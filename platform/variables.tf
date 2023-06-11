@@ -15,7 +15,7 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "ricliu-gke-dev"
+  default     = "<your project>"
 }
 
 variable "region" {
