@@ -1,7 +1,7 @@
 # Running distributed ML training workloads on GKE using the JobSet API
 
 In this guide you will run a distributed ML training workload on GKE using the [JobSet API](https://github.com/kubernetes-sigs/jobset).
-Specifically, you will train an handwritten digit image classifier on the classic MNIST dataset
+Specifically, you will train a handwritten digit image classifier on the classic MNIST dataset
 using PyTorch. The training computation will be distributed across 4 nodes in a GKE cluster.
 
 ## Prerequisites
