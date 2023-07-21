@@ -62,7 +62,7 @@ If you need to reinstall any resources, make sure to delete this file as well.
 
 5. To use the Ray dashboard, run the following command to port-forward:
 ```
-kubectl port-forward -n ray service/example-cluster-kuberay-head-svc 8265:8265
+kubectl port-forward -n <namespace> service/example-cluster-kuberay-head-svc 8265:8265
 ```
 
 And then open the dashboard using the following URL:
@@ -75,7 +75,7 @@ http://localhost:8265
 1. To connect to the remote GKE cluster with the Ray API, setup the Ray dashboard.
 Run the following command to port-forward:
 ```
-kubectl port-forward -n ray service/example-cluster-kuberay-head-svc 8265:8265
+kubectl port-forward -n <namespace> service/example-cluster-kuberay-head-svc 8265:8265
 ```
 
 And then open the dashboard using the following URL:
