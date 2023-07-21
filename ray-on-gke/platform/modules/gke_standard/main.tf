@@ -23,8 +23,8 @@ resource "google_container_cluster" "ml_cluster" {
   name     = var.cluster_name
   location = var.region
   count    = var.enable_autopilot == false ? 1 : 0
-
-  initial_node_count = 3
+  remove_default_node_pool = true
+  initial_node_count = 1
 
   logging_config {
     enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
