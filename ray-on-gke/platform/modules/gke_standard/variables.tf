@@ -47,11 +47,6 @@ variable "num_nodes" {
   default     = 1
 }
 
-variable "num_tpu_nodes" {
-  description = "Number of TPU nodes in the cluster"
-  default     = 1
-}
-
 variable "enable_autopilot" {
   type        = bool
   description = "Set to true to enable GKE Autopilot clusters"
@@ -59,7 +54,7 @@ variable "enable_autopilot" {
 }
 
 variable "enable_tpu" {
-  type = bool
+  type        = bool
   description = "Set to true to create TPU node pool"
-  default = true
+  default     = false
 }
