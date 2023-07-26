@@ -25,6 +25,11 @@ provider "google" {
   region  = var.region
 }
 
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
+
 provider "kubernetes" {
   host  = data.google_container_cluster.ml_cluster.endpoint
   token = data.google_client_config.provider.access_token

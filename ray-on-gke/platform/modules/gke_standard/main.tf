@@ -17,12 +17,17 @@ provider "google" {
   region  = var.region
 }
 
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
 
 # GKE cluster
 resource "google_container_cluster" "ml_cluster" {
   name     = var.cluster_name
   location = var.region
   count    = var.enable_autopilot == false ? 1 : 0
+
 
   initial_node_count = 1
 
@@ -44,14 +49,18 @@ resource "google_container_cluster" "ml_cluster" {
   release_channel {
     channel = "RAPID"
   }
+
+  release_channel {
+    channel = "RAPID"
+  }
 }
 
 resource "google_container_node_pool" "gpu_pool" {
   name       = "gpu-pool"
   location   = var.region
+  node_count = var.num_nodes
+  count      = var.enable_autopilot || var.enable_tpu ? 0 : 1
   cluster    = var.enable_autopilot || var.enable_tpu ? null : google_container_cluster.ml_cluster[0].name
-  node_count = var.num_gpu_nodes
-  count      = var.enable_autopilot == false ? 1 : 0
 
   autoscaling {
     min_node_count = "1"
@@ -96,15 +105,11 @@ resource "google_container_node_pool" "multi_host_tpu_pool" {
   provider   = google-beta
   name       = "tpu-pool"
   location   = var.region
-  cluster    = var.enable_tpu ? google_container_cluster.ml_cluster[0].name : null
-  initial_node_count = var.num_tpu_nodes
+  node_locations = var.zones
+  cluster    = var.enable_autopilot ==  false && var.enable_tpu ? google_container_cluster.ml_cluster[0].name : null
+  initial_node_count = var.num_nodes
+  count      = var.enable_autopilot == false && var.enable_tpu ? 1 : 0
 
-  autoscaling {
-    location_policy = "ANY"
-    min_node_count = "1"
-    max_node_count = "3"
-  }
-  
   node_config {
     machine_type = "ct4p-hightpu-4t"
   }
