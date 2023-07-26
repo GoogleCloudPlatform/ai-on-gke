@@ -39,5 +39,5 @@ variable "enable_autopilot" {
 variable "enable_tpu" {
   type = bool
   description = "Set to true to create TPU node pool"
-  default = true
+  default = false
 }

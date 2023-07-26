@@ -24,6 +24,12 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "zones" {
+  type = list(string)
+  description = "selected zones for TPU nodes"
+  default = ["us-central2-b"]
+}
+
 variable "cluster_name" {
   type        = string
   description = "GKE cluster name"
@@ -36,8 +42,8 @@ variable "namespace" {
   default     = "ray"
 }
 
-variable "num_gpu_nodes" {
-  description = "Number of GPU nodes in the cluster"
+variable "num_nodes" {
+  description = "Number of GPU / TPU nodes in the cluster"
   default     = 1
 }
 
