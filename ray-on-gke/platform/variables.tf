@@ -15,7 +15,7 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default = "<your project>"
+  default     = "<your project>"
 }
 
 variable "region" {
@@ -37,7 +37,7 @@ variable "enable_autopilot" {
 }
 
 variable "enable_tpu" {
-  type = bool
+  type        = bool
   description = "Set to true to create TPU node pool"
-  default = false
+  default     = false
 }
