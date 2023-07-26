@@ -23,7 +23,7 @@ resource "google_container_cluster" "ml_cluster" {
   name     = var.cluster_name
   location = var.region
   count    = var.enable_autopilot == false ? 1 : 0
-  remove_default_node_pool = true
+
   initial_node_count = 1
 
   logging_config {
@@ -40,12 +40,16 @@ resource "google_container_cluster" "ml_cluster" {
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
+
+  release_channel {
+    channel = "RAPID"
+  }
 }
 
 resource "google_container_node_pool" "gpu_pool" {
   name       = "gpu-pool"
   location   = var.region
-  cluster    = var.enable_autopilot == false ? google_container_cluster.ml_cluster[0].name : null
+  cluster    = var.enable_autopilot || var.enable_tpu ? null : google_container_cluster.ml_cluster[0].name
   node_count = var.num_gpu_nodes
   count      = var.enable_autopilot == false ? 1 : 0
 
@@ -85,5 +89,28 @@ resource "google_container_node_pool" "gpu_pool" {
     metadata = {
       disable-legacy-endpoints = "true"
     }
+  }
+}
+
+resource "google_container_node_pool" "multi_host_tpu_pool" {
+  provider   = google-beta
+  name       = "tpu-pool"
+  location   = var.region
+  cluster    = var.enable_tpu ? google_container_cluster.ml_cluster[0].name : null
+  initial_node_count = var.num_tpu_nodes
+
+  autoscaling {
+    location_policy = "ANY"
+    min_node_count = "1"
+    max_node_count = "3"
+  }
+  
+  node_config {
+    machine_type = "ct4p-hightpu-4t"
+  }
+
+  placement_policy {
+    tpu_topology = "2x2x1"
+    type = "COMPACT"
   }
 }
