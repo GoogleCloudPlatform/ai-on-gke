@@ -69,6 +69,7 @@ module "gke_standard" {
   region       = var.region
   cluster_name = var.cluster_name
   enable_autopilot = var.enable_autopilot
+  enable_tpu =  var.enable_tpu
 }
 
 module "kubernetes" {
@@ -78,6 +79,7 @@ module "kubernetes" {
   region       = var.region
   cluster_name = var.cluster_name
   enable_autopilot = var.enable_autopilot
+  enable_tpu =  var.enable_tpu
 }
 
 module "kuberay" {

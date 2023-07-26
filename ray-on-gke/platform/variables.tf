@@ -15,13 +15,13 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<your project>"
+  default     = "yiyingzhang-gke-dev"
 }
 
 variable "region" {
   type        = string
   description = "GCP project region or zone"
-  default     = "us-central1"
+  default     = "us-central2"
 }
 
 variable "cluster_name" {
@@ -34,4 +34,10 @@ variable "enable_autopilot" {
   type        = bool
   description = "Set to true to enable GKE Autopilot clusters"
   default     = false
+}
+
+variable "enable_tpu" {
+  type = bool
+  description = "Set to true to create TPU node pool"
+  default = true
 }
