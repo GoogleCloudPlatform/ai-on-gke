@@ -32,8 +32,7 @@ output "kubernetes_host" {
   value       = var.enable_autopilot ? resource.google_container_cluster.ml_cluster[0].endpoint : null
 }
 
-output "cluster_certicicate" {
-  description = "Kubernetes cluster ca certificate"
+output "cluster_certificate" {
+  description = "Kubernetes cluster CA certificate"
   value       = var.enable_autopilot ? base64decode(resource.google_container_cluster.ml_cluster[0].master_auth[0].cluster_ca_certificate) : null
-  sensitive   = true
 }
