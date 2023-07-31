@@ -24,12 +24,6 @@ variable "region" {
   default     = "us-central1"
 }
 
-variable "zones" {
-  type = list(string)
-  description = "selected zones for TPU nodes"
-  default = ["us-central2-b"]
-}
-
 variable "cluster_name" {
   type        = string
   description = "GKE cluster name"
