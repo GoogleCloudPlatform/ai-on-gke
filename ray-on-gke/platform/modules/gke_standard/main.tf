@@ -97,7 +97,7 @@ resource "google_container_node_pool" "gpu_pool" {
   }
 }
 
-resource "google_container_node_pool" "multi_host_tpu_pool" {
+resource "google_container_node_pool" "single_host_tpu_pool" {
   provider   = google-beta
   name       = "tpu-pool"
   location   = var.region
