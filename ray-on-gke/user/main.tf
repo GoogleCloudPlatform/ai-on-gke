@@ -57,10 +57,3 @@ module "prometheus" {
   project_id = var.project_id
   namespace  = var.namespace
 }
-
-module "jupyterhub" {
-  source = "./modules/jupyterhub"
-
-  depends_on = [module.kubernetes]
-  namespace  = var.namespace
-}
