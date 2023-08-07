@@ -22,10 +22,10 @@ User resources (deployed once per user):
 ## Installation
 
 Preinstall the following on your computer:
-Kubectl
-Terraform 
-Helm
-Gcloud
+* Kubectl
+* Terraform 
+* Helm
+* Gcloud
 
 Note: Terraform keeps state metadata in a local file called `terraform.tfstate`.
 If you need to reinstall any resources, make sure to delete this file as well.
