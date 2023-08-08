@@ -51,11 +51,3 @@ module "kuberay" {
   enable_tpu = var.enable_tpu
   enable_autopilot = var.enable_autopilot
 }
-
-module "prometheus" {
-  source = "./modules/prometheus"
-
-  depends_on = [module.kuberay]
-  project_id = var.project_id
-  namespace  = var.namespace
-}

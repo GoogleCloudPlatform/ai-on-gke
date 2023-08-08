@@ -12,22 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_providers {
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.8.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.18.1"
-    }
-    kubectl = {
-      source  = "alekc/kubectl"
-      version = "2.0.1"
-    }
-  }
-  provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-kubernetes-engine:kuberay/v0.1.0"
-  }
+variable "project_id" {
+  type        = string
+  description = "GCP project id"
+  default     = "<your user name>"
+}
+
+variable "namespace" {
+  type        = string
+  description = "Kubernetes namespace where resources are deployed"
+  default     = "ray"
 }

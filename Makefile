@@ -4,6 +4,7 @@ init:
 	gcloud init \
 	&& cd ./ray-on-gke/platform/ && terraform init \
 	&& cd ../user/ && terraform init \
+	&& cd ./monitoring && terraform init \
 	&& cd ./jupyterhub/ && terraform init 
 
 gcloud-auth-cluster: 
@@ -22,7 +23,7 @@ plan:
 	-var enable_autopilot=$(AUTOPILOT) \
 
 create-cluster: PROJECT ?= $(shell $(current-project))
-create-cluster: LOCATION ?= us-central1-b
+create-cluster: LOCATION ?= us-central1
 create-cluster: NAME ?= ml-cluster
 create-cluster: AUTOPILOT ?= false
 create-cluster:
@@ -46,13 +47,22 @@ build-user:
 
 build-jupyterhub: CREATE_NAMESPACE ?= false
 build-jupyterhub: NAMESPACE ?= ray
+build-jupyterhub: NAMESPACE ?= ray
 build-jupyterhub: 
 	cd ./ray-on-gke/user/jupyterhub/ \
 	&& terraform apply -auto-approve \
 	-var namespace=$(NAMESPACE) \
-	-var enable_create_namespace=$(CREATE_NAMESPACE) \
+	-var create_namespace=$(CREATE_NAMESPACE) \
 	&& echo "IP of JupyterHub Ednpoint" \
 	&& cd ../../../ && $(MAKE) get-jupyter-ip NAMESAPCE=$(NAMESPACE)
+
+add-monitoring: PROJECT ?= $(shell $(current-project))
+add-monitoring: NAMESPACE ?= ray
+add-monitoring:
+	cd ./ray-on-gke/user/monitoring/ \
+	&& terraform apply -auto-approve \
+	-var project_id=$(PROJECT) \
+	-var namespace=$(NAMESPACE) 
 
 get-jupyter-ip: NAMESPACE ?= ray
 get-jupyter-ip:
@@ -62,6 +72,7 @@ destroy-everything: SA-ACCOUNT-NAME ?= ray
 destroy-everything: NAMESPACE ?= ray
 destroy-everything: 
 	$(MAKE) delete-jupyterhub \
+	&& $(MAKE) delete-monitoring \
 	&& $(MAKE) delete-user-resource NAMESPACE=$(NAMESPACE) SA-ACCOUNT-NAME=$(SA-ACCOUNT-NAME) \
 	&& $(MAKE) delete-cluster 
 
@@ -72,6 +83,9 @@ delete-user-resource: SA-ACCOUNT-NAME ?= ray
 delete-user-resource: NAMESPACE ?= ray
 delete-user-resource:
 	cd ./ray-on-gke/user/ && terraform destroy -auto-approve -var namespace=$(NAMESPACE) -var service_account=$(SA-ACCOUNT-NAME)
+
+delete-monitoring: 
+	cd ./ray-on-gke/user/monitoring && terraform destroy -auto-approve
 
 delete-jupyterhub:
 	cd ./ray-on-gke/user/jupyterhub && terraform destroy -auto-approve

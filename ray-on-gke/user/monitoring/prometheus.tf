@@ -12,6 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+provider "kubernetes" {
+  config_path = pathexpand("~/.kube/config")
+}
+
+provider "kubectl" {
+  config_path = pathexpand("~/.kube/config")
+}
+
+provider "helm" {
+  kubernetes {
+    config_path = pathexpand("~/.kube/config")
+  }
+}
+
 data "local_file" "pod_monitor_yaml" {
   filename = "${path.module}/config/pod_monitor.yaml"
 }
