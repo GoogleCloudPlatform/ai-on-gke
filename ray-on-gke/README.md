@@ -34,7 +34,7 @@ If you need to reinstall any resources, make sure to delete this file as well.
 
 1. git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
-2. `cd platform`
+2. `cd ray-on-gke/platform`
 
 3. Edit `variables.tf` with your GCP settings.
 
