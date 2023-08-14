@@ -266,13 +266,35 @@ additionalWorkerGroups:
     # Ray container security context.
     securityContext: {}
     volumes:
-      - name: log-volume
+      - name: ray-logs
         emptyDir: {}
-  # Ray writes logs to /tmp/ray/session_latests/logs
+      - name: fluentbit-config
+        configMap:
+          name: fluentbit-config
+    # Ray writes logs to /tmp/ray/session_latests/logs
     volumeMounts:
       - mountPath: /tmp/ray
-        name: log-volume
-    sidecarContainers: []
+        name: ray-logs
+    # sidecarContainers specifies additional containers to attach to the Ray pod.
+    # Follows standard K8s container spec.
+    sidecarContainers:
+      - name: fluentbit
+        image: fluent/fluent-bit:1.9.6
+        # These resource requests for Fluent Bit should be sufficient in production.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+            ephemeral-storage: 2Gi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+            ephemeral-storage: 4Gi
+        volumeMounts:
+        - mountPath: /tmp/ray
+          name: ray-logs
+        - mountPath: /fluent-bit/etc/
+          name: fluentbit-config
 
 service:
   type: ClusterIP
