@@ -151,7 +151,7 @@ Zstandard compression is a feature supported in ContainerD. Please note that
 
 1. Use the zstd builder in docker buildx
 
-    ```
+```
 docker buildx create --name zstd-builder --driver docker-container \
   --driver-opt image=moby/buildkit:v0.10.3
 docker buildx use zstd-builder
@@ -160,7 +160,7 @@ docker buildx use zstd-builder
 
 2. Build and push an image
 
-    ```
+```
 IMAGE_URI=us-central1-docker.pkg.dev/<YOUR-CONTAINER-REPO>/example
 IMAGE_TAG=v1
 
