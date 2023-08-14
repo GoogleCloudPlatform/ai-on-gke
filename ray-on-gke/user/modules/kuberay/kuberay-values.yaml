@@ -95,7 +95,7 @@ head:
   annotations: {}
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
-    cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+    cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
   tolerations: []
   affinity: {}
   # Ray container security context.
@@ -179,7 +179,7 @@ worker:
     key: value
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
-    cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+    cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
   tolerations: []
   affinity: {}
   # Ray container security context.
