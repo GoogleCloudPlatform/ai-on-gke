@@ -15,17 +15,17 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<your project>"
+  default     = "yiyingzhang-gke-dev"
 }
 
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "<your user name>"
+  default     = "yiyingzhang"
 }
 
 variable "service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "<your user name>-system-account"
+  default     = "yiyingzhang-system-account"
 }

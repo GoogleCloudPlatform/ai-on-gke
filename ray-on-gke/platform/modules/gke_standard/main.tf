@@ -28,7 +28,6 @@ resource "google_container_cluster" "ml_cluster" {
   location = var.region
   count    = var.enable_autopilot == false ? 1 : 0
 
-
   initial_node_count = 1
 
   logging_config {
@@ -107,6 +106,19 @@ resource "google_container_node_pool" "tpu_pool" {
 
   node_config {
     machine_type = "ct4p-hightpu-4t"
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/trace.append",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+    ]
+
+    labels = {
+      "cloud.google.com/gke-profile" = "ray"
+      env = var.project_id
+    }
   }
 
   placement_policy {
