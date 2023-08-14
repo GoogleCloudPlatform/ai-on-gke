@@ -74,6 +74,11 @@ resource "google_container_node_pool" "gpu_pool" {
       env = var.project_id
     }
 
+    guest_accelerator {
+      type = "nvidia-tesla-t4"
+      count = 2
+    }
+
     # preemptible  = true
     image_type   = "cos_containerd"
     machine_type = "n1-standard-16"
