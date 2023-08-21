@@ -60,9 +60,9 @@ provider "helm" {
 module "gke_autopilot" {
   source = "./modules/gke_autopilot"
 
-  project_id   = var.project_id
-  region       = var.region
-  cluster_name = var.cluster_name
+  project_id       = var.project_id
+  region           = var.region
+  cluster_name     = var.cluster_name
   enable_autopilot = var.enable_autopilot
 }
 
@@ -70,21 +70,21 @@ module "gke_autopilot" {
 module "gke_standard" {
   source = "./modules/gke_standard"
 
-  project_id   = var.project_id
-  region       = var.region
-  cluster_name = var.cluster_name
+  project_id       = var.project_id
+  region           = var.region
+  cluster_name     = var.cluster_name
   enable_autopilot = var.enable_autopilot
-  enable_tpu =  var.enable_tpu
+  enable_tpu       = var.enable_tpu
 }
 
 module "kubernetes" {
   source = "./modules/kubernetes"
 
-  depends_on   = [module.gke_standard]
-  region       = var.region
-  cluster_name = var.cluster_name
+  depends_on       = [module.gke_standard]
+  region           = var.region
+  cluster_name     = var.cluster_name
   enable_autopilot = var.enable_autopilot
-  enable_tpu =  var.enable_tpu
+  enable_tpu       = var.enable_tpu
 }
 
 module "kuberay" {
