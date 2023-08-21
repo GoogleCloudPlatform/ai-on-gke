@@ -12,21 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-data "local_file" "ray_worker_service_yaml" {
-  filename = "${path.module}/config/service.yaml"
-}
-
-resource "kubectl_manifest" "ray_worker_service" {
-  override_namespace = var.namespace
-  yaml_body          = data.local_file.ray_worker_service_yaml.content
-}
-
 resource "helm_release" "ray-cluster" {
   name       = "example-cluster"
   repository = "https://ray-project.github.io/kuberay-helm/"
   chart      = "ray-cluster"
   namespace  = var.namespace
-  values = [
-    file("${path.module}/kuberay-tpu-pod-values.yaml")
-  ]
+  values     = var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : [file("${path.module}/kuberay-values.yaml")]
 }
