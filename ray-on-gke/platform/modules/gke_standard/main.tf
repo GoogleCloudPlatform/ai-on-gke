@@ -54,6 +54,7 @@ resource "google_container_node_pool" "cpu_pool" {
   name           = "cpu-pool"
   location       = var.region
   count          = var.enable_autopilot ? 0 : 1
+  node_locations = ["us-central2-a", "us-central2-d"]
   cluster        = var.enable_autopilot ? null : google_container_cluster.ml_cluster[0].name
 
   autoscaling {
@@ -67,7 +68,7 @@ resource "google_container_node_pool" "cpu_pool" {
   }
 
   node_config {
-    machine_type = "n1-standard-16"
+    machine_type = "n1-standard-32"
   }
 }
 
@@ -104,7 +105,7 @@ resource "google_container_node_pool" "gpu_pool" {
     }
 
     guest_accelerator {
-      type = "nvidia-tesla-t4"
+      type  = "nvidia-tesla-t4"
       count = 2
     }
 
@@ -126,6 +127,7 @@ resource "google_container_node_pool" "tpu_pool" {
   provider           = google-beta
   name               = "tpu-pool"
   location           = var.region
+  node_locations     = ["us-central2-b"]
   cluster            = var.enable_autopilot == false && var.enable_tpu ? google_container_cluster.ml_cluster[0].name : null
   initial_node_count = var.num_nodes
   count              = var.enable_autopilot == false && var.enable_tpu ? 1 : 0

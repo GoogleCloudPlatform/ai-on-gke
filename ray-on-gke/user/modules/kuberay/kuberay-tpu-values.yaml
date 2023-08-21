@@ -21,8 +21,10 @@
 
 image:
   # Replace this with your own image if needed.
-  repository: rayproject/ray
-  tag: 2.5.0-py310
+  #repository: rayproject/ray
+  #tag: 2.5.0-py310
+  repository: gcr.io/yiyingzhang-gke-dev/ray-tpu
+  tag: root-2.5.0-py310
   pullPolicy: IfNotPresent
 
 nameOverride: "kuberay"
@@ -67,6 +69,13 @@ head:
   #   value: "1"
     - name: RAY_memory_monitor_refresh_ms
       value: "0"
+  ports:
+  - containerPort: 6379
+    name: gcs
+  - containerPort: 8265
+    name: dashboard
+  - containerPort: 10001
+    name: client
   envFrom: []
     # - secretRef:
     #     name: my-env-secret
