@@ -38,6 +38,6 @@ variable "enable_autopilot" {
 
 variable "enable_tpu" {
   type = bool
-  description = "Set to true to create TPU node pool"
+  description = "Set to true to create TPU node pool, only one accelerator pool (GPU or TPU) will be created"
   default = false
 }
