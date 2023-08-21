@@ -1,0 +1,7 @@
+steps:
+  - id: 'terraform init'
+    name: 'hashicorp/terraform:1.0.0'
+    script: cd ray-on-gke/platform && terraform init
+  - id: 'terraform validate'
+    name: 'hashicorp/terraform:1.0.0'
+    script: cd ray-on-gke/platform && terraform validate
