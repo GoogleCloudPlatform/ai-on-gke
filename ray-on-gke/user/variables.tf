@@ -15,23 +15,23 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "yiyingzhang-gke-dev"
+  default     = "<your project>"
 }
 
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "yiyingzhang"
+  default     = "<your user name>"
 }
 
 variable "service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "yiyingzhang-system-account"
+  default     = "<your user name>-system-account"
 }
 
 variable "enable_tpu" {
   type        = bool
   description = "Set to true to create TPU node pool"
-  default     = true
+  default     = false
 }
