@@ -76,6 +76,8 @@ head:
     name: dashboard
   - containerPort: 10001
     name: client
+  - containerPort: 8000
+    name: serve
   envFrom: []
     # - secretRef:
     #     name: my-env-secret
@@ -95,12 +97,12 @@ head:
       cpu: "8"
       # google.com/tpu: "4"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
-      memory: "20G"
+      memory: "40G"
       ephemeral-storage: 20Gi
     requests:
       cpu: "8"
       # google.com/tpu: "4"
-      memory: "20G"
+      memory: "40G"
       ephemeral-storage: 10Gi
   annotations: {}
   # nodeSelector:
@@ -183,12 +185,12 @@ worker:
     limits:
       cpu: "1"
       google.com/tpu: "4"
-      memory: "20G"
+      memory: "40G"
       ephemeral-storage: 20Gi
     requests:
       cpu: "1"
       google.com/tpu: "4"
-      memory: "20G"
+      memory: "40G"
       ephemeral-storage: 10Gi
   annotations:
     key: value
