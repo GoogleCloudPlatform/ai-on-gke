@@ -44,7 +44,7 @@ If you need to reinstall any resources, make sure to delete this file as well.
 
 ### User
 
-1. `cd user`
+1. `cd ../user`
 
 2. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Ray services.
 
