@@ -93,13 +93,11 @@ head:
   resources:
     limits:
       cpu: "8"
-      # google.com/tpu: "4"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
       memory: "40G"
       ephemeral-storage: 20Gi
     requests:
       cpu: "8"
-      # google.com/tpu: "4"
       memory: "40G"
       ephemeral-storage: 10Gi
   annotations: {}
