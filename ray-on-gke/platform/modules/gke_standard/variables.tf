@@ -36,13 +36,19 @@ variable "namespace" {
   default     = "ray"
 }
 
-variable "num_gpu_nodes" {
-  description = "Number of GPU nodes in the cluster"
+variable "num_nodes" {
+  description = "Number of GPU / TPU nodes in the cluster"
   default     = 1
 }
 
 variable "enable_autopilot" {
   type        = bool
   description = "Set to true to enable GKE Autopilot clusters"
+  default     = false
+}
+
+variable "enable_tpu" {
+  type        = bool
+  description = "Set to true to create TPU node pool"
   default     = false
 }

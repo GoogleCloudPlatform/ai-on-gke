@@ -18,5 +18,5 @@ data "http" "nvidia_driver_installer_manifest" {
 
 resource "kubectl_manifest" "nvidia_driver_installer" {
   yaml_body = data.http.nvidia_driver_installer_manifest.response_body
-  count = var.enable_autopilot == false ? 1 : 0
+  count = var.enable_tpu || var.enable_autopilot ? 0 : 1
 }

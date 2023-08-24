@@ -29,3 +29,9 @@ variable "service_account" {
   description = "Google Cloud IAM service account for authenticating with GCP services"
   default     = "<your user name>-system-account"
 }
+
+variable "enable_tpu" {
+  type        = bool
+  description = "Set to true to create TPU node pool"
+  default     = false
+}
