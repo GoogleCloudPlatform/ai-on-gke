@@ -37,9 +37,9 @@ module "kubernetes" {
 module "service_accounts" {
   source = "./modules/service_accounts"
 
-  depends_on = [module.kubernetes]
-  project_id = var.project_id
-  namespace  = var.namespace
+  depends_on      = [module.kubernetes]
+  project_id      = var.project_id
+  namespace       = var.namespace
   service_account = var.service_account
 }
 
@@ -48,6 +48,7 @@ module "kuberay" {
 
   depends_on = [module.kubernetes]
   namespace  = var.namespace
+  enable_tpu = var.enable_tpu
 }
 
 module "prometheus" {
