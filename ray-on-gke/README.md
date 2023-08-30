@@ -47,6 +47,7 @@ If you need to reinstall any resources, make sure to delete this file as well.
 1. `cd ../user`
 
 2. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Ray services.
+   Note: To create a fault tolerant ray cluster, please see the section on "Fault Tolerance" below.
 
 3. Run `terraform init`
 
@@ -134,6 +135,25 @@ prompt = (
 ```
 
 4. This should output a generated text response.
+
+
+## Fault Tolerance
+
+The ray cluster is not fault tolerant by default i.e. if the ray head node dies for any reason, the application is disrupted.
+Fault tolerance via Redis can be enabled in the following way:
+
+1. `cd ray-on-gke/user`
+
+2. Edit `variables.tf` to set `enable_fault_tolerance` to `true`.
+
+3. Run `terraform init` and `terraform apply` as described above in the "User" section.
+
+To verify the setup, run `kubectl get pods -n <your_namespace>` which should display a Redis pod.
+Now if the head node dies, the application will continue to run.
+
+The Ray dashboard and job logs can also be recovered:
+1. Re-run the following: `kubectl port-forward -n <namespace> service/example-cluster-kuberay-head-svc 8265:8265`
+2. Open the dashboard via `http://localhost:8265` 
 
 
 ## Logging and Monitoring
