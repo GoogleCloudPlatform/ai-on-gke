@@ -17,7 +17,10 @@ User resources (deployed once per user):
 * Kuberay cluster
 * Prometheus monitoring
 * Logging container
+
+Jupyter resources:
 * Jupyter notebook
+* User namespace (if not exist)
 
 ## Installation
 
@@ -27,8 +30,7 @@ Preinstall the following on your computer:
 * Helm
 * Gcloud
 
-Note: Terraform keeps state metadata in a local file called `terraform.tfstate`.
-If you need to reinstall any resources, make sure to delete this file as well.
+> **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. If you need to reinstall any resources, make sure to delete this file as well.
 
 ### Platform
 
@@ -42,7 +44,9 @@ If you need to reinstall any resources, make sure to delete this file as well.
 
 5. Run `terraform apply`
 
-### User
+### User (No JupyterHub)
+
+> **_NOTE:_** Skip this part if you only want to install JupyterHub
 
 1. `cd ../user`
 
@@ -53,6 +57,18 @@ If you need to reinstall any resources, make sure to delete this file as well.
 4. Get the GKE cluster name and location/region from `platform/variables.tf`.
    Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
    Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
+
+5. Run `terraform apply`
+
+### JupyterHub
+
+1. `cd user/jupyterhub`
+
+2. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
+
+3. If the namespace does not exist, set `enable_create_namespace` to `true`
+
+4. Run `terraform init`
 
 5. Run `terraform apply`
 
