@@ -22,7 +22,7 @@
 image:
   # Replace this with your own image if needed.
   repository: rayproject/ray
-  tag: 2.5.0-py310
+  tag: 2.6.1-py310
   pullPolicy: IfNotPresent
 
 nameOverride: "kuberay"
