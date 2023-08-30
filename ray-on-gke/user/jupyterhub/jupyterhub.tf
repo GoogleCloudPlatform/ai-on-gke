@@ -12,18 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_providers {
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.8.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.18.1"
-    }
-  }
-  provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-kubernetes-engine:kuberay/v0.1.0"
+provider "kubernetes" {
+  config_path = pathexpand("~/.kube/config")
+}
+
+provider "kubectl" {
+  config_path = pathexpand("~/.kube/config")
+}
+
+provider "helm" {
+  kubernetes {
+    config_path = pathexpand("~/.kube/config")
   }
 }
+
+resource "helm_release" "jupyterhub" {
+  name       = "jupyterhub"
+  repository = "https://jupyterhub.github.io/helm-chart"
+  chart      = "jupyterhub"
+  namespace  = var.namespace
+  create_namespace = var.create_namespace
+  cleanup_on_fail = "true"
+
+  values = [
+    file("${path.module}/jupyter_config/config.yaml")
+  ]
+}
+
