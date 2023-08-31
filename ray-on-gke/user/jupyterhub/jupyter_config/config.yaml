@@ -42,11 +42,11 @@ scheduling:
 
 singleuser:
   cpu:
-    limit: 1G
-    guarantee: 1G
-  memory:
     limit: .5
     guarantee: .5
+  memory:
+    limit: 1G
+    guarantee: 1G
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
   image:
