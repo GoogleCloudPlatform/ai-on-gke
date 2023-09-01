@@ -50,8 +50,8 @@ singleuser:
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
   image:
-    name: <image-name>
-    tag: <tag>
+    name: jupyter/tensorflow-notebook
+    tag: python-3.10
   startTimeout: 700
 # More info on kubespawner overrides: https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner
 #   profile example:
@@ -78,7 +78,7 @@ singleuser:
     - display_name: "Profile2 name"
       description: "description here"
       kubespawner_override:
-        image: <image-name>:<tag>
+        image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
           # number of gpus needed on the node
           nvidia.com/gpu: "2"
@@ -88,7 +88,7 @@ singleuser:
     - display_name: "Profile3 name"
       description: "description"
       kubespawner_override:
-        image: <image-name>:<tag>
+        image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
           nvidia.com/gpu: "2"
         # GPU requests 
