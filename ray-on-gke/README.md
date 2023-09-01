@@ -62,6 +62,8 @@ Preinstall the following on your computer:
 
 ### JupyterHub
 
+> **_NOTE:_** Currently the cd/user/jupyterhub/jupyter_config/config.yaml has 3 profiles that uses the same jupyter images, this can be changed, as well as the description of these profiles
+
 1. `cd user/jupyterhub`
 
 2. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
