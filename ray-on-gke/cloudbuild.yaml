@@ -5,7 +5,6 @@ steps:
       cd platform
       terraform init
       terraform validate 
-      terraform apply -auto-approve -var project_id=gke-ai-eco-dev
     waitFor: ['-']
   
   - id: 'tf validate user'
@@ -14,12 +13,5 @@ steps:
       cd user
       terraform init
       terraform validate 
-    waitFor: ['tf validate platform']
-
-  - id: 'tf destroy pltaform'
-    name: 'hashicorp/terraform:1.0.0'
-    script: |
-      cd platform
-      terraform destroy
-    waitFor: ['tf validate user']
+    waitFor: ['-']
 
