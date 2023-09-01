@@ -64,7 +64,7 @@ If you need to reinstall any resources, make sure to delete this file as well.
 
 3. Open the external IP in a browser and login. The default user names and
    passwords can be found in the [Jupyter
-   settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/user/modules/jupyterhub/jupyterhub-values.yaml) file.
+   settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/user/jupyterhub/jupyter_config/config.yaml) file.
 
 4. The Ray cluster is available at `ray://example-cluster-kuberay-head-svc:10001`. To access the cluster, you can open one of the sample notebooks under `example_notebooks` (via `File` -> `Open from URL` in the Jupyter notebook window and use the raw file URL from GitHub) and run through the example. Ex url: https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/ray-on-gke/example_notebooks/gpt-j-online.ipynb
 
