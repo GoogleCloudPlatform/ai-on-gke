@@ -1,0 +1,17 @@
+steps:
+  - id: 'tf validate platform'
+    name: 'hashicorp/terraform:1.0.0'
+    script: |
+      cd platform
+      terraform init
+      terraform validate 
+    waitFor: ['-']
+  
+  - id: 'tf validate user'
+    name: 'hashicorp/terraform:1.0.0'
+    script: |
+      cd user
+      terraform init
+      terraform validate 
+    waitFor: ['-']
+
