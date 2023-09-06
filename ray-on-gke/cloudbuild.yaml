@@ -4,6 +4,7 @@ steps:
     env:
       - "PROJECT_ID=$PROJECT_ID"
       - "PR_NUMBER=$_PR_NUMBER"
+      - "KUBE_CONFIG_PATH=~/.kube/config"
     script: |
       cd ray-on-gke/platform
       terraform init
