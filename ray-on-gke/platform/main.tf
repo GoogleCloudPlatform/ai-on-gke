@@ -54,6 +54,7 @@ provider "helm" {
     cluster_ca_certificate = base64decode(
       data.google_container_cluster.ml_cluster.master_auth[0].cluster_ca_certificate
     )
+    load_config_file = false
   }
 }
 
