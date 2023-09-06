@@ -11,7 +11,7 @@ steps:
       cd ray-on-gke/platform
       terraform init
       terraform validate
-      terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=${BUILD_ID}-${PR_NUMBER}
+      terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${BUILD_ID}-${PR_NUMBER}
       terraform destroy -auto-approve
     waitFor: ['-']
   
