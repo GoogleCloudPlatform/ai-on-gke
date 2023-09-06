@@ -4,7 +4,8 @@ steps:
     script: |
       cd platform
       terraform init
-      terraform validate 
+      terraform validate
+      terraform apply -auto-approve -var=project-id=${PROJECT_ID}
     waitFor: ['-']
   
   - id: 'tf validate user'
