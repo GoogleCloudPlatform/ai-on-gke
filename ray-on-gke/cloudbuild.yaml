@@ -1,6 +1,8 @@
 steps:
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
+    env:
+      - "PROJECT_ID=$PROJECT_ID"
     script: |
       cd ray-on-gke/platform
       terraform init
