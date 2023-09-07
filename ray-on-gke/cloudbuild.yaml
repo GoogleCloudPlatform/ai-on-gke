@@ -6,11 +6,10 @@ steps:
       - "PR_NUMBER=$_PR_NUMBER"
       - "BUILD_ID=$BUILD_ID"
       - "SHORT_SHA=$SHORT_SHA"
-      # - "KUBECONFIG=/tmp/kubeconfig"
+      - "KUBECONFIG=/workspace/kubeconfig"
     script: |
       cd ray-on-gke/platform
       terraform init
-      export KUBECONFIG=$PROJECT_ID-kubeconfig
       terraform validate
       terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
       terraform destroy -auto-approve
