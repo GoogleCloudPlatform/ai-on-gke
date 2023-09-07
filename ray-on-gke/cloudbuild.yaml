@@ -6,7 +6,7 @@ steps:
       - "PR_NUMBER=$_PR_NUMBER"
       - "BUILD_ID=$BUILD_ID"
       - "SHORT_SHA=$SHORT_SHA"
-      - "KUBE_CONFIG_PATH=/workspace/kubeconfig"
+      - "KUBE_CONFIG_PATH=/workspace/.kube"
     script: |
       cd ray-on-gke/platform
       terraform init
