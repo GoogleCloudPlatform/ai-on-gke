@@ -1,4 +1,9 @@
 steps:
+  - id: 'Generate a kubeconfig file'
+    name: 'gcr.io/cloud-builders/kubectl'
+    env:
+      - 'KUBECONFIG=/kube/config'
+    entrypoint: 'sh'
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
@@ -6,7 +11,7 @@ steps:
       - "PR_NUMBER=$_PR_NUMBER"
       - "BUILD_ID=$BUILD_ID"
       - "SHORT_SHA=$SHORT_SHA"
-      - "KUBE_CONFIG_PATH=/workspace/.kube"
+      - "KUBE_CONFIG_PATH=/kube/config"
     script: |
       ls -a
       echo "go to cd ~ *******"
