@@ -1,13 +1,13 @@
 steps:
-  - id: 'configure kubectl'
-    name: gcr.io/cloud-builders/kubectl
-    env:
-      - 'KUBECONFIG=/workspace/.kube/config'
-    entrypoint: 'bash'
-    args:
-    - -exc
-    - |  
-      mkdir -p /workspace/.kube/
+  # - id: 'configure kubectl'
+  #   name: gcr.io/cloud-builders/kubectl
+  #   env:
+  #     - 'KUBECONFIG=/workspace/.kube/config'
+  #   entrypoint: 'bash'
+  #   args:
+  #   - -exc
+  #   - |  
+  #     mkdir -p /workspace/.kube/
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
@@ -22,7 +22,7 @@ steps:
       terraform validate
       terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
       # terraform destroy -auto-approve
-    waitFor: ['configure kubectl']
+    waitFor: ['-']
   
   # - id: 'tf validate user'
   #   name: 'hashicorp/terraform:1.0.0'
