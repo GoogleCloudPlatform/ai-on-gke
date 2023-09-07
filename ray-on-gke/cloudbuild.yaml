@@ -4,6 +4,9 @@ steps:
     env:
       - 'KUBECONFIG=/kube/config'
     entrypoint: 'sh'
+    volumes:
+      - name: 'kube'
+        path: /kube
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
