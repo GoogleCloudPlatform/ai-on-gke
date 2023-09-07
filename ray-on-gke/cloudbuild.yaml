@@ -9,6 +9,7 @@ steps:
       - "KUBE_CONFIG_PATH=/workspace/.kube"
     script: |
       ls -a
+      echo "go to cd ~ *******"
       cd ~
       ls -a
       # cd ray-on-gke/platform
