@@ -2,7 +2,7 @@ steps:
   - id: 'Generate a kubeconfig file'
     name: 'gcr.io/cloud-builders/kubectl'
     env:
-      - 'KUBECONFIG=/kube/config'
+      - 'KUBECONFIG=/workspace/.kube/'
     entrypoint: 'bash'
     args:
     - -exc
@@ -15,16 +15,12 @@ steps:
       - "PR_NUMBER=$_PR_NUMBER"
       - "BUILD_ID=$BUILD_ID"
       - "SHORT_SHA=$SHORT_SHA"
-      - "KUBE_CONFIG_PATH=/kube/config"
+      - "KUBE_CONFIG_PATH=/workspace/.kube/"
     script: |
-      ls -a
-      echo "go to cd ~ *******"
-      cd ~
-      ls -a
-      # cd ray-on-gke/platform
-      # terraform init
-      # terraform validate
-      # terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
+      cd ray-on-gke/platform
+      terraform init
+      terraform validate
+      terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
       # terraform destroy -auto-approve
     waitFor: ['-']
   
