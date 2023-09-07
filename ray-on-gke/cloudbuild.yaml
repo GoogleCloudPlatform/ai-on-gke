@@ -1,11 +1,4 @@
 steps:
-  - id: 'set kubectl'
-    name: 'gcr.io/cloud-builders/kubectl'
-    entrypoint: '/bin/bash'
-    args:
-    - '-c'
-    - |
-      kubectl config view
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
@@ -13,13 +6,12 @@ steps:
       - "PR_NUMBER=$_PR_NUMBER"
       - "BUILD_ID=$BUILD_ID"
       - "SHORT_SHA=$SHORT_SHA"
-      - "KUBE_CONFIG=/workspace/.kube"
-      - "LOCATION=$LOCATION"
+      - "KUBECONFIG=/tmp/kubeconfig"
     script: |
       cd ray-on-gke/platform
       terraform init
       terraform validate
-      terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=region=${LOCATION} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
+      terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
       terraform destroy -auto-approve
     waitFor: ['set kubectl']
   
