@@ -8,13 +8,14 @@ steps:
       - "SHORT_SHA=$SHORT_SHA"
       - "KUBE_CONFIG_PATH=/workspace/.kube"
     script: |
+      ls -a
       cd ~
       ls -a
-      cd ray-on-gke/platform
-      terraform init
-      terraform validate
-      terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
-      terraform destroy -auto-approve
+      # cd ray-on-gke/platform
+      # terraform init
+      # terraform validate
+      # terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
+      # terraform destroy -auto-approve
     waitFor: ['-']
   
   # - id: 'tf validate user'
