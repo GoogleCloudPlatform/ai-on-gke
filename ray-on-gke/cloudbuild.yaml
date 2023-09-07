@@ -13,7 +13,7 @@ steps:
       terraform validate
       terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
       terraform destroy -auto-approve
-    waitFor: ['set kubectl']
+    waitFor: ['-']
   
   # - id: 'tf validate user'
   #   name: 'hashicorp/terraform:1.0.0'
