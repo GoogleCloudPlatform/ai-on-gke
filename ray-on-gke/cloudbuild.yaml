@@ -3,10 +3,11 @@ steps:
     name: 'gcr.io/cloud-builders/kubectl'
     env:
       - 'KUBECONFIG=/kube/config'
-    entrypoint: 'sh'
-    volumes:
-      - name: 'kube'
-        path: /kube
+    entrypoint: 'bash'
+    args:
+    - -exc
+    - |  
+      mkdir -p /workspace/.kube/
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
