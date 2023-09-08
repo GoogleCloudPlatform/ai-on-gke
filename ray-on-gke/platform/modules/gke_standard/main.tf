@@ -126,7 +126,7 @@ resource "google_container_node_pool" "tpu_pool" {
   provider           = google-beta
   name               = "tpu-pool"
   location           = var.region
-  node_locations     = var.tpu_node_locations
+  node_locations     = ["us-central2-b"]
   cluster            = var.enable_autopilot == false && var.enable_tpu ? google_container_cluster.ml_cluster[0].name : null
   initial_node_count = var.num_nodes
   count              = var.enable_autopilot == false && var.enable_tpu ? 1 : 0
