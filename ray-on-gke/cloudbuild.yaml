@@ -1,13 +1,13 @@
 steps:
-  # - id: 'configure kubectl'
-  #   name: gcr.io/cloud-builders/kubectl
-  #   env:
-  #     - 'KUBECONFIG=/workspace/.kube/config'
-  #   entrypoint: 'bash'
-  #   args:
-  #   - -exc
-  #   - |  
-  #     mkdir -p /workspace/.kube/
+  - id: 'configure kubectl'
+    name: gcr.io/cloud-builders/kubectl
+    env:
+      - 'KUBECONFIG=/workspace/.kube/config'
+    entrypoint: 'bash'
+    args:
+    - -exc
+    - |  
+      kubectl get services
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
