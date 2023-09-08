@@ -52,3 +52,9 @@ variable "enable_tpu" {
   description = "Set to true to create TPU node pool"
   default     = false
 }
+
+variable "tpu_node_locations" {
+  type        = list(string)
+  description = "Locations of TPU node. TPU V4 is only available in us-central2-b. It will be used when enable_tpu is set to true"
+  default     = ["us-central2-b"]
+}
