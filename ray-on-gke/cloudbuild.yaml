@@ -1,8 +1,4 @@
 steps:
-  - name: kubectl
-    image: gcr.io/cloud-builders/kubectl
-    command:
-    - cat
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
@@ -10,7 +6,6 @@ steps:
       - "PR_NUMBER=$_PR_NUMBER"
       - "BUILD_ID=$BUILD_ID"
       - "SHORT_SHA=$SHORT_SHA"
-      - "KUBE_CONFIG_PATH=/workspace/.kube/config"
     script: |
       cd ray-on-gke/platform
       terraform init
