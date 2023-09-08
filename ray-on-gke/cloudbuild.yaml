@@ -7,7 +7,7 @@ steps:
     args:
     - -exc
     - |  
-      kubectl get services
+      kubectl config view
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
