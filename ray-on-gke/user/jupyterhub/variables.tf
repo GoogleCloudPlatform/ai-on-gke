@@ -19,7 +19,7 @@ variable "namespace" {
 }
 
 variable "create_namespace" {
-  type = bool
+  type        = bool
   description = "Enable creation of jupyterhub namespace if it does not exist"
-  default = false
+  default     = false
 }
