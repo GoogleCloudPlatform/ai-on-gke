@@ -1,8 +1,8 @@
 steps:
   - id: 'configure kubectl'
     name: gcr.io/cloud-builders/kubectl
-    env:
-      - 'KUBECONFIG=/workspace/.kube/config'
+    # env:
+    #   - 'KUBECONFIG=/workspace/.kube/config'
     entrypoint: 'bash'
     args:
     - -exc
