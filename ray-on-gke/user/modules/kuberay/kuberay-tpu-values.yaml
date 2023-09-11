@@ -59,7 +59,6 @@ head:
   rayStartParams:
     dashboard-host: '0.0.0.0'
     block: 'true'
-    # resources: '"{\"google.com/tpu\": 4}"'
   # containerEnv specifies environment variables for the Ray container,
   # Follows standard K8s container env schema.
   containerEnv:
@@ -101,15 +100,9 @@ head:
       memory: "40G"
       ephemeral-storage: 10Gi
   annotations: {}
-  # nodeSelector:
-    # iam.gke.io/gke-metadata-server-enabled: "true"
-    # cloud.google.com/gke-tpu-accelerator: tpu-v4-podslice
-    # cloud.google.com/gke-tpu-topology: 2x2x2
   tolerations: []
   affinity: {}
   # Ray container security context.
-  securityContext:
-    privileged: true
   volumes:
     - name: ray-logs
       emptyDir: {}
@@ -191,14 +184,12 @@ worker:
   annotations:
     key: value
   nodeSelector:
-    #iam.gke.io/gke-metadata-server-enabled: "true"
+    iam.gke.io/gke-metadata-server-enabled: "true"
     cloud.google.com/gke-tpu-accelerator: tpu-v4-podslice
     cloud.google.com/gke-tpu-topology: 2x2x1
   tolerations: []
   affinity: {}
   # Ray container security context.
-  securityContext:
-    privileged: true
   volumes:
     - name: ray-logs
       emptyDir: {}
@@ -279,8 +270,6 @@ additionalWorkerGroups:
     tolerations: []
     affinity: {}
     # Ray container security context.
-    securityContext:
-      privileged: true
     volumes:
       - name: log-volume
         emptyDir: {}
