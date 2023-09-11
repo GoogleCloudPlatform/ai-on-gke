@@ -13,7 +13,7 @@ steps:
       echo cluster name is "cluster-{$SHORT_SHA}-{$_PR_NUMBER}"
       terraform apply -var=project_id=$PROJECT_ID \
       -var=cluster_name=cluster-{$SHORT_SHA}-{$_PR_NUMBER} \
-      -var=region=$_ZONE -auto-approve \
+      -var=region=us-central1-c -auto-approve \
       || ( terraform destroy -auto-approve && exit 1 )
     dir: 'ray-on-gke/platform/'
     waitFor: ['tf validate platform']
@@ -61,6 +61,6 @@ steps:
       terraform destroy -auto-approve
     waitFor: ['tf apply user']
 
-substitutions:
-  _ZONE: us-central1-c
-  _USER_NAME: github
+# substitutions:
+#   _ZONE: us-central1-c
+#   _USER_NAME: github
