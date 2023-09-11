@@ -1,37 +1,63 @@
 steps:
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
-    env:
+    script:
+      terraform init 
+      terraform validate
+    dir: 'ray-on-gke/platform/'
+    waitFor: ['-']
+
+  - id: 'tf apply platform'
+    name: 'hashicorp/terraform:1.0.0'
+    env: 
       - "TF_IN_AUTOMATION=TRUE"
-      # - "TF_LOG=DEBUG"
-      # - "PROJECT_ID=$PROJECT_ID"
-      # - "PR_NUMBER=$_PR_NUMBER"
-      # - "BUILD_ID=$BUILD_ID"
-      # - "SHORT_SHA=$SHORT_SHA"
+    script: 
+      terraform apply \
+      -var=project_id=$PROJECT_ID \
+      -var=cluster_name=cluster-$SHORT_SHA-$PR_NUMBER \
+      -var=region=us-central1-c
+      || terraform destroy && exit 1
+    dir: 'ray-on-gke/platform/'
+    waitFor: ['tf validate platform']
+
+  - id: 'get kube config'
+    name: 'gcr.io/cloudbuilders/gcloud'
     entrypoint: 'sh'
     args: 
     - '-c'
     - |
-      terraform init 
-      terraform validate
-    dir: 'ray-on-gke/platform/'
-    # script: |
-    #   terraform init
-    #   terraform validate
-    #   terraform apply -auto-approve -var=project_id=$PROJECT_ID -var=cluster_name=cluster-$SHORT_SHA-$PR_NUMBER
+      gcloud container clusters get-credentials cluster-$SHORT_SHA-$PR_NUMBER --location us-central1-c --project $PROJECT_ID
+    waitFor: ['tf apply platform']
+
+  - id: 'tf validate user'
+    name: 'hashicorp/terraform:1.0.0'
+    script:
+      terraform init
+      terraform validate 
+    dir: 'ray-on-gke/user/'
     waitFor: ['-']
 
-  # - id: 'tf apply platform'
-  #   name: 'hashicorp/terraform:1.0.0'
-  #   dir: 'ray-on-gke/platform/'
-  #   waitFor: ['tf validate platform']
-  #   entrypoint: 'sh'
-  
-  # - id: 'tf validate user'
-  #   name: 'hashicorp/terraform:1.0.0'
-  #   script: |
-  #     cd ray-on-gke/user
-  #     terraform init
-  #     terraform validate 
-  #   waitFor: ['tf validate platform']
+  - id: 'tf apply user'
+    name: 'hashicorp/terraform:1.0.0'
+    env:
+      - "USER_NAME=github"
+    script: 
+      terraform apply \
+      -var=project_id=$PROJECT_ID \
+      -var=namespace=${USER_NAME}
+      -var=service_account=${USER_NAME}-system-account
+      || terraform destroy && exit 1
+    dir: 'ray-on-gke/platform/'
+    waitFor: ['get kube config']
+
+  - id: 'tf destroy'
+    name: 'hashicorp/terraform:1.0.0'
+    env: 
+      - "TF_IN_AUTOMATION=TRUE"
+    script: 
+      cd ray-on-gke/user 
+      terraform destroy 
+      cd ray-on-gke/platform
+      terraform destroy
+    waitFor: ['tf apply user']
 
