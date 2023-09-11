@@ -1,6 +1,6 @@
 steps:
   - id: 'test gcloud'
-    name: 'gcr.io/cloudbuilders/gcloud'
+    name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'sh'
     args:
       - '-c'
