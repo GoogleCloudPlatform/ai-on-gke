@@ -1,19 +1,30 @@
 steps:
-  - id: 'tf validate platform'
-    name: 'hashicorp/terraform:1.0.0'
-    env:
-      - "TF_LOG=DEBUG"
-      - "PROJECT_ID=$PROJECT_ID"
-      - "PR_NUMBER=$_PR_NUMBER"
-      - "BUILD_ID=$BUILD_ID"
-      - "SHORT_SHA=$SHORT_SHA"
-    script: |
-      cd ray-on-gke/platform
-      terraform init
-      terraform validate
-      terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
-      # terraform destroy -auto-approve
-    waitFor: ['-']
+  - name: 'gcr.io/$PROJECT_ID/TERRAFORM'
+  - id: 'terraform init platform'
+  - dir: 'ray-on-gke/platform'
+  - args: ['init']
+
+  - name: 'gcr.io/$PROJECT_ID/TERRAFORM'
+  - id: 'terraform validate platform'
+  - dir: 'ray-on-gke/platform'
+  - args: ['validate']
+  - waitFor: ['terraform init platform']
+  
+  # - id: 'tf validate platform'
+  #   name: 'hashicorp/terraform:1.0.0'
+  #   env:
+  #     - "TF_LOG=DEBUG"
+  #     - "PROJECT_ID=$PROJECT_ID"
+  #     - "PR_NUMBER=$_PR_NUMBER"
+  #     - "BUILD_ID=$BUILD_ID"
+  #     - "SHORT_SHA=$SHORT_SHA"
+  #   script: |
+  #     cd ray-on-gke/platform
+  #     terraform init
+  #     terraform validate
+  #     terraform apply -auto-approve -var=project_id=${PROJECT_ID} -var=cluster_name=cluster-${SHORT_SHA}-${PR_NUMBER}
+  #     # terraform destroy -auto-approve
+  #   waitFor: ['-']
   
   # - id: 'tf validate user'
   #   name: 'hashicorp/terraform:1.0.0'
