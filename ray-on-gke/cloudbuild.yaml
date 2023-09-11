@@ -11,7 +11,7 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     script: |
       terraform apply -var=project_id=$PROJECT_ID \
-      -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
+      -var=cluster_name=cluster-{$SHORT_SHA}-{$_PR_NUMBER} \
       -var=region=$_ZONE -auto-approve \
       || ( terraform destroy -auto-approve && exit 1 )
     dir: 'ray-on-gke/platform/'
