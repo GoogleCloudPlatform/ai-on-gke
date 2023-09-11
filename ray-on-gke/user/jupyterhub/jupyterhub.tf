@@ -27,12 +27,12 @@ provider "helm" {
 }
 
 resource "helm_release" "jupyterhub" {
-  name       = "jupyterhub"
-  repository = "https://jupyterhub.github.io/helm-chart"
-  chart      = "jupyterhub"
-  namespace  = var.namespace
+  name             = "jupyterhub"
+  repository       = "https://jupyterhub.github.io/helm-chart"
+  chart            = "jupyterhub"
+  namespace        = var.namespace
   create_namespace = var.create_namespace
-  cleanup_on_fail = "true"
+  cleanup_on_fail  = "true"
 
   values = [
     file("${path.module}/jupyter_config/config.yaml")
