@@ -72,11 +72,11 @@ singleuser:
 #                - >
 #                  gitpuller https://github.com/data-8/materials-fa17 master materials-fa;
   profileList:
-    - display_name: "Profile1 name"
-      description: "description here"
+    - display_name: "Basic"
+      description: "Creates CPU VMs as the compute for notebook execution."
       default: true
-    - display_name: "Profile2 name"
-      description: "description here"
+    - display_name: "GPU T4"
+      description: "Creates GPU VMs (T4) as the compute for notebook execution"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
@@ -85,8 +85,8 @@ singleuser:
       #  possible values: nvidia-tesla-k80, nvidia-tesla-p100, nvidia-tesla-p4, nvidia-tesla-v100, nvidia-tesla-t4, nvidia-tesla-a100, nvidia-a100-80gb, nvidia-l4
         node_selector:
           cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
-    - display_name: "Profile3 name"
-      description: "description"
+    - display_name: "GPU A100"
+      description: "Creates GPU VMs (A100) as the compute for notebook execution"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
@@ -95,7 +95,7 @@ singleuser:
         extra_resource_guarantees:
           nvidia.com/gpu: "2"
         node_selector:
-          cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
+          cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
   cmd: null
   cloudMetadata:
     blockWithIptables: false
