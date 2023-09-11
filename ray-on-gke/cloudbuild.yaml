@@ -11,15 +11,15 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     env: 
       - "TF_IN_AUTOMATION=TRUE"
-    entrypoint: /bin/bash
+    entrypoint: 'sh'
     args: 
       - '-c'
       - |
         terraform apply -var=project_id=$PROJECT_ID \
         -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
         -var=region=$_ZONE \
-        -auto-approve
-        || terraform destroy && exit 1
+        -auto-approve 
+        || { terraform destroy && exit 1; }
     dir: 'ray-on-gke/platform/'
     waitFor: ['tf validate platform']
 
