@@ -35,7 +35,7 @@ steps:
       terraform init
       terraform validate 
     dir: 'ray-on-gke/user/'
-    waitFor: ['-']
+    waitFor: ['get kube config']
 
   - id: 'tf apply user'
     name: 'hashicorp/terraform:1.0.0'
