@@ -10,22 +10,26 @@ steps:
   - id: 'tf apply platform'
     name: 'hashicorp/terraform:1.0.0'
     entrypoint: 'sh'
-    script: |
-      terraform apply -var=project_id=$PROJECT_ID \
-      -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
-      -var=region=us-central1-c -auto-approve \
-      || ( terraform destroy -auto-approve && exit 1 )
+    args:
+      - '-c'
+      - |
+        terraform apply -var=project_id=$PROJECT_ID \
+        -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
+        -var=region=$_ZONE -auto-approve \
+        || ( terraform destroy -auto-approve && exit 1 )
     dir: 'ray-on-gke/platform/'
     waitFor: ['tf validate platform']
 
   - id: 'get kube config'
     name: 'gcr.io/cloudbuilders/gcloud'
     entrypoint: 'sh'
-    script: |
-      gcloud container clusters get-credentials \
-      cluster-$SHORT_SHA-$_PR_NUMBER \
-      --location $_ZONE \
-      --project $PROJECT_ID
+    args:
+      - '-c'
+      - |
+        gcloud container clusters get-credentials \
+        cluster-$SHORT_SHA-$_PR_NUMBER \
+        --location $_ZONE \
+        --project $PROJECT_ID
     waitFor: ['tf apply platform']
 
   - id: 'tf validate user'
@@ -39,23 +43,23 @@ steps:
   - id: 'tf apply user'
     name: 'hashicorp/terraform:1.0.0'
     entrypoint: 'sh'
-    script: |
-      terraform apply \
-      -var=project_id=$PROJECT_ID \
-      -var=namespace=$_USER_NAME \
-      -var=service_account=$_USER_NAME-system-account \
-      -auto-approve \
-      || ( terraform destroy auto approve \
-      cd ray-on-gke/platform && \
-      terraform destroy -auto-approve && \
-      exit 1 )
+    args:
+      - '-c'
+      - |
+        terraform apply \
+        -var=project_id=$PROJECT_ID \
+        -var=namespace=$_USER_NAME \
+        -var=service_account=$_USER_NAME-system-account \
+        -auto-approve \
+        || ( terraform destroy auto approve \
+        cd ray-on-gke/platform && \
+        terraform destroy -auto-approve && \
+        exit 1 )
     dir: 'ray-on-gke/user/'
     waitFor: ['tf validate user']
 
   - id: 'tf destroy everything'
     name: 'hashicorp/terraform:1.0.0'
-    env: 
-      - "TF_IN_AUTOMATION=TRUE"
     script: |
       cd ray-on-gke/user 
       terraform destroy -auto-approve
@@ -63,6 +67,6 @@ steps:
       terraform destroy -auto-approve
     waitFor: ['tf apply user']
 
-# substitutions:
-#   _ZONE: us-central1-c
-#   _USER_NAME: github
+substitutions:
+  _ZONE: us-central1-c
+  _USER_NAME: github
