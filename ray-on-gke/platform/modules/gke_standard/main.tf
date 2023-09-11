@@ -29,6 +29,7 @@ resource "google_container_cluster" "ml_cluster" {
   count                    = var.enable_autopilot == false ? 1 : 0
   remove_default_node_pool = true
   initial_node_count       = 1
+  min_master_version = "1.28"
 
   logging_config {
     enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
@@ -67,7 +68,7 @@ resource "google_container_node_pool" "cpu_pool" {
   }
 
   node_config {
-    machine_type = "n1-standard-32"
+    machine_type = "n1-standard-16"
   }
 }
 
