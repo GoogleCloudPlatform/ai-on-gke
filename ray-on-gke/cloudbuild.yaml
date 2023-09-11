@@ -2,6 +2,7 @@ steps:
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     env:
+      - "TF_LOG=DEBUG"
       - "PROJECT_ID=$PROJECT_ID"
       - "PR_NUMBER=$_PR_NUMBER"
       - "BUILD_ID=$BUILD_ID"
