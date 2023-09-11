@@ -11,20 +11,21 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     env: 
       - "TF_IN_AUTOMATION=TRUE"
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args: 
       - '-c'
       - |
         terraform apply -var=project_id=$PROJECT_ID \
         -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
-        -var=region=$_ZONE 
+        -var=region=$_ZONE \
+        -auto-approve
         || terraform destroy && exit 1
     dir: 'ray-on-gke/platform/'
     waitFor: ['tf validate platform']
 
   - id: 'get kube config'
     name: 'gcr.io/cloudbuilders/gcloud'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args: 
     - '-c'
     - |
@@ -43,7 +44,7 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     env:
       - "USER_NAME=github"
-    entrypoint: 'sh'
+    entrypoint: 'hash'
     args: 
       - '-c'
       - |
