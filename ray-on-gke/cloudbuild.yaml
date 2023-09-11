@@ -14,7 +14,7 @@ steps:
     script: 
       terraform apply \
       -var=project_id=$PROJECT_ID \
-      -var=cluster_name=cluster-$SHORT_SHA-$PR_NUMBER \
+      -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
       -var=region=us-central1-c
       || terraform destroy && exit 1
     dir: 'ray-on-gke/platform/'
@@ -26,7 +26,7 @@ steps:
     args: 
     - '-c'
     - |
-      gcloud container clusters get-credentials cluster-$SHORT_SHA-$PR_NUMBER --location us-central1-c --project $PROJECT_ID
+      gcloud container clusters get-credentials cluster-$SHORT_SHA-$_PR_NUMBER --location us-central1-c --project $PROJECT_ID
     waitFor: ['tf apply platform']
 
   - id: 'tf validate user'
