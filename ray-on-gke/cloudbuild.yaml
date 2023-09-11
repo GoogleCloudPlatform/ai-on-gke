@@ -10,9 +10,8 @@ steps:
   - id: 'tf apply platform'
     name: 'hashicorp/terraform:1.0.0'
     script: |
-      echo cluster name is "cluster-{$SHORT_SHA}-{$_PR_NUMBER}"
       terraform apply -var=project_id=$PROJECT_ID \
-      -var=cluster_name=cluster-{$SHORT_SHA}-{$_PR_NUMBER} \
+      -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
       -var=region=us-central1-c -auto-approve \
       || ( terraform destroy -auto-approve && exit 1 )
     dir: 'ray-on-gke/platform/'
