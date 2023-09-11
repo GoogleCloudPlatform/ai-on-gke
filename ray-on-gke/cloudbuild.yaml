@@ -17,7 +17,7 @@ steps:
       - |
         terraform apply -var=project_id=$PROJECT_ID \
         -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
-        -var=region=us-central1-c 
+        -var=region=$_ZONE 
         || terraform destroy && exit 1
     dir: 'ray-on-gke/platform/'
     waitFor: ['tf validate platform']
@@ -28,7 +28,7 @@ steps:
     args: 
     - '-c'
     - |
-      gcloud container clusters get-credentials cluster-$SHORT_SHA-$_PR_NUMBER --location us-central1-c --project $PROJECT_ID
+      gcloud container clusters get-credentials cluster-$SHORT_SHA-$_PR_NUMBER --location $_ZONE --project $PROJECT_ID
     waitFor: ['tf apply platform']
 
   - id: 'tf validate user'
@@ -49,8 +49,8 @@ steps:
       - |
         terraform apply \
         -var=project_id=$PROJECT_ID \
-        -var=namespace=${USER_NAME}
-        -var=service_account=${USER_NAME}-system-account
+        -var=namespace=$_USER_NAME
+        -var=service_account=$_USER_NAME-system-account
         || terraform destroy && exit 1
     dir: 'ray-on-gke/platform/'
     waitFor: ['get kube config']
@@ -66,3 +66,6 @@ steps:
       terraform destroy
     waitFor: ['tf apply user']
 
+substitutions:
+  _ZONE: us-central1-c
+  _USER_NAME: github
