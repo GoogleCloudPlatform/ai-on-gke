@@ -2,7 +2,7 @@ steps:
   - id: 'tf validate platform'
     name: 'hashicorp/terraform:1.0.0'
     script: |
-      terraform init || { terraform validate && exit 1; }
+      terraform init || (terraform validate && exit 1)
       # terraform validate
     dir: 'ray-on-gke/platform/'
     waitFor: ['-']
