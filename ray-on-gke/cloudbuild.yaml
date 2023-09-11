@@ -11,7 +11,7 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     env: 
       - "TF_IN_AUTOMATION=TRUE"
-    entrypoint: 'bash'
+    entrypoint: /bin/bash
     args: 
       - '-c'
       - |
@@ -25,7 +25,7 @@ steps:
 
   - id: 'get kube config'
     name: 'gcr.io/cloudbuilders/gcloud'
-    entrypoint: 'bash'
+    entrypoint: /bin/bash
     args: 
     - '-c'
     - |
@@ -44,7 +44,7 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     env:
       - "USER_NAME=github"
-    entrypoint: 'hash'
+    entrypoint: /bin/bash
     args: 
       - '-c'
       - |
