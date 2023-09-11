@@ -11,12 +11,14 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     env: 
       - "TF_IN_AUTOMATION=TRUE"
-    script: |
-      terraform apply \
-      -var=project_id=$PROJECT_ID \
-      -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
-      -var=region=us-central1-c
-      || terraform destroy && exit 1
+    entrypoint: 'sh'
+    args: 
+      - '-c'
+      - |
+        terraform apply -var=project_id=$PROJECT_ID \
+        -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
+        -var=region=us-central1-c 
+        || terraform destroy && exit 1
     dir: 'ray-on-gke/platform/'
     waitFor: ['tf validate platform']
 
@@ -41,12 +43,15 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     env:
       - "USER_NAME=github"
-    script: |
-      terraform apply \
-      -var=project_id=$PROJECT_ID \
-      -var=namespace=${USER_NAME}
-      -var=service_account=${USER_NAME}-system-account
-      || terraform destroy && exit 1
+    entrypoint: 'sh'
+    args: 
+      - '-c'
+      - |
+        terraform apply \
+        -var=project_id=$PROJECT_ID \
+        -var=namespace=${USER_NAME}
+        -var=service_account=${USER_NAME}-system-account
+        || terraform destroy && exit 1
     dir: 'ray-on-gke/platform/'
     waitFor: ['get kube config']
 
