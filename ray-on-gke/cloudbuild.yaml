@@ -34,7 +34,7 @@ steps:
         --project $PROJECT_ID
         kubectl config view
         gke-gcloud-auth-plugin
-    waitFor: ['set up kube']
+    waitFor: ['-']
 
   - id: 'tf validate user'
     name: 'hashicorp/terraform:1.0.0'
