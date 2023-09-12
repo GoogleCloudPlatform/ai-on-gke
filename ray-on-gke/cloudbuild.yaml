@@ -32,6 +32,7 @@ steps:
         cluster-ebc0c59-31 \
         --location $_ZONE \
         --project $PROJECT_ID
+        gcloud components install gke-gcloud-auth-plugin
         kubectl config view
     waitFor: ['-']
 
@@ -51,7 +52,6 @@ steps:
     args:
       - '-c'
       - |
-        gcloud components install gke-gcloud-auth-plugin
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
