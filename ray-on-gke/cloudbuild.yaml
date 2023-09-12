@@ -19,17 +19,21 @@ steps:
   #       || ( terraform destroy -auto-approve && exit 1 )
   #   dir: 'ray-on-gke/platform/'
   #   waitFor: ['tf validate platform']
+  - id: 'prepare for env'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - -c
+      - |-
+        apt update && apt install -y google-cloud-cli-gke-gcloud-auth-plugin
+        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
-    env: 
-      - "USE_GKE_GCLOUD_AUTH_PLUGIN=True"
     args:
       - '-c'
       - |
-        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-        echo "{USE_GKE_GCLOUD_AUTH_PLUGIN}"
         kubectl version
         gke-gcloud-auth-plugin
         gcloud container clusters get-credentials \
@@ -49,9 +53,7 @@ steps:
 
   - id: 'tf apply user'
     name: 'hashicorp/terraform:1.0.0'
-    entrypoint: 'sh'
-    env: 
-      - "USE_GKE_GCLOUD_AUTH_PLUGIN=True"
+    entrypoint: 'bash'
     args:
       - '-c'
       - |
