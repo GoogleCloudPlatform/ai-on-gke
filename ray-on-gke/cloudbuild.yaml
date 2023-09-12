@@ -61,10 +61,6 @@ steps:
     args:
       - '-c'
       - |
-        gcloud container clusters get-credentials \
-        cluster-ebc0c59-31 \
-        --location $_ZONE \
-        --project $PROJECT_ID
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
