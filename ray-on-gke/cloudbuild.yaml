@@ -26,6 +26,7 @@ steps:
     args:
       - '-c'
       - |
+        gcloud components install gke-gcloud-auth-plugin
         gcloud components install kubectl
 
   - id: 'get kube config'
