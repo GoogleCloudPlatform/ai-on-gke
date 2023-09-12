@@ -20,14 +20,13 @@ steps:
   #   dir: 'ray-on-gke/platform/'
   #   waitFor: ['tf validate platform']
   - id: 'set up kube'
-    name: 'gcr.io/cloud-builders/kubectl'
+    name: 'gcr.io/cloud-builders/gcloud'
     env: 
       - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
     args:
       - '-c'
       - |
         gcloud components install gke-gcloud-auth-plugin
-        gcloud components install kubectl
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
