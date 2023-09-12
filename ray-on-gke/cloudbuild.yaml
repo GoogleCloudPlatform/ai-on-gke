@@ -42,7 +42,7 @@ steps:
         --project $PROJECT_ID
         terraform apply \
         -var=project_id=$PROJECT_ID \
-        -var=namespace=$_USER_NAME-$SHORT_SHA \
+        -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve
     dir: 'ray-on-gke/user/'
