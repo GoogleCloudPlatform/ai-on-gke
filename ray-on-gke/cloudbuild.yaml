@@ -34,12 +34,11 @@ steps:
     args:
       - '-c'
       - |
-        kubectl version
-        gke-gcloud-auth-plugin
         gcloud container clusters get-credentials \
         cluster-ebc0c59-31 \
         --location $_ZONE \
         --project $PROJECT_ID
+        kubectl config view
     waitFor: ['prepare for env']
 
   - id: 'tf validate user'
@@ -52,11 +51,10 @@ steps:
 
   - id: 'tf apply user'
     name: 'hashicorp/terraform:1.0.0'
-    entrypoint: 'bash'
+    entrypoint: 'sh'
     args:
       - '-c'
       - |
-        #!/usr/bin/env bash
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
