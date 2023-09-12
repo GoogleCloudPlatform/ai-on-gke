@@ -59,7 +59,7 @@ steps:
         -auto-approve \
         || ( terraform destroy -auto-approve && \
         cd ray-on-gke/platform && \
-        terraform destroy -auto-approve) && \
+        terraform destroy -auto-approve && \
         exit 1 )
     dir: 'ray-on-gke/user/'
     waitFor: ['tf validate user']
