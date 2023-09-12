@@ -19,9 +19,17 @@ steps:
   #       || ( terraform destroy -auto-approve && exit 1 )
   #   dir: 'ray-on-gke/platform/'
   #   waitFor: ['tf validate platform']
+  - id: 'set up kube'
+    name: 'gcr.io/cloud-builders/kubectl'
+    env: 
+      - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
+    args:
+      - '-c'
+      - |
+        gcloud components install kubectl
 
   - id: 'get kube config'
-    name: 'gcr.io/cloud-builders/gcloud:latest'
+    name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'sh'
     env: 
       - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
@@ -56,10 +64,10 @@ steps:
         -var=namespace=$_USER_NAME \
         -var=service_account=$_USER_NAME-system-account \
         -auto-approve \
-        || ( terraform destroy -auto-approve && \
+        || (( terraform destroy -auto-approve && \
         cd ray-on-gke/platform && \
-        terraform destroy -auto-approve && \
-        exit 1 )
+        terraform destroy -auto-approve) && \
+        ( exit 1 )
     dir: 'ray-on-gke/user/'
     waitFor: ['tf validate user']
 
