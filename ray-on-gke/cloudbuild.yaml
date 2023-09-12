@@ -44,7 +44,8 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        -auto-approve
+        -auto-approve || ( echo "false" > /workspace/user )
+        terraform destroy -auto-approve
     dir: 'ray-on-gke/user/'
     allowFailure: true
     waitFor: ['tf validate user']
@@ -54,14 +55,18 @@ steps:
     env: 
       - "TF_LOG=DEBUG"
     script: |
-      cd ray-on-gke/user/
-      terraform destroy \
-      -var=project_id=$PROJECT_ID \
-      -var=namespace=$SHORT_SHA \
-      -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-      -auto-approve
-      # cd ray-on-gke/platform
-      # terraform destroy -auto-approve
+      # cd ray-on-gke/user/
+      # terraform destroy \
+      # -var=project_id=$PROJECT_ID \
+      # -var=namespace=$SHORT_SHA \
+      # -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+      # -auto-approve
+      cd ray-on-gke/platform
+      terraform destroy -auto-approve
+
+      if [[ $(cat /workspace/iteration_exist) == "false"]] ; then 
+        exit 1
+      fi
     waitFor: ['tf apply user']
 
 substitutions:
