@@ -56,22 +56,9 @@ steps:
   #       # -var=service_account=$_USER_NAME-system-account \
   #       # -auto-approve 
 
-  # - id: 'get kube config'
-  #   name: 'gcr.io/cloud-builders/gcloud'
-  #   entrypoint: 'bash'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       gcloud container clusters get-credentials \
-  #       cluster-ebc0c59-31 \
-  #       --location $_ZONE \
-  #       --project $PROJECT_ID
-  #       kubectl config view
-  #   waitFor: ['prepare for env']
-
-  - id: 'tf apply user'
-    name: 'hashicorp/terraform:1.0.0'
-    entrypoint: 'sh'
+  - id: 'get kube config'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
     args:
       - '-c'
       - |
@@ -81,6 +68,21 @@ steps:
         cluster-ebc0c59-31 \
         --location $_ZONE \
         --project $PROJECT_ID
+        kubectl config view
+    waitFor: ['tf validate user']
+
+  - id: 'tf apply user'
+    name: 'hashicorp/terraform:1.0.0'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        # apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+        # export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+        # gcloud container clusters get-credentials \
+        # cluster-ebc0c59-31 \
+        # --location $_ZONE \
+        # --project $PROJECT_ID
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
@@ -91,7 +93,7 @@ steps:
         # terraform destroy -auto-approve && \
         # exit 1 )
     dir: 'ray-on-gke/user/'
-    waitFor: ['tf validate user']
+    waitFor: ['get kube config']
 
   - id: 'tf destroy everything'
     name: 'hashicorp/terraform:1.0.0'
