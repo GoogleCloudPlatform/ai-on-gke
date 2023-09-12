@@ -37,39 +37,20 @@ steps:
     waitFor: ['-']
 
   - id: 'get kube config'
-    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'sh'
+    name: 'gcr.io/cloud-builders/gcloud'
+    # name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
     args:
       - '-c'
       - |
-        apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+        gcloud components install gke-gcloud-auth-plugin
         export USE_GKE_GCLOUD_AUTH_PLUGIN=True
         gcloud container clusters get-credentials \
         cluster-ebc0c59-31 \
         --location $_ZONE \
         --project $PROJECT_ID
+        kubectl config view
     waitFor: ['tf validate user']
-
-  #       # terraform apply \
-  #       # -var=project_id=$PROJECT_ID \
-  #       # -var=namespace=$_USER_NAME \
-  #       # -var=service_account=$_USER_NAME-system-account \
-  #       # -auto-approve 
-
-  # - id: 'get kube config'
-  #   name: 'gcr.io/cloud-builders/gcloud'
-  #   entrypoint: 'bash'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
-  #       export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-  #       gcloud container clusters get-credentials \
-  #       cluster-ebc0c59-31 \
-  #       --location $_ZONE \
-  #       --project $PROJECT_ID
-  #       kubectl config view
-  #   waitFor: ['tf validate user']
 
   - id: 'tf apply user'
     name: 'hashicorp/terraform:1.0.0'
