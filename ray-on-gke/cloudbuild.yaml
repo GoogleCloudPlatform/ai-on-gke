@@ -38,7 +38,7 @@ steps:
 
   - id: 'prepare for env'
     name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
+    entrypoint: 'sh'
     args:
       - '-c'
       - |
@@ -71,7 +71,7 @@ steps:
 
   - id: 'tf apply user'
     name: 'hashicorp/terraform:1.0.0'
-    entrypoint: 'bash'
+    entrypoint: 'sh'
     args:
       - '-c'
       - |
