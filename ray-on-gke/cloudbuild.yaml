@@ -22,7 +22,7 @@ steps:
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
+    entrypoint: 'sh'
     env: 
       - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
     args:
@@ -32,6 +32,7 @@ steps:
         cluster-ebc0c59-31 \
         --location $_ZONE \
         --project $PROJECT_ID
+        kubectl config view
     waitFor: ['-']
 
   - id: 'tf validate user'
@@ -44,9 +45,9 @@ steps:
 
   - id: 'tf apply user'
     name: 'hashicorp/terraform:1.0.0'
-    env:
-    - USE_GKE_GCLOUD_AUTH_PLUGIN=true
     entrypoint: 'sh'
+    env: 
+      - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
     args:
       - '-c'
       - |
