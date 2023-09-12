@@ -26,7 +26,7 @@ steps:
       terraform init
       terraform validate 
     dir: 'ray-on-gke/user/'
-    waitFor: ['-']
+    waitFor: ['tf apply platform']
 
   - id: 'tf apply user'
     name: 'gcr.io/$PROJECT_ID/terraform'
