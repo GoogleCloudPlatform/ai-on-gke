@@ -21,15 +21,13 @@ steps:
   #   waitFor: ['tf validate platform']
 
   - id: 'get kube config'
-    name: 'gcr.io/cloud-builders/gcloud'
+    name: 'gcr.io/cloud-builders/gcloud:latest'
     entrypoint: 'sh'
     env: 
       - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
     args:
       - '-c'
       - |
-        gcloud components install gke-gcloud-auth-plugin
-        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
         gcloud container clusters get-credentials \
         cluster-ebc0c59-31 \
         --location $_ZONE \
