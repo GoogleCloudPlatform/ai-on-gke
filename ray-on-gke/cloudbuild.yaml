@@ -29,7 +29,8 @@ steps:
       - '-c'
       - |
         export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-        echo USE_GKE_GCLOUD_AUTH_PLUGIN
+        echo $USE_GKE_GCLOUD_AUTH_PLUGIN
+        kubectl version
         gke-gcloud-auth-plugin
         gcloud container clusters get-credentials \
         cluster-ebc0c59-31 \
@@ -54,6 +55,7 @@ steps:
     args:
       - '-c'
       - |
+        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
