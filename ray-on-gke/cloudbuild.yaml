@@ -40,8 +40,7 @@ steps:
         cluster-ebc0c59-31 \
         --location $_ZONE \
         --project $PROJECT_ID
-        
-    waitFor: ['-']
+    waitFor: ['prepare for env']
 
   - id: 'tf validate user'
     name: 'hashicorp/terraform:1.0.0'
