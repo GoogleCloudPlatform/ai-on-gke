@@ -16,18 +16,10 @@ data "google_client_config" "provider" {}
 
 provider "kubernetes" {
   config_path = pathexpand("~/.kube/config")
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "gke-gcloud-auth-plugin"
-  }
 }
 
 provider "kubectl" {
   config_path = pathexpand("~/.kube/config")
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "gke-gcloud-auth-plugin"
-  }
 }
 
 provider "helm" {
