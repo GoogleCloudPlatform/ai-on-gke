@@ -36,25 +36,25 @@ steps:
     dir: 'ray-on-gke/user/'
     waitFor: ['-']
 
-  - id: 'prepare for env'
-    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
+  # - id: 'prepare for env'
+  #   name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  #   entrypoint: 'sh'
+  #   args:
+  #     - '-c'
+  #     - |
         
-        apt update && apt install -y google-cloud-cli-gke-gcloud-auth-plugin
-        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-        gcloud container clusters get-credentials \
-        cluster-ebc0c59-31 \
-        --location $_ZONE \
-        --project $PROJECT_ID
+  #       apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+  #       export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+  #       gcloud container clusters get-credentials \
+  #       cluster-ebc0c59-31 \
+  #       --location $_ZONE \
+  #       --project $PROJECT_ID
 
-        # terraform apply \
-        # -var=project_id=$PROJECT_ID \
-        # -var=namespace=$_USER_NAME \
-        # -var=service_account=$_USER_NAME-system-account \
-        # -auto-approve 
+  #       # terraform apply \
+  #       # -var=project_id=$PROJECT_ID \
+  #       # -var=namespace=$_USER_NAME \
+  #       # -var=service_account=$_USER_NAME-system-account \
+  #       # -auto-approve 
 
   # - id: 'get kube config'
   #   name: 'gcr.io/cloud-builders/gcloud'
@@ -75,6 +75,12 @@ steps:
     args:
       - '-c'
       - |
+        apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+        gcloud container clusters get-credentials \
+        cluster-ebc0c59-31 \
+        --location $_ZONE \
+        --project $PROJECT_ID
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
@@ -85,7 +91,7 @@ steps:
         # terraform destroy -auto-approve && \
         # exit 1 )
     dir: 'ray-on-gke/user/'
-    waitFor: ['prepare for env']
+    waitFor: ['tf validate user']
 
   - id: 'tf destroy everything'
     name: 'hashicorp/terraform:1.0.0'
