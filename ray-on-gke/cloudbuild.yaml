@@ -28,7 +28,8 @@ steps:
     args:
       - '-c'
       - |
-        echo ${USE_GKE_GCLOUD_AUTH_PLUGIN}
+        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+        echo USE_GKE_GCLOUD_AUTH_PLUGIN
         gke-gcloud-auth-plugin
         gcloud container clusters get-credentials \
         cluster-ebc0c59-31 \
