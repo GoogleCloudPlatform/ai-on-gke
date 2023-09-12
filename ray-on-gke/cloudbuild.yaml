@@ -57,7 +57,7 @@ steps:
       cd ray-on-gke/user/
       terraform destroy \
       -var=project_id=$PROJECT_ID \
-      -var=namespace=$_USER_NAME-$SHORT_SHA \
+      -var=namespace=$SHORT_SHA \
       -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
       -auto-approve
       # cd ray-on-gke/platform
