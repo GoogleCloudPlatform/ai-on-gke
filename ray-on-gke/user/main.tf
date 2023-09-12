@@ -24,6 +24,10 @@ provider "kubernetes" {
 
 provider "kubectl" {
   config_path = pathexpand("~/.kube/config")
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "gke-gcloud-auth-plugin"
+  }
 }
 
 provider "helm" {
