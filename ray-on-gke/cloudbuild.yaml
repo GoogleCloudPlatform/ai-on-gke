@@ -55,10 +55,11 @@ steps:
       - "TF_LOG=DEBUG"
     script: |
       cd ray-on-gke/user/
-      terraform destroy -auto-approve \
+      terraform destroy \
       -var=project_id=$PROJECT_ID \
       -var=namespace=$_USER_NAME-$SHORT_SHA \
-      -var=service_account=$_USER_NAME-$SHORT_SHA-system-account
+      -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+      -auto-approve
       # cd ray-on-gke/platform
       # terraform destroy -auto-approve
     waitFor: ['tf apply user']
