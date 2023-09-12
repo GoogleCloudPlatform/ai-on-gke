@@ -1,24 +1,24 @@
 steps:
-  # - id: 'tf validate platform'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   script: |
-  #     terraform init
-  #     terraform validate
-  #   dir: 'ray-on-gke/platform/'
-  #   waitFor: ['-']
+  - id: 'tf validate platform'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init
+      terraform validate
+    dir: 'ray-on-gke/platform/'
+    waitFor: ['-']
 
-  # - id: 'tf apply platform'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   entrypoint: 'sh'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       terraform apply -var=project_id=$PROJECT_ID \
-  #       -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
-  #       -var=region=$_ZONE -auto-approve \
-  #       || ( terraform destroy -auto-approve && exit 1 )
-  #   dir: 'ray-on-gke/platform/'
-  #   waitFor: ['tf validate platform']
+  - id: 'tf apply platform'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        terraform apply -var=project_id=$PROJECT_ID \
+        -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
+        -var=region=$_ZONE -auto-approve \
+        || ( terraform destroy -auto-approve && exit 1 )
+    dir: 'ray-on-gke/platform/'
+    waitFor: ['tf validate platform']
 
   - id: 'tf validate user'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -26,7 +26,7 @@ steps:
       terraform init
       terraform validate 
     dir: 'ray-on-gke/user/'
-    waitFor: ['-']
+    waitFor: ['tf validate platform']
 
   - id: 'tf apply user'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -53,24 +53,16 @@ steps:
     allowFailure: true
     waitFor: ['tf validate user']
 
-  - id: 'tf destroy everything'
-    name: 'gcr.io/$PROJECT_ID/terraform'
-    env: 
-      - "TF_LOG=DEBUG"
-    script: |
-      # cd ray-on-gke/user/
-      # terraform destroy \
-      # -var=project_id=$PROJECT_ID \
-      # -var=namespace=$SHORT_SHA \
-      # -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-      # -auto-approve
-      cd ray-on-gke/platform
-      terraform destroy -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
-      -var=region=$_ZONE -auto-approve 
+  - id: 'clean gke cluster'
+    name: 'ggcr.io/cloud-builders/gcloud'
+    args:
+      - '-c'
+      - |
+        gcloud container clusters delete cluster-$SHORT_SHA-$_PR_NUMBER --zone $_ZONE  --project $PROJECT_ID
 
-      if [[ $(cat /workspace/use_result) == "false"]] ; then 
-        exit 1
-      fi
+        if [[ $(cat /workspace/use_result) == "false"]] ; then 
+          exit 1
+        fi
     waitFor: ['tf apply user']
 
 substitutions:
