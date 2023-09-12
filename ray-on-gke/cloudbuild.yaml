@@ -56,7 +56,7 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     entrypoint: 'sh'
     env:
-      - KUBECONFIG=/workspace/.kube/config
+      - KUBECONFIG=/builder/home/.kube/config
       - USE_GKE_GCLOUD_AUTH_PLUGIN=True
     args:
       - '-c'
