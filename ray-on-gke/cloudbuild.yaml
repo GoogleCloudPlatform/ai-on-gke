@@ -85,7 +85,7 @@ steps:
         # terraform destroy -auto-approve && \
         # exit 1 )
     dir: 'ray-on-gke/user/'
-    waitFor: ['tf validate user']
+    waitFor: ['prepare for env']
 
   - id: 'tf destroy everything'
     name: 'hashicorp/terraform:1.0.0'
