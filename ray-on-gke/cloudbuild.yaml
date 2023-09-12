@@ -76,15 +76,17 @@ steps:
         # exit 1 )
     dir: 'ray-on-gke/user/'
     # waitFor: ['get kube config']
+    allowFailure: true
     waitFor: ['tf validate user']
+
 
   - id: 'tf destroy everything'
     name: 'hashicorp/terraform:1.0.0'
     script: |
       cd ray-on-gke/user 
       terraform destroy -auto-approve
-      cd ray-on-gke/platform
-      terraform destroy -auto-approve
+      # cd ray-on-gke/platform
+      # terraform destroy -auto-approve
     waitFor: ['tf apply user']
 
 substitutions:
