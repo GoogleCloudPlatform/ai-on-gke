@@ -22,7 +22,7 @@ steps:
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     env: 
       - "USE_GKE_GCLOUD_AUTH_PLUGIN=True"
     args:
