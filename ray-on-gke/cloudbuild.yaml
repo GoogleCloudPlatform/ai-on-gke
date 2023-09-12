@@ -42,7 +42,7 @@ steps:
         --project $PROJECT_ID
         terraform apply \
         -var=project_id=$PROJECT_ID \
-        -var=namespace=$_USER_NAME_$SHORT_SHA \
+        -var=namespace=$_USER_NAME-$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve
     dir: 'ray-on-gke/user/'
@@ -51,12 +51,13 @@ steps:
 
   - id: 'tf destroy everything'
     name: 'gcr.io/$PROJECT_ID/terraform'
+    env: 
+      - "TF_LOG=DEBUG"
     script: |
-      cd ray-on-gke/user
-      terraform init
+      cd ray-on-gke/user/
       terraform destroy -auto-approve \
       -var=project_id=$PROJECT_ID \
-      -var=namespace=$_USER_NAME_$SHORT_SHA \
+      -var=namespace=$_USER_NAME-$SHORT_SHA \
       -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \ 
       # cd ray-on-gke/platform
       # terraform destroy -auto-approve
