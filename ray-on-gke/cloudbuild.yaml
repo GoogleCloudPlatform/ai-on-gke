@@ -21,6 +21,7 @@ steps:
   #   waitFor: ['tf validate platform']
   - id: 'set up kube'
     name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'sh'
     env: 
       - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
     args:
@@ -41,7 +42,7 @@ steps:
         --location $_ZONE \
         --project $PROJECT_ID
         kubectl config view
-    waitFor: ['-']
+    waitFor: ['set up kube']
 
   - id: 'tf validate user'
     name: 'hashicorp/terraform:1.0.0'
