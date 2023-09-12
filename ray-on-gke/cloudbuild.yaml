@@ -57,7 +57,7 @@ steps:
     args:
       - '-c'
       - |
-        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+        #!/usr/bin/env bash
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
