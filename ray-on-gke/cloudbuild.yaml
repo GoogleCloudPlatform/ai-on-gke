@@ -51,6 +51,7 @@ steps:
     args:
       - '-c'
       - |
+        gcloud components install gke-gcloud-auth-plugin
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$_USER_NAME \
