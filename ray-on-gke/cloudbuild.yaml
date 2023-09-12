@@ -24,7 +24,7 @@ steps:
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'sh'
     env: 
-      - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
+      - "USE_GKE_GCLOUD_AUTH_PLUGIN=True"
     args:
       - '-c'
       - |
@@ -32,7 +32,6 @@ steps:
         cluster-ebc0c59-31 \
         --location $_ZONE \
         --project $PROJECT_ID
-        kubectl config view
         gke-gcloud-auth-plugin
     waitFor: ['-']
 
@@ -48,7 +47,7 @@ steps:
     name: 'hashicorp/terraform:1.0.0'
     entrypoint: 'sh'
     env: 
-      - "USE_GKE_GCLOUD_AUTH_PLUGIN=true"
+      - "USE_GKE_GCLOUD_AUTH_PLUGIN=True"
     args:
       - '-c'
       - |
