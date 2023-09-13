@@ -10,9 +10,9 @@ For more information about TPUs on GKE, see [this page](https://cloud.google.com
 
 ### Platform
 
-1. git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
-2. `cd ray-on-gke/platform`
+2. `cd ai-on-gke/gke-platform`
 
 3. Edit `variables.tf` with your GCP settings.
 
@@ -41,7 +41,7 @@ variable "enable_tpu" {
 
 ### User
 
-1. Get the GKE cluster name and location/region from `platform/variables.tf`.
+1. Get the GKE cluster name and location/region from `gke-platform/variables.tf`.
    Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
    Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
 
