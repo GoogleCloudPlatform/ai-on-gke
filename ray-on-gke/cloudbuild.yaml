@@ -58,7 +58,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud container clusters delete cluster-46be183-31 --zone $_ZONE  --project $PROJECT_ID
+        gcloud container clusters delete cluster-46be183-31 --zone $_ZONE  --project $PROJECT_ID --quiet
 
         # if [[ $(cat /workspace/use_result) == "false"]] ; then 
         #   exit 1
