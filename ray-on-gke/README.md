@@ -24,7 +24,7 @@ Preinstall the following on your computer:
 
 > **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. If you need to reinstall any resources, make sure to delete this file as well.
 
-1. git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
 2. `cd ai-on-gke/ray-on-gke/user`
 

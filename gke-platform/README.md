@@ -20,7 +20,7 @@ Preinstall the following on your computer:
 
 ### Platform
 
-1. git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
 2. `cd ai-on-gke/gke-platform`
 
