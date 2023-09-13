@@ -32,8 +32,8 @@ steps:
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
-    env:
-      - USE_GKE_GCLOUD_AUTH_PLUGIN=False
+    # env:
+    #   - USE_GKE_GCLOUD_AUTH_PLUGIN=False
     args:
       - '-c'
       - |
@@ -43,8 +43,8 @@ steps:
         --project $PROJECT_ID
 
   - id: 'tf apply user'
-    # name: 'gcr.io/$PROJECT_ID/terraform'
-    name: 'hashicorp/terraform:1.0.0'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    # name: 'hashicorp/terraform:1.0.0'
     entrypoint: 'sh'
     args:
       - '-c'
