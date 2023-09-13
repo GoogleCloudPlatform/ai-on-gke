@@ -7,7 +7,7 @@ steps:
     dir: 'ray-on-gke/platform/'
     waitFor: ['-']
 
-  - id: 'tf apply platform'
+  - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
     args:
@@ -26,9 +26,9 @@ steps:
       terraform init
       terraform validate 
     dir: 'ray-on-gke/user/'
-    waitFor: ['tf apply platform']
+    waitFor: ['create gke cluster']
 
-  - id: 'tf apply user'
+  - id: 'create kube ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
     env:
@@ -64,7 +64,7 @@ steps:
         if [[ $(cat /workspace/user_result) == "false"]] ; then 
           exit 1
         fi
-    waitFor: ['tf apply user']
+    waitFor: ['create kube ray cluster']
 
 substitutions:
   _ZONE: us-central1-c
