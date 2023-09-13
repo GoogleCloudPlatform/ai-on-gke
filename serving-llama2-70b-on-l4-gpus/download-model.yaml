@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-llama-2-70b
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: loader
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/memory-limit: 4000Mi
+        gke-gcsfuse/ephemeral-storage-limit: 150Gi
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: loader
+        image: python:3.11
+        command:
+        - /bin/bash
+        - -c
+        - |
+          mkdir -p /gcs-mount/llama-2-70b-chat
+          cat > download-model.py << EOF
+          from huggingface_hub import snapshot_download
+          model_id="meta-llama/Llama-2-70b-chat-hf"
+          snapshot_download(repo_id=model_id, local_dir="/gcs-mount/llama-2-70b-chat",
+                            local_dir_use_symlinks=False, revision="main",
+                            ignore_patterns=["*.safetensors", "model.safetensors.index.json"])
+          EOF
+          pip install huggingface_hub
+          python3 download-model.py
+        imagePullPolicy: IfNotPresent
+        env:
+        # kubectl create secret generic l4-demo --from-literal="HF_TOKEN=$HF_TOKEN"
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: l4-demo
+              key: HF_TOKEN
+        volumeMounts:
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /gcs-mount
+      serviceAccountName: l4-demo
+      volumes:
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: $BUCKET_NAME
+            mountOptions: "implicit-dirs"
