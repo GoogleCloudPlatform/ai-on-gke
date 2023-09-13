@@ -37,7 +37,7 @@ steps:
       - '-c'
       - |
         gcloud container clusters get-credentials \
-        cluster-7ee1b08-31 \
+        cluster-$SHORT_SHA-$_PR_NUMBER \
         --location $_ZONE \
         --project $PROJECT_ID
         terraform apply \
