@@ -45,7 +45,7 @@ steps:
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve || ( echo "false" > /workspace/user_result )
-        
+
         terraform destroy -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
@@ -54,7 +54,7 @@ steps:
     waitFor: ['tf validate user']
 
   - id: 'clean gke cluster'
-    name: 'ggcr.io/cloud-builders/gcloud'
+    name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'sh'
     args:
       - '-c'
