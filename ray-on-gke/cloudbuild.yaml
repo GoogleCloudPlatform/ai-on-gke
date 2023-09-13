@@ -1,56 +1,59 @@
 steps:
-  # - id: 'tf validate platform'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   script: |
-  #     terraform init
-  #     terraform validate
-  #   dir: 'ray-on-gke/platform/'
-  #   waitFor: ['-']
+  - id: 'tf validate platform'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init
+      terraform validate
+    dir: 'ray-on-gke/platform/'
+    waitFor: ['-']
 
-  # - id: 'tf apply platform'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   entrypoint: 'sh'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       terraform apply -var=project_id=$PROJECT_ID \
-  #       -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
-  #       -var=region=$_ZONE -auto-approve \
-  #       || ( terraform destroy -auto-approve && exit 1 )
-  #   dir: 'ray-on-gke/platform/'
-  #   waitFor: ['tf validate platform']
+  - id: 'tf apply platform'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    env: 
+      - "KUBE_CONFIG_PATH=~/.kube/config"
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        terraform apply -var=project_id=$PROJECT_ID \
+        -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
+        -var=region=$_ZONE -auto-approve \
+        || ( terraform destroy -auto-approve && exit 1 )
+    dir: 'ray-on-gke/platform/'
+    waitFor: ['tf validate platform']
 
-  # - id: 'tf validate user'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   script: |
-  #     terraform init
-  #     terraform validate 
-  #   dir: 'ray-on-gke/user/'
-  #   waitFor: ['tf apply platform']
+  - id: 'tf validate user'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init
+      terraform validate 
+    dir: 'ray-on-gke/user/'
+    waitFor: ['tf apply platform']
 
-  # - id: 'tf apply user'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   entrypoint: 'sh'
-  #   env:
-  #     - USE_GKE_GCLOUD_AUTH_PLUGIN=True
-  #   args:
-  #     - '-c'
-  #     - |
-  #       gcloud container clusters get-credentials \
-  #       cluster-$SHORT_SHA-$_PR_NUMBER \
-  #       --location $_ZONE \
-  #       --project $PROJECT_ID
-  #       terraform apply \
-  #       -var=project_id=$PROJECT_ID \
-  #       -var=namespace=$SHORT_SHA \
-  #       -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-  #       -auto-approve || ( echo "false" > /workspace/use_result )
-  #       terraform destroy -var=project_id=$PROJECT_ID \
-  #       -var=namespace=$SHORT_SHA \
-  #       -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-  #       -auto-approve
-  #   dir: 'ray-on-gke/user/'
-  #   waitFor: ['tf validate user']
+  - id: 'tf apply user'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'sh'
+    env:
+      - USE_GKE_GCLOUD_AUTH_PLUGIN=True
+    args:
+      - '-c'
+      - |
+        gcloud container clusters get-credentials \
+        cluster-$SHORT_SHA-$_PR_NUMBER \
+        --location $_ZONE \
+        --project $PROJECT_ID
+        terraform apply \
+        -var=project_id=$PROJECT_ID \
+        -var=namespace=$SHORT_SHA \
+        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+        -auto-approve || ( echo "false" > /workspace/user_result )
+
+        terraform destroy -var=project_id=$PROJECT_ID \
+        -var=namespace=$SHORT_SHA \
+        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+        -auto-approve
+    dir: 'ray-on-gke/user/'
+    waitFor: ['tf validate user']
 
   - id: 'clean gke cluster'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -58,12 +61,12 @@ steps:
     args:
       - '-c'
       - |
-        gcloud container clusters delete cluster-46be183-31 --zone $_ZONE  --project $PROJECT_ID --quiet
+        gcloud container clusters delete cluster-$SHORT_SHA-$_PR_NUMBER --zone $_ZONE  --project $PROJECT_ID --quiet
 
-        # if [[ $(cat /workspace/use_result) == "false"]] ; then 
-        #   exit 1
-        # fi
-    waitFor: ['-']
+        if [[ $(cat /workspace/user_result) == "false"]] ; then 
+          exit 1
+        fi
+    waitFor: ['tf apply user']
 
 substitutions:
   _ZONE: us-central1-c
