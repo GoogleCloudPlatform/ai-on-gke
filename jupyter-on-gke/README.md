@@ -1,11 +1,13 @@
-# Ray on GKE
+# JupyterHub on GKE
 
 This repository contains a Terraform template for running [JupyterHub](https://jupyter.org/hub) on Google Kubernetes Engine.
-We've also included some example notebooks (`ai-on-gke/ray-on-gke/example_notebooks`), including one that serves a GPT-J-6B model with Ray AIR (see
-[here](https://docs.ray.io/en/master/ray-air/examples/gptj_serving.html) for the original notebook).
 
 This module assumes you already have a functional GKE cluster. If not, follow the instructions under `ai-on-gke/gke-platform/README.md`
-to install a Standard or Autopilot GKE cluster, then follow the instructions in this module to install Ray. 
+to install a Standard or Autopilot GKE cluster, then follow the instructions in this module to install JupyterHub. 
+
+We've also included some example notebooks (`ai-on-gke/ray-on-gke/example_notebooks`), including one that serves a GPT-J-6B model with Ray AIR (see
+[here](https://docs.ray.io/en/master/ray-air/examples/gptj_serving.html) for the original notebook). To run these, follow the instructions at
+`ai-on-gke/ray-on-gke/README.md` to install a Ray cluster.
 
 This module deploys the following resources, once per user:
 * JupyterHub deployment
@@ -26,24 +28,26 @@ Preinstall the following on your computer:
 
 > **_NOTE:_** Currently the cd/user/jupyterhub/jupyter_config/config.yaml has 3 profiles that uses the same jupyter images, this can be changed, as well as the description of these profiles.
 
-1. `cd ai-on-gke/jupyter-on-gke/jupyterhub`
+1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
-2. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
+2. `cd ai-on-gke/jupyter-on-gke/jupyterhub`
+
+3. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
 Note:
 If using this with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommended to use the same k8s namespace
 for both i.e. set this to the same namespace as `ai-on-gke/ray-on-gke/user/variables.tf`.
 If not, set `enable_create_namespace` to `true` so a new k8s namespace is created for the Jupyter resources.
 
-3. Run `terraform init`
+4. Run `terraform init`
 
-4. Find the name and location of the GKE cluster you want to use.
+5. Find the name and location of the GKE cluster you want to use.
    Run `gcloud container clusters list --project=<your GCP project> to see all the available clusters.
    Note: If you created the GKE cluster via the ai-on-gke/gke-platform repo, you can get the cluster info from `ai-on-gke/gke-platform/variables.tf`
 
-5. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
+6. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
    Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
 
-6. Run `terraform apply`
+7. Run `terraform apply`
 
 ## Using Ray with Jupyter
 
