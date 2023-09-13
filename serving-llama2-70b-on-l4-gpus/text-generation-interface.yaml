@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm
+  template:
+    metadata:
+      labels:
+        app: llm
+    spec:
+      containers:
+      - name: llm
+        image: ghcr.io/huggingface/text-generation-inference:1.0.3
+        resources:
+          limits:
+            nvidia.com/gpu: 8
+        env:
+        - name: MODEL_ID
+          # meta-llama/Llama-2-70b-chat-hf
+          value: TheBloke/Llama-2-70B-chat-GPTQ
+        - name: NUM_SHARD
+          value: "8"
+        - name: QUANTIZE
+          value: gptq
+        - name: REVISION
+          value: gptq-4bit-128g-actorder_True
+        - name: GPTQ_BITS
+          value: "4"
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: l4-demo
+              key: HF_TOKEN
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+      volumes:
+         - name: dshm
+           emptyDir:
+              medium: Memory
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4

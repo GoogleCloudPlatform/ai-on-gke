@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm
+  template:
+    metadata:
+      labels:
+        app: llm
+      annotations:
+        kubectl.kubernetes.io/default-container: vllm
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/memory-limit: 400Mi
+        gke-gcsfuse/ephemeral-storage-limit: 30Gi
+    spec:
+      containers:
+      - name: vllm
+        image: $IMAGE
+        resources:
+          requests:
+            nvidia.com/gpu: 8
+        volumeMounts:
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /gcs-mount
+      serviceAccountName: l4-demo
+      volumes:
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: $BUCKET_NAME
+            mountOptions: "implicit-dirs"
