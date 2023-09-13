@@ -44,7 +44,7 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        -auto-approve || ( echo "false" > /workspace/use_result )
+        -auto-approve || ( echo "false" > /workspace/user_result )
         terraform destroy -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
@@ -58,7 +58,7 @@ steps:
       - '-c'
       - |
         gcloud container clusters delete cluster-$SHORT_SHA-$_PR_NUMBER --zone $_ZONE  --project $PROJECT_ID
-        if [[ $(cat /workspace/use_result) == "false"]] ; then 
+        if [[ $(cat /workspace/user_result) == "false"]] ; then 
           exit 1
         fi
     waitFor: ['tf apply user']
