@@ -35,3 +35,9 @@ variable "enable_tpu" {
   description = "Set to true to create TPU node pool"
   default     = false
 }
+
+variable "enable_fault_tolerance" {
+  type        = bool
+  description = "Set to true to create fault tolerant Ray cluster"
+  default     = false
+}

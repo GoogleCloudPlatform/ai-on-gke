@@ -17,5 +17,5 @@ resource "helm_release" "ray-cluster" {
   repository = "https://ray-project.github.io/kuberay-helm/"
   chart      = "ray-cluster"
   namespace  = var.namespace
-  values     = var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : [file("${path.module}/kuberay-values.yaml")]
+  values     = var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : (var.enable_fault_tolerance ? [file("${path.module}/kuberay-with-fault-tolerance.yaml")] : [file("${path.module}/kuberay-values.yaml")])
 }

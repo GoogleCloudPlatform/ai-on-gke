@@ -16,6 +16,22 @@ data "local_file" "fluentd_config_yaml" {
   filename = "${path.module}/config/fluentd_config.yaml"
 }
 
+data "local_file" "redis_config_map_yaml" {
+  filename = "${path.module}/redis-config/config-map.yaml"
+}
+
+data "local_file" "redis_service_yaml" {
+  filename = "${path.module}/redis-config/service.yaml"
+}
+
+data "local_file" "redis_deployment_yaml" {
+  filename = "${path.module}/redis-config/deployment.yaml"
+}
+
+data "local_file" "redis_secret_yaml" {
+  filename = "${path.module}/redis-config/secret.yaml"
+}
+
 resource "kubernetes_namespace" "ml" {
   metadata {
     name = var.namespace
@@ -26,3 +42,28 @@ resource "kubectl_manifest" "fluentd_config" {
   override_namespace = var.namespace
   yaml_body          = data.local_file.fluentd_config_yaml.content
 }
+
+resource "kubectl_manifest" "redis_config_map" {
+  count = var.enable_fault_tolerance ? 1 : 0 
+  override_namespace = var.namespace
+  yaml_body          = data.local_file.redis_config_map_yaml.content
+}
+
+resource "kubectl_manifest" "redis_secret" {
+  count = var.enable_fault_tolerance ? 1 : 0
+  override_namespace = var.namespace
+  yaml_body          = data.local_file.redis_secret_yaml.content
+}
+
+resource "kubectl_manifest" "redis_service" {
+  count = var.enable_fault_tolerance ? 1 : 0
+  override_namespace = var.namespace
+  yaml_body          = data.local_file.redis_service_yaml.content
+}
+
+resource "kubectl_manifest" "redis_deployment" {
+  count = var.enable_fault_tolerance ? 1 : 0
+  override_namespace = var.namespace
+  yaml_body          = data.local_file.redis_deployment_yaml.content
+}
+

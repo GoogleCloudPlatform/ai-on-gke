@@ -32,6 +32,7 @@ module "kubernetes" {
   source = "./modules/kubernetes"
 
   namespace = var.namespace
+  enable_fault_tolerance = var.enable_fault_tolerance
 }
 
 module "service_accounts" {
@@ -49,6 +50,7 @@ module "kuberay" {
   depends_on = [module.kubernetes]
   namespace  = var.namespace
   enable_tpu = var.enable_tpu
+  enable_fault_tolerance = var.enable_fault_tolerance
 }
 
 module "prometheus" {
