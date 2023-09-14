@@ -58,37 +58,28 @@ Create a file named `text-generation-interface.yaml` with the following content:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm
+  name: llama-2-70b
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: llm
+      app: llama-2-70b
   template:
     metadata:
       labels:
-        app: llm
+        app: llama-2-70b
     spec:
       containers:
-      - name: llm
+      - name: llama-2-70b
         image: ghcr.io/huggingface/text-generation-inference:1.0.3
         resources:
           limits:
             nvidia.com/gpu: 2
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 600
-          periodSeconds: 10
         env:
         - name: MODEL_ID
           value: meta-llama/Llama-2-70b-chat-hf
-          # value: TheBloke/Llama-2-70B-chat-GPTQ
         - name: NUM_SHARD
           value: "2"
-        - name: HOSTNAME
-          value: "0.0.0.0"
         - name: PORT 
           value: "8080"
         - name: QUANTIZE
