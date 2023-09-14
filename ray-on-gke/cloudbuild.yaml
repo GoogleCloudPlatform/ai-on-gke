@@ -1,6 +1,6 @@
 steps:
   - id: 'tf validate platform'
-    name: 'gcr.io/$PROJECT_ID/terraform'
+    name: 'gcr.io/$PROJECT_ID/terraform-test'
     script: |
       terraform init
       terraform validate
@@ -8,7 +8,7 @@ steps:
     waitFor: ['-']
 
   - id: 'tf apply platform'
-    name: 'gcr.io/$PROJECT_ID/terraform'
+    name: 'gcr.io/$PROJECT_ID/terraform-test'
     env: 
       - "KUBE_CONFIG_PATH=~/.kube/config"
     entrypoint: 'sh'
@@ -23,7 +23,7 @@ steps:
     waitFor: ['tf validate platform']
 
   - id: 'tf validate user'
-    name: 'gcr.io/$PROJECT_ID/terraform'
+    name: 'gcr.io/$PROJECT_ID/terraform-test'
     script: |
       terraform init
       terraform validate 
@@ -44,7 +44,7 @@ steps:
     waitFor: ['tf validate user']
 
   - id: 'tf apply user'
-    name: 'gcr.io/$PROJECT_ID/terraform'
+    name: 'gcr.io/$PROJECT_ID/terraform-test'
     # name: 'hashicorp/terraform:1.0.0'
     entrypoint: 'sh'
     args:
