@@ -13,7 +13,7 @@ spec:
         app: llama-2-70b
     spec:
       containers:
-      - name: llm
+      - name: llama-2-70b
         image: ghcr.io/huggingface/text-generation-inference:1.0.3
         resources:
           limits:

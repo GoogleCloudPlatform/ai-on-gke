@@ -1,4 +1,13 @@
 # Tutorial: Serving Llama 2 70b on GKE L4 GPUs
+Learn how to serve Llama 2 70b chat model on GKE using just 2 x L4 GPUs. For
+this post the text-generation-inference project is used for serving.
+
+### Prerequisites
+*   A terminal with `kubectl` and `gcloud` installed. Cloud Shell works great!
+*   L4 GPUs quota to be able to run additional 2 L4 GPUs
+*   Request access to Meta Llama models by submitting the [request access form](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)
+*   Agree to the Llama 2 terms on the [Llama 2 70B Chat HF](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf) model in HuggingFace
+
 Create a GKE cluster:
 ```bash
 gcloud container clusters create l4-demo --location ${REGION} \
@@ -31,6 +40,18 @@ gcloud container node-pools create g2-standard-24 --cluster l4-demo \
   --node-locations $REGION-a,$REGION-b --region $REGION --spot
 ```
 
+Hugging Face requires authentication to download the [Llama-2-70b-chat-hf](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf) model, which means an access token is required to download the model.
+
+You can get your access token from [huggingface.com > Settings > Access Tokens](https://huggingface.co/settings/tokens). Afterwards, set your HuggingFace token as an environment variable:
+```bash
+export HF_TOKEN=<paste-your-own-token>
+```
+
+Create a Secret to store your HuggingFace token which will be used by the K8s job:
+```bash
+kubectl create secret generic l4-demo --from-literal="HF_TOKEN=$HF_TOKEN"
+```
+
 Create a file named `text-generation-interface.yaml` with the following content:
 [embedmd]:# (text-generation-interface.yaml)
 ```yaml
@@ -54,12 +75,20 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 2
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 600
+          periodSeconds: 10
         env:
         - name: MODEL_ID
           value: meta-llama/Llama-2-70b-chat-hf
           # value: TheBloke/Llama-2-70B-chat-GPTQ
         - name: NUM_SHARD
           value: "2"
+        - name: HOSTNAME
+          value: "0.0.0.0"
         - name: PORT 
           value: "8080"
         - name: QUANTIZE
@@ -88,4 +117,26 @@ spec:
 Create the deployment for serving:
 ```bash
 kubectl apply -f text-generation-interface.yaml
+```
+Check the logs and make sure there are no errors:
+```bash
+kubectl logs -l app=llama-2-70b
+```
+
+Now it's time to test it out by sending it some prompts.
+Setup port forwarding to the inferencing server:
+```bash
+kubectl port-forward deployment/llama-2-70b 8080:8080
+```
+
+Now you can chat with your model through a simple curl:
+```bash
+curl 127.0.0.1:8080/generate -X POST \
+    -H 'Content-Type: application/json' \
+    --data-binary @- <<EOF
+{
+    "inputs": "[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\nHow to deploy a container on K8s?[/INST]",
+    "parameters": {"max_new_tokens": 400}
+}
+EOF
 ```
