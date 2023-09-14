@@ -68,7 +68,7 @@ resource "google_container_node_pool" "cpu_pool" {
   }
 
   node_config {
-    machine_type = "n1-standard-32"
+    machine_type = "n1-standard-16"
   }
 }
 
