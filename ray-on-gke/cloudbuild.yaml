@@ -5,7 +5,8 @@ steps:
     args:
       - '-c'
       - |
-        echo $REVISION_ID
+        echo $_PR_NUMBER
+
   #   dir: 'ray-on-gke/platform/'
   #   waitFor: ['-']
 
@@ -80,3 +81,4 @@ steps:
 substitutions:
   _ZONE: us-central1-c
   _USER_NAME: github
+  _PR_NUMBER: "0"
