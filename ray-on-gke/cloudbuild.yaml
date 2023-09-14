@@ -1,5 +1,5 @@
 steps:
-  - id: 'tf validate platform'
+  - id: 'validate platform'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
       terraform init
@@ -18,9 +18,9 @@ steps:
         -var=region=$_ZONE -auto-approve \
         || ( terraform destroy -auto-approve && exit 1 )
     dir: 'ray-on-gke/platform/'
-    waitFor: ['tf validate platform']
+    waitFor: ['validate platform']
 
-  - id: 'tf validate user'
+  - id: 'validate user'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
       terraform init
@@ -28,18 +28,24 @@ steps:
     dir: 'ray-on-gke/user/'
     waitFor: ['create gke cluster']
 
+  - id: 'get kube config'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'sh'
+    args: 
+    - '-c'
+    - |
+      gcloud container clusters get-credentials \
+      cluster-$SHORT_SHA-$_PR_NUMBER \
+      --zone $_ZONE \
+      --project $PROJECT_ID 
+    waitFor: ['validate user']
+  
   - id: 'create kube ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
-    env:
-      - USE_GKE_GCLOUD_AUTH_PLUGIN=True
     args:
       - '-c'
       - |
-        gcloud container clusters get-credentials \
-        cluster-$SHORT_SHA-$_PR_NUMBER \
-        --location $_ZONE \
-        --project $PROJECT_ID
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
@@ -51,7 +57,7 @@ steps:
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve
     dir: 'ray-on-gke/user/'
-    waitFor: ['tf validate user']
+    waitFor: ['get kube config']
 
   - id: 'clean gke cluster'
     name: 'gcr.io/cloud-builders/gcloud'
