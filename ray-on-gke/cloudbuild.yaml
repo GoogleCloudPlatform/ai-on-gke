@@ -31,9 +31,7 @@ steps:
     waitFor: ['tf apply platform']
 
   - id: 'get kube config'
-    name: 'gcr.io/cloud-builders/gcloud'
-    # env:
-    #   - USE_GKE_GCLOUD_AUTH_PLUGIN=False
+    name: 'gcr.io/$PROJECT_ID/terraform'
     args:
       - '-c'
       - |
