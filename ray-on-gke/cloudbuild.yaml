@@ -4,11 +4,13 @@ steps:
     script: |
       terraform init
       terraform validate
-    dir: 'ray-on-gke/platform/'
+    dir: 'ray-on-gke/gke-platform/'
     waitFor: ['-']
 
   - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
+    env:
+      - "KUBE_LOAD_CONFIG_FILE=false"
     entrypoint: 'sh'
     args:
       - '-c'
@@ -25,7 +27,7 @@ steps:
     script: |
       terraform init
       terraform validate 
-    dir: 'ray-on-gke/user/'
+    dir: 'ray-on-gke/ray-on-gke/'
     waitFor: ['create gke cluster']
 
   - id: 'get kube config'
