@@ -49,7 +49,7 @@ provider "kubectl" {
   #   args        = []
   #   command     = "gke-gcloud-auth-plugin"
   # }
-  apply_retry_count = 15
+  load_config_file = true
 }
 
 provider "helm" {
