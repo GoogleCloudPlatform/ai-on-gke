@@ -32,13 +32,7 @@ steps:
 
   - id: 'get kube config'
     name: 'gcr.io/$PROJECT_ID/terraform'
-    args:
-      - '-c'
-      - |
-        gcloud container clusters get-credentials \
-        cluster-$SHORT_SHA-$_PR_NUMBER \
-        --location $_ZONE \
-        --project $PROJECT_ID
+    args: [ 'container', 'clusters', 'get-credentials', 'cluster-$SHORT_SHA-$_PR_NUMBER', '--zone', '$_ZONE', '--project', '$PROJECT_ID' ]
     waitFor: ['tf validate user']
 
   - id: 'tf apply user'
