@@ -4,7 +4,7 @@ steps:
     script: |
       terraform init
       terraform validate
-    dir: 'ai-on-gke/gke-platform/'
+    dir: 'gke-platform/'
     waitFor: ['-']
 
   - id: 'create gke cluster'
@@ -19,7 +19,7 @@ steps:
         -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
         -var=region=$_ZONE -auto-approve \
         || ( terraform destroy -auto-approve && exit 1 )
-    dir: 'ai-on-gke/gke-platform/'
+    dir: 'gke-platform/'
     waitFor: ['validate platform']
 
   - id: 'validate user'
@@ -27,7 +27,7 @@ steps:
     script: |
       terraform init
       terraform validate 
-    dir: 'ai-on-gke/ray-on-gke/'
+    dir: 'ray-on-gke/'
     waitFor: ['create gke cluster']
 
   - id: 'get kube config'
@@ -58,7 +58,7 @@ steps:
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve
-    dir: 'ai-on-gke/ray-on-gke/'
+    dir: 'ray-on-gke/'
     waitFor: ['get kube config']
 
   - id: 'clean gke cluster'
