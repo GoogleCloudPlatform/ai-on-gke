@@ -16,7 +16,7 @@ steps:
       - '-c'
       - |
         terraform apply -var=project_id=$PROJECT_ID \
-        -var=cluster_name=cluster-$SHORT_SHA-$_PR_NUMBER \
+        -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=region=$_ZONE -auto-approve \
         || ( terraform destroy -auto-approve && exit 1 )
     dir: 'gke-platform/'
@@ -37,7 +37,7 @@ steps:
     - '-c'
     - |
       gcloud container clusters get-credentials \
-      cluster-$SHORT_SHA-$_PR_NUMBER \
+      ray-$SHORT_SHA-$_PR_NUMBER-cluster \
       --zone $_ZONE \
       --project $PROJECT_ID 
     waitFor: ['validate user']
@@ -67,7 +67,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud container clusters delete cluster-$SHORT_SHA-$_PR_NUMBER --zone $_ZONE  --project $PROJECT_ID --quiet
+        gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
 
         if [[ $(cat /workspace/user_result) == "false"]] ; then 
           exit 1
