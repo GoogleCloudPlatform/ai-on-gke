@@ -30,7 +30,7 @@ Preinstall the following on your computer:
 
 1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
-2. `cd ai-on-gke/jupyter-on-gke/jupyterhub`
+2. `cd ai-on-gke/jupyter-on-gke/`
 
 3. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
 Note:
@@ -142,7 +142,7 @@ As the description for each profiles explains, each profiles uses a different re
 
 You can change the image used by these profiles, change the resources, and add specific hooks to the profiles
 
-Within the [`config.yaml`](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/user/jupyterhub/jupyter_config/config.yaml), the profiles sit under the `singleuser` key:
+Within the [`config.yaml`](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config.yaml), the profiles sit under the `singleuser` key:
 
 ``` yaml
 singleuser:
