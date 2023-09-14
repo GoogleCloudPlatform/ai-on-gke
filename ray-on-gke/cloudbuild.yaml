@@ -9,6 +9,8 @@ steps:
 
   - id: 'tf apply platform'
     name: 'gcr.io/$PROJECT_ID/terraform-test'
+    env:
+      - "USE_GKE_GCLOUD_AUTH_PLUGIN=True"
     entrypoint: 'sh'
     args:
       - '-c'
