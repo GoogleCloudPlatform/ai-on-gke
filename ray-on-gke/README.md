@@ -33,8 +33,8 @@ Preinstall the following on your computer:
 4. Run `terraform init`
 
 5. Find the name and location of the GKE cluster you want to use.
-   Run `gcloud container clusters list --project=<your GCP project> to see all the available clusters.
-   Note: If you created the GKE cluster via the ai-on-gke/gke-platform repo, you can get the cluster info from `ai-on-gke/gke-platform/variables.tf`
+   Run `gcloud container clusters list --project=<your GCP project>` to see all the available clusters.
+   _Note: If you created the GKE cluster via the ai-on-gke/gke-platform repo, you can get the cluster info from `ai-on-gke/gke-platform/variables.tf`_
 
 6. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
    Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
