@@ -44,7 +44,11 @@ provider "kubectl" {
   cluster_ca_certificate = base64decode(
     data.google_container_cluster.ml_cluster.master_auth[0].cluster_ca_certificate
   )
-  # load_config_file = false
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = []
+    command     = "gke-gcloud-auth-plugin"
+  }
 }
 
 provider "helm" {
