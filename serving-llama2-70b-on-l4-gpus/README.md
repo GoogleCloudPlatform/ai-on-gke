@@ -131,3 +131,5 @@ curl 127.0.0.1:8080/generate -X POST \
 }
 EOF
 ```
+
+There are also API docs available at [http://localhost:8080/docs](http://localhost:8080/docs).
