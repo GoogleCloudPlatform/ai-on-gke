@@ -9,8 +9,6 @@ steps:
 
   - id: 'tf apply platform'
     name: 'gcr.io/$PROJECT_ID/terraform-test'
-    env: 
-      - "KUBE_CONFIG_PATH=~/.kube/config"
     entrypoint: 'sh'
     args:
       - '-c'
