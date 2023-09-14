@@ -22,6 +22,16 @@ gcloud container clusters create l4-demo --location ${REGION} \
   --enable-private-nodes  \
   --master-ipv4-cidr 172.16.0.32/28
 
+gcloud container node-pools create g2-standard-48 --cluster l4-demo \
+  --accelerator type=nvidia-l4,count=4,gpu-driver-version=latest \
+  --machine-type g2-standard-48 \
+  --ephemeral-storage-local-ssd=count=4 \
+  --enable-autoscaling --enable-image-streaming \
+  --num-nodes=0 --min-nodes=0 --max-nodes=3 \
+  --shielded-secure-boot \
+  --shielded-integrity-monitoring \
+  --node-locations $REGION-a,$REGION-b --region $REGION --spot
+
 gcloud container node-pools create g2-standard-96 --cluster l4-demo \
   --accelerator type=nvidia-l4,count=8,gpu-driver-version=latest \
   --machine-type g2-standard-96 \

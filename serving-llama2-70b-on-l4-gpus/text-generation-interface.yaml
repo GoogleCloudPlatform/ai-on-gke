@@ -17,19 +17,17 @@ spec:
         image: ghcr.io/huggingface/text-generation-inference:1.0.3
         resources:
           limits:
-            nvidia.com/gpu: 8
+            nvidia.com/gpu: 2
         env:
         - name: MODEL_ID
-          # meta-llama/Llama-2-70b-chat-hf
-          value: TheBloke/Llama-2-70B-chat-GPTQ
+          value: meta-llama/Llama-2-70b-chat-hf
+          # value: TheBloke/Llama-2-70B-chat-GPTQ
         - name: NUM_SHARD
-          value: "8"
+          value: "2"
+        - name: PORT 
+          value: "8080"
         - name: QUANTIZE
-          value: gptq
-        - name: REVISION
-          value: gptq-4bit-128g-actorder_True
-        - name: GPTQ_BITS
-          value: "4"
+          value: bitsandbytes-nf4
         - name: HUGGING_FACE_HUB_TOKEN
           valueFrom:
             secretKeyRef:
@@ -38,9 +36,14 @@ spec:
         volumeMounts:
           - mountPath: /dev/shm
             name: dshm
+          - mountPath: /data
+            name: data
       volumes:
          - name: dshm
            emptyDir:
               medium: Memory
+         - name: data
+           hostPath:
+            path: /mnt/stateful_partition/kube-ephemeral-ssd/llama-data
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-l4
