@@ -49,7 +49,6 @@ provider "kubectl" {
   #   args        = []
   #   command     = "gke-gcloud-auth-plugin"
   # }
-  load_config_file = true
 }
 
 provider "helm" {
