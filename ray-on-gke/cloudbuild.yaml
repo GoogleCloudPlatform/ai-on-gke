@@ -6,6 +6,14 @@ steps:
       terraform validate
     dir: 'gke-platform/'
     waitFor: ['-']
+  
+  - id: 'validate user'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init
+      terraform validate 
+    dir: 'ray-on-gke/user/'
+    waitFor: ['-']
 
   - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -21,14 +29,6 @@ steps:
         || ( terraform destroy -auto-approve && exit 1 )
     dir: 'gke-platform/'
     waitFor: ['validate platform', 'validate user']
-
-  - id: 'validate user'
-    name: 'gcr.io/$PROJECT_ID/terraform'
-    script: |
-      terraform init
-      terraform validate 
-    dir: 'ray-on-gke/user/'
-    waitFor: ['-']
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
