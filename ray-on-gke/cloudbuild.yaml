@@ -27,7 +27,7 @@ steps:
     script: |
       terraform init
       terraform validate 
-    dir: 'ray-on-gke/'
+    dir: 'ray-on-gke/user/'
     waitFor: ['create gke cluster']
 
   - id: 'get kube config'
@@ -58,7 +58,7 @@ steps:
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve
-    dir: 'ray-on-gke/'
+    dir: 'ray-on-gke/user/'
     waitFor: ['get kube config']
 
   - id: 'clean gke cluster'
