@@ -1,11 +1,6 @@
-
-```
-export PROJECT_ID=$(gcloud config get project)
-export REGION=us-central1
-export BUCKET_NAME=${PROJECT_ID}-llama-l4
-export SERVICE_ACCOUNT="l4-demo@${PROJECT_ID}.iam.gserviceaccount.com"
-export IMAGE=gcr.io/$PROJECT_ID/vllm
-
+# Tutorial: Serving Llama 2 70b on GKE L4 GPUs
+Create a GKE cluster:
+```bash
 gcloud container clusters create l4-demo --location ${REGION} \
   --workload-pool ${PROJECT_ID}.svc.id.goog \
   --enable-image-streaming --enable-shielded-nodes \
@@ -21,26 +16,76 @@ gcloud container clusters create l4-demo --location ${REGION} \
   --enable-ip-alias \
   --enable-private-nodes  \
   --master-ipv4-cidr 172.16.0.32/28
+```
 
-gcloud container node-pools create g2-standard-48 --cluster l4-demo \
-  --accelerator type=nvidia-l4,count=4,gpu-driver-version=latest \
-  --machine-type g2-standard-48 \
-  --ephemeral-storage-local-ssd=count=4 \
+Create a nodepool where each VM has 2 x L4 GPU:
+```bash
+gcloud container node-pools create g2-standard-24 --cluster l4-demo \
+  --accelerator type=nvidia-l4,count=2,gpu-driver-version=latest \
+  --machine-type g2-standard-24 \
+  --ephemeral-storage-local-ssd=count=2 \
   --enable-autoscaling --enable-image-streaming \
   --num-nodes=0 --min-nodes=0 --max-nodes=3 \
   --shielded-secure-boot \
   --shielded-integrity-monitoring \
   --node-locations $REGION-a,$REGION-b --region $REGION --spot
+```
 
-gcloud container node-pools create g2-standard-96 --cluster l4-demo \
-  --accelerator type=nvidia-l4,count=8,gpu-driver-version=latest \
-  --machine-type g2-standard-96 \
-  --ephemeral-storage-local-ssd=count=8 \
-  --enable-autoscaling --enable-image-streaming \
-  --num-nodes=0 --min-nodes=0 --max-nodes=3 \
-  --shielded-secure-boot \
-  --shielded-integrity-monitoring \
-  --node-locations $REGION-a,$REGION-b --region $REGION --spot
+Create a file named `text-generation-interface.yaml` with the following content:
+[embedmd]:# (text-generation-interface.yaml)
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm
+  template:
+    metadata:
+      labels:
+        app: llm
+    spec:
+      containers:
+      - name: llm
+        image: ghcr.io/huggingface/text-generation-inference:1.0.3
+        resources:
+          limits:
+            nvidia.com/gpu: 2
+        env:
+        - name: MODEL_ID
+          value: meta-llama/Llama-2-70b-chat-hf
+          # value: TheBloke/Llama-2-70B-chat-GPTQ
+        - name: NUM_SHARD
+          value: "2"
+        - name: PORT 
+          value: "8080"
+        - name: QUANTIZE
+          value: bitsandbytes-nf4
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: l4-demo
+              key: HF_TOKEN
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+          - mountPath: /data
+            name: data
+      volumes:
+         - name: dshm
+           emptyDir:
+              medium: Memory
+         - name: data
+           hostPath:
+            path: /mnt/stateful_partition/kube-ephemeral-ssd/llama-data
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+```
 
-gcloud builds submit -t $IMAGE .
+Create the deployment for serving:
+```bash
+kubectl apply -f text-generation-interface.yaml
 ```
