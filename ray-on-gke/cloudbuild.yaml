@@ -20,7 +20,7 @@ steps:
         -var=region=$_ZONE -auto-approve \
         || ( terraform destroy -auto-approve && exit 1 )
     dir: 'gke-platform/'
-    waitFor: ['validate platform']
+    waitFor: ['validate platform', 'validate user']
 
   - id: 'validate user'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -28,7 +28,7 @@ steps:
       terraform init
       terraform validate 
     dir: 'ray-on-gke/user/'
-    waitFor: ['create gke cluster']
+    waitFor: ['-']
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -40,9 +40,9 @@ steps:
       ray-$SHORT_SHA-$_PR_NUMBER-cluster \
       --zone $_ZONE \
       --project $PROJECT_ID 
-    waitFor: ['validate user']
+    waitFor: ['create gke cluster']
   
-  - id: 'create kube ray cluster'
+  - id: 'create ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
     args:
@@ -72,7 +72,7 @@ steps:
         if [[ $(cat /workspace/user_result) == "false"]] ; then 
           exit 1
         fi
-    waitFor: ['create kube ray cluster']
+    waitFor: ['create ray cluster']
 
 substitutions:
   _ZONE: us-central1-c
