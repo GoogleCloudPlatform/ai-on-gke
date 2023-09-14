@@ -28,7 +28,7 @@ steps:
       terraform init
       terraform validate 
     dir: 'ray-on-gke/user/'
-    waitFor: ['tf apply platform']
+    waitFor: ['-']
 
   - id: 'get kube config'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -48,10 +48,6 @@ steps:
     args:
       - '-c'
       - |
-        # gcloud container clusters get-credentials \
-        # cluster-$SHORT_SHA-$_PR_NUMBER \
-        # --location $_ZONE \
-        # --project $PROJECT_ID
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \

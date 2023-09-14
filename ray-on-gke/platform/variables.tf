@@ -15,13 +15,13 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<your project>"
+  default     = "yiyingzhang-gke-dev"
 }
 
 variable "region" {
   type        = string
   description = "GCP project region or zone"
-  default     = "us-central1"
+  default     = "us-central1-c"
 }
 
 variable "cluster_name" {
