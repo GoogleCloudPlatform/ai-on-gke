@@ -5,7 +5,6 @@ metadata:
   annotations:
     gke-gcsfuse/volumes: "true"
 spec:
-  serviceAccount: sax-sa
   restartPolicy: Never
   initContainers:
   - name: pull-demo
