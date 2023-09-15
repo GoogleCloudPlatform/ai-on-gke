@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bert-deployment
+spec:
+  selector:
+    matchLabels:
+      app: tf-bert-server
+  replicas: 3
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+      labels:
+        app: tf-bert-server
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 1x1                    # target topology
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice  # target version
+      containers:
+      - name: serve-bert
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/tf-serving-tpu:2.13.0
+        securityContext:
+          privileged: true
+        env:
+          - name: MODEL_NAME
+            value: 'bert'
+        volumeMounts:
+          - mountPath: "/models/"
+            name: bert-external-storage
+        ports:
+        - containerPort: 8500
+        - containerPort: 8501
+        resources:
+          requests:
+            google.com/tpu: 1
+          limits:
+            google.com/tpu: 1
+      volumes:
+        - name: bert-external-storage
+          persistentVolumeClaim:
+            claimName: external-storage-pvc

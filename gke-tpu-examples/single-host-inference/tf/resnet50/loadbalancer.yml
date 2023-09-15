@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: resnet-service
+spec:
+  type: LoadBalancer
+  ports:
+  - name: resnet-grpc
+    port: 8500
+    protocol: TCP
+    targetPort: 8500
+  - name: resnet-http
+    port: 8501
+    protocol: TCP
+    targetPort: 8501
+  selector:
+    app: resnet-server
