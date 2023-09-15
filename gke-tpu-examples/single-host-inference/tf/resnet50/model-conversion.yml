@@ -18,7 +18,8 @@ spec:
     - -c
     - |
       cd /tmp/
-      gsutil -m cp -r "gs://BUCKET_NAME/single-host-inference/tf/resnet50" .
+      git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git
+      cp -r ai-on-gke/gke-tpu-examples/single-host-inference/tf/resnet50 .
       echo got files for the demo!
   - name: export-resnet
     image: python:3.10
