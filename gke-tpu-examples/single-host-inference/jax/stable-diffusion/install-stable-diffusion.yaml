@@ -17,7 +17,8 @@ spec:
     - -c
     - |
       cd /tmp/
-      gsutil -m cp -r "gs://BUCKET_NAME/single-host-inference/jax" .
+      git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git
+      cp -r ai-on-gke/gke-tpu-examples/single-host-inference/jax .
       echo got jax stable-diffusion resources
   - name: export-stable-diffusion
     image: python:3.10
