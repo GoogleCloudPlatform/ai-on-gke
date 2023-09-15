@@ -5,7 +5,7 @@ We’ll walk through fine tuning a Llama 2 7B model using GKE using 8 x L4 GPUs.
 Let’s get started and finetune Llama 2 7B on the [dell-research-harvard/AmericanStories](https://huggingface.co/datasets/dell-research-harvard/AmericanStories) dataset using GKE. You will get to do the following:
 
 *   Create a GKE cluster with an autoscaling L4 GPU nodepool
-*   Run a K8s Job to download Llama 2 7B and finetune using L4 GPUs 
+*   Run a Kubernetes Job to download Llama 2 7B and finetune using L4 GPUs
 
 
 ![architecture](image.png "architecture")
@@ -72,9 +72,9 @@ gcloud container node-pools create g2-standard-96 --cluster l4-demo \
 
 NOTE: The `--node-locations` flag might have to be adjusted based on which region you choose. Please take a look at which zones the [L4 GPUs are available](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones) if you change the region to something other than `us-central1`.
 
-The nodepool has been created and is scaled down to 0 nodes. So you are not paying for any GPUs until you start launching K8s Pods that request GPUs.
+The nodepool has been created and is scaled down to 0 nodes. So you are not paying for any GPUs until you start launching Kubernetes Pods that request GPUs.
 
-## Run a K8s job to finetune Llama 2 7B
+## Run a Kubernetes job to finetune Llama 2 7B
 
 Finetuning requires a base model and a dataset. For this post, the [dell-research-harvard/AmericanStories](https://huggingface.co/datasets/dell-research-harvard/AmericanStories) dataset will be used to finetune the [Llama 2 7B](https://huggingface.co/meta-llama/Llama-2-7b-hf) base model. GCS will be used for storing the base model. GKE with GCSFuse is used to transparently save the finetuned model to GCS. This provides a cost efficient way to store and serve the model and only pay for the storage used by the model.
 
@@ -86,7 +86,7 @@ Create a GCS bucket to store our models:
 gcloud storage buckets create gs://${BUCKET_NAME}
 ```
 
-The model loading Job will write to GCS. So let’s create a Google Service Account that has read and write permissions to the GCS bucket. Then create a K8s Service Account named `l4-demo` that is able to use the Google Service Account.
+The model loading Job will write to GCS. So let’s create a Google Service Account that has read and write permissions to the GCS bucket. Then create a Kubernetes Service Account named `l4-demo` that is able to use the Google Service Account.
 
 To do this, first create a new Google Service Account:
 ```bash
@@ -99,14 +99,14 @@ gcloud storage buckets add-iam-policy-binding gs://${BUCKET_NAME} \
   --member="serviceAccount:${SERVICE_ACCOUNT}" --role=roles/storage.admin
 ```
 
-Allow the K8s Service Account `l4-demo` in the `default` namespace to use the Google Service Account:
+Allow the Kubernetes Service Account `l4-demo` in the `default` namespace to use the Google Service Account:
 ```bash
 gcloud iam service-accounts add-iam-policy-binding ${SERVICE_ACCOUNT} \
   --role roles/iam.workloadIdentityUser \
   --member "serviceAccount:${PROJECT_ID}.svc.id.goog[default/l4-demo]"
 ```
 
-Create a new K8s Service Account:
+Create a new Kubernetes Service Account:
 ```bash
 kubectl apply -f - << EOF
 apiVersion: v1
@@ -126,12 +126,12 @@ You can get your access token from [huggingface.com > Settings > Access Tokens](
 export HF_TOKEN=<paste-your-own-token>
 ```
 
-Create a Secret to store your HuggingFace token which will be used by the K8s job:
+Create a Secret to store your HuggingFace token which will be used by the Kubernetes job:
 ```bash
 kubectl create secret generic l4-demo --from-literal="HF_TOKEN=$HF_TOKEN"
 ```
 
-Run a K8s Job to download the the Llama 2 7B model to the bucket which is mounted to the K8s Pod:
+Run a Kubernetes Job to download the the Llama 2 7B model to the bucket which is mounted to the Kubernetes Pod:
 ```bash
 kubectl apply -f - << EOF
 apiVersion: batch/v1
