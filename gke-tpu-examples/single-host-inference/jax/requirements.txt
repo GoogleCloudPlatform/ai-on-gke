@@ -1,0 +1,7 @@
+requests
+numpy
+tensorflow
+pillow
+tensorflow-serving-api
+transformers
+diffusers

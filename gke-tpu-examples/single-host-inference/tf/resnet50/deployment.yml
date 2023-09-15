@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resnet-deployment
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: resnet-server
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+      labels:
+        app: resnet-server
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 1x1
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice # target version
+      hostNetwork: false
+      restartPolicy: Always
+      containers:
+      - name: myresnet
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/tf-serving-tpu:2.13.0
+        env:
+        - name: MODEL_NAME
+          value: resnet
+        ports:
+        - containerPort: 8500
+        - containerPort: 8501
+        volumeMounts:
+          - mountPath: /models/
+            name: resnet50-external-storage
+            readOnly: true
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            google.com/tpu: 1
+          limits:
+            google.com/tpu: 1
+      volumes:
+        - name: resnet50-external-storage
+          persistentVolumeClaim:
+            claimName: external-storage-pvc
+            readOnly: true

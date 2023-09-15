@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: densenet161-service
+spec:
+  type: LoadBalancer
+  ports:
+  - name: densenet161-http-inference
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: densenet161-http-management
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  - name: densenet161-http-metrics
+    port: 8082
+    protocol: TCP
+    targetPort: 8082
+  selector:
+    app: densenet161-server
