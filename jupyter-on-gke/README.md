@@ -10,6 +10,7 @@ We've also included some example notebooks (`ai-on-gke/ray-on-gke/example_notebo
 `ai-on-gke/ray-on-gke/README.md` to install a Ray cluster.
 
 This module deploys the following resources, once per user:
+
 * JupyterHub deployment
 * User namespace
 * Kubernetes service accounts
@@ -17,8 +18,9 @@ This module deploys the following resources, once per user:
 ## Installation
 
 Preinstall the following on your computer:
+
 * Kubectl
-* Terraform 
+* Terraform
 * Helm
 * Gcloud
 
@@ -49,6 +51,30 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
 
 7. Run `terraform apply`
 
+### Authentication (Enabled by Default)
+
+> **_NOTE:_** To disable GCP IAP authentication, set the `add_auth` boolean in variables.tf to `false` and change the image Jupyterhub is using.
+
+1. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
+
+    ```cmd
+    gcloud compute backend-services list --project=%PROJECT_ID%
+    ```
+
+    You can describe the service to check which service is connected to `proxy-public` using:
+
+    ```cmd
+    gcloud compute backend-services describe SERVICE_NAME --project=%PROJECT_ID% --global
+    ```
+
+2. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
+
+3. Re-run `terraform apply`
+
+4. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
+
+5. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
+
 ## Using Ray with Jupyter
 
 1. Run `kubectl get services -n <namespace>`. The namespace is the user name that you specified above.
@@ -62,25 +88,27 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
 4. The Ray cluster is available at `ray://example-cluster-kuberay-head-svc:10001`. To access the cluster, you can open one of the sample notebooks under `example_notebooks` (via `File` -> `Open from URL` in the Jupyter notebook window and use the raw file URL from GitHub) and run through the example. Ex url: https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/ray-on-gke/example_notebooks/gpt-j-online.ipynb
 
 5. To use the Ray dashboard, run the following command to port-forward:
-```
+
+```cmd
 kubectl port-forward -n <namespace> service/example-cluster-kuberay-head-svc 8265:8265
 ```
 
 And then open the dashboard using the following URL:
-```
+
+```cmd
 http://localhost:8265
 ```
 
 ## Securing Your Cluster Endpoints
 
 For demo purposes, this repo creates a public IP for the Jupyter notebook with basic dummy authentication. To secure your cluster, it is *strong recommended* to replace
-this with your own secure endpoints. 
+this with your own secure endpoints.
 
 For more information, please take a look at the following links:
+
 * https://cloud.google.com/iap/docs/enabling-kubernetes-howto
 * https://cloud.google.com/endpoints/docs/openapi/get-started-kubernetes-engine
 * https://jupyterhub.readthedocs.io/en/stable/tutorial/getting-started/authenticators-users-basics.html
-
 
 ## Running GPT-J-6B
 
@@ -89,19 +117,20 @@ This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/ma
 1. Open the `gpt-j-online.ipynb` notebook under `ai-on-gke/ray-on-gke/example_notebooks`.
 
 2. Open a terminal in the Jupyter session and install Ray AIR:
-```
-pip install ray[air]
-```
+
+    ```cmd
+    pip install ray[air]
+    ```
 
 3. Run through the notebook cells. You can change the prompt in the last cell:
-```
-prompt = (
-     ## Input your own prompt here
-)
-```
+
+    ```cmd
+    prompt = (
+        ## Input your own prompt here
+    )
+    ```
 
 4. This should output a generated text response.
-
 
 ## Logging and Monitoring
 
@@ -110,14 +139,16 @@ and Managed Prometheus for monitoring. To see your Ray cluster logs:
 
 1. Open Cloud Console and open Logging
 2. If using Jupyter notebook for job submission, use the following query parameters:
-```
-resource.type="k8s_container"
-resource.labels.cluster_name=%CLUSTER_NAME%
-resource.labels.pod_name=%RAY_HEAD_POD_NAME%
-resource.labels.container_name="fluentbit"
-```
+
+    ```log explorer
+    resource.type="k8s_container"
+    resource.labels.cluster_name=%CLUSTER_NAME%
+    resource.labels.pod_name=%RAY_HEAD_POD_NAME%
+    resource.labels.container_name="fluentbit"
+    ```
 
 To see monitoring metrics:
+
 1. Open Cloud Console and open Metrics Explorer
 2. In "Target", select "Prometheus Target" and then "Ray".
 3. Select the metric you want to view, and then click "Apply".
