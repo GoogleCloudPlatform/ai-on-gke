@@ -3,7 +3,7 @@
 We’ll walk through fine-tuning a Llama 2 7B model using GKE using 8 x L4 GPUs. L4 GPUs are suitable for many use cases beyond serving models. We will demonstrate how the L4 GPU is a great option for fine tuning LLMs, at a fraction of the cost of using a higher end GPU.
 
 Let’s get started and fine-tune Llama 2 7B on the [dell-research-harvard/AmericanStories](https://huggingface.co/datasets/dell-research-harvard/AmericanStories) dataset using GKE.
-For fine-tuning, Parameter Efficient Fine Tuning (PEFT) and LoRA is used so fine-tuning is posible
+Parameter Efficient Fine Tuning (PEFT) and LoRA is used so fine-tuning is posible
 on GPUs with less GPU memory. 
 
 As part of this tutorial, you will get to do the following:
@@ -24,6 +24,11 @@ As part of this tutorial, you will get to do the following:
 ## Creating the GKE cluster with L4 nodepools
 Let’s start by setting a few environment variables that will be used throughout this post. You should modify these variables to meet your environment and needs. 
 
+Download the code and files used throughout the tutorial:
+```bash
+git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+cd ai-on-gke/tutorials/finetuning-llama-7b-on-l4
+```
 
 Run the following commands to set the env variables and make sure to replace `<my-project-id>`:
 
@@ -33,10 +38,9 @@ export PROJECT_ID=$(gcloud config get project)
 export REGION=us-central1
 export BUCKET_NAME=${PROJECT_ID}-llama-l4
 export SERVICE_ACCOUNT="l4-demo@${PROJECT_ID}.iam.gserviceaccount.com"
-export IMAGE=gcr.io/${PROJECT_ID}/llama2-finetune
 ```
 
-Note: You might have to rerun the export commands if for some reason you reset your shell and the variables are no longer set. This can happen for example when your Cloud Shell disconnects.
+> Note: You might have to rerun the export commands if for some reason you reset your shell and the variables are no longer set. This can happen for example when your Cloud Shell disconnects.
 
 Create the GKE cluster by running:
 ```bash
@@ -47,17 +51,17 @@ gcloud container clusters create l4-demo --location ${REGION} \
   --enable-ip-alias \
   --node-locations=${REGION}-a \
   --workload-pool=${PROJECT_ID}.svc.id.goog \
+  --labels="ai-on-gke=l4-demo" \
   --addons GcsFuseCsiDriver
 ```
 
 (Optional) In environments where external IP addresses are not allowed you can add the following arguments to the create GKE cluster command:
 ```bash
   --no-enable-master-authorized-networks \
-    --enable-private-nodes  --master-ipv4-cidr 172.16.0.32/28
+  --enable-private-nodes  --master-ipv4-cidr 172.16.0.32/28
 ```
 
-Let’s create a nodepool for our finetuning which will use 8 L4 GPUs per VM:
-
+Let’s create a nodepool for our finetuning which will use 8 L4 GPUs per VM.
 Create the `g2-standard-96` nodepool by running:
 ```bash
 gcloud container node-pools create g2-standard-96 --cluster l4-demo \
@@ -70,7 +74,6 @@ gcloud container node-pools create g2-standard-96 --cluster l4-demo \
   --shielded-integrity-monitoring \
   --node-locations ${REGION}-a,${REGION}-b --region ${REGION}
 ```
-
 
 > Note: The `--node-locations` flag might have to be adjusted based on which region you choose. Please check which zones the [L4 GPUs are available](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones) if you change the region to something other than `us-central1`.
 
@@ -124,9 +127,10 @@ kubectl create secret generic l4-demo \
   --from-literal="HF_TOKEN=<paste-your-own-token>"
 ```
 
-Run a Kubernetes Job to download the the Llama 2 7B model to the bucket:
-```bash
-kubectl apply -f - << EOF
+Let's use Kubernetes Job to download the Llama 2 7B model from HuggingFace.
+The file `download-model.yaml` in this repo shows how to do this:
+[embedmd]:# (download-model.yaml)
+```yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -150,6 +154,7 @@ spec:
         - -c
         - |
           pip install huggingface_hub
+          mkdir -p /gcs-mount/llama2-7b
           python3 - << EOF
           from huggingface_hub import snapshot_download
           model_id="meta-llama/Llama-2-7b-hf"
@@ -159,7 +164,6 @@ spec:
           EOF
         imagePullPolicy: IfNotPresent
         env:
-        # kubectl create secret generic l4-demo --from-literal="HF_TOKEN=$HF_TOKEN"
         - name: HUGGING_FACE_HUB_TOKEN
           valueFrom:
             secretKeyRef:
@@ -174,10 +178,15 @@ spec:
         csi:
           driver: gcsfuse.csi.storage.gke.io
           volumeAttributes:
-            bucketName: $BUCKET_NAME
+            bucketName: ${BUCKET_NAME}
             mountOptions: "implicit-dirs"
-EOF
 ```
+
+Run the Kubernetes Job to download the the Llama 2 7B model to the bucket created previously:
+```bash
+envsubst < download-model.yaml | kubectl apply -f -
+```
+> Note: `envsubst` is used to replace `${BUCKET_NAME}` inside `download-model.yaml` with your own bucket.
 
 Give it a minute to start running, once up you can watch the logs of the job by running:
 ```bash
@@ -191,8 +200,10 @@ gcloud storage ls -l gs://$BUCKET_NAME/llama2-7b/
 
 Let’s write our finetuning job code by using the HuggingFace library for training.
 
-Create a file named `finetune.py` with the following content:
-```python
+The `fine-tune.py` file in this repo will be used to do the finetuning. Let's take
+a look what's inside:
+[embedmd]:# (fine-tune.py)
+```py
 from pathlib import Path
 from datasets import load_dataset, concatenate_datasets
 from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments, DataCollatorForLanguageModeling
@@ -280,80 +291,20 @@ gen_tokens = model.generate(
 print(tokenizer.batch_decode(gen_tokens)[0])
 ```
 
-Let’s review the high level of what we’ve included in `finetune.py`. First we load the base model from GCS using GCS Fuse. Then we load the dataset from HuggingFace. The finetuning uses PEFT which stands for Parameter-Efficient Fine-Tuning. It is a technique that allows you to fine tune an LLM using a smaller number of parameters, which makes it more efficient, flexible and less computationally expensive.
+Let’s review the high level of what we’ve included in `fine-tune.py`. First we load the base model from GCS using GCS Fuse. Then we load the dataset from HuggingFace. The finetuning uses PEFT which stands for Parameter-Efficient Fine-Tuning. It is a technique that allows you to fine tune an LLM using a smaller number of parameters, which makes it more efficient, flexible and less computationally expensive.
 
-The fine-tuned model initially are separate LoRA weights. In the `finetune.py` script, the base model and LoRA weights are merged
-so the fine-tuned model can be used as a standalone model. This does utilize more storage than needed,
-but in return you get better compatibility with different libraries for serving.
+The fine-tuned model initially are saved as separate LoRA weights. In the `fine-tune.py` script, the base model and LoRA weights are merged so the fine-tuned model can be used as a standalone model. This does utilize more storage than needed, but in return you get better compatibility with different libraries for serving.
 
-Next, create a container image that will run the `finetune.py`. Create a file named `Dockerfile` with the following content:
-```Dockerfile
-FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
-
-RUN apt-get update && \
-    apt-get -y --no-install-recommends install python3 python3-pip git && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install --no-cache-dir transformers peft datasets bitsandbytes protobuf scipy einops
-
-COPY finetune.py /finetune.py
-
-ENV PYTHONUNBUFFERED 1
-
-CMD python3 /finetune.py
-```
+Now we need to run the `fine-tune.py`` script inside a container that has all the depdencies. The container image at `samos123/fine-tune-example` includes the `fine-tune.py` script and all required depencies. Alternatively, you can build and publish the image yourself by using the `Dockerfile` in this repo.
 
 Verify your environment variables are still set correctly:
 ```bash
-echo "Image: $IMAGE"
 echo "Bucket: $BUCKET_NAME"
 ```
 
-Build and publish the image to Google Container Registry:
+Run the finetuning Job that uses the image you just published by running:
 ```bash
-gcloud builds submit -t $IMAGE .
-```
-
-Create a finetuning Job that uses the image you just published by running:
-```bash
-kubectl apply -f - << EOF
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: finetune-job
-  namespace: default
-spec:
-  backoffLimit: 2
-  template:
-    metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: finetuner
-        gke-gcsfuse/volumes: "true"
-        gke-gcsfuse/memory-limit: 400Mi
-        gke-gcsfuse/ephemeral-storage-limit: 30Gi
-    spec:
-      terminationGracePeriodSeconds: 60
-      containers:
-      - name: finetuner
-        image: $IMAGE
-        resources:
-          limits:
-            nvidia.com/gpu: 8
-        volumeMounts:
-        - name: gcs-fuse-csi-ephemeral
-          mountPath: /gcs-mount
-      serviceAccountName: l4-demo
-      volumes:
-      - name: gcs-fuse-csi-ephemeral
-        csi:
-          driver: gcsfuse.csi.storage.gke.io
-          volumeAttributes:
-            bucketName: $BUCKET_NAME
-            mountOptions: "implicit-dirs"
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-l4
-      restartPolicy: OnFailure
-EOF
+envsubst < fine-tune.yaml | kubectl apply -f -
 ```
 
 Verify that the file Job was created and that `$IMAGE` and `$BUCKET_NAME` got replaced with the correct values. A Pod should have been created, which you can verify by running:
@@ -374,3 +325,5 @@ gcloud storage ls -l gs://$BUCKET_NAME/llama2-7b-american-stories
 ```
 
 Congratulations! You have now successfully fine tuned a Llama 2 7B model on old American Stories from 1809 to 1815. Stay tuned for a follow up blog post on how to serve a HuggingFace model from GCS using GKE and GCSfuse. In the meantime you can take a look at the [Basaran project](https://github.com/hyperonym/basaran) for serving HuggingFace models.
+
+Want a helping hand? You can reach me 
