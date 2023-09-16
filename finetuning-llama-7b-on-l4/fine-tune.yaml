@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: finetune-job
+  namespace: default
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: finetuner
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/memory-limit: 400Mi
+        gke-gcsfuse/ephemeral-storage-limit: 30Gi
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: finetuner
+        image: samos123/fine-tune-example
+        resources:
+          limits:
+            nvidia.com/gpu: 8
+        volumeMounts:
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /gcs-mount
+      serviceAccountName: l4-demo
+      volumes:
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: $BUCKET_NAME
+            mountOptions: "implicit-dirs"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      restartPolicy: OnFailure
