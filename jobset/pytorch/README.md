@@ -23,7 +23,7 @@ Follow the [JobSet installation guide](https://github.com/kubernetes-sigs/jobset
 Run the command: 
 
 ```
-$ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/jobset/main/examples/pytorch/mnist.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/jobset/main/examples/pytorch/cnn-mnist/mnist.yaml
 
 jobset.jobset.x-k8s.io/pytorch created
 ```
