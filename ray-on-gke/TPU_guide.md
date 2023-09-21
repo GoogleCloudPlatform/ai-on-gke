@@ -74,20 +74,18 @@ If you are using multiple TPU hosts with JAX, you need to manually set JAX envir
 ```
 @ray.remote(resources={"google.com/tpu": 4})
 def get_hostname():
-    import socket
-    import time;
+    import time
     time.sleep(1)
-    return socket.gethostname()
+    return ray.util.get_node_ip_address()
 
 
 @ray.remote(resources={"google.com/tpu": 4})
 def init_tpu_env_from_ray(id_hostname_map):
     import os
-    import socket
-    import time;
+    import time
     
     time.sleep(1)
-    hostname = socket.gethostname()
+    hostname = ray.util.get_node_ip_address()
     worker_id = id_hostname_map[hostname]
     
     os.environ["TPU_WORKER_ID"] = str(worker_id)
@@ -103,6 +101,7 @@ def init_jax_from_ray(num_workers: int):
 
     result = [init_tpu_env_from_ray.remote(id_hostname_map) for _ in range(num_workers)]
     print(ray.get(result))
+
 
 init_jax_from_ray(num_workers=2)
 
