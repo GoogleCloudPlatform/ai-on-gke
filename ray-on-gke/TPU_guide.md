@@ -8,7 +8,7 @@ file.
 For more information about TPUs on GKE, see [this page](https://cloud.google.com/kubernetes-engine/docs/concepts/tpus).
 
 
-### Platform
+### Installing the GKE Platform
 
 1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
@@ -39,7 +39,7 @@ variable "enable_tpu" {
 
 7. Run `terraform apply`
 
-### User
+### Creating the Kuberay Cluster
 
 1. Get the GKE cluster name and location/region from `gke-platform/variables.tf`.
    Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
@@ -65,4 +65,48 @@ Install Jupyterhub according to the instructions in the [README](https://github.
 A basic JAX program can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/example_notebooks/jax-tpu.ipynb).
 
 For a more advanced workload running Stable Diffusion on TPUs, see [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/example_notebooks/stable-diffusion-tpu.ipynb).
+
+
+### Initializing JAX Environment
+
+If you are using multiple TPU hosts with JAX, you need to manually set JAX environment variables for `TPU_WORKER_ID` and `TPU_WORKER_HOSTNAMES` before initializing JAX. Sample code:
+
+```
+@ray.remote(resources={"google.com/tpu": 4})
+def get_hostname():
+    import socket
+    import time;
+    time.sleep(1)
+    return socket.gethostname()
+
+
+@ray.remote(resources={"google.com/tpu": 4})
+def init_tpu_env_from_ray(id_hostname_map):
+    import os
+    import socket
+    import time;
+    
+    time.sleep(1)
+    hostname = socket.gethostname()
+    worker_id = id_hostname_map[hostname]
+    
+    os.environ["TPU_WORKER_ID"] = str(worker_id)
+    os.environ["TPU_WORKER_HOSTNAMES"] = ",".join(list(id_hostname_map))
+
+    return "TPU_WORKER_ID: " + os.environ["TPU_WORKER_ID"] + " TPU_WORKER_HOSTNAMES: " + os.environ["TPU_WORKER_HOSTNAMES"]
+
+
+def init_jax_from_ray(num_workers: int):
+    results = ray.get([get_hostname.remote() for x in range(num_workers)])
+    id_hostname_map = {
+        hostname: worker_id for worker_id, hostname in enumerate(set(results))}
+
+    result = [init_tpu_env_from_ray.remote(id_hostname_map) for _ in range(num_workers)]
+    print(ray.get(result))
+
+init_jax_from_ray(num_workers=2)
+
+``` 
+
+
 
