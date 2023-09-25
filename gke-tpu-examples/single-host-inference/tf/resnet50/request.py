@@ -15,57 +15,75 @@
 import argparse
 import json
 import logging
-import requests
-
 import numpy as np
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.resnet50 import preprocess_input
+import requests
 from tensorflow.keras.applications.resnet50 import decode_predictions
+from tensorflow.keras.applications.resnet50 import preprocess_input
+from tensorflow.keras.preprocessing import image
+
 
 def send_request(host):
-    # Define the API endpoint
-    api_endpoint = f"http://{host}:8501/v1/models/resnet:predict"
+  # Define the API endpoint
+  api_endpoint = f"http://{host}:8501/v1/models/resnet:predict"
 
-    # Image source: "https://i.imgur.com/j9xCCzn.jpeg", already downloaded to current folder
-    # Load the image, resize it to ResNet's expected input size, and convert the image to an array
-    img = image.load_img("./tf/resnet50/banana.jpeg", target_size=(224, 224))
-    img = image.img_to_array(img)
-    img = np.expand_dims(img, axis=0)
-    
-    # Preprocess the image (mean subtraction and scaling)
-    preprocessed_image = preprocess_input(img)
+  # Image source: "https://i.imgur.com/j9xCCzn.jpeg", already downloaded to current folder
+  # Load the image, resize it to ResNet's expected input size, and convert the image to an array
+  img = image.load_img("./tf/resnet50/banana.jpeg", target_size=(224, 224))
+  img = image.img_to_array(img)
+  img = np.expand_dims(img, axis=0)
 
-    # Prepare the JSON payload
-    payload = {
-        "instances": preprocessed_image.tolist()
-    }
+  # Preprocess the image (mean subtraction and scaling)
+  preprocessed_image = preprocess_input(img)
 
-    # Send a POST request
-    logging.info("Send the request to the model server.")
-    response = requests.post(api_endpoint, data=json.dumps(payload))
-    logging.info("Predict completed.")
+  # Prepare the JSON payload
+  payload = {"instances": preprocessed_image.tolist()}
 
-    # Convert predictions to numpy array
-    predictions = np.array(response.json()['predictions'])
+  # Send a POST request
+  logging.info("Send the request to the model server.")
+  response = requests.post(api_endpoint, data=json.dumps(payload))
+  logging.info("Predict completed.")
 
-    # Decode the predictions
-    decoded_predictions = decode_predictions(predictions, top=3)
+  # Convert predictions to numpy array
+  predictions = np.array(response.json()["predictions"])
 
-    # Format predictions for logging
-    formatted_predictions = [f"ImageNet ID: {pred[0]}, Label: {pred[1]}, Confidence: {pred[2]}" for pred in decoded_predictions[0]]
+  # Decode the predictions
+  decoded_predictions = decode_predictions(predictions, top=3)
 
-    # Log the predictions
-    logging.info(f'Predict result: {formatted_predictions}')
+  # Format predictions for logging
+  formatted_predictions = [
+      f"ImageNet ID: {pred[0]}, Label: {pred[1]}, Confidence: {pred[2]}"
+      for pred in decoded_predictions[0]
+  ]
+
+  # Log the predictions
+  logging.info(f"Predict result: {formatted_predictions}")
+
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        format="%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d] %(message)s",
-        level=logging.INFO,
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+  logging.basicConfig(
+      format=(
+          "%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d]"
+          " %(message)s"
+      ),
+      level=logging.INFO,
+      datefmt="%Y-%m-%d %H:%M:%S",
+  )
 
-    parser = argparse.ArgumentParser(description='Test Request: Send image to TF Serve Resnet50 Service on GKE for prediction')
-    parser.add_argument('--host', type=str, required=True, help='The host of TF Serve Resnet50 Service on GKE (External IP of the GKE Service)')
+  parser = argparse.ArgumentParser(
+      description=(
+          "Test Request: Send image to TF Serve Resnet50 Service on GKE for"
+          " prediction"
+      )
+  )
+  parser.add_argument(
+      "--host",
+      type=str,
+      required=True,
+      help=(
+          "The host of TF Serve Resnet50 Service on GKE (External IP of the GKE"
+          " Service)"
+      ),
+  )
 
-    args = parser.parse_args()
-    send_request(args.host)
+  args = parser.parse_args()
+  send_request(args.host)
