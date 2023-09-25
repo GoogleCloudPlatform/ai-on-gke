@@ -77,9 +77,13 @@ def export_resnet():
     )
     writer.write(log.SerializeToString())
 
+
 if __name__ == "__main__":
   logging.basicConfig(
-      format="%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d] %(message)s",
+      format=(
+          "%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d]"
+          " %(message)s"
+      ),
       level=logging.INFO,
       datefmt="%Y-%m-%d %H:%M:%S",
   )

@@ -12,8 +12,8 @@ spec:
   - name: collect-artifacts
     image: python:3.10
     volumeMounts:
-      - mountPath: "/home/model-server/"
-        name: tmp-storage
+    - mountPath: "/home/model-server/"
+      name: tmp-storage
     command:
     - bash
     - -c
@@ -74,13 +74,13 @@ spec:
       cp -r /home/model-server/* /models/pytorch/
       ls /models/pytorch/model-store
     volumeMounts:
-      - mountPath: "/home/model-server/"
-        name: tmp-storage
-      - mountPath: "/models/"
-        name: external-storage
+    - mountPath: "/home/model-server/"
+      name: tmp-storage
+    - mountPath: "/models/"
+      name: external-storage
   volumes:
-    - name: tmp-storage
-      emptyDir: {}
-    - name: external-storage
-      persistentVolumeClaim:
-        claimName: external-storage-pvc
+  - name: tmp-storage
+    emptyDir: {}
+  - name: external-storage
+    persistentVolumeClaim:
+      claimName: external-storage-pvc
