@@ -65,6 +65,11 @@ Refer [here](https://cloud.google.com/docs/terraform/resource-management/store-s
 
 You are ready to deploy your resources now! `cloudbuild.yaml` is already prepared with all the steps requires to deploy the application. 
 
+To set your Cloud Platform project in this terminal session use:
+```bash
+gcloud config set project [PROJECT_ID]
+```
+
 Run the below command to submit cloudbuild job to deploy the resources:
 ```bash
 gcloud beta builds submit
