@@ -7,7 +7,7 @@ project_id = "umeshkumhar"
 #######################################################
 ## network values
 create_network            = true
-network_name              = "test-network"
+network_name              = "demo-network"
 subnetwork_name           = "subnet-01"
 subnetwork_cidr           = "10.100.0.0/16"
 subnetwork_region         = "us-central1"
@@ -83,7 +83,7 @@ gpu_pools = [{
   accelerator_type       = "nvidia-tesla-t4"
 }]
 
-enable_tpu = true
+enable_tpu = false
 tpu_pools = [{
   name                   = "tpu-pool"
   machine_type           = "ct4p-hightpu-4t"

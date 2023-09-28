@@ -1,6 +1,6 @@
 # AI on GKE
 
-[![Deploy using Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/GoogleCloudPlatform/ai-on-gke&cloudshell_tutorial=README.md&cloudshell_workspace=hello-app)
+[![Deploy using Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/umeshkumhar/ai-on-gke&cloudshell_tutorial=tutorial.md)
 
 This repository contains assets related to AI/ML workloads on
 [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/).
