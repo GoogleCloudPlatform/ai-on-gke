@@ -1,8 +1,10 @@
-
+#######################################################
+####    PLATFORM
+#######################################################
 
 module "ai-on-gke" {
   count      = var.create_cluster ? 1 : 0
-  source = "../modules/gke-standard-cluster"
+  source = "./modules/gke-standard-cluster"
   project_id = var.project_id
 
   ## network values
@@ -36,3 +38,22 @@ module "ai-on-gke" {
   all_node_pools_tags         = var.all_node_pools_tags
 
 }
+
+
+#######################################################
+####    APPLICATIONS
+#######################################################
+# module "ray-on-gke" {
+#   count   = var.enable_ray_cluster ? 1 : 0
+#   type    = var.type
+#   network = var.network
+
+# }
+
+
+# module "jupyter-on-gke" {
+#   count   = var.enable_jupyter_notebook ? 1 : 0
+#   type    = var.type
+#   network = var.network
+
+# }

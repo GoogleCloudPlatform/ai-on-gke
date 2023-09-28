@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform.tfvars
+# Ignore Mac DS_Store files
+.DS_Store
+**/.DS_Store
+
+
 terraform.tfstate*
 .terraform*
