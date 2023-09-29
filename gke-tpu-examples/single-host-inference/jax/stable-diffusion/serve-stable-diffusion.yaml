@@ -15,7 +15,7 @@ spec:
         app: tf-stable-diffusion-server
     spec:
       nodeSelector:
-        cloud.google.com/gke-tpu-topology: 1x1   # target topology
+        cloud.google.com/gke-tpu-topology: 1x1  # target topology
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       containers:
       - name: serve-stable-diffusion
@@ -23,11 +23,11 @@ spec:
         securityContext:
           privileged: true
         env:
-          - name: MODEL_NAME
-            value: 'stable_diffusion'
+        - name: MODEL_NAME
+          value: 'stable_diffusion'
         volumeMounts:
-          - mountPath: "/models/"
-            name: stable-diffusion-external-storage
+        - mountPath: "/models/"
+          name: stable-diffusion-external-storage
         ports:
         - containerPort: 8500
         - containerPort: 8501
@@ -37,6 +37,6 @@ spec:
           limits:
             google.com/tpu: 1  # TPU chip request
       volumes:
-        - name: stable-diffusion-external-storage
-          persistentVolumeClaim:
-            claimName: external-storage-pvc
+      - name: stable-diffusion-external-storage
+        persistentVolumeClaim:
+          claimName: external-storage-pvc

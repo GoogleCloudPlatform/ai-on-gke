@@ -32,6 +32,7 @@ def export_stable_diffusion():
   )
   _TOKEN_LEN = pipeline.tokenizer.model_max_length
   logging.info("Use jax2tf to convert the Flax model.")
+
   # Converter the Jax model to TF2 model
   def predict_fn(params, prompt_ids):
     return pipeline._generate(
@@ -100,10 +101,14 @@ def export_stable_diffusion():
     )
     writer.write(log.SerializeToString())
 
+
 if __name__ == "__main__":
   os.environ["TOKENIZERS_PARALLELISM"] = "false"
   logging.basicConfig(
-      format="%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d] %(message)s",
+      format=(
+          "%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d]"
+          " %(message)s"
+      ),
       level=logging.INFO,
       datefmt="%Y-%m-%d %H:%M:%S",
   )

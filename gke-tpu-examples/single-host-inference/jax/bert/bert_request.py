@@ -22,12 +22,14 @@ from tensorflow_serving.apis import predict_pb2
 from tensorflow_serving.apis import prediction_service_pb2_grpc
 from transformers import AutoTokenizer
 
+
 def validate_ip_address(ip_string):
   try:
     ip_object = ipaddress.ip_address(ip_string)
     print("The IP address '{ip_object}' is valid.")
   except ValueError:
     print("The IP address '{ip_string}' is not valid")
+
 
 def send_request():
   logging.info("Establish the gRPC connection with the model server.")
@@ -91,7 +93,10 @@ if __name__ == "__main__":
   validate_ip_address(args.external_ip)
 
   logging.basicConfig(
-      format="%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d] %(message)s",
+      format=(
+          "%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d]"
+          " %(message)s"
+      ),
       level=logging.INFO,
       datefmt="%Y-%m-%d %H:%M:%S",
   )
