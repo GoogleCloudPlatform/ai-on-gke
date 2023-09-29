@@ -10,8 +10,8 @@ spec:
   - name: pull-demo
     image: google/cloud-sdk
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
+    - mountPath: "/tmp/"
+      name: tmp-storage
     command:
     - bash
     - -c
@@ -24,10 +24,10 @@ spec:
     image: python:3.10
     env:
     - name: JAX_PLATFORMS
-      value: 'cpu'
+      value: "cpu"
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
+    - mountPath: "/tmp/"
+      name: tmp-storage
     command:
     - bash
     - -c
@@ -47,17 +47,19 @@ spec:
   - name: convert-stable-diffusion
     image: us-docker.pkg.dev/cloud-tpu-images/inference/tpu-inference-converter-cli:2.13.0
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
-    args: ["--input_model_dir=/tmp/jax/stable_diffusion_cpu/1", "--output_model_dir=/tmp/jax/stable_diffusion_tpu/1", "--converter_options_string= tpu_functions { function_alias: 'tpu_func' } bfloat16_optimization: DISABLED"]
+    - mountPath: "/tmp/"
+      name: tmp-storage
+    args: ["--input_model_dir=/tmp/jax/stable_diffusion_cpu/1", "--output_model_dir=/tmp/jax/stable_diffusion_tpu/1",
+      "--converter_options_string= tpu_functions { function_alias: 'tpu_func' } bfloat16_optimization:\
+        \ DISABLED"]
   containers:
   - name: move-stable-diffusion
     image: google/cloud-sdk
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
-      - mountPath: "/models/"
-        name: external-storage
+    - mountPath: "/tmp/"
+      name: tmp-storage
+    - mountPath: "/models/"
+      name: external-storage
     command:
     - bash
     - -c
@@ -65,8 +67,8 @@ spec:
       mkdir -p /models/stable_diffusion/
       cp -r /tmp/jax/stable_diffusion_tpu/1/ /models/stable_diffusion/
   volumes:
-    - name: tmp-storage
-      emptyDir: {}
-    - name: external-storage
-      persistentVolumeClaim:
-        claimName: external-storage-pvc
+  - name: tmp-storage
+    emptyDir: {}
+  - name: external-storage
+    persistentVolumeClaim:
+      claimName: external-storage-pvc

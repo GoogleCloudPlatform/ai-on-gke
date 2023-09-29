@@ -17,7 +17,7 @@ spec:
     spec:
       nodeSelector:
         cloud.google.com/gke-tpu-topology: 1x1
-        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice # target version
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice  # target version
       hostNetwork: false
       restartPolicy: Always
       containers:
@@ -30,9 +30,9 @@ spec:
         - containerPort: 8500
         - containerPort: 8501
         volumeMounts:
-          - mountPath: /models/
-            name: resnet50-external-storage
-            readOnly: true
+        - mountPath: /models/
+          name: resnet50-external-storage
+          readOnly: true
         securityContext:
           privileged: true
         resources:
@@ -41,7 +41,7 @@ spec:
           limits:
             google.com/tpu: 1
       volumes:
-        - name: resnet50-external-storage
-          persistentVolumeClaim:
-            claimName: external-storage-pvc
-            readOnly: true
+      - name: resnet50-external-storage
+        persistentVolumeClaim:
+          claimName: external-storage-pvc
+          readOnly: true
