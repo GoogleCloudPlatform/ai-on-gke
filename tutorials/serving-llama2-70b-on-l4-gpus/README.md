@@ -105,6 +105,10 @@ spec:
         cloud.google.com/gke-accelerator: nvidia-l4
 ```
 
+Inside the YAML file the following settings are used:
+- `NUM_SHARD`, this has to be set to 2 because 2 x NVIDIA L4 GPUs are used. In our testing without setting this value it will only use a single GPU.
+- `QUANTIZE` is set to `nf4` which means that the model is loaded in 4 bit instead of 32 bits. This allows us to reduce the amount of GPU memory needed and improves the inference speed, however it can also decrease the model accuracy. If you change this you might need additional GPUs
+
 Create the deployment for serving:
 ```bash
 kubectl apply -f text-generation-interface.yaml
@@ -114,7 +118,7 @@ Check the logs and make sure there are no errors:
 kubectl logs -l app=llama-2-70b
 ```
 
-Now it's time to test it out by sending it some prompts.
+It's time to test it out by sending it some prompts.
 Setup port forwarding to the inferencing server:
 ```bash
 kubectl port-forward deployment/llama-2-70b 8080:8080
