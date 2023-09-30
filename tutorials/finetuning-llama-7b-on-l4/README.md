@@ -324,6 +324,4 @@ Once Job completes, you should see a fine-tuned model in your GCS bucket under t
 gcloud storage ls -l gs://$BUCKET_NAME/llama2-7b-american-stories
 ```
 
-Congratulations! You have now successfully fine tuned a Llama 2 7B model on old American Stories from 1809 to 1815. Stay tuned for a follow up blog post on how to serve a HuggingFace model from GCS using GKE and GCSfuse. In the meantime you can take a look at the [Basaran project](https://github.com/hyperonym/basaran) for serving HuggingFace models.
-
-Want a helping hand? You can reach me 
+Congratulations! You have now successfully fine tuned a Llama 2 7B model on old American Stories from 1809 to 1815. Stay tuned for a follow up blog post on how to serve a HuggingFace model from GCS using GKE and GCSfuse. In the meantime you can take a look at the [Basaran project](https://github.com/hyperonym/basaran) for serving HuggingFace models interactively with a Web UI.
