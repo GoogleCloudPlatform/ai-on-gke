@@ -1,0 +1,8 @@
+# to build, run `gcloud builds submit --config cloudbuild.yaml .` in directory
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'pull', 'docker.io/jupyterhub/k8s-hub:3.0.0' ]
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/gke-ai-eco-dev/jupyter-k8s-hub/jupyterhub-auth', '.' ]
+images:
+- 'us-central1-docker.pkg.dev/gke-ai-eco-dev/jupyter-k8s-hub/jupyterhub-auth'
