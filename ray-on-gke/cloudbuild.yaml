@@ -5,7 +5,9 @@ steps:
     args:
       - '-c'
       - |
-        python --version 
+        python3 --version
+        pip --version
+        ray --version
 
   # - id: 'validate platform'
   #   name: 'gcr.io/$PROJECT_ID/terraform'
