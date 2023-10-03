@@ -8,6 +8,12 @@ this post the text-generation-inference project is used for serving.
 *   Request access to Meta Llama models by submitting the [request access form](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)
 *   Agree to the Llama 2 terms on the [Llama 2 70B Chat HF](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf) model in HuggingFace
 
+Choose your region and set your project:
+```bash
+export REGION=us-central1
+export PROJECT_ID=$(gcloud config get project)
+```
+
 Create a GKE cluster:
 ```bash
 gcloud container clusters create l4-demo --location ${REGION} \
