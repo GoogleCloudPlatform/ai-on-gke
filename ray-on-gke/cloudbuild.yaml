@@ -40,17 +40,17 @@ steps:
     dir: 'gke-platform/'
     waitFor: ['validate platform', 'validate user']
 
-  # - id: 'get kube config'
-  #   name: 'gcr.io/cloud-builders/gcloud'
-  #   entrypoint: 'sh'
-  #   args: 
-  #   - '-c'
-  #   - |
-  #     gcloud container clusters get-credentials \
-  #     ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-  #     --zone $_ZONE \
-  #     --project $PROJECT_ID 
-  #   waitFor: ['create gke cluster']
+  - id: 'get kube config'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'sh'
+    args: 
+    - '-c'
+    - |
+      gcloud container clusters get-credentials \
+      ray-$SHORT_SHA-$_PR_NUMBER-cluster \
+      --zone $_ZONE \
+      --project $PROJECT_ID 
+    waitFor: ['create gke cluster']
   
   - id: 'create ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform-test'
@@ -64,11 +64,8 @@ steps:
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve || ( echo "false" > /workspace/user_result )
 
-        gcloud container clusters get-credentials \
-        ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-        --zone $_ZONE \
-        --project $PROJECT_ID 
-
+        kubectl get pods -n $SHORT_SHA
+        kubectl get services -n $SHORT_SHA
         sleep 60s
         kubectl port-forward -n $SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
@@ -81,8 +78,7 @@ steps:
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve
     dir: 'ray-on-gke/user/'
-    waitFor: ['create gke cluster']
-    # waitFor: ['get kube config']
+    waitFor: ['get kube config']
 
   - id: 'clean gke cluster'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -90,7 +86,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
+        # gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
 
         if [[ $(cat /workspace/user_result) == "false"]] ; then 
           exit 1
