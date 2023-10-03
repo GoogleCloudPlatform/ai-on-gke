@@ -67,7 +67,7 @@ steps:
 
         # kubectl get pods -n $SHORT_SHA
         # kubectl get services -n $SHORT_SHA
-        sleep 60s
+        # sleep 60s
         kubectl port-forward -n $SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 60s
