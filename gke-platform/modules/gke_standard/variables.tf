@@ -52,3 +52,21 @@ variable "enable_tpu" {
   description = "Set to true to create TPU node pool"
   default     = false
 }
+
+variable "gpu_pool_machine_type" {
+  type        = string
+  description = "Specify the gpu-pool machine type"
+  default     = "n1-standard-16"
+}
+
+variable "gpu_pool_accelerator_type" {
+  type        = string
+  description = "Specify the gpu-pool machine type"
+  default     = "nvidia-tesla-t4"
+}
+
+variable "gpu_pool_node_locations" {
+  type        = list
+  description = "Specify the gpu-pool node zone locations"
+  default     = ["us-central1-a", "us-central1-c", "us-central1-f"]
+}
