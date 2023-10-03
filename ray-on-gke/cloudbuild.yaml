@@ -81,7 +81,8 @@ steps:
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve
     dir: 'ray-on-gke/user/'
-    waitFor: ['get kube config']
+    waitFor: ['create gke cluster']
+    # waitFor: ['get kube config']
 
   - id: 'clean gke cluster'
     name: 'gcr.io/cloud-builders/gcloud'
