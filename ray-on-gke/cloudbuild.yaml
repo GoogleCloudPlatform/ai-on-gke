@@ -59,7 +59,6 @@ steps:
     args:
       - '-c'
       - |
-        ls
         cd ray-on-gke/user/
         # terraform apply \
         # -var=project_id=$PROJECT_ID \
@@ -75,7 +74,7 @@ steps:
         # Wait port-forwarding to take its place
         sleep 60s
 
-        ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" > ../../workspace/ray_result.txt )
+        ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" > /workspace/ray_result.txt )
         
         # terraform destroy -var=project_id=$PROJECT_ID \
         # -var=namespace=$SHORT_SHA \
