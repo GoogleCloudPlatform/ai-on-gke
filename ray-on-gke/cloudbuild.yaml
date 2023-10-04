@@ -85,7 +85,7 @@ steps:
 
   - id: 'clean gke cluster'
     name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args:
       - '-c'
       - |
