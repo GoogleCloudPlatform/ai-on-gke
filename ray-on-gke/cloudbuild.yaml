@@ -75,7 +75,7 @@ steps:
         # Wait port-forwarding to take its place
         sleep 60s
 
-        ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" > /workspace/ray_result.txt )
+        ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" > ~/workspace/ray_result.txt )
         
         # terraform destroy -var=project_id=$PROJECT_ID \
         # -var=namespace=$SHORT_SHA \
@@ -91,8 +91,9 @@ steps:
       - '-c'
       - |
         # gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
-
-        if [[ $(cat /workspace/ray_result.txt) == "false"]] ; then 
+        
+        echo ~/workspace/ray_result.txt
+        if [[ $(cat ~/workspace/ray_result.txt) == "false"]] ; then 
           exit 1
         fi
 
