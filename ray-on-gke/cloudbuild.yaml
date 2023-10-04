@@ -91,19 +91,19 @@ steps:
       - |
         # gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
         
-        if [[ $(cat /workspace/test_result.txt) == "false"]] ; then 
+        if [[ $(cat /workspace/test_result.txt) == "false"]]; then 
           echo "test_result.txt is false"
         fi
 
-        if [[ $(cat /workspace/test_result.txt) == "true"]] ; then 
+        if [[ $(cat /workspace/test_result.txt) == "true"]]; then
           echo "test_result.txt is true"
         fi
 
-        if [[ $(cat /workspace/ray_result.txt) == "false"]] ; then 
+        if [[ $(cat /workspace/ray_result.txt) == "false"]]; then
           exit 1
         fi
 
-        if [[ $(cat /workspace/user_result.txt) == "false"]] ; then 
+        if [[ $(cat /workspace/user_result.txt) == "false"]]; then
           exit 1
         fi
     waitFor: ['create ray cluster']
