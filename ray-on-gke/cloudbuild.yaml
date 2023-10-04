@@ -1,57 +1,46 @@
 steps:
-  # - id: 'test'
-  #   name: 'gcr.io/$PROJECT_ID/terraform-test'
-  #   entrypoint: 'sh'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       python3 --version
-  #       pip --version
-  #       ray --version
-
-  # - id: 'validate platform'
-  #   name: 'gcr.io/$PROJECT_ID/terraform-test'
-  #   script: |
-  #     terraform init
-  #     terraform validate
-  #   dir: 'gke-platform/'
-  #   waitFor: ['-']
+  - id: 'validate platform'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init
+      terraform validate
+    dir: 'gke-platform/'
+    waitFor: ['-']
   
-  # - id: 'validate user'
-  #   name: 'gcr.io/$PROJECT_ID/terraform-test'
-  #   script: |
-  #     terraform init
-  #     terraform validate 
-  #   dir: 'ray-on-gke/user/'
-  #   waitFor: ['-']
+  - id: 'validate user'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init
+      terraform validate 
+    dir: 'ray-on-gke/user/'
+    waitFor: ['-']
 
-  # - id: 'create gke cluster'
-  #   name: 'gcr.io/$PROJECT_ID/terraform-test'
-  #   env:
-  #     - "KUBE_LOAD_CONFIG_FILE=false"
-  #   entrypoint: 'sh'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       terraform apply -var=project_id=$PROJECT_ID \
-  #       -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-  #       -var=region=$_ZONE -auto-approve \
-  #       || ( terraform destroy -auto-approve && exit 1 )
-  #   dir: 'gke-platform/'
-  #   waitFor: ['validate platform', 'validate user']
+  - id: 'create gke cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    env:
+      - "KUBE_LOAD_CONFIG_FILE=false"
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        terraform apply -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=region=$_ZONE -auto-approve \
+        || ( terraform destroy -auto-approve && exit 1 )
+    dir: 'gke-platform/'
+    waitFor: ['validate platform', 'validate user']
 
-  # - id: 'get kube config'
-  #   name: 'gcr.io/cloud-builders/gcloud'
-  #   entrypoint: 'sh'
-  #   args: 
-  #   - '-c'
-  #   - |
-  #     gcloud container clusters get-credentials \
-  #     ray-285fcab-57-cluster \
-  #     --zone $_ZONE \
-  #     --project $PROJECT_ID 
-  #   # waitFor: ['create gke cluster']
-  #   waitFor: ['validate user']
+  - id: 'get kube config'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'sh'
+    args: 
+    - '-c'
+    - |
+      gcloud container clusters get-credentials \
+      ray-285fcab-57-cluster \
+      --zone $_ZONE \
+      --project $PROJECT_ID 
+    waitFor: ['create gke cluster']
   
   - id: 'create ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform-test'
@@ -59,29 +48,26 @@ steps:
     args:
       - '-c'
       - |
-        cd ray-on-gke/user/
-        # terraform apply \
-        # -var=project_id=$PROJECT_ID \
-        # -var=namespace=$SHORT_SHA \
-        # -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        # -auto-approve || ( echo "false" > /workspace/user_result )
+        # cd ray-on-gke/user/
+        terraform apply \
+        -var=project_id=$PROJECT_ID \
+        -var=namespace=$SHORT_SHA \
+        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+        -auto-approve || ( echo "false" > /workspace/user_result )
 
-        # kubectl get pods -n $SHORT_SHA
-        # kubectl get services -n $SHORT_SHA
-        # sleep 60s
-        # kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
-        # kubectl port-forward -n $SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265
+        kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
+        kubectl port-forward -n $SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265
         # Wait port-forwarding to take its place
         sleep 60s
 
         ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" >> /workspace/ray_result.txt )
         echo "true" >> /workspace/test_result.txt
-        # terraform destroy -var=project_id=$PROJECT_ID \
-        # -var=namespace=$SHORT_SHA \
-        # -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        # -auto-approve
-    # dir: 'ray-on-gke/user/'
-    # waitFor: ['get kube config']
+        terraform destroy -var=project_id=$PROJECT_ID \
+        -var=namespace=$SHORT_SHA \
+        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+        -auto-approve
+    dir: 'ray-on-gke/user/'
+    waitFor: ['get kube config']
 
   - id: 'clean gke cluster'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -90,14 +76,6 @@ steps:
       - '-c'
       - |
         # gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
-        
-        if [[ $(cat /workspace/test_result.txt) == "false" ]]; then 
-          echo "test_result.txt is false"
-        fi
-
-        if [[ $(cat /workspace/test_result.txt) == "true" ]]; then
-          echo "test_result.txt is true"
-        fi
 
         if [[ $(cat /workspace/ray_result.txt) == "false" ]]; then
           exit 1
