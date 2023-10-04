@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'us-docker.pkg.dev/google-samples/containers/gke/llama-7b-fine-tune-example', '.' ]
+images:
+- 'us-docker.pkg.dev/google-samples/containers/gke/llama-7b-fine-tune-example'
