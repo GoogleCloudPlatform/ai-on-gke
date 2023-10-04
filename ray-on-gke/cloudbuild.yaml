@@ -75,7 +75,7 @@ steps:
         sleep 60s
 
         ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" >> /workspace/ray_result.txt )
-        
+        echo "true" >> /workspace/test_result.txt
         # terraform destroy -var=project_id=$PROJECT_ID \
         # -var=namespace=$SHORT_SHA \
         # -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
@@ -91,7 +91,14 @@ steps:
       - |
         # gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
         
-        echo /workspace/ray_result.txt
+        if [[ $(cat /workspace/test_result.txt) == "false"]] ; then 
+          echo "test_result.txt is false"
+        fi
+
+        if [[ $(cat /workspace/test_result.txt) == "true"]] ; then 
+          echo "test_result.txt is true"
+        fi
+
         if [[ $(cat /workspace/ray_result.txt) == "false"]] ; then 
           exit 1
         fi
