@@ -115,6 +115,13 @@ Inside the YAML file the following settings are used:
 - `NUM_SHARD`, this has to be set to 2 because 2 x NVIDIA L4 GPUs are used. In our testing without setting this value it will only use a single GPU.
 - `QUANTIZE` is set to `nf4` which means that the model is loaded in 4 bit instead of 32 bits. This allows us to reduce the amount of GPU memory needed and improves the inference speed, however it can also decrease the model accuracy. If you change this you might need additional GPUs
 
+### How do you know how many GPUs you need?
+That depends on the value of `QUANTIZE` in our case `QUANTIZE` is set to `bitsandbytes-nf4`,
+which means that the model will be loaded in 4 bits. So a 70 billion parameter model would
+require a minimum of 70 billion * 4 bits = 35 GB of GPU memory, lets say there is 5GB of overhead, which takes the minimum to 40GB. The L4 GPU has 24GB of GPU memory, so a single
+L4 GPU wouldn't have enough memory, however 2 x 24 = 48GB GPU memory, so using 2 x L4 GPU
+is sufficient to run Llama 2 70B on L4 GPUs.
+
 Create the deployment for serving:
 ```bash
 kubectl apply -f text-generation-interface.yaml
