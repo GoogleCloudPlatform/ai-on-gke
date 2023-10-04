@@ -73,7 +73,7 @@ steps:
         # Wait port-forwarding to take its place
         sleep 60s
 
-        ray job submit --working-dir ai-on-gke/ray-on-gke/example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" > /workspace/ray_result )
+        ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" > /workspace/ray_result )
         
         terraform destroy -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
