@@ -41,7 +41,7 @@ steps:
       --zone $_ZONE \
       --project $PROJECT_ID 
     # waitFor: ['create gke cluster']
-    waitFor: ['validate user']
+    waitFor: ['validate platform', 'validate user']
   
   - id: 'create ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
