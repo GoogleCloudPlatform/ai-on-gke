@@ -130,7 +130,7 @@ packaging==23.0
     #   transformers
 pbr==5.11.1
     # via testresources
-pillow==9.5.0
+pillow==10.0.1
     # via
     #   diffusers
     #   matplotlib
