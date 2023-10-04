@@ -37,7 +37,7 @@ steps:
     - '-c'
     - |
       gcloud container clusters get-credentials \
-      ray-285fcab-57-cluster \
+      ray-fa30866-57-cluster \
       --zone $_ZONE \
       --project $PROJECT_ID 
     # waitFor: ['create gke cluster']
@@ -59,10 +59,10 @@ steps:
         kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
         kubectl port-forward -n $SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265
         # Wait port-forwarding to take its place
-        sleep 60s
+        sleep 5
 
         ray job submit --working-dir ../example_ray_job_scripts --address=http://127.0.0.1:8265 -- python ray_job.py || ( echo "false" >> /workspace/ray_result.txt )
-        echo "true" >> /workspace/test_result.txt
+
         terraform destroy -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
