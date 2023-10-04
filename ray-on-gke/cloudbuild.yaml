@@ -59,6 +59,7 @@ steps:
     args:
       - '-c'
       - |
+        ls
         cd ray-on-gke/user/
         # terraform apply \
         # -var=project_id=$PROJECT_ID \
