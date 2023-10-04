@@ -1,11 +1,11 @@
 steps:
-  # - id: 'validate platform'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   script: |
-  #     terraform init
-  #     terraform validate
-  #   dir: 'gke-platform/'
-  #   waitFor: ['-']
+  - id: 'validate platform'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init
+      terraform validate
+    dir: 'gke-platform/'
+    waitFor: ['-']
   
   - id: 'validate user'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -15,20 +15,20 @@ steps:
     dir: 'ray-on-gke/user/'
     waitFor: ['-']
 
-  # - id: 'create gke cluster'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   env:
-  #     - "KUBE_LOAD_CONFIG_FILE=false"
-  #   entrypoint: 'sh'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       terraform apply -var=project_id=$PROJECT_ID \
-  #       -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-  #       -var=region=$_ZONE -auto-approve \
-  #       || ( terraform destroy -auto-approve && exit 1 )
-  #   dir: 'gke-platform/'
-  #   waitFor: ['validate platform', 'validate user']
+  - id: 'create gke cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    env:
+      - "KUBE_LOAD_CONFIG_FILE=false"
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        terraform apply -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=region=$_ZONE -auto-approve \
+        || ( terraform destroy -auto-approve && exit 1 )
+    dir: 'gke-platform/'
+    waitFor: ['validate platform', 'validate user']
 
   - id: 'get kube config'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -37,11 +37,10 @@ steps:
     - '-c'
     - |
       gcloud container clusters get-credentials \
-      ray-db0a596-57-cluster \
+      ray-$SHORT_SHA-$_PR_NUMBER-cluster \
       --zone $_ZONE \
       --project $PROJECT_ID 
-    # waitFor: ['create gke cluster']
-    waitFor: ['validate user']
+    waitFor: ['create gke cluster']
   
   - id: 'create ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -75,15 +74,13 @@ steps:
     args:
       - '-c'
       - |
-        # gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
+        gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
 
         if [[ $(cat /workspace/ray_result.txt) == "false" ]]; then
-          echo "fail start ray job"
           exit 1
         fi
 
         if [[ $(cat /workspace/user_result.txt) == "false" ]]; then
-          echo "fail create ray cluster"
           exit 1
         fi
     waitFor: ['create ray cluster']
