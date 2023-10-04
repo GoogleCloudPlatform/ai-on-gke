@@ -295,14 +295,56 @@ Let’s review the high level of what we’ve included in `fine-tune.py`. First 
 
 The fine-tuned model initially are saved as separate LoRA weights. In the `fine-tune.py` script, the base model and LoRA weights are merged so the fine-tuned model can be used as a standalone model. This does utilize more storage than needed, but in return you get better compatibility with different libraries for serving.
 
-Now we need to run the `fine-tune.py`` script inside a container that has all the depdencies. The container image at `samos123/fine-tune-example` includes the `fine-tune.py` script and all required depencies. Alternatively, you can build and publish the image yourself by using the `Dockerfile` in this repo.
+Now we need to run the `fine-tune.py`` script inside a container that has all the depdencies. The container image at `us-docker.pkg.dev/google-samples/containers/gke/llama-7b-fine-tune-example` includes the `fine-tune.py` script and all required depencies. Alternatively, you can build and publish the image yourself by using the `Dockerfile` in this repo.
 
 Verify your environment variables are still set correctly:
 ```bash
 echo "Bucket: $BUCKET_NAME"
 ```
 
-Run the finetuning Job that uses the image you just published by running:
+Let's use a Kubernetes Job to fine-tune the model.
+The file `fine-tune.yaml` in this repo already has the following content:
+[embedmd]:# (fine-tune.yaml)
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: finetune-job
+  namespace: default
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: finetuner
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/memory-limit: 400Mi
+        gke-gcsfuse/ephemeral-storage-limit: 30Gi
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: finetuner
+        image: us-docker.pkg.dev/google-samples/containers/gke/llama-7b-fine-tune-example
+        resources:
+          limits:
+            nvidia.com/gpu: 8
+        volumeMounts:
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /gcs-mount
+      serviceAccountName: l4-demo
+      volumes:
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: $BUCKET_NAME
+            mountOptions: "implicit-dirs"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      restartPolicy: OnFailure
+```
+
+Run the fine-tuning Job:
 ```bash
 envsubst < fine-tune.yaml | kubectl apply -f -
 ```
