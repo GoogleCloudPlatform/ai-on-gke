@@ -49,6 +49,27 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
 
 7. Run `terraform apply`
 
+### Authentication (Enabled by Default)
+
+> **_NOTE:_** To disable GCP IAP authentication, set the `add_auth` boolean in variables.tf to `false` and change the image Jupyterhub is using.
+
+1. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
+
+    ```cmd
+    gcloud compute backend-services list --project=%PROJECT_ID%
+    ```
+
+    You can describe the service to check which service is connected to `proxy-public` using:
+
+    ```cmd
+    gcloud compute backend-services describe SERVICE_NAME --project=%PROJECT_ID% --global
+    ```
+
+2. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
+3. Re-run `terraform apply`
+4. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
+5. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
+
 ## Using Ray with Jupyter
 
 1. Run `kubectl get services -n <namespace>`. The namespace is the user name that you specified above.
