@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama-2-70b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama-2-70b
+  template:
+    metadata:
+      labels:
+        app: llama-2-70b
+    spec:
+      containers:
+      - name: llama-2-70b
+        image: ghcr.io/huggingface/text-generation-inference:1.0.3
+        resources:
+          limits:
+            nvidia.com/gpu: 2
+        env:
+        - name: MODEL_ID
+          value: meta-llama/Llama-2-70b-chat-hf
+        - name: NUM_SHARD
+          value: "2"
+        - name: PORT 
+          value: "8080"
+        - name: QUANTIZE
+          value: bitsandbytes-nf4
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: l4-demo
+              key: HF_TOKEN
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+          - mountPath: /data
+            name: data
+      volumes:
+         - name: dshm
+           emptyDir:
+              medium: Memory
+         - name: data
+           hostPath:
+            path: /mnt/stateful_partition/kube-ephemeral-ssd/llama-data
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
