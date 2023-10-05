@@ -115,6 +115,8 @@ Inside the YAML file the following settings are used:
 - `NUM_SHARD`, this has to be set to 2 because 2 x NVIDIA L4 GPUs are used. In our testing without setting this value it will only use a single GPU.
 - `QUANTIZE` is set to `nf4` which means that the model is loaded in 4 bit instead of 32 bits. This allows us to reduce the amount of GPU memory needed and improves the inference speed, however it can also decrease the model accuracy. If you change this you might need additional GPUs
 
+Visit the [text-generation-inference docs](https://github.com/huggingface/text-generation-inference/blob/v1.1.0/docs/source/basic_tutorials/launcher.md) for more details about these settings.
+
 ### How do you know how many GPUs you need?
 That depends on the value of `QUANTIZE` in our case `QUANTIZE` is set to `bitsandbytes-nf4`,
 which means that the model will be loaded in 4 bits. So a 70 billion parameter model would
