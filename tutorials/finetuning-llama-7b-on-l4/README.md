@@ -129,6 +129,7 @@ kubectl create secret generic l4-demo \
 
 Let's use Kubernetes Job to download the Llama 2 7B model from HuggingFace.
 The file `download-model.yaml` in this repo shows how to do this:
+
 [embedmd]:# (download-model.yaml)
 ```yaml
 apiVersion: batch/v1
@@ -202,6 +203,7 @@ Let’s write our finetuning job code by using the HuggingFace library for train
 
 The `fine-tune.py` file in this repo will be used to do the finetuning. Let's take
 a look what's inside:
+
 [embedmd]:# (fine-tune.py)
 ```py
 from pathlib import Path
