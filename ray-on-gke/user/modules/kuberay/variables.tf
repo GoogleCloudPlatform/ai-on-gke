@@ -23,3 +23,9 @@ variable "enable_tpu" {
   description = "Set to true to create TPU node pool"
   default     = false
 }
+
+variable "enable_autopilot" {
+  type        = bool
+  description = "Set to true to enable GKE Autopilot clusters"
+  default     = false
+}

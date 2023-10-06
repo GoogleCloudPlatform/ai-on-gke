@@ -11,8 +11,8 @@ spec:
   - name: pull-demo
     image: google/cloud-sdk
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
+    - mountPath: "/tmp/"
+      name: tmp-storage
     command:
     - bash
     - -c
@@ -24,8 +24,8 @@ spec:
   - name: export-resnet
     image: python:3.10
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
+    - mountPath: "/tmp/"
+      name: tmp-storage
     command:
     - bash
     - -c
@@ -40,17 +40,18 @@ spec:
   - name: convert-resnet
     image: us-docker.pkg.dev/cloud-tpu-images/inference/tpu-inference-converter-cli:2.13.0
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
-    args: ["--input_model_dir=/tmp/tf/resnet_cpu/1", "--output_model_dir=/tmp/tf/resnet_tpu/1", "--converter_options_string= tpu_functions { function_alias: 'tpu_func' } "]
+    - mountPath: "/tmp/"
+      name: tmp-storage
+    args: ["--input_model_dir=/tmp/tf/resnet_cpu/1", "--output_model_dir=/tmp/tf/resnet_tpu/1",
+      "--converter_options_string= tpu_functions { function_alias: 'tpu_func' } "]
   containers:
   - name: copy-exported-model
     image: google/cloud-sdk
     volumeMounts:
-      - mountPath: "/tmp/"
-        name: tmp-storage
-      - mountPath: "/models/"
-        name: external-storage
+    - mountPath: "/tmp/"
+      name: tmp-storage
+    - mountPath: "/models/"
+      name: external-storage
     command:
     - bash
     - -c
@@ -59,8 +60,8 @@ spec:
       cp -r /tmp/tf/resnet_tpu/1/* /models/resnet/1
       echo copy the model to /models/resnet/1!
   volumes:
-    - name: tmp-storage
-      emptyDir: {}
-    - name: external-storage
-      persistentVolumeClaim:
-        claimName: external-storage-pvc
+  - name: tmp-storage
+    emptyDir: {}
+  - name: external-storage
+    persistentVolumeClaim:
+      claimName: external-storage-pvc

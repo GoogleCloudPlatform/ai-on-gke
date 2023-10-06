@@ -47,6 +47,6 @@ resource "google_container_cluster" "ml_cluster" {
     channel = "RAPID"
   }
 
-  min_master_version = "1.27"
+  min_master_version = "1.28"
 }
 

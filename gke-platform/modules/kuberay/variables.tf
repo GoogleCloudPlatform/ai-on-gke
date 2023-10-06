@@ -29,3 +29,9 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
   default     = "ray"
 }
+
+variable "enable_autopilot" {
+  type        = bool
+  description = "Set to true to enable GKE Autopilot clusters"
+  default     = false
+}
