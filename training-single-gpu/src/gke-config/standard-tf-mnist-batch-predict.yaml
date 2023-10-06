@@ -8,9 +8,6 @@ spec:
       name: mnist
       annotations:
         gke-gcsfuse/volumes: "true"
-        # gke-gcsfuse/cpu-limit: 500m
-        # gke-gcsfuse/memory-limit: 100Mi
-        # gke-gcsfuse/ephemeral-storage-limit: 50Gi
     spec:
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-tesla-t4
@@ -26,9 +23,8 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            # ephemeral-storage: 30Gi
-          # requests:
-          #   ephemeral-storage: 30Gi
+            cpu: 1
+            memory: 3Gi
         volumeMounts:
         - name: gcs-fuse-csi-pv
           mountPath: /data
@@ -41,38 +37,5 @@ spec:
           readOnly: false
           volumeAttributes:
             bucketName: $BUCKET_NAME
-            mountOptions: "implicit-dirs,uid=1001,gid=3003"
+            mountOptions: "implicit-dirs"
       restartPolicy: "Never"
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: gcs-fuse-csi-pv
-spec:
-  accessModes:
-  - ReadWriteMany
-  capacity:
-    storage: 30Gi
-  storageClassName: example-storage-class
-  claimRef:
-    name: gcs-fuse-csi-static-pvc
-  mountOptions:
-    - uid=1001
-    - gid=3003
-  csi:
-    driver: gcsfuse.csi.storage.gke.io
-    volumeHandle: $BUCKET_NAME
-    readOnly: false
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: gcs-fuse-csi-static-pvc
-spec:
-  accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 30Gi
-  volumeName: gcs-fuse-csi-pv
-  storageClassName: example-storage-class
