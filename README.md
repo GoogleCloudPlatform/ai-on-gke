@@ -20,4 +20,6 @@ The use of the assets contained in this repository is subject to compliance with
 
 
 
-        export EXISTING_AUTH_NETS=$$(gcloud container clusters describe autopilot-cluster-1 --location us-central1 --format "flattened(masterAuthorizedNetworksConfig.cidrBlocks[])") && \
+        export CLUSTERNAME=$$(terraform -chdir="./platform/" output -raw cluster_name)
+        export REGION=$$(terraform -chdir="./platform/" output -raw cluster_region')
+        export PROJECT=$$(terraform -chdir="./platform/" output -raw project_id)

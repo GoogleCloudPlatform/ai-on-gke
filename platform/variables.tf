@@ -62,6 +62,15 @@ variable "create_cluster" {
   type = bool
 }
 
+variable "private_cluster" {
+  type = bool
+  default = true
+}
+
+variable "cluster_regional" {
+  type = bool
+}
+
 variable "cluster_name" {
   type = string
 }
@@ -83,6 +92,15 @@ variable "monitoring_enable_managed_prometheus" {
   type    = bool
   default = false
 }
+
+variable "master_authorized_networks" {
+  type = list(object({
+    cidr_block   = string
+    display_name = string
+  }))
+  default = []
+}
+
 variable "all_node_pools_oauth_scopes" {
   type = list(string)
 }

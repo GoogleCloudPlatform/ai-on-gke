@@ -25,10 +25,6 @@ variable "region" {
 }
 
 ## network variables
-variable "create_network" {
-  type = bool
-}
-
 variable "network_name" {
   type = string
 }
@@ -37,33 +33,13 @@ variable "subnetwork_name" {
   type = string
 }
 
-variable "subnetwork_cidr" {
-  type = string
-}
-
-variable "subnetwork_region" {
-  type = string
-}
-
-variable "subnetwork_private_access" {
-  type = string
-}
-
-variable "subnetwork_description" {
-  type = string
-}
-
-variable "network_secondary_ranges" {
-  type = map(list(object({ range_name = string, ip_cidr_range = string })))
-}
-
 ## GKE variables
-variable "create_cluster" {
-  type = bool
-}
-
 variable "cluster_name" {
   type = string
+}
+
+variable "cluster_regional" {
+  type = bool
 }
 
 variable "cluster_region" {
@@ -83,6 +59,15 @@ variable "monitoring_enable_managed_prometheus" {
   type    = bool
   default = false
 }
+
+variable "master_authorized_networks" {
+  type = list(object({
+    cidr_block   = string
+    display_name = string
+  }))
+  default = []
+}
+
 variable "all_node_pools_oauth_scopes" {
   type = list(string)
 }

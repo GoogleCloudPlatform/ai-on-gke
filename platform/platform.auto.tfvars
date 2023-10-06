@@ -6,7 +6,7 @@ project_id = "umeshkumhar"
 ####    PLATFORM
 #######################################################
 ## network values
-create_network            = true
+create_network            = false
 network_name              = "demo-network"
 subnetwork_name           = "subnet-01"
 subnetwork_cidr           = "10.100.0.0/16"
@@ -28,7 +28,9 @@ network_secondary_ranges = {
 
 ## gke variables
 create_cluster                       = true
-cluster_name                         = "demo"
+private_cluster                      = false
+cluster_name                         = "demo1"
+cluster_regional                     = true
 cluster_region                       = "us-central1"
 cluster_zones                        = ["us-central1-a", "us-central1-b", "us-central1-f"]
 ip_range_pods                        = "us-central1-01-gke-01-pods-1"
@@ -130,10 +132,3 @@ all_node_pools_metadata = {
 all_node_pools_tags = ["gke-node", "ai-on-gke"]
 
 
-
-
-#######################################################
-####    APPLICATIONS
-#######################################################
-
-# add appliction related values here

@@ -12,38 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "google_compute_network" "custom-network" {
-  count                   = var.create_network ? 1 : 0
-  project                 = var.project_id
-  name                    = var.network_name
-  auto_create_subnetworks = false
-}
-
-module "vpc" {
-  source       = "terraform-google-modules/network/google//modules/subnets"
-  count        = var.create_network ? 1 : 0
-  project_id   = var.project_id
-  network_name = google_compute_network.custom-network[count.index].name
-  subnets = [
-    {
-      subnet_name           = var.subnetwork_name
-      subnet_ip             = var.subnetwork_cidr
-      subnet_region         = var.subnetwork_region
-      subnet_private_access = var.subnetwork_private_access
-      description           = var.subnetwork_description
-    }
-  ]
-  secondary_ranges = var.network_secondary_ranges
-}
-
 locals {
   node_pools = concat((var.enable_gpu ? var.gpu_pools : []), (var.enable_tpu ? var.tpu_pools : []), var.cpu_pools)
 }
 
 module "gke" {
-  count        = var.create_cluster ? 1 : 0
   source                               = "terraform-google-modules/kubernetes-engine/google"
+  version                              = "28.0.0"
   project_id                           = var.project_id
+  regional                             = var.cluster_regional
   name                                 = var.cluster_name
   region                               = var.cluster_region
   zones                                = var.cluster_zones
@@ -73,5 +50,4 @@ module "gke" {
   node_pools_tags = {
     all = var.all_node_pools_tags
   }
-  depends_on = [google_compute_network.custom-network, module.vpc]
 }
