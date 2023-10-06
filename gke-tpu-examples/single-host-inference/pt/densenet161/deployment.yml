@@ -18,7 +18,7 @@ spec:
       serviceAccount: sax-sa
       nodeSelector:
         cloud.google.com/gke-tpu-topology: 1x1
-        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice # target version
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice  # target version
       hostNetwork: false
       restartPolicy: Always
       containers:
@@ -33,10 +33,10 @@ spec:
         - containerPort: 9001
         - containerPort: 9012
         volumeMounts:
-          - mountPath: /home/model-server/
-            name: densenet161-external-storage
-            subPath: pytorch
-            readOnly: true
+        - mountPath: /home/model-server/
+          name: densenet161-external-storage
+          subPath: pytorch
+          readOnly: true
         securityContext:
           privileged: true
         resources:
@@ -45,7 +45,7 @@ spec:
           limits:
             google.com/tpu: 1
       volumes:
-        - name: densenet161-external-storage
-          persistentVolumeClaim:
-            claimName: external-storage-pvc
-            readOnly: true
+      - name: densenet161-external-storage
+        persistentVolumeClaim:
+          claimName: external-storage-pvc
+          readOnly: true

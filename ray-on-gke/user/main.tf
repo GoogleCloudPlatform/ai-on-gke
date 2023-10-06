@@ -49,6 +49,7 @@ module "kuberay" {
   depends_on = [module.kubernetes]
   namespace  = var.namespace
   enable_tpu = var.enable_tpu
+  enable_autopilot = var.enable_autopilot
 }
 
 module "prometheus" {

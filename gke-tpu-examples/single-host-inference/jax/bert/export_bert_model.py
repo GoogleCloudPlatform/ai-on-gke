@@ -32,6 +32,7 @@ def export_bert_base_uncased():
   logging.info("Load Flax Bert model.")
   model = FlaxBertForMaskedLM.from_pretrained(_BERT_BASE_UNCASED)
   logging.info("Use jax2tf to convert the Flax model.")
+
   # Converter the Jax model to TF2 model
   def predict_fn(params, input_ids, attention_mask, token_type_ids):
     return model.__call__(
@@ -117,9 +118,11 @@ def export_bert_base_uncased():
 if __name__ == "__main__":
   os.environ["TOKENIZERS_PARALLELISM"] = "false"
   logging.basicConfig(
-      format="%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d] %(message)s",
+      format=(
+          "%(asctime)s.%(msecs)03d %(levelname)-8s [%(pathname)s:%(lineno)d]"
+          " %(message)s"
+      ),
       level=logging.INFO,
       datefmt="%Y-%m-%d %H:%M:%S",
   )
   export_bert_base_uncased()
-  
