@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "helm_release" "ray-cluster" {
-  name       = "example-cluster"
-  repository = "https://ray-project.github.io/kuberay-helm/"
-  chart      = "ray-cluster"
-  namespace  = var.namespace
-  values     = var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : [file("${path.module}/kuberay-values.yaml")]
+variable "project_id" {
+  type        = string
+  description = "GCP project id"
+}
+
+variable "namespace" {
+  type        = string
+  description = "Kubernetes namespace where resources are deployed"
+  default     = "ray"
 }

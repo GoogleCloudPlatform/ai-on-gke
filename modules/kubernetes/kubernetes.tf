@@ -12,10 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "helm_release" "ray-cluster" {
-  name       = "example-cluster"
-  repository = "https://ray-project.github.io/kuberay-helm/"
-  chart      = "ray-cluster"
-  namespace  = var.namespace
-  values     = var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : [file("${path.module}/kuberay-values.yaml")]
+data "local_file" "fluentd_config_yaml" {
+  filename = "${path.module}/config/fluentd_config.yaml"
+}
+
+resource "kubernetes_namespace" "ml" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubectl_manifest" "fluentd_config" {
+  override_namespace = var.namespace
+  yaml_body          = data.local_file.fluentd_config_yaml.content
 }

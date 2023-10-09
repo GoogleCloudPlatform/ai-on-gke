@@ -14,37 +14,36 @@ steps:
     - |
         export SHELL_IP=$$(curl https://ipinfo.io/ip) && \
         echo $$SHELL_IP && \
-        export CLUSTERNAME=$$(terraform -chdir="./platform/" output -raw cluster_name)
-        export REGION=$$(terraform -chdir="./platform/" output -raw cluster_region')
-        export PROJECT=$$(terraform -chdir="./platform/" output -raw project_id)
-        echo $$CLUSTERNAME $$REGION $$PROJECT
-        
-        EXISTING_AUTH_NETS=$$(gcloud container clusters describe $$CLUSTERNAME --location $$REGION --project $$PROJECT --format "flattened(masterAuthorizedNetworksConfig.cidrBlocks[])") && \
-        gcloud container clusters update $$CLUSTERNAME --location $$REGION --project $$PROJECT --enable-master-authorized-networks --master-authorized-networks $$SHELL_IP/32,$$EXISTING_AUTH_NETS,
-        gcloud container clusters get-credentials $$CLUSTERNAME --region $$REGION --project $$PROJECT && \
-        kubectl get pods -A
-        echo ~/.kube/config > /workspace/kubeconfig.yaml
-  entrypoint: bash
-# - id: Deploy hello-app
-#   name: gcr.io/google.com/cloudsdktool/cloud-sdk
-#   args:
-#     - '-c'
-#     - |
-#       terraform init -no-color
-#       terraform apply -auto-approve -no-color --kubeconfig /workspace/kubeconfig.yaml
-#   entrypoint: bash
 
-# - id: Optional Customization
-#   name: gcr.io/google.com/cloudsdktool/cloud-sdk
-#   args:
-#     - '-c'
-#     - |
-#       export SHELL_IP=$$(curl https://ipinfo.io/ip) && \
-#       echo $$SHELL_IP && \
-#       gcloud container clusters get-credentials autopilot-cluster-1 --region us-central1 --project umeshkumhar && \
-#       kubectl get pods -A && \
-#       kubectl run nginx2352 --image=nginx 
-#   entrypoint: bash
-serviceAccount: 'projects/umeshkumhar/serviceAccounts/aiongke@umeshkumhar.iam.gserviceaccount.com'
+        export CLUSTERNAME=$$(cat ./platform/platform.auto.tfvars | grep -w cluster_name | awk {'print $$NF'}| awk -F'["]' '{ print $$2 }')
+        export REGION=$$(cat ./platform/platform.auto.tfvars | grep -w cluster_region | awk {'print $$NF'}| awk -F'["]' '{ print $$2 }')
+        export PROJECT=$$(cat ./platform/platform.auto.tfvars | grep -w project_id | awk {'print $$NF'} | awk -F'["]' '{ print $$2 }')
+        export ISPRIVATE=$$(gcloud container clusters describe  $$CLUSTERNAME --region $$REGION --format "value(privateClusterConfig.enablePrivateEndpoint)")
+
+        if [[ $$ISPRIVATE == "True" ]]
+        then 
+          echo "WIP step, need to think more on this!!"
+          EXISTING_AUTH_NETS=$$(gcloud container clusters describe $$CLUSTERNAME --region $$REGION --project $$PROJECT --format "value(masterAuthorizedNetworksConfig.cidrBlocks[].cidrBlock)")
+          gcloud container clusters update $$CLUSTERNAME --region $$REGION --project $$PROJECT --enable-master-authorized-networks --master-authorized-networks $$SHELL_IP/32,$$EXISTING_AUTH_NETS 
+          gcloud container clusters get-credentials $$CLUSTERNAME --region $$REGION --project $$PROJECT 
+          kubectl get ns 
+          cat ~/.kube/config > /workspace/kubeconfig.yaml
+        else
+          echo "Does not have private GKE endpoint."
+          gcloud container clusters get-credentials $$CLUSTERNAME --region $$REGION --project $$PROJECT 
+          kubectl get ns 
+          cat ~/.kube/config > /workspace/kubeconfig.yaml
+        fi 
+  entrypoint: bash
+- id: Deploy Workloads on provided platform GKE
+  name: gcr.io/cloudshell-images/cloudshell:latest
+  entrypoint: 'sh'
+  args:
+    - '-c'
+    - |
+      apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y
+      terraform -chdir="./workloads/" init -no-color
+      terraform -chdir="./workloads/" apply -auto-approve -no-color -var kubeconfig_path="/workspace/kubeconfig.yaml"
+#serviceAccount: 'projects/umeshkumhar/serviceAccounts/aiongke@umeshkumhar.iam.gserviceaccount.com'
 options:
   logging: CLOUD_LOGGING_ONLY

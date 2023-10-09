@@ -23,6 +23,7 @@ module "gke" {
   regional                             = var.cluster_regional
   name                                 = var.cluster_name
   region                               = var.cluster_region
+  kubernetes_version                   = var.kubernetes_version
   zones                                = var.cluster_zones
   network                              = var.network_name
   subnetwork                           = var.subnetwork_name

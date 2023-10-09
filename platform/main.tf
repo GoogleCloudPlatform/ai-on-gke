@@ -28,7 +28,7 @@ module "vpc-subnets" {
 }
 
 locals {
-  network_name = var.create_network ? google_compute_network.custom-network[0].name : var.network_name
+  network_name    = var.create_network ? google_compute_network.custom-network[0].name : var.network_name
   subnetwork_name = var.create_network ? module.vpc-subnets.subnets.0.name : var.subnetwork_name
 }
 
@@ -45,6 +45,7 @@ module "public-gke-standard-cluster" {
   ## gke variables
   cluster_regional                     = var.cluster_regional
   cluster_name                         = var.cluster_name
+  kubernetes_version                   = var.kubernetes_version
   cluster_region                       = var.cluster_region
   cluster_zones                        = var.cluster_zones
   ip_range_pods                        = var.ip_range_pods
@@ -76,6 +77,7 @@ module "private-gke-standard-cluster" {
   ## gke variables
   cluster_regional                     = var.cluster_regional
   cluster_name                         = var.cluster_name
+  kubernetes_version                   = var.kubernetes_version
   cluster_region                       = var.cluster_region
   cluster_zones                        = var.cluster_zones
   ip_range_pods                        = var.ip_range_pods

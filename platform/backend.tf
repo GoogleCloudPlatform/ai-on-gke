@@ -1,6 +1,6 @@
 terraform {
  backend "gcs" {
    bucket  = "umeshkumhar"
-   prefix  = "platform/state"
+   prefix  = "platform-private/state"
  }
 }

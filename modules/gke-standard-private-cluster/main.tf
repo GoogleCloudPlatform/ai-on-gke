@@ -28,6 +28,7 @@ module "gke" {
   project_id                           = var.project_id
   regional                             = var.cluster_regional
   name                                 = var.cluster_name
+  kubernetes_version                   = var.kubernetes_version
   region                               = var.cluster_region
   zones                                = var.cluster_zones
   network                              = var.network_name
@@ -40,7 +41,7 @@ module "gke" {
   monitoring_enable_managed_prometheus = var.monitoring_enable_managed_prometheus
 
   enable_private_endpoint = true
-  enable_private_nodes    = true
+  enable_private_nodes    = false
   master_authorized_networks = concat([
     {
       cidr_block   = data.google_compute_subnetwork.subnetwork.ip_cidr_range

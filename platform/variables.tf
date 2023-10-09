@@ -63,7 +63,7 @@ variable "create_cluster" {
 }
 
 variable "private_cluster" {
-  type = bool
+  type    = bool
   default = true
 }
 
@@ -73,6 +73,11 @@ variable "cluster_regional" {
 
 variable "cluster_name" {
   type = string
+}
+
+variable "kubernetes_version" {
+  type = string
+  default = "latest"
 }
 
 variable "cluster_region" {

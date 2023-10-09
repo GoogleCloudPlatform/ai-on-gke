@@ -12,10 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "helm_release" "ray-cluster" {
-  name       = "example-cluster"
-  repository = "https://ray-project.github.io/kuberay-helm/"
-  chart      = "ray-cluster"
+# provider "kubernetes" {
+#   config_path = pathexpand("~/.kube/config")
+# }
+
+# provider "kubectl" {
+#   config_path = pathexpand("~/.kube/config")
+# }
+
+# provider "helm" {
+#   kubernetes {
+#     config_path = pathexpand("~/.kube/config")
+#   }
+# }
+
+resource "helm_release" "jupyterhub" {
+  name       = "jupyterhub"
+  repository = "https://jupyterhub.github.io/helm-chart"
+  chart      = "jupyterhub"
   namespace  = var.namespace
-  values     = var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : [file("${path.module}/kuberay-values.yaml")]
+  create_namespace = var.create_namespace
+  cleanup_on_fail = "true"
+
+  values = [
+    file("${path.module}/jupyter_config/config.yaml")
+  ]
 }
+
