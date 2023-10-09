@@ -1,6 +1,6 @@
 terraform {
  backend "gcs" {
-   bucket  = "umeshkumhar"
-   prefix  = "workloads/state"
+    bucket  = "juanie-state-bucket"
+    prefix  = "terraform/ai-on-gke/workloads"
  }
 }

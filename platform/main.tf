@@ -29,11 +29,13 @@ module "vpc-subnets" {
 
 locals {
   network_name    = var.create_network ? google_compute_network.custom-network[0].name : var.network_name
-  subnetwork_name = var.create_network ? module.vpc-subnets.subnets.0.name : var.subnetwork_name
+  # subnetwork_name = var.create_network ? module.vpc-subnets.subnets.0.name : var.subnetwork_name
+  subnetwork_name = var.subnetwork_name //module.vpc-subnets.subnets.0.subnet_name   
 }
 
 ## create public GKE
 module "public-gke-standard-cluster" {
+  depends_on      = [module.vpc-subnets, google_compute_network.custom-network]
   count      = var.create_cluster && !var.private_cluster ? 1 : 0
   source     = "../modules/gke-standard-public-cluster"
   project_id = var.project_id
@@ -66,6 +68,7 @@ module "public-gke-standard-cluster" {
 
 ## create private GKE
 module "private-gke-standard-cluster" {
+  depends_on      = [module.vpc-subnets, google_compute_network.custom-network]
   count      = var.create_cluster && var.private_cluster ? 1 : 0
   source     = "../modules/gke-standard-private-cluster"
   project_id = var.project_id

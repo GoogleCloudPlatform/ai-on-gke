@@ -29,15 +29,3 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
   default     = "ray"
 }
-
-variable "enable_autopilot" {
-  type        = bool
-  description = "Set to true to enable GKE Autopilot clusters"
-  default     = false
-}
-
-variable "enable_tpu" {
-  type = bool
-  description = "Set to true to create TPU node pool, only one accelerator pool (GPU or TPU) will be created"
-  default = false
-}

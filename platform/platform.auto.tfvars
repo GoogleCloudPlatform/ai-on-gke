@@ -1,12 +1,11 @@
-
 ##common variables
-project_id = "umeshkumhar"
+project_id = "ai-sandbox-4"
 
 #######################################################
 ####    PLATFORM
 #######################################################
 ## network values
-create_network            = false
+create_network            = true
 network_name              = "demo-network"
 subnetwork_name           = "subnet-01"
 subnetwork_cidr           = "10.100.0.0/16"

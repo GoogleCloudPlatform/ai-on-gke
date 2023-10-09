@@ -12,11 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-data "http" "nvidia_driver_installer_manifest" {
-  url = "https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml"
-}
-
-resource "kubectl_manifest" "nvidia_driver_installer" {
-  yaml_body = data.http.nvidia_driver_installer_manifest.response_body
-  count = var.enable_tpu || var.enable_autopilot ? 0 : 1
+terraform {
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.8.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.18.1"
+    }
+  }
+  provider_meta "google" {
+    module_name = "blueprints/terraform/terraform-google-kubernetes-engine:kuberay/v0.1.0"
+  }
 }

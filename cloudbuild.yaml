@@ -44,6 +44,6 @@ steps:
       apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y
       terraform -chdir="./workloads/" init -no-color
       terraform -chdir="./workloads/" apply -auto-approve -no-color -var kubeconfig_path="/workspace/kubeconfig.yaml"
-#serviceAccount: 'projects/umeshkumhar/serviceAccounts/aiongke@umeshkumhar.iam.gserviceaccount.com'
+serviceAccount: 'projects/juanie-newsandbox/serviceAccounts/terraform-sa@juanie-newsandbox.iam.gserviceaccount.com'
 options:
   logging: CLOUD_LOGGING_ONLY

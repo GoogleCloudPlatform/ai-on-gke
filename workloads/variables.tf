@@ -12,6 +12,9 @@
 # # See the License for the specific language governing permissions and
 # # limitations under the License.
 
+variable "cluster_name" {
+  type = string
+}
 
 variable "project_id" {
   type        = string
@@ -64,4 +67,10 @@ variable "jupyterhub_namespace" {
   type = string
   description = "Jupyterub Namesapce of GKE"
   # default = myray
+}
+
+variable "enable_autopilot" {
+  type        = bool
+  description = "Enable Autopilot cluster"
+  default     = false
 }

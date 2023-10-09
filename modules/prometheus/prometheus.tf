@@ -32,10 +32,10 @@ data "local_file" "grafana_service" {
   filename = "${path.module}/config/grafana-service.yaml"
 }
 
-# resource "kubectl_manifest" "pod_monitor" {
-#   override_namespace = var.namespace
-#   yaml_body          = data.local_file.pod_monitor_yaml.content
-# }
+resource "kubectl_manifest" "pod_monitor" {
+  override_namespace = var.namespace
+  yaml_body          = data.local_file.pod_monitor_yaml.content
+}
 
 resource "kubectl_manifest" "prometheus_frontend" {
   override_namespace = var.namespace

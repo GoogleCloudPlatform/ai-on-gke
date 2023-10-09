@@ -12,30 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_providers {
-    google = {
-      source = "hashicorp/google"
-    }
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = "~> 4.8"
-    }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.8.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.18.1"
-    }
-    kubectl = {
-    source  = "alekc/kubectl"
-    version = "2.0.1"
-  }
-  }
+data "local_file" "fluentd_config_yaml" {
+  filename = "${path.module}/config/fluentd_config.yaml"
+}
 
-      provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-kubernetes-engine:kuberay/v0.1.0"
+resource "kubernetes_namespace" "ml" {
+  metadata {
+    name = var.namespace
   }
+}
+
+resource "kubectl_manifest" "fluentd_config" {
+  override_namespace = var.namespace
+  yaml_body          = data.local_file.fluentd_config_yaml.content
 }
