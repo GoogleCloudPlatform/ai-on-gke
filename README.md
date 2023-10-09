@@ -18,8 +18,3 @@ The use of the assets contained in this repository is subject to compliance with
 
 * See [LICENSE](/LICENSE)
 
-
-
-        export CLUSTERNAME=$$(terraform -chdir="./platform/" output -raw cluster_name)
-        export REGION=$$(terraform -chdir="./platform/" output -raw cluster_region')
-        export PROJECT=$$(terraform -chdir="./platform/" output -raw project_id)

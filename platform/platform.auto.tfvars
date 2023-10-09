@@ -27,9 +27,9 @@ network_secondary_ranges = {
 }
 
 ## gke variables
-create_cluster                       = false
+create_cluster                       = true
 private_cluster                      = false
-cluster_name                         = "demo2"
+cluster_name                         = "demo-cluster"
 kubernetes_version                   = "1.25"
 cluster_regional                     = true
 cluster_region                       = "us-central1"
