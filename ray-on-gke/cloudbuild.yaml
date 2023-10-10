@@ -2,7 +2,7 @@ steps:
   - id: 'validate platform'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
-      terraform init
+      terraform init -no-color
       terraform validate -no-color
     dir: 'gke-platform/'
     waitFor: ['-']
@@ -10,7 +10,7 @@ steps:
   - id: 'validate user'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
-      terraform init
+      terraform init -no-color
       terraform validate -no-color
     dir: 'ray-on-gke/user/'
     waitFor: ['-']
