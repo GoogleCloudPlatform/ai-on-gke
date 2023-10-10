@@ -26,16 +26,53 @@ provider "helm" {
   }
 }
 
+provider "google-beta" {
+  project = var.project_id
+  region = var.location
+}
+
+resource "kubernetes_namespace" "namespace" {
+  count = var.create_namespace ? 1 : 0
+  metadata {
+    labels = {
+      namespace = var.namespace
+    }
+
+    name = var.namespace
+  }
+}
+
+module "iap_auth" {
+  count = var.add_auth ? 1 : 0
+  source = "./iap_module"
+
+  project_id = var.project_id
+  location = var.location
+  namespace  = var.namespace
+  client_id = var.client_id
+  client_secret = var.client_secret
+  service_name = var.service_name
+
+  depends_on = [ kubernetes_namespace.namespace ]
+}
+
 resource "helm_release" "jupyterhub" {
-  name             = "jupyterhub"
-  repository       = "https://jupyterhub.github.io/helm-chart"
-  chart            = "jupyterhub"
-  namespace        = var.namespace
-  create_namespace = var.create_namespace
-  cleanup_on_fail  = "true"
+  name       = "jupyterhub"
+  repository = "https://jupyterhub.github.io/helm-chart"
+  chart      = "jupyterhub"
+  namespace  = var.namespace
+  cleanup_on_fail = "true"
 
   values = [
-    file("${path.module}/jupyter_config/config.yaml")
+    templatefile(var.add_auth ? "${path.module}/jupyter_config/config-selfauth.yaml" : "${path.module}/jupyter_config/config.yaml", {
+      service_id = var.add_auth ? "${module.iap_auth[0].backend_service_id}" : "none"
+      project_number = "${var.project_number}"
+    })
+  ]
+
+  depends_on = [  
+    module.iap_auth,
+    kubernetes_namespace.namespace
   ]
 }
 
