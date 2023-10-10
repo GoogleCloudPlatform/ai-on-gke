@@ -32,7 +32,7 @@ proxy:
   service:
     type: NodePort
     annotations: 
-      beta.cloud.google.com/backend-config: '{"default": "config-default-test"}'
+      beta.cloud.google.com/backend-config: '{"default": "config-default"}'
   traefik:
     networkPolicy:
       enabled: false
