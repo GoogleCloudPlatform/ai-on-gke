@@ -19,10 +19,8 @@ import logging
 import grpc
 from PIL import Image
 import tensorflow as tf
-import tensorflow as tf
 from tensorflow_serving.apis import predict_pb2
 from tensorflow_serving.apis import prediction_service_pb2_grpc
-from transformers import AutoTokenizer
 from transformers import AutoTokenizer
 
 
@@ -34,9 +32,9 @@ def validate_ip_address(ip_string):
     print("The IP address '{ip_string}' is not valid")
 
 
-def send_request():
+def send_request(server_ip, prompt="Painting of a squirrel skating in New York"):
   logging.info("Establish the gRPC connection with the model server.")
-  _PREDICTION_SERVICE_HOST = str(args.external_ip)
+  _PREDICTION_SERVICE_HOST = str(server_ip)
   _GRPC_PORT = 8500
   options = [
       ("grpc.max_send_message_length", 512 * 1024 * 1024),
@@ -50,7 +48,6 @@ def send_request():
   tokenizer = AutoTokenizer.from_pretrained(
       "CompVis/stable-diffusion-v1-4", subfolder="tokenizer", revision="bf16"
   )
-  prompt = "Painting of a squirrel skating in New York"
   logging.info(f'The prompt is "{prompt}".')
   logging.info("Tokenize the prompt.")
   inputs = dict()
@@ -100,4 +97,4 @@ if __name__ == "__main__":
       level=logging.INFO,
       datefmt="%Y-%m-%d %H:%M:%S",
   )
-  send_request()
+  send_request(args.external_ip)
