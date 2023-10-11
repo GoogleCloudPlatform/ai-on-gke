@@ -1,6 +1,7 @@
 # Use flask to download a file from the serving model.
 from flask import Flask, request, send_file
 from stable_diffusion_request import send_request
+import os
 
 app = Flask(__name__)
 
@@ -27,10 +28,12 @@ def index():
 @app.route('/', methods=['POST'])
 def get_image():
     prompt = request.form['prompt']
+    # Get model server IP
+    ip = os.environ['EXTERNAL_IP']
     # Send requst
-    send_request("35.186.88.139", prompt)
+    send_request(ip, prompt)
     # Get the file name from the request.
-    filename = "../stable_diffusion_images.jpg"
+    filename = "../../stable_diffusion_images.jpg"
 
     # Serve the generated file.
     return send_file(filename, mimetype="image/jpeg")
