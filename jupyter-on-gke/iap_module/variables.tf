@@ -18,52 +18,40 @@ variable "namespace" {
   default     = "<your user name>"
 }
 
-variable "create_namespace" {
-  type        = bool
-  description = "Enable creation of jupyterhub namespace if it does not exist"
-  default     = false
-}
-
-variable "add_auth" {
-  type = bool
-  description = "Enable iap authentication on jupyterhub"
-  default = false
-}
-
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<>Project ID here"
+  default     = "<your project>"
 }
 
-variable "project_number" {
-  type        = string
-  description = "GCP project number (Not to be confused with porject id)"
-  default     = "<Project Number Here>"
+variable "service_name" {
+  type = string
+  description = "Name of the backend service"
+  default = "default"
 }
 
 variable "location" {
-  type        = string
+  type = string
   description = "GCP project location"
-  default     = "us-central1"
+  default = "us-central1"
 }
 
 variable "client_id" {
   type = string
   description = "Client ID of the OAuth Client"
-  default = "<ClientID Here>"
+  default = "<Client ID Here>"
   sensitive = true
 }
 
 variable "client_secret" {
   type = string
   description = "Client secret of the OAuth Client"
-  default = "<Client Secret Here>"
+  default = "<Client secret here>"
   sensitive = true
 }
 
-variable "service_name" {
-  type =string
-  description = "Name of the Backend Service on GCP"
-  default = "no-id-yet"
+variable "add_auth" {
+  type = bool
+  description = "Enable iap authentication on jupyterhub"
+  default = true
 }
