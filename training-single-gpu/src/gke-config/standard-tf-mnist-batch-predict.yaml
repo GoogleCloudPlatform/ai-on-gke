@@ -26,12 +26,12 @@ spec:
             cpu: 1
             memory: 3Gi
         volumeMounts:
-        - name: gcs-fuse-csi-pv
+        - name: gcs-fuse-csi-vol
           mountPath: /data
           readOnly: false
       serviceAccountName: $K8S_SA_NAME
       volumes:
-      - name: gcs-fuse-csi-pv
+      - name: gcs-fuse-csi-vol
         csi:
           driver: gcsfuse.csi.storage.gke.io
           readOnly: false
