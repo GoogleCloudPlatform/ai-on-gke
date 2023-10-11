@@ -23,48 +23,19 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
+            cpu: 1
+            memory: 3Gi
         volumeMounts:
-        - name: gcs-fuse-csi-pv
+        - name: gcs-fuse-csi-vol
           mountPath: /data
           readOnly: false
       serviceAccountName: $K8S_SA_NAME
       volumes:
-      - name: gcs-fuse-csi-pv
+      - name: gcs-fuse-csi-vol
         csi:
           driver: gcsfuse.csi.storage.gke.io
           readOnly: false
           volumeAttributes:
             bucketName: $BUCKET_NAME
-            mountOptions: "implicit-dirs,uid=1001,gid=3003"
+            mountOptions: "implicit-dirs"
       restartPolicy: "Never"
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: gcs-fuse-csi-pv
-spec:
-  accessModes:
-  - ReadWriteMany
-  capacity:
-    storage: 30Gi
-  claimRef:
-    name: gcs-fuse-csi-static-pvc
-  mountOptions:
-    - uid=1001
-    - gid=3003
-  csi:
-    driver: gcsfuse.csi.storage.gke.io
-    volumeHandle: $BUCKET_NAME
-    readOnly: false
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: gcs-fuse-csi-static-pvc
-spec:
-  accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 30Gi
-  volumeName: gcs-fuse-csi-pv
