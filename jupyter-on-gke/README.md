@@ -18,22 +18,24 @@ This module deploys the following resources, once per user:
 
 Preinstall the following on your computer:
 * Kubectl
-* Terraform 
+* Terraform
 * Helm
 * Gcloud
 
-> **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. If you need to reinstall any resources, make sure to delete this file as well.
+> **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using `terraform destory` before reapplying/reinstalling.
 
 ### JupyterHub
 
-> **_NOTE:_** Currently the cd/user/jupyterhub/jupyter_config/config.yaml has 3 profiles that uses the same jupyter images, this can be changed, as well as the description of these profiles.
+> **_NOTE:_** Currently the there are 3 preset profiles that uses the same jupyter images, this can be changed in the yaml files in /jupyter_config, as well as the description of these profiles.
+
+> **_NOTE:_** To enable/disable GCP IAP authentication, set the `add_auth` boolean in variables.tf to `true` or `false` and update the [image field](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L12) within the config. To build your image follow: this [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/README.md)
 
 1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
 2. `cd ai-on-gke/jupyter-on-gke/`
 
 3. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
-Note:
+**Important Note:**
 If using this with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommended to use the same k8s namespace
 for both i.e. set this to the same namespace as `ai-on-gke/ray-on-gke/user/variables.tf`.
 If not, set `enable_create_namespace` to `true` so a new k8s namespace is created for the Jupyter resources.
@@ -49,9 +51,7 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
 
 7. Run `terraform apply`
 
-### Authentication (Enabled by Default)
-
-> **_NOTE:_** To disable GCP IAP authentication, set the `add_auth` boolean in variables.tf to `false` and change the image Jupyterhub is using.
+### Authentication (Currently Disabled)
 
 1. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
 
@@ -70,38 +70,43 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
 4. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
 5. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
 
-## Using Ray with Jupyter
+> **_NOTE:_** Your managed certificate may take some time to finish provisioning. On average around 10-15 minutes. 
+
+## Using Jupyterhub
+
+### If Auth is disabled
 
 1. Run `kubectl get services -n <namespace>`. The namespace is the user name that you specified above.
 
 2. Copy the external IP for the notebook.
 
+Continue to Step 3.
+
+### If Auth is enabled
+
+1. Run `kubectl describe managedcertificate managed-cert -n <namespace>`. The namespace is the user name that you specified above.
+
+2. Copy the domain under `Domains`
+
 3. Open the external IP in a browser and login. The default user names and
    passwords can be found in the [Jupyter
    settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/jupyter_config/config.yaml) file.
 
-4. The Ray cluster is available at `ray://example-cluster-kuberay-head-svc:10001`. To access the cluster, you can open one of the sample notebooks under `example_notebooks` (via `File` -> `Open from URL` in the Jupyter notebook window and use the raw file URL from GitHub) and run through the example. Ex url: https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/ray-on-gke/example_notebooks/gpt-j-online.ipynb
-
-5. To use the Ray dashboard, run the following command to port-forward:
-```
-kubectl port-forward -n <namespace> service/example-cluster-kuberay-head-svc 8265:8265
-```
-
-And then open the dashboard using the following URL:
-```
-http://localhost:8265
-```
+4. Select profile and open a Jupyter Notebook
 
 ## Securing Your Cluster Endpoints
 
+If you have Authentication enabled, your endpoint is secured through GCP IAP.
+
+Otherwise:
+
 For demo purposes, this repo creates a public IP for the Jupyter notebook with basic dummy authentication. To secure your cluster, it is *strong recommended* to replace
-this with your own secure endpoints. 
+this with your own secure endpoints.
 
 For more information, please take a look at the following links:
 * https://cloud.google.com/iap/docs/enabling-kubernetes-howto
 * https://cloud.google.com/endpoints/docs/openapi/get-started-kubernetes-engine
 * https://jupyterhub.readthedocs.io/en/stable/tutorial/getting-started/authenticators-users-basics.html
-
 
 ## Running GPT-J-6B
 

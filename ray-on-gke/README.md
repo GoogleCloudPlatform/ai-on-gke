@@ -22,7 +22,7 @@ Preinstall the following on your computer:
 * Helm
 * Gcloud
 
-> **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. If you need to reinstall any resources, make sure to delete this file as well.
+> **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using `terraform destory` before reapplying/reinstalling.
 
 1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
