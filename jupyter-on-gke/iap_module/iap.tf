@@ -24,13 +24,6 @@ data "local_file" "static_ingress_yaml" {
   filename = "${path.module}/deployments/static-ingress.yaml"
 }
 
-data "google_compute_backend_service" "jupyter-ingress" {
-  name = var.service_name
-  project = var.project_id
-
-  depends_on = [ kubectl_manifest.backend_config ]
-}
-
 # Reserve IP Address
 resource "google_compute_global_address" "default" {
   provider     = google-beta
@@ -40,12 +33,14 @@ resource "google_compute_global_address" "default" {
   ip_version   = "IPV4"
 }
 
+# The configuration that will trigger turning on IAP
 resource "kubectl_manifest" "backend_config" {
   override_namespace = var.namespace
   yaml_body          = templatefile("${path.module}/deployments/backend-config.yaml", {})
   depends_on = [ kubectl_manifest.static_ingress ]
 }
 
+# Specifies the domain for the SSL certificate, wildcard domains are not supported
 resource "kubectl_manifest" "managed_cert" {
   override_namespace = var.namespace
   yaml_body          = templatefile("${path.module}/deployments/managed-cert.yaml", {
@@ -54,6 +49,7 @@ resource "kubectl_manifest" "managed_cert" {
   depends_on = [ google_compute_global_address.default ]
 }
 
+# Ingress for IAP
 resource "kubectl_manifest" "static_ingress" {
   override_namespace = var.namespace
 
@@ -63,6 +59,7 @@ resource "kubectl_manifest" "static_ingress" {
   depends_on = [ google_compute_global_address.default, kubectl_manifest.managed_cert ]
 }
 
+# Secret used by the BackendConfig, contains the OAuth client info
 resource "kubernetes_secret" "my-secret" {
   metadata {
     name = "my-secret"

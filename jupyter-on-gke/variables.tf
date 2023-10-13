@@ -33,13 +33,7 @@ variable "add_auth" {
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<>Project ID here"
-}
-
-variable "project_number" {
-  type        = string
-  description = "GCP project number (Not to be confused with porject id)"
-  default     = "<Project Number Here>"
+  default     = "<Project ID here>"
 }
 
 variable "location" {
