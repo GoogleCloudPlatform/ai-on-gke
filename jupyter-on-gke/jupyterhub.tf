@@ -31,6 +31,16 @@ provider "google-beta" {
   region = var.location
 }
 
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+# The data of the GCP backend service. IAP is enabled on this backend service
+data "google_compute_backend_service" "jupyter-ingress" {
+  name = var.service_name
+  project = var.project_id
+}
+
 resource "kubernetes_namespace" "namespace" {
   count = var.create_namespace ? 1 : 0
   metadata {
@@ -53,7 +63,10 @@ module "iap_auth" {
   client_secret = var.client_secret
   service_name = var.service_name
 
-  depends_on = [ kubernetes_namespace.namespace ]
+  depends_on = [
+    helm_release.jupyterhub,
+    kubernetes_namespace.namespace, 
+  ]
 }
 
 resource "helm_release" "jupyterhub" {
@@ -64,14 +77,13 @@ resource "helm_release" "jupyterhub" {
   cleanup_on_fail = "true"
 
   values = [
-    templatefile(var.add_auth ? "${path.module}/jupyter_config/config-selfauth.yaml" : "${path.module}/jupyter_config/config.yaml", {
-      service_id = var.add_auth ? "${module.iap_auth[0].backend_service_id}" : "none"
-      project_number = "${var.project_number}"
+    templatefile(var.add_auth ? "${path.module}/jupyter_config/config-selfauth.yaml" : "${path.module}/jupyter_config/config-filestore.yaml", {
+      service_id = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress.generated_id}" : "no-id-yet"
+      project_number = data.google_project.project.number
     })
   ]
 
   depends_on = [  
-    module.iap_auth,
     kubernetes_namespace.namespace
   ]
 }
