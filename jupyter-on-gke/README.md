@@ -28,32 +28,34 @@ Preinstall the following on your computer:
 
 > **_NOTE:_** Currently the there are 3 preset profiles that uses the same jupyter images, this can be changed in the yaml files in /jupyter_config, as well as the description of these profiles.
 
-> **_NOTE:_** To enable/disable GCP IAP authentication, set the `add_auth` boolean in variables.tf to `true` or `false` and update the [image field](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L12) within the config. To build your image follow: this [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/README.md)
+> **_NOTE:_** To enable/disable GCP IAP authentication, set the `add_auth` boolean in variables.tf to `true` or `false` and update the [image field](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L12) within the config. It is highly recommanded to **NOT** turn off Authentication.
 
 1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
-2. `cd ai-on-gke/jupyter-on-gke/`
+2. Build the Jupyterhub Image following [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/authentication/README.MD). This is an important step for Authentication. (Currently Enabled By Default)
 
-3. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
+3. Once the image is built, navigate to `ai-on-gke/jupyter-on-gke/`
+
+4. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
 **Important Note:**
 If using this with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommended to use the same k8s namespace
 for both i.e. set this to the same namespace as `ai-on-gke/ray-on-gke/user/variables.tf`.
 If not, set `enable_create_namespace` to `true` so a new k8s namespace is created for the Jupyter resources.
 
-4. Run `terraform init`
+5. Run `terraform init`
 
-5. Find the name and location of the GKE cluster you want to use.
+6. Find the name and location of the GKE cluster you want to use.
    Run `gcloud container clusters list --project=<your GCP project> to see all the available clusters.
    Note: If you created the GKE cluster via the ai-on-gke/gke-platform repo, you can get the cluster info from `ai-on-gke/gke-platform/variables.tf`
 
-6. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
+7. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
    Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
 
-7. Run `terraform apply`
+8. Run `terraform apply`
 
-### Authentication (Currently Disabled)
+## Authentication (Currently Enabled By Default)
 
-1. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
+9. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
 
     ```cmd
     gcloud compute backend-services list --project=%PROJECT_ID%
@@ -65,10 +67,10 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
     gcloud compute backend-services describe SERVICE_NAME --project=%PROJECT_ID% --global
     ```
 
-2. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
-3. Re-run `terraform apply`
-4. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
-5. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
+10. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
+11. Re-run `terraform apply`
+12. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
+13. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
 
 > **_NOTE:_** Your managed certificate may take some time to finish provisioning. On average around 10-15 minutes. 
 
