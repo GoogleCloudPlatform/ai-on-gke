@@ -27,7 +27,7 @@ variable "create_namespace" {
 variable "add_auth" {
   type = bool
   description = "Enable iap authentication on jupyterhub"
-  default = false
+  default = true
 }
 
 variable "project_id" {
