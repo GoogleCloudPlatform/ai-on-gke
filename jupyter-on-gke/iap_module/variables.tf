@@ -36,22 +36,17 @@ variable "location" {
   default = "us-central1"
 }
 
-variable "client_id" {
-  type = string
-  description = "Client ID of the OAuth Client"
-  default = "<Client ID Here>"
-  sensitive = true
-}
-
-variable "client_secret" {
-  type = string
-  description = "Client secret of the OAuth Client"
-  default = "<Client secret here>"
-  sensitive = true
-}
-
 variable "add_auth" {
   type = bool
   description = "Enable iap authentication on jupyterhub"
   default = true
+}
+
+variable "client" {
+  type = object({
+    display_name =  string
+    client_id = string
+    secret = string
+  })
+  description = "oauth client"
 }

@@ -68,8 +68,11 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
     ```
 
 10. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
+
 11. Re-run `terraform apply`
+
 12. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
+
 13. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
 
 > **_NOTE:_** Your managed certificate may take some time to finish provisioning. On average around 10-15 minutes. 

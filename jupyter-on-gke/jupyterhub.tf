@@ -41,6 +41,30 @@ data "google_compute_backend_service" "jupyter-ingress" {
   project = var.project_id
 }
 
+# Enabled the IAP service 
+resource "google_project_service" "project_service" {
+  count = var.enable_iap_service ? 1 : 0
+  project = var.project_id
+  service = "iap.googleapis.com"
+
+  disable_dependent_services = false
+  disable_on_destroy = false
+}
+
+# Creates a "Brand", equivalent to the OAuth consent screen on GCP UI
+resource "google_iap_brand" "project_brand" {
+  count = var.brand != "" ? 1 : 0
+  support_email     = "aaronliang@google.com"
+  application_title = "Cloud IAP protected Application"
+  project           = var.project_id
+}
+
+# Creates the OAuth client used in IAP
+resource "google_iap_client" "iap_oauth_client" {
+  display_name = "Jupyter-Client"
+  brand        =  "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}"
+}
+
 resource "kubernetes_namespace" "namespace" {
   count = var.create_namespace ? 1 : 0
   metadata {
@@ -59,9 +83,8 @@ module "iap_auth" {
   project_id = var.project_id
   location = var.location
   namespace  = var.namespace
-  client_id = var.client_id
-  client_secret = var.client_secret
   service_name = var.service_name
+  client = google_iap_client.iap_oauth_client
 
   depends_on = [
     helm_release.jupyterhub,
