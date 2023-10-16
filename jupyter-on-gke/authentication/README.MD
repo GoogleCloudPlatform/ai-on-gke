@@ -14,6 +14,8 @@ We combine the Jupyterhub image and our own authenticator. By default, the Jupyt
 
 4. Run `gcloud builds submit --config cloudbuild.yaml .` to upload it to your repository.
 
+5. Change the hub image name and tag in the [Jupyterhub config yaml](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L13).
+
 ## Configuration
 
 To use the image once the it's uploaded to GCR/AR, edit the jupyterhub values `config.yaml` to use the image. Ex:
