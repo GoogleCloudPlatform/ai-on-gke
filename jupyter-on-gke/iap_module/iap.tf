@@ -46,7 +46,7 @@ resource "kubectl_manifest" "managed_cert" {
   yaml_body          = templatefile("${path.module}/deployments/managed-cert.yaml", {
     ip_addr = "${google_compute_global_address.default.address}.nip.io"
   })
-  depends_on = [ google_compute_global_address.default ]
+  depends_on = [ google_compute_global_address.default, kubernetes_secret.my-secret ]
 }
 
 # Ingress for IAP
@@ -68,7 +68,7 @@ resource "kubernetes_secret" "my-secret" {
 
   # Omitting type defaults to `Opaque` which is the equivalent of `generic` 
   data = {
-    "client_id" = var.client_id
-    "client_secret" = var.client_secret
+    "client_id" = var.client.client_id
+    "client_secret" = var.client.secret
   }
 }
