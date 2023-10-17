@@ -85,6 +85,8 @@ module "iap_auth" {
   namespace  = var.namespace
   service_name = var.service_name
   client = google_iap_client.iap_oauth_client
+  url_domain_addr = var.url_domain_addr
+  url_domain_name = var.url_domain_name
 
   depends_on = [
     helm_release.jupyterhub,

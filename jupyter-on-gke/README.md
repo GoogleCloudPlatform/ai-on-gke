@@ -41,6 +41,8 @@ Preinstall the following on your computer:
 If using this with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommended to use the same k8s namespace
 for both i.e. set this to the same namespace as `ai-on-gke/ray-on-gke/user/variables.tf`.
 If not, set `enable_create_namespace` to `true` so a new k8s namespace is created for the Jupyter resources.
+**Note:**
+We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
 
 5. Run `terraform init`
 
