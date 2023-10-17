@@ -71,3 +71,9 @@ variable "url_domain_name" {
   description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
   default = ""
 }
+
+variable "support_email" {
+  type = string
+  description = "Email for users to contact with questions about their consent"
+  default = "<Support email>"
+}

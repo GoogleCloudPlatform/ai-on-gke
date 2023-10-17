@@ -41,6 +41,14 @@ data "google_compute_backend_service" "jupyter-ingress" {
   project = var.project_id
 }
 
+resource "google_iap_web_backend_service_iam_binding" "binding" {
+  count = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? 1 : 0
+  project = var.project_id
+  web_backend_service = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress.name}" : "no-id-yet"
+  role = "roles/iap.httpsResourceAccessor"
+  members = split("\n", chomp(file("${path.module}/allowlist")))
+}
+
 # Enabled the IAP service 
 resource "google_project_service" "project_service" {
   count = var.enable_iap_service ? 1 : 0
@@ -54,7 +62,7 @@ resource "google_project_service" "project_service" {
 # Creates a "Brand", equivalent to the OAuth consent screen on GCP UI
 resource "google_iap_brand" "project_brand" {
   count = var.brand != "" ? 1 : 0
-  support_email     = "aaronliang@google.com"
+  support_email     = var.support_email
   application_title = "Cloud IAP protected Application"
   project           = var.project_id
 }
