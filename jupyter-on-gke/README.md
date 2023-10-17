@@ -46,18 +46,33 @@ We allow user to set their own domains, in the `variables.tf` file. Since we are
 
 5. Run `terraform init`
 
-6. Find the name and location of the GKE cluster you want to use.
+6. Edit the `./allowlist` file to set the application users allowlist for Jupyterhub. These are the kinds of principals you can have:
+
+    * allUsers
+    * allAuthenticatedUsers
+    * user:{emailid}
+    * serviceAccount:{emailid}
+    * group:{emailid}
+    * domain:{domain}
+    * projectOwner:projectid
+    * projectEditor:projectid
+    * projectViewer:
+
+    **Note:** Seperate each principals with a new line
+
+7. Find the name and location of the GKE cluster you want to use.
    Run `gcloud container clusters list --project=<your GCP project> to see all the available clusters.
+
    Note: If you created the GKE cluster via the ai-on-gke/gke-platform repo, you can get the cluster info from `ai-on-gke/gke-platform/variables.tf`
 
-7. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
+8. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
    Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
 
-8. Run `terraform apply`
+9. Run `terraform apply`
 
 ## Authentication (Currently Enabled By Default)
 
-9. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
+10. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
 
     ```cmd
     gcloud compute backend-services list --project=%PROJECT_ID%
@@ -69,13 +84,13 @@ We allow user to set their own domains, in the `variables.tf` file. Since we are
     gcloud compute backend-services describe SERVICE_NAME --project=%PROJECT_ID% --global
     ```
 
-10. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
+11. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
 
-11. Re-run `terraform apply`
+12. Re-run `terraform apply`
 
-12. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
+13. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
 
-13. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
+14. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
 
 > **_NOTE:_** Your managed certificate may take some time to finish provisioning. On average around 10-15 minutes. 
 
@@ -122,19 +137,20 @@ This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/ma
 1. Open the `gpt-j-online.ipynb` notebook under `ai-on-gke/ray-on-gke/example_notebooks`.
 
 2. Open a terminal in the Jupyter session and install Ray AIR:
-```
-pip install ray[air]
-```
+
+    ```cmd
+    pip install ray[air]
+    ```
 
 3. Run through the notebook cells. You can change the prompt in the last cell:
-```
-prompt = (
-     ## Input your own prompt here
-)
-```
+
+    ```jupyter
+    prompt = (
+        ## Input your own prompt here
+    )
+    ```
 
 4. This should output a generated text response.
-
 
 ## Logging and Monitoring
 
@@ -142,8 +158,10 @@ This repository comes with out-of-the-box integrations with Google Cloud Logging
 and Managed Prometheus for monitoring. To see your Ray cluster logs:
 
 1. Open Cloud Console and open Logging
+
 2. If using Jupyter notebook for job submission, use the following query parameters:
-```
+
+```unset
 resource.type="k8s_container"
 resource.labels.cluster_name=%CLUSTER_NAME%
 resource.labels.pod_name=%RAY_HEAD_POD_NAME%
@@ -151,6 +169,7 @@ resource.labels.container_name="fluentbit"
 ```
 
 To see monitoring metrics:
+
 1. Open Cloud Console and open Metrics Explorer
 2. In "Target", select "Prometheus Target" and then "Ray".
 3. Select the metric you want to view, and then click "Apply".
@@ -224,8 +243,8 @@ Each of the users get a part of the memory and CPU and the resources are by defa
         guarantee: 1G
 ```
 
-The *limit* if the reousrce sets a hard limit on how much of that resource can the user have.
-The *guarantee* meaning the least amount of resource that will be available to the user at all times.
+The _limit_ if the reousrce sets a hard limit on how much of that resource can the user have.
+The _guarantee_ meaning the least amount of resource that will be available to the user at all times.
 
 Similar to overriding images, the resources can also be overwritten by using `kubesparner_override`:
 
