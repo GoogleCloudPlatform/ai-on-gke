@@ -4,13 +4,17 @@ We combine the Jupyterhub image and our own authenticator. By default, the Jupyt
 
 ## Creating Image
 
+> **_NOTE:_** An Artifact Registry Repo for this docker image is required. Create an AR Repo following [this guide](https://cloud.google.com/artifact-registry/docs/repositories/create-repos)
+
 1. Setup gcloud to point to your project.
 
-2. Navigate to the `docker_images` directory. `cd docker_images`
+2. Navigate to the `docker_image` directory. `cd docker_image`
 
 3. Edit the `cloudbuild.yaml` file and replace the repository with your own repository.
 
-4. Run `gcloud builds submit --config cloudbuild.yaml .`
+4. Run `gcloud builds submit --config cloudbuild.yaml .` to upload it to your repository.
+
+5. Change the hub image name and tag in the [Jupyterhub config yaml](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L13).
 
 ## Configuration
 
