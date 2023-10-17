@@ -59,3 +59,15 @@ variable "brand" {
   description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"
   default = ""
 }
+
+variable "url_domain_addr" { 
+  type = string
+  description = "Domain provided by the user. If it's empty, we will create one for you."
+  default = ""
+}
+
+variable "url_domain_name" { 
+  type = string
+  description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
+  default = ""
+}

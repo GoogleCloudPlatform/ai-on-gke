@@ -26,6 +26,7 @@ data "local_file" "static_ingress_yaml" {
 
 # Reserve IP Address
 resource "google_compute_global_address" "default" {
+  count = var.url_domain_addr != "" ? 0 : 1
   provider     = google-beta
   project      = var.project_id
   name         = "jupyter-address"
@@ -44,9 +45,9 @@ resource "kubectl_manifest" "backend_config" {
 resource "kubectl_manifest" "managed_cert" {
   override_namespace = var.namespace
   yaml_body          = templatefile("${path.module}/deployments/managed-cert.yaml", {
-    ip_addr = "${google_compute_global_address.default.address}.nip.io"
+    ip_addr = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
   })
-  depends_on = [ google_compute_global_address.default, kubernetes_secret.my-secret ]
+  depends_on = [ kubernetes_secret.my-secret ]
 }
 
 # Ingress for IAP
@@ -54,9 +55,9 @@ resource "kubectl_manifest" "static_ingress" {
   override_namespace = var.namespace
 
   yaml_body          = templatefile("${path.module}/deployments/static-ingress.yaml", {
-    static_addr_name = "${google_compute_global_address.default.name}"
+    static_addr_name = var.url_domain_addr != "" ? var.url_domain_name : "${google_compute_global_address.default[0].name}"
   })
-  depends_on = [ google_compute_global_address.default, kubectl_manifest.managed_cert ]
+  depends_on = [ kubectl_manifest.managed_cert ]
 }
 
 # Secret used by the BackendConfig, contains the OAuth client info
