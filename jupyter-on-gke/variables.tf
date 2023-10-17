@@ -42,22 +42,20 @@ variable "location" {
   default     = "us-central1"
 }
 
-variable "client_id" {
-  type = string
-  description = "Client ID of the OAuth Client"
-  default = "<ClientID Here>"
-  sensitive = true
-}
-
-variable "client_secret" {
-  type = string
-  description = "Client secret of the OAuth Client"
-  default = "<Client Secret Here>"
-  sensitive = true
-}
-
 variable "service_name" {
-  type =string
+  type = string
   description = "Name of the Backend Service on GCP"
   default = "no-id-yet"
+}
+
+variable "enable_iap_service" {
+  type = bool
+  description = "Flag to enable iap service on this project. If it is already enabled, please set it to false."
+  default = true
+}
+
+variable "brand" {
+  type = string
+  description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"
+  default = ""
 }
