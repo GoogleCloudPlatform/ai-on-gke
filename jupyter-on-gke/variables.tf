@@ -25,9 +25,9 @@ variable "create_namespace" {
 }
 
 variable "add_auth" {
-  type = bool
+  type        = bool
   description = "Enable iap authentication on jupyterhub"
-  default = true
+  default     = true
 }
 
 variable "project_id" {
@@ -43,37 +43,37 @@ variable "location" {
 }
 
 variable "service_name" {
-  type = string
+  type        = string
   description = "Name of the Backend Service on GCP"
-  default = "no-id-yet"
+  default     = "no-id-yet"
 }
 
 variable "enable_iap_service" {
-  type = bool
+  type        = bool
   description = "Flag to enable iap service on this project. If it is already enabled, please set it to false."
-  default = true
+  default     = true
 }
 
 variable "brand" {
-  type = string
+  type        = string
   description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"
-  default = ""
+  default     = ""
 }
 
-variable "url_domain_addr" { 
-  type = string
+variable "url_domain_addr" {
+  type        = string
   description = "Domain provided by the user. If it's empty, we will create one for you."
-  default = ""
+  default     = ""
 }
 
-variable "url_domain_name" { 
-  type = string
+variable "url_domain_name" {
+  type        = string
   description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
-  default = ""
+  default     = ""
 }
 
 variable "support_email" {
-  type = string
+  type        = string
   description = "Email for users to contact with questions about their consent"
-  default = "<Support email>"
+  default     = "<Support email>"
 }
