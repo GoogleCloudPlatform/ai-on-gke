@@ -25,40 +25,34 @@ variable "project_id" {
 }
 
 variable "service_name" {
-  type = string
+  type        = string
   description = "Name of the backend service"
-  default = "default"
-}
-
-variable "location" {
-  type = string
-  description = "GCP project location"
-  default = "us-central1"
+  default     = "default"
 }
 
 variable "add_auth" {
-  type = bool
+  type        = bool
   description = "Enable iap authentication on jupyterhub"
-  default = true
+  default     = true
 }
 
 variable "client" {
   type = object({
-    display_name =  string
-    client_id = string
-    secret = string
+    display_name = string
+    client_id    = string
+    secret       = string
   })
   description = "oauth client"
 }
 
-variable "url_domain_addr" { 
-  type = string
+variable "url_domain_addr" {
+  type        = string
   description = "Domain provided by the user. If it's empty, we will create one for you."
-  default = ""
+  default     = ""
 }
 
-variable "url_domain_name" { 
-  type = string
+variable "url_domain_name" {
+  type        = string
   description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
-  default = ""
+  default     = ""
 }
