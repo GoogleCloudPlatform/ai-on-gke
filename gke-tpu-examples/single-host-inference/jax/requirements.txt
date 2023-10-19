@@ -5,3 +5,4 @@ pillow
 tensorflow-serving-api
 transformers
 diffusers
+flask
