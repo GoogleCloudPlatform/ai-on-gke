@@ -70,7 +70,7 @@ Each of the users get a part of the memory and CPU and the resources are by defa
 The _limit_ if the reousrce sets a hard limit on how much of that resource can the user have.
 The _guarantee_ meaning the least amount of resource that will be available to the user at all times.
 
-Similar to overriding images, the resources can also be overwritten by using `kubesparner_override`:
+Similar to overriding images, the resources can also be overwritten by using `kubespawner_override`:
 
 ``` yaml
     kubespawner_override:
