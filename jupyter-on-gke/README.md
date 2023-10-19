@@ -36,13 +36,27 @@ Preinstall the following on your computer:
 
 3. Once the image is built, navigate to `ai-on-gke/jupyter-on-gke/`
 
-4. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services.
+4. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services. For more information about what the variabls do visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variable_definitions.md)
 **Important Note:**
 If using this with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommended to use the same k8s namespace
 for both i.e. set this to the same namespace as `ai-on-gke/ray-on-gke/user/variables.tf`.
 If not, set `enable_create_namespace` to `true` so a new k8s namespace is created for the Jupyter resources.
-**Note:**
-We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
+
+5. If you have not enabled the IAP API before or created a Brand for your project, you can proceed to the next step. If not, ensure that the following variables within `variables.tf` are set:
+
+    * enable_iap_service - Enables the IAP service API. Leave as false if IAP is enabled before.
+    * brand - creates a brand for the project, only one is currently allowed per project. If there is already a brand, leave the variable empty.
+    * support_email - used by brand, required field.
+
+    **Note:**
+    We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
+    Visit the [GCloud UI](https://pantheon.corp.google.com/security/iap) to see if it's enabled. If it's enabled, you will be able to see the page and will not prompt you to enable API:
+
+    ![IAP API Screen](./images/iap_enable_api_screenshot.png)
+
+    And the `brand` page, if there is not brand created yet, will have:
+
+    ![IAP API Screen](./images/consent_screen_screenshot.png)
 
 5. Run `terraform init`
 
@@ -70,7 +84,9 @@ We allow user to set their own domains, in the `variables.tf` file. Since we are
 
 9. Run `terraform apply`
 
-## Authentication (Currently Enabled By Default)
+## Securing your Jupyter Endpoint
+
+To secure the Jupyter endpoint, this example enables IAP by default. It is _strongly recommended_ to keep this configuration. If you wish to disable it, do the following: set the `add_auth` flag to false in the `variable.tf` file.
 
 10. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
 
@@ -100,9 +116,9 @@ We allow user to set their own domains, in the `variables.tf` file. Since we are
 
 1. Run `kubectl get services -n <namespace>`. The namespace is the user name that you specified above.
 
-2. Copy the external IP for the notebook.
+2. Copy the external IP for the notebook. If there isn't an external IP for `proxy-public`, is it most likely due to authencation being enabled.
 
-Continue to Step 3.
+Continue to Step 3 of [below](#if-auth-is-enabled).
 
 ### If Auth is enabled
 
@@ -115,20 +131,6 @@ Continue to Step 3.
    settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/jupyter_config/config.yaml) file.
 
 4. Select profile and open a Jupyter Notebook
-
-## Securing Your Cluster Endpoints
-
-If you have Authentication enabled, your endpoint is secured through GCP IAP.
-
-Otherwise:
-
-For demo purposes, this repo creates a public IP for the Jupyter notebook with basic dummy authentication. To secure your cluster, it is _strongly recommended_ to replace
-this with your own secure endpoints.
-
-For more information, please take a look at the following links:
-* https://cloud.google.com/iap/docs/enabling-kubernetes-howto
-* https://cloud.google.com/endpoints/docs/openapi/get-started-kubernetes-engine
-* https://jupyterhub.readthedocs.io/en/stable/tutorial/getting-started/authenticators-users-basics.html
 
 ## Running GPT-J-6B
 
@@ -151,28 +153,6 @@ This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/ma
     ```
 
 4. This should output a generated text response.
-
-## Logging and Monitoring
-
-This repository comes with out-of-the-box integrations with Google Cloud Logging
-and Managed Prometheus for monitoring. To see your Ray cluster logs:
-
-1. Open Cloud Console and open Logging
-
-2. If using Jupyter notebook for job submission, use the following query parameters:
-
-```unset
-resource.type="k8s_container"
-resource.labels.cluster_name=%CLUSTER_NAME%
-resource.labels.pod_name=%RAY_HEAD_POD_NAME%
-resource.labels.container_name="fluentbit"
-```
-
-To see monitoring metrics:
-
-1. Open Cloud Console and open Metrics Explorer
-2. In "Target", select "Prometheus Target" and then "Ray".
-3. Select the metric you want to view, and then click "Apply".
 
 ## Additional Information
 
