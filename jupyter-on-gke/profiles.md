@@ -135,7 +135,7 @@ Example of a profile that overrides the default values:
 
 ### Additional Overrides
 
-With `kubespanwer_override` there are additional overrides that could be done, including `lifecycle_hooks`, `storage_capcity`, and `storage class`
+With `kubespanwer_override` there are additional overrides that could be done, including `lifecycle_hooks`, `storage_capacity`, and `storage class`
 Fields can be found [here](https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html)
 
 [^1]: If using Standard clusters, the cluster must have at least 2 of the GPU type ready
