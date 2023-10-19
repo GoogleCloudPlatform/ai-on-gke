@@ -1,0 +1,7 @@
+# Environment variables
+env:
+# If not set or set to true, kuberay auto injects an init container waiting for ray GCS.
+# If false, you will need to inject your own init container to ensure ray GCS is up before the ray workers start.
+# NOTE: This has been explicitly the init container mounts all volumes from the ray spec. This would fail because GCS Fuse based volume mounts are not supported with init containers (https://github.com/GoogleCloudPlatform/gcs-fuse-csi-driver/issues/38). Improvements will de done to GCS CSI as part of k8s sidecar feature (https://github.com/kubernetes/kubernetes/pull/116429).
+ - name: ENABLE_INIT_CONTAINER_INJECTION
+   value: "false"
