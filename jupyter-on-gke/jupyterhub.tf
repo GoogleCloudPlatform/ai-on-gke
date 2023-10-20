@@ -109,9 +109,11 @@ resource "helm_release" "jupyterhub" {
   cleanup_on_fail = "true"
 
   values = [
-    templatefile(var.add_auth ? "${path.module}/jupyter_config/config-selfauth.yaml" : "${path.module}/jupyter_config/config.yaml", {
+    templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
       service_id     = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress.generated_id}" : "no-id-yet"
       project_number = data.google_project.project.number
+      authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
+      service_type = var.add_auth ? "NodePort" : "LoadBalancer"
     })
   ]
 
