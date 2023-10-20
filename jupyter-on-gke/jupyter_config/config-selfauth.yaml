@@ -12,15 +12,25 @@ hub:
   image: 
     name: <Repo name here>
     tag: latest
-  config: 
+  config:
     JupyterHub:
-      authenticator_class: 'gcpiapjwtauthenticator.GCPIAPAuthenticator'
+      authenticator_class: ${authenticator_class}
     GCPIAPAuthenticator: 
       header_name: 'X-Goog-IAP-JWT-Assertion'
       expected_audience: '/projects/${project_number}/global/backendServices/${service_id}'
+    Authenticator:
+      admin_users:
+        - user1
+        - user2
+      allowed_users:
+        - user3
+        - user4
+    # ...
+    DummyAuthenticator:
+      password: password
   networkPolicy:
     enabled: false
-
+  
 prePuller:
   hook:
     enabled: false
@@ -30,7 +40,7 @@ proxy:
     networkPolicy:
       enabled: false
   service:
-    type: NodePort
+    type: ${service_type}
     annotations: 
       beta.cloud.google.com/backend-config: '{"default": "config-default"}'
   traefik:
