@@ -15,7 +15,7 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<your project>"
+  default     = "yiyingzhang-gke-dev"
 }
 
 variable "namespace" {
