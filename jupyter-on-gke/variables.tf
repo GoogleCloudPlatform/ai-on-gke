@@ -15,7 +15,7 @@
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "<your user name>"
+  default     = "yiyingzhang"
 }
 
 variable "create_namespace" {
