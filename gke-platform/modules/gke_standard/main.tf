@@ -29,7 +29,7 @@ resource "google_container_cluster" "ml_cluster" {
   count                    = var.enable_autopilot == false ? 1 : 0
   remove_default_node_pool = true
   initial_node_count       = 1
-  min_master_version = "1.28"
+  min_master_version = "1.28.2"
 
   logging_config {
     enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
