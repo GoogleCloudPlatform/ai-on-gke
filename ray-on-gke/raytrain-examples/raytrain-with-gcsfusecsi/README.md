@@ -4,7 +4,7 @@ In this example we will demonstrate how to setup a ray cluster on GKE and deploy
 
 We will deploy a jupyter pod and a ray cluster (using kuberay operator). The pods will mount to shared filesystem (GCS Fuse CSI in this specific example) where the model and the datasets live and readily accessible to ray worker pods during training and inference. Ray jobs will be triggered from the jupyter notebook running in the jupyter pod. The example showcases [ray data API](https://docs.ray.io/en/latest/data/api/api.html) usage with a [GKE GCS Fuse CSI](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver) mounted volumes
 
-![ray-cluster](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/raytrain-examples/images/ray-cluster-on-gke.png)
+![ray-cluster](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/raytrain-examples/images/ray-cluster-on-gke.png)
 
 **Setup Steps**
 
@@ -91,7 +91,7 @@ $ kubectl exec --tty -i tensorflow-0 -c tensorflow-container -n example -- jupyt
 Currently running servers:
 http://tensorflow-0:8888/?token=<TOKEN> :: /home/jovyan
 ```
-11. Open a new notebook and import the notebook from the URL `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/ray-on-gke/example_notebooks/raytrain-stablediffusion.ipynb` ([notebook](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/example_notebooks/raytrain-stablediffusion.ipynb))
+11. Open a new notebook and import the notebook from the URL `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/ray-on-gke/example_notebooks/raytrain-stablediffusion.ipynb` ([notebook](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/example_notebooks/raytrain-stablediffusion.ipynb))
 
 12. Follow the comments and execute the cells in the notebook to run a distributed training job and then inference on the tuned model
 13. Port forward the ray service port to examine the ray dashboard for jobs progress details, The dashboard is reachable at localhost:8286 in the local browser
@@ -99,4 +99,4 @@ http://tensorflow-0:8888/?token=<TOKEN> :: /home/jovyan
 kubectl port-forward -n example service/example-cluster-kuberay-head-svc 8265:8265
 ```
 14. During an ongoing traing, the pod resource usage of CPU, Memory, GPU, GPU Memory can be visualized with the GKE Pantheon UI for the workloads
-example ![Ray Head resources](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/raytrain-examples/images/ray-head-resources.png) and ![Ray Worker resources](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/raytrain-examples/images/ray-worker-resources.png)
+example ![Ray Head resources](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/raytrain-examples/images/ray-head-resources.png) and ![Ray Worker resources](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/raytrain-examples/images/ray-worker-resources.png)
