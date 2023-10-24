@@ -28,9 +28,7 @@ gcloud container clusters create l4-demo --location ${REGION} \
   --machine-type n2d-standard-4 \
   --num-nodes 1 --min-nodes 1 --max-nodes 5 \
   --ephemeral-storage-local-ssd=count=2 \
-  --enable-ip-alias \
-  --enable-private-nodes  \
-  --master-ipv4-cidr 172.16.0.32/28
+  --enable-ip-alias
 ```
 
 Create a nodepool where each VM has 2 x L4 GPU:
