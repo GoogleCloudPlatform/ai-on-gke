@@ -1,0 +1,81 @@
+# Tensorflow/Jupyter StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tensorflow
+  namespace: example
+spec:
+  selector:
+    matchLabels:
+      pod: tensorflow-pod
+  serviceName: tensorflow
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: 500m
+        gke-gcsfuse/memory-limit: 10Gi
+        gke-gcsfuse/ephemeral-storage-limit: 30Gi
+      labels:
+        pod: tensorflow-pod
+    spec:
+      serviceAccountName: my-ksa
+      # nodeSelector:
+        #cloud.google.com/gke-accelerator: nvidia-tesla-t4
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: tensorflow-container
+        securityContext:
+          privileged: true
+        #image: tensorflow/tensorflow:2.13.0-gpu-jupyter
+        image: jupyter/tensorflow-notebook:python-3.9
+        volumeMounts:
+        - name: test-vol
+          mountPath: /persist-data
+        resources:
+            limits:
+              ephemeral-storage: 5Gi
+              memory: 10Gi
+            requests:
+              ephemeral-storage: 5Gi
+              memory: 10Gi
+      volumes:
+      - name: test-vol
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: test-gcsfuse-1
+            mountOptions: "implicit-dirs,uid=1000,gid=100"
+## Optional: override and set your own token
+#        env:
+#          - name: JUPYTER_TOKEN
+#            value: "jupyter"
+---
+# Headless service for the above StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: tensorflow
+  namespace: example
+spec:
+  ports:
+  - port: 8888
+  clusterIP: None
+  selector:
+    pod: tensorflow-pod
+---
+# External service
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: tensorflow-jupyter
+  namespace: example
+spec:
+  ports:
+  - protocol: "TCP"
+    port: 80
+    targetPort: 8888
+  selector:
+    pod: tensorflow-pod
+  type: LoadBalancer
