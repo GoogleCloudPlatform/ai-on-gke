@@ -1,0 +1,8 @@
+ray==2.6.1
+ray[serve] 
+requests 
+transformers 
+langchain
+torch
+flask
+Flask-CORS
