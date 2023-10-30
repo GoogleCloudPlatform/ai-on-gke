@@ -37,7 +37,7 @@ steps:
         || ( exit 1 )
         echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'gke-platform/'
-    allowExitCodes: [1]
+    allowFailure: true
     waitFor: ['validate platform', 'validate user', 'validate jupyterhub']
   
   - id: 'test ray cluster'
@@ -71,7 +71,7 @@ steps:
         --address=http://127.0.0.1:8265 -- python ray_job.py \
         || ( exit 1 )
         echo "pass" > /workspace/ray_result.txt
-    allowExitCodes: [1]
+    allowFailure: true
     waitFor: ['create gke cluster']
 
   - id: 'test jupyterhub'
@@ -101,7 +101,7 @@ steps:
         cd tests/
         python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) || ( exit 1 )
         echo "pass" > /workspace/jupyterhub_test_result.txt 
-    allowExitCodes: [1]
+    allowFailure: true
     waitFor: ['test ray cluster']
 
   - id: 'clean gke cluster'
@@ -124,8 +124,16 @@ steps:
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve -no-color
 
-        gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet 
+        gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
+    allowFailure: true
+    waitFor: ['test jupyterhub']
 
+  - id: 'check result'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
         if [[ $(cat /workspace/gke_cluster_result.txt) != "pass" ]]; then
           echo "gke cluster creation failed"
           exit 1
@@ -150,8 +158,8 @@ steps:
           echo "jupyterhub test failed"
           exit 1
         fi
-    waitFor: ['test jupyterhub']
-
+    waitFor: ['clean gke cluster']
+        
 substitutions:
   _ZONE: us-central1-c
   _USER_NAME: github
