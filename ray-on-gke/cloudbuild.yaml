@@ -34,8 +34,10 @@ steps:
         terraform apply -var=project_id=$PROJECT_ID \
         -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=region=$_ZONE -auto-approve -no-color \
-        || ( echo "false" > /workspace/gke_cluster_result.txt )
+        || ( exit 1 )
+        echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'gke-platform/'
+    allowExitCodes: [1]
     waitFor: ['validate platform', 'validate user', 'validate jupyterhub']
   
   - id: 'test ray cluster'
@@ -56,7 +58,8 @@ steps:
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
         -auto-approve -no-color \
-        || ( echo "false" > /workspace/user_result.txt )
+        || ( exit 1 )
+        echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
         kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
@@ -66,7 +69,9 @@ steps:
 
         ray job submit --working-dir ../example_ray_job_scripts \
         --address=http://127.0.0.1:8265 -- python ray_job.py \
-        || ( echo "false" >> /workspace/ray_result.txt )
+        || ( exit 1 )
+        echo "pass" > /workspace/ray_result.txt
+    allowExitCodes: [1]
     waitFor: ['create gke cluster']
 
   - id: 'test jupyterhub'
@@ -85,7 +90,8 @@ steps:
         -var=add_auth=false \
         -var=enable_iap_service=false \
         -auto-approve -no-color \
-        || ( echo "false" > /workspace/jupyterhub_tf_result.txt )
+        || ( exit 1 )
+        echo "pass" > /workspace/jupyterhub_tf_result.txt
 
         kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
         kubectl get services -n $SHORT_SHA
@@ -120,22 +126,22 @@ steps:
 
         gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet 
 
-        if [[ $(cat /workspace/gke_cluster_result.txt) == "false" ]]; then
+        if [[ $(cat /workspace/gke_cluster_result.txt) != "pass" ]]; then
           echo "gke cluster creation failed"
           exit 1
         fi
 
-        if [[ $(cat /workspace/ray_result.txt) == "false" ]]; then
+        if [[ $(cat /workspace/ray_result.txt) != "pass" ]]; then
           echo "ray API run failed"
           exit 1
         fi
 
-        if [[ $(cat /workspace/user_result.txt) == "false" ]]; then
+        if [[ $(cat /workspace/user_result.txt) != "pass" ]]; then
           echo "ray cluster failed"
           exit 1
         fi
 
-        if [[ $(cat /workspace/jupyterhub_tf_result.txt) == "false" ]]; then
+        if [[ $(cat /workspace/jupyterhub_tf_result.txt) != "pass" ]]; then
           echo "jupyterhub tf failed"
           exit 1
         fi
