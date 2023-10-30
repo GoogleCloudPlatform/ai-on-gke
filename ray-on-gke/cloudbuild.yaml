@@ -93,7 +93,9 @@ steps:
         echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
 
         cd tests/
-        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) || ( echo "false" > /workspace/jupyterhub_test_result.txt )
+        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) || ( exit 1 )
+        echo "pass" > /workspace/jupyterhub_test_result.txt 
+    allowExitCodes: [1]
     waitFor: ['test ray cluster']
 
   - id: 'clean gke cluster'
@@ -138,7 +140,7 @@ steps:
           exit 1
         fi
 
-        if [[ $(cat /workspace/jupyterhub_test_result.txt) == "false" ]]; then
+        if [[ $(cat /workspace/jupyterhub_test_result.txt) != "pass" ]]; then
           echo "jupyterhub test failed"
           exit 1
         fi
