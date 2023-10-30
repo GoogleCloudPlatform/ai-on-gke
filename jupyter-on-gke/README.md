@@ -128,7 +128,7 @@ Continue to Step 3 of [below](#if-auth-is-enabled).
 
 3. Open the external IP in a browser and login. The default user names and
    passwords can be found in the [Jupyter
-   settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/jupyter_config/config.yaml) file.
+   settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml) file.
 
 4. Select profile and open a Jupyter Notebook
 
