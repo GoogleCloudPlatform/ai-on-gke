@@ -59,7 +59,11 @@ packaging==23.0
     # via tensorflow
 pbr==5.11.1
     # via testresources
+<<<<<<< HEAD
 pillow==10.0.1
+=======
+pillow==9.5.0
+>>>>>>> b70282a (Bump urllib3 in /gke-tpu-examples/single-host-inference/tf/resnet50)
     # via -r export-model-requirements.in
 protobuf==3.19.6
     # via
