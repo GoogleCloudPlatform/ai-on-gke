@@ -60,7 +60,7 @@ packaging==23.0
 pbr==5.11.1
     # via testresources
 pillow==9.5.0
-    # via -r requirements.in
+    # via -r export-model-requirements.in
 protobuf==3.19.6
     # via
     #   tensorboard
@@ -94,23 +94,23 @@ tensorboard-plugin-wit==1.8.1
     # via tensorboard
 tensorflow==2.11.0
     # via
-    #   -r requirements.in
+    #   -r export-model-requirements.in
     #   tensorflow-serving-api
 tensorflow-estimator==2.11.0
     # via tensorflow
 tensorflow-io-gcs-filesystem==0.32.0
     # via tensorflow
 tensorflow-serving-api==2.11.0
-    # via -r requirements.in
+    # via -r export-model-requirements.in
 termcolor==2.2.0
     # via tensorflow
 testresources==2.0.1
-    # via -r requirements.in
+    # via -r export-model-requirements.in
 typing-extensions==4.5.0
     # via tensorflow
 urllib3==1.26.15
     # via requests
-werkzeug==2.2.3
+werkzeug==3.0.1
     # via tensorboard
 wheel==0.40.0
     # via
