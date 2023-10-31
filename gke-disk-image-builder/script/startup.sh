@@ -1,0 +1,143 @@
+sudo apt update
+sudo apt-get update
+
+# Install containerd.
+sudo apt install --yes containerd
+# Start containerd.
+sudo systemctl start containerd
+# Check to see if containerd is up and we can use ctr.
+if sudo ctr version | grep "Server:"; then
+  echo containerd is ready to use
+else
+  echo containerd is not running. Please rerun the tool to try it again.
+  exit 1
+fi
+
+# Check if the device exists
+if ! [ -b /dev/sdb ]; then
+  echo Device /dev/sdb does not exist. Please rerun the tool to try it again.
+  exit 1
+fi
+# Set ext4 as the file system.
+sudo mkfs.ext4 -F -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+# Check if the filesystem was created successfully
+if [ $? -ne 0 ]; then
+  echo Failed to create the filesystem on /dev/sdb. Please rerun the tool to try it again.
+  exit 1
+fi
+
+# Install JQ
+echo Installing JQ...
+sudo apt-get --yes install jq
+
+# Fetch and store the OAuth token of the service account in ACCESS_TOKEN.
+echo Fetching OAuth token...
+ACCESS_TOKEN=$(curl -sSf -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token | jq -r '.access_token')
+
+function remove_snapshot_views() {
+  echo Removing the previously created snapshot views...
+  views=($(sudo ctr -n k8s.io snapshot list | grep "View" | sed 's/ \{1,\}/,/g'))
+  for row in "${views[@]}"; do
+    view=$(echo "$row" | cut -d',' -f1)
+    echo Removing the view $view
+    sudo ctr -n k8s.io snapshot rm $view 2>/dev/null
+  done
+}
+
+function pull_images() {
+  echo Pulling the given container images...
+  for param in "$@"; do
+    echo Start pulling $param ...
+    if [ "$OAUTH_MECHANISM" == "none" ]; then
+      sudo ctr -n k8s.io image pull $param
+    elif [ "$OAUTH_MECHANISM" == "serviceaccounttoken" ]; then
+      sudo ctr -n k8s.io image pull --user "oauth2accesstoken:$ACCESS_TOKEN" $param
+    else
+      echo "Unknown OAuth mechanism, expected 'None' or 'ServiceAccountToken' but got '$OAUTH_MECHANISM'".
+      exit 1
+    fi
+    if [ $? -ne 0 ]; then
+      echo Failed to pull and unpack the image $param. Please rerun the tool to try it again.
+      exit 1
+    fi
+  done
+}
+
+function process_snapshots() {
+  echo Processing the snapshots...
+  snapshots=($(sudo ctr -n k8s.io snapshot list | grep "Committed" | cut -d ' ' -f1))
+
+  for snapshot in "${snapshots[@]}"; do
+    echo Processing $snapshot
+
+    sudo ctr -n k8s.io snapshot view tmp_$snapshot $snapshot
+    # Check if the view was successfully created
+    if [ $? -ne 0 ]; then
+      echo Failed to create snapshot view for $snapshot. Please rerun the tool to try it again.
+      exit 1
+    fi
+
+    original_path=$(sudo ctr -n k8s.io snapshot mount /tmp_$snapshot tmp_$snapshot | grep -oP '/\S+/snapshots/[0-9]+/fs' | tr ':' '\n' | head -n 1)
+    new_path=$(echo $original_path | grep -o "snapshots/.*/fs")
+    sudo mkdir -p "/mnt/disks/container_layers/${new_path}"
+    sudo cp -r $original_path "/mnt/disks/container_layers/${new_path}/.."
+    # Check if the data was successfully copied over to the new path
+    if [ $? -ne 0 ]; then
+      echo Failed to copy the snapshot files for $snapshot from $original_path to /mnt/disks/container_layers/${new_path}. Please rerun the tool to try it again.
+      exit 1
+    fi
+    mapping="$snapshot $new_path"
+    echo "Appending $mapping to Metadata file"
+    sudo echo "$mapping" >> "/mnt/disks/container_layers/snapshots.metadata"
+    if [ $? -ne 0 ]; then
+      echo Failed to write metadata view for $snapshot. Please rerun the tool to try it again.
+      exit 1
+    fi
+  done
+  echo Processing is done.
+}
+
+function unpack() {
+  # Prepare the disk image directories.
+  echo Preparing the disk image directories...
+  sudo mkdir -p /mnt/disks/container_layers
+  sudo mount -o discard,defaults /dev/sdb /mnt/disks/container_layers
+  # Check if the directory was successfully created
+  if [ $? -ne 0 ]; then
+    echo Failed to create the view for $snapshot. Please rerun the tool to try it again.
+    exit 1
+  fi
+  sudo chmod a+w /mnt/disks/container_layers
+  sudo rm /mnt/disks/container_layers/snapshots.metadata
+  sudo touch /mnt/disks/container_layers/snapshots.metadata
+  sudo chmod a+w /mnt/disks/container_layers/snapshots.metadata
+
+  # Remove the previously created snapshot views.
+  remove_snapshot_views
+
+  # Store the first parameter in OAUTH_MECHANISM and shift.
+  OAUTH_MECHANISM=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+  shift
+  # Pull all the given images.
+  pull_images $@
+
+  # Process the snapshots.
+  process_snapshots
+
+  # Remove the original pulled images.
+  for img in "${@}"; do
+    echo Removing the original pulled image $img ...
+    sudo ctr -n k8s.io image rm $img
+  done
+
+  echo Content of snapshots.metadata file:
+  sudo cat /mnt/disks/container_layers/snapshots.metadata
+
+  # We want to unmount the directory, otherwise we don't be able to generate the
+  # image properly.
+  sudo umount /mnt/disks/container_layers
+
+  # This script must print out this message as a signal to the caller script,
+  # meaning the unpacking is completed and the disk image creation can begin.
+  echo Unpacking is completed.
+}
