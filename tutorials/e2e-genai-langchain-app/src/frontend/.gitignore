@@ -1,0 +1,33 @@
+# Dependencies
+/node_modules
+
+# Production build output
+/dist
+
+# IDEs and editors
+/.idea
+.vscode/
+*.swp
+*.swo
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.tmp.json
+
+# Debug logs from ESLint, stylelint etc.
+*.log
+
+# Environment variables
+.env

@@ -41,6 +41,7 @@ data "google_compute_backend_service" "jupyter-ingress" {
   project = var.project_id
 }
 
+# Binds the list of principals in the allowlist file to roles/iap.httpsResourceAccessor
 resource "google_iap_web_backend_service_iam_binding" "binding" {
   count               = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? 1 : 0
   project             = var.project_id
@@ -110,10 +111,10 @@ resource "helm_release" "jupyterhub" {
 
   values = [
     templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
-      service_id     = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress.generated_id}" : "no-id-yet"
-      project_number = data.google_project.project.number
+      service_id          = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress.generated_id}" : "no-id-yet"
+      project_number      = data.google_project.project.number
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
-      service_type = var.add_auth ? "NodePort" : "LoadBalancer"
+      service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
     })
   ]
 

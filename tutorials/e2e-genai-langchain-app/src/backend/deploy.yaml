@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hf-lc-ray-deployment
+  labels:
+    app: hf-lc-ray
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hf-lc-ray
+  template:
+    metadata:
+      labels:
+        app: hf-lc-ray
+    spec:
+      containers:
+      - name: hf-lc-ray
+        image: gcr.io/YOUR_PROJECT/hf-lc-ray:latest
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hf-lc-ray-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 5000
+  selector:
+    app: hf-lc-ray
