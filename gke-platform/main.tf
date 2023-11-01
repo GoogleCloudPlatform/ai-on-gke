@@ -69,21 +69,21 @@ module "gke_standard" {
   enable_tpu       = var.enable_tpu
 }
 
-module "kubernetes" {
-  source = "./modules/kubernetes"
+# module "kubernetes" {
+#   source = "./modules/kubernetes"
 
-  depends_on       = [module.gke_standard]
-  region           = var.region
-  cluster_name     = var.cluster_name
-  enable_autopilot = var.enable_autopilot
-  enable_tpu       = var.enable_tpu
-}
+#   depends_on       = [module.gke_standard]
+#   region           = var.region
+#   cluster_name     = var.cluster_name
+#   enable_autopilot = var.enable_autopilot
+#   enable_tpu       = var.enable_tpu
+# }
 
-module "kuberay" {
-  source = "./modules/kuberay"
+# module "kuberay" {
+#   source = "./modules/kuberay"
 
-  depends_on       = [module.gke_autopilot, module.gke_standard]
-  region           = var.region
-  cluster_name     = var.cluster_name
-  enable_autopilot = var.enable_autopilot
-}
+#   depends_on       = [module.gke_autopilot, module.gke_standard]
+#   region           = var.region
+#   cluster_name     = var.cluster_name
+#   enable_autopilot = var.enable_autopilot
+# }

@@ -24,6 +24,17 @@ provider "helm" {
   }
 }
 
+module "kubernetes-nvidia" {
+  source           = "../../gke-platform/modules/kubernetes"
+  enable_autopilot = var.enable_autopilot
+  enable_tpu       = var.enable_tpu
+}
+
+module "kuberay-operator" {
+  source           = "../../gke-platform/modules/kuberay"
+  enable_autopilot = var.enable_autopilot
+}
+
 module "kubernetes" {
   source = "./modules/kubernetes"
 
@@ -42,9 +53,9 @@ module "service_accounts" {
 module "kuberay" {
   source = "./modules/kuberay"
 
-  depends_on = [module.kubernetes]
-  namespace  = var.namespace
-  enable_tpu = var.enable_tpu
+  depends_on       = [module.kubernetes]
+  namespace        = var.namespace
+  enable_tpu       = var.enable_tpu
   enable_autopilot = var.enable_autopilot
 }
 
