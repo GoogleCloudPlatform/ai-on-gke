@@ -1,0 +1,8 @@
+requests
+numpy
+Pillow
+climage
+tritonclient
+gevent
+geventhttpclient
+argparse
