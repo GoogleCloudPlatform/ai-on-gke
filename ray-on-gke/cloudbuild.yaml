@@ -33,8 +33,7 @@ steps:
       - |
         terraform apply -var=project_id=$PROJECT_ID \
         -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=region=$_ZONE -auto-approve -no-color \
-        || ( exit 1 )
+        -var=region=$_ZONE -auto-approve -no-color 
         echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'gke-platform/'
     allowFailure: true
@@ -57,8 +56,7 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        -auto-approve -no-color \
-        || ( exit 1 )
+        -auto-approve -no-color 
         echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
@@ -68,8 +66,7 @@ steps:
         sleep 5s
 
         ray job submit --working-dir ../example_ray_job_scripts \
-        --address=http://127.0.0.1:8265 -- python ray_job.py \
-        || ( exit 1 )
+        --address=http://127.0.0.1:8265 -- python ray_job.py 
         echo "pass" > /workspace/ray_result.txt
     allowFailure: true
     waitFor: ['create gke cluster']
@@ -89,8 +86,7 @@ steps:
         -var=namespace=$SHORT_SHA \
         -var=add_auth=false \
         -var=enable_iap_service=false \
-        -auto-approve -no-color \
-        || ( exit 1 )
+        -auto-approve -no-color 
         echo "pass" > /workspace/jupyterhub_tf_result.txt
 
         kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
@@ -99,7 +95,7 @@ steps:
         echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
 
         cd tests/
-        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) || ( exit 1 )
+        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) 
         echo "pass" > /workspace/jupyterhub_test_result.txt 
     allowFailure: true
     waitFor: ['test ray cluster']
