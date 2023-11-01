@@ -16,7 +16,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: jupyter-ingress
-  namespace: ray
+  namespace: ${namespace}
   annotations:
     kubernetes.io/ingress.global-static-ip-name: "${static_addr_name}"
     networking.gke.io/managed-certificates: "managed-cert"

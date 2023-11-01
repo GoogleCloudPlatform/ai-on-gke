@@ -16,6 +16,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
+  namespace: ${namespace}
 spec:
   replicas: 2
   selector:
@@ -35,7 +36,7 @@ spec:
         image: "gke.gcr.io/prometheus-engine/frontend:v0.5.0-gke.0"
         args:
         - "--web.listen-address=:9090"
-        - "--query.project-id=$PROJECT_ID"
+        - "--query.project-id=${project_id}"
         ports:
         - name: web
           containerPort: 9090

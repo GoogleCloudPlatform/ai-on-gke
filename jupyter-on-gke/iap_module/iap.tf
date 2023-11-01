@@ -35,29 +35,27 @@ resource "google_compute_global_address" "default" {
 }
 
 # The configuration that will trigger turning on IAP
-resource "kubectl_manifest" "backend_config" {
-  override_namespace = var.namespace
-  yaml_body          = templatefile("${path.module}/deployments/backend-config.yaml", {})
-  depends_on         = [kubectl_manifest.static_ingress]
+resource "kubernetes_manifest" "backend_config" {
+  manifest   = yamldecode(templatefile("${path.module}/deployments/backend-config.yaml", { namespace = var.namespace }))
+  depends_on = [kubernetes_manifest.static_ingress]
 }
 
 # Specifies the domain for the SSL certificate, wildcard domains are not supported
-resource "kubectl_manifest" "managed_cert" {
-  override_namespace = var.namespace
-  yaml_body = templatefile("${path.module}/deployments/managed-cert.yaml", {
-    ip_addr = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
-  })
+resource "kubernetes_manifest" "managed_cert" {
+  manifest = yamldecode(templatefile("${path.module}/deployments/managed-cert.yaml", {
+    ip_addr   = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
+    namespace = var.namespace
+  }))
   depends_on = [kubernetes_secret.my-secret]
 }
 
 # Ingress for IAP
-resource "kubectl_manifest" "static_ingress" {
-  override_namespace = var.namespace
-
-  yaml_body = templatefile("${path.module}/deployments/static-ingress.yaml", {
+resource "kubernetes_manifest" "static_ingress" {
+  manifest = yamldecode(templatefile("${path.module}/deployments/static-ingress.yaml", {
     static_addr_name = var.url_domain_addr != "" ? var.url_domain_name : "${google_compute_global_address.default[0].name}"
-  })
-  depends_on = [kubectl_manifest.managed_cert]
+    namespace        = var.namespace
+  }))
+  depends_on = [kubernetes_manifest.managed_cert]
 }
 
 # Secret used by the BackendConfig, contains the OAuth client info

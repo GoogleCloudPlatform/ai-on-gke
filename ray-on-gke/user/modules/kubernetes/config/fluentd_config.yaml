@@ -16,6 +16,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: fluentbit-config
+  namespace: ${namespace}
 data:
   fluent-bit.conf: |
     [SERVICE]
