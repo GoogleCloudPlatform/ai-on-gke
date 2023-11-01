@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: headless-svc
+  labels:
+    kuberay-tpu-webhook/inject: enabled
+spec:
+  ports:
+    - port: 80
+      name: web
+  clusterIP: None
+  selector:
+    kuberay-tpu-webhook/inject: enabled
