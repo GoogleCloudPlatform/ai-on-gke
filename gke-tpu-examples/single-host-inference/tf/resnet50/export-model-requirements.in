@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 #
-tensorflow==2.11.0
+tensorflow==2.11.1
 tensorflow-serving-api==2.11.0
 pillow==9.5.0
 # Added for launchpad dependency
