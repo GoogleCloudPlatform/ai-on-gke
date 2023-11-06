@@ -17,5 +17,6 @@ resource "helm_release" "ray-cluster" {
   repository = "https://ray-project.github.io/kuberay-helm/"
   chart      = "ray-cluster"
   namespace  = var.namespace
+  version    = "0.6.1"
   values     = var.enable_autopilot ? [file("${path.module}/kuberay-autopilot-values.yaml")] : (var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : [file("${path.module}/kuberay-values.yaml")])
 }
