@@ -77,3 +77,16 @@ variable "support_email" {
   description = "Email for users to contact with questions about their consent"
   default     = "<Support email>"
 }
+
+variable "client_id" {
+  type        = string
+  description = "Client ID used for enabling IAP"
+  default     = ""
+}
+
+variable "client_secret" {
+  type        = string
+  description = "Client secret used for enabling IAP"
+  default     = ""
+  sensitive = true
+}

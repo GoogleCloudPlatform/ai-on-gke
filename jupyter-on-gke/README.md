@@ -22,7 +22,7 @@ Preinstall the following on your computer:
 * Helm
 * Gcloud
 
-> **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using `terraform destory` before reapplying/reinstalling.
+> **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using `terraform destroy` before reapplying/reinstalling.
 
 ### JupyterHub
 
@@ -47,6 +47,8 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
     * enable_iap_service - Enables the IAP service API. Leave as false if IAP is enabled before.
     * brand - creates a brand for the project, only one is currently allowed per project. If there is already a brand, leave the variable empty.
     * support_email - used by brand, required field.
+    * **IMPORTANT** client_id and client_secret - If your brand is `external`, you must provide your own client_id and client_secret. If your brand is `internal`, you can choose to leave the variable as is and allow terraform to create one for you.
+        * if you do bring your own OAuth client, you must add to the `Authorized redirect URIs` Field:  `https://iap.googleapis.com/v1/oauth/clientIds/<client ID>:handleRedirect`
 
     **Note:**
     We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
