@@ -51,7 +51,7 @@ require (
 	github.com/prometheus/common v0.28.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/ray-project/kuberay v1.0.0-rc.2 // indirect
-	github.com/ray-project/kuberay/ray-operator v0.6.0 // indirect
+	github.com/ray-project/kuberay/ray-operator v1.0.0 // indirect
 	github.com/ray-project/ray-operator v0.0.0-20200207195449-58e94d549bfe // indirect
 	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
