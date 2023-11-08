@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
-	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1alpha1"
+	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
