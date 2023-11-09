@@ -117,7 +117,7 @@ By default, the IAP service is not enabled on the project. If this variable is s
 
 ### `brand` and `support_email`
 
-To create an OAuth client, a brand is required. The brand is essentially the app show on the [OAuth consent screen](https://pantheon.corp.google.com/apis/credentials/consent). Ex:
+To create an OAuth client, a brand is required. The brand is essentially the app show on the [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent). Ex:
 
 ![IAP Screen](../images/brand_screenshot.png)
 
@@ -127,12 +127,12 @@ The `support_email` variable will not be used if the `brand` variable is not fil
 
 There are 2 ways to add users to the IAP allowlist so users can access Jupyterhub.
 
-1. Manually on the GCloud UI
+1. Manually on the Cloud Console
 2. Add users to the allowlist file
 
 ### Manually
 
-Navigate to [IAP](https://pantheon.corp.google.com/security/iap) and select the Backend Service associated with Jupyterhub.
+Navigate to [IAP](https://console.cloud.google.com/security/iap) and select the Backend Service associated with Jupyterhub.
 
 Click on `Add Principal`. Add the email of the user/group and select the `IAP-secured Web App User` role to give access to that user/group
 
