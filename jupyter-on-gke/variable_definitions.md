@@ -55,7 +55,7 @@ Uses [support_email](#support_email)
 
 ### support_email
 
-Support email assocated with the [brand](#brand). Used as a point of contact for consent for the ["OAuth Consent" in Pantheon](https://pantheon.corp.google.com/apis/credentials/consent). It will not be used if brand is empty.
+Support email assocated with the [brand](#brand). Used as a point of contact for consent for the ["OAuth Consent" in Cloud Console](https://console.cloud.google.com/apis/credentials/consent). It will not be used if brand is empty.
 
 ### url_domain_addr
 
