@@ -14,8 +14,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// our representation of a pod slice
+// not necessarily true that worker groups scheduled on 1 slice
+type Slice struct {
+	rayClusterName	string
+	groupName	string
+}
+
 // map of ray cluster names to # of workers created in the slice
-var sliceToWorkers map[string]int
+var sliceToWorkers map[Slice]int
 
 // unmarshal raycluster from admission request
 func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCluster, error) {
@@ -42,10 +49,11 @@ func mutateRayCluster(
 		numWorkers := int(*raycluster.Spec.WorkerGroupSpecs[i].Replicas)
 
 		// generate hostnames - TODO: make these hostnames DNS addressable with headless-svc
+		workerGroupName := raycluster.Spec.WorkerGroupSpecs[i].GroupName
 		serviceName := "headless-svc"
 		hostNames := make([]string, numWorkers)
 		for j := 0; j < numWorkers; j++ {
-			hostNames[j] = fmt.Sprintf("worker-%d.%s", j, serviceName)
+			hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
 		}
 		joinedHostNames := strings.Join(hostNames, ",")
 
@@ -106,12 +114,14 @@ func mutatePod(
 	pod, _ := extractPod(admissionReview)
 
 	// ray operator only sets GenerateName field - doesn't include random suffix until after admission request
-	// have to use mapping of cluster name -> # workers created to set TPU_WORKER_IDs
+	// use mapping of {cluster name, group name} -> # workers created to set TPU_WORKER_IDs
 	clusterName := pod.Labels["ray.io/cluster"]
+	groupName := pod.Labels["ray.io/group"]
+	podSlice := Slice{clusterName, groupName}
 
 	// assign to the next unique ID in the pod slice
-	tpu_worker_id := sliceToWorkers[clusterName]
-	sliceToWorkers[clusterName] += 1
+	tpu_worker_id := sliceToWorkers[podSlice]
+	sliceToWorkers[podSlice] += 1
 
 	// create patch to tell pod how to modify environment
 	patches := []map[string]interface{}{}
@@ -151,7 +161,7 @@ func mutatePod(
 }
 
 func init() {
-	sliceToWorkers = make(map[string]int)
+	sliceToWorkers = make(map[Slice]int)
 }
 
 func main() {
