@@ -21,8 +21,29 @@ type Slice struct {
 	groupName	string
 }
 
-// map of ray cluster names to # of workers created in the slice
-var sliceToWorkers map[Slice]int
+var (
+	tpuResourceName = corev1.ResourceName("google.com/tpu")
+
+	// map of ray cluster names to # of workers created in the slice
+	sliceToWorkers map[Slice]int
+)
+
+// check if containers are requesting TPU resources
+func containerRequestingTPUs(containers ...corev1.Container) bool {
+	for _, container := range containers {
+		if l := container.Resources.Limits; l != nil {
+			if resource := l[tpuResourceName]; !resource.IsZero() {
+				return true
+			}
+		}
+		if r := container.Resources.Requests; r != nil {
+			if resource := r[tpuResourceName]; !resource.IsZero() {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 // unmarshal raycluster from admission request
 func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCluster, error) {
@@ -60,22 +81,24 @@ func mutateRayCluster(
 		// inject hostnames into ray worker pods
 		for j := 0; j < len(raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers); j++ {
 			container := raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers[j]
-			patch := map[string]interface{}{
-				"op": "add",
+			if(containerRequestingTPUs(container)) {
+				patch := map[string]interface{}{
+					"op": "add",
+				}
+				path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", i, j)
+				value := corev1.EnvVar{
+					Name:  "TPU_WORKER_HOSTNAMES",
+					Value: joinedHostNames,
+				}
+				if len(container.Env) == 0 {
+					patch["path"] = path
+					patch["value"] = []corev1.EnvVar{value}
+				} else {
+					patch["path"] = fmt.Sprintf("%s/-", path)
+					patch["value"] = value
+				}
+				patches = append(patches, patch)
 			}
-			path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", i, j)
-			value := corev1.EnvVar{
-				Name:  "TPU_WORKER_HOSTNAMES",
-				Value: joinedHostNames,
-			}
-			if len(container.Env) == 0 {
-				patch["path"] = path
-				patch["value"] = []corev1.EnvVar{value}
-			} else {
-				patch["path"] = fmt.Sprintf("%s/-", path)
-				patch["value"] = value
-			}
-			patches = append(patches, patch)
 		}
 	}
 	patchBytes, _ := json.Marshal(patches)
@@ -126,24 +149,27 @@ func mutatePod(
 	// create patch to tell pod how to modify environment
 	patches := []map[string]interface{}{}
 
-	// inject the TPU_WORKER_ID environment variable into each container
+	// inject the TPU_WORKER_ID environment variable into the container reguesting TPUs
 	for i := 0; i < len(pod.Spec.Containers); i++ {
-		path := fmt.Sprintf("/spec/containers/%d/env", i)
-		value := corev1.EnvVar{
-			Name:  "TPU_WORKER_ID",
-			Value: fmt.Sprint(tpu_worker_id),
+		container := pod.Spec.Containers[i]
+		if(containerRequestingTPUs(container)) {
+			path := fmt.Sprintf("/spec/containers/%d/env", i)
+			value := corev1.EnvVar{
+				Name:  "TPU_WORKER_ID",
+				Value: fmt.Sprint(tpu_worker_id),
+			}
+			patch := map[string]interface{}{
+				"op": "add",
+			}
+			if(len(container.Env) == 0) {
+				patch["path"] = path
+				patch["value"] = []corev1.EnvVar{value}
+			} else {
+				patch["path"] = fmt.Sprintf("%s/-", path)
+				patch["value"] = value
+			}
+			patches = append(patches, patch)
 		}
-		patch := map[string]interface{}{
-			"op": "add",
-		}
-		if(len(pod.Spec.Containers[i].Env) == 0) {
-			patch["path"] = path
-			patch["value"] = []corev1.EnvVar{value}
-		} else {
-			patch["path"] = fmt.Sprintf("%s/-", path)
-			patch["value"] = value
-		}
-		patches = append(patches, patch)
 	}
 
 	patchBytes, _ := json.Marshal(patches)
