@@ -1,3 +1,17 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 steps:
   - id: 'validate platform'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -14,6 +28,14 @@ steps:
       terraform validate -no-color
     dir: 'ray-on-gke/user/'
     waitFor: ['-']
+  
+  - id: 'validate jupyterhub'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: 'jupyter-on-gke/'
+    waitFor: ['-']
 
   - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -25,35 +47,31 @@ steps:
       - |
         terraform apply -var=project_id=$PROJECT_ID \
         -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=region=$_ZONE -auto-approve -no-color \
-        || ( terraform destroy -auto-approve && exit 1 )
+        -var=region=$_ZONE -auto-approve -no-color 
+        echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'gke-platform/'
-    waitFor: ['validate platform', 'validate user']
-
-  - id: 'get kube config'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'sh'
-    args: 
-    - '-c'
-    - |
-      gcloud container clusters get-credentials \
-      ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-      --zone $_ZONE \
-      --project $PROJECT_ID 
-    waitFor: ['create gke cluster']
+    allowFailure: true
+    waitFor: ['validate platform', 'validate user', 'validate jupyterhub']
   
-  - id: 'create ray cluster'
+  - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
+        # Get kube config
+        gcloud container clusters get-credentials \
+        ray-$SHORT_SHA-$_PR_NUMBER-cluster \
+        --zone $_ZONE \
+        --project $PROJECT_ID 
+
+        cd ray-on-gke/user/
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=namespace=$SHORT_SHA \
         -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        -auto-approve -no-color \
-        || ( echo "false" > /workspace/user_result )
+        -auto-approve -no-color 
+        echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
         kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
@@ -62,33 +80,96 @@ steps:
         sleep 5s
 
         ray job submit --working-dir ../example_ray_job_scripts \
-        --address=http://127.0.0.1:8265 -- python ray_job.py \
-        || ( echo "false" >> /workspace/ray_result.txt )
+        --address=http://127.0.0.1:8265 -- python ray_job.py 
+        echo "pass" > /workspace/ray_result.txt
+    allowFailure: true
+    waitFor: ['create gke cluster']
 
-        terraform destroy -var=project_id=$PROJECT_ID \
-        -var=namespace=$SHORT_SHA \
-        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        -auto-approve -no-color
-    dir: 'ray-on-gke/user/'
-    waitFor: ['get kube config']
-
-  - id: 'clean gke cluster'
-    name: 'gcr.io/cloud-builders/gcloud'
+  - id: 'test jupyterhub'
+    name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
+        cd jupyter-on-gke/tests
+        python3 change_jupyter_config.py
+
+        cd ../
+        terraform apply \
+        -var=project_id=$PROJECT_ID \
+        -var=namespace=$SHORT_SHA \
+        -var=add_auth=false \
+        -var=enable_iap_service=false \
+        -auto-approve -no-color 
+        echo "pass" > /workspace/jupyterhub_tf_result.txt
+
+        kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
+        kubectl get services -n $SHORT_SHA
+        kubectl get service proxy-public -n $SHORT_SHA --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/jupyterhub_host_url.txt
+        echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
+
+        cd tests/
+        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) 
+        echo "pass" > /workspace/jupyterhub_test_result.txt 
+    allowFailure: true
+    waitFor: ['test ray cluster']
+
+  - id: 'clean gke cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd jupyter-on-gke/
+        terraform destroy \
+        -var=project_id=$PROJECT_ID \
+        -var=namespace=$SHORT_SHA \
+        -var=add_auth=false \
+        -var=enable_iap_service=false \
+        -auto-approve -no-color 
+
+        cd ../ray-on-gke/user/
+        terraform destroy -var=project_id=$PROJECT_ID \
+        -var=namespace=$SHORT_SHA \
+        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+        -auto-approve -no-color
+
         gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
+    allowFailure: true
+    waitFor: ['test jupyterhub']
 
-        if [[ $(cat /workspace/ray_result.txt) == "false" ]]; then
+  - id: 'check result'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [[ $(cat /workspace/gke_cluster_result.txt) != "pass" ]]; then
+          echo "gke cluster creation failed"
           exit 1
         fi
 
-        if [[ $(cat /workspace/user_result.txt) == "false" ]]; then
+        if [[ $(cat /workspace/ray_result.txt) != "pass" ]]; then
+          echo "ray API run failed"
           exit 1
         fi
-    waitFor: ['create ray cluster']
 
+        if [[ $(cat /workspace/user_result.txt) != "pass" ]]; then
+          echo "ray cluster failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/jupyterhub_tf_result.txt) != "pass" ]]; then
+          echo "jupyterhub tf failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/jupyterhub_test_result.txt) != "pass" ]]; then
+          echo "jupyterhub test failed"
+          exit 1
+        fi
+    waitFor: ['clean gke cluster']
+        
 substitutions:
   _ZONE: us-central1-c
   _USER_NAME: github
