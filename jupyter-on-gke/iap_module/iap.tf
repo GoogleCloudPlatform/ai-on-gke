@@ -69,7 +69,7 @@ resource "kubernetes_secret" "my-secret" {
 
   # Omitting type defaults to `Opaque` which is the equivalent of `generic` 
   data = {
-    "client_id"     = var.client.client_id
-    "client_secret" = var.client.secret
+    "client_id"     = var.client_id
+    "client_secret" = var.client_secret
   }
 }

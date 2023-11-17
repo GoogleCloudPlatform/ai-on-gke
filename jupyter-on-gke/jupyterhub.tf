@@ -70,6 +70,7 @@ resource "google_iap_brand" "project_brand" {
 
 # Creates the OAuth client used in IAP
 resource "google_iap_client" "iap_oauth_client" {
+  count = var.client_id != "" ? 0 : 1
   display_name = "Jupyter-Client"
   brand        = "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}"
 }
@@ -92,7 +93,8 @@ module "iap_auth" {
   project_id      = var.project_id
   namespace       = var.namespace
   service_name    = var.service_name
-  client          = google_iap_client.iap_oauth_client
+  client_id = var.client_id != "" ?  var.client_id : google_iap_client.iap_oauth_client[0].client_id
+  client_secret = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
   url_domain_addr = var.url_domain_addr
   url_domain_name = var.url_domain_name
 

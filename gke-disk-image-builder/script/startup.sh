@@ -1,3 +1,17 @@
+#  Copyright 2023 Google LLC
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
 sudo apt update
 sudo apt-get update
 
@@ -70,14 +84,33 @@ function process_snapshots() {
   for snapshot in "${snapshots[@]}"; do
     echo Processing $snapshot
 
-    sudo ctr -n k8s.io snapshot view tmp_$snapshot $snapshot
-    # Check if the view was successfully created
-    if [ $? -ne 0 ]; then
-      echo Failed to create snapshot view for $snapshot. Please rerun the tool to try it again.
+    # Add retry in case `ctr snapshot view` fails silently
+    local retries=5
+    while [ ${retries} -ge 1 ]; do 
+      ((retries--))
+      sudo ctr -n k8s.io snapshot view tmp_$snapshot $snapshot
+      # Check if the view was successfully created
+      if [ $? -ne 0 ]; then
+        echo "Failed to create snapshot view for $snapshot. Will retry. ${retries} retries left."
+        continue
+      fi
+      
+      original_path=$(sudo ctr -n k8s.io snapshot mount /tmp_$snapshot tmp_$snapshot | grep -oP '/\S+/snapshots/[0-9]+/fs' | tr ':' '\n' | head -n 1)
+      if [[ -n "$original_path" ]]; then
+        break
+      fi
+      echo "Failed to get mount point for tmp_$snapshot. Will retry. ${retries} retries left."
+      echo "All snapshots:"
+      sudo ctr -n k8s.io snapshot list
+      sudo ctr -n k8s.io snapshot rm tmp_$snapshot
+      sleep 1
+    done
+
+    if [[ -z "$original_path" ]]; then
+      echo Failed to get snapshot directory for snapshot $snapshot. Please rerun the tool to try it again.
       exit 1
     fi
 
-    original_path=$(sudo ctr -n k8s.io snapshot mount /tmp_$snapshot tmp_$snapshot | grep -oP '/\S+/snapshots/[0-9]+/fs' | tr ':' '\n' | head -n 1)
     new_path=$(echo $original_path | grep -o "snapshots/.*/fs")
     sudo mkdir -p "/mnt/disks/container_layers/${new_path}"
     sudo cp -r $original_path "/mnt/disks/container_layers/${new_path}/.."
