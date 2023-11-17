@@ -31,7 +31,7 @@ spec:
         gke-gcsfuse/volumes: "true"
     spec:
       nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
+        cloud.google.com/gke-accelerator: "nvidia-l4"
       containers:
       - name: tfserve-server
         image: tensorflow/serving:2.13.1-gpu
