@@ -16,34 +16,12 @@ export PROJECT_ID=$(gcloud config get project)
 
 Create a GKE cluster:
 ```bash
-gcloud container clusters create l4-demo --location ${REGION} \
-  --workload-pool ${PROJECT_ID}.svc.id.goog \
-  --enable-image-streaming --enable-shielded-nodes \
-  --shielded-secure-boot --shielded-integrity-monitoring \
-  --enable-ip-alias \
-  --node-locations=$REGION-a \
-  --workload-pool=${PROJECT_ID}.svc.id.goog \
-  --addons GcsFuseCsiDriver   \
-  --no-enable-master-authorized-networks \
-  --machine-type n2d-standard-4 \
-  --num-nodes 1 --min-nodes 1 --max-nodes 5 \
-  --ephemeral-storage-local-ssd=count=2 \
-  --enable-ip-alias \
-  --enable-private-nodes  \
-  --master-ipv4-cidr 172.16.0.32/28
-```
-
-Create a nodepool where each VM has 2 x L4 GPU:
-```bash
-gcloud container node-pools create g2-standard-24 --cluster l4-demo \
-  --accelerator type=nvidia-l4,count=2,gpu-driver-version=latest \
-  --machine-type g2-standard-24 \
-  --ephemeral-storage-local-ssd=count=2 \
-  --enable-autoscaling --enable-image-streaming \
-  --num-nodes=0 --min-nodes=0 --max-nodes=3 \
-  --shielded-secure-boot \
-  --shielded-integrity-monitoring \
-  --node-locations $REGION-a,$REGION-b --region $REGION --spot
+VERSION="1.28.3-gke.1203000"
+CHANNEL="rapid"
+CLUSTER_NAME=l4-demo
+gcloud container clusters create-auto $CLUSTER_NAME \
+    --release-channel $CHANNEL --region $REGION \
+    --cluster-version $VERSION
 ```
 
 Hugging Face requires authentication to download the [Llama-2-70b-chat-hf](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf) model, which means an access token is required to download the model.
@@ -106,8 +84,17 @@ spec:
            emptyDir:
               medium: Memory
          - name: data
-           hostPath:
-            path: /mnt/stateful_partition/kube-ephemeral-ssd/llama-data
+           ephemeral:
+              volumeClaimTemplate:
+                metadata:
+                  labels:
+                    type: data-volume
+                spec:
+                  accessModes: [ "ReadWriteOnce" ]
+                  storageClassName: "premium-rwo"
+                  resources:
+                    requests:
+                      storage: 200Gi
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-l4
 ```
