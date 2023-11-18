@@ -66,11 +66,16 @@ scheduling:
 
 singleuser:
   memory:
-    limit: 1G
-    guarantee: 1G
+    limit: 32G
+    guarantee: 8G
   cpu:
-    limit: .5
-    guarantee: .5
+    limit: 8
+    guarantee: 4
+  extraResource:
+    limits:
+      ephemeral-storage: 20Gi
+    guarantees:
+      ephemeral-storage: 10Gi
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
   image:
