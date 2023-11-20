@@ -70,11 +70,14 @@ module "gke_autopilot" {
 module "gke_standard" {
   source = "./modules/gke_standard"
 
-  project_id       = var.project_id
-  region           = var.region
-  cluster_name     = var.cluster_name
-  enable_autopilot = var.enable_autopilot
-  enable_tpu       = var.enable_tpu
+  project_id                = var.project_id
+  region                    = var.region
+  cluster_name              = var.cluster_name
+  enable_autopilot          = var.enable_autopilot
+  enable_tpu                = var.enable_tpu
+  gpu_pool_machine_type     = var.gpu_pool_machine_type
+  gpu_pool_accelerator_type = var.gpu_pool_accelerator_type
+  gpu_pool_node_locations   = var.gpu_pool_node_locations
 }
 
 module "kubernetes" {
