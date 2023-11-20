@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sax-admin-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sax-admin-server
+  template:
+    metadata:
+      labels:
+        app: sax-admin-server
+    spec:
+      hostNetwork: false
+      serviceAccountName: sax-sa
+      containers:
+      - name: sax-admin-server
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/sax-admin-server:v1.1.0
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 10000
+        env:
+        - name: GSBUCKET
+          value: ${SAX_ADMIN_STORAGE_BUCKET}
