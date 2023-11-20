@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sax-http-lb
+spec:
+  selector:
+    app: sax-http
+  ports:
+  - protocol: TCP
+    port: 8888
+    targetPort: 8888
+  type: LoadBalancer

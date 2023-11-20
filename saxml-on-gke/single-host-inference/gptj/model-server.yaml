@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sax-model-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sax-model-server
+  template:
+    metadata:
+      labels:
+        app: sax-model-server
+    spec:
+      serviceAccountName: sax-sa
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 2x2
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+      hostNetwork: false
+      restartPolicy: Always
+      containers:
+      - name: sax-model-server
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/sax-model-server:v1.1.0
+        args: ["--port=10001","--sax_cell=/sax/test", "--platform_chip=tpuv4", "--platform_topology=2x2", "--jax_platforms=tpu"]
+        ports:
+        - containerPort: 10001
+        securityContext:
+          privileged: true
+        env:
+        - name: SAX_ROOT
+          value: "gs://${SAX_ADMIN_STORAGE_BUCKET}/sax-root"
+        resources:
+          requests:
+            google.com/tpu: 4
+          limits:
+            google.com/tpu: 4

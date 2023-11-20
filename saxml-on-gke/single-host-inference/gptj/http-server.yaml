@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sax-http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sax-http
+  template:
+    metadata:
+      labels:
+        app: sax-http
+    spec:
+      hostNetwork: false
+      serviceAccountName: sax-sa
+      containers:
+      - name: sax-http
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/sax-http:v1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8888
+        env:
+        - name: SAX_ROOT
+          value: "gs://${SAX_ADMIN_STORAGE_BUCKET}/sax-root"
+
