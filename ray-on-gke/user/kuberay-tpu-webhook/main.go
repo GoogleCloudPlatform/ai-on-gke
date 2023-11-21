@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"strconv"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -45,6 +46,26 @@ func containerRequestingTPUs(containers ...corev1.Container) bool {
 	return false
 }
 
+// check if request is for TPU multi-host
+func isTPUMultiHost(topology string) bool {
+	topologyVals :=  strings.Split(topology, "x")
+	values := make([]int, len(topologyVals))
+	for i := 0; i < len(values); i++ {
+		values[i], _ = strconv.Atoi(topologyVals[i])
+	}
+	vms := 1 // number VMs = number chips / 4
+	if(len(values) == 3) {
+		// TPU v4
+		vms = max(values[0]*values[1]*values[2]/4, 1)
+	} else if(len(values) == 2) {
+		// TPU v5e
+		// slices with 8 chips can be single or multi host
+		chips := values[0]*values[1]
+		vms = max(chips/4, 1)
+	}
+	return (vms > 1)
+}
+
 // unmarshal raycluster from admission request
 func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCluster, error) {
 	if admissionReview.Request.Kind.Kind != "RayCluster" {
@@ -68,37 +89,40 @@ func mutateRayCluster(
 
 	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
 		if(containerRequestingTPUs(raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers...)) {
-			numWorkers := int(*raycluster.Spec.WorkerGroupSpecs[i].Replicas)
+			topology := raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+			if(isTPUMultiHost(topology)) {
+				numWorkers := int(*raycluster.Spec.WorkerGroupSpecs[i].Replicas)
 
-			// generate DNS hostnames
-			workerGroupName := raycluster.Spec.WorkerGroupSpecs[i].GroupName
-			serviceName := "headless-svc" // TODO: get headless-svc associated with workergroup
-			hostNames := make([]string, numWorkers)
-			for j := 0; j < numWorkers; j++ {
-				hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
-			}
-			joinedHostNames := strings.Join(hostNames, ",")
+				// generate DNS hostnames
+				workerGroupName := raycluster.Spec.WorkerGroupSpecs[i].GroupName
+				serviceName := "headless-svc" // TODO: get headless-svc associated with workergroup
+				hostNames := make([]string, numWorkers)
+				for j := 0; j < numWorkers; j++ {
+					hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
+				}
+				joinedHostNames := strings.Join(hostNames, ",")
 
-			// inject hostnames into ray worker pods
-			for j := 0; j < len(raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers); j++ {
-				container := raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers[j]
-				if(containerRequestingTPUs(container)) {
-					patch := map[string]interface{}{
-						"op": "add",
+				// inject hostnames into ray worker pods
+				for j := 0; j < len(raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers); j++ {
+					container := raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers[j]
+					if(containerRequestingTPUs(container)) {
+						patch := map[string]interface{}{
+							"op": "add",
+						}
+						path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", i, j)
+						value := corev1.EnvVar{
+							Name:  "TPU_WORKER_HOSTNAMES",
+							Value: joinedHostNames,
+						}
+						if len(container.Env) == 0 {
+							patch["path"] = path
+							patch["value"] = []corev1.EnvVar{value}
+						} else {
+							patch["path"] = fmt.Sprintf("%s/-", path)
+							patch["value"] = value
+						}
+						patches = append(patches, patch)
 					}
-					path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", i, j)
-					value := corev1.EnvVar{
-						Name:  "TPU_WORKER_HOSTNAMES",
-						Value: joinedHostNames,
-					}
-					if len(container.Env) == 0 {
-						patch["path"] = path
-						patch["value"] = []corev1.EnvVar{value}
-					} else {
-						patch["path"] = fmt.Sprintf("%s/-", path)
-						patch["value"] = value
-					}
-					patches = append(patches, patch)
 				}
 			}
 		}
@@ -143,12 +167,13 @@ func mutatePod(
 	clusterName := pod.Labels["ray.io/cluster"]
 	groupName := pod.Labels["ray.io/group"]
 	podSlice := Slice{clusterName, groupName}
+	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 
 	// create patch to tell pod how to modify environment
 	patches := []map[string]interface{}{}
 
 	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
-	if(containerRequestingTPUs(pod.Spec.Containers...)) {
+	if(containerRequestingTPUs(pod.Spec.Containers...) && isTPUMultiHost(topology)) {
 		// assign to the next unique ID in the pod slice
 		tpu_worker_id := sliceToWorkers[podSlice]
 		sliceToWorkers[podSlice] += 1
