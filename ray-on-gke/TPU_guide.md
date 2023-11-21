@@ -106,6 +106,5 @@ def init_jax_from_ray(num_workers: int):
 init_jax_from_ray(num_workers=2)
 
 ``` 
-
-
+When initializing multi-host TPUs, the environment variables can be set using a mutating admission webhook. The webhook can be deployed following the instructions in the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/kuberay-tpu-env-injector/ray-on-gke/user/kuberay-tpu-webhook#readme).
 
