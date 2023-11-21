@@ -52,7 +52,7 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
 
     **Note:**
     We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
-    Visit the [GCloud UI](https://pantheon.corp.google.com/security/iap) to see if it's enabled. If it's enabled, you will be able to see the page and will not prompt you to enable API:
+    Visit the [Cloud Console](https://console.cloud.google.com/security/iap) to see if it's enabled. If it's enabled, you will be able to see the page and will not prompt you to enable API:
 
     ![IAP API Screen](./images/iap_enable_api_screenshot.png)
 
@@ -106,7 +106,7 @@ To secure the Jupyter endpoint, this example enables IAP by default. It is _stro
 
 12. Re-run `terraform apply`
 
-13. Navigate to the [GCP IAP Cloud Console](https://pantheon.corp.google.com/security/iap) and select your backend-service checkbox.
+13. Navigate to the [GCP IAP Cloud Console](https://console.cloud.google.com/security/iap) and select your backend-service checkbox.
 
 14. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
 
