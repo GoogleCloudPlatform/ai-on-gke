@@ -1,4 +1,4 @@
-FROM golang:1.21 AS builder
+FROM google-go.pkg.dev/golang:1.21.3 AS builder
 
 WORKDIR /app
 COPY go.mod go.sum ./
