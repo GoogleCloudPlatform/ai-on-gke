@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: headless-svc
+  name: tpu-worker-group-svc
   labels:
     kuberay-tpu-webhook/inject: enabled
 spec:
