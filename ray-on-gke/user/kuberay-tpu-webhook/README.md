@@ -27,17 +27,17 @@ Preinstall on your computer:
 
 1. `make install-cert-manager`
 
-2. `make deploy-cert`
+2. If deploying webhook across multiple namespaces: `make install-reflector`
 
-3. If deploying webhook across multiple namespaces: `make install-reflector`
+3. `make all`
 
-4. `make all`
+4. `make docker-build` - edit Makefile with your own Docker image if necessary
 
-5. `make docker-build` - edit Makefile with your own Docker image if necessary
+5. `make docker-push`
 
-6. `make docker-push`
+6. `make deploy`
 
-7. `make deploy`
+7. `make deploy-cert`
 
 ### Injecting TPU Environment Variables
 
