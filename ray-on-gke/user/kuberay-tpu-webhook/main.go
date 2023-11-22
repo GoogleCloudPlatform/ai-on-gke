@@ -92,10 +92,9 @@ func mutateRayCluster(
 			topology := raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 			if(isTPUMultiHost(topology)) {
 				numWorkers := int(*raycluster.Spec.WorkerGroupSpecs[i].Replicas)
-
 				// generate DNS hostnames
 				workerGroupName := raycluster.Spec.WorkerGroupSpecs[i].GroupName
-				serviceName := "headless-svc" // TODO: get headless-svc associated with workergroup
+				serviceName := "tpu-worker-group-svc" // TODO: get headless-svc associated with workergroup
 				hostNames := make([]string, numWorkers)
 				for j := 0; j < numWorkers; j++ {
 					hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
