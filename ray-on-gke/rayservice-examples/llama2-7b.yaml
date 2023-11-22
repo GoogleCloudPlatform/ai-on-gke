@@ -52,6 +52,9 @@ spec:
               requests:
                 cpu: 2
                 memory: 8Gi
+            volumeMounts:
+            - mountPath: /home/ray/models
+              name: model                
             ports:
             - containerPort: 6379
               name: gcs-server
@@ -61,6 +64,13 @@ spec:
               name: client
             - containerPort: 8000
               name: serve
+          volumes:
+          - name: model
+            configMap:
+              name: meta-llama2-7b-chat-hf
+              items:
+              - key: meta-llama--Llama-2-7b-chat-hf.yaml
+                path: meta-llama--Llama-2-7b-chat-hf.yaml              
     workerGroupSpecs:
     # the pod replicas in this group typed worker
     - replicas: 1

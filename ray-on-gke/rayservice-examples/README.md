@@ -1,4 +1,4 @@
-# Serve meta llama2 (7b, 13b), llama2 70b quantized, falcon 7b or falcon40 quantized models
+# Serve meta llama2 7b, llama2 70b quantized, falcon 7b-instruct or falcon 40b-instruct quantized models
 
 Use `RayService` and `ray-llm`, which manages a Ray Cluster to load your models for inferencing 
 
@@ -11,21 +11,29 @@ Use `RayService` and `ray-llm`, which manages a Ray Cluster to load your models 
 ## Pre-requisites
 - Navigate to the `gke-platform` folder
 - Specify values to deploy `L4` GPUs in the cluster, in the `gke-platform` folder.
-```zsh
-cat << EOF > terraform.tfvars
-gpu_pool_machine_type="g2-standard-24"
-gpu_pool_accelerator_type="nvidia-l4"
-gpu_pool_node_locations=["us-central1-a", "us-central1-c"]
-EOF
-```
+    - Autopilot
+    ```zsh
+    cat << EOF > terraform.tfvars
+    enable_autopilot=true
+    EOF
+    ```
 
-- Deploy GKE (tested on gke_standard)
+    - Standard
+    ```zsh
+    cat << EOF > terraform.tfvars
+    gpu_pool_machine_type="g2-standard-24"
+    gpu_pool_accelerator_type="nvidia-l4"
+    gpu_pool_node_locations=["us-central1-a", "us-central1-c"]
+    EOF
+    ```
+
+- Deploy GKE
 ```zsh
 terraform init
 terraform apply --auto-approve
 ```
  
-- Return to the `llm-on-ray` folder
+- Return to the `ray-on-gke/rayservice-examples` folder
 - Prepare your HF token as a secret
 > NOTE: In this example, this is needed for the llama-2 models, not the falcon.
 ```zsh
@@ -42,14 +50,24 @@ gcloud container clusters get-credentials ml-cluster --region us-central1
 
 > NOTE: The pre-built rayllm container image has models that references different accelerator types. For this example we are using nvidia `L4` GPUs, so the `spec.serveConfigV2` in `RayService` points to a [repo archive](https://github.com/kenthua/ai-ml) which contains models that uses the `L4` accelerator type. Alternatively, you can build an image as part of the pipeline and include your desired models.
 
-## Instructions for meta llama2 (7b, 13b) or falcon 7b chat model
+## Instructions for meta llama2 7b or falcon 7b-instruct chat model
 This example uses the `rayllm.backend:router_application` to load the model.
 
-- Deploy the RayService, below is the llama2 7b model, but you can change the `rayservice-*` filename to your desired model. llama2 (7b, 13b) or falcon 7b 
-```zsh
-kubectl apply -f hf-secret.yaml
-kubectl apply -f rayservice-meta-llama2-7b.yaml
-```
+- Deploy the RayService, below is the llama2 7b model, but you can change the `rayservice-*` filename to your desired model. llama2 7b or falcon 7b 
+    - Autopilot
+    ```zsh
+    kubectl apply -f hf-secret.yaml
+    kubectl apply -f ap_pvc-rayservice.yaml
+    kubectl apply -f models/llama2-7b-chat-hf.yaml
+    kubectl apply -f ap_llama2-7b.yaml
+    ```
+
+    - Standard
+    ```zsh
+    kubectl apply -f hf-secret.yaml
+    kubectl apply -f models/llama2-7b-chat-hf.yaml
+    kubectl apply -f llama2-7b.yaml
+    ```
 
 - Confirm the model is ready, from status `DEPLOYING` to `RUNNING`
 ```zsh
@@ -65,7 +83,7 @@ kubectl port-forward service/rayllm-serve-svc 8000:8000
 ```
 
 - Test out the inference endpoint
-> NOTE: Change the model below in the json model value to reflect the deployed model. i.e. `tiiuae/falcon-7b` or `meta-llama/Llama-2-13b-chat-hf`.
+> NOTE: Change the model below in the json model value to reflect the deployed model. i.e. `tiiuae/falcon-7b`.
 
 ```zsh
 curl http://localhost:8000/v1/chat/completions \
@@ -85,7 +103,7 @@ curl http://localhost:8000/v1/chat/completions \
 The [sample gradio app](https://github.com/kenthua/gradio-app) at the moment only supports chat completions json spec so it won't work with TGI text spec, which is what the quantized models in the later section uses. If you deploy the gradio application, you do not need the port forward of 8000 above
 
 - Deploy the sample gradio application
-> NOTE: If you deploy other models such as the `falcon-7b` or the `llama2-13b`, be sure to change the model value in the `gradio.yaml`.
+> NOTE: If you deploy other models such as the `falcon-7b`, be sure to change the model value in the `gradio.yaml`.
 
 ```zsh
 kubectl apply -f gradio.yaml
@@ -98,17 +116,27 @@ EXTERNAL_IP=$(kubectl get services gradio \
 echo -e "\nGradio URL: http://${EXTERNAL_IP}\n"
 ```
 
-## Instructions for meta llama-2 70b chat or falcon 40b model with 4bit quantization
+## Instructions for meta llama-2 70b chat or falcon 40b-instruct model with 4bit quantization
 
-> NOTE: If you deployed the previous 7b example, it will be overwritten by this example. You will also need the huggingface api token for the falcon 40b example because it's an input for the huggingface transformer example.
+> NOTE: If you deployed the previous 7b example, it will be overwritten by this example. You will also need the huggingface api token for the falcon 40b-instruct example because it's an input for the huggingface transformer example.
 
 The `spec.serveConfigV2.applications.import_path` points to custom python which uses huggingface transformer `BitsAndBytesConfig` & `AutoModelForCausalLM` libraries to load the quantized model, so that we can fit the 70b or 40b parameter models into 2x `L4` GPUs. This example uses `ray-llm` as the container image though it's not using the `rayllm.backend:router_application` to load the model.
 
 - Deploy the RayService, below is the llama2 70b model, but you can change the `rayservice-*` filename to your desired model. llama2 70b or falcon 40b.
-```zsh
-kubectl apply -f hf-secret.yaml
-kubectl apply -f rayservice-meta-llama2-70b-quantized.yaml
-```
+    - Autopilot
+    ```zsh
+    kubectl apply -f hf-secret.yaml
+    kubectl apply -f ap_pvc-rayservice.yaml
+    kubectl apply -f models/quantized-model.yaml
+    kubectl apply -f ap_llama2-70b.yaml
+    ```
+
+    - Standard
+    ```zsh
+    kubectl apply -f hf-secret.yaml
+    kubectl apply -f models/quantized-model.yaml
+    kubectl apply -f llama2-70b.yaml
+    ```
 
 - Confirm the model is ready, from status `DEPLOYING` to `RUNNING`
 ```zsh
@@ -127,7 +155,7 @@ kubectl port-forward service/rayllm-serve-svc 8000:8000
 ```zsh
 curl -X POST http://localhost:8000/ \
   -H "Content-Type: application/json" \
-  -d '{"text": "How do I bake a pie?"}'
+  -d '{"text": "What are the top 5 most popular programming languages? Please be brief."}'
 ```
 
 ## Insights & Debugging
