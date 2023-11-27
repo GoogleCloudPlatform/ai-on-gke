@@ -27,16 +27,23 @@ else
   exit 1
 fi
 
+# Check if disk is partitioned and update disk path accordingly if so.
+DEVICE_NODE=/dev/disk/by-id/google-secondary-disk-image-disk
+if [[ -e "$DEVICE_NODE-part1" ]]; then
+  DEVICE_NODE="$DEVICE_NODE-part1"
+fi
+echo "using device node: $DEVICE_NODE"
+
 # Check if the device exists
-if ! [ -b /dev/sdb ]; then
-  echo Device /dev/sdb does not exist. Please rerun the tool to try it again.
+if ! [ -b /dev/disk/by-id/google-secondary-disk-image-disk ]; then
+  echo Device /dev/disk/by-id/google-secondary-disk-image-disk does not exist. Please rerun the tool to try it again.
   exit 1
 fi
 # Set ext4 as the file system.
-sudo mkfs.ext4 -F -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+sudo mkfs.ext4 -F -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/disk/by-id/google-secondary-disk-image-disk
 # Check if the filesystem was created successfully
 if [ $? -ne 0 ]; then
-  echo Failed to create the filesystem on /dev/sdb. Please rerun the tool to try it again.
+  echo Failed to create the filesystem on /dev/disk/by-id/google-secondary-disk-image-disk. Please rerun the tool to try it again.
   exit 1
 fi
 
@@ -134,7 +141,7 @@ function unpack() {
   # Prepare the disk image directories.
   echo Preparing the disk image directories...
   sudo mkdir -p /mnt/disks/container_layers
-  sudo mount -o discard,defaults /dev/sdb /mnt/disks/container_layers
+  sudo mount -o discard,defaults /dev/disk/by-id/google-secondary-disk-image-disk /mnt/disks/container_layers
   # Check if the directory was successfully created
   if [ $? -ne 0 ]; then
     echo Failed to create the view for $snapshot. Please rerun the tool to try it again.
