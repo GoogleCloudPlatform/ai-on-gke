@@ -28,6 +28,8 @@ else
 fi
 
 # Check if disk is partitioned and update device node file path accordingly if so.
+# The disk name prefix is defined here: https://github.com/GoogleCloudPlatform/ai-on-gke/blob/71ebab897948cbca722c9abf4ec3ff2bc1318b3b/gke-disk-image-builder/imager.go#L32
+# The full disk name is then created here: https://github.com/GoogleCloudPlatform/ai-on-gke/blob/71ebab897948cbca722c9abf4ec3ff2bc1318b3b/gke-disk-image-builder/imager.go#L111
 DEVICE_NODE=/dev/disk/by-id/google-secondary-disk-image-disk
 if [[ -e "$DEVICE_NODE-part1" ]]; then
   DEVICE_NODE="$DEVICE_NODE-part1"
