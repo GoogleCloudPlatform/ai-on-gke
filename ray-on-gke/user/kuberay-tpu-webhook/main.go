@@ -20,6 +20,8 @@ type Slice struct {
 	groupName	string
 }
 
+type patch map[string]any
+
 var (
 	tpuResourceName = corev1.ResourceName("google.com/tpu")
 	certPath = "/etc/kuberay-tpu-webhook/tls/tls.crt"
@@ -27,6 +29,8 @@ var (
 
 	// map of ray cluster names to # of workers created in the slice
 	sliceToWorkers map[Slice]int
+	
+	patches []patch
 )
 
 // check if containers are requesting TPU resources
@@ -80,49 +84,52 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
+func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
+	numWorkers := int(*workerGroupSpec.Replicas)
+	workerGroupName := workerGroupSpec.GroupName
+	serviceName := "tpu-worker-group-svc" // TODO: get headless-svc associated with workergroup
+	hostNames := make([]string, numWorkers)
+	for j := 0; j < numWorkers; j++ {
+		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
+	}
+	return strings.Join(hostNames, ",")
+}
+
+func injectHostnames(joinedHostNames string, workerGroupSpec ray.WorkerGroupSpec, workerGroupIndex int) {
+	for j := 0; j < len(workerGroupSpec.Template.Spec.Containers); j++ {
+		container := workerGroupSpec.Template.Spec.Containers[j]
+		if(containerRequestingTPUs(container)) {
+			patch := map[string]interface{}{
+				"op": "add",
+			}
+			path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", workerGroupIndex, j)
+			tpuWorkerHostNames := corev1.EnvVar{
+				Name:  "TPU_WORKER_HOSTNAMES",
+				Value: joinedHostNames,
+			}
+			if len(container.Env) == 0 {
+				patch["path"] = path
+				patch["value"] = []corev1.EnvVar{tpuWorkerHostNames}
+			} else {
+				patch["path"] = fmt.Sprintf("%s/-", path)
+				patch["value"] = tpuWorkerHostNames
+			}
+			patches = append(patches, patch)
+		}
+	}
+}
+
 // add TPU_WORKER_HOSTNAMES to containers in a ray cluster
-func mutateRayCluster(
-	admissionReview *admissionv1.AdmissionReview,
-) (*admissionv1.AdmissionResponse, error) {
+func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, _ := extractRayCluster(admissionReview)
-	patches := []map[string]interface{}{}
 
 	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
-		if(containerRequestingTPUs(raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers...)) {
-			topology := raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
+		if(containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...)) {
+			topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 			if(isTPUMultiHost(topology)) {
-				numWorkers := int(*raycluster.Spec.WorkerGroupSpecs[i].Replicas)
-				// generate DNS hostnames
-				workerGroupName := raycluster.Spec.WorkerGroupSpecs[i].GroupName
-				serviceName := "tpu-worker-group-svc" // TODO: get headless-svc associated with workergroup
-				hostNames := make([]string, numWorkers)
-				for j := 0; j < numWorkers; j++ {
-					hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
-				}
-				joinedHostNames := strings.Join(hostNames, ",")
-
-				// inject hostnames into ray worker pods
-				for j := 0; j < len(raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers); j++ {
-					container := raycluster.Spec.WorkerGroupSpecs[i].Template.Spec.Containers[j]
-					if(containerRequestingTPUs(container)) {
-						patch := map[string]interface{}{
-							"op": "add",
-						}
-						path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", i, j)
-						value := corev1.EnvVar{
-							Name:  "TPU_WORKER_HOSTNAMES",
-							Value: joinedHostNames,
-						}
-						if len(container.Env) == 0 {
-							patch["path"] = path
-							patch["value"] = []corev1.EnvVar{value}
-						} else {
-							patch["path"] = fmt.Sprintf("%s/-", path)
-							patch["value"] = value
-						}
-						patches = append(patches, patch)
-					}
-				}
+				joinedHostNames := genDNSHostnames(workerGroupSpec)
+				injectHostnames(joinedHostNames, workerGroupSpec, i)
 			}
 		}
 	}
@@ -156,9 +163,7 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 }
 
 // add TPU_WORKER_ID to pod environment
-func mutatePod(
-	admissionReview *admissionv1.AdmissionReview,
-) (*admissionv1.AdmissionResponse, error) {
+func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, _ := extractPod(admissionReview)
 
 	// ray operator only sets GenerateName field - doesn't include random suffix until after admission request
@@ -167,9 +172,6 @@ func mutatePod(
 	groupName := pod.Labels["ray.io/group"]
 	podSlice := Slice{clusterName, groupName}
 	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
-
-	// create patch to tell pod how to modify environment
-	patches := []map[string]interface{}{}
 
 	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
 	if(containerRequestingTPUs(pod.Spec.Containers...) && isTPUMultiHost(topology)) {
@@ -180,23 +182,23 @@ func mutatePod(
 			container := pod.Spec.Containers[i]
 			if(containerRequestingTPUs(container)) {
 				path := fmt.Sprintf("/spec/containers/%d/env", i)
-				value1 := corev1.EnvVar{
+				tpuWorkerID := corev1.EnvVar{
 					Name:  "TPU_WORKER_ID",
 					Value: fmt.Sprint(tpu_worker_id),
 				}
-				value2 := corev1.EnvVar{
+				tpuName := corev1.EnvVar{
 					Name:  "TPU_NAME",
 					Value: fmt.Sprint(groupName),
 				}
 				patch1, patch2 := map[string]interface{}{"op": "add",}, map[string]interface{}{"op": "add",}
 				if(len(container.Env) == 0) {
 					patch1["path"], patch2["path"] = path, path
-					patch1["value"] = []corev1.EnvVar{value1}
-					patch2["value"] = []corev1.EnvVar{value2}
+					patch1["value"] = []corev1.EnvVar{tpuWorkerID}
+					patch2["value"] = []corev1.EnvVar{tpuName}
 				} else {
 					patch1["path"], patch2["path"] = fmt.Sprintf("%s/-", path), fmt.Sprintf("%s/-", path)
-					patch1["value"] = value1
-					patch2["value"] = value2
+					patch1["value"] = tpuWorkerID
+					patch2["value"] = tpuName
 				}
 				patches = append(patches, patch1, patch2)
 			}
