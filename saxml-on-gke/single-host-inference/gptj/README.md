@@ -29,7 +29,7 @@ gcloud container clusters create saxml \
     --project=${PROJECT_ID} \
     --workload-pool=${PROJECT_ID}.svc.id.goog \
     --release-channel=rapid \
-    --num-nodes=2 \
+    --num-nodes=2
 
 # Create one v5e TPU pool with topology 2x2 (1 TPU node with 4 chips)
 gcloud container node-pools create tpu \
