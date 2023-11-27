@@ -93,7 +93,7 @@ gcloud storage buckets create gs://${SAX_ADMIN_STORAGE_BUCKET}
 
 In `admin-server.yaml`, `model-server.yaml`, and `http-server.yaml`, replace the following:
 
-- ${SAX_ADMIN_STORAGE_BUCKET} with `[BUCKET_NAME]`
+- `${SAX_ADMIN_STORAGE_BUCKET}` with `[BUCKET_NAME]`
 
 Note: You can use your own HTTP server built for Saxml. To learn more, see [Inferencing using Saxml and an HTTP Server](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/saxml-on-gke/httpserver).
 
@@ -226,6 +226,9 @@ $ LB_IP=$(kubectl get svc sax-http-lb -o jsonpath='{.status.loadBalancer.ingress
 $ PORT="8888"
 ```
 ### Publish GPT-J 6B Model
+
+Replace `${SAX_DATA_STORAGE_BUCKET}` below with your bucket name
+
 ```
 $ curl --request POST \
 --header "Content-type: application/json" \
@@ -235,7 +238,7 @@ ${LB_IP}:${PORT}/publish \
 {
     "model": "/sax/test/gptj4bf16bs32",
     "model_path": "saxml.server.pax.lm.params.gptj.GPTJ4BF16BS32",
-    "checkpoint": "gs:/${SAX_DATA_STORAGE_BUCKET}/checkpoints/checkpoint_00000000",
+    "checkpoint": "gs://${SAX_DATA_STORAGE_BUCKET}/checkpoints/checkpoint_00000000",
     "replicas": "1"
 }
 '
