@@ -15,7 +15,7 @@ import (
 
 // our representation of a pod slice
 // not necessarily true that worker group scheduled on 1 slice
-type Slice struct {
+type slice struct {
 	rayClusterName	string
 	groupName	string
 }
@@ -28,9 +28,7 @@ var (
 	keyPath = "/etc/kuberay-tpu-webhook/tls/tls.key"
 
 	// map of ray cluster names to # of workers created in the slice
-	sliceToWorkers map[Slice]int
-	
-	patches []patch
+	sliceToWorkers map[slice]int
 )
 
 // check if containers are requesting TPU resources
@@ -55,13 +53,17 @@ func isTPUMultiHost(topology string) bool {
 	topologyVals :=  strings.Split(topology, "x")
 	values := make([]int, len(topologyVals))
 	for i := 0; i < len(values); i++ {
-		values[i], _ = strconv.Atoi(topologyVals[i])
+		dim, err := strconv.Atoi(topologyVals[i])
+		if err != nil {
+			klog.Fatalf("Invalid topology value: %s", err)
+		}
+		values[i] = dim
 	}
 	vms := 1 // number VMs = number chips / 4
-	if(len(values) == 3) {
+	if len(values) == 3 {
 		// TPU v4
 		vms = max(values[0]*values[1]*values[2]/4, 1)
-	} else if(len(values) == 2) {
+	} else if len(values) == 2 {
 		// TPU v5e
 		// slices with 8 chips can be single or multi host
 		chips := values[0]*values[1]
@@ -87,7 +89,7 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
 	numWorkers := int(*workerGroupSpec.Replicas)
 	workerGroupName := workerGroupSpec.GroupName
-	serviceName := "tpu-worker-group-svc" // TODO: get headless-svc associated with workergroup
+	serviceName := "tpu-worker-group-svc" // TODO: get headless service from workergroup spec
 	hostNames := make([]string, numWorkers)
 	for j := 0; j < numWorkers; j++ {
 		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
@@ -95,26 +97,26 @@ func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
 	return strings.Join(hostNames, ",")
 }
 
-func injectHostnames(joinedHostNames string, workerGroupSpec ray.WorkerGroupSpec, workerGroupIndex int) {
+func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, workerGroupIndex int, patches *[]patch) {
 	for j := 0; j < len(workerGroupSpec.Template.Spec.Containers); j++ {
 		container := workerGroupSpec.Template.Spec.Containers[j]
-		if(containerRequestingTPUs(container)) {
-			patch := map[string]interface{}{
+		if containerRequestingTPUs(container) {
+			hostNamesPatch := patch {
 				"op": "add",
 			}
 			path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", workerGroupIndex, j)
 			tpuWorkerHostNames := corev1.EnvVar{
 				Name:  "TPU_WORKER_HOSTNAMES",
-				Value: joinedHostNames,
+				Value: hostNames,
 			}
 			if len(container.Env) == 0 {
-				patch["path"] = path
-				patch["value"] = []corev1.EnvVar{tpuWorkerHostNames}
+				hostNamesPatch["path"] = path
+				hostNamesPatch["value"] = []corev1.EnvVar{tpuWorkerHostNames}
 			} else {
-				patch["path"] = fmt.Sprintf("%s/-", path)
-				patch["value"] = tpuWorkerHostNames
+				hostNamesPatch["path"] = fmt.Sprintf("%s/-", path)
+				hostNamesPatch["value"] = tpuWorkerHostNames
 			}
-			patches = append(patches, patch)
+			*patches = append(*patches, hostNamesPatch)
 		}
 	}
 }
@@ -122,15 +124,16 @@ func injectHostnames(joinedHostNames string, workerGroupSpec ray.WorkerGroupSpec
 // add TPU_WORKER_HOSTNAMES to containers in a ray cluster
 func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, err := extractRayCluster(admissionReview)
+	var patches []patch
 
-	if(err == nil) {
+	if err == nil {
 		for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
 			workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
-			if(containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...)) {
+			if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
 				topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
-				if(isTPUMultiHost(topology)) {
+				if isTPUMultiHost(topology) {
 					joinedHostNames := genDNSHostnames(workerGroupSpec)
-					injectHostnames(joinedHostNames, workerGroupSpec, i)
+					injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
 				}
 			}
 		}
@@ -139,7 +142,7 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 	}
 
 	patchBytes, err := json.Marshal(patches)
-	if(err != nil) {
+	if err != nil {
 		klog.Fatalf("Error serializing patches: %s", err)
 	}
 
@@ -173,23 +176,24 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 // add TPU_WORKER_ID to pod environment
 func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
-
-	if(err == nil) {
+	var patches []patch
+	
+	if err == nil {
 		// ray operator only sets GenerateName field - doesn't include random suffix until after admission request
 		// use mapping of {cluster name, group name} -> # workers created to set TPU_WORKER_IDs
 		clusterName := pod.Labels["ray.io/cluster"]
 		groupName := pod.Labels["ray.io/group"]
-		podSlice := Slice{clusterName, groupName}
+		podSlice := slice{clusterName, groupName}
 		topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 
 		// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
-		if(containerRequestingTPUs(pod.Spec.Containers...) && isTPUMultiHost(topology)) {
+		if containerRequestingTPUs(pod.Spec.Containers...) && isTPUMultiHost(topology) {
 			// assign to the next unique ID in the pod slice
 			tpu_worker_id := sliceToWorkers[podSlice]
 			sliceToWorkers[podSlice] += 1
 			for i := 0; i < len(pod.Spec.Containers); i++ {
 				container := pod.Spec.Containers[i]
-				if(containerRequestingTPUs(container)) {
+				if containerRequestingTPUs(container) {
 					path := fmt.Sprintf("/spec/containers/%d/env", i)
 					tpuWorkerID := corev1.EnvVar{
 						Name:  "TPU_WORKER_ID",
@@ -199,17 +203,17 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 						Name:  "TPU_NAME",
 						Value: fmt.Sprint(groupName),
 					}
-					patch1, patch2 := map[string]interface{}{"op": "add",}, map[string]interface{}{"op": "add",}
-					if(len(container.Env) == 0) {
-						patch1["path"], patch2["path"] = path, path
-						patch1["value"] = []corev1.EnvVar{tpuWorkerID}
-						patch2["value"] = []corev1.EnvVar{tpuName}
+					idPatch, namePatch := patch{"op": "add",}, patch{"op": "add",}
+					if len(container.Env) == 0 {
+						idPatch["path"], namePatch["path"] = path, path
+						idPatch["value"] = []corev1.EnvVar{tpuWorkerID}
+						namePatch["value"] = []corev1.EnvVar{tpuName}
 					} else {
-						patch1["path"], patch2["path"] = fmt.Sprintf("%s/-", path), fmt.Sprintf("%s/-", path)
-						patch1["value"] = tpuWorkerID
-						patch2["value"] = tpuName
+						idPatch["path"], namePatch["path"] = fmt.Sprintf("%s/-", path), fmt.Sprintf("%s/-", path)
+						idPatch["value"] = tpuWorkerID
+						namePatch["value"] = tpuName
 					}
-					patches = append(patches, patch1, patch2)
+					patches = append(patches, idPatch, namePatch)
 				}
 			}
 		}
@@ -218,7 +222,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	}
 
 	patchBytes, err := json.Marshal(patches)
-	if(err != nil) {
+	if err != nil {
 		klog.Fatalf("Error serializing patches: %s", err)
 	}
 
@@ -235,7 +239,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 }
 
 func init() {
-	sliceToWorkers = make(map[Slice]int)
+	sliceToWorkers = make(map[slice]int)
 }
 
 func main() {
