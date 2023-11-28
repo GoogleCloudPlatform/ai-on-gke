@@ -50,13 +50,13 @@ func containerRequestingTPUs(containers ...corev1.Container) bool {
 }
 
 // check if request is for TPU multi-host
-func isTPUMultiHost(topology string) bool {
+func isTPUMultiHost(topology string) (bool, error) {
 	topologyVals :=  strings.Split(topology, "x")
 	values := make([]int, len(topologyVals))
 	for i := 0; i < len(values); i++ {
 		dim, err := strconv.Atoi(topologyVals[i])
 		if err != nil {
-			klog.Fatalf("Invalid topology value: %s", err)
+			return false, err
 		}
 		values[i] = dim
 	}
@@ -70,7 +70,7 @@ func isTPUMultiHost(topology string) bool {
 		chips := values[0]*values[1]
 		vms = max(chips/4, 1)
 	}
-	return (vms > 1)
+	return (vms > 1), nil
 }
 
 // unmarshal raycluster from admission request
@@ -90,7 +90,7 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
 	numWorkers := int(*workerGroupSpec.Replicas)
 	workerGroupName := workerGroupSpec.GroupName
-	serviceName := "tpu-worker-group-svc" // TODO: get headless service from workergroup spec
+	serviceName := "tpu-worker-group-svc" // TODO: Kuberay should set DNS name for workergroup
 	hostNames := make([]string, numWorkers)
 	for j := 0; j < numWorkers; j++ {
 		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
@@ -134,7 +134,11 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
 		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
 			topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
-			if isTPUMultiHost(topology) {
+			isMultiHost, err := isTPUMultiHost(topology)
+			if err != nil {
+				return nil, err
+			}
+			if isMultiHost {
 				joinedHostNames := genDNSHostnames(workerGroupSpec)
 				injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
 			}
@@ -187,9 +191,13 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	groupName := pod.Labels["ray.io/group"]
 	podSlice := slice{clusterName, groupName}
 	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+	isMultiHost, err := isTPUMultiHost(topology)
+	if err != nil {
+		return nil, err
+	}
 
 	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
-	if containerRequestingTPUs(pod.Spec.Containers...) && isTPUMultiHost(topology) {
+	if containerRequestingTPUs(pod.Spec.Containers...) && isMultiHost {
 		// assign to the next unique ID in the pod slice
 		tpu_worker_id := sliceToWorkers[podSlice]
 		sliceToWorkers[podSlice] += 1
