@@ -145,7 +145,6 @@ worker:
   type: worker
   labels:
     cloud.google.com/gke-ray-node-type: worker
-    kuberay-tpu-webhook/inject: enabled
   rayStartParams:
     block: 'true'
     resources: '"{\"google.com/tpu\": 4}"'

@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: tpu-worker-group-svc
   labels:
-    kuberay-tpu-webhook/inject: enabled
+    cloud.google.com/gke-ray-node-type: worker
 spec:
   ports:
     - port: 80
       name: web
   clusterIP: None
   selector:
-    kuberay-tpu-webhook/inject: enabled
+    cloud.google.com/gke-ray-node-type: worker
