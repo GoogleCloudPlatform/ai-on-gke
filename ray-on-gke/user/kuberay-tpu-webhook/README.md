@@ -45,4 +45,4 @@ After deploying the webhook, follow the steps in ray-on-gke/TPU_GUIDE to setup R
 
 ### Limitations
 
-The webhook stores unique `TPU_WORKER_ID`s in memory, and thus will fail to initialize the environment variables correctly if the webhook pod dies or restarts before intercepting all pods. Additionally, `TPU_WORKER_ID`s and `TPU_WORKER_HOSTNAMES` are not updated or removed after the initial admission request.
+Currently, multi-slice TPUs are not supported by this webhook since we are only deploying a single headless service. However, single-slice, mutli-host TPUs are supported. Additionally,the webhook stores unique `TPU_WORKER_ID`s in memory, and thus will fail to initialize the environment variables correctly if the webhook pod dies or restarts before intercepting all pods. Finally, environment vars are not updated or removed after the initial admission request.
