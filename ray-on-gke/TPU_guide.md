@@ -106,5 +106,9 @@ def init_jax_from_ray(num_workers: int):
 init_jax_from_ray(num_workers=2)
 
 ``` 
+
+### TPU Multi-Host Workloads
+
 When initializing multi-host TPUs, the environment variables can be set using a mutating admission webhook. The webhook can be deployed following the instructions in the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/kuberay-tpu-env-injector/ray-on-gke/user/kuberay-tpu-webhook#readme).
 
+A caveat when running multiple TPU pod slices of the same topology and type with Ray is that a single Ray worker group may be scheduled across multiple pod slices. This goes against the assumptions of the webhook and would lead to  pod-to-pod communication occuring over DCN rather than the high bandwidth ICI mesh.
