@@ -20,6 +20,7 @@ type slice struct {
 	groupName	string
 }
 
+// JSON patch describing mutate operation(s) for incoming object
 type patch map[string]any
 
 var (
@@ -124,21 +125,20 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 // add TPU_WORKER_HOSTNAMES to containers in a ray cluster
 func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, err := extractRayCluster(admissionReview)
-	var patches []patch
+	if err != nil {
+		klog.Fatalf("Ray Cluster extraction failed: %s", err)
+	}
 
-	if err == nil {
-		for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
-			workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
-			if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
-				topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
-				if isTPUMultiHost(topology) {
-					joinedHostNames := genDNSHostnames(workerGroupSpec)
-					injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
-				}
+	var patches []patch
+	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
+		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
+		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
+			topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+			if isTPUMultiHost(topology) {
+				joinedHostNames := genDNSHostnames(workerGroupSpec)
+				injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
 			}
 		}
-	} else {
-		klog.Fatalf("Ray Cluster extraction failed: %s", err)
 	}
 
 	patchBytes, err := json.Marshal(patches)
@@ -176,49 +176,48 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 // add TPU_WORKER_ID to pod environment
 func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
-	var patches []patch
-	
-	if err == nil {
-		// ray operator only sets GenerateName field - doesn't include random suffix until after admission request
-		// use mapping of {cluster name, group name} -> # workers created to set TPU_WORKER_IDs
-		clusterName := pod.Labels["ray.io/cluster"]
-		groupName := pod.Labels["ray.io/group"]
-		podSlice := slice{clusterName, groupName}
-		topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+	if err != nil {
+		klog.Fatalf("Pod extraction failed: %s", err)
+	}
 
-		// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
-		if containerRequestingTPUs(pod.Spec.Containers...) && isTPUMultiHost(topology) {
-			// assign to the next unique ID in the pod slice
-			tpu_worker_id := sliceToWorkers[podSlice]
-			sliceToWorkers[podSlice] += 1
-			for i := 0; i < len(pod.Spec.Containers); i++ {
-				container := pod.Spec.Containers[i]
-				if containerRequestingTPUs(container) {
-					path := fmt.Sprintf("/spec/containers/%d/env", i)
-					tpuWorkerID := corev1.EnvVar{
-						Name:  "TPU_WORKER_ID",
-						Value: fmt.Sprint(tpu_worker_id),
-					}
-					tpuName := corev1.EnvVar{
-						Name:  "TPU_NAME",
-						Value: fmt.Sprint(groupName),
-					}
-					idPatch, namePatch := patch{"op": "add",}, patch{"op": "add",}
-					if len(container.Env) == 0 {
-						idPatch["path"], namePatch["path"] = path, path
-						idPatch["value"] = []corev1.EnvVar{tpuWorkerID}
-						namePatch["value"] = []corev1.EnvVar{tpuName}
-					} else {
-						idPatch["path"], namePatch["path"] = fmt.Sprintf("%s/-", path), fmt.Sprintf("%s/-", path)
-						idPatch["value"] = tpuWorkerID
-						namePatch["value"] = tpuName
-					}
-					patches = append(patches, idPatch, namePatch)
+	var patches []patch
+	// ray operator only sets GenerateName field - doesn't include random suffix until after admission request
+	// use mapping of {cluster name, group name} -> # workers created to set TPU_WORKER_IDs
+	clusterName := pod.Labels["ray.io/cluster"]
+	groupName := pod.Labels["ray.io/group"]
+	podSlice := slice{clusterName, groupName}
+	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+
+	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
+	if containerRequestingTPUs(pod.Spec.Containers...) && isTPUMultiHost(topology) {
+		// assign to the next unique ID in the pod slice
+		tpu_worker_id := sliceToWorkers[podSlice]
+		sliceToWorkers[podSlice] += 1
+		for i := 0; i < len(pod.Spec.Containers); i++ {
+			container := pod.Spec.Containers[i]
+			if containerRequestingTPUs(container) {
+				path := fmt.Sprintf("/spec/containers/%d/env", i)
+				tpuWorkerID := corev1.EnvVar{
+					Name:  "TPU_WORKER_ID",
+					Value: fmt.Sprint(tpu_worker_id),
 				}
+				tpuName := corev1.EnvVar{
+					Name:  "TPU_NAME",
+					Value: fmt.Sprint(groupName),
+				}
+				idPatch, namePatch := patch{"op": "add",}, patch{"op": "add",}
+				if len(container.Env) == 0 {
+					idPatch["path"], namePatch["path"] = path, path
+					idPatch["value"] = []corev1.EnvVar{tpuWorkerID}
+					namePatch["value"] = []corev1.EnvVar{tpuName}
+				} else {
+					idPatch["path"], namePatch["path"] = fmt.Sprintf("%s/-", path), fmt.Sprintf("%s/-", path)
+					idPatch["value"] = tpuWorkerID
+					namePatch["value"] = tpuName
+				}
+				patches = append(patches, idPatch, namePatch)
 			}
 		}
-	} else {
-		klog.Fatalf("Pod extraction failed: %s", err)
 	}
 
 	patchBytes, err := json.Marshal(patches)
