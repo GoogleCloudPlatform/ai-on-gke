@@ -24,4 +24,4 @@ webhooks:
         resources: ["pods"]
     objectSelector:
       matchLabels:
-        kuberay-tpu-webhook/inject: enabled
+        app.kubernetes.io/name: kuberay
