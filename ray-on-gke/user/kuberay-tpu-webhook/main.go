@@ -56,6 +56,7 @@ func isTPUMultiHost(topology string) (bool, error) {
 	for i := 0; i < len(values); i++ {
 		dim, err := strconv.Atoi(topologyVals[i])
 		if err != nil {
+			klog.Errorf("Invalid topology: %s", err)
 			return false, err
 		}
 		values[i] = dim
@@ -129,9 +130,16 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 		klog.Fatalf("Ray Cluster extraction failed: %s", err)
 	}
 
+	clusterName := raycluster.Name
 	var patches []patch
 	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
 		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
+		
+		// reset past sliceToWorkers entries for ray cluster
+		groupName := workerGroupSpec.GroupName
+		podSlice := slice{clusterName, groupName}
+		sliceToWorkers[podSlice] = 0
+
 		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
 			topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 			isMultiHost, err := isTPUMultiHost(topology)
@@ -191,10 +199,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	groupName := pod.Labels["ray.io/group"]
 	podSlice := slice{clusterName, groupName}
 	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
-	isMultiHost, err := isTPUMultiHost(topology)
-	if err != nil {
-		return nil, err
-	}
+	isMultiHost, _ := isTPUMultiHost(topology) // ignore error here because topology may not be set yet
 
 	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
 	if containerRequestingTPUs(pod.Spec.Containers...) && isMultiHost {
@@ -264,16 +269,34 @@ func main() {
 
 		if admissionReview.Request.Kind.Kind == "RayCluster" {
 			klog.Info("Received review for RayCluster")
-			admissionReview.Response, _ = mutateRayCluster(admissionReview)
-			responseBytes, _ := json.Marshal(admissionReview)
+			response, err := mutateRayCluster(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to mutate ray cluster: %s", err)
+				return
+			}
+			admissionReview.Response = response
+			responseBytes, err := json.Marshal(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to encode response: %s", err)
+				return
+			}
 			fmt.Fprint(w, string(responseBytes))
 			return
 		}
 
 		if admissionReview.Request.Kind.Kind == "Pod" {
 			klog.Info("Received review for Pod")
-			admissionReview.Response, _ = mutatePod(admissionReview)
-			responseBytes, _ := json.Marshal(admissionReview)
+			response, err := mutatePod(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to mutate pod: %s", err)
+				return
+			}
+			admissionReview.Response = response
+			responseBytes, err := json.Marshal(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to encode response: %s", err)
+				return
+			}
 			fmt.Fprint(w, string(responseBytes))
 			return
 		}
