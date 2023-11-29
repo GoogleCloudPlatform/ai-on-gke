@@ -1,0 +1,27 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kuberay-tpu-webhook-cfg
+  annotations:
+    cert-manager.io/inject-ca-from: default/kuberay-tpu-webhook-certs
+webhooks:
+  - name: kuberay-tpu-webhook.default.svc
+    admissionReviewVersions: [v1]
+    sideEffects: NoneOnDryRun
+    clientConfig:
+      service:
+        name: kuberay-tpu-webhook
+        namespace: default
+        path: /inject
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: ["*"]
+        apiVersions: ["*"]
+        resources: ["rayclusters"]
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    objectSelector:
+      matchLabels:
+        app.kubernetes.io/name: kuberay
