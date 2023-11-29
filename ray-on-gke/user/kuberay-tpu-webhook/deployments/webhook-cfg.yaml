@@ -15,7 +15,7 @@ webhooks:
         path: /inject
     rules:
       - operations: ["CREATE"]
-        apiGroups: ["*"]
+        apiGroups: ["ray.io"]
         apiVersions: ["*"]
         resources: ["rayclusters"]
       - operations: ["CREATE"]
