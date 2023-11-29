@@ -1,4 +1,4 @@
-module github.com/ryanaoleary/kuberay-tpu-webhook
+module github.com/GoogleCloudPlatform/kuberay-tpu-webhook
 
 go 1.21
 
