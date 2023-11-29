@@ -134,6 +134,16 @@ Continue to Step 3 of [below](#if-auth-is-enabled).
 
 4. Select profile and open a Jupyter Notebook
 
+## Persistent Storage
+
+Currently there are 2 choices for storage:
+
+1. Default Jupyterhub Storage - `pd.csi.storage.gke.io` with reclaim policy `Delete`
+
+2. GCSFuse - `gcsfuse.csi.storage.gke.io` uses GCS Buckets and require users to pre-create buckets with name format `gcsfuse-{username}`
+
+For more information about Persistent storage and the available options, visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/storage.md)
+
 ## Running GPT-J-6B
 
 This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/master/ray-air/examples/gptj_serving.html).

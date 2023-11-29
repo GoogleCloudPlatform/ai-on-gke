@@ -88,5 +88,5 @@ variable "client_secret" {
   type        = string
   description = "Client secret used for enabling IAP"
   default     = ""
-  sensitive = true
+  sensitive   = true
 }
