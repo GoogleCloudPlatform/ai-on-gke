@@ -30,6 +30,14 @@ variable "cluster_name" {
   default     = "ml-cluster"
 }
 
+variable "cluster_labels" {
+  type        = map
+  description = "GKE cluster labels"
+  default     =  {
+    created-by = "ai-on-gke"
+  }
+}
+
 variable "enable_autopilot" {
   type        = bool
   description = "Set to true to enable GKE Autopilot clusters"

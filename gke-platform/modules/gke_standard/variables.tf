@@ -30,6 +30,14 @@ variable "cluster_name" {
   default     = "ml-cluster"
 }
 
+variable "cluster_labels" {
+  type        = map
+  description = "GKE cluster labels"
+  default     =  {
+    created-by = "ai-on-gke"
+  }
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
