@@ -49,6 +49,8 @@ resource "google_container_cluster" "ml_cluster" {
   release_channel {
     channel = "RAPID"
   }
+
+  resource_labels = var.cluster_labels
 }
 
 resource "google_container_node_pool" "cpu_pool" {
