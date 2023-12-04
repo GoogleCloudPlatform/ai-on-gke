@@ -12,16 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
 
-provider "google-beta" {
-  project = var.project_id
-  region  = var.region
+# Extract eligible zones from GPU type and region.
+data "external" "gpu_locations" {
+  count = var.gpu_pool_node_locations == null ? 1 : 0
+  program = ["bash",
+    "-c",
+    <<-EOT
+    gcloud --project ${var.project_id} compute accelerator-types\
+      list --filter='name = ${local.gpu_type} AND zone : ${var.region}*'\
+       --format 'json(zone.basename())'\
+      | jq '{ "zones": [.[].zone]|join(",") }'
+    EOT
+  ]
 }
-
 # GKE cluster
 resource "google_container_cluster" "ml_cluster" {
   name                     = var.cluster_name
@@ -81,7 +85,7 @@ resource "google_container_node_pool" "gpu_pool" {
   count      = var.enable_autopilot || var.enable_tpu ? 0 : 1
   cluster    = var.enable_autopilot || var.enable_tpu ? null : google_container_cluster.ml_cluster[0].name
 
-  node_locations = var.gpu_pool_node_locations
+  node_locations = var.gpu_pool_node_locations == null ? split(",", data.external.gpu_locations[0].result.zones) : var.gpu_pool_node_locations
   
   autoscaling {
     min_node_count = "1"
@@ -109,17 +113,17 @@ resource "google_container_node_pool" "gpu_pool" {
     }
 
     guest_accelerator {
-      type  = var.gpu_pool_accelerator_type
-      count = 2
+      type  = local.gpu_type
+      count = local.gpu_count
     }
 
     # preemptible  = true
     image_type   = "cos_containerd"
-    machine_type = var.gpu_pool_machine_type
+    machine_type = local.gpu_pool_machine_type
     tags         = ["gke-node", "${var.project_id}-gke"]
 
     disk_size_gb = "200"
-    disk_type    = "pd-balanced"
+    disk_type    = local.gpu_pool_disk_type
 
     metadata = {
       disable-legacy-endpoints = "true"

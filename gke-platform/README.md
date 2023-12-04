@@ -24,7 +24,12 @@ Preinstall the following on your computer:
 
 2. `cd ai-on-gke/gke-platform`
 
-3. Edit `variables.tf` with your GCP settings.
+3. Create a `terraform.tfvars` file with your GCP settings.
+At least `project_id` should be specified. For example:
+
+   ```sh
+   project_id=<your_project_id>
+   ```
 
 4. Run `terraform init`
 
