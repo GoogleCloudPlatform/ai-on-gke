@@ -49,28 +49,28 @@ func containerRequestingTPUs(containers ...corev1.Container) bool {
 	return false
 }
 
-// check if request is for TPU multi-host
-func isTPUMultiHost(topology string) (bool, error) {
+func getNumTPUHosts(topology string) (int, error) {
 	topologyVals :=  strings.Split(topology, "x")
-	values := make([]int, len(topologyVals))
-	for i := 0; i < len(values); i++ {
+	vms := 1
+	for i := 0; i < len(topologyVals); i++ {
 		dim, err := strconv.Atoi(topologyVals[i])
 		if err != nil {
 			klog.Errorf("Invalid topology: %s", err)
-			return false, err
+			return 0, err
 		}
-		values[i] = dim
+		vms *= dim
 	}
-	vms := 1 // number VMs = number chips / 4
-	if len(values) == 3 {
-		// TPU v4
-		vms = max(values[0]*values[1]*values[2]/4, 1)
-	} else if len(values) == 2 {
-		// TPU v5e
-		// slices with 8 chips can be single or multi host
-		chips := values[0]*values[1]
-		vms = max(chips/4, 1)
+	// number VMs = number chips / 4
+	return max(vms / 4, 1), nil
+}
+
+// check if request is for TPU multi-host
+func isTPUMultiHost(topology string) (bool, error) {
+	vms, err := getNumTPUHosts(topology)
+	if err != nil {
+		return false, err
 	}
+
 	return (vms > 1), nil
 }
 
@@ -121,6 +121,45 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 			*patches = append(*patches, hostNamesPatch)
 		}
 	}
+}
+
+func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
+	numWorkers := int(*workerGroupSpec.Replicas)
+	if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
+		topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+		hosts, err := getNumTPUHosts(topology)
+		if err != nil {
+			return false, err
+		}
+
+		if hosts != numWorkers {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
+	raycluster, err := extractRayCluster(admissionReview)
+	if err != nil {
+		klog.Fatalf("Ray Cluster extraction failed: %s", err)
+	}
+
+	admit := true
+	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
+		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
+		admit, err = checkWorkersMatchTopology(workerGroupSpec)
+		if err != nil {
+			return nil, err
+		}
+	}
+	
+	// Create AdmissionResponse
+	admissionResponse := &admissionv1.AdmissionResponse{
+		UID: 	 admissionReview.Request.UID,
+		Allowed: admit,
+	}
+	return admissionResponse, nil
 }
 
 // add TPU_WORKER_HOSTNAMES to containers in a ray cluster
@@ -260,7 +299,7 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "kuberay-tpu-webhook")
 	})
-	mux.HandleFunc("/inject", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/mutate", func(w http.ResponseWriter, r *http.Request) {
 		admissionReview := &admissionv1.AdmissionReview{}
 		if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
 			http.Error(w, "Error decoding request body", http.StatusBadRequest)
@@ -289,6 +328,31 @@ func main() {
 			response, err := mutatePod(admissionReview)
 			if err != nil {
 				klog.Errorf("Failed to mutate pod: %s", err)
+				return
+			}
+			admissionReview.Response = response
+			responseBytes, err := json.Marshal(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to encode response: %s", err)
+				return
+			}
+			fmt.Fprint(w, string(responseBytes))
+			return
+		}
+	})
+
+	mux.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) {
+		admissionReview := &admissionv1.AdmissionReview{}
+		if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
+			http.Error(w, "Error decoding request body", http.StatusBadRequest)
+			return
+		}
+
+		if admissionReview.Request.Kind.Kind == "RayCluster" {
+			klog.Info("Received review for RayCluster")
+			response, err := validateRayCluster(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to mutate ray cluster: %s", err)
 				return
 			}
 			admissionReview.Response = response
