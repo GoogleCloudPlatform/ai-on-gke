@@ -23,7 +23,7 @@
 # Available chart versions: https://jupyterhub.github.io/helm-chart/
 hub:
   image: 
-    name: <Repo name here>
+    name: us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class
     tag: latest
   config:
     JupyterHub:
