@@ -38,23 +38,15 @@ If using this with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommended t
 for both i.e. set this to the same namespace as `ai-on-gke/ray-on-gke/user/variables.tf`.
 If not, set `enable_create_namespace` to `true` so a new k8s namespace is created for the Jupyter resources.
 
-2. If you have not enabled the IAP API before or created a Brand for your project, you can proceed to the next step. If not, ensure that the following variables within `variables.tf` are set:
+3. If you have not enabled the IAP API before or created a Brand for your project, please follow these steps:
 
-    * enable_iap_service - Enables the IAP service API. Leave as false if IAP is enabled before.
-    * brand - creates a brand for the project, only one is currently allowed per project. If there is already a brand, leave the variable empty.
-    * support_email - used by brand, required field.
-    * **IMPORTANT** client_id and client_secret - If your brand is `external`, you must provide your own client_id and client_secret. If your brand is `internal`, you can choose to leave the variable as is and allow terraform to create one for you.
-        * if you do bring your own OAuth client, you must add to the `Authorized redirect URIs` Field:  `https://iap.googleapis.com/v1/oauth/clientIds/<client ID>:handleRedirect`
-
-    **Note:**
-    We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
-    Visit the [Cloud Console](https://console.cloud.google.com/security/iap) to see if it's enabled. If it's enabled, you will be able to see the page and will not prompt you to enable API:
-
+    1. Navigate to [this](https://console.cloud.google.com/security/iap) page to enable the API:
     ![IAP API Screen](./images/iap_enable_api_screenshot.png)
 
-    And the `brand` page, if there is not brand created yet, will have:
-
+    2. Navigate to the `brand` [page](https://console.cloud.google.com/apis/credentials/consent) to create your own brand:
     ![IAP API Screen](./images/consent_screen_screenshot.png)
+
+    Go [here](#auto-brand-creation-and-iap-enablement) for more information about to create a brand automatically.
 
 4. Run `terraform init`
 
@@ -151,6 +143,21 @@ This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/ma
     ```
 
 4. This should output a generated text response.
+
+## Auto Brand creation and IAP enablement
+
+**IMPORTANT** If you enable automatic brand creation, only `Internal` brand will be created, meaning that only users under the same org as the project will be able to access the application.
+
+Ensure that the following variables within `variables.tf` are set:
+
+* enable_iap_service - Enables the IAP service API. Leave as false if IAP is enabled before.
+* brand - creates a brand for the project, only one is currently allowed per project. If there is already a brand, leave the variable empty.
+* support_email - used by brand, required field.
+* **IMPORTANT** client_id and client_secret - If your brand is `external`, you must provide your own client_id and client_secret. If your brand is `internal`, you can choose to leave the variable as is and allow terraform to create one for you.
+* if you do bring your own OAuth client, you must add to the `Authorized redirect URIs` Field:  `https://iap.googleapis.com/v1/oauth/clientIds/<client ID>:handleRedirect`
+
+**Note:**
+We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
 
 ## Additional Information
 
