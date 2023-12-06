@@ -8,7 +8,9 @@
 
 ## Creating Image
 
-We combine the Jupyterhub image and our own authenticator. By default, the JupyterHub images already have pre-installed authenticator classes such as GitHub, Auth0, and Globus. In order to specify our own class for JupyterHub, our class must also live in the JupyterHub image.
+We currently already have a public image containing the authenticator class already configured for Jupyterhub so user's dont need to create their own, but if needed, these are the instructions to do so.
+
+We combine the Jupyterhub image and our own authenticator. By default, the JupyterHub images already have pre-installed authenticator classes such as GitHub, Auth0, and Globus. In order to specify our own class for JupyterHub, our authentication class must also live in the JupyterHub image.
 
 > **_NOTE:_** An Artifact Registry Repo for this docker image is required. Create an AR Repo following [this guide](https://cloud.google.com/artifact-registry/docs/repositories/create-repos)
 
