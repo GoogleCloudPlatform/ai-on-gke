@@ -139,6 +139,24 @@ func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error
 	return true, nil
 }
 
+func checkWorkerGroupAffinity(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
+	if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
+		topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+		isMultiHost, err := isTPUMultiHost(topology)
+		if err != nil {
+			return false, err
+		}
+		if isMultiHost {
+			placementGroup := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-placement-group"]
+			if placementGroup == "" {
+				return false, nil	
+			}
+		}
+	}
+
+	return true, nil
+}
+
 func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, err := extractRayCluster(admissionReview)
 	if err != nil {
@@ -148,9 +166,18 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	admit := true
 	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
 		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
-		admit, err = checkWorkersMatchTopology(workerGroupSpec)
+		workersMatchTopology, err := checkWorkersMatchTopology(workerGroupSpec)
 		if err != nil {
 			return nil, err
+		}
+		workerGroupAffinity, err := checkWorkerGroupAffinity(workerGroupSpec)
+		if err != nil {
+			return nil, err
+		}
+
+		if !(workersMatchTopology && workerGroupAffinity) {
+			admit = false
+			break
 		}
 	}
 	
