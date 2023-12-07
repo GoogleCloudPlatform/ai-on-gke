@@ -21,7 +21,18 @@ Preinstall on your computer:
 
 4. Change the region or zone to one where TPUs are available (see [this link](https://cloud.google.com/tpu/docs/regions-zones) for details. For v4 TPUs (the default type), the region should be set to `us-central2` or `us-central2-b`.
 
-5. Set the following flags (note that TPUs are currently only supported on GKE standard):
+5. Set the following flag (note that TPUs are currently only supported on GKE standard):
+```
+variable "enable_tpu" {
+  type        = bool
+  description = "Set to true to create TPU node pool"
+  default     = true
+}
+```
+
+6. Run `terraform init` and `terraform apply`
+
+7. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
 
 ### Installing the Webhook
 
@@ -31,7 +42,7 @@ Preinstall on your computer:
 
 3. `make all`
 
-4. `make docker-build` - edit Makefile with your own Docker image if necessary
+4. `make docker-build`
 
 5. `make docker-push`
 
