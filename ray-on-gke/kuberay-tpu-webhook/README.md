@@ -36,7 +36,7 @@ variable "enable_tpu" {
 
 ### Installing the Webhook
 
-1. `make install-cert-manager`
+1. `make install-cert-manager` - it may take up to two minutes for the certificate to become ready
 
 2. If deploying webhook across multiple namespaces: `make install-reflector`
 
