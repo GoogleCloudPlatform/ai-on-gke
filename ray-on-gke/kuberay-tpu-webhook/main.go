@@ -7,9 +7,10 @@ import (
 	"strings"
 	"strconv"
 
-	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -164,6 +165,8 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	}
 
 	admit := true
+	status := "Success"
+	message := ""
 	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
 		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
 		workersMatchTopology, err := checkWorkersMatchTopology(workerGroupSpec)
@@ -177,6 +180,12 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 
 		if !(workersMatchTopology && workerGroupAffinity) {
 			admit = false
+			status = "Failure"
+			if !workersMatchTopology {
+				message = "Desired workers in worker group not equal to TPU topology"
+			} else {
+				message = "TPU worker group requested without gke-placement-group nodeSelector"
+			}
 			break
 		}
 	}
@@ -185,6 +194,10 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	admissionResponse := &admissionv1.AdmissionResponse{
 		UID: 	 admissionReview.Request.UID,
 		Allowed: admit,
+		Result:	 &metav1.Status{
+			Status:	 status,
+			Message: message,
+		},
 	}
 	return admissionResponse, nil
 }
