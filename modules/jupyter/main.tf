@@ -76,6 +76,21 @@ resource "random_password" "generated_password" {
   special = false
 }
 
+resource "helm_release" "storage" {
+  name             = "storage"
+  chart            = "../../modules/jupyter_storage/charts"
+  namespace        = var.namespace
+  create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
+  cleanup_on_fail  = "true"
+
+  values = [
+    templatefile("../../modules/jupyter_storage/charts/values.yaml", {
+      namespace           = var.namespace
+
+    })
+  ]
+}
+
 resource "helm_release" "jupyterhub" {
   name             = "jupyterhub"
   repository       = "https://jupyterhub.github.io/helm-chart"
@@ -85,7 +100,7 @@ resource "helm_release" "jupyterhub" {
   cleanup_on_fail  = "true"
 
   values = [
-    templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
+    templatefile(var.enable_filestore_use ? "${path.module}/jupyter_config/config-filestore.yaml" : "${path.module}/jupyter_config/config-selfauth.yaml", {
       password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
       service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
       backend_config      = var.service_name

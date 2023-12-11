@@ -72,3 +72,7 @@ Client ID of an OAuth client created by the user for enabling IAP. When this var
 ### client_secret
 
 Client Secret associated with the [client ID](#client_id). This variable will only be used when the client id is filled out.  
+
+### enable_filestore_use
+
+Enables a common PV/PVC to be used/shared within the same namespace by all users. Setting this flag to true will tell terraform to use the Jupyterhub config `config-filestore.yaml`.
