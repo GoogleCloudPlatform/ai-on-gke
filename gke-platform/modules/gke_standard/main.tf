@@ -46,6 +46,12 @@ resource "google_container_cluster" "ml_cluster" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
+  addons_config {
+    gcs_fuse_csi_driver_config {
+      enabled = true
+    }
+  }
+
   release_channel {
     channel = "RAPID"
   }
