@@ -44,7 +44,7 @@ If not, set `enable_create_namespace` to `true` so a new k8s namespace is create
     ![IAP API Screen](./images/iap_enable_api_screenshot.png)
 
     2. Navigate to the `brand` [page](https://console.cloud.google.com/apis/credentials/consent) to create your own brand:
-    ![IAP API Screen](./images/consent_screen_screenshot.png)
+    ![IAP API Screen](./images/oauth_consent_screenshot.png)
 
     Go [here](#auto-brand-creation-and-iap-enablement) for more information about to create a brand automatically.
 
