@@ -24,11 +24,9 @@ spec:
     - name: ray-llm
       route_prefix: /
       import_path: rayllm.backend:router_application
-      runtime_env:
-        working_dir: "https://github.com/kenthua/ai-ml/archive/refs/tags/v0.0.5.zip"
       args:
         models:
-        - "./models/meta-llama--Llama-2-13b-chat-hf.yaml"
+        - "./models/meta-llama--Llama-2-7b-chat-hf.yaml"
   rayClusterConfig:
     # Ray head pod template
     headGroupSpec:
@@ -52,6 +50,9 @@ spec:
               requests:
                 cpu: 2
                 memory: 8Gi
+            volumeMounts:
+            - mountPath: /home/ray/models
+              name: model           
             ports:
             - containerPort: 6379
               name: gcs-server
@@ -61,8 +62,13 @@ spec:
               name: client
             - containerPort: 8000
               name: serve
-            - containerPort: 7860
-              name: gradio           
+          volumes:
+          - name: model
+            configMap:
+              name: meta-llama2-7b-chat-hf
+              items:
+              - key: meta-llama--Llama-2-7b-chat-hf.yaml
+                path: meta-llama--Llama-2-7b-chat-hf.yaml
     workerGroupSpecs:
     # the pod replicas in this group typed worker
     - replicas: 1
@@ -72,10 +78,13 @@ spec:
       groupName: gpu-group
       rayStartParams:
         block: 'true'
-        resources: '"{\"accelerator_type_cpu\": 22, \"accelerator_type_l4\": 2}"'
+        resources: '"{\"accelerator_type_cpu\": 20, \"accelerator_type_l4\": 1}"'
       # pod template
       template:
         spec:
+          securityContext:
+            runAsUser: 1000
+            fsGroup: 100
           containers:
           - name: llm
             image: anyscale/ray-llm:0.4.0
@@ -91,13 +100,16 @@ spec:
                   command: ["/bin/sh","-c","ray stop"]
             resources:
               limits:
-                cpu: "22"
-                memory: "80G"
-                nvidia.com/gpu: 2
+                cpu: "20"
+                memory: "20G"
+                nvidia.com/gpu: 1
               requests:
-                cpu: "22"
-                memory: "80G"
-                nvidia.com/gpu: 2
+                cpu: "20"
+                memory: "20G"
+                nvidia.com/gpu: 1
+            volumeMounts:
+            - mountPath: "/home/ray/.cache"
+              name: worker-disk-vol
           # Please ensure the following taint has been applied to the GPU node in the cluster.
           tolerations:
             - key: "ray.io/node-type"
@@ -106,3 +118,7 @@ spec:
               effect: "NoSchedule"
           nodeSelector:
             cloud.google.com/gke-accelerator: nvidia-l4
+          volumes:
+          - name: worker-disk-vol
+            persistentVolumeClaim:
+              claimName: worker-disk

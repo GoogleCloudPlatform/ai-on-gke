@@ -22,13 +22,13 @@ spec:
   # setting the MODEL_ID env var on the workerGroupSpec did not work, it couldn't find it during exec
   serveConfigV2: |
     applications:
-    - name: llama-2
+    - name: falcon
       route_prefix: /
       import_path: model_nf4_mg:chat_app_nf4_mg
       runtime_env:
-        working_dir: "https://github.com/kenthua/ai-ml/archive/refs/tags/v0.0.5.zip"
         env_vars:
-          MODEL_ID: "meta-llama/Llama-2-70b-chat-hf"
+          MODEL_ID: "tiiuae/falcon-40b-instruct"
+          PYTHONPATH: "${HOME}/models"
       deployments:
       - name: Chat
         num_replicas: 1
@@ -55,6 +55,9 @@ spec:
               requests:
                 cpu: 2
                 memory: 8Gi
+            volumeMounts:
+            - mountPath: /home/ray/models
+              name: model                
             ports:
             - containerPort: 6379
               name: gcs-server
@@ -64,6 +67,13 @@ spec:
               name: client
             - containerPort: 8000
               name: serve
+          volumes:
+          - name: model
+            configMap:
+              name: quantized-model
+              items:
+              - key: model_nf4_mg.py
+                path: model_nf4_mg.py
     workerGroupSpecs:
     # the pod replicas in this group typed worker
     - replicas: 1
@@ -77,6 +87,9 @@ spec:
       # pod template
       template:
         spec:
+          securityContext:
+            runAsUser: 1000
+            fsGroup: 100        
           containers:
           - name: llm
             image: anyscale/ray-llm:0.4.0
@@ -99,6 +112,9 @@ spec:
                 cpu: "22"
                 memory: "40G"
                 nvidia.com/gpu: 2
+            volumeMounts:
+            - mountPath: "/home/ray/.cache"
+              name: worker-disk-vol
           # Please ensure the following taint has been applied to the GPU node in the cluster.
           tolerations:
             - key: "ray.io/node-type"
@@ -107,3 +123,7 @@ spec:
               effect: "NoSchedule"
           nodeSelector:
             cloud.google.com/gke-accelerator: nvidia-l4
+          volumes:
+          - name: worker-disk-vol
+            persistentVolumeClaim:
+              claimName: worker-disk

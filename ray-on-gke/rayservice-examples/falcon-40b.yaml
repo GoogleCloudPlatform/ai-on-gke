@@ -17,18 +17,21 @@ kind: RayService
 metadata:
   name: rayllm
 spec:
-  serviceUnhealthySecondThreshold: 1200 # Config for the health check threshold for service. Default value is 60.
-  deploymentUnhealthySecondThreshold: 1200 # Config for the health check threshold for deployments. Default value is 60.
+  serviceUnhealthySecondThreshold: 2400 # Config for the health check threshold for service. Default value is 60.
+  deploymentUnhealthySecondThreshold: 2400 # Config for the health check threshold for deployments. Default value is 60.
+  # setting the MODEL_ID env var on the workerGroupSpec did not work, it couldn't find it during exec
   serveConfigV2: |
     applications:
-    - name: ray-llm
+    - name: falcon
       route_prefix: /
-      import_path: rayllm.backend:router_application
+      import_path: model_nf4_mg:chat_app_nf4_mg
       runtime_env:
-        working_dir: "https://github.com/kenthua/ai-ml/archive/refs/tags/v0.0.5.zip"
-      args:
-        models:
-        - "./models/tiiuae--falcon-7b.yaml"
+        env_vars:
+          MODEL_ID: "tiiuae/falcon-40b-instruct"
+          PYTHONPATH: "${HOME}/models"
+      deployments:
+      - name: Chat
+        num_replicas: 1
   rayClusterConfig:
     # Ray head pod template
     headGroupSpec:
@@ -52,6 +55,9 @@ spec:
               requests:
                 cpu: 2
                 memory: 8Gi
+            volumeMounts:
+            - mountPath: /home/ray/models
+              name: model                
             ports:
             - containerPort: 6379
               name: gcs-server
@@ -61,6 +67,13 @@ spec:
               name: client
             - containerPort: 8000
               name: serve
+          volumes:
+          - name: model
+            configMap:
+              name: quantized-model
+              items:
+              - key: model_nf4_mg.py
+                path: model_nf4_mg.py              
     workerGroupSpecs:
     # the pod replicas in this group typed worker
     - replicas: 1
@@ -70,26 +83,32 @@ spec:
       groupName: gpu-group
       rayStartParams:
         block: 'true'
-        resources: '"{\"accelerator_type_cpu\": 20, \"accelerator_type_l4\": 1}"'
+        resources: '"{\"accelerator_type_cpu\": 22, \"accelerator_type_l4\": 2}"'
       # pod template
       template:
         spec:
           containers:
           - name: llm
             image: anyscale/ray-llm:0.4.0
+            env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: hf_api_token
             lifecycle:
               preStop:
                 exec:
                   command: ["/bin/sh","-c","ray stop"]
             resources:
               limits:
-                cpu: "20"
-                memory: "20G"
-                nvidia.com/gpu: 1
+                cpu: "22"
+                memory: "40G"
+                nvidia.com/gpu: 2
               requests:
-                cpu: "20"
-                memory: "20G"
-                nvidia.com/gpu: 1
+                cpu: "22"
+                memory: "40G"
+                nvidia.com/gpu: 2
           # Please ensure the following taint has been applied to the GPU node in the cluster.
           tolerations:
             - key: "ray.io/node-type"
