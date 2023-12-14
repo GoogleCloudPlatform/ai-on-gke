@@ -392,7 +392,7 @@ func main() {
 			klog.Info("Received review for RayCluster")
 			response, err := validateRayCluster(admissionReview)
 			if err != nil {
-				klog.Errorf("Failed to mutate ray cluster: %s", err)
+				klog.Errorf("Failed to validate ray cluster: %s", err)
 				return
 			}
 			admissionReview.Response = response
