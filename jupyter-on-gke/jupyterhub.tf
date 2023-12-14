@@ -62,7 +62,7 @@ resource "google_project_service" "project_service" {
 
 # Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
-  count             = var.brand != "" ? 1 : 0
+  count             = var.add_auth && var.add_auth && var.brand == "" ? 1 : 0
   support_email     = var.support_email
   application_title = "Cloud IAP protected Application"
   project           = var.project_id
@@ -70,7 +70,7 @@ resource "google_iap_brand" "project_brand" {
 
 # Creates the OAuth client used in IAP
 resource "google_iap_client" "iap_oauth_client" {
-  count        = var.client_id != "" ? 0 : 1
+  count        = var.add_auth && var.client_id == "" ? 1 : 0
   display_name = "Jupyter-Client"
   brand        = "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}"
 }
