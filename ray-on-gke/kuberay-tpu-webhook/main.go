@@ -140,7 +140,7 @@ func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error
 	return true, nil
 }
 
-func checkWorkerGroupAffinity(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
+func isScheduledWithAffinity(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
 	if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
 		topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 		isMultiHost, err := isTPUMultiHost(topology)
@@ -173,17 +173,17 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 		if err != nil {
 			return nil, err
 		}
-		workerGroupAffinity, err := checkWorkerGroupAffinity(workerGroupSpec)
+		workerGroupAffinity, err := isScheduledWithAffinity(workerGroupSpec)
 		if err != nil {
 			return nil, err
 		}
 
-		if !(workersMatchTopology && workerGroupAffinity) {
+		if !(workersMatchTopology && isScheduledWithAffinity) {
 			admit = false
 			status = "Failure"
 			if !workersMatchTopology {
 				message = "Number of workers in worker group not equal to requested TPU hosts"
-			} else if !workerGroupAffinity {
+			} else if !isScheduledWithAffinity {
 				message = "TPU worker group requested without gke-placement-group nodeSelector"
 			} else {
 				message = "Missing gke-placement-group nodeSelector and worker not equal to TPU hosts"
