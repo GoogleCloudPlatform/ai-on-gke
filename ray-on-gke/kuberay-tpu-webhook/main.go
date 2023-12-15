@@ -360,7 +360,6 @@ func main() {
 				return
 			}
 			fmt.Fprint(w, string(responseBytes))
-			return
 		}
 
 		if admissionReview.Request.Kind.Kind == "Pod" {
@@ -377,7 +376,6 @@ func main() {
 				return
 			}
 			fmt.Fprint(w, string(responseBytes))
-			return
 		}
 	})
 
@@ -402,7 +400,6 @@ func main() {
 				return
 			}
 			fmt.Fprint(w, string(responseBytes))
-			return
 		}
 	})
 
