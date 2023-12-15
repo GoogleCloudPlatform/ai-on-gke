@@ -90,7 +90,11 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 }
 
 func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
-	numWorkers := int(*workerGroupSpec.Replicas)
+	replicas := workerGroupSpec.Replicas
+	if replicas == nil {
+		klog.Error("workerGroupSpec replicas not set")
+	}
+	numWorkers := int(*replicas)
 	workerGroupName := workerGroupSpec.GroupName
 	serviceName := "tpu-worker-group-svc" // TODO: Kuberay should set DNS name for workergroup
 	hostNames := make([]string, numWorkers)
@@ -101,8 +105,12 @@ func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
 }
 
 func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, workerGroupIndex int, patches *[]patch) {
-	for j := 0; j < len(workerGroupSpec.Template.Spec.Containers); j++ {
-		container := workerGroupSpec.Template.Spec.Containers[j]
+	containers := workerGroupSpec.Template.Spec.Containers
+	if containers == nil {
+		klog.Error("Container path not specified")
+	}
+	for j := 0; j < len(containers); j++ {
+		container := containers[j]
 		if containerRequestingTPUs(container) {
 			hostNamesPatch := patch {
 				"op": "add",
@@ -125,9 +133,20 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 }
 
 func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
-	numWorkers := int(*workerGroupSpec.Replicas)
-	if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
+	replicas := workerGroupSpec.Replicas
+	if replicas == nil {
+		klog.Error("workerGroupSpec replicas not set")
+	}
+	numWorkers := int(*replicas)
+	containers := workerGroupSpec.Template.Spec.Containers
+	if containers == nil {
+		klog.Error("Container path not specified")
+	}
+	if containerRequestingTPUs(containers...) {
 		topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+		if topology == "" {
+			klog.Error("TPU topology not specified")
+		}
 		hosts, err := getNumTPUHosts(topology)
 		if err != nil {
 			return false, err
@@ -141,8 +160,15 @@ func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error
 }
 
 func isScheduledWithAffinity(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
-	if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
+	containers := workerGroupSpec.Template.Spec.Containers
+	if containers == nil {
+		klog.Error("Container path not specified")
+	}
+	if containerRequestingTPUs(containers...) {
 		topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+		if topology == "" {
+			klog.Error("TPU topology not specified")
+		}
 		isMultiHost, err := isTPUMultiHost(topology)
 		if err != nil {
 			return false, err
@@ -167,8 +193,12 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	admit := true
 	status := "Success"
 	message := ""
-	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
-		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
+	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
+	if workerGroupSpecs == nil {
+		klog.Error("WorkerGroupSpecs not specified")
+	}
+	for i := 0; i < len(workerGroupSpecs); i++ {
+		workerGroupSpec := workerGroupSpecs[i]
 		workersMatchTopology, err := checkWorkersMatchTopology(workerGroupSpec)
 		if err != nil {
 			return nil, err
@@ -178,12 +208,12 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 			return nil, err
 		}
 
-		if !(workersMatchTopology && isScheduledWithAffinity) {
+		if !(workersMatchTopology && workerGroupAffinity) {
 			admit = false
 			status = "Failure"
 			if !workersMatchTopology {
 				message = "Number of workers in worker group not equal to requested TPU hosts"
-			} else if !isScheduledWithAffinity {
+			} else if !workerGroupAffinity {
 				message = "TPU worker group requested without gke-placement-group nodeSelector"
 			} else {
 				message = "Missing gke-placement-group nodeSelector and worker not equal to TPU hosts"
@@ -208,21 +238,32 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, err := extractRayCluster(admissionReview)
 	if err != nil {
-		klog.Fatalf("Ray Cluster extraction failed: %s", err)
+		klog.Errorf("Ray Cluster extraction failed: %s", err)
 	}
 
 	clusterName := raycluster.Name
 	var patches []patch
-	for i := 0; i < len(raycluster.Spec.WorkerGroupSpecs); i++ {
-		workerGroupSpec := raycluster.Spec.WorkerGroupSpecs[i]
+	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
+	if workerGroupSpecs == nil {
+		klog.Error("WorkerGroupSpecs not specified")
+	}
+	for i := 0; i < len(workerGroupSpecs); i++ {
+		workerGroupSpec := workerGroupSpecs[i]
 		
 		// reset past sliceToWorkers entries for ray cluster
 		groupName := workerGroupSpec.GroupName
 		podSlice := slice{clusterName, groupName}
 		sliceToWorkers[podSlice] = 0
 
-		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
+		containers := workerGroupSpec.Template.Spec.Containers
+		if containers == nil {
+			klog.Error("Container path not specified")
+		}
+		if containerRequestingTPUs(containers...) {
 			topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+			if topology == "" {
+				klog.Error("TPU topology not specified")
+			}
 			isMultiHost, err := isTPUMultiHost(topology)
 			if err != nil {
 				return nil, err
@@ -236,7 +277,7 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 
 	patchBytes, err := json.Marshal(patches)
 	if err != nil {
-		klog.Fatalf("Error serializing patches: %s", err)
+		klog.Errorf("Error serializing patches: %s", err)
 	}
 
  	// Create AdmissionResponse
@@ -270,7 +311,7 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
 	if err != nil {
-		klog.Fatalf("Pod extraction failed: %s", err)
+		klog.Errorf("Pod extraction failed: %s", err)
 	}
 
 	var patches []patch
@@ -280,15 +321,21 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	groupName := pod.Labels["ray.io/group"]
 	podSlice := slice{clusterName, groupName}
 	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+	if topology == "" {
+		klog.Error("TPU topology not specified")
+	}
 	isMultiHost, _ := isTPUMultiHost(topology) // ignore error here because topology may not be set yet
-
+	containers := pod.Spec.Containers
+	if containers == nil {
+		klog.Error("Container path not specified")
+	}
 	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
-	if containerRequestingTPUs(pod.Spec.Containers...) && isMultiHost {
+	if containerRequestingTPUs(containers...) && isMultiHost {
 		// assign to the next unique ID in the pod slice
 		tpu_worker_id := sliceToWorkers[podSlice]
 		sliceToWorkers[podSlice] += 1
-		for i := 0; i < len(pod.Spec.Containers); i++ {
-			container := pod.Spec.Containers[i]
+		for i := 0; i < len(containers); i++ {
+			container := containers[i]
 			if containerRequestingTPUs(container) {
 				path := fmt.Sprintf("/spec/containers/%d/env", i)
 				tpuWorkerID := corev1.EnvVar{
@@ -316,7 +363,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 	patchBytes, err := json.Marshal(patches)
 	if err != nil {
-		klog.Fatalf("Error serializing patches: %s", err)
+		klog.Errorf("Error serializing patches: %s", err)
 	}
 
 	admissionResponse := &admissionv1.AdmissionResponse{
