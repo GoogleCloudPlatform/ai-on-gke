@@ -52,17 +52,17 @@ func containerRequestingTPUs(containers ...corev1.Container) bool {
 
 func getNumTPUHosts(topology string) (int, error) {
 	topologyVals :=  strings.Split(topology, "x")
-	vms := 1
+	chips := 1
 	for i := 0; i < len(topologyVals); i++ {
 		dim, err := strconv.Atoi(topologyVals[i])
 		if err != nil {
 			klog.Errorf("Invalid topology: %s", err)
 			return 0, err
 		}
-		vms *= dim
+		chips *= dim
 	}
 	// number VMs = number chips / 4
-	return max(vms / 4, 1), nil
+	return max(chips / 4, 1), nil
 }
 
 // check if request is for TPU multi-host
