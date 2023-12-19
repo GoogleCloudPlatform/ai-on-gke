@@ -213,12 +213,12 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 		if !(workersMatchTopology && workerGroupAffinity) {
 			admit = false
 			status = "Failure"
-			if !workersMatchTopology {
-				message = "Number of workers in worker group not equal to requested TPU hosts"
+			if !workersMatchTopology && !workerGroupAffinity {
+				message = "Missing gke-placement-group nodeSelector and workers not equal to specified topology"
+			} else if !workersMatchTopology {
+				message = "Number of workers in worker group not equal to specified topology"
 			} else if !workerGroupAffinity {
 				message = "TPU worker group requested without gke-placement-group nodeSelector"
-			} else {
-				message = "Missing gke-placement-group nodeSelector and worker not equal to TPU hosts"
 			}
 			break
 		}
