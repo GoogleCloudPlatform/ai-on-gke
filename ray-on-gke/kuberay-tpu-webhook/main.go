@@ -113,6 +113,7 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 	if containers == nil {
 		klog.Fatalf("Container path not specified")
 	}
+	// inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
 	for j := 0; j < len(containers); j++ {
 		container := containers[j]
 		if containerRequestingTPUs(container) {
