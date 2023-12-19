@@ -310,7 +310,7 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 	return &pod, nil
 }
 
-// add TPU_WORKER_ID to pod environment
+// add DNS hostname and TPU_WORKER_ID env var to the Pod
 func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
 	if err != nil {
@@ -332,18 +332,18 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	if containers == nil {
 		return nil, errors.New("Container path not specified")
 	}
-	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
 	if containerRequestingTPUs(containers...) && isMultiHost {
 		// assign to the next unique ID in the pod slice
 		tpu_worker_id := sliceToWorkers[podSlice]
 
-		// inject hostname into pod spec
+		// inject hostname into pod spec for DNS records
 		hostname := fmt.Sprintf(groupName + "-%d", tpu_worker_id)
 		hostnamePatch := patch{"op": "add",}
 		hostnamePatch["path"] = "/spec/hostname"
 		hostnamePatch["value"] = hostname
 		patches = append(patches, hostnamePatch)
 
+		// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
 		sliceToWorkers[podSlice] += 1
 		for i := 0; i < len(containers); i++ {
 			container := containers[i]
