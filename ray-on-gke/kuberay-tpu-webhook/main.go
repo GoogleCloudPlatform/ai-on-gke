@@ -125,6 +125,7 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 			}
 			subdomainPatch["path"] = subdomainPath
 			subdomainPatch["value"] = headlessServiceName
+			// create new EnvVar array if container.Env is empty, and append hostnames if not
 			if len(container.Env) == 0 {
 				hostNamesPatch["path"] = envPath
 				hostNamesPatch["value"] = []corev1.EnvVar{tpuWorkerHostNames}
