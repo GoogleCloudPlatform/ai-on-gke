@@ -112,22 +112,23 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 	for j := 0; j < len(containers); j++ {
 		container := containers[j]
 		if containerRequestingTPUs(container) {
-			hostNamesPatch := patch {
-				"op": "add",
-			}
-			path := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", workerGroupIndex, j)
+			subdomainPatch, hostNamesPatch := patch{"op": "add",}, patch{"op": "add",}
+			subdomainPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/subdomain", workerGroupIndex)
+			envPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", workerGroupIndex, j)
 			tpuWorkerHostNames := corev1.EnvVar{
 				Name:  "TPU_WORKER_HOSTNAMES",
 				Value: hostNames,
 			}
+			subdomainPatch["path"] = subdomainPath
+			subdomainPatch["value"] = "tpu-worker-group-svc"
 			if len(container.Env) == 0 {
-				hostNamesPatch["path"] = path
+				hostNamesPatch["path"] = envPath
 				hostNamesPatch["value"] = []corev1.EnvVar{tpuWorkerHostNames}
 			} else {
-				hostNamesPatch["path"] = fmt.Sprintf("%s/-", path)
+				hostNamesPatch["path"] = fmt.Sprintf("%s/-", envPath)
 				hostNamesPatch["value"] = tpuWorkerHostNames
 			}
-			*patches = append(*patches, hostNamesPatch)
+			*patches = append(*patches, subdomainPatch, hostNamesPatch)
 		}
 	}
 }
@@ -249,7 +250,6 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 	}
 	for i := 0; i < len(workerGroupSpecs); i++ {
 		workerGroupSpec := workerGroupSpecs[i]
-		
 		// reset past sliceToWorkers entries for ray cluster
 		groupName := workerGroupSpec.GroupName
 		podSlice := slice{clusterName, groupName}
@@ -333,6 +333,14 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	if containerRequestingTPUs(containers...) && isMultiHost {
 		// assign to the next unique ID in the pod slice
 		tpu_worker_id := sliceToWorkers[podSlice]
+
+		// inject hostname into pod spec
+		hostname := fmt.Sprintf(groupName + "-%d", tpu_worker_id)
+		hostnamePatch := patch{"op": "add",}
+		hostnamePatch["path"] = "/spec/hostname"
+		hostnamePatch["value"] = hostname
+		patches = append(patches, hostnamePatch)
+
 		sliceToWorkers[podSlice] += 1
 		for i := 0; i < len(containers); i++ {
 			container := containers[i]
