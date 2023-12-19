@@ -26,9 +26,10 @@ type slice struct {
 type patch map[string]any
 
 var (
-	tpuResourceName = corev1.ResourceName("google.com/tpu")
 	certPath = "/etc/kuberay-tpu-webhook/tls/tls.crt"
 	keyPath = "/etc/kuberay-tpu-webhook/tls/tls.key"
+	tpuResourceName = corev1.ResourceName("google.com/tpu")
+	headlessServiceName = "tpu-worker-svc"
 
 	// map of ray cluster names to # of workers created in the slice
 	sliceToWorkers map[slice]int
@@ -100,10 +101,9 @@ func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) (string, error) {
 	}
 	numWorkers := int(*replicas)
 	workerGroupName := workerGroupSpec.GroupName
-	serviceName := "tpu-worker-group-svc" // TODO: Kuberay should set DNS name for workergroup
 	hostNames := make([]string, numWorkers)
 	for j := 0; j < numWorkers; j++ {
-		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
+		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, headlessServiceName)
 	}
 	return strings.Join(hostNames, ","), nil
 }
@@ -124,7 +124,7 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 				Value: hostNames,
 			}
 			subdomainPatch["path"] = subdomainPath
-			subdomainPatch["value"] = "tpu-worker-group-svc"
+			subdomainPatch["value"] = headlessServiceName
 			if len(container.Env) == 0 {
 				hostNamesPatch["path"] = envPath
 				hostNamesPatch["value"] = []corev1.EnvVar{tpuWorkerHostNames}
