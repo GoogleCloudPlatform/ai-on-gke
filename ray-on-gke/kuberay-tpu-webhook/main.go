@@ -206,19 +206,19 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 		if err != nil {
 			return nil, err
 		}
-		workerGroupAffinity, err := isScheduledWithAffinity(workerGroupSpec)
+		hasCorrectAffinity, err := isScheduledWithAffinity(workerGroupSpec)
 		if err != nil {
 			return nil, err
 		}
 
-		if !(workersMatchTopology && workerGroupAffinity) {
+		if !(workersMatchTopology && hasCorrectAffinity) {
 			admit = false
 			status = "Failure"
-			if !workersMatchTopology && !workerGroupAffinity {
+			if !workersMatchTopology && !hasCorrectAffinity {
 				message = "Missing gke-placement-group nodeSelector and workers not equal to specified topology"
 			} else if !workersMatchTopology {
 				message = "Number of workers in worker group not equal to specified topology"
-			} else if !workerGroupAffinity {
+			} else if !hasCorrectAffinity {
 				message = "TPU worker group requested without gke-placement-group nodeSelector"
 			}
 			break
@@ -357,6 +357,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 					Value: fmt.Sprint(groupName),
 				}
 				idPatch, namePatch := patch{"op": "add",}, patch{"op": "add",}
+				// create new EnvVar array if container.Env is empty, and append new EnvVars if not
 				if len(container.Env) == 0 {
 					idPatch["path"], namePatch["path"] = path, path
 					idPatch["value"] = []corev1.EnvVar{tpuWorkerID}
