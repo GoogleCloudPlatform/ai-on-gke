@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -51,6 +52,9 @@ func containerRequestingTPUs(containers ...corev1.Container) bool {
 }
 
 func getNumTPUHosts(topology string) (int, error) {
+	if topology == "" {
+		return 0, errors.New("TPU topology not specified")
+	}
 	topologyVals :=  strings.Split(topology, "x")
 	chips := 1
 	for i := 0; i < len(topologyVals); i++ {
@@ -89,10 +93,10 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
-func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
+func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) (string, error) {
 	replicas := workerGroupSpec.Replicas
 	if replicas == nil {
-		klog.Error("workerGroupSpec replicas not set")
+		return "", errors.New("workerGroupSpec replicas not set")
 	}
 	numWorkers := int(*replicas)
 	workerGroupName := workerGroupSpec.GroupName
@@ -101,13 +105,13 @@ func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) string {
 	for j := 0; j < numWorkers; j++ {
 		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, serviceName)
 	}
-	return strings.Join(hostNames, ",")
+	return strings.Join(hostNames, ","), nil
 }
 
 func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, workerGroupIndex int, patches *[]patch) {
 	containers := workerGroupSpec.Template.Spec.Containers
 	if containers == nil {
-		klog.Error("Container path not specified")
+		klog.Fatalf("Container path not specified")
 	}
 	for j := 0; j < len(containers); j++ {
 		container := containers[j]
@@ -136,12 +140,12 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
 	replicas := workerGroupSpec.Replicas
 	if replicas == nil {
-		klog.Error("workerGroupSpec replicas not set")
+		return false, errors.New("workerGroupSpec replicas not set")
 	}
 	numWorkers := int(*replicas)
 	containers := workerGroupSpec.Template.Spec.Containers
 	if containers == nil {
-		klog.Error("Container path not specified")
+		return false, errors.New("Container path not specified")
 	}
 	if containerRequestingTPUs(containers...) {
 		topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
@@ -163,13 +167,10 @@ func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error
 func isScheduledWithAffinity(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
 	containers := workerGroupSpec.Template.Spec.Containers
 	if containers == nil {
-		klog.Error("Container path not specified")
+		return false, errors.New("Container path not specified")
 	}
 	if containerRequestingTPUs(containers...) {
 		topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
-		if topology == "" {
-			klog.Error("TPU topology not specified")
-		}
 		isMultiHost, err := isTPUMultiHost(topology)
 		if err != nil {
 			return false, err
@@ -196,7 +197,7 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	message := ""
 	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
 	if workerGroupSpecs == nil {
-		klog.Error("WorkerGroupSpecs not specified")
+		return nil, errors.New("WorkerGroupSpecs not specified")
 	}
 	for i := 0; i < len(workerGroupSpecs); i++ {
 		workerGroupSpec := workerGroupSpecs[i]
@@ -239,14 +240,14 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, err := extractRayCluster(admissionReview)
 	if err != nil {
-		klog.Errorf("Ray Cluster extraction failed: %s", err)
+		return nil, err
 	}
 
 	clusterName := raycluster.Name
 	var patches []patch
 	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
 	if workerGroupSpecs == nil {
-		klog.Error("WorkerGroupSpecs not specified")
+		return nil, errors.New("WorkerGroupSpecs not specified")
 	}
 	for i := 0; i < len(workerGroupSpecs); i++ {
 		workerGroupSpec := workerGroupSpecs[i]
@@ -257,19 +258,19 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 
 		containers := workerGroupSpec.Template.Spec.Containers
 		if containers == nil {
-			klog.Error("Container path not specified")
+			return nil, errors.New("Container path not specified")
 		}
 		if containerRequestingTPUs(containers...) {
 			topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
-			if topology == "" {
-				klog.Error("TPU topology not specified")
-			}
 			isMultiHost, err := isTPUMultiHost(topology)
 			if err != nil {
 				return nil, err
 			}
 			if isMultiHost {
-				joinedHostNames := genDNSHostnames(workerGroupSpec)
+				joinedHostNames, err := genDNSHostnames(workerGroupSpec)
+				if err != nil {
+					return nil, err
+				}
 				injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
 			}
 		}
@@ -277,7 +278,7 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 
 	patchBytes, err := json.Marshal(patches)
 	if err != nil {
-		klog.Errorf("Error serializing patches: %s", err)
+		return nil, err
 	}
 
  	// Create AdmissionResponse
@@ -311,7 +312,7 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
 	if err != nil {
-		klog.Errorf("Pod extraction failed: %s", err)
+		return nil, err
 	}
 
 	var patches []patch
@@ -327,7 +328,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	isMultiHost, _ := isTPUMultiHost(topology) // ignore error here because topology may not be set yet
 	containers := pod.Spec.Containers
 	if containers == nil {
-		klog.Error("Container path not specified")
+		return nil, errors.New("Container path not specified")
 	}
 	// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
 	if containerRequestingTPUs(containers...) && isMultiHost {
@@ -371,7 +372,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 	patchBytes, err := json.Marshal(patches)
 	if err != nil {
-		klog.Errorf("Error serializing patches: %s", err)
+		return nil, err
 	}
 
 	admissionResponse := &admissionv1.AdmissionResponse{
