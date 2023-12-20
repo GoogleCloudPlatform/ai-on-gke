@@ -29,7 +29,10 @@ var (
 	certPath = "/etc/kuberay-tpu-webhook/tls/tls.crt"
 	keyPath = "/etc/kuberay-tpu-webhook/tls/tls.key"
 	tpuResourceName = corev1.ResourceName("google.com/tpu")
-	headlessServiceName = "tpu-worker-svc"
+
+	// headless svc will be of the form: {kuberay-cluster-name}-tpu-worker-svc
+	headlessServiceSuffix = "tpu-worker-svc"
+	headlessServiceName string
 
 	// map of ray cluster names to # of workers created in the slice
 	sliceToWorkers map[slice]int
@@ -246,6 +249,7 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 	}
 
 	clusterName := raycluster.Name
+	headlessServiceName = fmt.Sprintf("%s-%s", clusterName, headlessServiceSuffix)
 	var patches []patch
 	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
 	if workerGroupSpecs == nil {
