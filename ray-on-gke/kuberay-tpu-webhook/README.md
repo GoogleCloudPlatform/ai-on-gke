@@ -52,7 +52,7 @@ variable "enable_tpu" {
 
 ### Injecting TPU Environment Variables
 
-After deploying the webhook, follow the steps in ray-on-gke/TPU_GUIDE to setup Ray on GKE with TPUs. The webhook will intercept Ray Clusters and Pods created by kuberay and inject environment variables into Pods requesting TPU multi-host resources. Once the Kuberay cluster is deployed, `kubectl describe` the worker pods to verify the `TPU_WORKER_ID`, `TPU_WORKER_HOSTNAMES`, and `TPU_NAME` environment variables have been properly set.
+After deploying the webhook, follow the steps in ray-on-gke/TPU_GUIDE to setup Ray on GKE with TPUs. The webhook will intercept Ray clusters and pods created by Kuberay and inject environment variables into pods requesting TPU multi-host resources. Once the Kuberay cluster is deployed, `kubectl describe` the worker pods to verify the `TPU_WORKER_ID`, `TPU_WORKER_HOSTNAMES`, and `TPU_NAME` environment variables have been properly set.
 
 ### Limitations
 
