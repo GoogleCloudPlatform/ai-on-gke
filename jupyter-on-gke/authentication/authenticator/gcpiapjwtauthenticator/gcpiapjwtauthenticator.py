@@ -44,7 +44,7 @@ class IAPUserLoginHandler(BaseHandler):
             else:
                 logging.info(f'Successfully validated!')
         
-        username = user_email.lower()
+        username = user_email.lower().split("@")[0]
         user = self.user_from_username(username)
 
         self.set_login_cookie(user)
