@@ -21,17 +21,28 @@ Preinstall on your computer:
 
 4. Change the region or zone to one where TPUs are available (see [this link](https://cloud.google.com/tpu/docs/regions-zones) for details. For v4 TPUs (the default type), the region should be set to `us-central2` or `us-central2-b`.
 
-5. Set the following flags (note that TPUs are currently only supported on GKE standard):
+5. Set the following flag (note that TPUs are currently only supported on GKE standard):
+```
+variable "enable_tpu" {
+  type        = bool
+  description = "Set to true to create TPU node pool"
+  default     = true
+}
+```
+
+6. Run `terraform init` and `terraform apply`
+
+7. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
 
 ### Installing the Webhook
 
-1. `make install-cert-manager`
+1. `make install-cert-manager` - it may take up to two minutes for the certificate to become ready
 
 2. If deploying webhook across multiple namespaces: `make install-reflector`
 
 3. `make all`
 
-4. `make docker-build` - edit Makefile with your own Docker image if necessary
+4. `make docker-build`
 
 5. `make docker-push`
 
@@ -41,7 +52,7 @@ Preinstall on your computer:
 
 ### Injecting TPU Environment Variables
 
-After deploying the webhook, follow the steps in ray-on-gke/TPU_GUIDE to setup Ray on GKE with TPUs. The webhook will intercept Ray Clusters and Pods created by kuberay and inject environment variables into Pods requesting TPU multi-host resources. Once the Kuberay cluster is deployed, `kubectl describe` the worker pods to verify the `TPU_WORKER_ID`, `TPU_WORKER_HOSTNAMES`, and `TPU_NAME` environment variables have been properly set.
+After deploying the webhook, follow the steps in ray-on-gke/TPU_GUIDE to setup Ray on GKE with TPUs. The webhook will intercept Ray clusters and pods created by Kuberay and inject environment variables into pods requesting TPU multi-host resources. Once the Kuberay cluster is deployed, `kubectl describe` the worker pods to verify the `TPU_WORKER_ID`, `TPU_WORKER_HOSTNAMES`, and `TPU_NAME` environment variables have been properly set.
 
 ### Limitations
 

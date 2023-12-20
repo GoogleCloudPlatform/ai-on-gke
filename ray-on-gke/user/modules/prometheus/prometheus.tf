@@ -32,10 +32,6 @@ data "local_file" "grafana_service" {
   filename = "${path.module}/config/grafana-service.yaml"
 }
 
-data "local_file" "tpu_worker_group_svc" {
-  filename = "${path.module}/config/tpu-worker-group-svc.yaml"
-}
-
 resource "kubectl_manifest" "pod_monitor" {
   override_namespace = var.namespace
   yaml_body          = data.local_file.pod_monitor_yaml.content
@@ -59,9 +55,4 @@ resource "kubectl_manifest" "prometheus_frontend_service" {
 resource "kubectl_manifest" "prometheus_grafana_service" {
   override_namespace = var.namespace
   yaml_body          = data.local_file.grafana_service.content
-}
-
-resource "kubectl_manifest" "prometheus_tpu_worker_group_svc" {
-  override_namespace = var.namespace
-  yaml_body          = data.local_file.tpu_worker_group_svc.content
 }
