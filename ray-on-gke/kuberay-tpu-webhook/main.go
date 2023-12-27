@@ -331,21 +331,23 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	if topology == "" {
 		klog.Error("TPU topology not specified")
 	}
-	isMultiHost, _ := isTPUMultiHost(topology) // ignore error here because topology may not be set yet
 	containers := pod.Spec.Containers
 	if containers == nil {
 		return nil, errors.New("Container path not specified")
 	}
-	if containerRequestingTPUs(containers...) && isMultiHost {
+	if containerRequestingTPUs(containers...) {
 		// assign to the next unique ID in the pod slice
 		tpu_worker_id := sliceToWorkers[podSlice]
 
-		// inject hostname into pod spec for DNS records
-		hostname := fmt.Sprintf(groupName + "-%d", tpu_worker_id)
-		hostnamePatch := patch{"op": "add",}
-		hostnamePatch["path"] = "/spec/hostname"
-		hostnamePatch["value"] = hostname
-		patches = append(patches, hostnamePatch)
+		// if multihost -> inject hostname into pod spec for DNS records
+		isMultiHost, _ := isTPUMultiHost(topology) // ignore error here because topology may not be set yet
+		if isMultiHost {
+			hostname := fmt.Sprintf(groupName + "-%d", tpu_worker_id)
+			hostnamePatch := patch{"op": "add",}
+			hostnamePatch["path"] = "/spec/hostname"
+			hostnamePatch["value"] = hostname
+			patches = append(patches, hostnamePatch)
+		}
 
 		// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
 		sliceToWorkers[podSlice] += 1
