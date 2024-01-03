@@ -55,6 +55,8 @@ type Request struct {
 	DiskType        string
 	DiskSizeGB      int64
 	GCPOAuth        string
+	Network         string
+	Subnet          string
 	ContainerImages []string
 	Timeout         time.Duration
 	ImagePullAuth   ImagePullAuthMechanism
@@ -128,6 +130,12 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 						Instance: compute.Instance{
 							Name:        fmt.Sprintf("%s-instance", name),
 							MachineType: fmt.Sprintf("zones/%s/machineTypes/%s", req.Zone, req.MachineType),
+							NetworkInterfaces: []*compute.NetworkInterface{
+								{
+									Network:    req.Network,
+									Subnetwork: req.Subnet,
+								},
+							},
 							Disks: []*compute.AttachedDisk{
 								&compute.AttachedDisk{
 									AutoDelete: true,
