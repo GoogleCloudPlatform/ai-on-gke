@@ -1,0 +1,129 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+timeout: 3600s
+steps:
+  - name: "gcr.io/kaniko-project/executor:v1.9.1-slim"
+    id: "Build Installer Image"
+    waitFor: ["-"]
+    args:
+      - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer
+      - --cache=true
+      - --cache-ttl=12h
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "Setup Terraform state Cloud Storage bucket"
+    waitFor: ["-"]
+    entrypoint: "bash"
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        [[ $(gsutil ls | grep "gs://${PROJECT_ID}-tutorial-tfstate/") ]] || \
+        gsutil mb -p ${PROJECT_ID} gs://${PROJECT_ID}-tutorial-tfstate && \
+        [[ $(gsutil versioning get gs://${PROJECT_ID}-tutorial-tfstate | grep Enabled) ]] || \
+        gsutil versioning set on gs://${PROJECT_ID}-tutorial-tfstate
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Push workload image to Artifact Registry: pytorch-gpu"
+    entrypoint: "ash"
+    waitFor: ["Build Installer Image"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        echo y | gcloud auth configure-docker ${_REGION}-docker.pkg.dev && \
+        if ! gcloud artifacts docker images describe ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1 &> /dev/null; then
+          docker pull gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m109 && \
+          docker tag gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m109 ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1 && \
+          docker push ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1
+        fi
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Push workload image to Artifact Registry: pytorch-mnist"
+    dir: "06_jobset"
+    entrypoint: "ash"
+    waitFor: ["Build Installer Image"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        echo y | gcloud auth configure-docker ${_REGION}-docker.pkg.dev && \
+        if ! gcloud artifacts docker images describe ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1 &> /dev/null; then
+          docker build -t ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1 . && \
+          docker push ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1
+        fi
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Setup GKE"
+    dir: "01_gke"
+    entrypoint: "ash"
+    waitFor:
+      ["Build Installer Image", "Setup Terraform state Cloud Storage bucket"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform plan -out terraform.tfplan -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
+        rm terraform.tfplan
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Install GPU drivers"
+    entrypoint: "ash"
+    waitFor: ["Setup GKE"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        gcloud container clusters get-credentials gke-batch-refarch --region=${_REGION} --project=${PROJECT_ID} && \
+        kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded-latest.yaml
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Install Kueue and JobSet"
+    entrypoint: "ash"
+    waitFor: ["Setup GKE"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        gcloud container clusters get-credentials gke-batch-refarch --region=${_REGION} --project=${PROJECT_ID} && \
+        kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.2.3/manifests.yaml && \
+        kubectl -n jobset-system wait --for condition=established --timeout=120s customresourcedefinition.apiextensions.k8s.io/jobsets.jobset.x-k8s.io && \
+        kubectl apply --server-side -f "https://github.com/kubernetes-sigs/kueue/releases/download/v0.5.1/manifests.yaml" && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/clusterqueues.kueue.x-k8s.io && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/localqueues.kueue.x-k8s.io && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/resourceflavors.kueue.x-k8s.io && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/workloads.kueue.x-k8s.io
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Deploy platform config: Priority Classes, teams, Kueue and monitoring configuration"
+    dir: "02_platform"
+    entrypoint: "ash"
+    waitFor:
+      [
+        "Install Kueue and JobSet",
+        "Push workload image to Artifact Registry: pytorch-gpu",
+        "Push workload image to Artifact Registry: pytorch-mnist",
+      ]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        gcloud container clusters get-credentials gke-batch-refarch --region=${_REGION} --project=${PROJECT_ID} && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/clusterqueues.kueue.x-k8s.io && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/localqueues.kueue.x-k8s.io && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/resourceflavors.kueue.x-k8s.io && \
+        kubectl -n kueue-system wait --for condition=established --timeout=120s crd/workloads.kueue.x-k8s.io && \
+        kubectl apply -f priorityclass && \
+        kubectl apply -f teams && \
+        kubectl apply -f kueue && \
+        envsubst '$_REGION, $PROJECT_ID' < ./monitoring/install-prometheus.sh
+##########################################################################################
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,36 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+timeout: 3600s
+steps:
+  - name: "gcr.io/kaniko-project/executor:v1.6.0"
+    id: "Build Installer Image"
+    args:
+      - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer
+      - --cache=true
+      - --cache-ttl=12h
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Destroy GKE batch platform"
+    dir: "01_gke"
+    entrypoint: "ash"
+    waitFor: ["Build Installer Image"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform destroy -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -auto-approve -no-color
+
+options:
+  logging: CLOUD_LOGGING_ONLY

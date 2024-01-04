@@ -12,10 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+resource "kubernetes_namespace" "ray_namespace" {
+  metadata {
+    name = var.namespace
+  }
+}
+
 resource "helm_release" "kuberay-operator" {
   name       = "kuberay-operator"
   repository = "https://ray-project.github.io/kuberay-helm/"
   chart      = "kuberay-operator"
   values     = var.enable_autopilot ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
-  version    = "0.6.1"
+  version    = "1.0.0"
+  namespace  = "${kubernetes_namespace.ray_namespace.metadata[0].name}"
 }
