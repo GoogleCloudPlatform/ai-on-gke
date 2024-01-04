@@ -51,8 +51,12 @@ type Request struct {
 	ProjectName     string
 	Zone            string
 	GCSPath         string
+	MachineType     string
+	DiskType        string
 	DiskSizeGB      int64
 	GCPOAuth        string
+	Network         string
+	Subnet          string
 	ContainerImages []string
 	Timeout         time.Duration
 	ImagePullAuth   ImagePullAuthMechanism
@@ -107,7 +111,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 					},
 					Disk: compute.Disk{
 						Name:   fmt.Sprintf("%s-disk", name),
-						Type:   "pd-balanced",
+						Type:   req.DiskType,
 						SizeGb: req.DiskSizeGB,
 					},
 				},
@@ -124,7 +128,14 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 							StartupScript: "startup.sh",
 						},
 						Instance: compute.Instance{
-							Name: fmt.Sprintf("%s-instance", name),
+							Name:        fmt.Sprintf("%s-instance", name),
+							MachineType: fmt.Sprintf("zones/%s/machineTypes/%s", req.Zone, req.MachineType),
+							NetworkInterfaces: []*compute.NetworkInterface{
+								{
+									Network:    req.Network,
+									Subnetwork: req.Subnet,
+								},
+							},
 							Disks: []*compute.AttachedDisk{
 								&compute.AttachedDisk{
 									AutoDelete: true,
@@ -134,7 +145,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 									Mode:       "READ_WRITE",
 									InitializeParams: &compute.AttachedDiskInitializeParams{
 										DiskSizeGb:  req.DiskSizeGB,
-										DiskType:    fmt.Sprintf("projects/%s/zones/%s/diskTypes/pd-balanced", req.ProjectName, req.Zone),
+										DiskType:    fmt.Sprintf("projects/%s/zones/%s/diskTypes/%s", req.ProjectName, req.Zone, req.DiskType),
 										SourceImage: "projects/debian-cloud/global/images/debian-11-bullseye-v20230912",
 									},
 								},
