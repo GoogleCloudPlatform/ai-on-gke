@@ -27,7 +27,7 @@ variable "cluster_name" {
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "ray"
+  default     = "ray-system"
 }
 
 variable "enable_autopilot" {

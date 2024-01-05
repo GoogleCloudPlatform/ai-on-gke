@@ -215,7 +215,7 @@ tqdm==4.65.0
     # via
     #   huggingface-hub
     #   transformers
-transformers==4.27.3
+transformers==4.36.0
     # via -r requirements.in
 typing-extensions==4.5.0
     # via
@@ -224,9 +224,9 @@ typing-extensions==4.5.0
     #   huggingface-hub
     #   optax
     #   tensorflow
-urllib3==1.26.17
+urllib3==1.26.18
     # via requests
-werkzeug==2.2.3
+werkzeug==3.0.1
     # via tensorboard
 wheel==0.40.0
     # via
