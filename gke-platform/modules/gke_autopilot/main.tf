@@ -48,5 +48,7 @@ resource "google_container_cluster" "ml_cluster" {
   }
 
   min_master_version = "1.28"
+
+  resource_labels = var.cluster_labels
 }
 
