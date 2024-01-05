@@ -108,7 +108,7 @@ testresources==2.0.1
     # via -r export-model-requirements.in
 typing-extensions==4.5.0
     # via tensorflow
-urllib3==1.26.15
+urllib3==1.26.18
     # via requests
 werkzeug==3.0.1
     # via tensorboard
