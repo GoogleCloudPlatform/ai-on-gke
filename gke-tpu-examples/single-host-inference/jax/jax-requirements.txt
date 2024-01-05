@@ -145,7 +145,7 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
-pygments==2.14.0
+pygments==2.15.0
     # via rich
 pyparsing==3.0.9
     # via matplotlib
