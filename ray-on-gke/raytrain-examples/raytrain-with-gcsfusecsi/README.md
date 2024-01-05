@@ -98,5 +98,5 @@ http://tensorflow-0:8888/?token=<TOKEN> :: /home/jovyan
 ```
 kubectl port-forward -n example service/example-cluster-kuberay-head-svc 8265:8265
 ```
-14. During an ongoing traing, the pod resource usage of CPU, Memory, GPU, GPU Memory can be visualized with the GKE Pantheon UI for the workloads
+14. During an ongoing traing, the pod resource usage of CPU, Memory, GPU, GPU Memory can be visualized with the GKE Cloud Console for the workloads
 example ![Ray Head resources](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/raytrain-examples/images/ray-head-resources.png) and ![Ray Worker resources](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/raytrain-examples/images/ray-worker-resources.png)

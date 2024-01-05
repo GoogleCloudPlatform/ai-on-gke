@@ -8,7 +8,9 @@
 
 ## Creating Image
 
-We combine the Jupyterhub image and our own authenticator. By default, the JupyterHub images already have pre-installed authenticator classes such as GitHub, Auth0, and Globus. In order to specify our own class for JupyterHub, our class must also live in the JupyterHub image.
+We currently already have a public image containing the authenticator class already configured for Jupyterhub so user's dont need to create their own, but if needed, these are the instructions to do so.
+
+We combine the Jupyterhub image and our own authenticator. By default, the JupyterHub images already have pre-installed authenticator classes such as GitHub, Auth0, and Globus. In order to specify our own class for JupyterHub, our authentication class must also live in the JupyterHub image.
 
 > **_NOTE:_** An Artifact Registry Repo for this docker image is required. Create an AR Repo following [this guide](https://cloud.google.com/artifact-registry/docs/repositories/create-repos)
 
@@ -117,7 +119,7 @@ By default, the IAP service is not enabled on the project. If this variable is s
 
 ### `brand` and `support_email`
 
-To create an OAuth client, a brand is required. The brand is essentially the app show on the [OAuth consent screen](https://pantheon.corp.google.com/apis/credentials/consent). Ex:
+To create an OAuth client, a brand is required. The brand is essentially the app show on the [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent). Ex:
 
 ![IAP Screen](../images/brand_screenshot.png)
 
@@ -127,12 +129,12 @@ The `support_email` variable will not be used if the `brand` variable is not fil
 
 There are 2 ways to add users to the IAP allowlist so users can access Jupyterhub.
 
-1. Manually on the GCloud UI
+1. Manually on the Cloud Console
 2. Add users to the allowlist file
 
 ### Manually
 
-Navigate to [IAP](https://pantheon.corp.google.com/security/iap) and select the Backend Service associated with Jupyterhub.
+Navigate to [IAP](https://console.cloud.google.com/security/iap) and select the Backend Service associated with Jupyterhub.
 
 Click on `Add Principal`. Add the email of the user/group and select the `IAP-secured Web App User` role to give access to that user/group
 
