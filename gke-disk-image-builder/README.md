@@ -12,40 +12,46 @@ This is a Go module that can be used as a library as well as a CLI . Find the
 examples below to understand how this tool work better.
 
 ### Preconditions
-1. You must either:
-    1. Be logged into a GCP project using `gcloud auth login` on the host that
-    you are running the tool
-    1. Pass an OAuth file, that contain the credentials to access a GCP project,
-  to the tool using the `--gcp-oauth` flag (see examples below for more info).
-    1. Run the tool from the Cloud Shell.
-1. If a container image resides in a private registry, the tool runner must have
-access to it (See examples below).
-1. Compute Engine API must be enabled.
-1. Verify that `$PROJECT_NUMBER-compute@developer.gserviceaccount.com` has
-`storage.objects.get` permission to the provided *GCS path* for the logs. You
-can run the following command to grant proper permissions for this:
 
-      ```shell
-      gcloud storage buckets add-iam-policy-binding gs://kg-sec-disk \
+1.  For GCP authentication, either:
+    1.  `~/.config/gcloud/application_default_credentials.json` must exit. If it
+        does not exist, create it by running `gcloud auth application-default
+        login`.
+    1.  You must provide a `credentials.json` file to the tool via the
+        `--gcp-oauth` flag. The path to `credentials.json` must be absolute.
+1.  If a container image resides in a private registry, the tool runner must
+    have access to it (See examples below).
+1.  Compute Engine API must be enabled.
+    (https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=$PROJECT_NAME)
+1.  Verify that `$PROJECT_NUMBER-compute@developer.gserviceaccount.com` has
+    `storage.objectCreator` permissions to the provided *GCS path* for the logs.
+    You can run the following command to grant proper permissions for this:
+
+    ```shell
+      gcloud storage buckets add-iam-policy-binding gs://$GCS_PATH \
       --project=$PROJECT_NAME \
       --member=serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
-      --role=roles/storage.objectViewer
-      ```
-1. If a disk image with the given name (via the **--image-name** flag) already
-exists, the tool will error out. Please provide a new name for the image.
+      --role=roles/storage.objectCreator
+    ```
+
+1.  If a disk image with the given name (via the **--image-name** flag) already
+    exists, the tool will error out. Please provide a new name for the image.
 
 ### Available Flags
-| Flag | Required | Default | Description |
-| ------- | ------- | ------- | ------- |
-| *--project-name* | Yes | nil | Name of a gcp project where the script will be run |
-| *--image-name* | Yes | nil | Name of the image that will be generated |
-| *--zone* | Yes | nil | Zone where the resources will be used to create the image creator resources |
-| *--gcs-path* | Yes | nil | GCS path prefix to dump the logs |
-| *--container-image* | Yes | nil | Container image to include in the disk image. This flag can be specified multiple times |
-| *--gcp-oauth* | No | nil | Path to GCP service account credential file |
-| *--disk-size-gb* | No | 10 | Size of a disk that will host the unpacked images |
-| *--image-pull-auth* | No | 'None' | Auth mechanism to pull the container image, valid values: [None, ServiceAccountToken]. None means that the images are publically available and no authentication is required to pull them. ServiceAccountToken means the service account oauth token will be used to pull the images. For more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications |
-| *--timeout* | No | '20m' | Default timout for each step. Must be set to a proper value if the image is large to acount for the pull and image creation time step. |
+
+Flag                | Required | Default | Description
+------------------- | -------- | ------- | -----------
+*--project-name*    | Yes      | nil     | Name of a gcp project where the script will be run
+*--image-name*      | Yes      | nil     | Name of the image that will be generated
+*--zone*            | Yes      | nil     | Zone where the resources will be used to create the image creator resources
+*--gcs-path*        | Yes      | nil     | GCS path prefix to dump the logs
+*--container-image* | Yes      | nil     | Container image to include in the disk image. This flag can be specified multiple times
+*--gcp-oauth*       | No       | nil     | Path to GCP service account credential file
+*--disk-size-gb*    | No       | 10      | Size of a disk that will host the unpacked images
+*--image-pull-auth* | No       | 'None'  | Auth mechanism to pull the container image, valid values: [None, ServiceAccountToken]. None means that the images are publically available and no authentication is required to pull them. ServiceAccountToken means the service account oauth token will be used to pull the images. For more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications
+*--timeout*         | No       | '20m'   | Default timeout for each step. Must be set to a proper value if the image is large to account for the pull and image creation time step.
+*--network*         | No       | 'default'   | VPC network used by the GCE resources used for creating the disk image.
+*--subnet*         | No       | 'default'   | Subnet used by the GCE resources used for creating the disk image.
 
 ### Go
 
@@ -63,17 +69,31 @@ go run ./cli \
 
 ### Cloud Build
 
+Cloud Build API must be enabled.
+(https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com?project=$PROJECT_NAME)
+
+The Cloud Build service account must have the `compute.admin` and
+`roles/compute.serviceAgent` roles:
+
+```shell
+gcloud projects add-iam-policy-binding $PROJECT_NAME \
+--member serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com \
+--role roles/compute.admin \
+--role roles/compute.serviceAgent
+```
+
 Create a Cloud Build config file, named **cloudbuild.yaml**:
 
 ```yaml
 steps:
 - name: 'gcr.io/cloud-builders/git'
   args: ['clone', 'https://github.com/GoogleCloudPlatform/ai-on-gke.git']
-- name: 'gcr.io/cloud-builders/go'
-  env: ['GOPATH=.']
+- name: 'gcr.io/cloud-builders/go:1.21'
+  env: ['GOPATH=./ai-on-gke/gke-disk-image-builder']
+  dir: './ai-on-gke/gke-disk-image-builder'
   args:
     - 'run'
-    - './ai-on-gke/gke-disk-image-builder/cli'
+    - './cli'
     - --project-name={project-name}
     - --image-name={image-name}
     - --zone={zone}
@@ -180,14 +200,12 @@ go run ./cli \
 ### Run the tool with a GCP OAuth token
 
 By default the tool uses the OAuth credentials stored in
-`~/.config/gcloud/application_default_credentials.json` (created by running the
-`gcloud auth login` command automatically). If one must use another credentials,
-a new GCP OAuth file must be provided via the **--gcp-oauth** flag.
+`~/.config/gcloud/application_default_credentials.json`.
 
 **Note:** The path of the `--gcp-oauth` must be absolute.
 
-**Note:** Run `gcloud auth application-default login` to refresh the existing
-token or get a new one.
+**Note:** Run `gcloud auth application-default login` to create
+`~/.config/gcloud/application_default_credentials.json` file.
 
 ```shell
 go run ./cli \
