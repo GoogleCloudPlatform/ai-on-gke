@@ -36,15 +36,6 @@ variable "add_auth" {
   default     = true
 }
 
-variable "client" {
-  type = object({
-    display_name = string
-    client_id    = string
-    secret       = string
-  })
-  description = "oauth client"
-}
-
 variable "url_domain_addr" {
   type        = string
   description = "Domain provided by the user. If it's empty, we will create one for you."
@@ -55,4 +46,17 @@ variable "url_domain_name" {
   type        = string
   description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
   default     = ""
+}
+
+variable "client_id" {
+  type        = string
+  description = "Client ID used for enabling IAP"
+  default     = ""
+}
+
+variable "client_secret" {
+  type        = string
+  description = "Client secret used for enabling IAP"
+  default     = ""
+  sensitive = true
 }

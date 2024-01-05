@@ -60,9 +60,9 @@ resource "google_project_service" "project_service" {
   disable_on_destroy         = false
 }
 
-# Creates a "Brand", equivalent to the OAuth consent screen on GCP UI
+# Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
-  count             = var.brand != "" ? 1 : 0
+  count             = var.add_auth && var.add_auth && var.brand == "" ? 1 : 0
   support_email     = var.support_email
   application_title = "Cloud IAP protected Application"
   project           = var.project_id
@@ -70,6 +70,7 @@ resource "google_iap_brand" "project_brand" {
 
 # Creates the OAuth client used in IAP
 resource "google_iap_client" "iap_oauth_client" {
+  count        = var.add_auth && var.client_id == "" ? 1 : 0
   display_name = "Jupyter-Client"
   brand        = "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}"
 }
@@ -92,14 +93,24 @@ module "iap_auth" {
   project_id      = var.project_id
   namespace       = var.namespace
   service_name    = var.service_name
-  client          = google_iap_client.iap_oauth_client
+  client_id       = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
+  client_secret   = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
   url_domain_addr = var.url_domain_addr
   url_domain_name = var.url_domain_name
 
   depends_on = [
     helm_release.jupyterhub,
     kubernetes_namespace.namespace,
+    module.workload_identity_service_account
   ]
+}
+
+module "workload_identity_service_account" {
+  source = "./service_accounts_module"
+
+  project_id      = var.project_id
+  namespace       = var.namespace
+  service_account = "jupyter-service-account"
 }
 
 resource "helm_release" "jupyterhub" {

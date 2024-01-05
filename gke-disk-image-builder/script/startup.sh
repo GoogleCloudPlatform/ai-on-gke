@@ -27,16 +27,25 @@ else
   exit 1
 fi
 
+# Check if disk is partitioned and update device node file path accordingly if so.
+# The disk name prefix is defined here: https://github.com/GoogleCloudPlatform/ai-on-gke/blob/71ebab897948cbca722c9abf4ec3ff2bc1318b3b/gke-disk-image-builder/imager.go#L32
+# The full disk name is then created here: https://github.com/GoogleCloudPlatform/ai-on-gke/blob/71ebab897948cbca722c9abf4ec3ff2bc1318b3b/gke-disk-image-builder/imager.go#L111
+DEVICE_NODE=/dev/disk/by-id/google-secondary-disk-image-disk
+if [[ -e "$DEVICE_NODE-part1" ]]; then
+  DEVICE_NODE="$DEVICE_NODE-part1"
+fi
+echo "using device node: $DEVICE_NODE"
+
 # Check if the device exists
-if ! [ -b /dev/sdb ]; then
-  echo Device /dev/sdb does not exist. Please rerun the tool to try it again.
+if ! [ -b "$DEVICE_NODE" ]; then
+  echo "Device $DEVICE_NODE does not exist. Please rerun the tool to try it again."
   exit 1
 fi
 # Set ext4 as the file system.
-sudo mkfs.ext4 -F -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+sudo mkfs.ext4 -F -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard $DEVICE_NODE
 # Check if the filesystem was created successfully
 if [ $? -ne 0 ]; then
-  echo Failed to create the filesystem on /dev/sdb. Please rerun the tool to try it again.
+  echo Failed to create the filesystem on $DEVICE_NODE. Please rerun the tool to try it again.
   exit 1
 fi
 
@@ -84,14 +93,33 @@ function process_snapshots() {
   for snapshot in "${snapshots[@]}"; do
     echo Processing $snapshot
 
-    sudo ctr -n k8s.io snapshot view tmp_$snapshot $snapshot
-    # Check if the view was successfully created
-    if [ $? -ne 0 ]; then
-      echo Failed to create snapshot view for $snapshot. Please rerun the tool to try it again.
+    # Add retry in case `ctr snapshot view` fails silently
+    local retries=5
+    while [ ${retries} -ge 1 ]; do 
+      ((retries--))
+      sudo ctr -n k8s.io snapshot view tmp_$snapshot $snapshot
+      # Check if the view was successfully created
+      if [ $? -ne 0 ]; then
+        echo "Failed to create snapshot view for $snapshot. Will retry. ${retries} retries left."
+        continue
+      fi
+      
+      original_path=$(sudo ctr -n k8s.io snapshot mount /tmp_$snapshot tmp_$snapshot | grep -oP '/\S+/snapshots/[0-9]+/fs' | tr ':' '\n' | head -n 1)
+      if [[ -n "$original_path" ]]; then
+        break
+      fi
+      echo "Failed to get mount point for tmp_$snapshot. Will retry. ${retries} retries left."
+      echo "All snapshots:"
+      sudo ctr -n k8s.io snapshot list
+      sudo ctr -n k8s.io snapshot rm tmp_$snapshot
+      sleep 1
+    done
+
+    if [[ -z "$original_path" ]]; then
+      echo Failed to get snapshot directory for snapshot $snapshot. Please rerun the tool to try it again.
       exit 1
     fi
 
-    original_path=$(sudo ctr -n k8s.io snapshot mount /tmp_$snapshot tmp_$snapshot | grep -oP '/\S+/snapshots/[0-9]+/fs' | tr ':' '\n' | head -n 1)
     new_path=$(echo $original_path | grep -o "snapshots/.*/fs")
     sudo mkdir -p "/mnt/disks/container_layers/${new_path}"
     sudo cp -r $original_path "/mnt/disks/container_layers/${new_path}/.."
@@ -115,7 +143,7 @@ function unpack() {
   # Prepare the disk image directories.
   echo Preparing the disk image directories...
   sudo mkdir -p /mnt/disks/container_layers
-  sudo mount -o discard,defaults /dev/sdb /mnt/disks/container_layers
+  sudo mount -o discard,defaults $DEVICE_NODE /mnt/disks/container_layers
   # Check if the directory was successfully created
   if [ $? -ne 0 ]; then
     echo Failed to create the view for $snapshot. Please rerun the tool to try it again.

@@ -187,6 +187,7 @@ worker:
     iam.gke.io/gke-metadata-server-enabled: "true"
     cloud.google.com/gke-tpu-accelerator: tpu-v4-podslice
     cloud.google.com/gke-tpu-topology: 2x2x1
+    cloud.google.com/gke-placement-group: "tpu-pool"
   tolerations: []
   affinity: {}
   # Ray container security context.
