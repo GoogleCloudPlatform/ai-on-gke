@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+  namespace: default
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kuberay-tpu-webhook-certs
+  namespace: default
+spec:
+  secretName: kuberay-tpu-webhook-certs
+  dnsNames:
+    - kuberay-tpu-webhook.default.svc
+    - kuberay-tpu-webhook.default.svc.cluster.local
+  issuerRef:
+    name: selfsigned-issuer
+  secretTemplate:
+    annotations:
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"

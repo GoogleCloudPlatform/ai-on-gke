@@ -55,7 +55,7 @@ Uses [support_email](#support_email)
 
 ### support_email
 
-Support email assocated with the [brand](#brand). Used as a point of contact for consent for the ["OAuth Consent" in Pantheon](https://pantheon.corp.google.com/apis/credentials/consent). It will not be used if brand is empty.
+Support email assocated with the [brand](#brand). Used as a point of contact for consent for the ["OAuth Consent" in Cloud Console](https://console.cloud.google.com/apis/credentials/consent). It will not be used if brand is empty.
 
 ### url_domain_addr
 
@@ -64,3 +64,11 @@ Provided by the user if they want to bring their own URL/Domain. Used by the IAP
 ### url_domain_name
 
 This variable will only be used if [url_domain_addr](#url_domain_addr) is provided. It is the name associated with the domain provided by the user. Since we are using Ingress, it will require the `kubernetes.io/ingress.global-static-ip-name` annotation along with the name associated.
+
+### client_id
+
+Client ID of an OAuth client created by the user for enabling IAP. When this variable is not empty, the template will not create an OAuth client for you. You must also input the [client_secret](#client_secret).
+
+### client_secret
+
+Client Secret associated with the [client ID](#client_id). This variable will only be used when the client id is filled out.  

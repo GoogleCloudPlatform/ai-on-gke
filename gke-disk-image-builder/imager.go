@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Package imager contains the library of the secondary disk image generator.
 package imager
 
@@ -37,8 +51,12 @@ type Request struct {
 	ProjectName     string
 	Zone            string
 	GCSPath         string
+	MachineType     string
+	DiskType        string
 	DiskSizeGB      int64
 	GCPOAuth        string
+	Network         string
+	Subnet          string
 	ContainerImages []string
 	Timeout         time.Duration
 	ImagePullAuth   ImagePullAuthMechanism
@@ -93,7 +111,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 					},
 					Disk: compute.Disk{
 						Name:   fmt.Sprintf("%s-disk", name),
-						Type:   "pd-balanced",
+						Type:   req.DiskType,
 						SizeGb: req.DiskSizeGB,
 					},
 				},
@@ -110,7 +128,14 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 							StartupScript: "startup.sh",
 						},
 						Instance: compute.Instance{
-							Name: fmt.Sprintf("%s-instance", name),
+							Name:        fmt.Sprintf("%s-instance", name),
+							MachineType: fmt.Sprintf("zones/%s/machineTypes/%s", req.Zone, req.MachineType),
+							NetworkInterfaces: []*compute.NetworkInterface{
+								{
+									Network:    req.Network,
+									Subnetwork: req.Subnet,
+								},
+							},
 							Disks: []*compute.AttachedDisk{
 								&compute.AttachedDisk{
 									AutoDelete: true,
@@ -120,7 +145,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 									Mode:       "READ_WRITE",
 									InitializeParams: &compute.AttachedDiskInitializeParams{
 										DiskSizeGb:  req.DiskSizeGB,
-										DiskType:    fmt.Sprintf("projects/%s/zones/%s/diskTypes/pd-balanced", req.ProjectName, req.Zone),
+										DiskType:    fmt.Sprintf("projects/%s/zones/%s/diskTypes/%s", req.ProjectName, req.Zone, req.DiskType),
 										SourceImage: "projects/debian-cloud/global/images/debian-11-bullseye-v20230912",
 									},
 								},
