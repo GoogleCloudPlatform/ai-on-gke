@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	name = "secondary-disk-image"
+	deviceName = "secondary-disk-image-disk"
+	imageFamilyName = "secondary-disk-image"
 )
 
 // ImagePullAuthMechanism declares the contract on how to convert a struct into a string that is
@@ -49,6 +50,7 @@ const (
 type Request struct {
 	ImageName       string
 	ProjectName     string
+	JobName         string
 	Zone            string
 	GCSPath         string
 	MachineType     string
@@ -63,7 +65,7 @@ type Request struct {
 }
 
 func generateStartupScript(req Request) (*os.File, error) {
-	concreteStartupScript, err := os.CreateTemp("", fmt.Sprintf("%s-startup-script-", name))
+	concreteStartupScript, err := os.CreateTemp("", fmt.Sprintf("%s-startup-script-", req.JobName))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a tmp file, err: %v", err)
 	}
@@ -93,7 +95,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 	defer os.Remove(startupScriptFile.Name())
 
 	preloadDiskWorkflow := daisy.New()
-	preloadDiskWorkflow.Name = name
+	preloadDiskWorkflow.Name = req.JobName
 	preloadDiskWorkflow.Project = req.ProjectName
 	preloadDiskWorkflow.Zone = req.Zone
 	preloadDiskWorkflow.GCSPath = req.GCSPath
@@ -110,7 +112,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 						ExactName: true,
 					},
 					Disk: compute.Disk{
-						Name:   fmt.Sprintf("%s-disk", name),
+						Name:   fmt.Sprintf("%s-disk", req.JobName),
 						Type:   req.DiskType,
 						SizeGb: req.DiskSizeGB,
 					},
@@ -128,7 +130,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 							StartupScript: "startup.sh",
 						},
 						Instance: compute.Instance{
-							Name:        fmt.Sprintf("%s-instance", name),
+							Name:        fmt.Sprintf("%s-instance", req.JobName),
 							MachineType: fmt.Sprintf("zones/%s/machineTypes/%s", req.Zone, req.MachineType),
 							NetworkInterfaces: []*compute.NetworkInterface{
 								{
@@ -141,7 +143,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 									AutoDelete: true,
 									Boot:       true,
 									Type:       "PERSISTENT",
-									DeviceName: fmt.Sprintf("%s-bootable-disk", name),
+									DeviceName: fmt.Sprintf("%s-bootable-disk", req.JobName),
 									Mode:       "READ_WRITE",
 									InitializeParams: &compute.AttachedDiskInitializeParams{
 										DiskSizeGb:  req.DiskSizeGB,
@@ -153,7 +155,8 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 									AutoDelete: true,
 									Boot:       false,
 									DiskSizeGb: req.DiskSizeGB,
-									Source:     fmt.Sprintf("%s-disk", name),
+									DeviceName: deviceName,
+									Source:     fmt.Sprintf("%s-disk", req.JobName),
 								},
 							},
 						},
@@ -164,7 +167,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 		"wait-on-image-creation": {
 			WaitForInstancesSignal: &daisy.WaitForInstancesSignal{
 				&daisy.InstanceSignal{
-					Name: fmt.Sprintf("%s-instance", name),
+					Name: fmt.Sprintf("%s-instance", req.JobName),
 					SerialOutput: &daisy.SerialOutput{
 						Port:         1,
 						SuccessMatch: "Unpacking is completed",
@@ -179,8 +182,8 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 		"detach-disk": {
 			DetachDisks: &daisy.DetachDisks{
 				&daisy.DetachDisk{
-					Instance:   fmt.Sprintf("%s-instance", name),
-					DeviceName: fmt.Sprintf("%s-disk", name),
+					Instance:   fmt.Sprintf("%s-instance", req.JobName),
+					DeviceName: deviceName,
 				},
 			},
 		},
@@ -196,8 +199,8 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 						},
 						Image: compute.Image{
 							Name:       req.ImageName,
-							SourceDisk: fmt.Sprintf("%s-disk", name),
-							Family:     name,
+							SourceDisk: fmt.Sprintf("%s-disk", req.JobName),
+							Family:     imageFamilyName,
 						},
 					},
 				},
