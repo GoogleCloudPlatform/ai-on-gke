@@ -39,6 +39,12 @@ variable "enable_tpu" {
 
 7. Run `terraform apply`
 
+
+### Installing the TPU Initialization Webhook
+
+The TPU Initialization Webhook can automatically inject the `TPU_WORKER_ID` and `TPU_WORKER_HOSTNAMES` environment variables necessary for multi-host TPU clusters. The webhook needs to be installed once per GKE cluster. The instructions can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/kuberay-tpu-webhook).
+
+
 ### Creating the Kuberay Cluster
 
 1. Get the GKE cluster name and location/region from `gke-platform/variables.tf`.
@@ -57,6 +63,8 @@ variable "enable_tpu" {
 
 This should deploy a Kuberay cluster with a single TPU worker node (v4 TPU with `2x2x1` topology). 
 
+To deploy a multi-host Ray Cluster, modify `tpu_topology` [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/gke-platform/modules/gke_standard/main.tf#L162) as well as the Kuberay cluster spec [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/user/modules/kuberay/kuberay-tpu-values.yaml#L189).
+
 
 ### Running Sample Workloads
 
@@ -67,9 +75,9 @@ A basic JAX program can be found [here](https://github.com/GoogleCloudPlatform/a
 For a more advanced workload running Stable Diffusion on TPUs, see [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/example_notebooks/stable-diffusion-tpu.ipynb).
 
 
-### Initializing JAX Environment
+### (Optional) Initializing JAX Environment Manually
 
-If you are using multiple TPU hosts with JAX, you need to manually set JAX environment variables for `TPU_WORKER_ID` and `TPU_WORKER_HOSTNAMES` before initializing JAX. Sample code:
+To manually set JAX environment variables for `TPU_WORKER_ID` and `TPU_WORKER_HOSTNAMES` before initializing JAX without using the webhook, run the following sample code:
 
 ```
 @ray.remote(resources={"google.com/tpu": 4})
@@ -106,9 +114,3 @@ def init_jax_from_ray(num_workers: int):
 init_jax_from_ray(num_workers=2)
 
 ``` 
-
-### TPU Multi-Host Workloads
-
-When initializing multi-host TPUs, the environment variables can be set using a mutating admission webhook. The webhook can be deployed following the instructions in the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/kuberay-tpu-webhook#readme).
-
-A caveat when running multiple TPU pod slices of the same topology and type with Ray is that a single Ray worker group may be scheduled across multiple pod slices. This goes against the assumptions of the webhook and would lead to  pod-to-pod communication occuring over DCN rather than the high bandwidth ICI mesh.
