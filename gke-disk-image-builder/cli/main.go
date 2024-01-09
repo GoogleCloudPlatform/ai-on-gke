@@ -62,8 +62,8 @@ func main() {
 		log.Panicf("invalid argument, timeout: %v, err: %v", timeout, err)
 	}
 
-	if len(*jobName) > 50 {
-		log.Panicf("invalid argument, job-name: %v cannot be longer than 50 characters, got: %v", *jobName, len(*jobName))
+	if len(*jobName) >= 50 {
+		log.Panicf("invalid argument, job-name: %v should be less than 50 characters, got: %v", *jobName, len(*jobName))
 	}
 
 	var auth builder.ImagePullAuthMechanism
