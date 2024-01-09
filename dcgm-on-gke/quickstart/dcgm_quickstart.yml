@@ -45,7 +45,7 @@ spec:
         hostPath:
           path: /home/kubernetes/bin/nvidia
       containers:
-      - image: "nvcr.io/nvidia/cloud-native/dcgm:2.3.5-1-ubuntu20.04"
+      - image: "nvcr.io/nvidia/cloud-native/dcgm:3.3.0-1-ubuntu22.04"
         command: ["nv-hostengine", "-n", "-b", "ALL"]
         ports:
         - containerPort: 5555
@@ -94,7 +94,7 @@ spec:
             path: /var/lib/kubelet/pod-resources              
       containers:
       - name: nvidia-dcgm-exporter  
-        image: nvcr.io/nvidia/k8s/dcgm-exporter:2.3.5-2.6.5-ubuntu20.04
+        image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.0-3.2.0-ubuntu22.04
         command: ["/bin/bash", "-c"]
         args: 
         - hostname $NODE_NAME; dcgm-exporter -k --remote-hostengine-info $(NODE_IP) --collectors /etc/dcgm-exporter/counters.csv --collect-interval 20000
