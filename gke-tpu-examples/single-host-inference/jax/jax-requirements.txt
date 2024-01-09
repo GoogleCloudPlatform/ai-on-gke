@@ -39,7 +39,7 @@ flatbuffers==23.3.3
     # via tensorflow
 flax==0.6.2
     # via -r requirements.in
-fonttools==4.39.3
+fonttools==4.43.0
     # via matplotlib
 gast==0.4.0
     # via tensorflow
