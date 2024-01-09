@@ -162,7 +162,7 @@ data:
     DCGM_FI_PROF_NVLINK_TX_BYTES, gauge, The number of bytes of active NvLink tx (transmit) data including both header and payload.
     DCGM_FI_PROF_NVLINK_RX_BYTES, gauge, The number of bytes of active NvLink rx (read) data including both header and payload.
 ---
-apiVersion: monitoring.googleapis.com/v1alpha1
+apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
   name: nvidia-dcgm-exporter-gmp-monitor
