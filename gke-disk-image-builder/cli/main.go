@@ -41,6 +41,7 @@ func main() {
 	var containerImages stringSlice
 	projectName := flag.String("project-name", "", "name of a gcp project where the script will be run")
 	imageName := flag.String("image-name", "", "name of the image that will be generated")
+	jobName := flag.String("job-name", "secondary-disk-image", "name of the workflow job; no more than 50 characters")
 	zone := flag.String("zone", "", "zone where the resources will be used to create the image creator resources")
 	gcsPath := flag.String("gcs-path", "", "gcs location to dump the logs")
 	machineType := flag.String("machine-type", "n2-standard-16", "GCE instance machine type to generate the disk image")
@@ -61,6 +62,10 @@ func main() {
 		log.Panicf("invalid argument, timeout: %v, err: %v", timeout, err)
 	}
 
+	if len(*jobName) >= 50 {
+		log.Panicf("invalid argument, job-name: %v should be less than 50 characters, got: %v", *jobName, len(*jobName))
+	}
+
 	var auth builder.ImagePullAuthMechanism
 	switch *imagePullAuth {
 	case "":
@@ -76,6 +81,7 @@ func main() {
 	req := builder.Request{
 		ImageName:       *imageName,
 		ProjectName:     *projectName,
+		JobName:         *jobName,
 		Zone:            *zone,
 		GCSPath:         *gcsPath,
 		MachineType:     *machineType,
