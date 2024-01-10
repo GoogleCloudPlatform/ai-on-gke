@@ -30,7 +30,6 @@ import (
 
 const (
 	deviceName = "secondary-disk-image-disk"
-	imageFamilyName = "secondary-disk-image"
 )
 
 // ImagePullAuthMechanism declares the contract on how to convert a struct into a string that is
@@ -49,6 +48,7 @@ const (
 // Request contains the required input for the disk image generation.
 type Request struct {
 	ImageName       string
+	ImageFamilyName string
 	ProjectName     string
 	JobName         string
 	Zone            string
@@ -200,7 +200,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 						Image: compute.Image{
 							Name:       req.ImageName,
 							SourceDisk: fmt.Sprintf("%s-disk", req.JobName),
-							Family:     imageFamilyName,
+							Family:     req.ImageFamilyName,
 						},
 					},
 				},
