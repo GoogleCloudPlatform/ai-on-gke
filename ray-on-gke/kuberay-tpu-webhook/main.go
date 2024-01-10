@@ -300,6 +300,28 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 	return admissionResponse, nil
 }
 
+func hasWorkerID(container corev1.Container) bool {
+	if container.Env != nil && len(container.Env) > 0 {
+		for _, envVar := range container.Env  {
+			if envVar.Name == "TPU_WORKER_ID" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func hasWorkerName(container corev1.Container) bool {
+	if container.Env != nil && len(container.Env) > 0 {
+		for _, envVar := range container.Env {
+			if envVar.Name == "TPU_WORKER_NAME" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // unmarshal pod from admission request
 func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, error) {
 	if admissionReview.Request.Kind.Kind != "Pod" {
@@ -350,32 +372,48 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		}
 
 		// inject the TPU_WORKER_ID environment variable into the container requesting TPUs
-		sliceToWorkers[podSlice] += 1
+		increment_worker_id := false
 		for i := 0; i < len(containers); i++ {
 			container := containers[i]
 			if containerRequestingTPUs(container) {
 				path := fmt.Sprintf("/spec/containers/%d/env", i)
-				tpuWorkerID := corev1.EnvVar{
-					Name:  "TPU_WORKER_ID",
-					Value: fmt.Sprint(tpu_worker_id),
+				if !hasWorkerID(container) {
+					increment_worker_id = true
+					tpuWorkerID := corev1.EnvVar{
+						Name:  "TPU_WORKER_ID",
+						Value: fmt.Sprint(tpu_worker_id),
+					}
+					idPatch := patch{"op": "add",}
+					// create new EnvVar array if container.Env is empty, and append new EnvVars if not
+					if len(container.Env) == 0 {
+						idPatch["path"] = path
+						idPatch["value"] = []corev1.EnvVar{tpuWorkerID}
+					} else {
+						idPatch["path"] = fmt.Sprintf("%s/-", path)
+						idPatch["value"] = tpuWorkerID
+					}
+					patches = append(patches, idPatch)
 				}
-				tpuName := corev1.EnvVar{
-					Name:  "TPU_NAME",
-					Value: fmt.Sprint(groupName),
+				if !hasWorkerName(container) {
+					tpuName := corev1.EnvVar{
+						Name:  "TPU_NAME",
+						Value: fmt.Sprint(groupName),
+					}
+					namePatch := patch{"op": "add",}
+					// create new EnvVar array if container.Env is empty, and append new EnvVars if not
+					if len(container.Env) == 0 {
+						namePatch["path"] = path
+						namePatch["value"] = []corev1.EnvVar{tpuName}
+					} else {
+						namePatch["path"] = fmt.Sprintf("%s/-", path)
+						namePatch["value"] = tpuName
+					}
+					patches = append(patches, namePatch)
 				}
-				idPatch, namePatch := patch{"op": "add",}, patch{"op": "add",}
-				// create new EnvVar array if container.Env is empty, and append new EnvVars if not
-				if len(container.Env) == 0 {
-					idPatch["path"], namePatch["path"] = path, path
-					idPatch["value"] = []corev1.EnvVar{tpuWorkerID}
-					namePatch["value"] = []corev1.EnvVar{tpuName}
-				} else {
-					idPatch["path"], namePatch["path"] = fmt.Sprintf("%s/-", path), fmt.Sprintf("%s/-", path)
-					idPatch["value"] = tpuWorkerID
-					namePatch["value"] = tpuName
-				}
-				patches = append(patches, idPatch, namePatch)
 			}
+		}
+		if increment_worker_id {
+			sliceToWorkers[podSlice] += 1
 		}
 	}
 
