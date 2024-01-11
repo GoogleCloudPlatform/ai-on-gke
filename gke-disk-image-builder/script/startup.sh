@@ -122,7 +122,7 @@ function process_snapshots() {
 
     new_path=$(echo $original_path | grep -o "snapshots/.*/fs")
     sudo mkdir -p "/mnt/disks/container_layers/${new_path}"
-    sudo cp -r $original_path "/mnt/disks/container_layers/${new_path}/.."
+    sudo cp -r -p $original_path "/mnt/disks/container_layers/${new_path}/.."
     # Check if the data was successfully copied over to the new path
     if [ $? -ne 0 ]; then
       echo Failed to copy the snapshot files for $snapshot from $original_path to /mnt/disks/container_layers/${new_path}. Please rerun the tool to try it again.
