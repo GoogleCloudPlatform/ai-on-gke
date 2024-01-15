@@ -15,13 +15,12 @@
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "<your user name>"
+  default     = "umesh"
 }
 
-variable "create_namespace" {
-  type        = bool
-  description = "Enable creation of jupyterhub namespace if it does not exist"
-  default     = false
+variable "default_backend_service" {
+  type        = string
+  default     = "proxy-public"
 }
 
 variable "add_auth" {
@@ -33,25 +32,13 @@ variable "add_auth" {
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<Project ID here>"
-}
-
-variable "location" {
-  type        = string
-  description = "GCP project location"
-  default     = "us-central1"
+  default     = "ai-on-gke-jss-sandbox"
 }
 
 variable "service_name" {
   type        = string
   description = "Name of the Backend Service on GCP"
-  default     = "no-id-yet"
-}
-
-variable "enable_iap_service" {
-  type        = bool
-  description = "Flag to enable iap service on this project. If it is already enabled, please set it to false."
-  default     = true
+  default     = "iap-config-default"
 }
 
 variable "brand" {
@@ -75,18 +62,18 @@ variable "url_domain_name" {
 variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
-  default     = "<Support email>"
+  default     = "umeshkumhar@google.com"
 }
 
 variable "client_id" {
   type        = string
   description = "Client ID used for enabling IAP"
-  default     = ""
+  default     = "" 
 }
 
 variable "client_secret" {
   type        = string
   description = "Client secret used for enabling IAP"
-  default     = ""
-  sensitive   = true
+  default     =  "" 
+  sensitive   = false
 }

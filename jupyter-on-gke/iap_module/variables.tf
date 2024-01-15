@@ -12,28 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+variable "project_id" {
+  type        = string
+  description = "GCP project ID"
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "<your user name>"
 }
 
-variable "project_id" {
-  type        = string
-  description = "GCP project id"
-  default     = "<your project>"
-}
-
-variable "service_name" {
+variable "default_backend_service" {
   type        = string
   description = "Name of the backend service"
-  default     = "default"
-}
-
-variable "add_auth" {
-  type        = bool
-  description = "Enable iap authentication on jupyterhub"
-  default     = true
+  default     = "proxy-public"
 }
 
 variable "url_domain_addr" {
@@ -59,4 +51,15 @@ variable "client_secret" {
   description = "Client secret used for enabling IAP"
   default     = ""
   sensitive = true
+}
+
+variable "iap_client_secret" {
+  type        = string
+  description = "Name of the IAP secret to be created."
+  default     = "iap-client-secret"
+}
+
+variable "service_name" {
+  type        = string
+  description = "Name of the Backend Service on GCP"
 }
