@@ -55,7 +55,7 @@ proxy:
   service:
     type: ${service_type}
     annotations: 
-      beta.cloud.google.com/backend-config: '{"default": "config-default"}'
+      beta.cloud.google.com/backend-config: '{"default": "${backend_config}"}'
   traefik:
     networkPolicy:
       enabled: false
