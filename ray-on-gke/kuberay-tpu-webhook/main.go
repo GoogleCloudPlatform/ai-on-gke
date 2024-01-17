@@ -314,7 +314,7 @@ func hasWorkerID(container corev1.Container) bool {
 func hasWorkerName(container corev1.Container) bool {
 	if container.Env != nil && len(container.Env) > 0 {
 		for _, envVar := range container.Env {
-			if envVar.Name == "TPU_WORKER_NAME" {
+			if envVar.Name == "TPU_NAME" {
 				return true
 			}
 		}
