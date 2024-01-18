@@ -15,7 +15,6 @@
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "umesh"
 }
 
 variable "default_backend_service" {
@@ -32,7 +31,6 @@ variable "add_auth" {
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "ai-on-gke-jss-sandbox"
 }
 
 variable "service_name" {
@@ -62,7 +60,6 @@ variable "url_domain_name" {
 variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
-  default     = "umeshkumhar@google.com"
 }
 
 variable "client_id" {
