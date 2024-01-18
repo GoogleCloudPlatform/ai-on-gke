@@ -23,7 +23,7 @@ project_id = "ai-on-gke-jss-sandbox"
 #######################################################
 
 ## JupyterHub variables
-namespace = "umesh"
+namespace = "jupyter-ns"
 
 # Jupyterhub with IAP
 add_auth = true

@@ -126,7 +126,7 @@ data "google_compute_backend_service" "jupyter-ingress" {
 
 # Binds the list of principals in the allowlist file to roles/iap.httpsResourceAccessor
 resource "google_iap_web_backend_service_iam_binding" "binding" {
-  count               = data.kubernetes_service.jupyter-ingress.metadata != null ? 1 : 0
+  count               = data.kubernetes_service.jupyter-ingress.metadata != null ? (data.kubernetes_service.jupyter-ingress.metadata[0].annotations != null ? 1 : 0) : 0
   project             = var.project_id
   web_backend_service = data.google_compute_backend_service.jupyter-ingress.generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress.name}" : "no-id-yet"
   role                = "roles/iap.httpsResourceAccessor"
