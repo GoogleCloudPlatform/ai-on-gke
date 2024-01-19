@@ -20,9 +20,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
-	"regexp"
 
 	builder "github.com/GoogleCloudPlatform/ai-on-gke/gke-disk-image-builder"
 )
@@ -44,6 +44,7 @@ var (
 
 func main() {
 	var containerImages stringSlice
+	var imageLabels stringSlice
 	projectName := flag.String("project-name", "", "name of a gcp project where the script will be run")
 	imageName := flag.String("image-name", "", "name of the image that will be generated")
 	imageFamilyName := flag.String("image-family-name", "secondary-disk-image", "name of the image family associated with the created disk image")
@@ -58,6 +59,7 @@ func main() {
 	timeout := flag.String("timeout", "20m", "Default timout for each step, defaults to 20m")
 	network := flag.String("network", "default", "VPC network to be used by GCE resources used for disk image creation.")
 	subnet := flag.String("subnet", "default", "subnet to be used by GCE resources used for disk image creation.")
+	flag.Var(&imageLabels, "image-labels", "labels tagged to the disk image. This flag can be specified multiple times. The accepted format is `--image-labels=key=val`.")
 	flag.Var(&containerImages, "container-image", "container image to include in the disk image. This flag can be specified multiple times")
 
 	flag.Parse()
@@ -110,6 +112,7 @@ func main() {
 		ContainerImages: containerImages,
 		Timeout:         td,
 		ImagePullAuth:   auth,
+		ImageLabels:     imageLabels,
 	}
 
 	if err = builder.GenerateDiskImage(ctx, req); err != nil {
