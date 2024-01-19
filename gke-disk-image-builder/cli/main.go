@@ -22,6 +22,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"regexp"
 
 	builder "github.com/GoogleCloudPlatform/ai-on-gke/gke-disk-image-builder"
 )
@@ -37,10 +38,15 @@ func (s *stringSlice) Set(value string) error {
 	return nil
 }
 
+var (
+	gcpResourceNameRegex = regexp.MustCompile("^[a-z]([-a-z0-9]*[a-z0-9])?$")
+)
+
 func main() {
 	var containerImages stringSlice
 	projectName := flag.String("project-name", "", "name of a gcp project where the script will be run")
 	imageName := flag.String("image-name", "", "name of the image that will be generated")
+	imageFamilyName := flag.String("image-family-name", "secondary-disk-image", "name of the image family associated with the created disk image")
 	jobName := flag.String("job-name", "secondary-disk-image", "name of the workflow job; no more than 50 characters")
 	zone := flag.String("zone", "", "zone where the resources will be used to create the image creator resources")
 	gcsPath := flag.String("gcs-path", "", "gcs location to dump the logs")
@@ -62,8 +68,18 @@ func main() {
 		log.Panicf("invalid argument, timeout: %v, err: %v", timeout, err)
 	}
 
+	// GCP resources naming convention: https://cloud.google.com/compute/docs/naming-resources
 	if len(*jobName) >= 50 {
 		log.Panicf("invalid argument, job-name: %v should be less than 50 characters, got: %v", *jobName, len(*jobName))
+	}
+	if !gcpResourceNameRegex.MatchString(*jobName) {
+		log.Panicf("invalid argument, job-name: %v must conform to `^[a-z]([-a-z0-9]*[a-z0-9])?`")
+	}
+	if len(*imageFamilyName) >= 64 {
+		log.Panicf("invalid argument, image-family-name: %v should be less than 64 characters, got: %v", *imageFamilyName, len(*imageFamilyName))
+	}
+	if !gcpResourceNameRegex.MatchString(*imageFamilyName) {
+		log.Panicf("invalid argument, image-family-name: %v must conform to `^[a-z]([-a-z0-9]*[a-z0-9])?`", *imageFamilyName)
 	}
 
 	var auth builder.ImagePullAuthMechanism
@@ -80,6 +96,7 @@ func main() {
 
 	req := builder.Request{
 		ImageName:       *imageName,
+		ImageFamilyName: *imageFamilyName,
 		ProjectName:     *projectName,
 		JobName:         *jobName,
 		Zone:            *zone,

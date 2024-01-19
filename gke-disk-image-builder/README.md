@@ -43,6 +43,7 @@ Flag                | Required | Default | Description
 ------------------- | -------- | ------- | -----------
 *--project-name*    | Yes      | nil     | Name of a gcp project where the script will be run
 *--image-name*      | Yes      | nil     | Name of the image that will be generated
+*--image-family-name* | No | secondary-disk-image | Name of the image family associated with the created disk image
 *--job-name*        | No       | secondary-disk-image | Name of the workflow. This name is used to provision some of the intermediate resources (disks, VMs) needed by the workflow. The maximum length is 50 characters
 *--zone*            | Yes      | nil     | Zone where the resources will be used to create the image creator resources
 *--gcs-path*        | Yes      | nil     | GCS path prefix to dump the logs
