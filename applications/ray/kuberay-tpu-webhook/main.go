@@ -108,11 +108,11 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 }
 
 func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) (string, error) {
-	replicas := workerGroupSpec.Replicas
-	if replicas == nil {
-		return "", errors.New("workerGroupSpec replicas not set")
+	numHosts := workerGroupSpec.numOfHosts
+	if numHosts == nil {
+		return "", errors.New("workerGroupSpec numOfHosts not set")
 	}
-	numWorkers := int(*replicas)
+	numWorkers := int(*numHosts) // number of TPU worker pods, 1:1 worker pods to TPU VM hosts
 	workerGroupName := workerGroupSpec.GroupName
 	hostNames := make([]string, numWorkers)
 	for j := 0; j < numWorkers; j++ {
