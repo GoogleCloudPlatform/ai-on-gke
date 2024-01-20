@@ -153,11 +153,11 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 }
 
 func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
-	replicas := workerGroupSpec.Replicas
-	if replicas == nil {
-		return false, errors.New("workerGroupSpec replicas not set")
+	numHosts := workerGroupSpec.numOfHosts
+	if numHosts == nil {
+		return false, errors.New("workerGroupSpec numOfHosts not set")
 	}
-	numWorkers := int(*replicas)
+	numWorkers := int(*numHosts) // the number of TPU worker pods, where 1 worker -> 1 TPU VM host
 	containers := workerGroupSpec.Template.Spec.Containers
 	if containers == nil {
 		return false, errors.New("Container path not specified")
