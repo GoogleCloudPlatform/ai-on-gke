@@ -19,13 +19,13 @@ project_id = "ai-on-gke-jss-sandbox"
 ####    PLATFORM
 #######################################################
 ## network values
-create_network  = true
+create_network  = false
 network_name    = "ml-network"
 subnetwork_name = "ml-subnet"
 
 ## required only in case new network provisioning
 subnetwork_cidr           = "10.100.0.0/16"
-subnetwork_region         = "us-central1"
+subnetwork_region         = "us-central"
 subnetwork_private_access = "true"
 subnetwork_description    = "GKE subnet"
 network_secondary_ranges = {
@@ -53,6 +53,8 @@ cluster_zones                        = ["us-central1-a", "us-central1-b", "us-ce
 ip_range_pods                        = "us-central1-01-gke-01-pods-1"
 ip_range_services                    = "us-central1-01-gke-01-services-1"
 monitoring_enable_managed_prometheus = true
+gcs_fuse_csi_driver                  = true ## enabled default for autopilot
+deletion_protection                  = false 
 master_authorized_networks = [{
   cidr_block   = "10.100.0.0/16"
   display_name = "VPC"
