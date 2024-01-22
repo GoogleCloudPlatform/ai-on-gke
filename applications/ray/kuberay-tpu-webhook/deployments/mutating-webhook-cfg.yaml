@@ -16,7 +16,7 @@ webhooks:
     rules:
       - operations: ["CREATE"]
         apiGroups: ["ray.io"]
-        apiVersions: ["*"]
+        apiVersions: ["v1"]
         resources: ["rayclusters"]
       - operations: ["CREATE"]
         apiGroups: [""]
