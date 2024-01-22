@@ -13,7 +13,7 @@
 # limitations under the License.
 
 ##common variables
-project_id = "umeshkumhar"
+project_id = "<project-id>"
 
 #######################################################
 ####    PLATFORM
