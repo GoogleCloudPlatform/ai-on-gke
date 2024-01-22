@@ -142,7 +142,7 @@ all_node_pools_oauth_scopes = [
 ]
 
 all_node_pools_labels = {
-  "cloud.google.com/gke-profile" = "ray"
+  "gke-profile" = "ai-on-gke"
 }
 
 all_node_pools_metadata = {
