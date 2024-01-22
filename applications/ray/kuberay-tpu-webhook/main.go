@@ -19,6 +19,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
+
 // our representation of a pod slice
 // not necessarily true that worker group scheduled on 1 slice
 type slice struct {
@@ -65,7 +66,7 @@ func containerRequestingTPUs(containers ...corev1.Container) bool {
 	return false
 }
 
-func getNumTPUHosts(topology string) (int, error) {
+func getNumTPUHosts(topology string) (int32, error) {
 	if topology == "" {
 		return 0, errors.New("TPU topology not specified")
 	}
@@ -80,7 +81,7 @@ func getNumTPUHosts(topology string) (int, error) {
 		chips *= dim
 	}
 	// number VMs = number chips / 4
-	return max(chips/4, 1), nil
+	return int32(max(chips/4, 1)), nil
 }
 
 // check if request is for TPU multi-host
@@ -108,14 +109,13 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 }
 
 func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) (string, error) {
-	numHosts := workerGroupSpec.numOfHosts
-	if numHosts == nil {
-		return "", errors.New("workerGroupSpec numOfHosts not set")
+	numHosts := workerGroupSpec.NumOfHosts
+	if numHosts == 0 {
+		return "", errors.New("workerGroupSpec NumOfHosts not set")
 	}
-	numWorkers := int(*numHosts) // number of TPU worker pods, 1:1 worker pods to TPU VM hosts
 	workerGroupName := workerGroupSpec.GroupName
-	hostNames := make([]string, numWorkers)
-	for j := 0; j < numWorkers; j++ {
+	hostNames := make([]string, numHosts)
+	for j := 0; j < int(numHosts); j++ {
 		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, headlessServiceName)
 	}
 	return strings.Join(hostNames, ","), nil
@@ -152,12 +152,12 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 	}
 }
 
+// check that the # of Ray TPU worker pods equals the # of hosts defined in the topology key
 func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
-	numHosts := workerGroupSpec.numOfHosts
-	if numHosts == nil {
-		return false, errors.New("workerGroupSpec numOfHosts not set")
+	numHosts := workerGroupSpec.NumOfHosts // 1 TPU VM host -> 1 Ray worker pod
+	if numHosts == 0 {
+		return false, errors.New("workerGroupSpec NumOfHosts not set")
 	}
-	numWorkers := int(*numHosts) // the number of TPU worker pods, where 1 worker -> 1 TPU VM host
 	containers := workerGroupSpec.Template.Spec.Containers
 	if containers == nil {
 		return false, errors.New("Container path not specified")
@@ -167,12 +167,12 @@ func checkWorkersMatchTopology(workerGroupSpec ray.WorkerGroupSpec) (bool, error
 		if topology == "" {
 			klog.Error("TPU topology not specified")
 		}
-		hosts, err := getNumTPUHosts(topology)
+		expectedHosts, err := getNumTPUHosts(topology)
 		if err != nil {
 			return false, err
 		}
 
-		if hosts != numWorkers {
+		if expectedHosts != numHosts {
 			return false, nil
 		}
 	}
