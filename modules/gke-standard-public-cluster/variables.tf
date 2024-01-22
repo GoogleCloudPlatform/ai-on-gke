@@ -67,6 +67,14 @@ variable "monitoring_enable_managed_prometheus" {
   type    = bool
   default = false
 }
+variable "gcs_fuse_csi_driver" {
+  type    = bool
+  default = false
+}
+variable "deletion_protection" {
+  type    = bool
+  default = false
+}
 variable "all_node_pools_oauth_scopes" {
   type = list(string)
 }

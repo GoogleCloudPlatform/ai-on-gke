@@ -19,7 +19,7 @@ locals {
 
 module "gke" {
   source                               = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version                              = "28.0.0"
+  version                              = "29.0.0"
   project_id                           = var.project_id
   regional                             = var.cluster_regional
   name                                 = var.cluster_name
@@ -31,6 +31,8 @@ module "gke" {
   subnetwork                           = var.subnetwork_name
   ip_range_pods                        = var.ip_range_pods
   ip_range_services                    = var.ip_range_services
+  gcs_fuse_csi_driver                  = var.gcs_fuse_csi_driver
+  deletion_protection                  = var.deletion_protection
   remove_default_node_pool             = true
   logging_enabled_components           = ["SYSTEM_COMPONENTS", "WORKLOADS"]
   monitoring_enabled_components        = ["SYSTEM_COMPONENTS"]

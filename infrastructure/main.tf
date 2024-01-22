@@ -23,7 +23,7 @@ provider "google" {
 
 module "custom-network" {
   source       = "terraform-google-modules/network/google"
-  version      = "7.3.0"
+  version      = "8.0.0"
   count        = var.create_network ? 1 : 0
   project_id   = var.project_id
   network_name = var.network_name
@@ -67,7 +67,9 @@ module "public-gke-standard-cluster" {
   ip_range_pods                        = var.ip_range_pods
   ip_range_services                    = var.ip_range_services
   monitoring_enable_managed_prometheus = var.monitoring_enable_managed_prometheus
+  gcs_fuse_csi_driver                  = var.gcs_fuse_csi_driver
   master_authorized_networks           = var.master_authorized_networks
+  deletion_protection                  = var.deletion_protection
 
   ## pools config variables
   cpu_pools                   = var.cpu_pools
@@ -101,6 +103,8 @@ module "public-gke-autopilot-cluster" {
   ip_range_pods              = var.ip_range_pods
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
+  deletion_protection        = var.deletion_protection
+
 }
 
 ## create private GKE standard
@@ -123,6 +127,8 @@ module "private-gke-standard-cluster" {
   ip_range_pods                        = var.ip_range_pods
   ip_range_services                    = var.ip_range_services
   monitoring_enable_managed_prometheus = var.monitoring_enable_managed_prometheus
+  gcs_fuse_csi_driver                  = var.gcs_fuse_csi_driver
+  deletion_protection                  = var.deletion_protection
   master_authorized_networks           = var.master_authorized_networks
 
   ## pools config variables
@@ -157,13 +163,15 @@ module "private-gke-autopilot-cluster" {
   ip_range_pods              = var.ip_range_pods
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
+  deletion_protection        = var.deletion_protection
+
 }
 
 
 ## configure cloud NAT for private GKE
 module "cloud-nat" {
   source        = "terraform-google-modules/cloud-nat/google"
-  version       = "4.1.0"
+  version       = "5.0.0"
   count         = var.create_network && var.private_cluster ? 1 : 0
   region        = var.region
   project_id    = var.project_id
