@@ -27,8 +27,8 @@ namespace = "jupyter-ns"
 
 # Jupyterhub with IAP
 add_auth = true
-brand = "projects/494975018659/brands/494975018659"
-support_email = "umeshkumhar@google.com"
+brand = "projects/<project-id>/brands/<project-id>"
+support_email = "<email>"
 default_backend_service = "proxy-public"
 service_name = "iap-config-default"
 
