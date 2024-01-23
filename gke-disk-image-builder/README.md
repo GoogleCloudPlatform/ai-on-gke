@@ -44,6 +44,7 @@ Flag                | Required | Default | Description
 *--project-name*    | Yes      | nil     | Name of a gcp project where the script will be run
 *--image-name*      | Yes      | nil     | Name of the image that will be generated
 *--image-family-name* | No | secondary-disk-image | Name of the image family associated with the created disk image
+*--image-labels* | No | nil | Labels tagged to the disk image. This flag can be specified multiple times. The accepted format is `--image-labels=key=val`.
 *--job-name*        | No       | secondary-disk-image | Name of the workflow. This name is used to provision some of the intermediate resources (disks, VMs) needed by the workflow. The maximum length is 50 characters
 *--zone*            | Yes      | nil     | Zone where the resources will be used to create the image creator resources
 *--gcs-path*        | Yes      | nil     | GCS path prefix to dump the logs
@@ -217,4 +218,18 @@ go run ./cli \
     --gcs-path=gs://$GCS_PATH/ \
     --gcp-oauth=/usr/local/google/home/username/another_credentials.json \
     --container-image=docker.io/library/nginx:latest
+```
+### Customize the image family name and attach labels to the built image
+```
+go run ./cli \
+    --project-name=$PROJECT_NAME \
+    --image-name=$IMAGE_NAME \
+    --zone=$ZONE \
+    --gcs-path=gs://$GCS_PATH/ \
+    --container-image=docker.io/library/python:latest \
+    --container-image=docker.io/library/nginx:latest \
+    --image-family-name=customize-image-family \
+    --image-labels=pokemon=pikachu \
+    --image-labels=band=ac-dc \
+    --image-labels=theory=ramsey_theory
 ```

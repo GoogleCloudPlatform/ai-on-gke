@@ -62,6 +62,7 @@ type Request struct {
 	ContainerImages []string
 	Timeout         time.Duration
 	ImagePullAuth   ImagePullAuthMechanism
+	ImageLabels     []string
 }
 
 func generateStartupScript(req Request) (*os.File, error) {
@@ -85,9 +86,25 @@ func generateStartupScript(req Request) (*os.File, error) {
 	return concreteStartupScript, nil
 }
 
+func buildImageLabels(req Request) (map[string]string, error) {
+	labels := make(map[string]string)
+	for _, label := range req.ImageLabels {
+		keyValue := strings.Split(label, "=")
+		if len(keyValue) != 2 {
+			return labels, fmt.Errorf("label: %v is not a valid key=value pair", label)
+		}
+		labels[keyValue[0]] = keyValue[1]
+	}
+	return labels, nil
+}
+
 // GenerateDiskImage generates the disk image according to the given request.
 func GenerateDiskImage(ctx context.Context, req Request) error {
 	startupScriptFile, err := generateStartupScript(req)
+	if err != nil {
+		return err
+	}
+	imageLabels, err := buildImageLabels(req)
 	if err != nil {
 		return err
 	}
@@ -201,6 +218,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 							Name:       req.ImageName,
 							SourceDisk: fmt.Sprintf("%s-disk", req.JobName),
 							Family:     req.ImageFamilyName,
+							Labels:     imageLabels,
 						},
 					},
 				},
