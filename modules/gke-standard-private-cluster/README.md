@@ -10,7 +10,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_gke"></a> [gke](#module\_gke) | github.com/umeshkumhar/terraform-google-kubernetes-engine//modules/private-cluster | n/a |
+| <a name="module_gke"></a> [gke](#module\_gke) | terraform-google-modules/kubernetes-engine/google//modules/private-cluster | 28.0.0 |
 
 ## Resources
 
@@ -26,6 +26,7 @@
 | <a name="input_all_node_pools_metadata"></a> [all\_node\_pools\_metadata](#input\_all\_node\_pools\_metadata) | n/a | `map(string)` | n/a | yes |
 | <a name="input_all_node_pools_oauth_scopes"></a> [all\_node\_pools\_oauth\_scopes](#input\_all\_node\_pools\_oauth\_scopes) | n/a | `list(string)` | n/a | yes |
 | <a name="input_all_node_pools_tags"></a> [all\_node\_pools\_tags](#input\_all\_node\_pools\_tags) | n/a | `list(string)` | n/a | yes |
+| <a name="input_cluster_labels"></a> [cluster\_labels](#input\_cluster\_labels) | GKE cluster labels | `map` | n/a | yes |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | # GKE variables | `string` | n/a | yes |
 | <a name="input_cluster_region"></a> [cluster\_region](#input\_cluster\_region) | n/a | `string` | n/a | yes |
 | <a name="input_cluster_regional"></a> [cluster\_regional](#input\_cluster\_regional) | n/a | `bool` | n/a | yes |
