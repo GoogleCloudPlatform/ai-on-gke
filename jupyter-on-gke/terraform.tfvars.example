@@ -17,20 +17,19 @@
 project_id = "ai-on-gke-jss-sandbox"
 ## this is required for terraform to connect to GKE master and deploy workloads
 
-
 #######################################################
 ####    APPLICATIONS
 #######################################################
 
 ## JupyterHub variables
-namespace = "jupyter-ns"
-gcs_bucket = "<GCS Bucket here>"
-k8s_service_account = "<K8s service account here>"
+namespace = "rag"
+gcs_bucket = "gcs-bucket"
+k8s_service_account = "default"
 
 # Jupyterhub with IAP
 add_auth = true
-brand = "projects/<project-id>/brands/<project-id>"
-support_email = "<email>"
+brand = "projects/0000000000/brands/0000000000"
+support_email = "sample@google.com"
 default_backend_service = "proxy-public"
 service_name = "iap-config-default"
 
@@ -38,3 +37,4 @@ url_domain_addr = ""
 url_domain_name = ""
 client_id = ""
 client_secret = ""
+members_allowlist = "allAuthenticatedUsers,user:sample@google.com,user:sample1@google.com,group:sample@google.com"

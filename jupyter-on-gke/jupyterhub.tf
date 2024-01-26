@@ -98,12 +98,12 @@ resource "helm_release" "jupyterhub" {
 
   values = [
     templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
-      service_id          = var.add_auth && data.google_compute_backend_service.jupyter-ingress.generated_id != null ? data.google_compute_backend_service.jupyter-ingress.generated_id : "no-id-yet"
+      service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet" ) : "no-id-yet"
       backend_config      = var.service_name
       project_number      = data.google_project.project.number
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
       service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
-      gcs_bucket = var.gcs_bucket
+      gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.k8s_service_account
     })
   ]
@@ -122,16 +122,17 @@ data "kubernetes_service" "jupyter-ingress" {
 
 # The data of the GCP backend service. IAP is enabled on this backend service
 data "google_compute_backend_service" "jupyter-ingress" {
+  count  = var.add_auth ? 1 : 0
   name    = data.kubernetes_service.jupyter-ingress.metadata != null ? (data.kubernetes_service.jupyter-ingress.metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter-ingress.metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups["80"] : "not-found") : "not-found"
   project = var.project_id
 }
 
 # Binds the list of principals in the allowlist file to roles/iap.httpsResourceAccessor
 resource "google_iap_web_backend_service_iam_binding" "binding" {
-  count               = data.kubernetes_service.jupyter-ingress.metadata != null ? (data.kubernetes_service.jupyter-ingress.metadata[0].annotations != null ? 1 : 0) : 0
+  count               = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? 1 : 0 ) : 0
   project             = var.project_id
-  web_backend_service = data.google_compute_backend_service.jupyter-ingress.generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress.name}" : "no-id-yet"
+  web_backend_service = data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress[0].name}" : "no-id-yet"
   role                = "roles/iap.httpsResourceAccessor"
-  members             = split("\n", chomp(file("${path.module}/allowlist")))
+  members             = split(",", var.members_allowlist)
 }
 
