@@ -24,6 +24,8 @@ project_id = "ai-on-gke-jss-sandbox"
 
 ## JupyterHub variables
 namespace = "jupyter-ns"
+gcs_bucket = "<GCS Bucket here>"
+k8s_service_account = "<K8s service account here>"
 
 # Jupyterhub with IAP
 add_auth = true
