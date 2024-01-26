@@ -15,6 +15,6 @@
 #
 tensorflow==2.11.1
 tensorflow-serving-api==2.11.0
-pillow==10.0.1
+pillow==10.2.0
 # Added for launchpad dependency
 testresources==2.0.1

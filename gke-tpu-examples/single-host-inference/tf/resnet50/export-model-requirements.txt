@@ -59,7 +59,7 @@ packaging==23.0
     # via tensorflow
 pbr==5.11.1
     # via testresources
-pillow==10.0.1
+pillow==10.2.0
     # via -r export-model-requirements.in
 protobuf==3.19.6
     # via
