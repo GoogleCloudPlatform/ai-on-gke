@@ -90,9 +90,21 @@ singleuser:
     gke-gcsfuse/cpu-limit: 500m
     gke-gcsfuse/memory-limit: 250Mi
     gke-gcsfuse/ephemeral-storage-limit: 10Gi
+  serviceAccountName: ${k8s_service_account}
+    # Configure csi for gcsfuse
   storage:
     dynamic:
       pvcNameTemplate: claim-{username}
+    extraVolumes:
+      - name: test-vol
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: ${gcs_bucket}
+            mountOptions: "implicit-dirs,uid=1000,gid=100"
+    extraVolumeMounts:
+        - name: test-vol
+          mountPath: /persist-data
 # More info on kubespawner overrides: https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner
 #   profile example:
 #   - display_name: "Learning Data Science"

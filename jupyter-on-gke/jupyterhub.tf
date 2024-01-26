@@ -103,6 +103,8 @@ resource "helm_release" "jupyterhub" {
       project_number      = data.google_project.project.number
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
       service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
+      gcs_bucket = var.gcs_bucket
+      k8s_service_account = var.k8s_service_account
     })
   ]
   depends_on = [module.iap_auth]

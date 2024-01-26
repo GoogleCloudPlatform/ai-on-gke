@@ -28,6 +28,16 @@ variable "add_auth" {
   default     = true
 }
 
+variable "gcs_bucket" {
+  type = string
+  description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
+}
+
+variable "k8s_service_account" {
+  type = string
+  description = "k8s service account"
+}
+
 variable "project_id" {
   type        = string
   description = "GCP project id"
