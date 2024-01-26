@@ -11052,7 +11052,7 @@ spec:
         - --feature-gates=ProvisioningACC=true
         command:
         - /manager
-        image: registry.k8s.io/kueue/kueue:v0.5.1
+        image: registry.k8s.io/kueue/kueue:v0.5.2
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
