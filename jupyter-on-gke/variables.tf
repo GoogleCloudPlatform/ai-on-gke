@@ -22,6 +22,10 @@ variable "default_backend_service" {
   default     = "proxy-public"
 }
 
+variable "members_allowlist" {
+  type        = string
+  default     = ""
+}
 variable "add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
