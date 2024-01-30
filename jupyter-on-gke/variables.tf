@@ -15,43 +15,42 @@
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "<your user name>"
 }
 
-variable "create_namespace" {
-  type        = bool
-  description = "Enable creation of jupyterhub namespace if it does not exist"
-  default     = false
+variable "default_backend_service" {
+  type        = string
+  default     = "proxy-public"
 }
 
+variable "members_allowlist" {
+  type        = string
+  default     = ""
+}
 variable "add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
   default     = true
 }
 
+variable "gcs_bucket" {
+  type = string
+  description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
+}
+
+variable "k8s_service_account" {
+  type = string
+  description = "k8s service account"
+}
+
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<Project ID here>"
-}
-
-variable "location" {
-  type        = string
-  description = "GCP project location"
-  default     = "us-central1"
 }
 
 variable "service_name" {
   type        = string
   description = "Name of the Backend Service on GCP"
-  default     = "no-id-yet"
-}
-
-variable "enable_iap_service" {
-  type        = bool
-  description = "Flag to enable iap service on this project. If it is already enabled, please set it to false."
-  default     = true
+  default     = "iap-config-default"
 }
 
 variable "brand" {
@@ -75,18 +74,17 @@ variable "url_domain_name" {
 variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
-  default     = "<Support email>"
 }
 
 variable "client_id" {
   type        = string
   description = "Client ID used for enabling IAP"
-  default     = ""
+  default     = "" 
 }
 
 variable "client_secret" {
   type        = string
   description = "Client secret used for enabling IAP"
-  default     = ""
-  sensitive   = true
+  default     =  "" 
+  sensitive   = false
 }

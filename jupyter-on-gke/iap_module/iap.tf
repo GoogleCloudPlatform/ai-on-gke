@@ -12,18 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-data "local_file" "backend_config_yaml" {
-  filename = "${path.module}/deployments/backend-config.yaml"
-}
-
-data "local_file" "managed_cert_yaml" {
-  filename = "${path.module}/deployments/managed-cert.yaml"
-}
-
-data "local_file" "static_ingress_yaml" {
-  filename = "${path.module}/deployments/static-ingress.yaml"
-}
-
 # Reserve IP Address
 resource "google_compute_global_address" "default" {
   count        = var.url_domain_addr != "" ? 0 : 1
@@ -34,42 +22,52 @@ resource "google_compute_global_address" "default" {
   ip_version   = "IPV4"
 }
 
-# The configuration that will trigger turning on IAP
-resource "kubectl_manifest" "backend_config" {
-  override_namespace = var.namespace
-  yaml_body          = templatefile("${path.module}/deployments/backend-config.yaml", {})
-  depends_on         = [kubectl_manifest.static_ingress]
-}
-
-# Specifies the domain for the SSL certificate, wildcard domains are not supported
-resource "kubectl_manifest" "managed_cert" {
-  override_namespace = var.namespace
-  yaml_body = templatefile("${path.module}/deployments/managed-cert.yaml", {
-    ip_addr = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
-  })
-  depends_on = [kubernetes_secret.my-secret]
-}
-
-# Ingress for IAP
-resource "kubectl_manifest" "static_ingress" {
-  override_namespace = var.namespace
-
-  yaml_body = templatefile("${path.module}/deployments/static-ingress.yaml", {
-    static_addr_name = var.url_domain_addr != "" ? var.url_domain_name : "${google_compute_global_address.default[0].name}"
-  })
-  depends_on = [kubectl_manifest.managed_cert]
-}
-
 # Secret used by the BackendConfig, contains the OAuth client info
-resource "kubernetes_secret" "my-secret" {
+resource "kubernetes_secret" "iap-secret" {
   metadata {
-    name      = "my-secret"
+    name      = var.iap_client_secret
     namespace = var.namespace
   }
-
-  # Omitting type defaults to `Opaque` which is the equivalent of `generic` 
   data = {
     "client_id"     = var.client_id
     "client_secret" = var.client_secret
   }
 }
+
+# fetch all namespaces
+data "kubernetes_all_namespaces" "allns" {}
+
+# Helm Chart IAP
+resource "helm_release" "iap_jupyter" {
+  name             = "iap-jupyter"
+  chart            = "${path.module}/charts/iap_jupyter/"
+  namespace        = var.namespace
+  create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
+
+  set {
+    name  = "iap.backendConfig.name"
+    value = var.service_name
+  }
+
+  set {
+    name  = "iap.backendConfig.iapSecretName"
+    value = var.iap_client_secret
+  }
+
+  set {
+    name  = "iap.managedCertificate.domain"
+    value = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
+  }
+
+  set {
+    name  = "iap.jupyterIngress.staticIpName"
+    value = var.url_domain_addr != "" ? var.url_domain_name : "${google_compute_global_address.default[0].name}"
+  }
+
+  set {
+    name  = "iap.jupyterIngress.defaultBackend"
+    value = var.default_backend_service
+  }
+  depends_on = [kubernetes_secret.iap-secret]
+}
+

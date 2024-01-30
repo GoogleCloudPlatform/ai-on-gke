@@ -1,0 +1,21 @@
+# Default values for iap_jupyter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+iap: 
+  backendConfig:
+    name: "iap-config-default"
+    iapSecretName: "my-secret"
+
+  managedCertificate:
+    name: "iap-managed-cert"
+    domain: ""
+
+  jupyterIngress:
+    name: "jupyter-ingress"
+    staticIpName: "xyz"
+    managedCertificates: "iap-managed-cert"
+    defaultBackend: "proxy-public"
+
+

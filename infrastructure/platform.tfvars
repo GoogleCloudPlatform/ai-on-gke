@@ -44,9 +44,9 @@ network_secondary_ranges = {
 ## gke variables
 create_cluster                       = true
 private_cluster                      = true ## Default true. Use false for a public cluster
-autopilot_cluster                    = false # false = standard cluster, true = autopilot cluster
+autopilot_cluster                    = true # false = standard cluster, true = autopilot cluster
 cluster_name                         = "ml-cluster"
-kubernetes_version                   = "1.27"
+kubernetes_version                   = "1.28"
 cluster_regional                     = true
 cluster_region                       = "us-central1"
 cluster_zones                        = ["us-central1-a", "us-central1-b", "us-central1-f"]
@@ -145,12 +145,12 @@ all_node_pools_oauth_scopes = [
 ]
 
 
-cluster_labels= {
-  "cloud.google.com/gke-profile" = "ai-on-gke"
+cluster_labels = {
+  "gke-profile" = "ai-on-gke"
 }
 
 all_node_pools_labels = {
-  "cloud.google.com/gke-profile" = "ray"
+  "gke-profile" = "ai-on-gke"
 }
 
 all_node_pools_metadata = {
