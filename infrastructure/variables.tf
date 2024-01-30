@@ -15,7 +15,6 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "umeshkumhar"
 }
 
 variable "region" {
@@ -82,9 +81,6 @@ variable "cluster_name" {
 variable "cluster_labels" {
   type        = map
   description = "GKE cluster labels"
-  default     =  {
-    "cloud.google.com/gke-profile" = "ai-on-gke"
-  }
 }
 
 variable "kubernetes_version" {

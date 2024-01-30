@@ -10,7 +10,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_gke"></a> [gke](#module\_gke) | github.com/umeshkumhar/terraform-google-kubernetes-engine//modules/private-cluster | n/a |
+| <a name="module_gke"></a> [gke](#module\_gke) | terraform-google-modules/kubernetes-engine/google//modules/private-cluster | 28.0.0 |
 
 ## Resources
 
@@ -26,6 +26,7 @@
 | <a name="input_all_node_pools_metadata"></a> [all\_node\_pools\_metadata](#input\_all\_node\_pools\_metadata) | n/a | `map(string)` | n/a | yes |
 | <a name="input_all_node_pools_oauth_scopes"></a> [all\_node\_pools\_oauth\_scopes](#input\_all\_node\_pools\_oauth\_scopes) | n/a | `list(string)` | n/a | yes |
 | <a name="input_all_node_pools_tags"></a> [all\_node\_pools\_tags](#input\_all\_node\_pools\_tags) | n/a | `list(string)` | n/a | yes |
+| <a name="input_cluster_labels"></a> [cluster\_labels](#input\_cluster\_labels) | GKE cluster labels | `map` | n/a | yes |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | # GKE variables | `string` | n/a | yes |
 | <a name="input_cluster_region"></a> [cluster\_region](#input\_cluster\_region) | n/a | `string` | n/a | yes |
 | <a name="input_cluster_regional"></a> [cluster\_regional](#input\_cluster\_regional) | n/a | `bool` | n/a | yes |
@@ -40,7 +41,7 @@
 | <a name="input_master_authorized_networks"></a> [master\_authorized\_networks](#input\_master\_authorized\_networks) | n/a | <pre>list(object({<br>    cidr_block   = string<br>    display_name = string<br>  }))</pre> | `[]` | no |
 | <a name="input_monitoring_enable_managed_prometheus"></a> [monitoring\_enable\_managed\_prometheus](#input\_monitoring\_enable\_managed\_prometheus) | n/a | `bool` | `false` | no |
 | <a name="input_network_name"></a> [network\_name](#input\_network\_name) | # network variables | `string` | n/a | yes |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project id | `string` | `"umeshkumhar"` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project id | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | GCP project region or zone | `string` | `"us-central1"` | no |
 | <a name="input_subnetwork_name"></a> [subnetwork\_name](#input\_subnetwork\_name) | n/a | `string` | n/a | yes |
 | <a name="input_tpu_pools"></a> [tpu\_pools](#input\_tpu\_pools) | n/a | `list(map(any))` | n/a | yes |

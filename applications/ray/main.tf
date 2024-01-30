@@ -69,20 +69,20 @@ provider "helm" {
 data "kubernetes_all_namespaces" "allns" {}
 
 module "kuberay-operator" {
-  source           = "./modules/kuberay-operator"
+  source           = "../../modules/kuberay-operator"
   name             = "kuberay-operator"
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
   namespace        = var.ray_namespace
 }
 
 module "kubernetes-namespace" {
-  source     = "./modules/kubernetes-namespace"
+  source     = "../../modules/kubernetes-namespace"
   depends_on = [module.kuberay-operator]
   namespace  = var.ray_namespace
 }
 
 module "k8s_service_accounts" {
-  source          = "./modules/service_accounts"
+  source          = "../../modules/service_accounts"
   project_id      = var.project_id
   namespace       = var.ray_namespace
   service_account = var.service_account
@@ -91,7 +91,7 @@ module "k8s_service_accounts" {
 
 module "kuberay-cluster" {
   count      = var.create_ray_cluster == true ? 1 : 0
-  source     = "./modules/kuberay-cluster"
+  source     = "../../modules/kuberay-cluster"
   depends_on = [module.kubernetes-namespace]
   namespace  = var.ray_namespace
   enable_tpu = var.support_tpu
@@ -99,7 +99,7 @@ module "kuberay-cluster" {
 
 module "prometheus" {
   count      = var.create_ray_cluster == true ? 1 : 0
-  source     = "./modules/prometheus"
+  source     = "../../modules/prometheus"
   depends_on = [module.kuberay-cluster, module.kubernetes-namespace]
   project_id = var.project_id
   namespace  = var.ray_namespace

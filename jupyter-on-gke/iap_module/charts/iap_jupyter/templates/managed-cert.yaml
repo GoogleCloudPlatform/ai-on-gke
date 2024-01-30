@@ -15,8 +15,7 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: managed-cert
-  namespace: ray
+  name:  {{ .Values.iap.managedCertificate.name }}
 spec:
-  domains:
-    - ${ip_addr}
+  domains: 
+  - {{ .Values.iap.managedCertificate.domain }}

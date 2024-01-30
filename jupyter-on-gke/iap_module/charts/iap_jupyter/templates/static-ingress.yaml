@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: cloud.google.com/v1
-kind: BackendConfig
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: config-default
-  namespace: ray
+  name: {{ .Values.iap.jupyterIngress.name }}
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name:  {{ .Values.iap.jupyterIngress.staticIpName }}
+    networking.gke.io/managed-certificates:  {{ .Values.iap.jupyterIngress.managedCertificates }}
 spec:
-  iap:
-    enabled: true
-    oauthclientCredentials:
-      secretName: my-secret
+  defaultBackend:
+    service:
+      name: {{ .Values.iap.jupyterIngress.defaultBackend }}
+      port:
+        number: 80
