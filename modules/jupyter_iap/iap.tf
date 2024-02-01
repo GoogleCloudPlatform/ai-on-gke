@@ -22,18 +22,6 @@ resource "google_compute_global_address" "default" {
   ip_version   = "IPV4"
 }
 
-# Secret used by the BackendConfig, contains the OAuth client info
-resource "kubernetes_secret" "iap-secret" {
-  metadata {
-    name      = var.iap_client_secret
-    namespace = var.namespace
-  }
-  data = {
-    "client_id"     = var.client_id
-    "client_secret" = var.client_secret
-  }
-}
-
 # fetch all namespaces
 data "kubernetes_all_namespaces" "allns" {}
 
@@ -55,6 +43,16 @@ resource "helm_release" "iap_jupyter" {
   }
 
   set {
+    name  = "iap.secret.client_id"
+    value = base64encode(var.client_id)
+  }
+
+  set {
+    name  = "iap.secret.client_secret"
+    value = base64encode(var.client_secret)
+  }
+
+  set {
     name  = "iap.managedCertificate.domain"
     value = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
   }
@@ -68,6 +66,5 @@ resource "helm_release" "iap_jupyter" {
     name  = "iap.jupyterIngress.defaultBackend"
     value = var.default_backend_service
   }
-  depends_on = [kubernetes_secret.iap-secret]
 }
 

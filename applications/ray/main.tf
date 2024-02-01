@@ -33,11 +33,11 @@ data "google_container_cluster" "default" {
 
 locals {
   private_cluster       = data.google_container_cluster.default.private_cluster_config.0.enable_private_endpoint
-  cluster_membership_id = local.private_cluster ? element(split("/", data.google_container_cluster.default.fleet.0.membership), length(split("/", data.google_container_cluster.default.fleet.0.membership)) - 1) : ""
+  cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
 }
 
 provider "kubernetes" {
-  host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/global/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+  host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
   token                  = data.google_client_config.default.access_token
   cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
   dynamic "exec" {
@@ -51,7 +51,7 @@ provider "kubernetes" {
 
 provider "helm" {
   kubernetes {
-    host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/global/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+    host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
     token                  = data.google_client_config.default.access_token
     cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
     dynamic "exec" {
@@ -86,6 +86,7 @@ module "k8s_service_accounts" {
   project_id      = var.project_id
   namespace       = var.ray_namespace
   service_account = var.service_account
+  sa_iam_roles    = var.service_account_iam_roles
   depends_on      = [module.kubernetes-namespace]
 }
 
