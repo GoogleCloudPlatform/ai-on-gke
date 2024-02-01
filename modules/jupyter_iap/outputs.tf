@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: cloud.google.com/v1
-kind: BackendConfig
-metadata:
-  name: {{ .Values.iap.backendConfig.name }}
-spec:
-  iap:
-    enabled: true
-    oauthclientCredentials:
-      secretName:  {{ .Values.iap.backendConfig.iapSecretName }}
+output "domain" {
+  value = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
+}

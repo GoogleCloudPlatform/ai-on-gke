@@ -12,19 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "project_id" {
-  type        = string
-  description = "GCP project id"
-}
-
-variable "namespace" {
-  type        = string
-  description = "Kubernetes namespace where resources are deployed"
-  default     = "jup"
-}
-
-variable "service_account" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "jup-system-account"
+output "domain" {
+  value = module.iap_auth[0].domain
 }

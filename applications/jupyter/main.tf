@@ -25,14 +25,41 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+data "google_container_cluster" "default" {
+  name     = var.cluster_name
+  location = var.cluster_location
+}
+
+locals {
+  private_cluster       = data.google_container_cluster.default.private_cluster_config.0.enable_private_endpoint
+  cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
+}
 
 provider "kubernetes" {
-  config_path = pathexpand("~/.kube/config")
+  host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
+  dynamic "exec" {
+    for_each = local.private_cluster ? [1] : []
+    content {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "gke-gcloud-auth-plugin"
+    }
+  }
 }
 
 provider "helm" {
   kubernetes {
-    config_path = pathexpand("~/.kube/config")
+    host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
+    dynamic "exec" {
+      for_each = local.private_cluster ? [1] : []
+      content {
+        api_version = "client.authentication.k8s.io/v1beta1"
+        command     = "gke-gcloud-auth-plugin"
+      }
+    }
   }
 }
 
@@ -67,7 +94,7 @@ resource "google_iap_client" "iap_oauth_client" {
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
-  source = "./iap_module"
+  source = "../../modules/jupyter_iap"
 
   project_id              = var.project_id
   namespace               = var.namespace
@@ -81,11 +108,13 @@ module "iap_auth" {
 }
 
 module "workload_identity_service_account" {
-  source = "./service_accounts_module"
+  source = "../../modules/service_accounts"
 
   project_id      = var.project_id
   namespace       = var.namespace
-  service_account = "jupyter-service-account1"
+  service_account = var.gcp_service_account
+  sa_iam_roles = split(",",var.gcp_service_account_iam_roles)
+  depends_on = [helm_release.jupyterhub]
 }
 
 resource "helm_release" "jupyterhub" {
@@ -109,7 +138,6 @@ resource "helm_release" "jupyterhub" {
   ]
   depends_on = [module.iap_auth]
 }
-
 
 # Need to re-apply: fetch service_id from deployed service
 data "kubernetes_service" "jupyter-ingress" {

@@ -25,5 +25,9 @@ variable "namespace" {
 variable "service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "ray-system-account"
+}
+
+variable "sa_iam_roles" {
+  type        = list(string)
+  description = "Service Account Project IAM binding roles"
 }

@@ -18,7 +18,7 @@
 project_id = "ai-on-gke-jss-sandbox"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-cluster_name     = "ml-cluster1"
+cluster_name     = "temp-private-cluster"
 cluster_location = "us-central1"
 
 #######################################################
@@ -26,7 +26,8 @@ cluster_location = "us-central1"
 #######################################################
 
 ## GKE environment variables
-ray_namespace      = "myray"
+ray_namespace      = "rag"
 service_account    = "myray-system-account7"
+service_account_iam_roles = [ "roles/monitoring.viewer" ]
 support_tpu        = false
 create_ray_cluster = true

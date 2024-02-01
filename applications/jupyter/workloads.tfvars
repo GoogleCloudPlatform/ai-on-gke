@@ -15,7 +15,11 @@
 ##common variables  
 ## Need to pull this variables from tf output from previous platform stage
 project_id = "ai-on-gke-jss-sandbox"
+
 ## this is required for terraform to connect to GKE master and deploy workloads
+cluster_name     = "temp-private-cluster"
+cluster_location = "us-central1"
+cluster_membership_id = "" # require for private cluster, default: cluster_name
 
 #######################################################
 ####    APPLICATIONS
@@ -23,13 +27,15 @@ project_id = "ai-on-gke-jss-sandbox"
 
 ## JupyterHub variables
 namespace = "rag"
-gcs_bucket = "gcs-bucket"
+gcs_bucket = "rag-demo-bucket"
 k8s_service_account = "default"
+gcp_service_account ="jupyter-service-account1"
+gcp_service_account_iam_roles = "roles/storage.admin,roles/artifactregistry.reader"
 
 # Jupyterhub with IAP
 add_auth = true
-brand = "projects/0000000000/brands/0000000000"
-support_email = "sample@google.com"
+brand = "projects/<prj-number>/brands/<prj-number>"
+support_email = "<email>"
 default_backend_service = "proxy-public"
 service_name = "iap-config-default"
 
@@ -37,4 +43,4 @@ url_domain_addr = ""
 url_domain_name = ""
 client_id = ""
 client_secret = ""
-members_allowlist = "allAuthenticatedUsers,user:sample@google.com,user:sample1@google.com,group:sample@google.com"
+members_allowlist = "allAuthenticatedUsers,user:<email>"

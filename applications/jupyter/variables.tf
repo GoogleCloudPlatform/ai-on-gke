@@ -12,6 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+variable "cluster_name" {
+  type = string
+}
+
+variable "cluster_location" {
+  type = string
+}
+
+variable "cluster_membership_id" {
+  type = string
+  description = "require to use connectgateway for private clusters, default: cluster_name"
+  default = ""
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
@@ -40,6 +54,16 @@ variable "gcs_bucket" {
 variable "k8s_service_account" {
   type = string
   description = "k8s service account"
+}
+
+variable "gcp_service_account" {
+  type = string
+  description = "gcp service account"
+}
+
+variable "gcp_service_account_iam_roles" {
+  type = string
+  description = "Service Account Project IAM binding roles"
 }
 
 variable "project_id" {
