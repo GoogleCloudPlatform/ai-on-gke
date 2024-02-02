@@ -13,6 +13,7 @@
 # limitations under the License.
 
 FROM pytorch/pytorch:latest
-RUN pip install tqdm
+COPY requirements.txt requirements.txt
+RUN pip install --require-hashes -r requirements.txt
 COPY mnist.py mnist.py
 CMD printenv
