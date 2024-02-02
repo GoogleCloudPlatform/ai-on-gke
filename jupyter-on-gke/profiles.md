@@ -10,9 +10,11 @@ As the description for each profiles explains, each profiles uses a different re
 
 1. First profile uses CPUs and uses the image: `jupyter/tensorflow-notebook` with tag `python-3.10`
 
-2. Second profile uses 2 T4 GPUs and the image: `jupyter/tensorflow-notebook:python-3.10` with tag `python-3.10` [^1]
+2. Second profile uses TPUs and will only work when TPU is enabled on the cluster. It uses the image `jupyter/tensorflow-notebook` with tag `python-3.10`
 
-3. Third profile uses 2 A100 GPUs and the image: `jupyter/tensorflow-notebook:python-3.10` with tag `python-3.10` [^1]
+3. Second profile uses 2 T4 GPUs and the image: `jupyter/tensorflow-notebook:python-3.10` with tag `python-3.10` [^1]
+
+4. Third profile uses 2 A100 GPUs and the image: `jupyter/tensorflow-notebook:python-3.10` with tag `python-3.10` [^1]
 
 ## Editting profiles
 
@@ -109,6 +111,22 @@ The possible GPUs are:
 6. nvidia-tesla-a100
 7. nvidia-a100-80gb
 8. nvidia-l4
+
+### TPUs
+
+Jupyterhub profiles has a TPU option. It utilizes the [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector), and the annotations `cloud.google.com/gke-tpu-accelerator` and `cloud.google.com/gke-tpu-topology` to select the TPU nodes.
+
+We add the following annotations to `kupespawner_override`
+
+```yaml
+extra_resource_limits:
+    google.com/tpu: "4"
+node_selector:
+    cloud.google.com/gke-tpu-accelerator: "tpu-v4-podslice"
+    cloud.google.com/gke-tpu-topology: "2x2x1"
+```
+
+Currently the template only provisions a `ct4p-hightpu-4t` TPU machine with placement `2x2x1`.
 
 ### Example profile
 

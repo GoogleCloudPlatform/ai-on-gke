@@ -120,7 +120,7 @@ Continue to Step 3 of [below](#if-auth-is-enabled).
    passwords can be found in the [Jupyter
    settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml) file.
 
-4. Select profile and open a Jupyter Notebook
+4. Select profile and open a Jupyter Notebook. For more information on the profiles, visit [this page](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/profiles.md)
 
 ## Persistent Storage
 
