@@ -15,3 +15,8 @@
 output "domain" {
   value = module.jupyterhub.domain
 }
+
+output "password" {
+  value     = module.jupyterhub.password
+  sensitive = true
+}
