@@ -19,7 +19,6 @@ import (
 	"k8s.io/klog/v2"
 )
 
-
 // our representation of a pod slice
 // not necessarily true that worker group scheduled on 1 slice
 type slice struct {
@@ -460,6 +459,14 @@ func init() {
 	flag.StringVar(&CACert, "ca-cert", "", "base64-encoded root certificate for TLS")
 	flag.StringVar(&ServerCert, "server-cert", "", "base64-encoded server certificate for TLS")
 	flag.StringVar(&ServerKey, "server-key", "", "base64-encoded server key for TLS")
+}
+
+var (
+	BindAddr string
+)
+
+func init() {
+	flag.StringVar(&BindAddr, "bind-address", ":443", "Address to bind HTTPS service to")
 }
 
 func main() {
