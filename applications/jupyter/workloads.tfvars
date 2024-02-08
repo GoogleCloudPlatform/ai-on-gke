@@ -17,7 +17,7 @@
 project_id = "ai-on-gke-jss-sandbox"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-cluster_name     = "temp-private-cluster"
+cluster_name     = "ml-cluster"
 cluster_location = "us-central1"
 cluster_membership_id = "" # require for private cluster, default: cluster_name
 
@@ -26,8 +26,8 @@ cluster_membership_id = "" # require for private cluster, default: cluster_name
 #######################################################
 
 ## JupyterHub variables
-namespace = "rag"
-gcs_bucket = "rag-demo-bucket"
+namespace = "ml"
+gcs_bucket = "gcs-bucket"
 k8s_service_account = "default"
 gcp_service_account ="jupyter-service-account1"
 gcp_service_account_iam_roles = "roles/storage.admin,roles/artifactregistry.reader"

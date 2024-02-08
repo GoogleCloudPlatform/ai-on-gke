@@ -13,5 +13,5 @@
 # limitations under the License.
 
 output "domain" {
-  value = module.jupyterhub.domain
+  value = var.add_auth ?  module.iap_auth[0].domain : var.url_domain_addr 
 }
