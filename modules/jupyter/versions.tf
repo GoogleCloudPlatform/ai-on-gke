@@ -12,19 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "project_id" {
-  type        = string
-  description = "GCP project id"
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "4.56.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "4.81.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.8.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.24.0"
+    }
+  }
 }
 
-variable "namespace" {
-  type        = string
-  description = "Kubernetes namespace where resources are deployed"
-  default     = "jup"
-}
-
-variable "service_account" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "jup-system-account"
-}

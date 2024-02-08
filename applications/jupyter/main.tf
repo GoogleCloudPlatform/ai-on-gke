@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#######################################################
-####    APPLICATIONS
-#######################################################
-
 provider "google" {
+  project = var.project_id
+}
+provider "google-beta" {
   project = var.project_id
 }
 
@@ -65,43 +64,28 @@ provider "helm" {
 }
 
 
-# fetch all namespaces
-data "kubernetes_all_namespaces" "allns" {}
+# Creates jupyterhub
+module "jupyterhub" {
+ 
+ source = "../../modules/jupyter"
+ project_id = var.project_id
 
-module "kuberay-operator" {
-  source           = "../../modules/kuberay-operator"
-  name             = "kuberay-operator"
-  create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
-  namespace        = var.ray_namespace
-}
+ namespace = var.namespace
+ gcp_service_account = var.gcp_service_account
+ gcp_service_account_iam_roles = var.gcp_service_account_iam_roles
+ k8s_service_account = var.k8s_service_account
+ gcs_bucket = var.gcs_bucket
 
-module "kubernetes-namespace" {
-  source     = "../../modules/kubernetes-namespace"
-  depends_on = [module.kuberay-operator]
-  namespace  = var.ray_namespace
-}
+ # IAP Auth parameters
+ add_auth = var.add_auth
+ brand = var.brand
+ support_email = var.support_email
+ client_id = var.client_id
+ client_secret = var.client_secret
+ default_backend_service = var.default_backend_service
+ service_name = var.service_name
+ url_domain_addr = var.url_domain_addr
+ url_domain_name = var.url_domain_name
+ members_allowlist = var.members_allowlist
 
-module "k8s_service_accounts" {
-  source          = "../../modules/service_accounts"
-  project_id      = var.project_id
-  namespace       = var.ray_namespace
-  service_account = var.service_account
-  sa_iam_roles    = var.service_account_iam_roles
-  depends_on      = [module.kubernetes-namespace]
-}
-
-module "kuberay-cluster" {
-  count      = var.create_ray_cluster == true ? 1 : 0
-  source     = "../../modules/kuberay-cluster"
-  depends_on = [module.kubernetes-namespace]
-  namespace  = var.ray_namespace
-  enable_tpu = var.support_tpu
-}
-
-module "prometheus" {
-  count      = var.create_ray_cluster == true ? 1 : 0
-  source     = "../../modules/prometheus"
-  depends_on = [module.kuberay-cluster, module.kubernetes-namespace]
-  project_id = var.project_id
-  namespace  = var.ray_namespace
 }

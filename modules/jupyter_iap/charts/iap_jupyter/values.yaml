@@ -8,6 +8,10 @@ iap:
     name: "iap-config-default"
     iapSecretName: "my-secret"
 
+  secret:
+    client_id: ""
+    client_secret: ""
+
   managedCertificate:
     name: "iap-managed-cert"
     domain: ""

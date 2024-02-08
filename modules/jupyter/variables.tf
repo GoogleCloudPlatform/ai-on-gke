@@ -42,6 +42,16 @@ variable "k8s_service_account" {
   description = "k8s service account"
 }
 
+variable "gcp_service_account" {
+  type = string
+  description = "gcp service account"
+}
+
+variable "gcp_service_account_iam_roles" {
+  type = string
+  description = "Service Account Project IAM binding roles"
+}
+
 variable "project_id" {
   type        = string
   description = "GCP project id"

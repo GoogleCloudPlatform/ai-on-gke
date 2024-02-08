@@ -15,10 +15,10 @@
 resource "google_service_account" "sa" {
   project      = "${var.project_id}"
   account_id   = "${var.service_account}"
-  display_name = "Terraform managed service account for ai-on-gke"
+  display_name = "Terraform managed service account"
 }
 
-resource "google_service_account_iam_binding" "workload-identity-user" {
+resource "google_service_account_iam_binding" "sa-binding" {
   service_account_id = google_service_account.sa.name
   role               = "roles/iam.workloadIdentityUser"
 
@@ -27,12 +27,13 @@ resource "google_service_account_iam_binding" "workload-identity-user" {
   ]
 }
 
-resource "google_project_iam_binding" "monitoring-viewer" {
+resource "google_project_iam_binding" "project-binding" {
   project = var.project_id
-  role    = "roles/monitoring.viewer"
+  for_each = toset(var.sa_iam_roles)
+  role = each.key
 
   members = [
-    "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/default]",
+    "serviceAccount:${google_service_account.sa.account_id}@${var.project_id}.iam.gserviceaccount.com",
   ]
 }
 

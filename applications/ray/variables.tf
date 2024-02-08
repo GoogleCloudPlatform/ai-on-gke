@@ -25,6 +25,12 @@ variable "cluster_location" {
   type = string
 }
 
+variable "cluster_membership_id" {
+  type = string
+  description = "require to use connectgateway for private clusters, default: cluster_name"
+  default = ""
+}
+
 variable "ray_version" {
   type    = string
   default = "v2.7.1"
@@ -40,6 +46,12 @@ variable "service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
   default     = "myray-system-account"
+}
+
+variable "service_account_iam_roles" {
+  type        = list(string)
+  description = "Google Cloud IAM service account for authenticating with GCP services"
+  default = [ "roles/monitoring.viewer" ]
 }
 
 variable "create_ray_cluster" {
