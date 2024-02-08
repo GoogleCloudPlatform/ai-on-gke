@@ -3,36 +3,37 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 
+	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	"k8s.io/klog/v2"
 )
 
 // our representation of a pod slice
 // not necessarily true that worker group scheduled on 1 slice
 type slice struct {
-	rayClusterName	string
-	groupName	string
+	rayClusterName string
+	groupName      string
 }
 
 // JSON patch describing mutate operation(s) for incoming object
 type patch map[string]any
 
 var (
-	certPath = "/etc/kuberay-tpu-webhook/tls/tls.crt"
-	keyPath = "/etc/kuberay-tpu-webhook/tls/tls.key"
+	certPath        = "/etc/kuberay-tpu-webhook/tls/tls.crt"
+	keyPath         = "/etc/kuberay-tpu-webhook/tls/tls.key"
 	tpuResourceName = corev1.ResourceName("google.com/tpu")
 
 	// headless svc will be of the form: {kuberay-cluster-name}-tpu-worker-svc
 	headlessServiceSuffix = "tpu-worker-svc"
-	headlessServiceName string
+	headlessServiceName   string
 
 	// map of ray cluster names to # of workers created in the slice
 	sliceToWorkers map[slice]int
@@ -59,7 +60,7 @@ func getNumTPUHosts(topology string) (int, error) {
 	if topology == "" {
 		return 0, errors.New("TPU topology not specified")
 	}
-	topologyVals :=  strings.Split(topology, "x")
+	topologyVals := strings.Split(topology, "x")
 	chips := 1
 	for i := 0; i < len(topologyVals); i++ {
 		dim, err := strconv.Atoi(topologyVals[i])
@@ -70,7 +71,7 @@ func getNumTPUHosts(topology string) (int, error) {
 		chips *= dim
 	}
 	// number VMs = number chips / 4
-	return max(chips / 4, 1), nil
+	return max(chips/4, 1), nil
 }
 
 // check if request is for TPU multi-host
@@ -120,7 +121,7 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 	for j := 0; j < len(containers); j++ {
 		container := containers[j]
 		if containerRequestingTPUs(container) {
-			subdomainPatch, hostNamesPatch := patch{"op": "add",}, patch{"op": "add",}
+			subdomainPatch, hostNamesPatch := patch{"op": "add"}, patch{"op": "add"}
 			subdomainPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/subdomain", workerGroupIndex)
 			envPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", workerGroupIndex, j)
 			tpuWorkerHostNames := corev1.EnvVar{
@@ -183,7 +184,7 @@ func isScheduledWithAffinity(workerGroupSpec ray.WorkerGroupSpec) (bool, error) 
 		if isMultiHost {
 			placementGroup := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-placement-group"]
 			if placementGroup == "" {
-				return false, nil	
+				return false, nil
 			}
 		}
 	}
@@ -228,13 +229,13 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 			break
 		}
 	}
-	
+
 	// Create AdmissionResponse
 	admissionResponse := &admissionv1.AdmissionResponse{
-		UID: 	 admissionReview.Request.UID,
+		UID:     admissionReview.Request.UID,
 		Allowed: admit,
-		Result:	 &metav1.Status{
-			Status:	 status,
+		Result: &metav1.Status{
+			Status:  status,
 			Message: message,
 		},
 	}
@@ -287,9 +288,9 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 		return nil, err
 	}
 
- 	// Create AdmissionResponse
+	// Create AdmissionResponse
 	admissionResponse := &admissionv1.AdmissionResponse{
-		UID: 	 admissionReview.Request.UID,
+		UID:     admissionReview.Request.UID,
 		Allowed: true,
 		Patch:   patchBytes,
 		PatchType: func() *admissionv1.PatchType {
@@ -302,7 +303,7 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 
 func hasWorkerID(container corev1.Container) bool {
 	if container.Env != nil && len(container.Env) > 0 {
-		for _, envVar := range container.Env  {
+		for _, envVar := range container.Env {
 			if envVar.Name == "TPU_WORKER_ID" {
 				return true
 			}
@@ -364,8 +365,8 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		// if multihost -> inject hostname into pod spec for DNS records
 		isMultiHost, _ := isTPUMultiHost(topology) // ignore error here because topology may not be set yet
 		if isMultiHost {
-			hostname := fmt.Sprintf(groupName + "-%d", tpu_worker_id)
-			hostnamePatch := patch{"op": "add",}
+			hostname := fmt.Sprintf(groupName+"-%d", tpu_worker_id)
+			hostnamePatch := patch{"op": "add"}
 			hostnamePatch["path"] = "/spec/hostname"
 			hostnamePatch["value"] = hostname
 			patches = append(patches, hostnamePatch)
@@ -383,7 +384,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 						Name:  "TPU_WORKER_ID",
 						Value: fmt.Sprint(tpu_worker_id),
 					}
-					idPatch := patch{"op": "add",}
+					idPatch := patch{"op": "add"}
 					// create new EnvVar array if container.Env is empty, and append new EnvVars if not
 					if len(container.Env) == 0 {
 						idPatch["path"] = path
@@ -399,7 +400,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 						Name:  "TPU_NAME",
 						Value: fmt.Sprint(groupName),
 					}
-					namePatch := patch{"op": "add",}
+					namePatch := patch{"op": "add"}
 					// create new EnvVar array if container.Env is empty, and append new EnvVars if not
 					if len(container.Env) == 0 {
 						namePatch["path"] = path
@@ -423,7 +424,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	}
 
 	admissionResponse := &admissionv1.AdmissionResponse{
-		UID: 	 admissionReview.Request.UID,
+		UID:     admissionReview.Request.UID,
 		Allowed: true,
 		Patch:   patchBytes,
 		PatchType: func() *admissionv1.PatchType {
@@ -438,7 +439,17 @@ func init() {
 	sliceToWorkers = make(map[slice]int)
 }
 
+var (
+	BindAddr string
+)
+
+func init() {
+	flag.StringVar(&BindAddr, "bind-address", ":443", "Address to bind HTTPS service to")
+}
+
 func main() {
+	flag.Parse()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -509,7 +520,7 @@ func main() {
 	})
 
 	srv := &http.Server{
-		Addr:    ":443",
+		Addr:    BindAddr,
 		Handler: mux,
 	}
 
