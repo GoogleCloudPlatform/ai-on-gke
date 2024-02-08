@@ -12,28 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-provider "google" {
-  project = var.project_id
-}
-provider "google-beta" {
-  project = var.project_id
-}
-
-data "google_client_config" "default" {}
-
 data "google_project" "project" {
   project_id = var.project_id
-}
-
-
-provider "kubernetes" {
-  config_path = pathexpand("~/.kube/config")
-}
-
-provider "helm" {
-  kubernetes {
-    config_path = pathexpand("~/.kube/config")
-  }
 }
 
 # fetch all namespaces
@@ -67,7 +47,7 @@ resource "google_iap_client" "iap_oauth_client" {
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
-  source = "./iap_module"
+  source = "../../modules/jupyter_iap"
 
   project_id              = var.project_id
   namespace               = var.namespace
@@ -81,11 +61,19 @@ module "iap_auth" {
 }
 
 module "workload_identity_service_account" {
-  source = "./service_accounts_module"
+  source = "../../modules/service_accounts"
 
   project_id      = var.project_id
   namespace       = var.namespace
-  service_account = "jupyter-service-account1"
+  service_account = var.gcp_service_account
+  sa_iam_roles    = split(",", var.gcp_service_account_iam_roles)
+  depends_on      = [helm_release.jupyterhub]
+}
+
+resource "random_password" "generated_password" {
+  count   = var.add_auth ? 0 : 1
+  length  = 10
+  special = false
 }
 
 resource "helm_release" "jupyterhub" {
@@ -98,7 +86,8 @@ resource "helm_release" "jupyterhub" {
 
   values = [
     templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
-      service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet" ) : "no-id-yet"
+      password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
+      service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
       backend_config      = var.service_name
       project_number      = data.google_project.project.number
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
@@ -109,7 +98,6 @@ resource "helm_release" "jupyterhub" {
   ]
   depends_on = [module.iap_auth]
 }
-
 
 # Need to re-apply: fetch service_id from deployed service
 data "kubernetes_service" "jupyter-ingress" {
@@ -122,14 +110,14 @@ data "kubernetes_service" "jupyter-ingress" {
 
 # The data of the GCP backend service. IAP is enabled on this backend service
 data "google_compute_backend_service" "jupyter-ingress" {
-  count  = var.add_auth ? 1 : 0
+  count   = var.add_auth ? 1 : 0
   name    = data.kubernetes_service.jupyter-ingress.metadata != null ? (data.kubernetes_service.jupyter-ingress.metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter-ingress.metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups["80"] : "not-found") : "not-found"
   project = var.project_id
 }
 
 # Binds the list of principals in the allowlist file to roles/iap.httpsResourceAccessor
 resource "google_iap_web_backend_service_iam_binding" "binding" {
-  count               = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? 1 : 0 ) : 0
+  count               = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? 1 : 0) : 0
   project             = var.project_id
   web_backend_service = data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress[0].name}" : "no-id-yet"
   role                = "roles/iap.httpsResourceAccessor"

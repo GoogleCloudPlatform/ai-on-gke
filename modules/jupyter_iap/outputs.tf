@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-    }
-  }
+output "domain" {
+  value = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
 }
