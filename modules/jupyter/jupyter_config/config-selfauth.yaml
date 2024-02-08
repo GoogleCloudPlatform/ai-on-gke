@@ -40,7 +40,7 @@ hub:
         - user4
     # ...
     DummyAuthenticator:
-      password: password
+      password: ${password}
   networkPolicy:
     enabled: false
   
