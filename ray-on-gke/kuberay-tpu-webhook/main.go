@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -37,6 +40,12 @@ var (
 
 	// map of ray cluster names to # of workers created in the slice
 	sliceToWorkers map[slice]int
+
+	// Flag arguments.
+	BindAddr   string
+	CACert     string
+	ServerCert string
+	ServerKey  string
 )
 
 // check if containers are requesting TPU resources
@@ -435,16 +444,22 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	return admissionResponse, nil
 }
 
-func init() {
-	sliceToWorkers = make(map[slice]int)
+func writeCertfile(filename string, encodedData string) error {
+	data, err := base64.StdEncoding.DecodeString(encodedData)
+	if err != nil {
+		return err
+	}
+	_ = os.MkdirAll(filepath.Dir(filename), 0755)
+	return os.WriteFile(filename, data, 0644)
 }
 
-var (
-	BindAddr string
-)
-
 func init() {
+	sliceToWorkers = make(map[slice]int)
+
 	flag.StringVar(&BindAddr, "bind-address", ":443", "Address to bind HTTPS service to")
+	flag.StringVar(&CACert, "ca-cert", "", "base64-encoded root certificate for TLS")
+	flag.StringVar(&ServerCert, "server-cert", "", "base64-encoded server certificate for TLS")
+	flag.StringVar(&ServerKey, "server-key", "", "base64-encoded server key for TLS")
 }
 
 func main() {
@@ -522,6 +537,15 @@ func main() {
 	srv := &http.Server{
 		Addr:    BindAddr,
 		Handler: mux,
+	}
+
+	if ServerCert != "" && ServerKey != "" {
+		if err := writeCertfile(certPath, ServerCert); err != nil {
+			klog.Fatalf("write server cert: %v", err)
+		}
+		if err := writeCertfile(keyPath, ServerKey); err != nil {
+			klog.Fatalf("write server key: %v", err)
+		}
 	}
 
 	if err := srv.ListenAndServeTLS(certPath, keyPath); err != nil {
