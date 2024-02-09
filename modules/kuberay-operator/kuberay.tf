@@ -13,10 +13,11 @@
 # limitations under the License.
 
 resource "helm_release" "kuberay-operator" {
-  name            = var.name
-  repository      = "https://ray-project.github.io/kuberay-helm/"
-  chart           = "kuberay-operator"
-  namespace       = var.namespace
-  cleanup_on_fail = "true"
+  name             = "kuberay-operator"
+  repository       = "https://ray-project.github.io/kuberay-helm/"
+  chart            = "kuberay-operator"
+  values           = var.enable_autopilot ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
+  version          = "1.0.0"
+  namespace        = var.namespace
   create_namespace = var.create_namespace
 }

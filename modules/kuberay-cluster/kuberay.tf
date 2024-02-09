@@ -18,7 +18,16 @@ resource "helm_release" "ray-cluster" {
   chart      = "ray-cluster"
   namespace  = var.namespace
   version    = "0.6.1"
-  values     = var.enable_autopilot ? [file("${path.module}/kuberay-autopilot-values.yaml")] : (var.enable_tpu ? [file("${path.module}/kuberay-tpu-values.yaml")] : [file("${path.module}/kuberay-values.yaml")])
+  values = var.enable_autopilot ? [templatefile("${path.module}/kuberay-autopilot-values.yaml", {
+    gcs_bucket          = var.gcs_bucket
+    k8s_service_account = var.k8s_service_account
+    })] : (var.enable_tpu ? [templatefile("${path.module}/kuberay-tpu-values.yaml", {
+      gcs_bucket          = var.gcs_bucket
+      k8s_service_account = var.k8s_service_account
+      })] : [templatefile("${path.module}/kuberay-values.yaml", {
+      gcs_bucket          = var.gcs_bucket
+      k8s_service_account = var.k8s_service_account
+  })])
 }
 
 data "local_file" "tpu_worker_svc" {

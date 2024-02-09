@@ -26,9 +26,9 @@ Preinstall the following on your computer:
 
 1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
-2. `cd ai-on-gke/ray-on-gke/user`
+2. `cd applications/ray`
 
-3. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Ray services.
+3. Edit `workloads.tfvars` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Ray services.
 
 4. Run `terraform init`
 

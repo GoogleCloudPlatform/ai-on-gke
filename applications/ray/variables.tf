@@ -26,9 +26,9 @@ variable "cluster_location" {
 }
 
 variable "cluster_membership_id" {
-  type = string
+  type        = string
   description = "require to use connectgateway for private clusters, default: cluster_name"
-  default = ""
+  default     = ""
 }
 
 variable "ray_version" {
@@ -42,16 +42,28 @@ variable "ray_namespace" {
   default     = "myray"
 }
 
-variable "service_account" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "myray-system-account"
+variable "gcs_bucket" {
+  type = string
 }
 
-variable "service_account_iam_roles" {
-  type        = list(string)
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-  default = [ "roles/monitoring.viewer" ]
+variable "create_k8s_service_account" {
+  type        = bool
+  description = "Create k8s service account"
+  default     = false
+}
+
+variable "k8s_service_account" {
+  type = string
+}
+
+variable "gcp_service_account_gcs" {
+  type        = string
+  description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
+}
+
+variable "gcp_service_account_prom" {
+  type        = string
+  description = "Google Cloud IAM service account for authenticating with GCP services for Prometheus"
 }
 
 variable "create_ray_cluster" {
@@ -59,7 +71,3 @@ variable "create_ray_cluster" {
   default = false
 }
 
-variable "support_tpu" {
-  type    = bool
-  default = false
-}

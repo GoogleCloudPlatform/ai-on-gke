@@ -27,5 +27,14 @@ variable "enable_tpu" {
 variable "enable_autopilot" {
   type        = bool
   description = "Set to true to enable GKE Autopilot clusters"
-  default     = false
+}
+
+variable "k8s_service_account" {
+  type        = string
+  description = "Kubernetes Service Account name"
+}
+
+variable "gcs_bucket" {
+  type        = string
+  description = "GCS Bucket name"
 }

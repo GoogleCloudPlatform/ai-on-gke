@@ -13,8 +13,8 @@
 # limitations under the License.
 
 variable "name" {
-  type        = string
-  default     = "kuberay-operator"
+  type    = string
+  default = "kuberay-operator"
 }
 
 variable "namespace" {
@@ -23,6 +23,9 @@ variable "namespace" {
 }
 
 variable "create_namespace" {
-  type        = bool
-  default     = false
+  type    = bool
+}
+
+variable "enable_autopilot" {
+  type = bool
 }

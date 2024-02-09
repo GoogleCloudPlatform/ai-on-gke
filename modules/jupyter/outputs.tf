@@ -13,10 +13,10 @@
 # limitations under the License.
 
 output "domain" {
-  value = var.add_auth ?  module.iap_auth[0].domain : var.url_domain_addr 
+  value = var.add_auth ? module.iap_auth[0].domain : var.url_domain_addr
 }
 
 output "password" {
-  value = var.add_auth ? "" : random_password.generated_password[0].result
+  value     = var.add_auth ? "" : random_password.generated_password[0].result
   sensitive = true
 }

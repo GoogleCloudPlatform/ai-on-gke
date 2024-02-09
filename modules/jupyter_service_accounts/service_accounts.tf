@@ -14,7 +14,7 @@
 
 resource "google_service_account" "sa" {
   project      = "${var.project_id}"
-  account_id   = "${var.service_account}"
+  account_id   = "${var.gcp_service_account}"
   display_name = "Terraform managed service account"
 }
 
@@ -23,13 +23,13 @@ resource "google_service_account_iam_binding" "sa-binding" {
   role               = "roles/iam.workloadIdentityUser"
 
   members = [
-    "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/default]",
+    "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${var.k8s_service_account}]",
   ]
 }
 
 resource "google_project_iam_binding" "project-binding" {
   project = var.project_id
-  for_each = toset(var.sa_iam_roles)
+  for_each = toset(var.gcp_sa_iam_roles)
   role = each.key
 
   members = [
@@ -37,14 +37,26 @@ resource "google_project_iam_binding" "project-binding" {
   ]
 }
 
+resource "kubernetes_service_account" "ksa" {
+  count = var.create_k8s_service_account ? 1 : 0
+  metadata {
+    name = "${var.k8s_service_account}"
+    namespace = "${var.namespace}"
+  }
+  automount_service_account_token = true
+}
+
 resource "kubernetes_annotations" "default" {
   api_version = "v1"
   kind        = "ServiceAccount"
   metadata {
-    name = "default"
+    name = "${var.k8s_service_account}"
     namespace = "${var.namespace}"
   }
   annotations = {
     "iam.gke.io/gcp-service-account" = "${google_service_account.sa.account_id}@${var.project_id}.iam.gserviceaccount.com"
   }
+  depends_on = [
+    kubernetes_service_account.ksa    ]
 }
+

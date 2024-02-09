@@ -61,13 +61,15 @@ module "iap_auth" {
 }
 
 module "workload_identity_service_account" {
-  source = "../../modules/service_accounts"
+  source = "../../modules/jupyter_service_accounts"
 
-  project_id      = var.project_id
-  namespace       = var.namespace
-  service_account = var.gcp_service_account
-  sa_iam_roles    = split(",", var.gcp_service_account_iam_roles)
-  depends_on      = [helm_release.jupyterhub]
+  project_id                 = var.project_id
+  namespace                  = var.namespace
+  gcp_service_account        = var.gcp_service_account
+  gcp_sa_iam_roles           = split(",", var.gcp_service_account_iam_roles)
+  create_k8s_service_account = var.create_k8s_service_account
+  k8s_service_account        = var.k8s_service_account
+  depends_on                 = [helm_release.jupyterhub]
 }
 
 resource "random_password" "generated_password" {
