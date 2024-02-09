@@ -15,42 +15,33 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "ricliu-gke-dev"
-}
-
-variable "region" {
-  type        = string
-  description = "GCP project region or zone"
-  default     = "us-central1"
-}
-
-variable "cluster_name" {
-  type        = string
-  description = "GKE cluster name"
-  default     = "ml-cluster"
-}
-
-variable "cluster_labels" {
-  type        = map
-  description = "GKE cluster labels"
-  default     =  {
-    created-by = "ai-on-gke"
-  }
 }
 
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "ray"
 }
 
-variable "num_gpu_nodes" {
-  description = "Number of GPU nodes in the cluster"
-  default     = 1
+variable "gcp_service_account_prom" {
+  type        = string
+  description = "Google Cloud IAM service account for authenticating with GCP services for Prometheus"
 }
 
-variable "enable_autopilot" {
+variable "gcp_service_account_gcs" {
+  type        = string
+  description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
+}
+
+variable "gcs_bucket" {
+  type = string
+}
+
+variable "create_k8s_service_account" {
   type        = bool
-  description = "Set to true to enable GKE Autopilot clusters"
-  default     = false
+  description = "Create k8s service account"
+}
+
+variable "k8s_service_account" {
+  type        = string
+  description = "K8S service account name"
 }

@@ -18,13 +18,13 @@ variable "namespace" {
 }
 
 variable "default_backend_service" {
-  type        = string
-  default     = "proxy-public"
+  type    = string
+  default = "proxy-public"
 }
 
 variable "members_allowlist" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 variable "add_auth" {
   type        = bool
@@ -33,22 +33,28 @@ variable "add_auth" {
 }
 
 variable "gcs_bucket" {
-  type = string
+  type        = string
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
+variable "create_k8s_service_account" {
+  type        = bool
+  description = "Create k8s service account"
+  default     = false
+}
+
 variable "k8s_service_account" {
-  type = string
+  type        = string
   description = "k8s service account"
 }
 
 variable "gcp_service_account" {
-  type = string
+  type        = string
   description = "gcp service account"
 }
 
 variable "gcp_service_account_iam_roles" {
-  type = string
+  type        = string
   description = "Service Account Project IAM binding roles"
 }
 
@@ -89,12 +95,12 @@ variable "support_email" {
 variable "client_id" {
   type        = string
   description = "Client ID used for enabling IAP"
-  default     = "" 
+  default     = ""
 }
 
 variable "client_secret" {
   type        = string
   description = "Client secret used for enabling IAP"
-  default     =  "" 
+  default     = ""
   sensitive   = false
 }

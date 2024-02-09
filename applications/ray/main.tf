@@ -73,35 +73,42 @@ module "kuberay-operator" {
   name             = "kuberay-operator"
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
   namespace        = var.ray_namespace
+  enable_autopilot = data.google_container_cluster.default.enable_autopilot
 }
 
-module "kubernetes-namespace" {
-  source     = "../../modules/kubernetes-namespace"
+module "kuberay-logging" {
+  source     = "../../modules/kuberay-logging"
   depends_on = [module.kuberay-operator]
   namespace  = var.ray_namespace
 }
 
-module "k8s_service_accounts" {
-  source          = "../../modules/service_accounts"
-  project_id      = var.project_id
-  namespace       = var.ray_namespace
-  service_account = var.service_account
-  sa_iam_roles    = var.service_account_iam_roles
-  depends_on      = [module.kubernetes-namespace]
+module "gcp_service_accounts" {
+  source                     = "../../modules/kuberay-serviceaccounts"
+  project_id                 = var.project_id
+  namespace                  = var.ray_namespace
+  create_k8s_service_account = var.create_k8s_service_account
+  k8s_service_account        = var.k8s_service_account
+  gcp_service_account_prom   = var.gcp_service_account_prom
+  gcp_service_account_gcs    = var.gcp_service_account_gcs
+  gcs_bucket                 = var.gcs_bucket
+  depends_on                 = [module.kuberay-logging]
 }
 
 module "kuberay-cluster" {
-  count      = var.create_ray_cluster == true ? 1 : 0
-  source     = "../../modules/kuberay-cluster"
-  depends_on = [module.kubernetes-namespace]
-  namespace  = var.ray_namespace
-  enable_tpu = var.support_tpu
+  count               = var.create_ray_cluster == true ? 1 : 0
+  source              = "../../modules/kuberay-cluster"
+  depends_on          = [module.kuberay-logging]
+  namespace           = var.ray_namespace
+  enable_tpu          = data.google_container_cluster.default.enable_tpu
+  gcs_bucket          = var.gcs_bucket
+  enable_autopilot    = data.google_container_cluster.default.enable_autopilot
+  k8s_service_account = var.k8s_service_account
 }
 
-module "prometheus" {
+module "kuberay-monitoring" {
   count      = var.create_ray_cluster == true ? 1 : 0
-  source     = "../../modules/prometheus"
-  depends_on = [module.kuberay-cluster, module.kubernetes-namespace]
+  source     = "../../modules/kuberay-monitoring"
+  depends_on = [module.kuberay-cluster, module.kuberay-logging]
   project_id = var.project_id
   namespace  = var.ray_namespace
 }

@@ -12,32 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "region" {
+variable "project_id" {
   type        = string
-  description = "GCP project region or zone"
-  default     = "us-central1"
-}
-
-variable "cluster_name" {
-  type        = string
-  description = "Kubernetes cluster name"
-  default     = "ml-cluster"
+  description = "GCP project id"
 }
 
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "ray"
 }
 
-variable "enable_autopilot" {
+variable "gcp_service_account" {
+  type        = string
+  description = "Google Cloud IAM service account for authenticating with GCP services"
+}
+
+variable "gcp_sa_iam_roles" {
+  type        = list(string)
+  description = "Service Account Project IAM binding roles"
+}
+
+variable "create_k8s_service_account" {
   type        = bool
-  description = "Set to true to enable GKE Autopilot clusters"
-  default     = false
+  description = "Create k8s service account"
 }
 
-variable "enable_tpu" {
-  type = bool
-  description = "Set to true to create TPU node pool, only one accelerator pool (GPU or TPU) will be created"
-  default = false
+variable "k8s_service_account" {
+  type        = string
+  description = "K8S service account name"
 }
