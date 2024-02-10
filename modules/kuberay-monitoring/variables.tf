@@ -21,3 +21,11 @@ variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
 }
+
+variable "create_namespace" {
+  type        = bool
+}
+
+variable "k8s_service_account" {
+  type        = string
+}

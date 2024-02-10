@@ -24,7 +24,7 @@ resource "google_service_account_iam_binding" "workload-identity-user-prom" {
   role               = "roles/iam.workloadIdentityUser"
 
   members = [
-    "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${var.k8s_service_account}]",
+    "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${var.k8s_service_account_prom}]",
   ]
 }
 
@@ -36,12 +36,31 @@ resource "google_project_iam_binding" "monitoring-viewer" {
     "serviceAccount:${google_service_account.sa_prom.account_id}@${var.project_id}.iam.gserviceaccount.com",
   ]
 }
+resource "google_project_iam_binding" "monitoring-viewer-sa" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountTokenCreator"
+
+  members = [
+    "serviceAccount:${google_service_account.sa_prom.account_id}@${var.project_id}.iam.gserviceaccount.com",
+  ]
+}
+
+resource "kubernetes_service_account" "ksa-prom" {
+  count = var.create_k8s_service_account_prom ? 1 : 0
+  metadata {
+    name      = var.k8s_service_account_prom
+    namespace = var.namespace
+  }
+  lifecycle { ignore_changes = [metadata[0].annotations] }
+
+}
 
 resource "kubernetes_annotations" "default" {
   api_version = "v1"
   kind        = "ServiceAccount"
   metadata {
-    name = "default"
+    name = var.k8s_service_account_prom
+    namespace = var.namespace
   }
   annotations = {
     "iam.gke.io/gcp-service-account" = "${google_service_account.sa_prom.account_id}@${var.project_id}.iam.gserviceaccount.com"
@@ -60,7 +79,7 @@ resource "google_service_account_iam_binding" "workload-identity-user-gcs" {
   role               = "roles/iam.workloadIdentityUser"
 
   members = [
-    "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${var.k8s_service_account}]",
+    "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${var.k8s_service_account_gcs}]",
   ]
   depends_on = [google_service_account.sa_gcs]
 }
@@ -74,19 +93,20 @@ resource "google_storage_bucket_iam_binding" "gcs-bucket-iam" {
 }
 
 resource "kubernetes_service_account" "ksa" {
-  count = var.create_k8s_service_account ? 1 : 0
+  count = var.create_k8s_service_account_gcs ? 1 : 0
   metadata {
-    name      = var.k8s_service_account
+    name      = var.k8s_service_account_gcs
     namespace = var.namespace
   }
   automount_service_account_token = true
+  lifecycle { ignore_changes = [metadata[0].annotations] }
 }
 
 resource "kubernetes_annotations" "ray-sa-annotations" {
   api_version = "v1"
   kind        = "ServiceAccount"
   metadata {
-    name      = var.k8s_service_account
+    name      = var.k8s_service_account_gcs
     namespace = var.namespace
   }
   annotations = {

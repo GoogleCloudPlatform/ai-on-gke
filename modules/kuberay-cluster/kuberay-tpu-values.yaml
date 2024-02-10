@@ -60,6 +60,12 @@ head:
   #   value: "1"
     - name: RAY_memory_monitor_refresh_ms
       value: "0"
+    - name: RAY_GRAFANA_IFRAME_HOST
+      value: http://${grafana_host}
+    - name: RAY_GRAFANA_HOST
+      value: http://grafana:80
+    - name: RAY_PROMETHEUS_HOST
+      value: http://frontend:9090
   ports:
   - containerPort: 6379
     name: gcs

@@ -68,9 +68,9 @@ head:
     - name: RAY_memory_monitor_refresh_ms
       value: "0"
     - name: RAY_GRAFANA_IFRAME_HOST
-      value: http://127.0.0.1:3000
+      value: http://${grafana_host}
     - name: RAY_GRAFANA_HOST
-      value: http://grafana:3000
+      value: http://grafana:80
     - name: RAY_PROMETHEUS_HOST
       value: http://frontend:9090
   envFrom: []

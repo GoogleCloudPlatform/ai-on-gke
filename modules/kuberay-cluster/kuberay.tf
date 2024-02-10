@@ -17,24 +17,40 @@ resource "helm_release" "ray-cluster" {
   repository = "https://ray-project.github.io/kuberay-helm/"
   chart      = "ray-cluster"
   namespace  = var.namespace
+  create_namespace = var.create_namespace
   version    = "0.6.1"
   values = var.enable_autopilot ? [templatefile("${path.module}/kuberay-autopilot-values.yaml", {
     gcs_bucket          = var.gcs_bucket
     k8s_service_account = var.k8s_service_account
+    grafana_host = var.grafana_host
     })] : (var.enable_tpu ? [templatefile("${path.module}/kuberay-tpu-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.k8s_service_account
+      grafana_host = var.grafana_host
       })] : [templatefile("${path.module}/kuberay-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.k8s_service_account
+      grafana_host = var.grafana_host
   })])
 }
 
-data "local_file" "tpu_worker_svc" {
-  filename = "${path.module}/config/tpu-worker-svc.yaml"
+resource "kubernetes_service" "tpu-worker-svc" {
+  count = var.enable_tpu ? 1 : 0
+  metadata {
+    name = "${helm_release.ray-cluster.name}-kuberay-tpu-worker-svc"
+  }
+  spec {
+    selector = {
+      "cloud.google.com/gke-ray-node-type" = "worker"   
+    }
+    cluster_ip = "None"
+  }
 }
 
-resource "kubectl_manifest" "tpu_worker_svc" {
-  override_namespace = var.namespace
-  yaml_body          = data.local_file.tpu_worker_svc.content
+data "kubernetes_service" "example" {
+  metadata {
+    name = "${helm_release.ray-cluster.name}-kuberay-head-svc"
+    namespace = var.namespace
+  }
+  depends_on = [ helm_release.ray-cluster ]
 }

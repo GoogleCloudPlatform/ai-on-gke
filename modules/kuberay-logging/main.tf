@@ -12,16 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# data "local_file" "fluentd_config_yaml" {
-#   filename = "${path.module}/config/fluentd_config.yaml"
-# }
-
-
-# resource "kubectl_manifest" "fluentd_config" {
-#   override_namespace = var.namespace
-#   yaml_body          = data.local_file.fluentd_config_yaml.content
-# }
-
 resource "kubernetes_manifest" "manifests" {
   for_each = fileset("${path.module}/config/", "*.yaml")
   manifest = yamldecode(templatefile("${path.module}/config/${each.value}", { namespace: var.namespace}))
