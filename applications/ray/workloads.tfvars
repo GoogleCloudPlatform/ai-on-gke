@@ -26,9 +26,15 @@ cluster_location = "us-central1"
 #######################################################
 
 ## GKE environment variables
-ray_namespace            = "ml"
-gcp_service_account_gcs  = "ray-gcp-gcs"
-gcp_service_account_prom = "ray-gcp-prom"
-k8s_service_account      = "default"
-gcs_bucket               = "ml-bucket"
-create_ray_cluster       = true
+
+## GKE environment variables
+ray_namespace                  = "ml"
+create_k8s_service_account_gcs = true
+k8s_service_account_gcs        = "gcs-sa"
+gcp_service_account_gcs        = "ray-gcs-sa"
+
+create_k8s_service_account_prom = true
+k8s_service_account_prom        = "prom-sa"
+gcp_service_account_prom        = "ray-gcs-prom"
+gcs_bucket                      = "ml-bucket"
+create_ray_cluster              = true
