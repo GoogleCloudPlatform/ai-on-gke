@@ -28,6 +28,7 @@ spec:
         app: frontend
     spec:
       automountServiceAccountToken: true
+      serviceAccountName: ${k8s_service_account}
       nodeSelector:
         kubernetes.io/os: linux
         kubernetes.io/arch: amd64

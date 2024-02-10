@@ -18,6 +18,10 @@ variable "namespace" {
   default     = "ray-system"
 }
 
+variable "create_namespace" {
+  type        = bool
+}
+
 variable "enable_tpu" {
   type        = bool
   description = "Set to true to create TPU node pool"
@@ -37,4 +41,8 @@ variable "k8s_service_account" {
 variable "gcs_bucket" {
   type        = string
   description = "GCS Bucket name"
+}
+
+variable "grafana_host" {
+  type        = string
 }

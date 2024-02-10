@@ -1,10 +1,10 @@
 # Ray on GKE
 
 This repository contains a Terraform template for running [Ray](https://www.ray.io/) on Google Kubernetes Engine.
-We've also included some example notebooks (`ai-on-gke/ray-on-gke/example_notebooks`), including one that serves a GPT-J-6B model with Ray AIR (see
+We've also included some example notebooks (`applications/ray/example_notebooks`), including one that serves a GPT-J-6B model with Ray AIR (see
 [here](https://docs.ray.io/en/master/ray-air/examples/gptj_serving.html) for the original notebook).
 
-This module assumes you already have a functional GKE cluster. If not, follow the instructions under `ai-on-gke/gke-platform/README.md`
+This module assumes you already have a functional GKE cluster. If not, follow the instructions under `infrastructure/README.md`
 to install a Standard or Autopilot GKE cluster, then follow the instructions in this module to install Ray. 
 
 This module deploys the following, once per user:
@@ -17,9 +17,7 @@ This module deploys the following, once per user:
 ## Installation
 
 Preinstall the following on your computer:
-* Kubectl
 * Terraform 
-* Helm
 * Gcloud
 
 > **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using `terraform destory` before reapplying/reinstalling.
@@ -28,18 +26,14 @@ Preinstall the following on your computer:
 
 2. `cd applications/ray`
 
-3. Edit `workloads.tfvars` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Ray services.
-
-4. Run `terraform init`
-
-5. Find the name and location of the GKE cluster you want to use.
+3. Find the name and location of the GKE cluster you want to use.
    Run `gcloud container clusters list --project=<your GCP project>` to see all the available clusters.
-   _Note: If you created the GKE cluster via the ai-on-gke/gke-platform repo, you can get the cluster info from `ai-on-gke/gke-platform/variables.tf`_
+   _Note: If you created the GKE cluster via the infrastructure repo, you can get the cluster info from `platform.tfvars`_
 
-6. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
-   Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
+4. Edit `workloads.tfvars` with your environment specific variables and configurations.
 
-7. Run `terraform apply`
+5. Run `terraform init && terraform apply -var-file workloads.tfvars`
+
 
 ## Using Ray with Ray Jobs API
 
@@ -70,7 +64,7 @@ See [Ray docs](https://docs.ray.io/en/latest/cluster/running-applications/job-su
 ## Using Ray with Jupyter
 
 If you want to connect to the Ray cluster via a Jupyter notebook or to try the example notebooks in the repo, please
-first install JupyterHub via `ai-on-gke/jupyter-on-gke/README.md`.
+first install JupyterHub via `applications/jupyter/README.md`.
 
 ## Logging and Monitoring
 

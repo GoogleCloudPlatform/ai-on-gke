@@ -36,12 +36,23 @@ variable "gcs_bucket" {
   type = string
 }
 
-variable "create_k8s_service_account" {
+variable "create_k8s_service_account_prom" {
   type        = bool
   description = "Create k8s service account"
 }
 
-variable "k8s_service_account" {
+variable "k8s_service_account_prom" {
   type        = string
   description = "K8S service account name"
 }
+
+variable "create_k8s_service_account_gcs" {
+  type        = bool
+  description = "Create k8s service account"
+}
+
+variable "k8s_service_account_gcs" {
+  type        = string
+  description = "K8S service account name"
+}
+

@@ -46,19 +46,29 @@ variable "gcs_bucket" {
   type = string
 }
 
-variable "create_k8s_service_account" {
+variable "create_k8s_service_account_gcs" {
   type        = bool
   description = "Create k8s service account"
   default     = false
 }
 
-variable "k8s_service_account" {
+variable "k8s_service_account_gcs" {
   type = string
 }
 
 variable "gcp_service_account_gcs" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
+}
+
+variable "create_k8s_service_account_prom" {
+  type        = bool
+  description = "Create k8s service account"
+  default     = false
+}
+
+variable "k8s_service_account_prom" {
+  type = string
 }
 
 variable "gcp_service_account_prom" {
