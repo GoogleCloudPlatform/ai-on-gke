@@ -123,7 +123,9 @@ steps:
         kubectl apply -f priorityclass && \
         kubectl apply -f teams && \
         kubectl apply -f kueue && \
-        envsubst '$_REGION, $PROJECT_ID' < ./monitoring/install-prometheus.sh
+        export PROJECT_ID=${PROJECT_ID} && \
+        export REGION=${_REGION} && \
+        ./monitoring/install-prometheus.sh
 ##########################################################################################
 options:
   logging: CLOUD_LOGGING_ONLY
