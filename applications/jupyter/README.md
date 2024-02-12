@@ -22,7 +22,7 @@ This module deploys the following resources, once per user:
 2. A functional GKE cluster.
     - To create a new standard or autopilot cluster, follow the instructions under `infrastructure/README.md`
 
-3. This module is configured to use Identity Aware Proxy (IAP) as default authentication method for JupyterHub. It expects the brand & the OAuth concent configured in your org. You can check the details here: [OAuth concent screen](https://console.cloud.google.com/apis/credentials/consent)
+3. This module is configured to use Identity Aware Proxy (IAP) as default authentication method for JupyterHub. It expects the brand & the OAuth consent configured in your org. You can check the details here: [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
 
 This code can also perform auto brand creation. Please check the details [below](#auto-brand-creation-and-iap-enablement)
 
@@ -64,33 +64,52 @@ For variables under `Jupyterhub with IAP`, please see the section below
 
 > **_NOTE:_** To secure the Jupyter endpoint, this module enables IAP by default. It is _strongly recommended_ to keep this configuration. If you wish to disable it, do the following: set the `add_auth` flag to false in the `workloads.tf` file.
 
-3. If you have not enabled the IAP API before or created a Brand for your project, please follow these steps:
+3. If you already have a brand setup for your project, use the existing values to fill in the variable values in workloads.tf
+
+4. If you have not enabled the IAP API before or created a Brand for your project, please follow these steps:
 
     - Navigate to the `brand` [page](https://console.cloud.google.com/apis/credentials/consent) to create your own brand:
 
     See [here](#auto-brand-creation-and-iap-enablement) for more information about how to create a brand automatically. Please note, auto brand creation enables the application only for [internal users](https://cloud.google.com/iap/docs/programmatic-oauth-clients#branding). This can be switched to external users from the [consent](https://console.cloud.google.com/apis/credentials/consent) screen.
 
+
+| Variable                 | Description                | Default Value | Required |
+| ------------------------ |--------------------------- |:-------------:|:--------:|
+| add_auth                 | Enable IAP on Jupyterhub   | true          | Yes      |
+| brand                    | Name of the brand used for creating IAP OAuth clients. Currently only one is allowed per project. If there is already a brand, leave it empty.  Uses [support_email](#support_email) |           |       |
+| support_email            | Support email assocated with the [brand](#brand). Used as a point of contact for consent for the ["OAuth Consent" in Cloud Console](https://console.cloud.google.com/apis/credentials/consent). It will not be used if brand is empty.   |           |       |
+| default_backend_service  | default_backend_service   |           |       |
+| service_name             | Name of the Backend Service that gets created when enabling IAP.   |           |       |
+| url_domain_addr          | Provided by the user if they want to bring their own URL/Domain. Used by the IAP resources if filled in. Filling this in will disable automatic global IP reservation. Must also fill in [url_domain_name](#url_domain_name).   |           |       |
+| url_domain_name          | This variable will only be used if [url_domain_addr](#url_domain_addr) is provided. It is the name associated with the domain provided by the user. Since we are using Ingress, it will require the `kubernetes.io/ingress.global-static-ip-name` annotation along with the name associated.   |           |       |
+| client_id                | Client ID of an OAuth client created by the user for enabling IAP. When this variable is not empty, the template will not create an OAuth client for you. You must also input the [client_secret](#client_secret).   |           |       |
+| client_secret            | Client Secret associated with the [client_id](#client_id). This variable will only be used when the client id is filled out.     |           |       |
+| members_allowlist        | Comma seperated values for users to be allowed access through IAP. Example values: `allAuthenticatedUsers` or `allAuthenticatedUsers,user:username@domain.com`  | allAuthenticatedUsers     |       |
+
+
 ### Install
 
 > **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using `terraform destroy` before reapplying/reinstalling.
 
-4. Run `terraform init`
+5. Run `terraform init`
 
-5. Run `terraform apply --var-file=./workloads.tfvars`
+6. Run `terraform apply --var-file=./workloads.tfvars`
 
 
 
-6. Wait for terraform apply to complete successfully & then rerun it again. This is needed to configure Jupyter with IAP correctly. Run `terraform apply --var-file=./workloads.tfvars`
+7. Wait for terraform apply to complete successfully & then rerun it again. This is needed to configure Jupyter with IAP correctly. Run `terraform apply --var-file=./workloads.tfvars`
 
-7. Note down the value for the `domain` from the terraform output section. You can open this in a browser & login with your credentials 
+8. Note down the value for the `domain` from the terraform output section. You can open this in a browser & login with your credentials 
 
 > **_NOTE:_** Domain specific managed certificate may take some time to finish provisioning. On average around 10-15 minutes. 
 
 ### Setup Access
 
-8. Navigate to the [GCP IAP Cloud Console](https://console.cloud.google.com/security/iap) and select your backend-service checkbox.
+In order for users to login to Jupyterhub via IAP, their access needs to be configured. To allow access for users/groups: 
 
-9. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
+9. Navigate to the [GCP IAP Cloud Console](https://console.cloud.google.com/security/iap) and select your backend-service for `<namespace>/proxy-public`.
+
+10. Click on `Add Principal`, insert the username / group name and select under `Cloud IAP` with role `IAP-secured Web App User`. Once presmission is granted, these users / groups can login to Jupyterhub with IAP
 
 ## Using Jupyterhub
 
