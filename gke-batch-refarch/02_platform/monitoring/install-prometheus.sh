@@ -9,7 +9,6 @@ cd kube-prometheus && \
 kubectl apply --server-side -f manifests/setup && \
 kubectl wait \
     --for condition=Established \
-    --timeout=180s \
     --all CustomResourceDefinition \
     --namespace=monitoring  && \
 kubectl apply -f manifests/ && \
