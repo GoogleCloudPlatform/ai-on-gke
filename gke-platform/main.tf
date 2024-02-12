@@ -31,7 +31,7 @@ provider "google-beta" {
 }
 
 provider "kubernetes" {
-  host  = data.google_container_cluster.ml_cluster.endpoint
+  host  = "https://${data.google_container_cluster.ml_cluster.endpoint}"
   token = data.google_client_config.provider.access_token
   cluster_ca_certificate = base64decode(
     data.google_container_cluster.ml_cluster.master_auth[0].cluster_ca_certificate
@@ -39,7 +39,7 @@ provider "kubernetes" {
 }
 
 provider "kubectl" {
-  host  = data.google_container_cluster.ml_cluster.endpoint
+  host  = "https://${data.google_container_cluster.ml_cluster.endpoint}"
   token = data.google_client_config.provider.access_token
   cluster_ca_certificate = base64decode(
     data.google_container_cluster.ml_cluster.master_auth[0].cluster_ca_certificate
@@ -49,7 +49,7 @@ provider "kubectl" {
 provider "helm" {
   kubernetes {
     ##config_path = pathexpand("~/.kube/config")
-    host  = data.google_container_cluster.ml_cluster.endpoint
+    host  = "https://${data.google_container_cluster.ml_cluster.endpoint}"
     token = data.google_client_config.provider.access_token
     cluster_ca_certificate = base64decode(
       data.google_container_cluster.ml_cluster.master_auth[0].cluster_ca_certificate
@@ -77,8 +77,7 @@ module "gke_standard" {
   cluster_labels            = var.cluster_labels
   enable_autopilot          = var.enable_autopilot
   enable_tpu                = var.enable_tpu
-  gpu_pool_machine_type     = var.gpu_pool_machine_type
-  gpu_pool_accelerator_type = var.gpu_pool_accelerator_type
+  gpu_pool_machine_cfg      = var.gpu_pool_machine_cfg
   gpu_pool_node_locations   = var.gpu_pool_node_locations
 }
 

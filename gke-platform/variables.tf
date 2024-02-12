@@ -15,7 +15,6 @@
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  default     = "<your project>"
 }
 
 variable "region" {
@@ -50,20 +49,14 @@ variable "enable_tpu" {
   default     = false
 }
 
-variable "gpu_pool_machine_type" {
-  type        = string
-  description = "Specify the gpu-pool machine type"
-  default     = "n1-standard-16"
-}
-
-variable "gpu_pool_accelerator_type" {
-  type        = string
-  description = "Specify the gpu accelerator type"
-  default     = "nvidia-tesla-t4"
-}
-
 variable "gpu_pool_node_locations" {
   type        = list
-  description = "Specify the gpu-pool node zone locations"
-  default     = ["us-central1-a", "us-central1-c", "us-central1-f"]
+  description = "Specify the gpu-pool node zone locations, they will be derived from the region and gpu type if omitted."
+  default     = null
+}
+
+variable "gpu_pool_machine_cfg" {
+  type        = string
+  description = "Use a gpu/cpu combo, see locals.tf for details."
+  default     = "nvidia_l4_x1"
 }
