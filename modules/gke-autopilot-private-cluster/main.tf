@@ -39,7 +39,8 @@ module "gke" {
 # GKE cluster fleet registration
 resource "google_gke_hub_membership" "gke-fleet" {
   project       = var.project_id
-  membership_id = "${var.cluster_name}-${var.cluster_region}"
+  membership_id = var.cluster_name
+  location      = var.cluster_region
 
   endpoint {
     gke_cluster {

@@ -13,11 +13,17 @@
 # limitations under the License.
 
 # Reserve IP Address
+resource "random_string" "random" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
 resource "google_compute_global_address" "default" {
   count        = var.url_domain_addr != "" ? 0 : 1
   provider     = google-beta
   project      = var.project_id
-  name         = "jupyter-address"
+  name         = "jupyter-address-${random_string.random.result}"
   address_type = "EXTERNAL"
   ip_version   = "IPV4"
 }
