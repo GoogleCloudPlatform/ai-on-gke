@@ -107,6 +107,20 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
+// unmarshal rayjob from admission request
+func extractRayJob(admissionReview *admissionv1.AdmissionReview) (*ray.RayJob, error) {
+	if admissionReview.Request.Kind.Kind != "RayJob" {
+		return nil, fmt.Errorf("Expected RayJob but got %s", admissionReview.Request.Kind.Kind)
+	}
+
+	rayJob := ray.RayJob{}
+	if err := json.Unmarshal(admissionReview.Request.Object.Raw, &rayJob); err != nil {
+		return nil, err
+	}
+
+	return &rayJob, nil
+}
+
 func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) (string, error) {
 	replicas := workerGroupSpec.Replicas
 	if replicas == nil {
@@ -270,6 +284,66 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 		// reset past sliceToWorkers entries for ray cluster
 		groupName := workerGroupSpec.GroupName
 		podSlice := slice{clusterName, groupName}
+		sliceToWorkers[podSlice] = 0
+
+		containers := workerGroupSpec.Template.Spec.Containers
+		if containers == nil {
+			return nil, errors.New("Container path not specified")
+		}
+		if containerRequestingTPUs(containers...) {
+			topology := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
+			isMultiHost, err := isTPUMultiHost(topology)
+			if err != nil {
+				return nil, err
+			}
+			if isMultiHost {
+				joinedHostNames, err := genDNSHostnames(workerGroupSpec)
+				if err != nil {
+					return nil, err
+				}
+				injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
+			}
+		}
+	}
+
+	patchBytes, err := json.Marshal(patches)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create AdmissionResponse
+	admissionResponse := &admissionv1.AdmissionResponse{
+		UID:     admissionReview.Request.UID,
+		Allowed: true,
+		Patch:   patchBytes,
+		PatchType: func() *admissionv1.PatchType {
+			pt := admissionv1.PatchTypeJSONPatch
+			return &pt
+		}(),
+	}
+	return admissionResponse, nil
+}
+
+// Add TPU_WORKER_HOSTNAMES env var to multi-host TPU workers created by RayJob
+func mutateRayJob(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
+	rayJob, err := extractRayJob(admissionReview)
+	if err != nil {
+		return nil, err
+	}
+
+	clusterSpec := rayJob.Spec.RayClusterSpec
+	rayJobName := rayJob.ObjectMeta.Name
+	headlessServiceName = fmt.Sprintf("%s-%s", rayJobName, headlessServiceSuffix)
+	var patches []patch
+	workerGroupSpecs := clusterSpec.WorkerGroupSpecs
+	if workerGroupSpecs == nil {
+		return nil, errors.New("WorkerGroupSpecs not specified")
+	}
+	for i := 0; i < len(workerGroupSpecs); i++ {
+		workerGroupSpec := workerGroupSpecs[i]
+		// reset past sliceToWorkers entries for ray job
+		groupName := workerGroupSpec.GroupName
+		podSlice := slice{rayJobName, groupName}
 		sliceToWorkers[podSlice] = 0
 
 		containers := workerGroupSpec.Template.Spec.Containers
@@ -482,6 +556,22 @@ func main() {
 			response, err := mutateRayCluster(admissionReview)
 			if err != nil {
 				klog.Errorf("Failed to mutate ray cluster: %s", err)
+				return
+			}
+			admissionReview.Response = response
+			responseBytes, err := json.Marshal(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to encode response: %s", err)
+				return
+			}
+			fmt.Fprint(w, string(responseBytes))
+		}
+
+		if admissionReview.Request.Kind.Kind == "RayJob" {
+			klog.Info("Received review for RayJob")
+			response, err := mutateRayJob(admissionReview)
+			if err != nil {
+				klog.Errorf("Failed to mutate ray job: %s", err)
 				return
 			}
 			admissionReview.Response = response
