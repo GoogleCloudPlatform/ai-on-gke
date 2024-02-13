@@ -140,19 +140,23 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 	if containers == nil {
 		klog.Fatalf("Container path not specified")
 	}
-	// inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
+	// Inject subdomain into workerGroup spec
+	subdomainPatch := patch{"op": "add"}
+	subdomainPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/subdomain", workerGroupIndex)
+	subdomainPatch["path"] = subdomainPath
+	subdomainPatch["value"] = headlessServiceName
+	*patches = append(*patches, subdomainPatch)
+
+	// inject TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
 	for j := 0; j < len(containers); j++ {
 		container := containers[j]
 		if containerRequestingTPUs(container) {
-			subdomainPatch, hostNamesPatch := patch{"op": "add"}, patch{"op": "add"}
-			subdomainPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/subdomain", workerGroupIndex)
+			hostNamesPatch := patch{"op": "add"}
 			envPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", workerGroupIndex, j)
 			tpuWorkerHostNames := corev1.EnvVar{
 				Name:  "TPU_WORKER_HOSTNAMES",
 				Value: hostNames,
 			}
-			subdomainPatch["path"] = subdomainPath
-			subdomainPatch["value"] = headlessServiceName
 			// create new EnvVar array if container.Env is empty, and append hostnames if not
 			if len(container.Env) == 0 {
 				hostNamesPatch["path"] = envPath
@@ -161,7 +165,7 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 				hostNamesPatch["path"] = fmt.Sprintf("%s/-", envPath)
 				hostNamesPatch["value"] = tpuWorkerHostNames
 			}
-			*patches = append(*patches, subdomainPatch, hostNamesPatch)
+			*patches = append(*patches, hostNamesPatch)
 		}
 	}
 }
