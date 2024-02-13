@@ -86,6 +86,12 @@ function pull_images() {
   done
 }
 
+function write_image_info() {
+  echo Writing image info to disk image...
+  images=$(ctr -n k8s.io images ls)
+  sudo echo "$images" >> "/mnt/disks/container_layers/images.metadata"
+}
+
 function process_snapshots() {
   echo Processing the snapshots...
   snapshots=($(sudo ctr -n k8s.io snapshot list | grep "Committed" | cut -d ' ' -f1))
@@ -162,6 +168,9 @@ function unpack() {
   shift
   # Pull all the given images.
   pull_images $@
+
+  # Write image info to disk image.
+  write_image_info $@
 
   # Process the snapshots.
   process_snapshots
