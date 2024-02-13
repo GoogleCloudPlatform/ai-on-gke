@@ -2,141 +2,156 @@
 
 This repository contains a Terraform template for running [JupyterHub](https://jupyter.org/hub) on Google Kubernetes Engine.
 
-This module assumes you already have a functional GKE cluster. If not, follow the instructions under `ai-on-gke/gke-platform/README.md`
-to install a Standard or Autopilot GKE cluster, then follow the instructions in this module to install JupyterHub.
+We've also included some example notebooks (`applications/ray/example_notebooks`), including one that serves a GPT-J-6B model with Ray AIR (see
+[here](https://docs.ray.io/en/latest/train/examples/deepspeed/gptj_deepspeed_fine_tuning.html) for the original notebook). To run these, follow the instructions at
+`applications/ray/README.md` to install a Ray cluster.
 
-We've also included some example notebooks (`ai-on-gke/ray-on-gke/example_notebooks`), including one that serves a GPT-J-6B model with Ray AIR (see
-[here](https://docs.ray.io/en/master/ray-air/examples/gptj_serving.html) for the original notebook). To run these, follow the instructions at
-`ai-on-gke/ray-on-gke/README.md` to install a Ray cluster.
 
 This module deploys the following resources, once per user:
 * JupyterHub deployment
 * User namespace
 * Kubernetes service accounts
 
+## Prerequisites
+
+1. GCP Project with following APIs enabled
+    - container.googleapis.com
+    - gkehub.googleapis.com (required when using private clusters with Anthos Connect Gateway)
+    - iap.googleapis.com (required when using authentication with Identity Aware Proxy)
+
+2. A functional GKE cluster.
+    - To create a new standard or autopilot cluster, follow the instructions under `infrastructure/README.md`
+
+3. This module is configured to use Identity Aware Proxy (IAP) as default authentication method for JupyterHub. It expects the brand & the OAuth consent configured in your org. You can check the details here: [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
+
+This code can also perform auto brand creation. Please check the details [below](#auto-brand-creation-and-iap-enablement)
+
+4. Preinstall the following on your computer:
+    * Terraform
+    * Gcloud CLI
+
+Jupyterhub server can use either local storage or GCS to store notebooks and other artifcts. 
+To use GCS, create a bucket with your username. For example, when authenticating with IAP as username@domain.com, ensure your bucket name is `gcsfuse-<username>`
+
 ## Installation
 
-Preinstall the following on your computer:
-* Kubectl
-* Terraform
-* Helm
-* Gcloud
+### Configure Inputs
+
+1. If needed, clone the repo
+```
+ git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+ cd ai-on-gke/applications/jupyter
+ ```
+
+2. Edit `workloads.tfvars` with your GCP settings. The `namespace` that you specify will become a K8s namespace for your Jupyterhub services. For more information about what the variables do visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/jupyter/variable_definitions.md)
+
+**Important Note:**
+If using this with the Ray module (`applications/ray/`), it is recommended to use the same k8s namespace
+for both i.e. set this to the same namespace as `applications/ray/workloads.tfvars`.
+
+| Variable               | Description       | Required |
+| ---------------------- |-------------------|:--------:|
+| project_id             | GCP Project Id    | Yes      |
+| cluster_name           | GKE Cluster Name  | Yes      |
+| cluster_location       | GCP Region        | Yes      |
+| cluster_membership_id  | Fleet membership name for GKE cluster. <br /> Required when using private clusters with Anthos Connect Gateway   | |
+| namespace              | The namespace that Jupyterhub and rest of the other resources will be installed in.        | Yes      |
+| gcs_bucket             | GCS bucket to be used for Jupyter storage        |       |
+| k8s_service_account    | Kubernetes service account used for Workload Identity mapping       | Yes      | 
+| gcp_service_account    | GCP service account used for Workload Identity mapping      | Yes      | 
+| gcp_service_account_iam_roles       | IAM roles to be assigned to GCP service account        | Yes      | 
+
+For variables under `Jupyterhub with IAP`, please see the section below 
+
+### Secure endpoint with IAP
+
+> **_NOTE:_** To secure the Jupyter endpoint, this module enables IAP by default. It is _strongly recommended_ to keep this configuration. If you wish to disable it, do the following: set the `add_auth` flag to false in the `workloads.tf` file.
+
+3. If you already have a brand setup for your project, use the existing values to fill in the variable values in workloads.tf
+
+4. If you have not enabled the IAP API before or created a Brand for your project, please follow these steps:
+
+    - Navigate to the `brand` [page](https://console.cloud.google.com/apis/credentials/consent) to create your own brand:
+
+    See [here](#auto-brand-creation-and-iap-enablement) for more information about how to create a brand automatically. Please note, auto brand creation enables the application only for [internal users](https://cloud.google.com/iap/docs/programmatic-oauth-clients#branding). This can be switched to external users from the [consent](https://console.cloud.google.com/apis/credentials/consent) screen.
+
+
+| Variable                 | Description                | Default Value | Required |
+| ------------------------ |--------------------------- |:-------------:|:--------:|
+| add_auth                 | Enable IAP on Jupyterhub   | true          | Yes      |
+| brand                    | Name of the brand used for creating IAP OAuth clients. Only one is allowed per project. Leave it empty to create a new brand.  Uses [support_email](#support_email) |           |       |
+| support_email            | Support email assocated with the [brand](#brand). Used as a point of contact for consent for the ["OAuth Consent" in Cloud Console](https://console.cloud.google.com/apis/credentials/consent). It will not be used if brand is empty.   |           |       |
+| default_backend_service  | default_backend_service   |           |       |
+| service_name             | Name of the Backend Service that gets created when enabling IAP.   |           |       |
+| url_domain_addr          | Provided by the user if they want to bring their own URL/Domain. Used by the IAP resources if filled in. Filling this in will disable automatic global IP reservation. Must also fill in [url_domain_name](#url_domain_name).   |           |       |
+| url_domain_name          | This variable will only be used if [url_domain_addr](#url_domain_addr) is provided. It is the name associated with the domain provided by the user. Since we are using Ingress, it will require the `kubernetes.io/ingress.global-static-ip-name` annotation along with the name associated.   |           |       |
+| client_id                | Client ID of an OAuth client created by the user for enabling IAP. When this variable is not empty, the template will not create an OAuth client for you. You must also input the [client_secret](#client_secret).   |           |       |
+| client_secret            | Client Secret associated with the [client_id](#client_id). This variable will only be used when the client id is filled out.     |           |       |
+| members_allowlist        | Comma seperated values for users to be allowed access through IAP. Example values: `allAuthenticatedUsers` or `allAuthenticatedUsers,user:username@domain.com`  | allAuthenticatedUsers     |       |
+
+
+### Install
 
 > **_NOTE:_** Terraform keeps state metadata in a local file called `terraform.tfstate`. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using `terraform destroy` before reapplying/reinstalling.
 
-### JupyterHub
+5. Ensure your gcloud application default credentials are in place. 
+```
+gcloud auth application-default login
+```
 
-> **_NOTE:_** Currently the there are 3 preset profiles that uses the same jupyter images, this can be changed in the yaml files in /jupyter_config, as well as the description of these profiles.
+6. Run `terraform init`
 
-> **_NOTE:_** To enable/disable GCP IAP authentication, set the `add_auth` boolean in variables.tf to `true` or `false` and update the [image field](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L12) within the config. It is highly recommanded to **NOT** turn off Authentication.
+7. Run `terraform apply --var-file=./workloads.tfvars`. It can take upto 5 minutes on standard clusters & upto 10 minutes on AutoPilot clusters.
 
-1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
-
-2. Edit `variables.tf` with your GCP settings. The `<your user name>` that you specify will become a K8s namespace for your Jupyterhub services. For more information about what the variabls do visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variable_definitions.md)
-**Important Note:**
-If using this with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommended to use the same k8s namespace
-for both i.e. set this to the same namespace as `ai-on-gke/ray-on-gke/user/variables.tf`.
-If not, set `enable_create_namespace` to `true` so a new k8s namespace is created for the Jupyter resources.
-
-3. If you have not enabled the IAP API before or created a Brand for your project, please follow these steps:
-
-    1. Navigate to [this](https://console.cloud.google.com/security/iap) page to enable the API:
-    ![IAP API Screen](./images/iap_enable_api_screenshot.png)
-
-    2. Navigate to the `brand` [page](https://console.cloud.google.com/apis/credentials/consent) to create your own brand:
-    ![IAP API Screen](./images/oauth_consent_screenshot.png)
-
-    Go [here](#auto-brand-creation-and-iap-enablement) for more information about to create a brand automatically.
-
-4. Run `terraform init`
-
-5. Edit the `./allowlist` file to set the application users allowlist for Jupyterhub. These are the kinds of principals you can have:
-
-    * allUsers
-    * allAuthenticatedUsers
-    * user:{emailid}
-    * serviceAccount:{emailid}
-    * group:{emailid}
-    * domain:{domain}
-    * projectOwner:projectid
-    * projectEditor:projectid
-    * projectViewer:
-
-    **Note:** Seperate each principals with a new line
-
-6. Find the name and location of the GKE cluster you want to use.
-   Run `gcloud container clusters list --project=<your GCP project> to see all the available clusters.
-
-   Note: If you created the GKE cluster via the ai-on-gke/gke-platform repo, you can get the cluster info from `ai-on-gke/gke-platform/variables.tf`
-
-7. Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`
-   Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
-
-8. Run `terraform apply`
-
-## Securing your Jupyter Endpoint
-
-To secure the Jupyter endpoint, this example enables IAP by default. It is _strongly recommended_ to keep this configuration. If you wish to disable it, do the following: set the `add_auth` flag to false in the `variable.tf` file.
-
-9. After installing Jupyterhub, you will need to retrieve the name of the backend-service from GCP using the following command:
-
-    ```cmd
-    gcloud compute backend-services list --project=%PROJECT_ID%
-    ```
-
-    You can describe the service to check which service is connected to `proxy-public` using:
-
-    ```cmd
-    gcloud compute backend-services describe SERVICE_NAME --project=%PROJECT_ID% --global
-    ```
-
-10. Once you get the name of the backend-service, replace the variable in the [variables.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variables.tf) file.
-
-11. Re-run `terraform apply`
-
-12. Navigate to the [GCP IAP Cloud Console](https://console.cloud.google.com/security/iap) and select your backend-service checkbox.
-
-13. Click on `Add Principal`, insert the new principle and select under `Cloud IAP` with role `IAP-secured Web App User`
-
-> **_NOTE:_** Your managed certificate may take some time to finish provisioning. On average around 10-15 minutes. 
+8. If using authentication with IAP (i.e. add_auth = true), rerun terraform apply again. This is needed to configure Jupyter with IAP correctly. Run `terraform apply --var-file=./workloads.tfvars`
 
 ## Using Jupyterhub
 
-### If Auth is disabled
+### If Auth with IAP is disabled
 
-1. Run `kubectl get services -n <namespace>`. The namespace is the user name that you specified above.
+1. Extract the randomly generated password for Jupyterhub login
 
-2. Copy the external IP for the notebook. If there isn't an external IP for `proxy-public`, is it most likely due to authencation being enabled.
+```
+terraform output password
+```
 
-Continue to Step 3 of [below](#if-auth-is-enabled).
+2. Visit [Services](https://console.cloud.google.com/kubernetes/discovery) section on the GKE console & open the external IP for the `proxy-public` service in the browser.
 
-### If Auth is enabled
+> **_NOTE:_** If there isn't an external IP for `proxy-public`, is it most likely due to authentication being enabled.
 
-1. Run `kubectl describe managedcertificate managed-cert -n <namespace>`. The namespace is the user name that you specified above.
+### If Auth with IAP is enabled
 
-2. Copy the domain under `Domains`
+1. Note down the value for the `domain` from the terraform output section. You can open this in a browser & login with your credentials. Alternatively, domain value for Jupyter Ingress can be found on [Certificate Manager](https://console.cloud.google.com/security/ccm/list/lbCertificates) page.
 
-3. Open the external IP in a browser and login. The default user names and
-   passwords can be found in the [Jupyter
-   settings](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml) file.
+4. Open the external IP in a browser and login. 
 
-4. Select profile and open a Jupyter Notebook. For more information on the profiles, visit [this page](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/profiles.md)
+4. Select profile and open a Jupyter Notebook
+
+> **_NOTE:_** Domain specific managed certificate may take some time to finish provisioning. This can take between 10-15 minutes. The browser may not display the login page correctly until the certificate provisioning is complete.
+
+### Setup Access
+
+In order for users to login to Jupyterhub via IAP, their access needs to be configured. To allow access for users/groups: 
+
+1. Navigate to the [GCP IAP Cloud Console](https://console.cloud.google.com/security/iap) and select your backend-service for `<namespace>/proxy-public`.
+
+2. Click on `Add Principal`, insert the username / group name and select under `Cloud IAP` with role `IAP-secured Web App User`. Once presmission is granted, these users / groups can login to Jupyterhub with IAP
 
 ## Persistent Storage
 
-Currently there are 2 choices for storage:
+Jupyterhub is configured to provide 2 choices for storage:
 
 1. Default Jupyterhub Storage - `pd.csi.storage.gke.io` with reclaim policy `Delete`
 
 2. GCSFuse - `gcsfuse.csi.storage.gke.io` uses GCS Buckets and require users to pre-create buckets with name format `gcsfuse-{username}`
 
-For more information about Persistent storage and the available options, visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/storage.md)
+For more information about Persistent storage and the available options, visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/jupyter/storage.md)
 
 ## Running GPT-J-6B
 
-This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/master/ray-air/examples/gptj_serving.html).
+This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/latest/train/examples/deepspeed/gptj_deepspeed_fine_tuning.html).
 
-1. Open the `gpt-j-online.ipynb` notebook under `ai-on-gke/ray-on-gke/example_notebooks`.
+1. Open the `gpt-j-online.ipynb` notebook under `ai-on-gke/applications/ray/example_notebooks`.
 
 2. Open a terminal in the Jupyter session and install Ray AIR:
 
@@ -156,21 +171,19 @@ This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/ma
 
 ## Auto Brand creation and IAP enablement
 
-**IMPORTANT** If you enable automatic brand creation, only `Internal` brand will be created, meaning that only users under the same org as the project will be able to access the application.
+**IMPORTANT** If you enable automatic brand creation, only `Internal` brand will be created, allowing only the users under the same org as the project to access the application.
 
-Ensure that the following variables within `variables.tf` are set:
+Ensure that the following variables within `workloads.tfvars` are set:
 
 * enable_iap_service - Enables the IAP service API. Leave as false if IAP is enabled before.
-* brand - creates a brand for the project, only one is currently allowed per project. If there is already a brand, leave the variable empty.
+* brand - creates a brand for the project. Only one is currently allowed per project. Leave it empty to create a new brand
 * support_email - used by brand, required field.
 * **IMPORTANT** client_id and client_secret - If your brand is `external`, you must provide your own client_id and client_secret. If your brand is `internal`, you can choose to leave the variable as is and allow terraform to create one for you.
 * if you do bring your own OAuth client, you must add to the `Authorized redirect URIs` Field:  `https://iap.googleapis.com/v1/oauth/clientIds/<client ID>:handleRedirect`
 
 **Note:**
-We allow user to set their own domains, in the `variables.tf` file. Since we are also using an Ingress Object, it is required for the Ingress to also have specifiy the name of the global static address.
+This module uses `<ip>.nip.io` as the domain name with a global static ipv4 address that is configured automatically. Optionaly you can also use a custom doamin & existing ingress ip address in the `workloads.tfvars` file.
 
 ## Additional Information
 
-For more information about Jupyterhub profiles and the preset profiles visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/profiles.md)
-
-For more information about the variables used in this Terraform template visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/variable_definitions.md)
+For more information about Jupyterhub profiles and the preset profiles visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/jupyter/profiles.md)
