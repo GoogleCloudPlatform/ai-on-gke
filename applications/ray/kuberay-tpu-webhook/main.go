@@ -135,14 +135,14 @@ func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) (string, error) {
 	return strings.Join(hostNames, ","), nil
 }
 
-func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, workerGroupIndex int, patches *[]patch) {
+func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, path string, workerGroupIndex int, patches *[]patch) {
 	containers := workerGroupSpec.Template.Spec.Containers
 	if containers == nil {
 		klog.Fatalf("Container path not specified")
 	}
 	// Inject subdomain into workerGroup spec
 	subdomainPatch := patch{"op": "add"}
-	subdomainPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/subdomain", workerGroupIndex)
+	subdomainPath := fmt.Sprintf("%s/%d/template/spec/subdomain", path, workerGroupIndex)
 	subdomainPatch["path"] = subdomainPath
 	subdomainPatch["value"] = headlessServiceName
 	*patches = append(*patches, subdomainPatch)
@@ -152,7 +152,7 @@ func injectHostnames(hostNames string, workerGroupSpec ray.WorkerGroupSpec, work
 		container := containers[j]
 		if containerRequestingTPUs(container) {
 			hostNamesPatch := patch{"op": "add"}
-			envPath := fmt.Sprintf("/spec/workerGroupSpecs/%d/template/spec/containers/%d/env", workerGroupIndex, j)
+			envPath := fmt.Sprintf("%s/%d/template/spec/containers/%d/env", path, workerGroupIndex, j)
 			tpuWorkerHostNames := corev1.EnvVar{
 				Name:  "TPU_WORKER_HOSTNAMES",
 				Value: hostNames,
@@ -305,7 +305,8 @@ func mutateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv
 				if err != nil {
 					return nil, err
 				}
-				injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
+				path := "/spec/workerGroupSpecs"
+				injectHostnames(joinedHostNames, workerGroupSpec, path, i, &patches)
 			}
 		}
 	}
@@ -365,7 +366,8 @@ func mutateRayJob(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Ad
 				if err != nil {
 					return nil, err
 				}
-				injectHostnames(joinedHostNames, workerGroupSpec, i, &patches)
+				path := "/spec/rayClusterSpec/workerGroupSpecs"
+				injectHostnames(joinedHostNames, workerGroupSpec, path, i, &patches)
 			}
 		}
 	}
