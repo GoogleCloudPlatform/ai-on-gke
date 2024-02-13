@@ -37,7 +37,7 @@ gcloud container node-pools create tpu \
     --zone=${ZONE} \
     --num-nodes=1 \
     --machine-type=ct5lp-hightpu-4t \
-    --project=${PROJECT_ID} \
+    --project=${PROJECT_ID}
 ```
 
 You have created the following resources:

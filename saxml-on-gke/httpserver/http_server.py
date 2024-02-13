@@ -14,191 +14,185 @@
 
 """HTTP Server to interact with SAX Cluster, SAX Admin Server, and SAX Model Server."""
 
-import http.server
+from fastapi import FastAPI, HTTPException, Response
+import uvicorn
 import json
+import logging
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
+from pydantic import BaseModel, Field
+from typing import Optional, Union, List
+
 import sax
 
-class Server(http.server.BaseHTTPRequestHandler):
-  """Handler for HTTP Server."""
+class ExtraInputs(BaseModel):
+    temperature: Optional[float] = 0.5
+    per_example_max_decode_steps: Optional[int] = 128
+    per_example_top_k: Optional[int] = 200
+    per_example_top_p: Optional[float] = 0.95
 
-  invalid_res = {
-    'message': "Invalid Request"
-  }
-  get_dict = {"/", "/listcell"}
-  post_dict = {"/publish", "/unpublish", "/generate"}
-  put_dict = {"/update"}
+class Generate(BaseModel):
+    model: str
+    query: str
+    extra_inputs: Optional[ExtraInputs] = Field(default_factory=ExtraInputs)
 
-  def success_res(self, res):
-    self.send_response(200)
-    self.end_headers()
-    self.wfile.write(json.dumps(res, indent=4).encode('utf-8'))
-    self.wfile.write('\n'.encode('utf-8'))
-    return
+class Model(BaseModel):
+    model: str
+    model_path: str
+    checkpoint: str
+    replicas: int
 
-  def error_res(self, e):
-    self.send_response(400)
-    self.end_headers()
-    error = {'Error': str(e)}
-    self.wfile.write(json.dumps(error, indent=4).encode('utf-8'))
-    self.wfile.write('\n'.encode('utf-8'))
-    return
-    
-  def do_GET(self):
-    """Handles GET requests."""
+class ModelID(BaseModel):
+    model: str
 
-    if self.path not in self.get_dict:
-      self.send_response(400)
-      self.end_headers()
-      self.wfile.write(json.dumps(self.invalid_res).encode('utf-8'))
-      self.wfile.write('\n'.encode('utf-8'))
-      return
+class SaxCell(BaseModel):
+    sax_cell: str
 
-    if self.path == '/':
-      default_res = {'message': 'HTTP Server for SAX Client'}
-      self.success_res(default_res)
-      return
+app = FastAPI()
 
-    content_length = int(self.headers['content-length'])
-    data = self.rfile.read(content_length).decode('utf-8')
-    params = json.loads(data)
+executor = ThreadPoolExecutor(max_workers=1000)
 
-    if self.path == '/listcell':
-      """List details about a published model."""
+@app.get("/")
+def root():
+    response = {"message": "HTTP Server for SAX Client"}
+    response = Response(
+        content=json.dumps(response, indent=4), 
+        media_type="application/json"
+        )
+    return response
 
-      if len(params) != 1:
-        self.error_res("Provide model for list cell")
-        return
-      
-      try:
-        model = params['model']
-        details = sax.ListDetail(model)
-        details_res = {
-            'model': model,
+@app.get("/listcell")
+def listcell(request: ModelID, status_code=200):
+    try:
+        details = sax.ListDetail(request.model)
+        response = {
+            'model': request.model,
             'model_path': details.model,
             'checkpoint': details.ckpt,
             'max_replicas': details.max_replicas,
             'active_replicas': details.active_replicas,
         }
-        self.success_res(details_res)
-
-      except Exception as e:
-        self.error_res(e)
-
-  def do_POST(self):
-    """Handles POST requests."""
-
-    if self.path not in self.post_dict:
-      self.send_response(400)
-      self.end_headers()
-      self.wfile.write(json.dumps(self.invalid_res).encode('utf-8'))
-      self.wfile.write('\n'.encode('utf-8'))
-      return
-
-    content_length = int(self.headers['content-length'])
-    data = self.rfile.read(content_length).decode('utf-8')
-    params = json.loads(data)
-
-    if self.path == '/publish':
-      """Publishes a model."""
-
-      if len(params) != 4:
-        self.error_res("Provide model, model path, checkpoint, and replica number for publish")
+        response = Response(
+            content=json.dumps(response, indent=4), 
+            media_type="application/json"
+            )
+        return response
+    except Exception as e:
+        logging.exception("Exception in model listcell")
+        raise HTTPException(status_code=500, detail=str(e))
         return
-      
-      try:
-        model = params['model']
-        path = params['model_path']
-        ckpt = params['checkpoint']
-        replicas = int(params['replicas'])
-        sax.Publish(model, path, ckpt, replicas)
-        publish_res = {
+
+@app.get("/listall")
+def listall(request: SaxCell,status_code=200):
+    try:
+        response = sax.ListAll(request.sax_cell)
+        response = Response(
+            content=json.dumps(response, indent=4), 
+            media_type="application/json"
+            )
+        return response
+    except Exception as e:
+        logging.exception("Exception in model listall")
+        raise HTTPException(status_code=500, detail=str(e))
+        return
+
+@app.post("/publish")
+def publish(request: Model, status_code=200):
+    try:
+        model = request.model
+        model_path = request.model_path
+        ckpt = request.checkpoint
+        replicas = request.replicas
+
+        sax.Publish(model, model_path, ckpt, replicas)
+        response = {
             'model': model,
-            'path': path,
+            'model_path': model_path,
             'checkpoint': ckpt,
             'replicas': replicas,
         }
-        self.success_res(publish_res)
-
-      except Exception as e:
-        self.error_res(e)
-
-    if self.path == '/unpublish':
-      """Unpublishes a model."""
-
-      if len(params) != 1:
-        self.error_res("Provide model for unpublish")
+        response = Response(
+            content=json.dumps(response, indent=4), 
+            media_type="application/json"
+            )
+        return response
+    except Exception as e:
+        logging.exception("Exception in model publish")
+        raise HTTPException(status_code=500, detail=str(e))
         return
-      
-      try:
-        model = params['model']
-        sax.Unpublish(model)
-        unpublish_res = {
-            'model': model,
+
+@app.post("/unpublish")
+def unpublish(request: ModelID, status_code=200):
+    try:
+        sax.Unpublish(request.model)
+        response = {
+            'model': request.model,
         }
-        self.success_res(unpublish_res)
-
-      except Exception as e:
-        self.error_res(e)
-
-    if self.path == '/generate':
-      """Generates a text input using a published language model."""
-
-      if len(params) != 2:
-        self.error_res("Provide model and query for generate")
+        response = Response(
+            content=json.dumps(response, indent=4), 
+            media_type="application/json"
+            )
+        return response
+    except Exception as e:
+        logging.exception("Exception in model unpublish")
+        raise HTTPException(status_code=500, detail=str(e))
         return
-      
-      try:
-        model = params['model']
-        query = params['query']
+
+@app.post("/generate")
+async def lm_generate(request: Generate, status_code=200):
+    try:
+        model = request.model
+        query = request.query
         sax.ListDetail(model)
         model_open = sax.Model(model)
         lm = model_open.LM()
-        res = lm.Generate(query)
-        generate_res = {
-            'generate_response': res,
-        }
-        self.success_res(generate_res)
 
-      except Exception as e:
-        self.error_res(e)
-  
-  def do_PUT(self):
-    """Handles PUT requests."""
+        options = None
+        if request.extra_inputs:
+            options = sax.ModelOptions()
+            input_vars = dict(request.extra_inputs)
+            for key, value in input_vars.items():
+                options.SetExtraInput(key, value)
 
-    if self.path not in self.put_dict:
-      self.send_response(400)
-      self.end_headers()
-      self.wfile.write(json.dumps(self.invalid_res).encode('utf-8'))
-      self.wfile.write('\n'.encode('utf-8'))
-      return
-
-    content_length = int(self.headers['content-length'])
-    data = self.rfile.read(content_length).decode('utf-8')
-    params = json.loads(data)
-
-    if self.path == '/update':
-      """Updates a model."""
-
-      if len(params) != 4:
-        self.error_res("Provide model, model path, checkpoint, and replica number for update")
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            executor, generate_prompt, lm, query, options
+        )
+        response = Response(
+            content=json.dumps(response, indent=4), 
+            media_type="application/json"
+            )
+        return response
+    except Exception as e:
+        logging.exception("Exception in lm generate")
+        raise HTTPException(status_code=500, detail=str(e))
         return
-      
-      try:
-        model = params['model']
-        path = params['model_path']
-        ckpt = params['checkpoint']
-        replicas = int(params['replicas'])
-        sax.Update(model, path, ckpt, replicas)
-        update_res = {
+
+def generate_prompt(lm: sax.LanguageModel, query: str, options: sax.ModelOptions):
+    response = lm.Generate(query, options)
+    return response
+
+@app.put("/update")
+def update(request: Model, status_code=200):
+    try:
+        model = request.model
+        model_path = request.model_path
+        ckpt = request.checkpoint
+        replicas = request.replicas
+        sax.Update(model, model_path, ckpt, replicas)
+        response = {
             'model': model,
-            'path': path,
+            'model_path': model_path,
             'checkpoint': ckpt,
             'replicas': replicas,
         }
-        self.success_res(update_res)
+        response = Response(
+            content=json.dumps(response, indent=4), 
+            media_type="application/json"
+            )
+        return response
 
-      except Exception as e:
-        self.error_res(e)
-
-s = http.server.HTTPServer(('0.0.0.0', 8888), Server)
-s.serve_forever()
+    except Exception as e:
+        logging.exception("Exception in model update")
+        raise HTTPException(status_code=500, detail=str(e))
+        return
