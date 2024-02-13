@@ -55,4 +55,4 @@ WORKDIR /saxml/saxml/httpserver
 
 EXPOSE 8888
 
-CMD ["python3.10", "http_server.py"]
+CMD ["uvicorn", "http_server:app", "--host=0.0.0.0", "--port=8888"]

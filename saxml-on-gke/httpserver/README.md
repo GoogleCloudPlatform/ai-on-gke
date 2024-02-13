@@ -72,6 +72,26 @@ You will see the output below:
 }
 ```
 
+### List all models in a Sax Cell
+
+```
+$ curl --request GET \
+-s \
+localhost:8888/listall \
+--data '
+{
+    "sax_cell": "/sax/test"
+}
+'
+```
+You will see the output below: 
+
+```
+[
+    "/sax/test/lm2b"
+]
+```
+
 ### List a Sax Cell
 
 ```
@@ -114,6 +134,21 @@ localhost:8888/generate \
 ```
 
 The result should be printed in the terminal
+
+You can also add the following extra decode parameters:
+
+```
+{
+  "model": "/sax/test/lm2b",
+  "query": "Q: Who is Harry Potter's mom? A: ",
+  "extra_inputs": {
+    "temperature": 0.9,
+    "per_example_max_decode_steps": 128,
+    "per_example_top_k": 1,
+    "per_example_top_p": 1.0
+  }
+}
+```
 
 ### Unpublish a model
 
