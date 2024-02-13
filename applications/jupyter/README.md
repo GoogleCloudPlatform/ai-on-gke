@@ -124,11 +124,13 @@ Continue to Step 3 of [below](#if-auth-is-enabled).
 
 ## Persistent Storage
 
-Currently there are 2 choices for storage:
+Currently there are 3 choices for storage:
 
 1. Default Jupyterhub Storage - `pd.csi.storage.gke.io` with reclaim policy `Delete`
 
 2. GCSFuse - `gcsfuse.csi.storage.gke.io` uses GCS Buckets and require users to pre-create buckets with name format `gcsfuse-{username}`
+
+3. Filestore - `filestore.csi.storage.gke.io` uses uses CSI Dynamic provisioning to provision Filestore based k8s volumes. Uses `Retain` reclaim policy
 
 For more information about Persistent storage and the available options, visit [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/storage.md)
 
