@@ -140,7 +140,7 @@ You can also add the following extra decode parameters:
 ```
 {
   "model": "/sax/test/lm2b",
-  "query": "Q: Who is Harry Potter's mom? A: "
+  "query": "Q: Who is Harry Potter's mom? A: ",
   "extra_inputs": {
 		"temperature": 0.9,
 		"per_example_max_decode_steps": 128,
