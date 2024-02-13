@@ -1,6 +1,3 @@
 google-api-python-client
 numpy
 pip
-fastapi
-uvicorn
-pydantic
