@@ -47,23 +47,24 @@ const (
 
 // Request contains the required input for the disk image generation.
 type Request struct {
-	ImageName       string
-	ImageFamilyName string
-	ProjectName     string
-	JobName         string
-	Zone            string
-	GCSPath         string
-	MachineType     string
-	DiskType        string
-	DiskSizeGB      int64
-	GCPOAuth        string
-	Network         string
-	Subnet          string
-	ContainerImages []string
-	Timeout         time.Duration
-	ImagePullAuth   ImagePullAuthMechanism
-	ImageLabels     []string
-	ServiceAccount  string
+	ImageName             string
+	ImageFamilyName       string
+	ProjectName           string
+	JobName               string
+	Zone                  string
+	GCSPath               string
+	MachineType           string
+	DiskType              string
+	DiskSizeGB            int64
+	GCPOAuth              string
+	Network               string
+	Subnet                string
+	ContainerImages       []string
+	Timeout               time.Duration
+	ImagePullAuth         ImagePullAuthMechanism
+	ImageLabels           []string
+	ServiceAccount        string
+	StoreSnapshotCheckSum bool
 }
 
 func generateStartupScript(req Request) (*os.File, error) {
@@ -80,7 +81,7 @@ func generateStartupScript(req Request) (*os.File, error) {
 		return nil, fmt.Errorf("unable to create the concrete startup file suceesfully, err: %v", err)
 	}
 	images := strings.Join(req.ContainerImages, " ")
-	flags := fmt.Sprintf("\n\nunpack %s %s", req.ImagePullAuth, images)
+	flags := fmt.Sprintf("\n\nunpack %t %s %s", req.StoreSnapshotCheckSum, req.ImagePullAuth, images)
 	if _, err = concreteStartupScript.Write([]byte(flags)); err != nil {
 		return nil, fmt.Errorf("umable to create concrete startup script: %v", err)
 	}
