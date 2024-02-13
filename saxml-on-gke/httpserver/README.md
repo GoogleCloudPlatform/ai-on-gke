@@ -142,11 +142,11 @@ You can also add the following extra decode parameters:
   "model": "/sax/test/lm2b",
   "query": "Q: Who is Harry Potter's mom? A: ",
   "extra_inputs": {
-		"temperature": 0.9,
-		"per_example_max_decode_steps": 128,
-      		"per_example_top_k": 1,
-      		"per_example_top_p": 1.0
-	}
+    "temperature": 0.9,
+    "per_example_max_decode_steps": 128,
+    "per_example_top_k": 1,
+    "per_example_top_p": 1.0
+  }
 }
 ```
 
