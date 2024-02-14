@@ -1,1 +1,3 @@
+fastapi
 protobuf
+uvicorn

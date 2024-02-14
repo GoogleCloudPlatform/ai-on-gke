@@ -44,7 +44,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=/venv/lib/saxml-client/saxml/client/python
 ENV PYTHONUNBUFFERED=1
 
-COPY requirements-build.txt /venv/requirements.txt
+COPY requirements.txt /venv/requirements.txt
 RUN python -m venv /venv && \
 pip install --no-cache-dir -r /venv/requirements.txt
 
