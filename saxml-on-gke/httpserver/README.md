@@ -182,10 +182,10 @@ JSON object of the following format:
 - `model` is the name of the model to query.
 - `query` is the prompt to send to the model.
 - `extra_inputs` is an optional object that overrides the default decoding configuration of the model.
-  - `temperature`: is the decoding temperature.
-  - `per_example_max_decode_steps`: Is the maximum decoding steps for each request. Needs to be smaller than maximum value of max_decode_steps configured for the published model.
-  - `per_example_top_k`: is the topK used for decoding.
-  - `per_example_top_p`: is the topP used for decoding.
+  - `temperature`: is a floating point number for the decoding temperature.
+  - `per_example_max_decode_steps`: is an integer for the maximum decoding steps for each request. Needs to be smaller than maximum value of max_decode_steps configured for the published model.
+  - `per_example_top_k`: is an integer for the topK used for decoding.
+  - `per_example_top_p`: is a floating point number for the topP used for decoding.
 
 #### generate Response
 
@@ -204,7 +204,7 @@ JSON object with the following format:
 `[[<String>, <Number>]]` is an array of arrays
 
 - `<String>` is the response from the model.
-- `<Number>` is the score of the response.
+- `<Number>` is a floating point number for the score of the response.
 
 ### listall
 
@@ -269,8 +269,8 @@ JSON object with the following format:
 - `model` is the name of the model.
 - `model_path` is the path of the model in the Saxml model registry.
 - `checkpoint` is the location of the model checkpoint.
-- `max_replicas` is the maximum number of replicas the model be deployed on.
-- `active_replicas` is the number of replicas the model is currently deployed on.
+- `max_replicas` is an integer for the maximum number of replicas the model be deployed on.
+- `active_replicas` is an integer for the number of replicas the model is currently deployed on.
 
 ### publish
 
@@ -292,7 +292,7 @@ JSON object of the following format:
 - `model` is the name of the model.
 - `model_path` is the path of the model in the Saxml model registry.
 - `checkpoint` is the location of the model checkpoint.
-- `replicas` is the number of replicas of the model to deploy.
+- `replicas` is an integer for the number of replicas of the model to deploy.
 
 #### publish Response
 
@@ -354,7 +354,7 @@ JSON object of the following format:
 - `model` is the name of the model.
 - `model_path` is the path of the model in the Saxml model registry.
 - `checkpoint` is the location of the model checkpoint.
-- `replicas` is the <Number> of replicas of the model to deploy.
+- `replicas` is an integer for the number of replicas of the model to deploy.
 
 #### update Response
 
@@ -372,4 +372,4 @@ JSON object with the following format:
 - `model` is the name of the model.
 - `model_path` is the path of the model in the Saxml model registry.
 - `checkpoint` is the location of the model checkpoint.
-- `replicas` is the number of replicas of the model to deploy.
+- `replicas` is an integer for the number of replicas of the model to deploy.
