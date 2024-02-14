@@ -61,6 +61,7 @@ func main() {
 	network := flag.String("network", "default", "VPC network to be used by GCE resources used for disk image creation.")
 	subnet := flag.String("subnet", "default", "subnet to be used by GCE resources used for disk image creation.")
 	storeSnapshotCheckSum := flag.Bool("store-snapshot-checksum", true, "calculate and store checksums of every snapshot directory.")
+	verifyOnly := flag.Bool("verify-only", false, "Only verifies the disk image provided in image-name, and does not generate any image.")
 	flag.Var(&imageLabels, "image-labels", "labels tagged to the disk image. This flag can be specified multiple times. The accepted format is `--image-labels=key=val`.")
 	flag.Var(&containerImages, "container-image", "container image to include in the disk image. This flag can be specified multiple times")
 
@@ -117,6 +118,14 @@ func main() {
 		ImagePullAuth:         auth,
 		ImageLabels:           imageLabels,
 		StoreSnapshotCheckSum: *storeSnapshotCheckSum,
+	}
+
+	if *verifyOnly {
+		if err = builder.VerifyDiskImage(ctx, req); err != nil {
+			log.Panicf("Image verification fails. The images/snapshots preloaded might be broken: %v", err)
+		}
+		fmt.Printf("Image at projects/%s/global/images/%s\n has been verified and all container images and snapshots are valid.", req.ProjectName, req.ImageName)
+		return
 	}
 
 	if err = builder.GenerateDiskImage(ctx, req); err != nil {
