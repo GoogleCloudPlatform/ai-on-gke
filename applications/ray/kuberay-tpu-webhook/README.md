@@ -40,12 +40,6 @@ variable "enable_tpu" {
 
 2. If deploying webhook across multiple namespaces: `make install-reflector`
 
-3. `make all`
-
-4. `make docker-build`
-
-5. `make docker-push`
-
 6. `make deploy`
 
 7. `make deploy-cert`
