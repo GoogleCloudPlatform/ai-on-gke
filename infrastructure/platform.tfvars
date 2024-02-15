@@ -19,7 +19,7 @@ project_id = "ai-on-gke-jss-sandbox"
 ####    PLATFORM
 #######################################################
 ## network values
-create_network  = false
+create_network  = true
 network_name    = "ml-network"
 subnetwork_name = "ml-subnet"
 
@@ -56,7 +56,7 @@ monitoring_enable_managed_prometheus = true
 gcs_fuse_csi_driver                  = true ## enabled default for autopilot
 deletion_protection                  = false
 master_authorized_networks = [{
-  cidr_block   = "10.100.0.0/16"
+  cidr_block   = "0.0.0.0/0"
   display_name = "VPC"
 }]
 
@@ -87,7 +87,7 @@ cpu_pools = [{
 enable_gpu = true
 gpu_pools = [{
   name                   = "gpu-pool"
-  machine_type           = "n1-standard-8"
+  machine_type           = "n1-standard-16"
   node_locations         = "us-central1-b,us-central1-c"
   autoscaling            = true
   min_count              = 1

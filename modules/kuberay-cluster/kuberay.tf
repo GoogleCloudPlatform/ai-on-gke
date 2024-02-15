@@ -46,12 +46,3 @@ resource "kubernetes_service" "tpu-worker-svc" {
     cluster_ip = "None"
   }
 }
-
-data "kubernetes_service" "example" {
-  count = var.enable_autopilot ? 1 : 0
-  metadata {
-    name      = "${helm_release.ray-cluster.name}-kuberay-head-svc"
-    namespace = var.namespace
-  }
-  depends_on = [helm_release.ray-cluster]
-}

@@ -531,4 +531,4 @@ additionalWorkerGroups:
           name: fluentbit-config
           
 service:
-  type: LoadBalancer 
+  type: ClusterIP 
