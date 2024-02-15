@@ -12,37 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+variable "project_id" {
+  type        = string
+  description = "GCP project id"
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "ray-system"
 }
 
-variable "create_namespace" {
-  type        = bool
+variable "gcp_service_account" {
+  type        = string
+  description = "Google Cloud IAM service account for authenticating with GCP services"
 }
 
-variable "enable_tpu" {
-  type        = bool
-  description = "Set to true to create TPU node pool"
-  default     = false
+variable "gcp_sa_iam_roles" {
+  type        = list(string)
+  description = "Service Account Project IAM binding roles"
 }
 
-variable "enable_autopilot" {
+variable "create_k8s_service_account" {
   type        = bool
-  description = "Set to true to enable GKE Autopilot clusters"
+  description = "Create k8s service account"
 }
 
 variable "k8s_service_account" {
   type        = string
-  description = "Kubernetes Service Account name"
-}
-
-variable "gcs_bucket" {
-  type        = string
-  description = "GCS Bucket name"
-}
-
-variable "grafana_host" {
-  type        = string
+  description = "K8S service account name"
 }

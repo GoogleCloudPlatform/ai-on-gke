@@ -79,7 +79,7 @@ variable "cluster_name" {
 }
 
 variable "cluster_labels" {
-  type        = map
+  type        = map(any)
   description = "GKE cluster labels"
 }
 
@@ -105,7 +105,14 @@ variable "monitoring_enable_managed_prometheus" {
   type    = bool
   default = false
 }
-
+variable "gcs_fuse_csi_driver" {
+  type    = bool
+  default = false
+}
+variable "deletion_protection" {
+  type    = bool
+  default = false
+}
 variable "master_authorized_networks" {
   type = list(object({
     cidr_block   = string

@@ -20,14 +20,6 @@ terraform {
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "2.18.1"
     }
-    # kubectl = {
-    #   source  = "alekc/kubectl"
-    #   version = "2.0.3"
-    # }
-  }
-  provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-kubernetes-engine:kuberay/v0.1.0"
   }
 }

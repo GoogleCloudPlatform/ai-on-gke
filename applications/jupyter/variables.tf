@@ -21,9 +21,9 @@ variable "cluster_location" {
 }
 
 variable "cluster_membership_id" {
-  type = string
+  type        = string
   description = "require to use connectgateway for private clusters, default: cluster_name"
-  default = ""
+  default     = ""
 }
 
 variable "namespace" {
@@ -31,44 +31,50 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
-variable "default_backend_service" {
-  type        = string
-  default     = "proxy-public"
-}
-
-variable "members_allowlist" {
-  type        = string
-  default     = ""
-}
-variable "add_auth" {
-  type        = bool
-  description = "Enable iap authentication on jupyterhub"
-  default     = true
-}
-
 variable "gcs_bucket" {
-  type = string
+  type        = string
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
+variable "create_k8s_service_account" {
+  type        = bool
+  description = "Create k8s service account"
+  default     = false
+}
+
 variable "k8s_service_account" {
-  type = string
+  type        = string
   description = "k8s service account"
 }
 
 variable "gcp_service_account" {
-  type = string
+  type        = string
   description = "gcp service account"
 }
 
 variable "gcp_service_account_iam_roles" {
-  type = string
+  type        = string
   description = "Service Account Project IAM binding roles"
 }
 
 variable "project_id" {
   type        = string
   description = "GCP project id"
+}
+
+variable "default_backend_service" {
+  type    = string
+  default = "proxy-public"
+}
+
+variable "members_allowlist" {
+  type    = string
+  default = ""
+}
+variable "add_auth" {
+  type        = bool
+  description = "Enable iap authentication on jupyterhub"
+  default     = true
 }
 
 variable "service_name" {
@@ -103,12 +109,12 @@ variable "support_email" {
 variable "client_id" {
   type        = string
   description = "Client ID used for enabling IAP"
-  default     = "" 
+  default     = ""
 }
 
 variable "client_secret" {
   type        = string
   description = "Client secret used for enabling IAP"
-  default     =  "" 
+  default     = ""
   sensitive   = false
 }

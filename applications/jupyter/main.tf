@@ -66,26 +66,27 @@ provider "helm" {
 
 # Creates jupyterhub
 module "jupyterhub" {
- 
- source = "../../modules/jupyter"
- project_id = var.project_id
 
- namespace = var.namespace
- gcp_service_account = var.gcp_service_account
- gcp_service_account_iam_roles = var.gcp_service_account_iam_roles
- k8s_service_account = var.k8s_service_account
- gcs_bucket = var.gcs_bucket
+  source     = "../../modules/jupyter"
+  project_id = var.project_id
 
- # IAP Auth parameters
- add_auth = var.add_auth
- brand = var.brand
- support_email = var.support_email
- client_id = var.client_id
- client_secret = var.client_secret
- default_backend_service = var.default_backend_service
- service_name = var.service_name
- url_domain_addr = var.url_domain_addr
- url_domain_name = var.url_domain_name
- members_allowlist = var.members_allowlist
+  namespace                     = var.namespace
+  gcp_service_account           = var.gcp_service_account
+  gcp_service_account_iam_roles = var.gcp_service_account_iam_roles
+  create_k8s_service_account    = var.create_k8s_service_account
+  k8s_service_account           = var.k8s_service_account
+  gcs_bucket                    = var.gcs_bucket
+
+  # IAP Auth parameters
+  add_auth                = var.add_auth
+  brand                   = var.brand
+  support_email           = var.support_email
+  client_id               = var.client_id
+  client_secret           = var.client_secret
+  default_backend_service = var.default_backend_service
+  service_name            = var.service_name
+  url_domain_addr         = var.url_domain_addr
+  url_domain_name         = var.url_domain_name
+  members_allowlist       = var.members_allowlist
 
 }

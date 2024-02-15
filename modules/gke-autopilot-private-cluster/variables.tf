@@ -38,7 +38,7 @@ variable "cluster_name" {
 }
 
 variable "cluster_labels" {
-  type        = map
+  type        = map(any)
   description = "GKE cluster labels"
 }
 
@@ -70,4 +70,8 @@ variable "master_authorized_networks" {
     display_name = string
   }))
   default = []
+}
+variable "deletion_protection" {
+  type    = bool
+  default = false
 }

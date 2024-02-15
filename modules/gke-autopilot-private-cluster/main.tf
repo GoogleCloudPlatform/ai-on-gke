@@ -14,7 +14,7 @@
 
 module "gke" {
   source                  = "terraform-google-modules/kubernetes-engine/google//modules/beta-autopilot-private-cluster"
-  version                 = "28.0.0"
+  version                 = "29.0.0"
   project_id              = var.project_id
   regional                = var.cluster_regional
   name                    = var.cluster_name
@@ -32,12 +32,15 @@ module "gke" {
   enable_private_endpoint    = true
   enable_private_nodes       = true
   master_authorized_networks = var.master_authorized_networks
+  deletion_protection        = var.deletion_protection
+
 }
 
 # GKE cluster fleet registration
 resource "google_gke_hub_membership" "gke-fleet" {
   project       = var.project_id
-  membership_id = "${var.cluster_name}-${var.cluster_region}"
+  membership_id = var.cluster_name
+  location      = var.cluster_region
 
   endpoint {
     gke_cluster {
