@@ -30,7 +30,7 @@ namespace                     = "ml"
 gcs_bucket                    = "gcs-bucket"
 create_k8s_service_account    = false
 k8s_service_account           = "default"
-gcp_service_account           = "jupyter-service-account1"
+gcp_service_account           = "jupyter-service-account"
 gcp_service_account_iam_roles = "roles/storage.admin,roles/artifactregistry.reader"
 
 # Jupyterhub with IAP

@@ -25,7 +25,7 @@ subnetwork_name = "ml-subnet"
 
 ## required only in case new network provisioning
 subnetwork_cidr           = "10.100.0.0/16"
-subnetwork_region         = "us-central"
+subnetwork_region         = "us-central1"
 subnetwork_private_access = "true"
 subnetwork_description    = "GKE subnet"
 network_secondary_ranges = {
