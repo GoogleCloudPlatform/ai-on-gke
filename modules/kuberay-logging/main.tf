@@ -12,11 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "domain" {
-  value = var.add_auth ? module.iap_auth[0].domain : var.url_domain_addr
+resource "kubernetes_manifest" "manifests" {
+  for_each = fileset("${path.module}/config/", "*.yaml")
+  manifest = yamldecode(templatefile("${path.module}/config/${each.value}", { namespace: var.namespace}))
 }
 
-output "password" {
-  value     = var.add_auth ? "" : random_password.generated_password[0].result
-  sensitive = true
-}

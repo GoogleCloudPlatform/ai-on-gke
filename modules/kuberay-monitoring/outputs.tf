@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "domain" {
-  value = var.add_auth ? module.iap_auth[0].domain : var.url_domain_addr
+output "grafana_uri" {
+  value = data.kubernetes_service.example.status != null ? ( data.kubernetes_service.example.status[0].load_balancer != null ? "${data.kubernetes_service.example.status[0].load_balancer[0].ingress[0].ip}" : "") : ""
 }
 
-output "password" {
-  value     = var.add_auth ? "" : random_password.generated_password[0].result
-  sensitive = true
-}

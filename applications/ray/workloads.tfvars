@@ -26,8 +26,15 @@ cluster_location = "us-central1"
 #######################################################
 
 ## GKE environment variables
-ray_namespace      = "ml"
-service_account    = "myray-system-account"
-service_account_iam_roles = [ "roles/monitoring.viewer" ]
-support_tpu        = false
-create_ray_cluster = true
+
+## GKE environment variables
+ray_namespace                  = "ml"
+create_k8s_service_account_gcs = true
+k8s_service_account_gcs        = "gcs-sa"
+gcp_service_account_gcs        = "ray-gcs-sa"
+
+create_k8s_service_account_prom = true
+k8s_service_account_prom        = "prom-sa"
+gcp_service_account_prom        = "ray-gcs-prom"
+gcs_bucket                      = "ml-bucket"
+create_ray_cluster              = true
