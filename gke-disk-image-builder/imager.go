@@ -63,6 +63,7 @@ type Request struct {
 	Timeout         time.Duration
 	ImagePullAuth   ImagePullAuthMechanism
 	ImageLabels     []string
+	ServiceAccount  string
 }
 
 func generateStartupScript(req Request) (*os.File, error) {
@@ -149,6 +150,20 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 						Instance: compute.Instance{
 							Name:        fmt.Sprintf("%s-instance", req.JobName),
 							MachineType: fmt.Sprintf("zones/%s/machineTypes/%s", req.Zone, req.MachineType),
+							ServiceAccounts: []*compute.ServiceAccount{
+								&compute.ServiceAccount{
+									Email: req.ServiceAccount,
+									Scopes: []string{
+										"https://www.googleapis.com/auth/devstorage.read_only",
+										"https://www.googleapis.com/auth/logging.write",
+										"https://www.googleapis.com/auth/monitoring.write",
+										"https://www.googleapis.com/auth/pubsub",
+										"https://www.googleapis.com/auth/service.management.readonly",
+										"https://www.googleapis.com/auth/servicecontrol",
+										"https://www.googleapis.com/auth/trace.append",
+									},
+								},
+							},
 							NetworkInterfaces: []*compute.NetworkInterface{
 								{
 									Network:    req.Network,
