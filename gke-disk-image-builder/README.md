@@ -55,7 +55,7 @@ Flag                | Required | Default | Description
 *--timeout*         | No       | '20m'   | Default timeout for each step. Must be set to a proper value if the image is large to account for the pull and image creation time step.
 *--network*         | No       | 'default'   | VPC network used by the GCE resources used for creating the disk image.
 *--subnet*          | No       | 'default'   | Subnet used by the GCE resources used for creating the disk image.
-*--service-account* | No       | 'default'   | Service Account assigned to the GCE instance used for creating the disk image.
+*--service-account* | No       | 'default'   | Service Account email assigned to the GCE instance used for creating the disk image.
 
 ### Go
 
