@@ -52,7 +52,7 @@ func main() {
 	zone := flag.String("zone", "", "zone where the resources will be used to create the image creator resources")
 	gcsPath := flag.String("gcs-path", "", "gcs location to dump the logs")
 	machineType := flag.String("machine-type", "n2-standard-16", "GCE instance machine type to generate the disk image")
-	serviceAccount := flag.String("service-account", "default", "service account to run the image creator")
+	serviceAccount := flag.String("service-account", "default", "Service Account email assigned to the GCE instance used for creating the disk image.")
 	diskType := flag.String("disk-type", "pd-ssd", "disk type to generate the disk image")
 	diskSizeGb := flag.Int64("disk-size-gb", 60, "disk size to unpack container images")
 	gcpOAuth := flag.String("gcp-oauth", "", "path to GCP service account credential file")
