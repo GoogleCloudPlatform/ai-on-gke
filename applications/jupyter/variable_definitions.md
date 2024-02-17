@@ -20,9 +20,9 @@ This README contains all the variables used by Terraform for installing Juypterh
 
 The namespace that Jupyterhub and rest of the other resources will be installed/allocated in. If using Jupyterhub with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommanded to have this namespace the same as the one with Ray.
 
-### create_namespace
+### create_service_account
 
-Flag that if enabled, will create a namespace for the user using the [namespace](#namespace) field.
+Create k8s and GCP service accounts for Jupyterhub workloads & configures workload identity.
 
 ### add_auth
 

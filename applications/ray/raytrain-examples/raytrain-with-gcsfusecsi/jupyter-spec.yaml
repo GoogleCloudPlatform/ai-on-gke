@@ -35,24 +35,23 @@ spec:
         pod: tensorflow-pod
     spec:
       serviceAccountName: my-ksa
-      # nodeSelector:
-        #cloud.google.com/gke-accelerator: nvidia-tesla-t4
       terminationGracePeriodSeconds: 30
       containers:
       - name: tensorflow-container
         securityContext:
           privileged: true
-        #image: tensorflow/tensorflow:2.13.0-gpu-jupyter
-        image: jupyter/tensorflow-notebook:python-3.9
+        image: jupyter/tensorflow-notebook:python-3.10
         volumeMounts:
         - name: test-vol
           mountPath: /persist-data
         resources:
             limits:
-              ephemeral-storage: 5Gi
-              memory: 10Gi
+              cpu: "10"
+              ephemeral-storage: 50Gi
+              memory: 50Gi
             requests:
-              ephemeral-storage: 5Gi
+              cpu: "2"
+              ephemeral-storage: 10Gi
               memory: 10Gi
       volumes:
       - name: test-vol
