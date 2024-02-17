@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+variable "project_id" {
+  type        = string
+  description = "GCP project id"
+}
+
 variable "name" {
   type    = string
   default = "kuberay-operator"
@@ -28,4 +33,16 @@ variable "create_namespace" {
 
 variable "enable_autopilot" {
   type = bool
+}
+
+variable "google_service_account" {
+  type        = string
+  description = "Google service account name"
+  default     = "kuberay-gcp-sa"
+}
+
+variable "create_service_account" {
+  type        = bool
+  description = "Creates a google service account & k8s service account & configures workload identity"
+  default     = true
 }

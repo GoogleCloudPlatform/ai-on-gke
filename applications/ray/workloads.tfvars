@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
-##common variables  
+##common variables
 ## Need to pull this variables from tf output from previous platform stage
-project_id = "ai-on-gke-jss-sandbox"
+project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
 cluster_name     = "ml-cluster"
@@ -28,13 +28,14 @@ cluster_location = "us-central1"
 ## GKE environment variables
 
 ## GKE environment variables
-ray_namespace                  = "ml"
-create_k8s_service_account_gcs = true
-k8s_service_account_gcs        = "gcs-sa"
-gcp_service_account_gcs        = "ray-gcs-sa"
+ray_namespace                   = "ml"
 
-create_k8s_service_account_prom = true
-k8s_service_account_prom        = "prom-sa"
-gcp_service_account_prom        = "ray-gcs-prom"
-gcs_bucket                      = "ml-bucket"
+# Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
+# Set to false & update the variable `gcp_service_account` to use an existing IAM service account.
+create_service_account          = true
+gcp_service_account             = "ray-service-account"
+
+# Bucket name should be globally unique.
+gcs_bucket                      = "ray-bucket-zydg"
+
 create_ray_cluster              = true
