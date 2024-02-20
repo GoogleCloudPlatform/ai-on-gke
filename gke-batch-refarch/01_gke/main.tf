@@ -163,7 +163,14 @@ resource "google_container_node_pool" "reserved_np" {
   location       = resource.google_container_cluster.gke_batch.location
   node_config {
     machine_type = var.machine_type
-    taint        = var.reserved_taints
+    dynamic "taint" {
+      for_each = var.reserved_taints
+      content {
+        key = taint.value.key
+        value = taint.value.taint_value
+        effect = taint.value.effect
+      }
+    }
     labels = {
       "resource-type" : "reservation"
     }
@@ -206,7 +213,14 @@ resource "google_container_node_pool" "ondemand_np" {
   location   = var.region
   node_config {
     machine_type = var.machine_type
-    taint        = var.ondemand_taints
+    dynamic "taint" {
+      for_each = var.ondemand_taints
+      content {
+        key = taint.value.key
+        value = taint.value.taint_value
+        effect = taint.value.effect
+      }
+    }
     labels = {
       "resource-type" : "ondemand"
     }
@@ -250,7 +264,14 @@ resource "google_container_node_pool" "spot_np" {
   node_config {
     machine_type = var.machine_type
     spot         = true
-    taint        = var.spot_taints
+    dynamic "taint" {
+      for_each = var.spot_taints
+      content {
+        key = taint.value.key
+        value = taint.value.taint_value
+        effect = taint.value.effect
+      }
+    }
     labels = {
       "resource-type" : "spot"
     }

@@ -53,42 +53,42 @@ variable "accelerator_count" {
 variable "reserved_taints" {
   description = "Taints to be applied to the on-demand node pool."
   type = list(object({
-    key    = string
-    value  = any
-    effect = string
+    key         = string
+    taint_value = any
+    effect      = string
   }))
   default = [{
-    key    = "reserved"
-    value  = true
-    effect = "NO_SCHEDULE"
+    key         = "reserved"
+    taint_value = true
+    effect      = "NO_SCHEDULE"
   }]
 }
 
 variable "ondemand_taints" {
   description = "Taints to be applied to the on-demand node pool."
   type = list(object({
-    key    = string
-    value  = any
-    effect = string
+    key         = string
+    taint_value = any
+    effect      = string
   }))
   default = [{
-    key    = "ondemand"
-    value  = true
-    effect = "NO_SCHEDULE"
+    key         = "ondemand"
+    taint_value = true
+    effect      = "NO_SCHEDULE"
   }]
 }
 
 variable "spot_taints" {
   description = "Taints to be applied to the spot node pool."
   type = list(object({
-    key    = string
-    value  = any
-    effect = string
+    key         = string
+    taint_value = any
+    effect      = string
   }))
   default = [{
-    key    = "spot"
-    value  = true
-    effect = "NO_SCHEDULE"
+    key         = "spot"
+    taint_value = true
+    effect      = "NO_SCHEDULE"
   }]
 }
 
