@@ -4,7 +4,7 @@
 FROM python:3.10 as builder
 
 ENV BAZEL_VERSION=5.4.0
-ENV SAXML_VERSION=1.1.0
+ENV SAXML_VERSION=1.2.0
 
 RUN curl https://bazel.build/bazel-release.pub.gpg | apt-key --keyring /usr/share/keyrings/bazel-archive-keyring.gpg add - && \
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
