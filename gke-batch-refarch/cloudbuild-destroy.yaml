@@ -14,7 +14,7 @@
 
 timeout: 3600s
 steps:
-  - name: "gcr.io/kaniko-project/executor:v1.6.0"
+  - name: "gcr.io/kaniko-project/executor:v1.20.1-slim"
     id: "Build Installer Image"
     args:
       - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer
