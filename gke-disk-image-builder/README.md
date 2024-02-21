@@ -54,7 +54,8 @@ Flag                | Required | Default | Description
 *--image-pull-auth* | No       | 'None'  | Auth mechanism to pull the container image, valid values: [None, ServiceAccountToken]. None means that the images are publically available and no authentication is required to pull them. ServiceAccountToken means the service account oauth token will be used to pull the images. For more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications
 *--timeout*         | No       | '20m'   | Default timeout for each step. Must be set to a proper value if the image is large to account for the pull and image creation time step.
 *--network*         | No       | 'default'   | VPC network used by the GCE resources used for creating the disk image.
-*--subnet*         | No       | 'default'   | Subnet used by the GCE resources used for creating the disk image.
+*--subnet*          | No       | 'default'   | Subnet used by the GCE resources used for creating the disk image.
+*--service-account* | No       | 'default'   | Service Account email assigned to the GCE instance used for creating the disk image.
 
 ### Go
 
