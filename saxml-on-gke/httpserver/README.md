@@ -15,7 +15,7 @@ This tutorial uses an HTTP Server to handle HTTP requests to Sax, supporting fea
 Build the HTTP Server image:
 
 ```
-docker build -f Dockerfile.http -t sax-http .
+docker build -f Dockerfile -t sax-http .
 ```
 
 ### Run the HTTP Server Locally
