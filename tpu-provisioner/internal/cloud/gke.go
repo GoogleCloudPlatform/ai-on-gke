@@ -145,10 +145,11 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 	}
 
 	for k, v := range p.Spec.NodeSelector {
-		// Don't copy GCP/Google labels onto the node.
-		if !strings.HasPrefix(k, gcpLabelPrefix) && !strings.HasPrefix(k, googleLabelPrefix) {
-			labels[k] = v
-		}
+		// // Don't copy GCP/Google labels onto the node.
+		// if !strings.HasPrefix(k, gcpLabelPrefix) && !strings.HasPrefix(k, googleLabelPrefix) {
+		// 	labels[k] = v
+		// }
+		labels[k] = v
 	}
 
 	// Pod should already be filtered for this Node Selector at this point.
