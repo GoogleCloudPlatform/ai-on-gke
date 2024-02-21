@@ -81,6 +81,8 @@ singleuser:
 # Used for GCSFuse to set the ephemeral storage as the home directory. If not set, it will show a permission error on the pod log when using GCSFuse. 
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
+  extraLabels:
+    created-by: "jupyter-on-gke"
   image:
     name: jupyter/tensorflow-notebook
     tag: python-3.10
