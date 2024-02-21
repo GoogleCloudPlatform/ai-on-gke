@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_providers {
-    google = {
-      source = "hashicorp/google"
-    }
-    kubernetes = {
-      source = "hashicorp/kubernetes"
-    }
-  }
-}
+FROM python:3.11.5
+
+ADD ./ /workspace/frontend
+WORKDIR /workspace/frontend
+
+RUN pip install -r requirements.txt
+
+CMD ["python", "main.py"]

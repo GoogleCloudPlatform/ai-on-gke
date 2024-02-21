@@ -32,7 +32,7 @@ Preinstall the following on your computer:
 
 4. Edit `workloads.tfvars` with your environment specific variables and configurations.
 
-5. Run `terraform init && terraform apply -var-file workloads.tfvars`
+5. Run `terraform init && terraform apply --var-file workloads.tfvars`
 
 
 ## Using Ray with Ray Jobs API

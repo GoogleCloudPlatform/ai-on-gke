@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,39 +20,45 @@ variable "project_id" {
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
+  default     = "rag"
 }
 
-variable "gcp_service_account_prom" {
+variable "region" {
   type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services for Prometheus"
+  description = "GCP project region"
+  default     = "us-central1"
 }
 
-variable "gcp_service_account_gcs" {
+variable "db_secret_name" {
   type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
+  description = "CloudSQL user"
 }
 
-variable "gcs_bucket" {
-  type = string
+variable "db_secret_namespace" {
+  type        = string
+  description = "CloudSQL password"
+  default = "rag"
 }
 
-variable "create_k8s_service_account_prom" {
+variable "inference_service_name" {
+  type        = string
+  description = "Model inference k8s service name"
+}
+
+variable "inference_service_namespace" {
+  type        = string
+  description = "Model inference k8s service endpoint"
+  default = "rag"
+}
+
+variable "create_service_account" {
   type        = bool
-  description = "Create k8s service account"
+  description = "Creates a google service account & k8s service account & configures workload identity"
+  default     = true
 }
 
-variable "k8s_service_account_prom" {
+variable "google_service_account" {
   type        = string
-  description = "K8S service account name"
+  description = "Google Service Account name"
+  default = "frontend-gcp-sa"
 }
-
-variable "create_k8s_service_account_gcs" {
-  type        = bool
-  description = "Create k8s service account"
-}
-
-variable "k8s_service_account_gcs" {
-  type        = string
-  description = "K8S service account name"
-}
-
