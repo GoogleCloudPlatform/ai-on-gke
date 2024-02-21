@@ -28,19 +28,18 @@ cluster_membership_id = "" # required only for private cluster, default: cluster
 ## JupyterHub variables
 namespace = "jupyter"
 gcs_bucket = "<gcs-bucket>"
-k8s_service_account = "default"
-gcp_service_account ="jupyter-service-account"
-gcp_service_account_iam_roles = "roles/storage.admin,roles/artifactregistry.reader"
+create_service_account        = true
+gcp_service_account           = "jupyter-service-account"
 
 # Jupyterhub with IAP
 add_auth = true
-brand = "projects/<prj-number>/brands/<prj-number>"
+brand = "projects/<prj-number>/brands/<prj-number>" # ensure brand is Internal
 support_email = "<email>"
 default_backend_service = "proxy-public"
 service_name = "iap-config-default"
 
 url_domain_addr = ""
 url_domain_name = ""
-client_id = "<client_id>"  # used for brands marked external
-client_secret = "<client_secret>"  # used for brands marked external
-members_allowlist = "allAuthenticatedUsers"
+client_id = "" # client auto created
+client_secret = ""
+members_allowlist = "allAuthenticatedUsers,user:<email>"

@@ -1,0 +1,11 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: mistral-7b-instruct 
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: mistral-7b-instruct
+  endpoints:
+  - port: metrics

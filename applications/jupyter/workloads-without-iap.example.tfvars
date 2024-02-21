@@ -28,9 +28,8 @@ cluster_membership_id = "" # required only for private clusters, default: cluste
 ## JupyterHub variables
 namespace = "jupyter"
 gcs_bucket = "<gcs-bucket>"
-k8s_service_account = "default"
-gcp_service_account ="jupyter-service-account"
-gcp_service_account_iam_roles = "roles/storage.admin,roles/artifactregistry.reader"
+create_service_account        = true
+gcp_service_account           = "jupyter-service-account"
 
 # Jupyterhub with IAP
 add_auth = false
@@ -43,4 +42,4 @@ url_domain_addr = ""
 url_domain_name = ""
 client_id = ""
 client_secret = ""
-members_allowlist = "allAuthenticatedUsers"
+members_allowlist = "allAuthenticatedUsers,user:<email>"

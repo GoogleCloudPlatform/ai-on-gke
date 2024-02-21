@@ -17,27 +17,13 @@ variable "project_id" {
   description = "GCP project id"
 }
 
-variable "namespace" {
+variable "region" {
   type        = string
-  description = "Kubernetes namespace where resources are deployed"
+  description = "GCS bucket region"
+  default     = "us-central1"
 }
 
-variable "gcp_service_account" {
+variable "bucket_name" {
   type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-}
-
-variable "gcp_sa_iam_roles" {
-  type        = list(string)
-  description = "Service Account Project IAM binding roles"
-}
-
-variable "create_k8s_service_account" {
-  type        = bool
-  description = "Create k8s service account"
-}
-
-variable "k8s_service_account" {
-  type        = string
-  description = "K8S service account name"
+  description = "GCS bucket name"
 }

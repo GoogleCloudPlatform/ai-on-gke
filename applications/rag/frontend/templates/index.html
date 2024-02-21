@@ -1,0 +1,54 @@
+<!-- Copyright 2024 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RAG on GKE</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}" ></script>
+</head>
+<body>
+  <div class="content-container">
+    <div id="chat-and-form">
+      <div id="chat">
+          <p class="instruct">Submit your query below.</p>
+      </div>
+      <form id="form" action="/" method="post">
+          <textarea id="prompt" name="prompt" placeholder="Enter your prompt..." autofocus rows="1"></textarea>
+          <input id="submit" type="submit" value="Submit">
+      </form>
+    </div>
+
+    <!-- Filter Options Section -->
+    <div id="filter-section">
+      <label for="toggle-filters">Enable Filters:</label>
+      <input type="checkbox" id="toggle-filters">
+
+      <!-- Dropdown for inspect_templates and deidentify_templates -->
+      <div id="template-section" style="display: none;">
+        <select id="inspect-template-dropdown">
+          <!-- Options will be dynamically added here -->
+        </select>
+        <select id="deidentify-template-dropdown">
+          <!-- Options will be dynamically added here -->
+        </select>
+      </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

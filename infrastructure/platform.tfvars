@@ -13,17 +13,15 @@
 # limitations under the License.
 
 ##common variables
-project_id = "ai-on-gke-jss-sandbox"
-
+project_id = "<your project ID>"
 #######################################################
 ####    PLATFORM
 #######################################################
 ## network values
-create_network  = true
+create_network  = true # set to false to use an existing network
 network_name    = "ml-network"
 subnetwork_name = "ml-subnet"
-
-## required only in case new network provisioning
+## required only if creating a new network
 subnetwork_cidr           = "10.100.0.0/16"
 subnetwork_region         = "us-central1"
 subnetwork_private_access = "true"
@@ -40,7 +38,6 @@ network_secondary_ranges = {
     }
   ]
 }
-
 ## gke variables
 create_cluster                       = true
 private_cluster                      = true ## Default true. Use false for a public cluster
@@ -50,10 +47,10 @@ kubernetes_version                   = "1.28"
 cluster_regional                     = true
 cluster_region                       = "us-central1"
 cluster_zones                        = ["us-central1-a", "us-central1-b", "us-central1-f"]
-ip_range_pods                        = "us-central1-01-gke-01-pods-1"
-ip_range_services                    = "us-central1-01-gke-01-services-1"
+ip_range_pods                        = "us-central1-01-gke-01-pods-1" # update if using your own network
+ip_range_services                    = "us-central1-01-gke-01-services-1"  # update if using your own network
 monitoring_enable_managed_prometheus = true
-gcs_fuse_csi_driver                  = true ## enabled default for autopilot
+gcs_fuse_csi_driver                  = true ## enabled by default for autopilot
 deletion_protection                  = false
 master_authorized_networks = [{
   cidr_block   = "0.0.0.0/0"
