@@ -1,0 +1,14 @@
+{
+    'metrics': {
+        'DCGM_UTIL': {
+            'filter': 'metric.type = "prometheus.googleapis.com/DCGM_FI_DEV_GPU_UTIL/gauge"',
+            'type': 'GAUGE',
+            'aggregation': ''
+        },
+        'DCGM_USED': {
+            'filter': 'metric.type = "prometheus.googleapis.com/DCGM_FI_DEV_FB_USED/gauge"',
+            'type': 'GAUGE',
+            'aggregation': ''
+        }
+    }
+}
