@@ -38,7 +38,10 @@ rag_service_account        = "rag-system-account"
 create_jupyter_service_account  = true
 jupyter_service_account = "jupyter-system-account"
 
-# IAP config
+## Embeddings table name - change this to the TABLE_NAME used in the notebook.
+dataset_embeddings_table_name = "googlemaps_reviews_db"
+
+## IAP config
 add_auth                = false # Set to true when using auth with IAP
 brand                   = "projects/<prj-number>/brands/<prj-number>"
 support_email           = "<email>"
