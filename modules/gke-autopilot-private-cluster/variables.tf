@@ -75,3 +75,8 @@ variable "deletion_protection" {
   type    = bool
   default = false
 }
+
+variable "master_ipv4_cidr_block" {
+  type    = string
+  default = ""
+}

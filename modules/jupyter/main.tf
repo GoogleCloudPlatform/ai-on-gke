@@ -90,6 +90,7 @@ resource "helm_release" "jupyterhub" {
   namespace        = var.namespace
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
   cleanup_on_fail  = "true"
+  timeout          = 1200
 
   values = [
     templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
