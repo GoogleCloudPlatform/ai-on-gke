@@ -60,14 +60,29 @@ module "iap_auth" {
   depends_on              = [google_project_service.project_service]
 }
 
-module "workload_identity_service_account" {
-  source = "../../modules/service_accounts"
+module "jupyterhub-workload-identity" {
+  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  use_existing_gcp_sa = !var.create_service_account
+  name                = var.gcp_and_k8s_service_account
+  namespace           = var.namespace
+  project_id          = var.project_id
+  roles               = concat(var.predefined_iam_roles, var.gcp_service_account_iam_roles)
+  depends_on          = [ module.iap_auth ]
+}
 
-  project_id      = var.project_id
-  namespace       = var.namespace
-  service_account = var.gcp_service_account
-  sa_iam_roles    = split(",", var.gcp_service_account_iam_roles)
-  depends_on      = [helm_release.jupyterhub]
+resource "kubernetes_annotations" "default" {
+  api_version = "v1"
+  kind        = "ServiceAccount"
+  metadata {
+    name = "${var.gcp_and_k8s_service_account}"
+    namespace = "${var.namespace}"
+  }
+  annotations = {
+    "iam.gke.io/gcp-service-account" = "${var.gcp_and_k8s_service_account}@${var.project_id}.iam.gserviceaccount.com"
+  }
+  depends_on = [
+    module.jupyterhub-workload-identity
+  ]
 }
 
 resource "random_password" "generated_password" {
@@ -102,16 +117,26 @@ resource "helm_release" "jupyterhub" {
   values = [
     templatefile(var.enable_filestore_use ? "${path.module}/jupyter_config/config-filestore.yaml" : "${path.module}/jupyter_config/config-selfauth.yaml", {
       password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
-      service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
-      backend_config      = var.service_name
+      project_id          = var.project_id
       project_number      = data.google_project.project.number
+
+      # Support legacy image.
+      service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
+      namespace           = var.namespace
+
+      # Need to fix the naming
+      backend_config      = var.service_name # backend config name
+      service_name        = var.default_backend_service # ingress name
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
       service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
       gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.k8s_service_account
+      k8s_service_account = var.gcp_and_k8s_service_account
     })
   ]
-  depends_on = [module.iap_auth]
+  depends_on = [
+    module.iap_auth,
+    module.jupyterhub-workload-identity
+  ]
 }
 
 # Need to re-apply: fetch service_id from deployed service
@@ -129,13 +154,3 @@ data "google_compute_backend_service" "jupyter-ingress" {
   name    = data.kubernetes_service.jupyter-ingress.metadata != null ? (data.kubernetes_service.jupyter-ingress.metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter-ingress.metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups["80"] : "not-found") : "not-found"
   project = var.project_id
 }
-
-# Binds the list of principals in the allowlist file to roles/iap.httpsResourceAccessor
-resource "google_iap_web_backend_service_iam_binding" "binding" {
-  count               = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? 1 : 0) : 0
-  project             = var.project_id
-  web_backend_service = data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? "${data.google_compute_backend_service.jupyter-ingress[0].name}" : "no-id-yet"
-  role                = "roles/iap.httpsResourceAccessor"
-  members             = split(",", var.members_allowlist)
-}
-

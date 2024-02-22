@@ -51,14 +51,9 @@ variable "gcs_bucket" {
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
-variable "k8s_service_account" {
+variable "gcp_and_k8s_service_account" {
   type = string
-  description = "k8s service account"
-}
-
-variable "gcp_service_account" {
-  type = string
-  description = "gcp service account"
+  description = "gcp and k8s service account"
 }
 
 variable "gcp_service_account_iam_roles" {

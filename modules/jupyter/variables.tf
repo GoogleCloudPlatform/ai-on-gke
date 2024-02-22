@@ -23,9 +23,10 @@ variable "default_backend_service" {
 }
 
 variable "members_allowlist" {
-  type        = string
-  default     = ""
+  type    = list(string)
+  default = []
 }
+
 variable "add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
@@ -37,19 +38,27 @@ variable "gcs_bucket" {
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
-variable "k8s_service_account" {
-  type = string
-  description = "k8s service account"
+variable "create_service_account" {
+  type        = bool
+  description = "Creates a google service account & k8s service account & configures workload identity"
+  default     = true
 }
 
-variable "gcp_service_account" {
-  type = string
+variable "gcp_and_k8s_service_account" {
+  type        = string
   description = "gcp service account"
 }
 
 variable "gcp_service_account_iam_roles" {
-  type = string
+  type        = list(string)
   description = "Service Account Project IAM binding roles"
+  default     = []
+}
+
+variable "predefined_iam_roles" {
+  description = "Predefined list of IAM roles to assign"
+  type        = list(string)
+  default     = ["roles/compute.networkViewer", "roles/viewer", "roles/cloudsql.client", "roles/artifactregistry.reader", "roles/storage.admin", "roles/iam.serviceAccountAdmin"]
 }
 
 variable "project_id" {

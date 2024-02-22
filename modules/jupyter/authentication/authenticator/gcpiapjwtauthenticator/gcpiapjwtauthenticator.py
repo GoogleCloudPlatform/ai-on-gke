@@ -22,14 +22,50 @@ from traitlets import Unicode
 from urllib import parse
 from google.auth.transport import requests
 from google.oauth2 import id_token
+from googleapiclient import discovery
+import google.auth
+
+
+def list_backend_services_ids(project_id, keyword):
+    credentials, _ = google.auth.default()
+    service = discovery.build('compute', 'v1', credentials=credentials)
+    request = service.backendServices().list(project=project_id)
+    response = request.execute()
+
+    filtered_service_ids = [
+        service['id'] for service in response.get('items', [])
+        if keyword.lower() in service['name'].lower()
+    ]
+
+    return filtered_service_ids
+
 
 class IAPUserLoginHandler(BaseHandler):
     def get(self):
         header_name = self.authenticator.header_name
-        
+
         auth_header_content = self.request.headers.get(header_name, "") if header_name else None
-        expected_audience = self.authenticator.expected_audience
-    
+
+        # Extract project ID, namespace, and backend config name from the authenticator
+        project_id = self.authenticator.project_id
+        namespace = self.authenticator.namespace
+        service_name = self.authenticator.service_name
+        print("Project ID:", project_id)
+        print("Namespace:", namespace)
+        print("Backend Config Name:", service_name)
+
+        # Construct the keyword from namespace and backend config name
+        keyword = namespace + "-" + service_name
+        print("Keyword:", keyword)
+
+        # List GCP backend services IDs based on the project ID and keyword
+        gcp_backend_services_ids = list_backend_services_ids(project_id, keyword)
+        print("GCP Backend Services IDs:", gcp_backend_services_ids)
+
+        # Construct expected audiences from the GCP backend services IDs
+        expected_audiences = [f"/projects/{self.authenticator.project_number}/global/backendServices/{service_id}" for service_id in gcp_backend_services_ids]
+        print("Expected Audiences:", expected_audiences)
+
         if self.authenticator.header_name != "X-Goog-IAP-JWT-Assertion":
             raise web.HTTPError(400, 'X-Goog-IAP-JWT-Assertion is the only accepted Header')
         elif bool(auth_header_content) == 0:
@@ -37,19 +73,19 @@ class IAPUserLoginHandler(BaseHandler):
         else:
             _, user_email, err = validate_iap_jwt(
                 auth_header_content,
-                expected_audience
+                expected_audiences
             )
             if err:
                 raise Exception(f'Ran into error: {err}')
             else:
                 logging.info(f'Successfully validated!')
-        
+
         username = user_email.lower().split("@")[0]
         user = self.user_from_username(username)
 
         self.set_login_cookie(user)
         self.redirect(url_path_join(self.hub.server.base_url, 'home'))
-        
+
 class GCPIAPAuthenticator(Authenticator):
     """
     Accept the authenticated JSON Web Token from IAP Login.
@@ -59,7 +95,7 @@ class GCPIAPAuthenticator(Authenticator):
     header_name = Unicode(
         config=True,
         help="""HYYP header to inspect for the authenticated JWT.""")
-    
+
     cookie_name = Unicode(
         config=True,
         help="""The name of the cookie field used to specify the JWT token""")
@@ -67,12 +103,27 @@ class GCPIAPAuthenticator(Authenticator):
     param_name = Unicode(
         config=True,
         help="""The name of the query parameter used to specify the JWT token""")
-    
-    expected_audience = Unicode(
+
+    project_id = Unicode(
         default_value='',
         config=True,
-        help="""Expected Audience of the authenication JWT""")
-    
+        help="""Expected project_id""")
+
+    project_number = Unicode(
+        default_value='',
+        config=True,
+        help="""Expected project_number""")
+
+    namespace = Unicode(
+        default_value='',
+        config=True,
+        help="""Expected namespace""")
+
+    service_name = Unicode(
+        default_value='',
+        config=True,
+        help="""Expected backend_config_name""")
+
     secret = Unicode(
         config=True,
         help="""Shared secret key for signing JWT token""")
@@ -80,12 +131,12 @@ class GCPIAPAuthenticator(Authenticator):
     def get_handlers(self, app):
         return [(r'login', IAPUserLoginHandler)]
 
-def validate_iap_jwt(iap_jwt, expected_audience):
+def validate_iap_jwt(iap_jwt, expected_audiences):
     """Validate an IAP JWT.
 
     Args:
       iap_jwt: The contents of the X-Goog-IAP-JWT-Assertion header.
-      expected_audience: The Signed Header JWT audience. See
+      expected_audiences: The Signed Header JWT audiences. See
           https://cloud.google.com/iap/docs/signed-headers-howto
           for details on how to get this value.
 
@@ -97,7 +148,7 @@ def validate_iap_jwt(iap_jwt, expected_audience):
         decoded_jwt = id_token.verify_token(
             iap_jwt,
             requests.Request(),
-            audience=expected_audience,
+            audience=expected_audiences,
             certs_url="https://www.gstatic.com/iap/verify/public_key",
         )
         return (decoded_jwt["sub"], decoded_jwt["email"], "")

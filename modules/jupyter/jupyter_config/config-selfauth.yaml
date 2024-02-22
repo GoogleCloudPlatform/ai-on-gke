@@ -28,8 +28,13 @@ hub:
   config:
     JupyterHub:
       authenticator_class: ${authenticator_class}
-    GCPIAPAuthenticator: 
+    GCPIAPAuthenticator:
       header_name: 'X-Goog-IAP-JWT-Assertion'
+      project_id: '${project_id}'
+      namespace: '${namespace}'
+      service_name: '${service_name}'
+      project_number: '${project_number}'
+      # support legacy image
       expected_audience: '/projects/${project_number}/global/backendServices/${service_id}'
     Authenticator:
       admin_users:

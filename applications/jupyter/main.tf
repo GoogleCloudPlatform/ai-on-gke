@@ -71,9 +71,8 @@ module "jupyterhub" {
  project_id = var.project_id
 
  namespace = var.namespace
- gcp_service_account = var.gcp_service_account
+ gcp_and_k8s_service_account = var.gcp_and_k8s_service_account
  gcp_service_account_iam_roles = var.gcp_service_account_iam_roles
- k8s_service_account = var.k8s_service_account
  gcs_bucket = var.gcs_bucket
 
  # IAP Auth parameters
@@ -87,5 +86,4 @@ module "jupyterhub" {
  url_domain_addr = var.url_domain_addr
  url_domain_name = var.url_domain_name
  members_allowlist = var.members_allowlist
-
 }
