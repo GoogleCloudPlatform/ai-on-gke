@@ -83,6 +83,12 @@ variable "gcs_bucket" {
   description = "GCS bucket name to store dataset"
 }
 
+variable "private_network" {
+  type        = string
+  description = "name of the private network CloudSQL is using"
+  default     = "default"
+}
+
 variable "dataset_embeddings_table_name" {
   type        = string
   description = "Name of the table that stores vector embeddings for input dataset"

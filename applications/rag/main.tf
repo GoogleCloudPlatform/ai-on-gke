@@ -121,6 +121,7 @@ module "cloudsql" {
   instance_name   = var.cloudsql_instance
   namespace       = var.kubernetes_namespace
   depends_on      = [module.namespace]
+  private_network = var.private_network
 }
 
 module "jupyterhub" {

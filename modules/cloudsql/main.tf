@@ -21,6 +21,24 @@ resource "google_project_service" "project_service" {
   disable_on_destroy         = false
 }
 
+data "google_compute_network" "compute_network" {
+  name = var.private_network
+}
+
+resource "google_compute_global_address" "private_ip_address" {
+  name          = "private-ip-address"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = data.google_compute_network.compute_network.id
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = data.google_compute_network.compute_network.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+}
+
 resource "google_sql_database_instance" "main" {
   name             = var.instance_name
   database_version = "POSTGRES_15"
@@ -29,15 +47,19 @@ resource "google_sql_database_instance" "main" {
     # Second-generation instance tiers are based on the machine
     # type. See argument reference below.
     tier = "db-f1-micro"
+    ip_configuration {
+      ipv4_enabled                                  = false
+      private_network                               = data.google_compute_network.compute_network.id
+      enable_private_path_for_google_cloud_services = true
+    }
   }
-
+  depends_on = [google_service_networking_connection.private_vpc_connection]
   deletion_protection = false
 }
 
 resource "google_sql_database" "database" {
   name     = "pgvector-database"
   instance = var.instance_name
-
   depends_on = [google_sql_database_instance.main]
 }
 

@@ -27,7 +27,7 @@ from langchain.prompts import PromptTemplate
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
 from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 from werkzeug.exceptions import HTTPException
-from google.cloud.sql.connector import Connector
+from google.cloud.sql.connector import Connector, IPTypes
 from sentence_transformers import SentenceTransformer
 
 app = Flask(__name__, static_folder='static')
@@ -41,8 +41,7 @@ DB_NAME = "pgvector-database"
 # initialize parameters
 INFERENCE_ENDPOINT=os.environ.get('INFERENCE_ENDPOINT', '127.0.0.1:8081')
 INSTANCE_CONNECTION_NAME = os.environ.get('INSTANCE_CONNECTION_NAME', '')
-DB_USER = os.environ.get('DB_USER', '')
-DB_PASS = os.environ.get('DB_PASSWORD', '')
+DB_IAM_USER = os.environ.get('DB_IAM_USER', '')
 
 db = None
 filter_names = ['DlpFilter', 'WebRiskFilter']
@@ -88,8 +87,9 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
         conn = connector.connect(
             INSTANCE_CONNECTION_NAME,
             "pg8000",
-            user=DB_USER,
-            password=DB_PASS,
+            user=DB_IAM_USER,
+            ip_type=IPTypes.PRIVATE,
+            enable_iam_auth=True,
             db=DB_NAME
         )
         return conn

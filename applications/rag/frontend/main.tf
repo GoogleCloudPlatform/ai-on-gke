@@ -18,6 +18,7 @@ data "google_project" "project" {
 
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.region, var.cloudsql_instance)
+  db_iam_user = format("%s:%s:%s", "kuberay-gcp-sa@", var.project_id, ".iam.gserviceaccount.com")
 }
 
 # IAP Section: Enabled the IAP service
@@ -141,6 +142,11 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           env {
             name  = "TABLE_NAME"
             value = var.dataset_embeddings_table_name
+          }
+
+          env {
+            name  = "DB_IAM_USER"
+            value = local.db_iam_user
           }
 
           env {

@@ -35,8 +35,15 @@ variable "db_user" {
   default     = "rag-user"
 }
 
+<<<<<<< HEAD
 variable "instance_name" {
   type        = string
   description = "Name of the CloudSQL instance for RAG VectorDB"
   default     = "pgvector-instance"
+=======
+variable "private_network" {
+  type        = string
+  description = "Cloud SQL private network"
+  default     = "default"
+>>>>>>> c967d74 (Add Private IP Configuration to CloudSQL)
 }

@@ -24,7 +24,10 @@ kubernetes_namespace = "rag"
 create_gcs_bucket    = true
 gcs_bucket           = "rag-data-xyzu" # Choose a globally unique bucket name.
 
+## CloudSQL variables
+private_network   = "ml-network"
 cloudsql_instance = "pgvector-instance"
+
 ## Service accounts
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `ray_service_account` to use an existing IAM service account.
