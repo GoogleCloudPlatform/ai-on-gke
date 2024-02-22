@@ -40,6 +40,11 @@ variable "db_secret_namespace" {
   default = "rag"
 }
 
+variable "dataset_embeddings_table_name" {
+  type        = string
+  description = "Name of the table that stores vector embeddings for input dataset"
+}
+
 variable "inference_service_name" {
   type        = string
   description = "Model inference k8s service name"

@@ -85,7 +85,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:6ba3a1f8298d6164805dd2a039718d0d8b713ccfc2c3ab9bc8669ac5e30f89ed"
+          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:e2dd85e92f42e3684455a316dee5f98f61f1f3fba80b9368bd6f48d5e2e3475e"
           name  = "rag-frontend"
 
           port {
@@ -100,6 +100,11 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           env {
             name = "INFERENCE_ENDPOINT"
             value = data.kubernetes_service.inference_service.status.0.load_balancer.0.ingress.0.ip
+          }
+
+          env {
+            name  = "TABLE_NAME"
+            value = var.dataset_embeddings_table_name
           }
 
           env {
