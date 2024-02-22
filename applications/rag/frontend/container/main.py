@@ -33,7 +33,7 @@ app = Flask(__name__, static_folder='static')
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 
-TABLE_NAME = 'huggingface_db'  # CloudSQL table name
+TABLE_NAME = os.environ.get('TABLE_NAME', '')  # CloudSQL table name
 SENTENCE_TRANSFORMER_MODEL = 'intfloat/multilingual-e5-small' # Transformer to use for converting text chunks to vector embeddings
 DB_NAME = "pgvector-database"
 
@@ -126,7 +126,7 @@ def index():
 
 def fetchContext(query_text):
     with db.connect() as conn:
-        results = conn.execute(sqlalchemy.text("SELECT * FROM huggingface_db")).fetchall()
+        results = conn.execute(sqlalchemy.text("SELECT * FROM " + TABLE_NAME)).fetchall()
         log.info(f"query database results:")
         for row in results:
             print(row)
