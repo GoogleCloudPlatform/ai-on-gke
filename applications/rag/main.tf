@@ -157,4 +157,5 @@ module "frontend" {
   inference_service_namespace = module.inference-server.inference_service_namespace
   db_secret_name = module.cloudsql.db_secret_name
   db_secret_namespace = module.cloudsql.db_secret_namespace
+  dataset_embeddings_table_name = var.dataset_embeddings_table_name
 }

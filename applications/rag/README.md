@@ -38,7 +38,7 @@ gcloud container node-pools create g2-standard-24 --cluster <cluster-name> \
   --ephemeral-storage-local-ssd=count=2 \
  --enable-image-streaming \
  --num-nodes=1 --min-nodes=1 --max-nodes=2 \
- --node-locations $REGION-a,$REGION-b --region $REGION
+ --node-locations $REGION-a,$REGION-b --location=$REGION
 ```
 
 #### Setup Components
@@ -47,7 +47,9 @@ Next, set up the inference server, the `pgvector` instance, Jupyterhub, Kuberay 
 
 1. `cd ai-on-gke/applications/rag`
 
-2. Edit `workloads.tfvars` with your project ID, cluster name & location. Optionally choose the k8s namespace, service account and GCS bucket to be used by the application. If not selected, these resources will be created based on the default values set.
+2. Edit `workloads.tfvars` with your project ID, cluster name, location and a GCS bucket name. 
+    * The GCS bucket name needs to be globally unique so add some random suffix to it (ensure `gcloud storage buckets describe gs://<bucketname>` returns a 404).
+    * Optionally choose the k8s namespace & service account to be used by the application. If not selected, these resources will be created based on the default values set.
 
 3. Run `terraform init`
 
@@ -79,7 +81,7 @@ This filter can auto fetch the templates in your project. Please refer to the fo
 4. Verify the inference server is setup:
 * Set up port forward
 ```
-kubectl port-forward deployment/mistral-7b-instruct 8080:8080 &
+kubectl port-forward -n <namespace> deployment/mistral-7b-instruct 8080:8080 &
 ```
 
 * Try a few prompts:
@@ -96,6 +98,7 @@ curl 127.0.0.1:8080/generate -X POST \
 }
 EOF
 ```
+* At the end of the smoke test with the TGI server, close the port forward for 8080.
 
 5. Verify the frontend chat interface is setup:
  * Verify the service exists: `kubectl get services rag-frontend -n <namespace>`
@@ -103,25 +106,30 @@ EOF
 
 ### Vector Embeddings for Dataset
 
-This step generates the vector embeddings for your input dataset. Currently, the default dataset is `wiki_dpr`. We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
+This step generates the vector embeddings for your input dataset. Currently, the default dataset is [Google Maps Restaurant Reviews](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews). We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
 
-1. Download the provided Juypter notebook to generate vector embeddings from `ai-on-gke\applications\rag\example_notebooks\ray-hf-cloudsql-latest.ipynb`.
+1. Create a CloudSQL user to access the database: `gcloud sql users create rag-user-notebook --password=<choose a password> --instance=pgvector-instance --host=%`
 
-2. Create a CloudSQL user to access the database: `gcloud sql users create rag-user-notebook --password=${PASSWORD:?} --instance=pgvector-instance --host=%`
+2. Go to the Jupyterhub service endpoint in a browser: `kubectl get services proxy-public -n <namespace> --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 
-3. Go to the Jupyterhub service endpoint in a browser: `kubectl get services proxy-public -n <namespace> --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-
-4. Login with placeholder credentials [TBD: replace with instructions for IAP]:
+3. Login with placeholder credentials [TBD: replace with instructions for IAP]:
 * username: user3
 * password: use `terraform output password` to fetch the password value
 
-5. Once logged in, choose the `CPU` preset & use the Upload button to upload the notebook `ray-hf-cloudsql-latest.ipynb`. Replace the variables in the 3rd cell with the following:
+4. Once logged in, choose the `CPU` preset. Go to File -> Open From URL & upload the notebook `rag-kaggle-ray-sql.ipynb` from `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb`. This path can also be found by going to the [notebook location](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb) and selecting `Raw`.
 
+5. Replace the variables in the 3rd cell with the following to access the database:
 * `INSTANCE_CONNECTION_NAME`: `<project_id>:<region>:pgvector-instance`
 * `DB_USER`: `rag-user-notebook`
-* `DB_PASS`: password from step 2
+* `DB_PASS`: password from step 1
 
-6. Run all the cells in the notebook. This generates vector embeddings for the input dataset (`wiki-dpr`) and stores them in the `pgvector-instance` via a Ray job.
+6. Create a Kaggle account and navigate to https://www.kaggle.com/settings/account and generate an API token. See https://www.kaggle.com/docs/api#authentication how to create one from https://kaggle.com/settings ([screenshot](https://screenshot.googleplex.com/4rj6Tjdwt5KGTRz)). This token is used in the notebook to access the [Google Maps Restaurant Reviews dataset](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews)
+
+8. Replace the kaggle username and api token in 2nd cell with your credentials (can be found in the `kaggle.json` file created by Step 6):
+* `os.environ['KAGGLE_USERNAME']`
+* `os.environ['KAGGLE_KEY']`
+
+9. Run all the cells in the notebook. This generates vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and stores them in the `pgvector-instance` via a Ray job.
     * When the last cell says the job has succeeded (eg: `Job 'raysubmit_APungAw6TyB55qxk' succeeded`), the vector embeddings have been generated and we can launch the frontend chat interface.
 
 ### Launch the Frontend Chat Interface

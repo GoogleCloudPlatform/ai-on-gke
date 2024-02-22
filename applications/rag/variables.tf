@@ -78,6 +78,11 @@ variable "gcs_bucket" {
   description = "GCS bucket name to store dataset"
 }
 
+variable "dataset_embeddings_table_name" {
+  type        = string
+  description = "Name of the table that stores vector embeddings for input dataset"
+}
+
 variable "default_backend_service" {
   type    = string
   default = "proxy-public"
