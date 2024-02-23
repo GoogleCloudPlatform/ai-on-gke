@@ -65,14 +65,11 @@ When you deploy the solution, you choose the [Google Cloud project](https://clou
 an existing project or to create a new project, consider the following
 factors:
 
--   If you create a project for the solution, then when you no longer
-    > need the deployment, you can delete the project and avoid
-    > continued billing. If you use an existing project, you must delete
-    > the deployment when you no longer need it.
+-   If you create a project for the solution, then when you no longer need the deployment, you can delete the project and avoid
+continued billing. If you use an existing project, you must delete
+the deployment when you no longer need it.
 
--   Using a new project can help avoid conflicts with previously
-    > provisioned resources, such as resources that are used for
-    > production workloads.
+-   Using a new project can help avoid conflicts with previously provisioned resources, such as resources that are used for production workloads.
 
 If you want to deploy the solution in a new project, create the project
 *before* you begin the deployment.
@@ -240,19 +237,17 @@ use to customize the deployment based on your requirements. For example,
 you can specify the Google Cloud project and the region where you want
 the solution to be deployed.
 
-> Update the terraform tfvars file (located in ./platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include input parameters as key value pairs. Update the values as per your requirements.
+Update the terraform tfvars file (located in ./platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include input parameters as key value pairs. Update the values as per your requirements.
 Open terraform.tfvars (located in ./platform/terraform.tfvars)
 Update all values where required.
 
 ## Configure Terraform GCS backend
 
-> You can also configure the GCS bucket to persist the terraform state
-file for further use. To configure the terraform backend you need to
-have a GCS bucket already created.
+You can also configure the GCS bucket to persist the terraform state file for further use. To configure the terraform backend you need to have a GCS bucket already created.
 
 ### Create GCS Bucket
 
-> In case you don\'t have a GCS bucket already, you can create using
+In case you don\'t have a GCS bucket already, you can create using
 terraform or gcloud command as well. Refer below for the gcloud command
 line to create a new GCS bucket.
 ```bash
@@ -357,19 +352,12 @@ cd \~/ai-on-gke/applications/genai-on-gke/jupyternotebook
 
 
 
--   **Update Terraform Variables for Jupyte**r: Update the terraform
-    > variable file (located in ./jupyternotebook/variables.tf) to
-    > provide the input parameters (project_id, location and cluster
-    > name) to allow terraform code execution to provision
-    > Jupyternotebook.
+-   **Update Terraform Variables for Jupyter**: Update the terraform variable file (located in ./jupyternotebook/variables.tf) to provide the input parameters (project_id, location and cluster name) to allow terraform code execution to provision Jupyternotebook.
 
--   **Update Jupyter Config**: Review and update (if required) the helm
-    > values for changing the resource allocation or the image used in
-    > the file (located in ./jupyternotebook/jupyter_config/config.yaml
-    > )
+-   **Update Jupyter Config**: Review and update (if required) the helm values for changing the resource allocation or the image used in the file (located in ./jupyternotebook/jupyter_config/config.yaml)
 
--   **Update the bucket name in the Terraform Backend for Jupyter**:
-    > Update the bucket name in the file ./jupyternotebook/backend.tf
+-   **Update the bucket name in the Terraform Backend for Jupyter**: Update the bucket name in the file ./jupyternotebook/backend.tf
+
 
 Run Terraform Plan and Apply
 
@@ -388,8 +376,7 @@ terraform apply
 ```
 ## Running Jupyter Notebook
 
-1.  To view your clusters, go to the **Google Kubernetes Engine** page
-    > in the Google Cloud console.
+1.  To view your clusters, go to the **Google Kubernetes Engine** page in the Google Cloud console.
 
 > [Go to Google Kubernetes
 > Engine](https://console.cloud.google.com/kubernetes/list)
@@ -465,14 +452,9 @@ were revoked automatically after the solution deployment and deletion
 operations were completed, but the service account isn\'t deleted.
 Google recommends deleting this service account.
 
--   If you deployed the solution through the Google Cloud console, go to
-    > the [Solution deployments](https://console.cloud.google.com/products/solutions/deployments)
-    > page. (If you\'re already on that page, refresh the browser.) A
-    > process is triggered in the background to delete the service
-    > account. No further action is necessary.
+-   If you deployed the solution through the Google Cloud console, go to the [Solution deployments](https://console.cloud.google.com/products/solutions/deployments) page. (If you\'re already on that page, refresh the browser.) A process is triggered in the background to delete the service account. No further action is necessary.
 
--   If you deployed the solution by using the Terraform CLI, complete
-    > the following steps:
+-   If you deployed the solution by using the Terraform CLI, complete the following steps:
 
     1.  In the Google Cloud console, go to the **Service accounts**
         [Go to Service accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
@@ -503,7 +485,7 @@ diagnose the problem.
 The examples in the following sections show deployment errors that you
 might encounter when using Terraform.
 
-API not enabled error
+##API not enabled error
 
 If you create a project and then immediately attempt to deploy the
 solution in the new project, the deployment might fail with an error
