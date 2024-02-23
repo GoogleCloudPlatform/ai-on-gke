@@ -24,6 +24,7 @@ resource "kubernetes_manifest" "manifests" {
 
 # grafana
 resource "helm_release" "grafana" {
+  count      = var.enable_grafana_on_ray_dashboard ? 1 : 0
   name       = "grafana"
   repository = "https://grafana.github.io/helm-charts"
   chart      = "grafana"

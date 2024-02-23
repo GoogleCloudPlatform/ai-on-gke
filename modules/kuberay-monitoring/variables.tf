@@ -29,3 +29,9 @@ variable "create_namespace" {
 variable "k8s_service_account" {
   type        = string
 }
+
+variable "enable_grafana_on_ray_dashboard" {
+  type = bool
+  description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
+  default = false
+}
