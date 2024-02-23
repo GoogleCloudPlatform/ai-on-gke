@@ -97,8 +97,8 @@ module "jupyterhub" {
   gcs_bucket = var.gcs_bucket
   add_auth   = false # TODO: Replace with IAP.
 
-  gcp_service_account    = var.jupyter_service_account
-  create_service_account = var.create_jupyter_service_account
+  gcp_and_k8s_service_account    = var.jupyter_service_account
+  create_service_account         = var.create_jupyter_service_account
 
   # IAP Auth parameters
   brand                   = var.brand

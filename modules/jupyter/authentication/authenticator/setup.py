@@ -26,11 +26,13 @@ setuptools.setup(
     packages=['gcpiapjwtauthenticator'],
     license='Apache 2.0',
     install_requires=[
-        "jupyterhub", 
+        "jupyterhub",
         "tornado>=5.0",
         'oauthenticator>=0.9.0',
         'pyjwt>=1.7.1',
+        "google-api-python-client",
         "google-auth",
         "google-auth-oauthlib",
+        "google-cloud",
     ]
 )
