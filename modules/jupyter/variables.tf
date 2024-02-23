@@ -23,9 +23,10 @@ variable "default_backend_service" {
 }
 
 variable "members_allowlist" {
-  type    = string
-  default = ""
+  type    = list(string)
+  default = []
 }
+
 variable "add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
@@ -43,9 +44,21 @@ variable "create_service_account" {
   default     = true
 }
 
-variable "gcp_service_account" {
+variable "gcp_and_k8s_service_account" {
   type        = string
   description = "gcp service account"
+}
+
+variable "gcp_service_account_iam_roles" {
+  type        = list(string)
+  description = "Service Account Project IAM binding roles"
+  default     = []
+}
+
+variable "predefined_iam_roles" {
+  description = "Predefined list of IAM roles to assign"
+  type        = list(string)
+  default     = ["roles/compute.networkViewer", "roles/viewer", "roles/cloudsql.client", "roles/artifactregistry.reader", "roles/storage.admin", "roles/iam.serviceAccountAdmin", "roles/compute.loadBalancerServiceUser"]
 }
 
 variable "project_id" {

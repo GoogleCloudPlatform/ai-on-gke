@@ -134,7 +134,15 @@ function process_snapshots() {
       echo Failed to copy the snapshot files for $snapshot from $original_path to /mnt/disks/container_layers/${new_path}. Please rerun the tool to try it again.
       exit 1
     fi
+
     mapping="$snapshot $new_path"
+
+    if [ "$STORE_SNAPSHOT_CHECKSUMS" = "true" ]; then
+      echo "Calculating checksum for snapshot $snapshot"
+      checksum="$(find /mnt/disks/container_layers/${new_path} -type f -exec md5sum {} + | cut -d' ' -f1 | LC_ALL=C sort | md5sum | cut -d' ' -f1)"
+      mapping="$snapshot $new_path $checksum"
+    fi
+
     echo "Appending $mapping to Metadata file"
     sudo echo "$mapping" >> "/mnt/disks/container_layers/snapshots.metadata"
     if [ $? -ne 0 ]; then
@@ -163,9 +171,14 @@ function unpack() {
   # Remove the previously created snapshot views.
   remove_snapshot_views
 
-  # Store the first parameter in OAUTH_MECHANISM and shift.
+  # Store the first parameter in STORE_SNAPSHOT_CHECKSUMS and shift
+  STORE_SNAPSHOT_CHECKSUMS=$(echo "$1")
+  shift
+
+  # Store the second parameter in OAUTH_MECHANISM and shift.
   OAUTH_MECHANISM=$(echo "$1" | tr '[:upper:]' '[:lower:]')
   shift
+
   # Pull all the given images.
   pull_images $@
 

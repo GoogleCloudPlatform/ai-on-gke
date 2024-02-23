@@ -19,30 +19,51 @@ project_id = "<project-id>"
 ####    PLATFORM
 #######################################################
 ## network values
-create_network            = true
-network_name              = "demo-network-1"
-subnetwork_name           = "subnet-02"
+create_network  = true
+network_name    = "ml-network"
+subnetwork_name = "ml-subnet"
 
+## required only in case new network provisioning
+subnetwork_cidr           = "10.100.0.0/16"
+subnetwork_region         = "us-central1"
+subnetwork_private_access = "true"
+subnetwork_description    = "GKE subnet"
+network_secondary_ranges = {
+  "ml-subnet" = [
+    {
+      range_name    = "us-central1-01-gke-01-pods-1"
+      ip_cidr_range = "192.168.0.0/20"
+    },
+    {
+      range_name    = "us-central1-01-gke-01-services-1"
+      ip_cidr_range = "192.168.48.0/20"
+    }
+  ]
+}
 
 ## gke variables
 create_cluster                       = true
-private_cluster                      = false
-cluster_name                         = "demo-cluster1"
-kubernetes_version                   = "1.27"
+private_cluster                      = true ## Default true. Use false for a public cluster
+autopilot_cluster                    = true # false = standard cluster, true = autopilot cluster
+cluster_name                         = "ml-cluster"
+kubernetes_version                   = "1.28"
 cluster_regional                     = true
 cluster_region                       = "us-central1"
 cluster_zones                        = ["us-central1-a", "us-central1-b", "us-central1-f"]
 ip_range_pods                        = "us-central1-01-gke-01-pods-1"
 ip_range_services                    = "us-central1-01-gke-01-services-1"
 monitoring_enable_managed_prometheus = true
+gcs_fuse_csi_driver                  = true ## enabled default for autopilot
+deletion_protection                  = false
 master_authorized_networks = [{
-  cidr_block   = "135.23.43.2/32"
-  display_name = "Home"
+  cidr_block   = "10.100.0.0/16"
+  display_name = "VPC"
 }]
 
+## Node configuration are ignored for autopilot clusters
 cpu_pools = [{
   name                   = "cpu-pool"
-  machine_type           = "n1-standard-16"
+  machine_type           = "n2-standard-8"
   node_locations         = "us-central1-b,us-central1-c"
   autoscaling            = true
   min_count              = 1
@@ -125,6 +146,11 @@ all_node_pools_oauth_scopes = [
   "https://www.googleapis.com/auth/servicecontrol",
 ]
 
+
+cluster_labels = {
+  "gke-profile" = "ai-on-gke"
+}
+
 all_node_pools_labels = {
   "gke-profile" = "ai-on-gke"
 }
@@ -134,5 +160,4 @@ all_node_pools_metadata = {
 }
 
 all_node_pools_tags = ["gke-node", "ai-on-gke"]
-
 

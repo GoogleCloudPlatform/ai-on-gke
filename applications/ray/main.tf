@@ -68,50 +68,51 @@ provider "helm" {
 data "kubernetes_all_namespaces" "allns" {}
 
 module "kuberay-operator" {
-  source           = "../../modules/kuberay-operator"
-  name             = "kuberay-operator"
-  create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
-  namespace        = var.ray_namespace
-  project_id       = var.project_id
-  enable_autopilot = data.google_container_cluster.default.enable_autopilot
+  source                 = "../../modules/kuberay-operator"
+  name                   = "kuberay-operator"
+  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
+  namespace              = var.ray_namespace
+  project_id             = var.project_id
+  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
   google_service_account = var.gcp_service_account
   create_service_account = var.create_service_account
 }
 
 module "kuberay-logging" {
-  source     = "../../modules/kuberay-logging"
-  namespace  = var.ray_namespace
+  source    = "../../modules/kuberay-logging"
+  namespace = var.ray_namespace
 
   depends_on = [module.kuberay-operator]
 }
 
 module "kuberay-monitoring" {
-  count               = var.create_ray_cluster == true ? 1 : 0
-  source              = "../../modules/kuberay-monitoring"
-  project_id          = var.project_id
-  namespace           = var.ray_namespace
-  create_namespace    = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
-  k8s_service_account = var.gcp_service_account
-  depends_on = [module.kuberay-operator]
+  count                           = var.create_ray_cluster ? 1 : 0
+  source                          = "../../modules/kuberay-monitoring"
+  project_id                      = var.project_id
+  namespace                       = var.ray_namespace
+  create_namespace                = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
+  enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
+  k8s_service_account             = var.gcp_service_account
+  depends_on                      = [module.kuberay-operator]
 }
 
 module "gcs" {
-  source     = "../../modules/gcs"
-  project_id = var.project_id
+  source      = "../../modules/gcs"
+  project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 module "kuberay-cluster" {
-  count                   = var.create_ray_cluster == true ? 1 : 0
-  source                  = "../../modules/kuberay-cluster"
-  create_namespace        = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
-  namespace               = var.ray_namespace
-  project_id              = var.project_id
-  enable_tpu              = data.google_container_cluster.default.enable_tpu
-  gcs_bucket              = var.gcs_bucket
-  enable_autopilot        = data.google_container_cluster.default.enable_autopilot
-  google_service_account  = var.gcp_service_account
-  grafana_host            = module.kuberay-monitoring[0].grafana_uri
-  depends_on              = [module.kuberay-monitoring, module.gcs]
+  count                  = var.create_ray_cluster == true ? 1 : 0
+  source                 = "../../modules/kuberay-cluster"
+  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
+  namespace              = var.ray_namespace
+  project_id             = var.project_id
+  enable_tpu             = data.google_container_cluster.default.enable_tpu
+  gcs_bucket             = var.gcs_bucket
+  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
+  google_service_account = var.gcp_service_account
+  grafana_host           = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
+  depends_on             = [module.kuberay-monitoring, module.gcs]
 }
 

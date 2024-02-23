@@ -12,26 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "project_id" {
-  type        = string
-  description = "GCP project id"
-}
-
-variable "namespace" {
-  type        = string
-  description = "Kubernetes namespace where resources are deployed"
-}
-
-variable "create_namespace" {
-  type        = bool
-}
-
-variable "k8s_service_account" {
-  type        = string
-}
-
-variable "enable_grafana_on_ray_dashboard" {
-  type = bool
-  description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
-  default = false
+terraform {
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+    }
+    google-beta = {
+      source = "hashicorp/google-beta"
+    }
+  }
 }

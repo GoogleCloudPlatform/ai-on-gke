@@ -35,7 +35,7 @@ create_service_account        = true
 gcp_service_account           = "jupyter-service-account"
 
 # Jupyterhub with IAP
-add_auth                = true
+add_auth                = false
 brand                   = "projects/<prj-number>/brands/<prj-number>"
 support_email           = "<email>"
 default_backend_service = "proxy-public"
@@ -45,4 +45,4 @@ url_domain_addr   = ""
 url_domain_name   = ""
 client_id         = ""
 client_secret     = ""
-members_allowlist = "user:<email>"
+members_allowlist = ["user:<email>"]

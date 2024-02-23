@@ -66,39 +66,39 @@ provider "helm" {
 data "kubernetes_all_namespaces" "allns" {}
 
 module "kuberay-operator" {
-  source                  = "../../modules/kuberay-operator"
-  project_id              = var.project_id
-  create_namespace        = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
-  namespace               = var.kubernetes_namespace
-  name                    = "kuberay-operator"
-  google_service_account  = var.ray_service_account
-  create_service_account  = var.create_ray_service_account
-  enable_autopilot        = data.google_container_cluster.default.enable_autopilot
+  source                 = "../../modules/kuberay-operator"
+  project_id             = var.project_id
+  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
+  namespace              = var.kubernetes_namespace
+  name                   = "kuberay-operator"
+  google_service_account = var.ray_service_account
+  create_service_account = var.create_ray_service_account
+  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
 }
 
 module "gcs" {
-  source     = "../../modules/gcs"
-  project_id = var.project_id
+  source      = "../../modules/gcs"
+  project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 module "cloudsql" {
   source     = "../../modules/cloudsql"
-  depends_on = [module.gcs,module.kuberay-operator]
+  depends_on = [module.gcs, module.kuberay-operator]
   project_id = var.project_id
   namespace  = var.kubernetes_namespace
 }
 
 module "jupyterhub" {
-  source      = "../../modules/jupyter"
+  source     = "../../modules/jupyter"
   depends_on = [module.kuberay-operator]
-  namespace   = var.kubernetes_namespace
-  project_id  = var.project_id
-  gcs_bucket  = var.gcs_bucket
-  add_auth    = false # TODO: Replace with IAP.
+  namespace  = var.kubernetes_namespace
+  project_id = var.project_id
+  gcs_bucket = var.gcs_bucket
+  add_auth   = false # TODO: Replace with IAP.
 
-  gcp_service_account    = var.jupyter_service_account
-  create_service_account = var.create_jupyter_service_account
+  gcp_and_k8s_service_account    = var.jupyter_service_account
+  create_service_account         = var.create_jupyter_service_account
 
   # IAP Auth parameters
   brand                   = var.brand
@@ -119,25 +119,26 @@ module "kuberay-logging" {
 }
 
 module "kuberay-cluster" {
-  source     = "../../modules/kuberay-cluster"
-  project_id  = var.project_id
-  depends_on = [module.kuberay-operator, module.gcs, module.kuberay-monitoring]
-  namespace  = var.kubernetes_namespace
-  gcs_bucket = var.gcs_bucket 
-  create_namespace    = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
-  enable_tpu          = data.google_container_cluster.default.enable_tpu
-  enable_autopilot    = data.google_container_cluster.default.enable_autopilot
+  source                 = "../../modules/kuberay-cluster"
+  project_id             = var.project_id
+  depends_on             = [module.kuberay-operator, module.gcs, module.kuberay-monitoring]
+  namespace              = var.kubernetes_namespace
+  gcs_bucket             = var.gcs_bucket
+  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
+  enable_tpu             = data.google_container_cluster.default.enable_tpu
+  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
   google_service_account = var.ray_service_account
-  grafana_host        = module.kuberay-monitoring.grafana_uri
+  grafana_host           = module.kuberay-monitoring.grafana_uri
 }
 
 module "kuberay-monitoring" {
-  source     = "../../modules/kuberay-monitoring"
-  depends_on = [module.kuberay-operator]
-  project_id = var.project_id
-  namespace  = var.kubernetes_namespace
-  create_namespace    = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
-  k8s_service_account = var.ray_service_account
+  source                          = "../../modules/kuberay-monitoring"
+  depends_on                      = [module.kuberay-operator]
+  project_id                      = var.project_id
+  namespace                       = var.kubernetes_namespace
+  create_namespace                = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
+  enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
+  k8s_service_account             = var.ray_service_account
 }
 
 module "inference-server" {
@@ -147,15 +148,15 @@ module "inference-server" {
 }
 
 module "frontend" {
-  source            = "./frontend"
-  depends_on = [module.cloudsql, module.gcs, module.inference-server]
-  project_id = var.project_id
-  create_service_account = var.create_rag_service_account
-  google_service_account = var.rag_service_account
-  namespace  = var.kubernetes_namespace
-  inference_service_name = module.inference-server.inference_service_name
-  inference_service_namespace = module.inference-server.inference_service_namespace
-  db_secret_name = module.cloudsql.db_secret_name
-  db_secret_namespace = module.cloudsql.db_secret_namespace
+  source                        = "./frontend"
+  depends_on                    = [module.cloudsql, module.gcs, module.inference-server]
+  project_id                    = var.project_id
+  create_service_account        = var.create_rag_service_account
+  google_service_account        = var.rag_service_account
+  namespace                     = var.kubernetes_namespace
+  inference_service_name        = module.inference-server.inference_service_name
+  inference_service_namespace   = module.inference-server.inference_service_namespace
+  db_secret_name                = module.cloudsql.db_secret_name
+  db_secret_namespace           = module.cloudsql.db_secret_namespace
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
 }

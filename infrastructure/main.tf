@@ -130,6 +130,7 @@ module "private-gke-standard-cluster" {
   gcs_fuse_csi_driver                  = var.gcs_fuse_csi_driver
   deletion_protection                  = var.deletion_protection
   master_authorized_networks           = var.master_authorized_networks
+  master_ipv4_cidr_block               = var.master_ipv4_cidr_block
 
   ## pools config variables
   cpu_pools                   = var.cpu_pools
@@ -163,6 +164,7 @@ module "private-gke-autopilot-cluster" {
   ip_range_pods              = var.ip_range_pods
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
+  master_ipv4_cidr_block     = var.master_ipv4_cidr_block
   deletion_protection        = var.deletion_protection
 
 }
