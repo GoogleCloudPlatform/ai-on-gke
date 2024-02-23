@@ -50,6 +50,7 @@ head:
     #     memory: "512Mi"
   labels:
     cloud.google.com/gke-ray-node-type: head
+    created-by: ray-on-gke
   rayStartParams:
     dashboard-host: '0.0.0.0'
     block: 'true'
@@ -144,6 +145,7 @@ worker:
   type: worker
   labels:
     cloud.google.com/gke-ray-node-type: worker
+    created-by: ray-on-gke
   rayStartParams:
     block: 'true'
     resources: '"{\"google.com/tpu\": 4}"'
