@@ -37,7 +37,7 @@ resource "helm_release" "iap_jupyter" {
   chart            = "${path.module}/charts/iap_jupyter/"
   namespace        = var.namespace
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
-
+  timeout          = 1200
   set {
     name  = "iap.backendConfig.name"
     value = var.service_name
