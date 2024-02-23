@@ -49,6 +49,11 @@ variable "jupyter_service_account" {
   default     = "jupyter-system-account"
 }
 
+variable "enable_grafana_on_ray_dashboard" {
+  type        = bool
+  description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
+  default     = false
+}
 variable "create_ray_service_account" {
   type        = bool
   description = "Creates a google IAM service account & k8s service account & configures workload identity"
@@ -89,9 +94,10 @@ variable "default_backend_service" {
 }
 
 variable "members_allowlist" {
-  type    = string
-  default = ""
+  type    = list(string)
+  default = []
 }
+
 variable "add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"

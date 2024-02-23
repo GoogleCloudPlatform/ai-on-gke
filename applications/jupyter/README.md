@@ -49,16 +49,16 @@ To use GCS, create a bucket with your username. For example, when authenticating
 If using this with the Ray module (`applications/ray/`), it is recommended to use the same k8s namespace
 for both i.e. set this to the same namespace as `applications/ray/workloads.tfvars`.
 
-| Variable               | Description       | Required |
-| ---------------------- |-------------------|:--------:|
-| project_id             | GCP Project Id    | Yes      |
-| cluster_name           | GKE Cluster Name  | Yes      |
-| cluster_location       | GCP Region        | Yes      |
-| cluster_membership_id  | Fleet membership name for GKE cluster. <br /> Required when using private clusters with Anthos Connect Gateway   | |
-| namespace              | The namespace that Jupyterhub and rest of the other resources will be installed in.        | Yes      |
-| gcs_bucket             | GCS bucket to be used for Jupyter storage        |       |
-| create_service_account | Create service accounts used for Workload Identity mapping       | Yes      |
-| gcp_service_account    | GCP service account used for Workload Identity mapping      | Yes      |
+| Variable                    | Description                                                                                                    | Required |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------|:--------:|
+| project_id                  | GCP Project Id                                                                                                 | Yes      |
+| cluster_name                | GKE Cluster Name                                                                                               | Yes      |
+| cluster_location            | GCP Region                                                                                                     | Yes      |
+| cluster_membership_id       | Fleet membership name for GKE cluster. <br /> Required when using private clusters with Anthos Connect Gateway | |
+| namespace                   | The namespace that Jupyterhub and rest of the other resources will be installed in.                            | Yes      |
+| gcs_bucket                  | GCS bucket to be used for Jupyter storage                                                                      |       |
+| create_service_account      | Create service accounts used for Workload Identity mapping                                                     | Yes      |
+| gcp_and_k8s_service_account | GCP service account used for Workload Identity mapping and k8s sa attached with workload                       | Yes      |
 
 For variables under `Jupyterhub with IAP`, please see the section below 
 

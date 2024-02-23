@@ -30,6 +30,11 @@ hub:
       authenticator_class: ${authenticator_class}
     GCPIAPAuthenticator: 
       header_name: 'X-Goog-IAP-JWT-Assertion'
+      project_id: '${project_id}'
+      namespace: '${namespace}'
+      service_name: '${service_name}'
+      project_number: '${project_number}'
+      # support legacy image
       expected_audience: '/projects/${project_number}/global/backendServices/${service_id}'
     Authenticator:
       admin_users:
@@ -81,6 +86,8 @@ singleuser:
 # Used for GCSFuse to set the ephemeral storage as the home directory. If not set, it will show a permission error on the pod log when using GCSFuse. 
   extraEnv:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
+  extraLabels:
+    created-by: "jupyter-on-gke"
   image:
     name: jupyter/tensorflow-notebook
     tag: python-3.10

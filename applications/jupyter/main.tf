@@ -77,7 +77,7 @@ module "jupyterhub" {
 
   namespace                     = var.namespace
   create_service_account        = var.create_service_account
-  gcp_service_account           = var.gcp_service_account
+  gcp_and_k8s_service_account   = var.gcp_and_k8s_service_account
   gcs_bucket                    = var.gcs_bucket
 
   # IAP Auth parameters

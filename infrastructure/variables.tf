@@ -37,28 +37,34 @@ variable "subnetwork_name" {
 }
 
 variable "subnetwork_cidr" {
-  type = string
+  type    = string
+  default = "10.128.0.0/20"
 }
 
 variable "subnetwork_region" {
-  type = string
+  type    = string
+  default = "us-central1"
 }
 
 variable "subnetwork_private_access" {
-  type = string
+  type    = string
+  default = "true"
 }
 
 variable "subnetwork_description" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "network_secondary_ranges" {
-  type = map(list(object({ range_name = string, ip_cidr_range = string })))
+  type    = map(list(object({ range_name = string, ip_cidr_range = string })))
+  default = {}
 }
 
 ## GKE variables
 variable "create_cluster" {
-  type = bool
+  type    = bool
+  default = true
 }
 
 variable "private_cluster" {
@@ -71,7 +77,8 @@ variable "autopilot_cluster" {
 }
 
 variable "cluster_regional" {
-  type = bool
+  type    = bool
+  default = true
 }
 
 variable "cluster_name" {
@@ -81,6 +88,9 @@ variable "cluster_name" {
 variable "cluster_labels" {
   type        = map(any)
   description = "GKE cluster labels"
+  default = {
+    "gke-profile" = "ai-on-gke"
+  }
 }
 
 variable "kubernetes_version" {
@@ -96,14 +106,16 @@ variable "cluster_zones" {
   type = list(string)
 }
 variable "ip_range_pods" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "ip_range_services" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "monitoring_enable_managed_prometheus" {
   type    = bool
-  default = false
+  default = true
 }
 variable "gcs_fuse_csi_driver" {
   type    = bool
@@ -121,17 +133,37 @@ variable "master_authorized_networks" {
   default = []
 }
 
+variable "master_ipv4_cidr_block" {
+  type    = string
+  default = ""
+}
+
 variable "all_node_pools_oauth_scopes" {
   type = list(string)
+  default = [
+    "https://www.googleapis.com/auth/logging.write",
+    "https://www.googleapis.com/auth/monitoring",
+    "https://www.googleapis.com/auth/devstorage.read_only",
+    "https://www.googleapis.com/auth/trace.append",
+    "https://www.googleapis.com/auth/service.management.readonly",
+    "https://www.googleapis.com/auth/servicecontrol",
+  ]
 }
 variable "all_node_pools_labels" {
   type = map(string)
+  default = {
+    "gke-profile" = "ai-on-gke"
+  }
 }
 variable "all_node_pools_metadata" {
   type = map(string)
+  default = {
+    disable-legacy-endpoints = "true"
+  }
 }
 variable "all_node_pools_tags" {
-  type = list(string)
+  type    = list(string)
+  default = ["gke-node", "ai-on-gke"]
 }
 
 variable "enable_tpu" {
@@ -146,13 +178,82 @@ variable "enable_gpu" {
 }
 
 variable "cpu_pools" {
-  type = list(map(any))
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = string
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+  }))
+  default = []
 }
 
 variable "gpu_pools" {
-  type = list(map(any))
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = string
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+    accelerator_type       = optional(string, "nvidia-tesla-t4")
+    gpu_version            = optional(string, "DEFAULT")
+  }))
+  default = []
 }
 
 variable "tpu_pools" {
-  type = list(map(any))
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = string
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+    accelerator_type       = optional(string, "nvidia-tesla-t4")
+  }))
+  default = []
 }

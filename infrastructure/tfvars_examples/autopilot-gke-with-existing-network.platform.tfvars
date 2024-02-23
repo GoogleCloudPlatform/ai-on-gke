@@ -13,20 +13,19 @@
 # limitations under the License.
 
 ##common variables
-project_id = "<your project ID>"
+project_id = "<project-id>"
+
 #######################################################
 ####    PLATFORM
 #######################################################
 ## network values
-create_network    = true
-network_name      = "ml-network"
-subnetwork_name   = "ml-subnet1"
-subnetwork_cidr   = "10.100.0.0/16"
-subnetwork_region = "us-central1"
+create_network    = false
+network_name      = "demo-network"
+subnetwork_name   = "demo-subnet"
 
 ## gke variables
-private_cluster   = false ## true = private cluster, false = public cluster
-autopilot_cluster = true ## true = autopilot cluster, false = standard cluster
-cluster_name      = "ml-cluster"
+private_cluster   = true ## Default true. Use false for a public cluster
+autopilot_cluster = true # false = standard cluster, true = autopilot cluster
+cluster_name      = "demo-cluster"
 cluster_region    = "us-central1"
 cluster_zones     = ["us-central1-a", "us-central1-b", "us-central1-f"]
