@@ -42,6 +42,12 @@ variable "ray_namespace" {
   default     = "myray"
 }
 
+variable "enable_grafana_on_ray_dashboard" {
+  type    = bool
+  description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
+  default = false  
+}
+
 variable "gcs_bucket" {
   type = string
 }
