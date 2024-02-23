@@ -94,9 +94,10 @@ variable "default_backend_service" {
 }
 
 variable "members_allowlist" {
-  type    = string
-  default = ""
+  type    = list(string)
+  default = []
 }
+
 variable "add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
