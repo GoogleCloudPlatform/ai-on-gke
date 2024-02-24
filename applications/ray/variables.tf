@@ -42,38 +42,25 @@ variable "ray_namespace" {
   default     = "myray"
 }
 
+variable "enable_grafana_on_ray_dashboard" {
+  type    = bool
+  description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
+  default = false  
+}
+
 variable "gcs_bucket" {
   type = string
 }
 
-variable "create_k8s_service_account_gcs" {
+variable "create_service_account" {
   type        = bool
-  description = "Create k8s service account"
-  default     = false
+  description = "Creates a google IAM service account & k8s service account & configures workload identity"
+  default     = true
 }
 
-variable "k8s_service_account_gcs" {
-  type = string
-}
-
-variable "gcp_service_account_gcs" {
+variable "gcp_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
-}
-
-variable "create_k8s_service_account_prom" {
-  type        = bool
-  description = "Create k8s service account"
-  default     = false
-}
-
-variable "k8s_service_account_prom" {
-  type = string
-}
-
-variable "gcp_service_account_prom" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services for Prometheus"
 }
 
 variable "create_ray_cluster" {

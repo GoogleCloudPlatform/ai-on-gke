@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-##common variables  
+##common variables
 ## Need to pull this variables from tf output from previous platform stage
-project_id = "ai-on-gke-jss-sandbox"
+project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
 cluster_name          = "ml-cluster"
 cluster_location      = "us-central1"
-cluster_membership_id = "" # require for private cluster, default: cluster_name
+cluster_membership_id = "" # required for private cluster, defaults to `cluster_name`
 
 #######################################################
 ####    APPLICATIONS
@@ -27,14 +27,15 @@ cluster_membership_id = "" # require for private cluster, default: cluster_name
 
 ## JupyterHub variables
 namespace                     = "ml"
-gcs_bucket                    = "gcs-bucket"
-create_k8s_service_account    = false
-k8s_service_account           = "default"
+gcs_bucket                    = "gcs-bucket-dsfhfh"
+
+# Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
+# Set to false & update the variable `gcp_service_account` to use an existing IAM service account.
+create_service_account        = true
 gcp_service_account           = "jupyter-service-account"
-gcp_service_account_iam_roles = "roles/storage.admin,roles/artifactregistry.reader"
 
 # Jupyterhub with IAP
-add_auth                = true
+add_auth                = false
 brand                   = "projects/<prj-number>/brands/<prj-number>"
 support_email           = "<email>"
 default_backend_service = "proxy-public"
@@ -44,4 +45,4 @@ url_domain_addr   = ""
 url_domain_name   = ""
 client_id         = ""
 client_secret     = ""
-members_allowlist = "allAuthenticatedUsers,user:<email>"
+members_allowlist = ["user:<email>"]

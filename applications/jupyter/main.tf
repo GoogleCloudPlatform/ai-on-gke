@@ -63,6 +63,11 @@ provider "helm" {
   }
 }
 
+module "gcs" {
+  source     = "../../modules/gcs"
+  project_id = var.project_id
+  bucket_name = var.gcs_bucket
+}
 
 # Creates jupyterhub
 module "jupyterhub" {
@@ -71,10 +76,8 @@ module "jupyterhub" {
   project_id = var.project_id
 
   namespace                     = var.namespace
-  gcp_service_account           = var.gcp_service_account
-  gcp_service_account_iam_roles = var.gcp_service_account_iam_roles
-  create_k8s_service_account    = var.create_k8s_service_account
-  k8s_service_account           = var.k8s_service_account
+  create_service_account        = var.create_service_account
+  gcp_and_k8s_service_account   = var.gcp_and_k8s_service_account
   gcs_bucket                    = var.gcs_bucket
 
   # IAP Auth parameters
@@ -88,5 +91,5 @@ module "jupyterhub" {
   url_domain_addr         = var.url_domain_addr
   url_domain_name         = var.url_domain_name
   members_allowlist       = var.members_allowlist
-
+  depends_on              = [module.gcs]
 }

@@ -22,7 +22,7 @@
 image:
   # Replace this with your own image if needed.
   repository: anyscale/ray
-  tag: 2.7.1-py39-cu118
+  tag: 2.7.1-py310-cu118
   pullPolicy: IfNotPresent
 
 nameOverride: "kuberay"
@@ -56,6 +56,7 @@ head:
     #     memory: "512Mi"
   labels:
     cloud.google.com/gke-ray-node-type: head
+    created-by: ray-on-gke
   serviceAccountName: my-ksa
   rayStartParams:
     dashboard-host: '0.0.0.0'
@@ -83,10 +84,10 @@ head:
   # for further guidance.
   resources:
     limits:
-      cpu: "4"
+      cpu: "5"
       nvidia.com/gpu: "1"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
-      memory: "40G"
+      memory: "50G"
       ephemeral-storage: 40Gi
     requests:
       cpu: "2"
@@ -130,6 +131,7 @@ worker:
   type: worker
   labels:
     cloud.google.com/gke-ray-node-type: worker
+    created-by: ray-on-gke
   serviceAccountName: my-ksa
   rayStartParams:
     block: 'true'

@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+variable "project_id" {
+  type        = string
+  description = "GCP project id"
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
@@ -33,9 +38,10 @@ variable "enable_autopilot" {
   description = "Set to true to enable GKE Autopilot clusters"
 }
 
-variable "k8s_service_account" {
+variable "google_service_account" {
   type        = string
-  description = "Kubernetes Service Account name"
+  description = "Google service account name"
+  default     = "kuberay-gcp-sa"
 }
 
 variable "gcs_bucket" {

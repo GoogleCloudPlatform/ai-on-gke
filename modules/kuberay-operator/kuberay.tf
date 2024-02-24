@@ -13,11 +13,22 @@
 # limitations under the License.
 
 resource "helm_release" "kuberay-operator" {
-  name             = "kuberay-operator"
-  repository       = "https://ray-project.github.io/kuberay-helm/"
-  chart            = "kuberay-operator"
-  values           = var.enable_autopilot ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
-  version          = "1.0.0"
-  namespace        = var.namespace
+  name       = var.name
+  repository = "https://ray-project.github.io/kuberay-helm/"
+  chart      = "kuberay-operator"
+  values     = var.enable_autopilot ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
+  version    = "1.0.0"
+  namespace       = var.namespace
+  cleanup_on_fail = "true"
   create_namespace = var.create_namespace
+}
+
+module "kuberay-workload-identity" {
+  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  use_existing_gcp_sa = !var.create_service_account
+  name                = var.google_service_account
+  namespace           = var.namespace
+  project_id          = var.project_id
+  roles               = ["roles/cloudsql.client", "roles/monitoring.viewer"]
+  depends_on          = [ helm_release.kuberay-operator ]
 }

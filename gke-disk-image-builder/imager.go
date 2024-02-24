@@ -47,25 +47,27 @@ const (
 
 // Request contains the required input for the disk image generation.
 type Request struct {
-	ImageName       string
-	ImageFamilyName string
-	ProjectName     string
-	JobName         string
-	Zone            string
-	GCSPath         string
-	MachineType     string
-	DiskType        string
-	DiskSizeGB      int64
-	GCPOAuth        string
-	Network         string
-	Subnet          string
-	ContainerImages []string
-	Timeout         time.Duration
-	ImagePullAuth   ImagePullAuthMechanism
-	ImageLabels     []string
+	ImageName             string
+	ImageFamilyName       string
+	ProjectName           string
+	JobName               string
+	Zone                  string
+	GCSPath               string
+	MachineType           string
+	DiskType              string
+	DiskSizeGB            int64
+	GCPOAuth              string
+	Network               string
+	Subnet                string
+	ContainerImages       []string
+	Timeout               time.Duration
+	ImagePullAuth         ImagePullAuthMechanism
+	ImageLabels           []string
+	ServiceAccount        string
+	StoreSnapshotCheckSum bool
 }
 
-func generateStartupScript(req Request) (*os.File, error) {
+func buildDiskStartupScript(req Request) (*os.File, error) {
 	concreteStartupScript, err := os.CreateTemp("", fmt.Sprintf("%s-startup-script-", req.JobName))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a tmp file, err: %v", err)
@@ -79,11 +81,33 @@ func generateStartupScript(req Request) (*os.File, error) {
 		return nil, fmt.Errorf("unable to create the concrete startup file suceesfully, err: %v", err)
 	}
 	images := strings.Join(req.ContainerImages, " ")
-	flags := fmt.Sprintf("\n\nunpack %s %s", req.ImagePullAuth, images)
+	flags := fmt.Sprintf("\n\nunpack %t %s %s", req.StoreSnapshotCheckSum, req.ImagePullAuth, images)
 	if _, err = concreteStartupScript.Write([]byte(flags)); err != nil {
 		return nil, fmt.Errorf("umable to create concrete startup script: %v", err)
 	}
 	return concreteStartupScript, nil
+}
+
+func verifyDiskStartupScript(req Request) (*os.File, error) {
+	verifyDiskStartupScript, err := os.CreateTemp("", fmt.Sprintf("%s-verify-startup-script-", req.JobName))
+	if err != nil {
+		return nil, fmt.Errorf("unable to create a tmp file, err: %v", err)
+	}
+	verifyDiskStartupScriptTemplate, err := os.Open("./script/verify.sh")
+	if err != nil {
+		return nil, fmt.Errorf("unable to open the startup template file, err: %v", err)
+	}
+	defer verifyDiskStartupScriptTemplate.Close()
+	if _, err = io.Copy(verifyDiskStartupScript, verifyDiskStartupScriptTemplate); err != nil {
+		return nil, fmt.Errorf("unable to create the verify disk startup file suceesfully, err: %v", err)
+	}
+
+	flags := fmt.Sprintf("\n\nverify_snapshots")
+	if _, err = verifyDiskStartupScript.Write([]byte(flags)); err != nil {
+		return nil, fmt.Errorf("umable to create verify disk startup script: %v", err)
+	}
+
+	return verifyDiskStartupScript, nil
 }
 
 func buildImageLabels(req Request) (map[string]string, error) {
@@ -100,7 +124,7 @@ func buildImageLabels(req Request) (map[string]string, error) {
 
 // GenerateDiskImage generates the disk image according to the given request.
 func GenerateDiskImage(ctx context.Context, req Request) error {
-	startupScriptFile, err := generateStartupScript(req)
+	startupScriptFile, err := buildDiskStartupScript(req)
 	if err != nil {
 		return err
 	}
@@ -149,6 +173,14 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 						Instance: compute.Instance{
 							Name:        fmt.Sprintf("%s-instance", req.JobName),
 							MachineType: fmt.Sprintf("zones/%s/machineTypes/%s", req.Zone, req.MachineType),
+							ServiceAccounts: []*compute.ServiceAccount{
+								&compute.ServiceAccount{
+									Email: req.ServiceAccount,
+									Scopes: []string{
+										"https://www.googleapis.com/auth/cloud-platform",
+									},
+								},
+							},
 							NetworkInterfaces: []*compute.NetworkInterface{
 								{
 									Network:    req.Network,
@@ -233,6 +265,119 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 	}
 
 	return run(ctx, preloadDiskWorkflow)
+}
+
+// VerifyDiskImage verifies the snapshots on the disk image by calculating the checksums and comparing them with those stored in snapshots.metadata file.
+func VerifyDiskImage(ctx context.Context, req Request) error {
+	startupScriptFile, err := verifyDiskStartupScript(req)
+	if err != nil {
+		return err
+	}
+	defer startupScriptFile.Close()
+	defer os.Remove(startupScriptFile.Name())
+
+	verifyDiskWorkflow := daisy.New()
+	verifyDiskWorkflow.Name = req.JobName
+	verifyDiskWorkflow.Project = req.ProjectName
+	verifyDiskWorkflow.Zone = req.Zone
+	verifyDiskWorkflow.GCSPath = req.GCSPath
+	verifyDiskWorkflow.OAuthPath = req.GCPOAuth
+	verifyDiskWorkflow.DefaultTimeout = req.Timeout.String()
+	verifyDiskWorkflow.Sources = map[string]string{
+		"verify.sh": startupScriptFile.Name(),
+	}
+	verifyDiskWorkflow.Steps = map[string]*daisy.Step{
+		"create-disk": {
+			CreateDisks: &daisy.CreateDisks{
+				&daisy.Disk{
+					Resource: daisy.Resource{
+						ExactName: true,
+					},
+					Disk: compute.Disk{
+						Name:   fmt.Sprintf("%s-disk", req.JobName),
+						Type:   req.DiskType,
+						SizeGb: req.DiskSizeGB,
+						// Use the image to be verified to create a disk.
+						SourceImage: req.ImageName,
+					},
+				},
+			},
+		},
+		"create-instance": {
+			CreateInstances: &daisy.CreateInstances{
+				Instances: []*daisy.Instance{
+					&daisy.Instance{
+						InstanceBase: daisy.InstanceBase{
+							Resource: daisy.Resource{
+								ExactName: true,
+							},
+							StartupScript: "verify.sh",
+						},
+						Instance: compute.Instance{
+							Name:        fmt.Sprintf("%s-instance", req.JobName),
+							MachineType: fmt.Sprintf("zones/%s/machineTypes/%s", req.Zone, req.MachineType),
+							NetworkInterfaces: []*compute.NetworkInterface{
+								{
+									Network:    req.Network,
+									Subnetwork: req.Subnet,
+								},
+							},
+							Disks: []*compute.AttachedDisk{
+								&compute.AttachedDisk{
+									AutoDelete: true,
+									Boot:       true,
+									Type:       "PERSISTENT",
+									DeviceName: fmt.Sprintf("%s-bootable-disk", req.JobName),
+									Mode:       "READ_WRITE",
+									InitializeParams: &compute.AttachedDiskInitializeParams{
+										DiskSizeGb:  req.DiskSizeGB,
+										DiskType:    fmt.Sprintf("projects/%s/zones/%s/diskTypes/%s", req.ProjectName, req.Zone, req.DiskType),
+										SourceImage: "projects/debian-cloud/global/images/debian-11-bullseye-v20230912",
+									},
+								},
+								&compute.AttachedDisk{
+									AutoDelete: true,
+									Boot:       false,
+									DiskSizeGb: req.DiskSizeGB,
+									DeviceName: deviceName,
+									Source:     fmt.Sprintf("%s-disk", req.JobName),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"wait-on-image-verification": {
+			WaitForInstancesSignal: &daisy.WaitForInstancesSignal{
+				&daisy.InstanceSignal{
+					Name: fmt.Sprintf("%s-instance", req.JobName),
+					SerialOutput: &daisy.SerialOutput{
+						Port:         1,
+						SuccessMatch: "Disk image verification succeeds",
+						FailureMatch: []string{
+							"Image verfication failure",
+						},
+					},
+				},
+			},
+		},
+		"detach-disk": {
+			DetachDisks: &daisy.DetachDisks{
+				&daisy.DetachDisk{
+					Instance:   fmt.Sprintf("%s-instance", req.JobName),
+					DeviceName: deviceName,
+				},
+			},
+		},
+	}
+	verifyDiskWorkflow.Dependencies = map[string][]string{
+		"create-instance":            {"create-disk"},
+		"wait-on-image-verification": {"create-instance"},
+		"detach-disk":                {"wait-on-image-verification"},
+	}
+
+	return run(ctx, verifyDiskWorkflow)
 }
 
 func run(ctx context.Context, w *daisy.Workflow) error {

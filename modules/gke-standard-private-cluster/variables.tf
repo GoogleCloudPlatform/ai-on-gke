@@ -38,7 +38,7 @@ variable "cluster_name" {
 }
 
 variable "cluster_labels" {
-  type        = map
+  type        = map(any)
   description = "GKE cluster labels"
 }
 
@@ -81,6 +81,11 @@ variable "master_authorized_networks" {
     display_name = string
   }))
   default = []
+}
+
+variable "master_ipv4_cidr_block" {
+  type    = string
+  default = ""
 }
 
 variable "all_node_pools_oauth_scopes" {

@@ -32,12 +32,13 @@ data "google_project" "project" {
 }
 
 resource "google_container_cluster" "gke_batch" {
-  provider           = google-beta
-  name               = "gke-batch-refarch"
-  project            = var.project_id
-  location           = var.region
-  node_locations     = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
-  initial_node_count = 2
+  deletion_protection = false
+  provider            = google-beta
+  name                = "gke-batch-refarch"
+  project             = var.project_id
+  location            = var.region
+  node_locations      = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
+  initial_node_count  = 2
   private_cluster_config {
     enable_private_nodes    = true
     enable_private_endpoint = false
@@ -47,7 +48,7 @@ resource "google_container_cluster" "gke_batch" {
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
-# Adding gcfs_config to enable image streaming on the cluster.
+  # Adding gcfs_config to enable image streaming on the cluster.
   node_pool_defaults {
     node_config_defaults {
       gcfs_config {
@@ -163,7 +164,14 @@ resource "google_container_node_pool" "reserved_np" {
   location       = resource.google_container_cluster.gke_batch.location
   node_config {
     machine_type = var.machine_type
-    taint        = var.reserved_taints
+    dynamic "taint" {
+      for_each = var.reserved_taints
+      content {
+        key    = taint.value.key
+        value  = taint.value.taint_value
+        effect = taint.value.effect
+      }
+    }
     labels = {
       "resource-type" : "reservation"
     }
@@ -206,7 +214,14 @@ resource "google_container_node_pool" "ondemand_np" {
   location   = var.region
   node_config {
     machine_type = var.machine_type
-    taint        = var.ondemand_taints
+    dynamic "taint" {
+      for_each = var.ondemand_taints
+      content {
+        key    = taint.value.key
+        value  = taint.value.taint_value
+        effect = taint.value.effect
+      }
+    }
     labels = {
       "resource-type" : "ondemand"
     }
@@ -250,7 +265,14 @@ resource "google_container_node_pool" "spot_np" {
   node_config {
     machine_type = var.machine_type
     spot         = true
-    taint        = var.spot_taints
+    dynamic "taint" {
+      for_each = var.spot_taints
+      content {
+        key    = taint.value.key
+        value  = taint.value.taint_value
+        effect = taint.value.effect
+      }
+    }
     labels = {
       "resource-type" : "spot"
     }
