@@ -1,0 +1,8 @@
+resources:
+- ../../../config/default
+patches:
+- path: ./deployment-patch.yaml
+- path: ./configmap-patch.yaml
+- path: ./serviceaccount-patch.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

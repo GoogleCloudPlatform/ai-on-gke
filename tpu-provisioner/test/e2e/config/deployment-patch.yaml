@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: tpu-provisioner-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          image: ${CONTROLLER_IMAGE}
+          imagePullPolicy: Always
