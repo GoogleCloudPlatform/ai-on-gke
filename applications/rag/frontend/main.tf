@@ -36,7 +36,7 @@ module "frontend-workload-identity" {
   name                = var.google_service_account
   namespace           = var.namespace
   project_id          = var.project_id
-  roles               = ["roles/cloudsql.client"]
+  roles               = ["roles/cloudsql.client", "roles/dlp.admin"]
 }
 
 resource "kubernetes_service" "rag_frontend_service" {
@@ -90,6 +90,11 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
 
           port {
             container_port = 8080
+          }
+
+          env {
+            name  = "PROJECT_ID"
+            value = "projects/${var.project_id}"
           }
 
           env {
