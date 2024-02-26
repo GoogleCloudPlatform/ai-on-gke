@@ -20,4 +20,5 @@ kustomize build ${root_dir}/test/e2e/config | envsubst | kubectl apply --server-
 kubectl delete pods -n tpu-provisioner-system --all
 
 go clean -testcache
-go test -v ${root_dir}/test/e2e/test
+
+cd ${root_dir}/test/e2e/test ; go test -v . ; cd -
