@@ -109,7 +109,7 @@ resource "helm_release" "jupyterhub" {
 
   values = [
     templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
-      password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
+      password            = var.add_auth ? random_password.generated_password[0].result : "dummy"
       project_id          = var.project_id
       project_number      = data.google_project.project.number
 
