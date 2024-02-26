@@ -88,11 +88,6 @@ variable "dataset_embeddings_table_name" {
   description = "Name of the table that stores vector embeddings for input dataset"
 }
 
-variable "default_backend_service" {
-  type    = string
-  default = "proxy-public"
-}
-
 variable "members_allowlist" {
   type    = list(string)
   default = []
@@ -104,12 +99,22 @@ variable "add_auth" {
   default     = true
 }
 
-variable "service_name" {
-  type        = string
-  description = "Name of the Kubernetes backend service"
-  default     = "iap-config-default"
+variable "k8s_ingress_name" {
+  type    = string
+  default = "jupyter-ingress"
 }
 
+variable "k8s_backend_config_name" {
+  type        = string
+  description = "Name of the Backend Config on GCP"
+  default     = "jupyter-iap-config"
+}
+
+variable "k8s_backend_service_name" {
+  type        = string
+  description = "Name of the Backend Config on GCP, this is defined by Jupyter hub"
+  default     = "proxy-public"
+}
 variable "brand" {
   type        = string
   description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"

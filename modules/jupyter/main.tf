@@ -49,15 +49,16 @@ module "iap_auth" {
   count  = var.add_auth ? 1 : 0
   source = "../../modules/jupyter_iap"
 
-  project_id              = var.project_id
-  namespace               = var.namespace
-  default_backend_service = var.default_backend_service
-  service_name            = var.service_name
-  client_id               = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
-  client_secret           = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
-  url_domain_addr         = var.url_domain_addr
-  url_domain_name         = var.url_domain_name
-  depends_on              = [google_project_service.project_service]
+  project_id                = var.project_id
+  namespace                 = var.namespace
+  k8s_ingress_name          = var.k8s_ingress_name
+  k8s_backend_config_name   = var.k8s_backend_config_name
+  k8s_backend_service_name  = var.k8s_backend_service_name
+  client_id                 = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
+  client_secret             = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
+  url_domain_addr           = var.url_domain_addr
+  url_domain_name           = var.url_domain_name
+  depends_on                = [google_project_service.project_service]
 }
 
 module "jupyterhub-workload-identity" {
@@ -116,10 +117,8 @@ resource "helm_release" "jupyterhub" {
       # Support legacy image.
       service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
       namespace           = var.namespace
-
-      # TODO Need to fix the naming
-      backend_config      = var.service_name # backend config name
-      service_name        = var.default_backend_service # ingress name
+      backend_config      = var.k8s_backend_config_name
+      service_name        = var.k8s_backend_service_name
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
       service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
       gcs_bucket          = var.gcs_bucket
@@ -135,7 +134,7 @@ resource "helm_release" "jupyterhub" {
 # Need to re-apply: fetch service_id from deployed service
 data "kubernetes_service" "jupyter-ingress" {
   metadata {
-    name      = var.default_backend_service
+    name      = var.k8s_ingress_name
     namespace = var.namespace
   }
   depends_on = [module.iap_auth]
