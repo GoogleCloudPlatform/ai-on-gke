@@ -17,11 +17,6 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
-variable "default_backend_service" {
-  type    = string
-  default = "proxy-public"
-}
-
 variable "members_allowlist" {
   type    = list(string)
   default = []
@@ -66,10 +61,21 @@ variable "project_id" {
   description = "GCP project id"
 }
 
-variable "service_name" {
+variable "k8s_ingress_name" {
+  type    = string
+  default = "jupyter-ingress"
+}
+
+variable "k8s_backend_config_name" {
   type        = string
-  description = "Name of the Backend Service on GCP"
-  default     = "iap-config-default"
+  description = "Name of the Backend Config on GCP"
+  default     = "jupyter-iap-config"
+}
+
+variable "k8s_backend_service_name" {
+  type        = string
+  description = "Name of the Backend Service on GCP, this is defined by Jupyter hub"
+  default     = "proxy-public"
 }
 
 variable "brand" {

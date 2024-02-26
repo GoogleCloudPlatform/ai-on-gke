@@ -22,12 +22,6 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
-variable "default_backend_service" {
-  type        = string
-  description = "Name of the backend service"
-  default     = "proxy-public"
-}
-
 variable "url_domain_addr" {
   type        = string
   description = "Domain provided by the user. If it's empty, we will create one for you."
@@ -59,7 +53,20 @@ variable "iap_client_secret" {
   default     = "iap-client-secret"
 }
 
-variable "service_name" {
+variable "k8s_ingress_name" {
+  type        = string
+  description = "Name of the backend service"
+  default     = "jupyter-ingress"
+}
+
+variable "k8s_backend_service_name" {
   type        = string
   description = "Name of the Backend Service on GCP"
+  default = "proxy-public"
+}
+
+variable "k8s_backend_config_name" {
+  type        = string
+  description = "Name of the Backend Config on GCP"
+  default = "jupyter-iap-config"
 }
