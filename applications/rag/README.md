@@ -28,7 +28,7 @@ Preinstall the following on your computer:
 
 TODO: Add GKE cluster requirements for a successful installation.
 
-2. Ensure your environment is pointing at the created cluster by running `gcloud container clusters get-credentials <cluster-name>` --location=<region or zone>.
+2. Ensure your environment is pointing at the created cluster by running `gcloud container clusters get-credentials <cluster-name> --location=<region or zone>`.
 
 3. The inference server requires L4 GPUs. Create an additional node pool:
 ```
@@ -39,6 +39,11 @@ gcloud container node-pools create g2-standard-24 --cluster <cluster-name> \
  --enable-image-streaming \
  --num-nodes=1 --min-nodes=1 --max-nodes=2 \
  --node-locations $REGION-a,$REGION-b --location=$REGION
+```
+
+4. Enable additional required APIs:
+```
+gcloud services enable sql-component.googleapis.com sqladmin.googleapis.com
 ```
 
 #### Setup Components

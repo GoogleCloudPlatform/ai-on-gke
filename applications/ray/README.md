@@ -54,7 +54,7 @@ http://localhost:8265
 3. Create a working directory with some job file `ray_job.py`.
 
 4. Submit the job:
-`ray job submit --working-dir %your_working_directory% -- python ray_job.py`
+`ray job submit --working-dir %YOUR_WORKING_DIRECTORY% -- python ray_job.py`
 
 5. Note the job submission ID from the output, eg.:
 `Job 'raysubmit_inB2ViQuE29aZRJ5' succeeded`
@@ -81,7 +81,7 @@ resource.labels.container_name="fluentbit"
 ```
 3. If using Ray Jobs API:
 (a) Note the job ID returned by the `ray job submit` API.
-Eg: Job submission: `ray job submit --working-dir /Users/imreddy/ray_working_directory  -- python script.py`
+Eg: Job submission: `ray job submit --working-dir %YOUR_WORKING_DIRECTORY%  -- python script.py`
     Job submission ID: `Job 'raysubmit_kFWB6VkfyqK1CbEV' submitted successfully`
 (b) Get the namespace name from `user/variables.tf` or `kubectl get namespaces`
 (c) Use the following query to search for the job logs:
