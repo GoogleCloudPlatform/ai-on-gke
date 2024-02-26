@@ -25,6 +25,7 @@ resource "helm_release" "ray-cluster" {
   namespace        = var.namespace
   create_namespace = var.create_namespace
   version          = "1.0.0"
+  
   values = [
     var.autopilot_cluster ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {
       gcs_bucket          = var.gcs_bucket
