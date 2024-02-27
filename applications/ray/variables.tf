@@ -68,3 +68,7 @@ variable "create_ray_cluster" {
   default = false
 }
 
+variable "enable_gpu" {
+  type    = bool
+  default = false
+}

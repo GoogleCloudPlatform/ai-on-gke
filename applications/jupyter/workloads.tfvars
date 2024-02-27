@@ -32,7 +32,7 @@ gcs_bucket                    = "gcs-bucket-dsfhfh"
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `gcp_service_account` to use an existing IAM service account.
 create_service_account        = true
-gcp_service_account           = "jupyter-service-account"
+gcp_and_k8s_service_account   = "jupyter-service-account"
 
 # Jupyterhub with IAP
 add_auth                  = false

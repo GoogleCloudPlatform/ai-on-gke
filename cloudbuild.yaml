@@ -18,15 +18,15 @@ steps:
     script: |
       terraform init -no-color
       terraform validate -no-color
-    dir: 'gke-platform/'
+    dir: 'infrastructure/'
     waitFor: ['-']
   
-  - id: 'validate user'
+  - id: 'validate ray'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
       terraform init -no-color
       terraform validate -no-color
-    dir: 'ray-on-gke/user/'
+    dir: 'applications/ray/'
     waitFor: ['-']
   
   - id: 'validate jupyterhub'
@@ -34,7 +34,7 @@ steps:
     script: |
       terraform init -no-color
       terraform validate -no-color
-    dir: 'jupyter-on-gke/'
+    dir: 'applications/jupyter/'
     waitFor: ['-']
 
   - id: 'create gke cluster'
@@ -46,13 +46,13 @@ steps:
       - '-c'
       - |
         set -e
-        terraform apply -var=project_id=$PROJECT_ID \
-        -var=cluster_name=ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=region=$_ZONE -auto-approve -no-color 
+        terraform apply -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=cluster_region=$_REGION -auto-approve -no-color
         echo "pass" > /workspace/gke_cluster_result.txt
-    dir: 'gke-platform/'
+    dir: 'infrastructure/'
     allowFailure: true
-    waitFor: ['validate platform', 'validate user', 'validate jupyterhub']
+    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub']
   
   - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -64,25 +64,29 @@ steps:
 
         # Get kube config
         gcloud container clusters get-credentials \
-        ray-$SHORT_SHA-$_PR_NUMBER-cluster \
-        --zone $_ZONE \
+        ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        --location $_REGION \
         --project $PROJECT_ID 
 
-        cd ray-on-gke/user/
+        cd applications/ray/
         terraform apply \
+        -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=namespace=$SHORT_SHA \
-        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
-        -auto-approve -no-color 
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=cluster_location=$_REGION \
+        -var=ray_namespace=ml-$SHORT_SHA \
+        -var=gcp_service_account=ray-sa-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA \
+        -auto-approve -no-color
         echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
-        kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
-        kubectl port-forward -n $SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265 &
+        kubectl wait --all pods -n ml-$SHORT_SHA --for=condition=Ready --timeout=300s
+        kubectl port-forward -n ml-$SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
 
-        ray job submit --working-dir ../example_ray_job_scripts \
+        ray job submit --working-dir ./example_ray_job_scripts \
         --address=http://127.0.0.1:8265 -- python ray_job.py 
         echo "pass" > /workspace/ray_result.txt
     allowFailure: true
@@ -96,26 +100,28 @@ steps:
       - |
         set -e
 
-        cd jupyter-on-gke/tests
+        cd /workspace/modules/jupyter/tests
         python3 change_jupyter_config.py
 
-        cd ../
+        cd /workspace/applications/jupyter
         terraform apply \
+        -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=namespace=$SHORT_SHA \
-        -var=add_auth=false \
-        -var=enable_iap_service=false \
-        -auto-approve -no-color 
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=namespace=ml-$SHORT_SHA \
+        -var=gcp_and_k8s_service_account=jupyter-sa-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA \
+        -auto-approve -no-color
         echo "pass" > /workspace/jupyterhub_tf_result.txt
 
-        kubectl wait --all pods -n $SHORT_SHA --for=condition=Ready --timeout=300s
-        kubectl get services -n $SHORT_SHA
-        kubectl get service proxy-public -n $SHORT_SHA --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/jupyterhub_host_url.txt
+        kubectl wait --all pods -n ml-$SHORT_SHA --for=condition=Ready --timeout=300s
+        kubectl get services -n ml-$SHORT_SHA
+        kubectl get service proxy-public -n ml-$SHORT_SHA --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/jupyterhub_host_url.txt
         echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
 
-        cd tests/
-        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) 
-        echo "pass" > /workspace/jupyterhub_test_result.txt 
+        cd /workspace/modules/jupyter/tests
+        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt)
+        echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
     waitFor: ['test ray cluster']
 
@@ -127,21 +133,31 @@ steps:
       - |
         set -e
 
-        cd jupyter-on-gke/
+        cd /workspace/applications/jupyter/
         terraform destroy \
+        -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=namespace=$SHORT_SHA \
-        -var=add_auth=false \
-        -var=enable_iap_service=false \
-        -auto-approve -no-color 
-
-        cd ../ray-on-gke/user/
-        terraform destroy -var=project_id=$PROJECT_ID \
-        -var=namespace=$SHORT_SHA \
-        -var=service_account=$_USER_NAME-$SHORT_SHA-system-account \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=namespace=ml-$SHORT_SHA \
+        -var=gcp_and_k8s_service_account=jupyter-sa-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA \
         -auto-approve -no-color
 
-        gcloud container clusters delete ray-$SHORT_SHA-$_PR_NUMBER-cluster --zone $_ZONE  --project $PROJECT_ID --quiet
+        cd /workspace/applications/ray/
+        terraform destroy \
+        -var-file=workloads.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=cluster_location=$_REGION \
+        -var=ray_namespace=ml-$SHORT_SHA \
+        -var=gcp_service_account=ray-sa-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA \
+        -auto-approve -no-color
+
+        cd /workspace/infrastructure
+        terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=cluster_region=$_REGION -auto-approve -no-color
     allowFailure: true
     waitFor: ['test jupyterhub']
 
@@ -178,5 +194,5 @@ steps:
     waitFor: ['clean gke cluster']
         
 substitutions:
-  _ZONE: us-central1-c
+  _REGION: us-central1
   _USER_NAME: github

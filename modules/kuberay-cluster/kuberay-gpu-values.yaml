@@ -19,7 +19,7 @@
 image:
   # Replace this with your own image if needed.
   repository: rayproject/ray
-  tag: 2.7.1-py310
+  tag: 2.7.1-py310-gpu
   pullPolicy: IfNotPresent
 nameOverride: "kuberay"
 fullnameOverride: ""
@@ -85,11 +85,13 @@ head:
   resources:
     limits:
       cpu: "8"
+      nvidia.com/gpu: "1"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
       memory: "20G"
       ephemeral-storage: 20Gi
     requests:
       cpu: "8"
+      nvidia.com/gpu: "1"
       memory: "20G"
       ephemeral-storage: 10Gi
   annotations:
@@ -99,6 +101,7 @@ head:
     gke-gcsfuse/ephemeral-storage-limit: 20Gi
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
+    cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
   tolerations: []
   affinity: {}
   # Ray container security context.
@@ -180,10 +183,12 @@ worker:
   resources:
     limits:
       cpu: "1"
+      nvidia.com/gpu: "1"
       memory: "20G"
       ephemeral-storage: 20Gi
     requests:
       cpu: "1"
+      nvidia.com/gpu: "1"
       memory: "20G"
       ephemeral-storage: 10Gi
   annotations:
@@ -193,6 +198,7 @@ worker:
     gke-gcsfuse/ephemeral-storage-limit: 20Gi
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
+    cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
   tolerations: []
   affinity: {}
   # Ray container security context.
