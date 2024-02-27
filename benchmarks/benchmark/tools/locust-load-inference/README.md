@@ -8,10 +8,12 @@
     - [Step 2: create and give service account access to view dataset](#step-2-create-and-give-service-account-access-to-view-dataset)
     - [Step 3: create output bucket](#step-3-create-output-bucket)
     - [Step 4: create and give service account access to write to output gcs bucket](#step-4-create-and-give-service-account-access-to-write-to-output-gcs-bucket)
+    - [Step 5: create artifact repository for automated Locust docker build](#step-5-create-artifact-repository-for-automated-locust-docker-build)
+    - [Step 6: create and configure terraform.tfvars](#step-6-create-and-configure-terraformtfvars)
       - [\[optional\] set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
-    - [Step 5: login to gcloud](#step-5-login-to-gcloud)
-    - [Step 6: terraform initialize, plan and apply](#step-6-terraform-initialize-plan-and-apply)
-    - [Step 7: start an end to end benchmark](#step-7-start-an-end-to-end-benchmark)
+    - [Step 7: login to gcloud](#step-7-login-to-gcloud)
+    - [Step 8: terraform initialize, plan and apply](#step-8-terraform-initialize-plan-and-apply)
+    - [Step 9: start an end to end benchmark](#step-9-start-an-end-to-end-benchmark)
       - [option 1: initiate a single end to end Locust benchmark run via curl command](#option-1-initiate-a-single-end-to-end-locust-benchmark-run-via-curl-command)
       - [option 2: interactive benchmark with locust web ui](#option-2-interactive-benchmark-with-locust-web-ui)
     - [Additional Tips](#additional-tips)
@@ -57,7 +59,7 @@ To give viewer permissions on the gcs bucket to the gcloud service account, run 
 
 ```
 gcloud storage buckets add-iam-policy-binding  gs://$BUCKET/$DATASET_FILENAME
---member=serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com --role=roles/storage.admin
+--member=serviceAccount:$GOOGLE_SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com --role=roles/storage.admin
 ```
 
 Your kubernetes service account will inherit the reader permissions.
@@ -66,7 +68,7 @@ You will set the `ksa` in your `terraform.tfvars` to the kubernetes service acco
 
 ### Step 3: create output bucket
 
-If you followed steps from `infra/` for creating your cluster and extra resources, you will already have an output bucket created for you.  If not, you will have to create and manage your own gcs bucket for storing benchmarking results.
+If you followed steps from `../../infra/` for creating your cluster and extra resources, you will already have an output bucket created for you.  If not, you will have to create and manage your own gcs bucket for storing benchmarking results.
 
 Set the `output_bucket` in your `terraform.tfvars` to this gcs bucket.
 
@@ -78,12 +80,21 @@ To give viewer permissions on the gcs bucket to the gcloud service account, run 
 
 ```
 gcloud storage buckets add-iam-policy-binding  gs://$OUTPUT_BUCKET/
---member=serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com --role=roles/storage.admin
-```s
+--member=serviceAccount:$GOOGLE_SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com --role=roles/storage.admin
+```
 
 Your kubernetes service account will inherit the reader permissions.
 
 You will set the `locust_runner_kubernetes_service_account` in your `terraform.tfvars` to the kubernetes service account name.
+
+### Step 5: create artifact repository for automated Locust docker build
+
+Locust rebuilds the docker file on each terraform apply. The containers will be pushed to the given `artifact_registry`. This artifact repository is expected to already exist. If you created your cluster via `../../infra/`, then an artifact repository was created for you with the same name as the prefix in the same location as the cluster. You can also create your own via this command:
+
+```bash
+gcloud artifacts repositories create ai-benchmark --location=us-central1 --repository-format=docker
+```
+
 
 ### Step 6: create and configure terraform.tfvars
 
@@ -131,7 +142,7 @@ credentials_config = {
 }
 ```
 
-### Step 5: login to gcloud
+### Step 7: login to gcloud
 
 Run the following gcloud command for authorization:
 
@@ -139,7 +150,7 @@ Run the following gcloud command for authorization:
 gcloud auth application-default login
 ```
 
-### Step 6: terraform initialize, plan and apply
+### Step 8: terraform initialize, plan and apply
 
 Run the following terraform commands:
 
@@ -154,7 +165,7 @@ terraform plan
 terraform apply
 ```
 
-### Step 7: start an end to end benchmark
+### Step 9: start an end to end benchmark
 
 #### option 1: initiate a single end to end Locust benchmark run via curl command
 
