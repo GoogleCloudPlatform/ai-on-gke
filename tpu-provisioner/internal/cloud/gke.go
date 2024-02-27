@@ -219,7 +219,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 			Type:        "COMPACT",
 		},
 		Management: &containerv1beta1.NodeManagement{
-			AutoRepair:  false, // true,
+			AutoRepair:  true,
 			AutoUpgrade: true,
 		},
 		UpgradeSettings: &containerv1beta1.UpgradeSettings{
