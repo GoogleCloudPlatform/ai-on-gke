@@ -158,8 +158,6 @@ steps:
         terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=cluster_region=$_REGION -auto-approve -no-color
-
-        gcloud container clusters delete ml-$SHORT_SHA-$_PR_NUMBER-cluster --location $_REGION  --project $PROJECT_ID --quiet
     allowFailure: true
     waitFor: ['test jupyterhub']
 
