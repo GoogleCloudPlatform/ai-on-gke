@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC All Rights Reserved.
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform.tfvars
-terraform.tfstate*
-.terraform*
-__pycache__/
-bin/
-deploy/
-.idea/
+terraform {
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.8.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.18.1"
+    }
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = "2.0.1"
+    }
+  }
+}
