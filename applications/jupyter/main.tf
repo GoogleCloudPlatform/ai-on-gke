@@ -81,15 +81,16 @@ module "jupyterhub" {
   gcs_bucket                    = var.gcs_bucket
 
   # IAP Auth parameters
-  add_auth                = var.add_auth
-  brand                   = var.brand
-  support_email           = var.support_email
-  client_id               = var.client_id
-  client_secret           = var.client_secret
-  default_backend_service = var.default_backend_service
-  service_name            = var.service_name
-  url_domain_addr         = var.url_domain_addr
-  url_domain_name         = var.url_domain_name
-  members_allowlist       = var.members_allowlist
-  depends_on              = [module.gcs]
+  add_auth                  = var.add_auth
+  brand                     = var.brand
+  support_email             = var.support_email
+  client_id                 = var.client_id
+  client_secret             = var.client_secret
+  k8s_ingress_name          = var.k8s_ingress_name
+  k8s_backend_config_name   = var.k8s_backend_config_name
+  k8s_backend_service_name  = var.k8s_backend_service_name
+  url_domain_addr           = var.url_domain_addr
+  url_domain_name           = var.url_domain_name
+  members_allowlist         = var.members_allowlist
+  depends_on                = [module.gcs]
 }

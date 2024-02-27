@@ -35,8 +35,9 @@ gcp_service_account           = "jupyter-service-account"
 add_auth = false
 brand = ""
 support_email = ""
-default_backend_service = ""
-service_name = ""
+k8s_ingress_name = ""
+k8s_backend_config_name = ""
+k8s_backend_service_name = ""
 
 url_domain_addr = ""
 url_domain_name = ""

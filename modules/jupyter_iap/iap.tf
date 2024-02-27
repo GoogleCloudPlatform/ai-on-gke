@@ -40,7 +40,7 @@ resource "helm_release" "iap_jupyter" {
   timeout          = 1200
   set {
     name  = "iap.backendConfig.name"
-    value = var.service_name
+    value = var.k8s_backend_config_name
   }
 
   set {
@@ -69,8 +69,13 @@ resource "helm_release" "iap_jupyter" {
   }
 
   set {
+    name  = "iap.jupyterIngress.name"
+    value = var.k8s_ingress_name
+  }
+
+  set {
     name  = "iap.jupyterIngress.defaultBackend"
-    value = var.default_backend_service
+    value = var.k8s_backend_service_name
   }
 }
 

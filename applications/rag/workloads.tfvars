@@ -45,8 +45,9 @@ dataset_embeddings_table_name = "googlemaps_reviews_db"
 add_auth                = false # Set to true when using auth with IAP
 brand                   = "projects/<prj-number>/brands/<prj-number>"
 support_email           = "<email>"
-default_backend_service = "proxy-public"
-service_name            = "iap-config-default"
+k8s_ingress_name          = "jupyter-ingress"
+k8s_backend_config_name   = "jupyter-iap-config"
+k8s_backend_service_name  = "proxy-public"
 
 url_domain_addr   = ""
 url_domain_name   = ""
