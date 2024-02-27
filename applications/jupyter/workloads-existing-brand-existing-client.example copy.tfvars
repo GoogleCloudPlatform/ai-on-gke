@@ -29,7 +29,7 @@ cluster_membership_id = "" # required only for private cluster, default: cluster
 namespace = "jupyter"
 gcs_bucket = "<gcs-bucket>"
 create_service_account        = true
-gcp_service_account           = "jupyter-service-account"
+gcp_and_k8s_service_account   = "jupyter-service-account"
 
 # Jupyterhub with IAP
 add_auth = true

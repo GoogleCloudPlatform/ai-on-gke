@@ -29,7 +29,13 @@ variable "create_namespace" {
 
 variable "enable_tpu" {
   type        = bool
-  description = "Set to true to create TPU node pool"
+  description = "Set to true to request TPUs in Ray cluster"
+  default     = false
+}
+
+variable "enable_gpu" {
+  type        = bool
+  description = "Set to true to request GPUs in Ray cluster"
   default     = false
 }
 

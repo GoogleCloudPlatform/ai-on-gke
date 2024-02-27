@@ -109,6 +109,7 @@ module "kuberay-cluster" {
   namespace              = var.ray_namespace
   project_id             = var.project_id
   enable_tpu             = data.google_container_cluster.default.enable_tpu
+  enable_gpu             = var.enable_gpu
   gcs_bucket             = var.gcs_bucket
   enable_autopilot       = data.google_container_cluster.default.enable_autopilot
   google_service_account = var.gcp_service_account
