@@ -13,7 +13,7 @@ via these terraform scripts on a Standard cluster that you've created yourself.
 ### Terraform
 
 Install Terraform by following the documentation at https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli.
-This requires a minimum Terraform version of 1.7.0
+This requires a minimum Terraform version of 1.7.4
 
 ## Deploy and serve an ML model
 
@@ -131,3 +131,5 @@ terraform plan
 # Run apply if the changes look good by confirming the prompt.
 terraform apply
 ```
+
+To further interact with the Locust inference benchmark, view the README.md file in `benchmark/tools/locust-load-inference`
