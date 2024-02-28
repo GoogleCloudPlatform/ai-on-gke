@@ -21,7 +21,7 @@ data "kubernetes_all_namespaces" "allns" {}
 
 # create namespace
 module "namespace" {
-  source           = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kubernetes-namespace"
+  source           = "../../modules/kubernetes-namespace"
   namespace        = var.namespace
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
 }
@@ -54,7 +54,7 @@ resource "google_iap_client" "iap_oauth_client" {
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
-  source = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter_iap"
+  source = "../../modules/jupyter_iap"
 
   project_id                = var.project_id
   namespace                 = var.namespace
