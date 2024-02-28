@@ -92,7 +92,7 @@ module "cloudsql" {
 
 module "jupyterhub" {
   source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter"
-  depends_on = [module.kuberay-operator]
+  depends_on = [module.kuberay-operator, module.gcs]
   namespace  = var.kubernetes_namespace
   project_id = var.project_id
   gcs_bucket = var.gcs_bucket
@@ -122,7 +122,7 @@ module "kuberay-logging" {
 module "kuberay-cluster" {
   source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster"
   project_id             = var.project_id
-  depends_on             = [module.kuberay-operator, module.kuberay-monitoring]
+  depends_on             = [module.kuberay-operator, module.gcs, module.kuberay-monitoring]
   namespace              = var.kubernetes_namespace
   gcs_bucket             = var.gcs_bucket
   create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)

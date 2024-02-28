@@ -22,11 +22,6 @@
 # Chart default values:     https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
 # Available chart versions: https://jupyterhub.github.io/helm-chart/
 hub:
-  serviceAccount:
-    create: true
-    name: hub
-    annotations: 
-        iam.gke.io/gcp-service-account: "${k8s_service_account}@${project_id}.iam.gserviceaccount.com"
   image: 
     name: us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class
     tag: latest

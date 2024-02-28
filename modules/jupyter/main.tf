@@ -77,6 +77,22 @@ module "jupyterhub-workload-identity" {
   depends_on = [module.iap_auth, module.namespace]
 }
 
+resource "kubernetes_annotations" "hub" {
+  api_version = "v1"
+  kind        = "ServiceAccount"
+  metadata {
+    name = "hub"
+    namespace = "${var.namespace}"
+  }
+  annotations = {
+    "iam.gke.io/gcp-service-account" = "${var.workload_identity_service_account}@${var.project_id}.iam.gserviceaccount.com"
+  }
+  depends_on = [
+    helm_release.jupyterhub
+  ]
+}
+
+
 resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
   bucket     = var.gcs_bucket
   role       = "roles/storage.objectAdmin"
@@ -125,18 +141,18 @@ resource "helm_release" "jupyterhub" {
 
 # Need to re-apply: fetch service_id from deployed service
 data "kubernetes_service" "jupyter-ingress" {
-  depends_on = [ helm_release.jupyterhub ]
   metadata {
     name      = var.k8s_ingress_name
     namespace = var.namespace
   }
+  depends_on = [module.iap_auth]
 }
 
-# # The data of the GCP backend service. IAP is enabled on this backend service
-# data "google_compute_backend_service" "jupyter-ingress" {
-#   count   = var.add_auth ? 1 : 0
-#   name    = data.kubernetes_service.jupyter-ingress[0].metadata != null ? (data.kubernetes_service.jupyter-ingress[0].metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter-ingress[0].metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups["80"] : "not-found") : "not-found"
-#   project = var.project_id
-# }
+# The data of the GCP backend service. IAP is enabled on this backend service
+data "google_compute_backend_service" "jupyter-ingress" {
+  count   = var.add_auth ? 1 : 0
+  name    = data.kubernetes_service.jupyter-ingress.metadata != null ? (data.kubernetes_service.jupyter-ingress.metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter-ingress.metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups["80"] : "not-found") : "not-found"
+  project = var.project_id
+}
 
 # TODO fix the permission setting issue.
