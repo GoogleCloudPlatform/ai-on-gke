@@ -112,10 +112,18 @@ func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec) (string, error) {
 	if numHosts == 0 {
 		return "", errors.New("workerGroupSpec NumOfHosts not set")
 	}
+	replicas := int32(*workerGroupSpec.Replicas)
+	if replicas == 0 {
+		return "", errors.New("workerGroupSpec Replicas not set")
+	}
 	workerGroupName := workerGroupSpec.GroupName
-	hostNames := make([]string, numHosts)
-	for j := 0; j < int(numHosts); j++ {
-		hostNames[j] = fmt.Sprintf("%s-%d.%s", workerGroupName, j, headlessServiceName)
+	numWorkers := numHosts*replicas
+	hostNames := make([]string, numWorkers)
+	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.headless-worker-svc
+	for replicaIndex := int32(0); replicaIndex < replicas; replicaIndex++ {
+		for j := 0; j < int(numHosts); j++ {
+			hostNames[j] = fmt.Sprintf("%s-%d-%d.%s", workerGroupName, replicaIndex, j, headlessServiceName)
+		}
 	}
 	return strings.Join(hostNames, ","), nil
 }
@@ -459,14 +467,6 @@ func init() {
 	flag.StringVar(&CACert, "ca-cert", "", "base64-encoded root certificate for TLS")
 	flag.StringVar(&ServerCert, "server-cert", "", "base64-encoded server certificate for TLS")
 	flag.StringVar(&ServerKey, "server-key", "", "base64-encoded server key for TLS")
-}
-
-var (
-	BindAddr string
-)
-
-func init() {
-	flag.StringVar(&BindAddr, "bind-address", ":443", "Address to bind HTTPS service to")
 }
 
 func main() {
