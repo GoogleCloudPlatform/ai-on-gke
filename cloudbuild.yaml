@@ -36,6 +36,14 @@ steps:
       terraform validate -no-color
     dir: 'applications/jupyter/'
     waitFor: ['-']
+  
+  - id: 'validate rag'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: 'applications/rag/'
+    waitFor: ['-']
 
   - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -125,6 +133,63 @@ steps:
     allowFailure: true
     waitFor: ['test ray cluster']
 
+  - id: 'test rag setup'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        # Get kube config
+        gcloud container clusters get-credentials \
+        ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        --location $_REGION \
+        --project $PROJECT_ID 
+
+        cd /workspace/modules/jupyter/tests
+        python3 change_jupyter_config.py
+
+        cd applications/rag/
+        terraform init
+        terraform apply \
+        -var-file=workloads.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=kubernetes_namespace=rag-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA \
+        -auto-approve -no-color
+        echo "pass" > /workspace/rag_result.txt
+
+        # Validate Ray: Make sure pods are running
+        kubectl wait --all pods -n rag-$SHORT_SHA --for=condition=Ready --timeout=300s
+        kubectl port-forward -n rag-$SHORT_SHA service/example-cluster-kuberay-head-svc 8265:8265 &
+        # Wait port-forwarding to take its place
+        sleep 5s
+
+        # Validate Ray: Check dashboard
+        ray job submit --working-dir ./example_ray_job_scripts \
+        --address=http://127.0.0.1:8265 -- python ray_job.py 
+        echo "pass" > /workspace/rag_ray_dashboard_result.txt
+
+        # Validate Jupyterhub: Get hub url
+        kubectl get services -n rag-$SHORT_SHA
+        kubectl get service proxy-public -n rag-$SHORT_SHA --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/rag_jupyterhub_host_url.txt
+        echo "HOST URL is " $(cat /workspace/rag_jupyterhub_host_url.txt)
+
+        # Validate Jupyterhub: Test Hub
+        cd /workspace/modules/jupyter/tests
+        python3 test_hub.py $(cat /workspace/rag_jupyterhub_host_url.txt)
+        echo "pass" > /workspace/rag_jupyterhub_test_result.txt
+
+        # Validate RAG: Test rag frontend
+        kubectl port-forward -n rag-$SHORT_SHA service/rag-frontend 8081:8080 &
+        # Wait port-forwarding to take its place
+        sleep 5s
+
+    allowFailure: true
+    waitFor: ['create gke cluster']
+
   - id: 'clean gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'bash'
@@ -154,12 +219,21 @@ steps:
         -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA \
         -auto-approve -no-color
 
+        cd /workspace/applications/rag/
+        terraform destroy \
+        -var-file=workloads.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=kubernetes_namespace=rag-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA \
+        -auto-approve -no-color
+
         cd /workspace/infrastructure
         terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=cluster_region=$_REGION -auto-approve -no-color
     allowFailure: true
-    waitFor: ['test jupyterhub']
+    waitFor: ['test rag setup']
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -196,3 +270,6 @@ steps:
 substitutions:
   _REGION: us-central1
   _USER_NAME: github
+options:
+  substitutionOption: 'ALLOW_LOOSE'
+
