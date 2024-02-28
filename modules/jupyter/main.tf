@@ -19,6 +19,13 @@ data "google_project" "project" {
 # fetch all namespaces
 data "kubernetes_all_namespaces" "allns" {}
 
+# create namespace
+module "namespace" {
+  source           = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kubernetes-namespace"
+  namespace        = var.namespace
+  create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
+}
+
 # Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
   count             = var.add_auth && var.brand == "" ? 1 : 0
@@ -47,7 +54,7 @@ resource "google_iap_client" "iap_oauth_client" {
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
-  source = "../../modules/jupyter_iap"
+  source = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter_iap"
 
   project_id                = var.project_id
   namespace                 = var.namespace
@@ -62,35 +69,19 @@ module "iap_auth" {
 }
 
 module "jupyterhub-workload-identity" {
-  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  use_existing_gcp_sa = !var.create_service_account
-  name                = var.gcp_and_k8s_service_account
-  namespace           = var.namespace
-  project_id          = var.project_id
-  roles               = concat(var.predefined_iam_roles, var.gcp_service_account_iam_roles)
-  depends_on          = [ module.iap_auth ]
+  source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  name       = var.workload_identity_service_account
+  namespace  = var.namespace
+  project_id = var.project_id
+  roles      = concat(var.predefined_iam_roles, var.gcp_service_account_iam_roles)
+  depends_on = [module.iap_auth, module.namespace]
 }
 
-resource "kubernetes_annotations" "hub" {
-  api_version = "v1"
-  kind        = "ServiceAccount"
-  metadata {
-    name = "hub"
-    namespace = "${var.namespace}"
-  }
-  annotations = {
-    "iam.gke.io/gcp-service-account" = "${var.gcp_and_k8s_service_account}@${var.project_id}.iam.gserviceaccount.com"
-  }
-  depends_on = [
-    helm_release.jupyterhub
-  ]
-}
-
-resource "google_storage_bucket_iam_member"  "gcs-bucket-iam" {
-  bucket = "${var.gcs_bucket}"
-  role = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${var.gcp_and_k8s_service_account}@${var.project_id}.iam.gserviceaccount.com"
-  depends_on = [ module.jupyterhub-workload-identity ]
+resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
+  bucket     = var.gcs_bucket
+  role       = "roles/storage.objectAdmin"
+  member     = "serviceAccount:${var.workload_identity_service_account}@${var.project_id}.iam.gserviceaccount.com"
+  depends_on = [module.jupyterhub-workload-identity]
 }
 
 resource "random_password" "generated_password" {
@@ -106,6 +97,7 @@ resource "helm_release" "jupyterhub" {
   namespace        = var.namespace
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
   cleanup_on_fail  = "true"
+  # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment 
   timeout          = 1200
 
   values = [
@@ -115,14 +107,14 @@ resource "helm_release" "jupyterhub" {
       project_number      = data.google_project.project.number
 
       # Support legacy image.
-      service_id          = var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
+      service_id          = ""#var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
       namespace           = var.namespace
       backend_config      = var.k8s_backend_config_name
       service_name        = var.k8s_backend_service_name
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
       service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
       gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.gcp_and_k8s_service_account
+      k8s_service_account = var.workload_identity_service_account
     })
   ]
   depends_on = [
@@ -133,18 +125,18 @@ resource "helm_release" "jupyterhub" {
 
 # Need to re-apply: fetch service_id from deployed service
 data "kubernetes_service" "jupyter-ingress" {
+  depends_on = [ helm_release.jupyterhub ]
   metadata {
     name      = var.k8s_ingress_name
     namespace = var.namespace
   }
-  depends_on = [module.iap_auth]
 }
 
-# The data of the GCP backend service. IAP is enabled on this backend service
-data "google_compute_backend_service" "jupyter-ingress" {
-  count   = var.add_auth ? 1 : 0
-  name    = data.kubernetes_service.jupyter-ingress.metadata != null ? (data.kubernetes_service.jupyter-ingress.metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter-ingress.metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups["80"] : "not-found") : "not-found"
-  project = var.project_id
-}
+# # The data of the GCP backend service. IAP is enabled on this backend service
+# data "google_compute_backend_service" "jupyter-ingress" {
+#   count   = var.add_auth ? 1 : 0
+#   name    = data.kubernetes_service.jupyter-ingress[0].metadata != null ? (data.kubernetes_service.jupyter-ingress[0].metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter-ingress[0].metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups["80"] : "not-found") : "not-found"
+#   project = var.project_id
+# }
 
 # TODO fix the permission setting issue.

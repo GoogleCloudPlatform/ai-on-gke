@@ -78,6 +78,12 @@ variable "rag_service_account" {
   default     = "rag-system-account"
 }
 
+variable "create_gcs_bucket" {
+  type = bool
+  default = false
+  description = "Enable flag to create gcs_bucket"
+}
+
 variable "gcs_bucket" {
   type        = string
   description = "GCS bucket name to store dataset"
@@ -136,6 +142,7 @@ variable "url_domain_name" {
 variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
+  default     = ""
 }
 
 variable "client_id" {

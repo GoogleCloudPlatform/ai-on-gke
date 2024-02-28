@@ -17,8 +17,8 @@
 project_id = "<gcp-prj-id>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-cluster_name     = "<cluster-name>"
-cluster_location = "us-central1"
+cluster_name          = "<cluster-name>"
+cluster_location      = "us-central1"
 cluster_membership_id = "" # required only for private cluster, default: cluster_name
 
 #######################################################
@@ -26,21 +26,21 @@ cluster_membership_id = "" # required only for private cluster, default: cluster
 #######################################################
 
 ## JupyterHub variables
-namespace = "jupyter"
-gcs_bucket = "<gcs-bucket>"
-create_service_account        = true
-gcp_and_k8s_service_account   = "jupyter-service-account"
+namespace              = "jupyter"
+create_gcs_bucket      = true
+gcs_bucket             = "<gcs-bucket>"
+create_service_account = true
+gcp_service_account    = "jupyter-service-account"
 
 # Jupyterhub with IAP
-add_auth = true
-brand = ""
-support_email = "<email>"
-k8s_ingress_name          = "jupyter-ingress"
-k8s_backend_config_name   = "jupyter-iap-config"
-k8s_backend_service_name  = "proxy-public"
+add_auth                = true
+brand                   = ""
+support_email           = "<email>"
+default_backend_service = "proxy-public"
+service_name            = "iap-config-default"
 
-url_domain_addr = ""
-url_domain_name = ""
-client_id = ""
-client_secret = ""
+url_domain_addr   = ""
+url_domain_name   = ""
+client_id         = ""
+client_secret     = ""
 members_allowlist = "allAuthenticatedUsers,user:<email>"

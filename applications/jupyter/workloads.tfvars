@@ -26,13 +26,13 @@ cluster_membership_id = "" # required for private cluster, defaults to `cluster_
 #######################################################
 
 ## JupyterHub variables
-namespace                     = "ml"
-gcs_bucket                    = "gcs-bucket-dsfhfh"
+namespace         = "ml"
+create_gcs_bucket = true
+gcs_bucket        = "gcs-bucket-dsfhfh"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `gcp_service_account` to use an existing IAM service account.
-create_service_account        = true
-gcp_and_k8s_service_account   = "jupyter-service-account"
+workload_identity_service_account = "jupyter-service-account"
 
 # Jupyterhub with IAP
 add_auth                  = false

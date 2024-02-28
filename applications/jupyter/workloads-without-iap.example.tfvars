@@ -17,8 +17,8 @@
 project_id = "<gcp-prj-id>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-cluster_name     = "<cluster-name>"
-cluster_location = "us-central1"
+cluster_name          = "<cluster-name>"
+cluster_location      = "us-central1"
 cluster_membership_id = "" # required only for private clusters, default: cluster_name
 
 #######################################################

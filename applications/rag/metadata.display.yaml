@@ -1,0 +1,149 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke-display
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: RAG-on-GKE Application
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/rag
+  ui:
+    input:
+      variables:
+        cluster_name:
+          name: cluster_name
+          title: Cluster Name
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GKE_CLUSTER
+            gkeCluster:
+              clusterCreationVariable: create_cluster
+              locationVariable: cluster_location
+        cluster_location:
+          name: cluster_location
+          title: Cluster Location
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GCE_REGION
+        cluster_membership_id:
+          name: cluster_membership_id
+          title: Cluster Membership Id
+          section: cluster_details
+          invisible: true
+        create_jupyter_service_account:
+          name: create_jupyter_service_account
+          title: Create Jupyter Service Account
+          invisible: true
+        create_rag_service_account:
+          name: create_rag_service_account
+          title: Create Rag Service Account
+          invisible: true
+        create_ray_service_account:
+          name: create_ray_service_account
+          title: Create Ray Service Account
+          invisible: true
+        default_backend_service:
+          name: default_backend_service
+          title: Default Backend Service
+          invisible: true
+        gcs_bucket:
+          name: gcs_bucket
+          title: Gcs Bucket
+          section: rag
+          xGoogleProperty:
+            type: ET_GCS_BUCKET 
+        jupyter_service_account:
+          name: jupyter_service_account
+          title: Jupyter Service Account
+          section: rag
+        kubernetes_namespace:
+          name: kubernetes_namespace
+          title: Kubernetes Namespace
+          section: cluster_details
+        project_id:
+          name: project_id
+          title: Project Id
+          invisible: true
+        rag_service_account:
+          name: rag_service_account
+          title: Rag Service Account
+          section: rag
+        ray_service_account:
+          name: ray_service_account
+          title: Ray Service Account
+          section: rag
+        add_auth:
+          name: add_auth
+          title: Enable IAP Authentication
+          section: iap_auth
+        brand:
+          name: brand
+          title: Brand
+          section: iap_auth
+          level: 1
+        support_email:
+          name: support_email
+          title: Support Email
+          section: iap_auth
+          level: 1
+        client_id:
+          name: client_id
+          title: Client Id
+          section: iap_auth
+          level: 1
+        client_secret:
+          name: client_secret
+          title: Client Secret    
+          section: iap_auth  
+          level: 1  
+        service_name:
+          name: service_name
+          title: Service Name
+          section: iap_auth
+          invisible: true
+          level: 1
+        url_domain_addr:
+          name: url_domain_addr
+          title: Url Domain Addr
+          section: iap_auth
+          level: 1
+        url_domain_name:
+          name: url_domain_name
+          title: Url Domain Name
+          section: iap_auth
+          level: 1
+        members_allowlist:
+          name: members_allowlist
+          title: Members Allowlist
+          section: iap_auth
+          level: 1
+      sections:
+        - name: cluster_details
+          title: Cluster Details
+          tooltip: Select or Create GKE cluster
+        - name: rag
+          title: Rag Application
+        - name: iap_auth
+          title: IAP Authentication
+          #subtext: Provide IAP details
+    runtime:
+        outputMessage: Deployment can take several minutes to complete.
+        suggestedActions:
+        - heading: No external IP configured
+          description: "The VM instance has been configured with no external IP or internet access. Connecting \nto it directly may not be possible. Consider using a <a href=\"https://cloud.google.com/compute/docs/instances/connecting-advanced#bastion_host\">bastion host</a> \nto access this VM."
+        outputs:
+          admin_url:
+            open_in_new_tab: true
+            show_in_notification: true
+            label: "Go to Admin page"
+          admin_password: {}
+          password: {}
+          domain:  
+            open_in_new_tab: true
+            show_in_notification: true
+            label: "Go to RAG Application page"
+

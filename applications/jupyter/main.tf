@@ -64,21 +64,19 @@ provider "helm" {
 }
 
 module "gcs" {
-  source     = "../../modules/gcs"
-  project_id = var.project_id
+  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs"
+  count       = var.create_gcs_bucket ? 1 : 0
+  project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 # Creates jupyterhub
 module "jupyterhub" {
-
-  source     = "../../modules/jupyter"
-  project_id = var.project_id
-
-  namespace                     = var.namespace
-  create_service_account        = var.create_service_account
-  gcp_and_k8s_service_account   = var.gcp_and_k8s_service_account
-  gcs_bucket                    = var.gcs_bucket
+  source                            = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter"
+  project_id                        = var.project_id
+  namespace                         = var.namespace
+  workload_identity_service_account = var.workload_identity_service_account
+  gcs_bucket                        = var.gcs_bucket
 
   # IAP Auth parameters
   add_auth                  = var.add_auth

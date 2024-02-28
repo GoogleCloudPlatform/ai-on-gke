@@ -1,0 +1,105 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: RAG-on-GKE Application
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/rag
+    actuationTool:
+      flavor: Terraform
+    description: {}
+  content: {}
+  interfaces:
+    variables:
+      - name: add_auth
+        description: Enable iap authentication on jupyterhub
+        varType: bool
+        defaultValue: true
+      - name: brand
+        description: name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty
+        varType: string
+        defaultValue: ""
+      - name: client_id
+        description: Client ID used for enabling IAP
+        varType: string
+        defaultValue: ""
+      - name: client_secret
+        description: Client secret used for enabling IAP
+        varType: string
+        defaultValue: ""
+      - name: cluster_location
+        varType: string
+        required: true
+      - name: cluster_membership_id
+        description: "require to use connectgateway for private clusters, default: cluster_name"
+        varType: string
+        defaultValue: ""
+      - name: cluster_name
+        varType: string
+        required: true
+      - name: create_jupyter_service_account
+        description: Creates a google IAM service account & k8s service account & configures workload identity
+        varType: bool
+        defaultValue: true
+      - name: create_rag_service_account
+        description: Creates a google IAM service account & k8s service account & configures workload identity
+        varType: bool
+        defaultValue: true
+      - name: create_ray_service_account
+        description: Creates a google IAM service account & k8s service account & configures workload identity
+        varType: bool
+        defaultValue: true
+      - name: default_backend_service
+        varType: string
+        defaultValue: proxy-public
+      - name: gcs_bucket
+        description: GCS bucket name to store dataset
+        varType: string
+        required: true
+      - name: jupyter_service_account
+        description: Google Cloud IAM service account for authenticating with GCP services
+        varType: string
+        defaultValue: jupyter-system-account
+      - name: kubernetes_namespace
+        description: Kubernetes namespace where resources are deployed
+        varType: string
+        defaultValue: rag
+      - name: members_allowlist
+        varType: string
+        defaultValue: ""
+      - name: project_id
+        description: GCP project id
+        varType: string
+        required: true
+      - name: rag_service_account
+        description: Google Cloud IAM service account for authenticating with GCP services
+        varType: string
+        defaultValue: rag-system-account
+      - name: ray_service_account
+        description: Google Cloud IAM service account for authenticating with GCP services
+        varType: string
+        defaultValue: ray-system-account
+      - name: service_name
+        description: Name of the Kubernetes backend service
+        varType: string
+        defaultValue: iap-config-default
+      - name: support_email
+        description: Email for users to contact with questions about their consent
+        varType: string
+      - name: url_domain_addr
+        description: Domain provided by the user. If it's empty, we will create one for you.
+        varType: string
+        defaultValue: ""
+      - name: url_domain_name
+        description: Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty
+        varType: string
+        defaultValue: ""
+    outputs:
+      - name: domain
+      - name: password
