@@ -13,10 +13,10 @@
 # limitations under the License.
 
 output "domain" {
-  value = module.jupyterhub.domain
+  value = module.jupyterhub.jupyterhub_uri
 }
 
 output "password" {
-  value     = module.jupyterhub.password
+  value     = module.jupyterhub.jupyterhub_password
   sensitive = true
 }

@@ -36,6 +36,7 @@ create_service_account = true
 gcp_service_account    = "ray-service-account"
 
 # Bucket name should be globally unique.
+create_gcs_bucket               = true
 gcs_bucket                      = "ray-bucket-zydg"
 create_ray_cluster              = true
 enable_grafana_on_ray_dashboard = false

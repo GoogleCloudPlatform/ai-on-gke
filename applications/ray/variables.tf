@@ -48,6 +48,12 @@ variable "enable_grafana_on_ray_dashboard" {
   default = false  
 }
 
+variable "create_gcs_bucket" {
+  type = bool
+  default = false
+  description = "Enable flag to create gcs_bucket"
+}
+
 variable "gcs_bucket" {
   type = string
 }

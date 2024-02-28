@@ -23,3 +23,26 @@ output "cluster_name" {
 output "cluster_region" {
   value = var.cluster_region
 }
+
+output "endpoint" {
+  value = var.create_cluster && var.autopilot_cluster && var.private_cluster ? module.private-gke-autopilot-cluster[0].endpoint : (
+    var.create_cluster && !var.autopilot_cluster && var.private_cluster ? module.private-gke-standard-cluster[0].endpoint : (
+      var.create_cluster && var.autopilot_cluster && !var.private_cluster ? module.public-gke-autopilot-cluster[0].endpoint : (
+        var.create_cluster && !var.autopilot_cluster && !var.private_cluster ? module.public-gke-standard-cluster[0].endpoint :
+  "")))
+  depends_on = [ module.private-gke-autopilot-cluster, module.private-gke-standard-cluster, module.public-gke-autopilot-cluster, module.public-gke-standard-cluster ]
+}
+
+output "ca_certificate" {
+  value = var.create_cluster && var.autopilot_cluster && var.private_cluster ? module.private-gke-autopilot-cluster[0].ca_certificate : (
+    var.create_cluster && !var.autopilot_cluster && var.private_cluster ? module.private-gke-standard-cluster[0].ca_certificate : (
+      var.create_cluster && var.autopilot_cluster && !var.private_cluster ? module.public-gke-autopilot-cluster[0].ca_certificate : (
+        var.create_cluster && !var.autopilot_cluster && !var.private_cluster ? module.public-gke-standard-cluster[0].ca_certificate :
+  "")))
+    depends_on = [ module.private-gke-autopilot-cluster, module.private-gke-standard-cluster, module.public-gke-autopilot-cluster, module.public-gke-standard-cluster ]
+
+}
+
+output "private_cluster" {
+  value =  var.private_cluster 
+}

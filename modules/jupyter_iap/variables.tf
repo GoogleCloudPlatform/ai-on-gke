@@ -67,6 +67,11 @@ variable "k8s_backend_service_name" {
 
 variable "k8s_backend_config_name" {
   type        = string
-  description = "Name of the Backend Config on GCP"
   default = "jupyter-iap-config"
+  description = "Name of the BackendConfig Service on GCP"
+}
+
+variable "members_allowlist" {
+  type    = list(string)
+  default = []
 }
