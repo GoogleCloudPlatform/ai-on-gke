@@ -21,6 +21,3 @@ variable "namespace" {
 variable "create_namespace" {
   type        = bool
 }
-
-
-
