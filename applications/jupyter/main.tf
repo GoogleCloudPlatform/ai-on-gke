@@ -64,7 +64,7 @@ provider "helm" {
 }
 
 module "gcs" {
-  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs"
+  source      = "../../modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
@@ -72,7 +72,7 @@ module "gcs" {
 
 # Creates jupyterhub
 module "jupyterhub" {
-  source                            = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter"
+  source                            = "../../modules/jupyter"
   project_id                        = var.project_id
   namespace                         = var.namespace
   workload_identity_service_account = var.workload_identity_service_account
