@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-    }
-    google-beta = {
-      source  = "hashicorp/google-beta"
-    }
-  }
+
+variable "namespace" {
+  type        = string
+  description = "Kubernetes namespace where resources are deployed"
 }
+
+variable "create_namespace" {
+  type        = bool
+}
+
+
+

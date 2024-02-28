@@ -1,0 +1,141 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+## Blueprint display metadata file is used to define blueprint for marketplace offering UI interface that includes different parameters and their properties including title, description, tooltip, etc.
+
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke-display
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: JupyterHub on GKE
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/jupyter
+  ui:
+    input:
+      variables:
+        cluster_name:
+          name: cluster_name
+          title: Cluster Name
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GKE_CLUSTER
+            gkeCluster:
+              clusterCreationVariable: create_cluster
+              locationVariable: cluster_location
+        cluster_location:
+          name: cluster_location
+          title: Cluster Location
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GCE_REGION
+        cluster_membership_id:
+          name: cluster_membership_id
+          title: Cluster Membership Id
+          section: cluster_details
+          invisible: true
+        default_backend_service:
+          name: default_backend_service
+          title: Default Backend Service
+          section: jupyterhub
+          invisible: true
+        workload_identity_service_account:
+          name: workload_identity_service_account
+          title: GCP Workload Identity Service Account
+          section: jupyterhub
+        gcs_bucket:
+          name: gcs_bucket
+          title: GCS Bucket
+          section: jupyterhub 
+          xGoogleProperty:
+            type: ET_GCS_BUCKET      
+        namespace:
+          name: namespace
+          title: Kubernetes Namespace
+          section: jupyterhub
+        add_auth:
+          name: add_auth
+          title: Enable IAP Authentication
+          section: iap_auth
+        brand:
+          name: brand
+          title: Brand
+          section: iap_auth
+          level: 1
+        support_email:
+          name: support_email
+          title: Support Email
+          section: iap_auth
+          level: 1
+        client_id:
+          name: client_id
+          title: Client Id
+          section: iap_auth
+          level: 1
+        client_secret:
+          name: client_secret
+          title: Client Secret    
+          section: iap_auth  
+          level: 1  
+        service_name:
+          name: service_name
+          title: Service Name
+          section: iap_auth
+          invisible: true
+          level: 1
+        url_domain_addr:
+          name: url_domain_addr
+          title: Url Domain Addr
+          section: iap_auth
+          level: 1
+        url_domain_name:
+          name: url_domain_name
+          title: Url Domain Name
+          section: iap_auth
+          level: 1
+        members_allowlist:
+          name: members_allowlist
+          title: Members Allowlist
+          section: iap_auth
+          level: 1
+        project_id:
+          name: project_id
+          title: Project Id
+          invisible: true
+      sections:
+        - name: cluster_details
+          title: Cluster Details
+          tooltip: Select or Create GKE cluster
+        - name: jupyterhub
+          title: JupyterHub Application
+        - name: iap_auth
+          title: JupyterHub IAP Authentication
+          #subtext: Provide IAP details
+    runtime:
+        outputMessage: Deployment can take several minutes to complete.
+        suggestedActions:
+        - heading: No external IP configured
+          description: "The application has been configured with no external IP or domain."
+        outputs:
+          jupyterhub_uri:
+            open_in_new_tab: true
+            show_in_notification: true
+            label: "Go to Jupyter Application"
+          jupyterhub_password: {}
+          

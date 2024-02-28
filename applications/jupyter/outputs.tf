@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "domain" {
-  value = module.jupyterhub.domain
+output "jupyterhub_uri" {
+  value = "http://${module.jupyterhub.uri}"
 }
 
-output "password" {
+output "jupyterhub_password" {
   value     = module.jupyterhub.password
   sensitive = true
 }

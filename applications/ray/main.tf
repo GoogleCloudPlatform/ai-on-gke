@@ -68,7 +68,7 @@ provider "helm" {
 data "kubernetes_all_namespaces" "allns" {}
 
 module "kuberay-operator" {
-  source                 = "../../modules/kuberay-operator"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-operator"
   name                   = "kuberay-operator"
   create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
   namespace              = var.ray_namespace
@@ -79,7 +79,7 @@ module "kuberay-operator" {
 }
 
 module "kuberay-logging" {
-  source    = "../../modules/kuberay-logging"
+  source    = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-logging"
   namespace = var.ray_namespace
 
   depends_on = [module.kuberay-operator]
@@ -87,7 +87,7 @@ module "kuberay-logging" {
 
 module "kuberay-monitoring" {
   count                           = var.create_ray_cluster ? 1 : 0
-  source                          = "../../modules/kuberay-monitoring"
+  source                          = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-monitoring"
   project_id                      = var.project_id
   namespace                       = var.ray_namespace
   create_namespace                = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
@@ -97,14 +97,15 @@ module "kuberay-monitoring" {
 }
 
 module "gcs" {
-  source      = "../../modules/gcs"
+  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs"
+  count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 module "kuberay-cluster" {
   count                  = var.create_ray_cluster == true ? 1 : 0
-  source                 = "../../modules/kuberay-cluster"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster"
   create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
   namespace              = var.ray_namespace
   project_id             = var.project_id

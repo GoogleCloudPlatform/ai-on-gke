@@ -33,15 +33,9 @@ variable "gcs_bucket" {
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
-variable "create_service_account" {
-  type        = bool
-  description = "Creates a google service account & k8s service account & configures workload identity"
-  default     = true
-}
-
-variable "gcp_and_k8s_service_account" {
+variable "workload_identity_service_account" {
   type        = string
-  description = "gcp service account"
+  description = "workload identity service account"
 }
 
 variable "gcp_service_account_iam_roles" {

@@ -66,7 +66,7 @@ provider "helm" {
 data "kubernetes_all_namespaces" "allns" {}
 
 module "kuberay-operator" {
-  source                 = "../../modules/kuberay-operator"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-operator"
   project_id             = var.project_id
   create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
   namespace              = var.kubernetes_namespace
@@ -77,28 +77,28 @@ module "kuberay-operator" {
 }
 
 module "gcs" {
-  source      = "../../modules/gcs"
+  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs"
+  count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 module "cloudsql" {
-  source     = "../../modules/cloudsql"
-  depends_on = [module.gcs, module.kuberay-operator]
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/cloudsql"
+  depends_on = [module.kuberay-operator]
   project_id = var.project_id
   namespace  = var.kubernetes_namespace
 }
 
 module "jupyterhub" {
-  source     = "../../modules/jupyter"
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter"
   depends_on = [module.kuberay-operator]
   namespace  = var.kubernetes_namespace
   project_id = var.project_id
   gcs_bucket = var.gcs_bucket
   add_auth   = false # TODO: Replace with IAP.
 
-  gcp_and_k8s_service_account    = var.jupyter_service_account
-  create_service_account         = var.create_jupyter_service_account
+  workload_identity_service_account = var.jupyter_service_account
 
   # IAP Auth parameters
   brand                     = var.brand
@@ -114,15 +114,15 @@ module "jupyterhub" {
 }
 
 module "kuberay-logging" {
-  source     = "../../modules/kuberay-logging"
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-logging"
   depends_on = [module.kuberay-operator]
   namespace  = var.kubernetes_namespace
 }
 
 module "kuberay-cluster" {
-  source                 = "../../modules/kuberay-cluster"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster"
   project_id             = var.project_id
-  depends_on             = [module.kuberay-operator, module.gcs, module.kuberay-monitoring]
+  depends_on             = [module.kuberay-operator, module.kuberay-monitoring]
   namespace              = var.kubernetes_namespace
   gcs_bucket             = var.gcs_bucket
   create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
@@ -134,7 +134,7 @@ module "kuberay-cluster" {
 }
 
 module "kuberay-monitoring" {
-  source                          = "../../modules/kuberay-monitoring"
+  source                          = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-monitoring"
   depends_on                      = [module.kuberay-operator]
   project_id                      = var.project_id
   namespace                       = var.kubernetes_namespace
@@ -144,7 +144,7 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source     = "../../tutorials/hf-tgi"
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//tutorials/hf-tgi"
   depends_on = [module.kuberay-operator]
   namespace  = var.kubernetes_namespace
 }

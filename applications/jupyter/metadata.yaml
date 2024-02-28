@@ -1,0 +1,106 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+## Blueprint metadata file is used to define blueprint for marketplace offering and deployment schema
+
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: JupyterHub on GKE
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/jupyter
+    actuationTool:
+      flavor: Terraform
+      version: ">= 1.5"
+    description: {}
+  content: {}
+  interfaces:
+    variables:
+      - name: add_auth
+        description: Enable iap authentication on jupyterhub
+        varType: bool
+        defaultValue: false
+      - name: brand
+        description: name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty
+        varType: string
+        defaultValue: "projects/<prj-number>/brands/<prj-number>"
+      - name: client_id
+        description: Client ID used for enabling IAP
+        varType: string
+        defaultValue: ""
+      - name: client_secret
+        description: Client secret used for enabling IAP
+        varType: string
+        defaultValue: ""
+      - name: cluster_location
+        varType: string
+        required: true
+      - name: cluster_membership_id
+        description: "require to use connectgateway for private clusters, default: cluster_name"
+        varType: string
+        defaultValue: ""
+      - name: cluster_name
+        varType: string
+        required: true
+      - name: default_backend_service
+        varType: string
+        defaultValue: proxy-public
+      - name: workload_identity_service_account
+        description: Workload Identity Service Account
+        varType: string
+        required: true
+        defaultValue: "jupyter-service-account"
+      - name: gcs_bucket
+        description: GCS bucket to mount on the notebook via GCSFuse and CSI
+        varType: string
+        required: true
+      - name: members_allowlist
+        varType: string
+        defaultValue: "allAuthenticatedUsers"
+      - name: namespace
+        description: Kubernetes namespace where resources are deployed
+        varType: string
+        required: true
+        defaultValue: "ai-on-gke"
+      - name: project_id
+        description: GCP project id
+        varType: string
+        required: true
+      - name: service_name
+        description: Name of the BackendConfig Service on GCP
+        varType: string
+        defaultValue: iap-config-default
+      - name: support_email
+        description: Email for users to contact with questions about their consent
+        varType: string
+      - name: url_domain_addr
+        description: Domain provided by the user. If it's empty, we will create one for you.
+        varType: string
+        defaultValue: ""
+      - name: url_domain_name
+        description: Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty
+        varType: string
+        defaultValue: ""
+    outputs:
+      - name: jupyterhub_uri
+        description: Domain name to access deployment.
+      - name: jupyterhub_password
+        description: Sensitive login password for application
