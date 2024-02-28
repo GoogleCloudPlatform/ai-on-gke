@@ -17,8 +17,8 @@
 project_id = "<gcp-prj-id>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-cluster_name     = "<cluster-name>"
-cluster_location = "us-central1"
+cluster_name          = "<cluster-name>"
+cluster_location      = "us-central1"
 cluster_membership_id = "" # required only for private cluster, default: cluster_name
 
 #######################################################
@@ -39,8 +39,8 @@ k8s_ingress_name          = "jupyter-ingress"
 k8s_backend_config_name   = "jupyter-iap-config"
 k8s_backend_service_name  = "proxy-public"
 
-url_domain_addr = ""
-url_domain_name = ""
-client_id = "" # client auto created
-client_secret = ""
+url_domain_addr   = ""
+url_domain_name   = ""
+client_id         = "" # client auto created
+client_secret     = ""
 members_allowlist = "allAuthenticatedUsers,user:<email>"

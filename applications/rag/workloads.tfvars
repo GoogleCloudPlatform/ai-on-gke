@@ -20,6 +20,7 @@ cluster_location = "us-central1"
 
 ## GKE environment variables
 kubernetes_namespace = "rag"
+create_gcs_bucket    = true
 gcs_bucket           = "rag-data-xyzu" # Choose a globally unique bucket name.
 
 ## Service accounts

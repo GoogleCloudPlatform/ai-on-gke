@@ -36,17 +36,10 @@ variable "gcs_bucket" {
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
-variable "create_service_account" {
-  type        = bool
-  description = "Creates GCP & k8s service accounts"
-  default     = true
-}
-
-variable "gcp_and_k8s_service_account" {
+variable "workload_identity_service_account" {
   type        = string
-  description = "gcp service account"
+  description = "workload identity service account"
 }
-
 
 variable "project_id" {
   type        = string
@@ -115,4 +108,10 @@ variable "client_secret" {
   description = "Client secret used for enabling IAP"
   default     = ""
   sensitive   = false
+}
+
+variable "create_gcs_bucket" {
+  type = bool
+  default = false
+  description = "Enable flag to create gcs_bucket"
 }

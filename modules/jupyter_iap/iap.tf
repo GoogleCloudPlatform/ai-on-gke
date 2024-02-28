@@ -37,7 +37,8 @@ resource "helm_release" "iap_jupyter" {
   chart            = "${path.module}/charts/iap_jupyter/"
   namespace        = var.namespace
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
-  timeout          = 1200
+  # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment 
+  timeout = 1200
   set {
     name  = "iap.backendConfig.name"
     value = var.k8s_backend_config_name
@@ -79,3 +80,9 @@ resource "helm_release" "iap_jupyter" {
   }
 }
 
+resource "google_project_iam_member" "project" {
+  for_each = toset(var.members_allowlist)
+  project  = var.project_id
+  role     = "roles/iap.httpsResourceAccessor"
+  member   = each.key
+}
