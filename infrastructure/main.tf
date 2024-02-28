@@ -16,11 +16,6 @@
 ####    PLATFORM
 #######################################################
 
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
-
 module "custom-network" {
   source       = "terraform-google-modules/network/google"
   version      = "8.0.0"
@@ -38,7 +33,7 @@ module "custom-network" {
     }
   ]
 
-  secondary_ranges = var.network_secondary_ranges
+  #secondary_ranges = var.network_secondary_ranges
   #firewall_rules = var.firewall_rules
 }
 
