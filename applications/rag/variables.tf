@@ -19,7 +19,6 @@ variable "project_id" {
 
 variable "cluster_name" {
   type    = string
-  default = "new-cluster"
 }
 
 variable "cluster_membership_id" {
@@ -30,7 +29,6 @@ variable "cluster_membership_id" {
 
 variable "cluster_location" {
   type    = string
-  default = "us-central1"
 }
 
 variable "kubernetes_namespace" {
