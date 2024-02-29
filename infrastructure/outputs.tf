@@ -30,7 +30,7 @@ output "endpoint" {
       var.create_cluster && var.autopilot_cluster && !var.private_cluster ? module.public-gke-autopilot-cluster[0].endpoint : (
         var.create_cluster && !var.autopilot_cluster && !var.private_cluster ? module.public-gke-standard-cluster[0].endpoint :
   "")))
-    sensitive = true
+  sensitive = true
   depends_on = [ module.private-gke-autopilot-cluster, module.private-gke-standard-cluster, module.public-gke-autopilot-cluster, module.public-gke-standard-cluster ]
 }
 
@@ -40,7 +40,7 @@ output "ca_certificate" {
       var.create_cluster && var.autopilot_cluster && !var.private_cluster ? module.public-gke-autopilot-cluster[0].ca_certificate : (
         var.create_cluster && !var.autopilot_cluster && !var.private_cluster ? module.public-gke-standard-cluster[0].ca_certificate :
   "")))
-    sensitive = true
+  sensitive = true
     depends_on = [ module.private-gke-autopilot-cluster, module.private-gke-standard-cluster, module.public-gke-autopilot-cluster, module.public-gke-standard-cluster ]
 
 }

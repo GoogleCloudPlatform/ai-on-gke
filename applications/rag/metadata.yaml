@@ -21,6 +21,9 @@ spec:
         description: Enable iap authentication on jupyterhub
         varType: bool
         defaultValue: true
+      - name: autopilot_cluster
+        varType: bool
+        defaultValue: false
       - name: brand
         description: name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty
         varType: string
@@ -43,6 +46,13 @@ spec:
       - name: cluster_name
         varType: string
         required: true
+      - name: create_cluster
+        varType: bool
+        required: true
+      - name: create_gcs_bucket
+        description: Enable flag to create gcs_bucket
+        varType: bool
+        defaultValue: false
       - name: create_jupyter_service_account
         description: Creates a google IAM service account & k8s service account & configures workload identity
         varType: bool
@@ -55,9 +65,13 @@ spec:
         description: Creates a google IAM service account & k8s service account & configures workload identity
         varType: bool
         defaultValue: true
-      - name: default_backend_service
+      - name: dataset_embeddings_table_name
+        description: Name of the table that stores vector embeddings for input dataset
         varType: string
-        defaultValue: proxy-public
+      - name: enable_grafana_on_ray_dashboard
+        description: Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access.
+        varType: bool
+        defaultValue: false
       - name: gcs_bucket
         description: GCS bucket name to store dataset
         varType: string
@@ -66,13 +80,27 @@ spec:
         description: Google Cloud IAM service account for authenticating with GCP services
         varType: string
         defaultValue: jupyter-system-account
+      - name: k8s_backend_config_name
+        description: Name of the Backend Config on GCP
+        varType: string
+        defaultValue: jupyter-iap-config
+      - name: k8s_backend_service_name
+        description: Name of the Backend Config on GCP, this is defined by Jupyter hub
+        varType: string
+        defaultValue: proxy-public
+      - name: k8s_ingress_name
+        varType: string
+        defaultValue: jupyter-ingress
       - name: kubernetes_namespace
         description: Kubernetes namespace where resources are deployed
         varType: string
         defaultValue: rag
       - name: members_allowlist
-        varType: string
-        defaultValue: ""
+        varType: list(string)
+        defaultValue: []
+      - name: private_cluster
+        varType: bool
+        defaultValue: false
       - name: project_id
         description: GCP project id
         varType: string
@@ -85,10 +113,6 @@ spec:
         description: Google Cloud IAM service account for authenticating with GCP services
         varType: string
         defaultValue: ray-system-account
-      - name: service_name
-        description: Name of the Kubernetes backend service
-        varType: string
-        defaultValue: iap-config-default
       - name: support_email
         description: Email for users to contact with questions about their consent
         varType: string
@@ -101,5 +125,5 @@ spec:
         varType: string
         defaultValue: ""
     outputs:
-      - name: domain
-      - name: password
+      - name: jupyterhub_password
+      - name: jupyterhub_uri
