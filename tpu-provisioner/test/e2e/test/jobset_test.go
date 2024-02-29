@@ -16,6 +16,7 @@ package e2e_test
 import (
 	"e2e/test/util"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -38,16 +39,16 @@ const (
 )
 
 func TestTPUJobsets(t *testing.T) {
+	spot := os.Getenv("TEST_SPOT") == "true"
 	cases := []struct {
 		name   string
 		config tpuConfig
 	}{
 		// v4
 		{
-			name: "v4-2x2x2-spot",
+			name: "v4-2x2x2-tpu",
 			config: tpuConfig{
 				accelerator:  "tpu-v4-podslice",
-				spot:         true,
 				topoX:        2,
 				topoY:        2,
 				topoZ:        2,
@@ -55,10 +56,21 @@ func TestTPUJobsets(t *testing.T) {
 				sliceCount:   1,
 			},
 		},
+		{
+			name: "v4-2x2x4-tpu",
+			config: tpuConfig{
+				accelerator:  "tpu-v4-podslice",
+				topoX:        2,
+				topoY:        2,
+				topoZ:        4,
+				chipsPerNode: 4,
+				sliceCount:   1,
+			},
+		},
 		// v5e
 		/*
 			{
-				name: "v5e-2x4-topo",
+				name: "v5e-2x4-tpu",
 				config: tpuConfig{
 					accelerator:  "tpu-v5-lite-podslice",
 					topoX:        2,
@@ -68,10 +80,24 @@ func TestTPUJobsets(t *testing.T) {
 				},
 			},
 		*/
+		// v5p
+		{
+			name: "v5p-2x2x2-tpu",
+			config: tpuConfig{
+				accelerator:  "tpu-v5p-slice",
+				topoX:        2,
+				topoY:        2,
+				topoZ:        2,
+				chipsPerNode: 4,
+				sliceCount:   1,
+			},
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			c.config.spot = spot
+
 			js := newJobset(c.name, c.config)
 			err := client.Create(ctx, js)
 			require.NoError(t, err)

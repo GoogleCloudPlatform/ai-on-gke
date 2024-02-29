@@ -16,7 +16,7 @@ ${BUILD_TOOL} build --platform linux/amd64 -t ${CONTROLLER_IMAGE} ${root_dir}
 ${BUILD_TOOL} push ${CONTROLLER_IMAGE}
 
 kustomize build ${root_dir}/test/e2e/config | envsubst | kubectl apply --server-side -f -
-# Restart Pods is already running
+# Restart Pods if already running.
 kubectl delete pods -n tpu-provisioner-system --all
 
 go clean -testcache
