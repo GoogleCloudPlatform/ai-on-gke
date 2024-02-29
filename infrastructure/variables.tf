@@ -120,7 +120,7 @@ variable "monitoring_enable_managed_prometheus" {
 }
 variable "gcs_fuse_csi_driver" {
   type    = bool
-  default = false
+  default = true
 }
 variable "deletion_protection" {
   type    = bool
@@ -236,7 +236,7 @@ variable "gpu_pools" {
     initial_node_count     = optional(number, 1)
     accelerator_count      = optional(number, 0)
     accelerator_type       = optional(string, "nvidia-tesla-t4")
-    gpu_version            = optional(string, "DEFAULT")
+    gpu_driver_version     = optional(string, "DEFAULT")
   }))
   default = [{
   name               = "gpu-pool"
