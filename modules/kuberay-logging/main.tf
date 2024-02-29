@@ -12,8 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "kubernetes_manifest" "manifests" {
-  for_each = fileset("${path.module}/config/", "*.yaml")
-  manifest = yamldecode(templatefile("${path.module}/config/${each.value}", { namespace: var.namespace}))
-}
+resource "kubernetes_config_map" "example" {
+  metadata {
+    name = "fluentbit-config"
+    namespace = var.namespace
+  }
 
+  data = {
+    "fluent-bit.conf" = "${file("${path.module}/config/fluent-bit.conf")}"
+    "parsers.conf"    = "${file("${path.module}/config/parsers.conf")}"
+  }
+
+}
