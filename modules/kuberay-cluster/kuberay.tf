@@ -24,10 +24,9 @@ resource "helm_release" "ray-cluster" {
   chart            = "ray-cluster"
   namespace        = var.namespace
   create_namespace = var.create_namespace
-  version          = "0.6.1"
-
+  version          = "1.0.0"
   values = [
-    var.enable_autopilot ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {
+    var.autopilot_cluster ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host

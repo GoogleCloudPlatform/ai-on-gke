@@ -31,7 +31,7 @@ variable "create_namespace" {
   type    = bool
 }
 
-variable "enable_autopilot" {
+variable "autopilot_cluster" {
   type = bool
 }
 

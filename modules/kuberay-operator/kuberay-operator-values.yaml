@@ -45,9 +45,6 @@ resources:
     # Anecdotally, managing 500 Ray pods requires roughly 500MB memory.
     # Monitor memory usage and adjust as needed.
     memory: 512Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 512Mi
 
 livenessProbe:
   initialDelaySeconds: 10
@@ -96,7 +93,8 @@ singleNamespaceInstall: false
 env:
 # If not set or set to true, kuberay auto injects an init container waiting for ray GCS.
 # If false, you will need to inject your own init container to ensure ray GCS is up before the ray workers start.
-# Warning: we highly recommend setting to true and let kuberay handle for you. note: This is disabled because gcs fuse csi based volumes cannot be mounted in init containers.
+# Warning: we highly recommend setting to true and let kuberay handle for you.
+# Note: This is disabled because gcs fuse csi based volumes cannot be mounted in init containers.
 - name: ENABLE_INIT_CONTAINER_INJECTION
   value: "false"
 # If not set or set to "", kuberay will pick up the default k8s cluster domain `cluster.local`
