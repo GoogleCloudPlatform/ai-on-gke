@@ -73,7 +73,7 @@ module "kuberay-operator" {
   name                   = "kuberay-operator"
   google_service_account = var.ray_service_account
   create_service_account = var.create_ray_service_account
-  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
+  autopilot_cluster      = data.google_container_cluster.default.enable_autopilot
 }
 
 module "gcs" {

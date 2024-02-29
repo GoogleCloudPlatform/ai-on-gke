@@ -73,7 +73,7 @@ module "kuberay-operator" {
   create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
   namespace              = var.ray_namespace
   project_id             = var.project_id
-  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
+  autopilot_cluster      = data.google_container_cluster.default.enable_autopilot
   google_service_account = var.gcp_service_account
   create_service_account = var.create_service_account
 }
