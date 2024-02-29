@@ -17,7 +17,7 @@ variable "project_id" {
   description = "The GCP project where the resources will be created. It is a map with environments a skeys and project_ids s values"
   default     = {}
   #Below is an example of not null project_id variable
-  #default    = { "dev" : "gkebatchexpce3c8dcb", "staging" : "gkebatchexpce3c8dcb", "prod" : "gkebatchexpce3c8dcb" }
+  #default    = { "dev" : "project_id1", "staging" : "project_id2", "prod" : "project_id3" }
 }
 
 variable "network_name" {
