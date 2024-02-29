@@ -18,6 +18,8 @@ locals {
 
   all_templates = concat(local.wl_templates, local.secret_templates)
 
+  hpa_cpu_template = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
+
   wl_templates = [
     for f in fileset(local.wl_templates_path, "*tftpl") :
     "${local.wl_templates_path}/${f}"
@@ -57,4 +59,11 @@ resource "kubernetes_manifest" "default" {
   timeouts {
     create = "60m"
   }
+}
+
+resource "kubernetes_manifest" "hpa-cpu" {
+  count = var.hpa_type == "cpu" ? 1 : 0
+  manifest = yamldecode(templatefile(local.hpa_cpu_template, {
+    namespace = var.namespace
+  }))
 }
