@@ -30,6 +30,8 @@ cp sample-terraform.tfvars terraform.tfvars
 
 Fill out your `terraform.tfvars` with the desired model and server configuration, referring to the list of required and optional variables [here](#variables). Variables `credentials_config` are required.
 
+Optionally configure HPA (Horizontal Pod Autoscaling) by setting `hpa_type`. Note: GMP (Google Managed Prometheus) must be enabled on this cluster (which is the default) to scale based on custom metrics. See `autoscaling.md` for more details.
+
 #### Determine number of gpus
 
 `gpu_count` should be configured respective to the size of the model with some overhead for the kv cache. Here's an example on figuring out how many GPUs you need to run a model:

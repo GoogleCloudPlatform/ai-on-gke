@@ -97,7 +97,21 @@ variable "hpa_type" {
   default     = null
   nullable    = true
   validation {
-    condition     = var.hpa_type == null ? true : contains(["cpu"], var.hpa_type)
-    error_message = "Allows values for hpa_type are {null, \"cpu\"}"
+    condition     = var.hpa_type == null ? true : contains(["cpu", "tgi_queue_size", "tgi_batch_current_size", "tgi_batch_current_max_tokens"], var.hpa_type)
+    error_message = "Allows values for hpa_type are {null, \"cpu\", \"tgi_queue_size\", \"tgi_batch_current_size\", \"tgi_batch_current_max_tokens\"}"
   }
+}
+
+# TODO: combine hpa variables into a single object (so that they can be
+# validated together)
+variable "hpa_averagevalue_target" {
+  description = "AverageValue target for the `hpa_type` metric. Must be set if `hpa_type` is not null."
+  type        = number
+  default     = null
+  nullable    = true
+}
+
+variable "project_id" {
+  description = "Project id of existing or created project."
+  type        = string
 }
