@@ -206,7 +206,7 @@ steps:
         -var=kubernetes_namespace=rag-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA \
         -auto-approve -no-color -lock=false
-        echo "pass" > /workspace/rag_result.txt
+        echo "pass" > /workspace/rag_tf_result.txt
 
         # Validate Ray: Make sure pods are running
         kubectl wait --all pods -n rag-$SHORT_SHA --for=condition=Ready --timeout=300s
@@ -329,18 +329,18 @@ steps:
           exit 1
         fi
 
-        if [[ $(cat /workspace/rag_result.txt) != "pass" ]]; then
-          echo "jupyterhub test failed"
+        if [[ $(cat /workspace/rag_tf_result.txt) != "pass" ]]; then
+          echo "rag tf failed"
           exit 1
         fi
 
         if [[ $(cat /workspace/rag_ray_dashboard_result.txt) != "pass" ]]; then
-          echo "jupyterhub test failed"
+          echo "rag ray dashboard test failed"
           exit 1
         fi
         
         if [[ $(cat /workspace/rag_jupyterhub_test_result.txt) != "pass" ]]; then
-          echo "jupyterhub test failed"
+          echo "rag jupyterhub test failed"
           exit 1
         fi
 
