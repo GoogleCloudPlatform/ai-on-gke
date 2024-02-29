@@ -24,26 +24,40 @@ Preinstall the following on your computer:
 ### Infra Setup
 
 #### GKE Cluster Setup
-1. This sample assumes a GKE cluster already exists. If not, please follow the [instructions](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md) to create a GKE cluster.
+
+1. Set your cluster name and cloud region:
+```
+CLUSTER_NAME=rag-cluster
+CLUSTER_REGION=us-central1
+```
+2. Use the following instructions to create a GKE cluster. We recommend using Autopilot for a simpler setup.
+
+##### Autopilot (recommended)
+
+RAG requires the latest Autopilot features, available on GKE cluster version `1.29.1-gke.1575000+`.
+
+To create an Autopilot cluster, run:
+```
+gcloud container clusters create-auto $CLUSTER_NAME \
+  --location $CLUSTER_REGION \
+  --cluster-version 1.29.1-gke.1589000
+```
+
+##### Standard
+
+1. To create a GKE Standard cluster using Terraform, please follow the [instructions here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md).
 
 TODO: Add GKE cluster requirements for a successful installation.
 
-2. Ensure your environment is pointing at the created cluster by running `gcloud container clusters get-credentials <cluster-name> --location=<region or zone>`.
-
-3. The inference server requires L4 GPUs. Create an additional node pool:
+2. The inference server requires L4 GPUs. Create an additional node pool:
 ```
-gcloud container node-pools create g2-standard-24 --cluster <cluster-name> \
+gcloud container node-pools create g2-standard-24 --cluster $CLUSTER_NAME \
   --accelerator type=nvidia-l4,count=2,gpu-driver-version=latest \
   --machine-type g2-standard-24 \
   --ephemeral-storage-local-ssd=count=2 \
  --enable-image-streaming \
  --num-nodes=1 --min-nodes=1 --max-nodes=2 \
  --node-locations $REGION-a,$REGION-b --location=$REGION
-```
-
-4. Enable additional required APIs:
-```
-gcloud services enable sql-component.googleapis.com sqladmin.googleapis.com
 ```
 
 #### Setup Components
@@ -74,22 +88,32 @@ This filter can auto fetch the templates in your project. Please refer to the fo
 
 #### Verify Setup
 
-1. Verify Kuberay is setup: run `kubectl get pods -n <namespace>` where the namespace is the one set in `workloads.tfvars`. There should be a Ray head and Ray worker pod in `Running` state (prefixed by `example-cluster-kuberay-head-` and `example-cluster-kuberay-worker-workergroup-`).
+Set your namespace from `workloads.tfvars`:
+```
+NAMESPACE=rag
+```
+
+Ensure your k8s client is using the correct cluster by running:
+```
+gcloud container clusters get-credentials $CLUSTER_NAME --location $CLUSTER_REGION
+```
+
+1. Verify Kuberay is setup: run `kubectl get pods -n $NAMESPACE`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `example-cluster-kuberay-head-` and `example-cluster-kuberay-worker-workergroup-`).
 
 2. Verify Jupyterhub service is setup:
 
-* Fetch the service IP: `kubectl get services proxy-public -n <namespace> --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+* Fetch the service IP: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 * Go to the IP in a browser which should display the Jupyterlab login UI.
 
 3. Verify the instance `pgvector-instance` exists: `gcloud sql instances list | grep pgvector`
 
 4. Verify the inference server is setup:
-* Set up port forward
+* Start port forwarding
 ```
-kubectl port-forward -n <namespace> deployment/mistral-7b-instruct 8080:8080 &
+kubectl port-forward -n $NAMESPACE deployment/mistral-7b-instruct 8080:8080
 ```
 
-* Try a few prompts:
+* In a new terminal, try a few prompts:
 ```
 export USER_PROMPT="How to deploy a container on K8s?"
 ```
@@ -103,11 +127,11 @@ curl 127.0.0.1:8080/generate -X POST \
 }
 EOF
 ```
-* At the end of the smoke test with the TGI server, close the port forward for 8080.
+* At the end of the smoke test with the TGI server, stop port forwarding by using Ctrl-C on the original terminal.
 
 5. Verify the frontend chat interface is setup:
- * Verify the service exists: `kubectl get services rag-frontend -n <namespace>`
- * Verify the deployment exists: `kubectl get deployments rag-frontend -n <namespace>` & ensure the deployment is in `READY` state.
+ * Verify the service exists: `kubectl get services rag-frontend -n $NAMESPACE`
+ * Verify the deployment exists: `kubectl get deployments rag-frontend -n $NAMESPACE` & ensure the deployment is in `READY` state.
 
 ### Vector Embeddings for Dataset
 
@@ -115,10 +139,10 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 1. Create a CloudSQL user to access the database: `gcloud sql users create rag-user-notebook --password=<choose a password> --instance=pgvector-instance --host=%`
 
-2. Go to the Jupyterhub service endpoint in a browser: `kubectl get services proxy-public -n <namespace> --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+2. Go to the Jupyterhub service endpoint in a browser: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 
 3. Login with placeholder credentials [TBD: replace with instructions for IAP]:
-* username: user3
+* username: user
 * password: use `terraform output password` to fetch the password value
 
 4. Once logged in, choose the `CPU` preset. Go to File -> Open From URL & upload the notebook `rag-kaggle-ray-sql.ipynb` from `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb`. This path can also be found by going to the [notebook location](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb) and selecting `Raw`.
@@ -139,7 +163,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 ### Launch the Frontend Chat Interface
 
-1. Setup port forwarding for the frontend [TBD: Replace with IAP]: `kubectl port-forward service/rag-frontend -n <namespace> 8080:8080 &`
+1. Setup port forwarding for the frontend [TBD: Replace with IAP]: `kubectl port-forward service/rag-frontend -n $NAMESPACE 8080:8080 &`
 
 2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
 
