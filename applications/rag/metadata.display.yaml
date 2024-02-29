@@ -13,7 +13,19 @@ spec:
       dir: /applications/rag
   ui:
     input:
-      variables:
+      variables:    
+        create_cluster:
+          name: create_cluster
+          title: Create GKE Cluster
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_CREATE_RESOURCE
+        cluster_location:
+          name: cluster_location
+          title: Cluster Location
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GCE_LOCATION
         cluster_name:
           name: cluster_name
           title: Cluster Name
@@ -23,16 +35,19 @@ spec:
             gkeCluster:
               clusterCreationVariable: create_cluster
               locationVariable: cluster_location
-        cluster_location:
-          name: cluster_location
-          title: Cluster Location
-          section: cluster_details
-          xGoogleProperty:
-            type: ET_GCE_REGION
         cluster_membership_id:
           name: cluster_membership_id
           title: Cluster Membership Id
+          invisible: true
           section: cluster_details
+        autopilot_cluster:
+          name: autopilot_cluster
+          title: Autopilot Cluster
+          invisible: true
+          section: cluster_details
+        create_gcs_bucket:
+          name: create_gcs_bucket
+          title: Create Gcs Bucket
           invisible: true
         create_jupyter_service_account:
           name: create_jupyter_service_account
@@ -46,16 +61,21 @@ spec:
           name: create_ray_service_account
           title: Create Ray Service Account
           invisible: true
-        default_backend_service:
-          name: default_backend_service
-          title: Default Backend Service
+        dataset_embeddings_table_name:
+          name: dataset_embeddings_table_name
+          title: Dataset Embeddings Table Name
+          invisible: true
+        enable_grafana_on_ray_dashboard:
+          name: enable_grafana_on_ray_dashboard
+          title: Enable Grafana On Ray Dashboard
+          section: rag
           invisible: true
         gcs_bucket:
           name: gcs_bucket
           title: Gcs Bucket
           section: rag
           xGoogleProperty:
-            type: ET_GCS_BUCKET 
+            type: ET_GCS_BUCKET
         jupyter_service_account:
           name: jupyter_service_account
           title: Jupyter Service Account
@@ -63,6 +83,11 @@ spec:
         kubernetes_namespace:
           name: kubernetes_namespace
           title: Kubernetes Namespace
+          section: cluster_details
+        private_cluster:
+          name: private_cluster
+          title: Private Cluster
+          invisible: true
           section: cluster_details
         project_id:
           name: project_id
@@ -97,12 +122,24 @@ spec:
           level: 1
         client_secret:
           name: client_secret
-          title: Client Secret    
-          section: iap_auth  
-          level: 1  
-        service_name:
-          name: service_name
-          title: Service Name
+          title: Client Secret
+          section: iap_auth
+          level: 1
+        k8s_backend_config_name:
+          name: k8s_backend_config_name
+          title: K8s Backend Config Name
+          section: iap_auth
+          invisible: true
+          level: 1
+        k8s_backend_service_name:
+          name: k8s_backend_service_name
+          title: K8s Backend Service Name
+          section: iap_auth
+          invisible: true
+          level: 1
+        k8s_ingress_name:
+          name: k8s_ingress_name
+          title: K8s Ingress Name
           section: iap_auth
           invisible: true
           level: 1
@@ -129,21 +166,17 @@ spec:
           title: Rag Application
         - name: iap_auth
           title: IAP Authentication
-          #subtext: Provide IAP details
     runtime:
-        outputMessage: Deployment can take several minutes to complete.
-        suggestedActions:
+      outputMessage: Deployment can take several minutes to complete.
+      suggestedActions:
         - heading: No external IP configured
-          description: "The VM instance has been configured with no external IP or internet access. Connecting \nto it directly may not be possible. Consider using a <a href=\"https://cloud.google.com/compute/docs/instances/connecting-advanced#bastion_host\">bastion host</a> \nto access this VM."
-        outputs:
-          admin_url:
-            open_in_new_tab: true
-            show_in_notification: true
-            label: "Go to Admin page"
-          admin_password: {}
-          password: {}
-          domain:  
-            open_in_new_tab: true
-            show_in_notification: true
-            label: "Go to RAG Application page"
-
+          description: |-
+            The VM instance has been configured with no external IP or internet access. Connecting 
+            to it directly may not be possible. Consider using a <a href="https://cloud.google.com/compute/docs/instances/connecting-advanced#bastion_host">bastion host</a> 
+            to access this VM.
+      outputs:
+        jupyterhub_password: {}
+        jupyterhub_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Go to Jupyter Application
