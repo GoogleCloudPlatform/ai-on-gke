@@ -144,12 +144,14 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
 
           resources {
             limits = {
-              cpu    = "3"
-              memory = "3G"
+              cpu               = "3"
+              memory            = "3Gi"
+              ephemeral-storage = "5Gi"
             }
             requests = {
-              cpu    = "3"
-              memory = "3G"
+              cpu               = "3"
+              memory            = "3Gi"
+              ephemeral-storage = "5Gi"
             }
           }
         }

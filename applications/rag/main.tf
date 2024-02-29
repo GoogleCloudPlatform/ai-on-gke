@@ -145,9 +145,10 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source     = "../../tutorials/hf-tgi"
-  depends_on = [module.kuberay-operator]
-  namespace  = var.kubernetes_namespace
+  source            = "../../tutorials/hf-tgi"
+  depends_on        = [module.kuberay-operator]
+  namespace         = var.kubernetes_namespace
+  autopilot_cluster = data.google_container_cluster.default.enable_autopilot
 }
 
 module "frontend" {
