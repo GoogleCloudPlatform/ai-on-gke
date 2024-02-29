@@ -90,14 +90,12 @@ head:
   # for further guidance.
   resources:
     limits:
-      cpu: "5"
-      nvidia.com/gpu: "1"
+      cpu: "8"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
-      memory: "50G"
-      ephemeral-storage: 40Gi
+      memory: "20G"
+      ephemeral-storage: 20Gi
     requests:
-      cpu: "2"
-      nvidia.com/gpu: "1"
+      cpu: "8"
       memory: "20G"
       ephemeral-storage: 20Gi
   annotations:
@@ -106,8 +104,10 @@ head:
     gke-gcsfuse/memory-limit: 20Gi
     gke-gcsfuse/ephemeral-storage-limit: 20Gi
   nodeSelector:
+    cloud.google.com/compute-class: "Performance"
+    cloud.google.com/machine-family: "c3"
+    cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
     iam.gke.io/gke-metadata-server-enabled: "true"
-    cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
   tolerations: []
   affinity: {}
   # Ray container security context.
@@ -156,108 +156,15 @@ worker:
   # If you want to disable the default workergroup
   # uncomment the line below
   disabled: true
-  groupName: workergroup
-  replicas: 0
-  type: worker
-  labels:
-    cloud.google.com/gke-ray-node-type: worker
-    created-by: ray-on-gke
-  serviceAccountName: ${k8s_service_account}
-  rayStartParams:
-    block: 'true'
-  initContainerImage: 'busybox:1.28'  # Enable users to specify the image for init container. Users can pull the busybox image from their private repositories.
-  # Security context for the init container.
-  initContainerSecurityContext: {}
-  # containerEnv specifies environment variables for the Ray container,
-  # Follows standard K8s container env schema.
-  containerEnv: []
-  # - name: EXAMPLE_ENV
-  #   value: "1"
-  envFrom: []
-    # - secretRef:
-    #     name: my-env-secret
-  # ports optionally allows specifying ports for the Ray container.
-  # ports: []
-  # resource requests and limits for the Ray head container.
-  # Modify as needed for your application.
-  # Note that the resources in this example are much too small for production;
-  # we don't recommend allocating less than 8G memory for a Ray pod in production.
-  # Ray pods should be sized to take up entire K8s nodes when possible.
-  # Always set CPU and memory limits for Ray pods.
-  # It is usually best to set requests equal to limits.
-  # See https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/config.html#resources
-  # for further guidance.
-  resources:
-    limits:
-      cpu: "4"
-      nvidia.com/gpu: "1"
-      memory: "40G"
-      ephemeral-storage: 40Gi
-    requests:
-      cpu: "2"
-      nvidia.com/gpu: "1"
-      memory: "20G"
-      ephemeral-storage: 20Gi
-  annotations:
-    gke-gcsfuse/volumes: "true"
-    gke-gcsfuse/cpu-limit: "2"
-    gke-gcsfuse/memory-limit: 20Gi
-    gke-gcsfuse/ephemeral-storage-limit: 20Gi
-  nodeSelector:
-    iam.gke.io/gke-metadata-server-enabled: "true"
-    cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
-  tolerations: []
-  affinity: {}
-  # Ray container security context.
-  securityContext: {}
-  volumes:
-    - name: ray-logs
-      emptyDir: {}
-    - name: fluentbit-config
-      configMap:
-        name: fluentbit-config
-    - name: gcs-fuse-csi-ephemeral
-      csi:
-        driver: gcsfuse.csi.storage.gke.io
-        #readOnly: true
-        volumeAttributes:
-          bucketName: ${gcs_bucket}
-          mountOptions: "implicit-dirs,uid=1000,gid=100"
-  # Ray writes logs to /tmp/ray/session_latests/logs
-  volumeMounts:
-    - mountPath: /tmp/ray
-      name: ray-logs
-    - name: gcs-fuse-csi-ephemeral
-      mountPath: /data
-  # sidecarContainers specifies additional containers to attach to the Ray pod.
-  # Follows standard K8s container spec.
-  sidecarContainers:
-    - name: fluentbit
-      image: fluent/fluent-bit:1.9.6
-      # These resource requests for Fluent Bit should be sufficient in production.
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-          ephemeral-storage: 2Gi
-        limits:
-          cpu: 100m
-          memory: 128Mi
-          ephemeral-storage: 4Gi
-      volumeMounts:
-      - mountPath: /tmp/ray
-        name: ray-logs
-      - mountPath: /fluent-bit/etc/
-        name: fluentbit-config
 
 # The map's key is used as the groupName.
 # For example, key:small-group in the map below
 # will be used as the groupName
 additionalWorkerGroups:
-  smallGroup:
+  cpuGroup:
     # Disabled by default
     disabled: false
-    replicas: 0 
+    replicas: 0
     minReplicas: 0
     maxReplicas: 10
     type: worker
@@ -286,11 +193,11 @@ additionalWorkerGroups:
   # for further guidance.
     resources:
       limits:
-        cpu: 1
+        cpu: 4
         memory: "20G"
         ephemeral-storage: 20Gi
       requests:
-        cpu: 1
+        cpu: 4
         memory: "20G"
         ephemeral-storage: 20Gi
     annotations:
@@ -298,7 +205,11 @@ additionalWorkerGroups:
       gke-gcsfuse/cpu-limit: "2"
       gke-gcsfuse/memory-limit: 20Gi
       gke-gcsfuse/ephemeral-storage-limit: 20Gi
-    nodeSelector: {}
+    nodeSelector:
+      cloud.google.com/compute-class: "Performance"
+      cloud.google.com/machine-family: "c3"
+      cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+      iam.gke.io/gke-metadata-server-enabled: "true"
     tolerations: []
     affinity: {}
     # Ray container security context.
@@ -344,10 +255,10 @@ additionalWorkerGroups:
         - mountPath: /fluent-bit/etc/
           name: fluentbit-config
 
-  mediumGroup:
+  gpuGroup:
     # Disabled by default
     disabled: false
-    replicas: 0 
+    replicas: 0
     minReplicas: 0
     maxReplicas: 10
     serviceAccountName: ${k8s_service_account}
@@ -377,13 +288,13 @@ additionalWorkerGroups:
     resources:
       limits:
         cpu: "8"
-        nvidia.com/gpu: "1"
-        memory: "20G"
+        nvidia.com/gpu: "2"
+        memory: "40G"
         ephemeral-storage: 20Gi
       requests:
         cpu: "8"
-        nvidia.com/gpu: "1"
-        memory: "20G"
+        nvidia.com/gpu: "2"
+        memory: "40G"
         ephemeral-storage: 20Gi
     annotations:
       gke-gcsfuse/volumes: "true"
@@ -391,8 +302,10 @@ additionalWorkerGroups:
       gke-gcsfuse/memory-limit: 20Gi
       gke-gcsfuse/ephemeral-storage-limit: 20Gi
     nodeSelector:
+      cloud.google.com/compute-class: "Accelerator"
+      cloud.google.com/gke-accelerator: "nvidia-l4"
+      cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
       iam.gke.io/gke-metadata-server-enabled: "true"
-      cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
     tolerations: []
     affinity: {}
     # Ray container security context.
@@ -438,99 +351,5 @@ additionalWorkerGroups:
         - mountPath: /fluent-bit/etc/
           name: fluentbit-config
 
-  largeGroup:
-    # Disabled by default
-    disabled: false
-    replicas: 0 
-    minReplicas: 0
-    maxReplicas: 1
-    serviceAccountName: ${k8s_service_account}
-    type: worker
-    labels: {}
-    rayStartParams:
-      block: 'true'
-  # containerEnv specifies environment variables for the Ray container,
-  # Follows standard K8s container env schema.
-    containerEnv: []
-      # - name: EXAMPLE_ENV
-      #   value: "1"
-    envFrom: []
-        # - secretRef:
-        #     name: my-env-secret
-    # ports optionally allows specifying ports for the Ray container.
-    # ports: []
-  # resource requests and limits for the Ray head container.
-  # Modify as needed for your application.
-  # Note that the resources in this example are much too small for production;
-  # we don't recommend allocating less than 8G memory for a Ray pod in production.
-  # Ray pods should be sized to take up entire K8s nodes when possible.
-  # Always set CPU and memory limits for Ray pods.
-  # It is usually best to set requests equal to limits.
-  # See https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/config.html#resources
-  # for further guidance.
-    resources:
-      limits:
-        cpu: "8"
-        nvidia.com/gpu: "8"
-        memory: "40G"
-        ephemeral-storage: 20Gi
-      requests:
-        cpu: "8"
-        nvidia.com/gpu: "8"
-        memory: "40G"
-        ephemeral-storage: 20Gi
-    annotations:
-      gke-gcsfuse/volumes: "true"
-      gke-gcsfuse/cpu-limit: "2"
-      gke-gcsfuse/memory-limit: 20Gi
-      gke-gcsfuse/ephemeral-storage-limit: 20Gi
-    nodeSelector:
-      iam.gke.io/gke-metadata-server-enabled: "true"
-      cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
-    tolerations: []
-    affinity: {}
-    # Ray container security context.
-    securityContext: {}
-    volumes:
-      - name: ray-logs
-        emptyDir: {}
-      - name: fluentbit-config
-        configMap:
-          name: fluentbit-config
-      - name: gcs-fuse-csi-ephemeral
-        csi:
-          driver: gcsfuse.csi.storage.gke.io
-          #readOnly: true
-          volumeAttributes:
-            bucketName: ${gcs_bucket}
-            mountOptions: "implicit-dirs,uid=1000,gid=100"
-    # Ray writes logs to /tmp/ray/session_latests/logs
-    volumeMounts:
-      - mountPath: /tmp/ray
-        name: ray-logs
-      - name: gcs-fuse-csi-ephemeral
-        mountPath: /data
-
-    # sidecarContainers specifies additional containers to attach to the Ray pod.
-    # Follows standard K8s container spec.
-    sidecarContainers:
-      - name: fluentbit
-        image: fluent/fluent-bit:1.9.6
-        # These resource requests for Fluent Bit should be sufficient in production.
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-            ephemeral-storage: 2Gi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-            ephemeral-storage: 4Gi
-        volumeMounts:
-        - mountPath: /tmp/ray
-          name: ray-logs
-        - mountPath: /fluent-bit/etc/
-          name: fluentbit-config
-          
 service:
-  type: ClusterIP 
+  type: ClusterIP

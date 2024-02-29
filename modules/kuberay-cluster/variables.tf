@@ -39,9 +39,8 @@ variable "enable_gpu" {
   default     = false
 }
 
-variable "enable_autopilot" {
-  type        = bool
-  description = "Set to true to enable GKE Autopilot clusters"
+variable "autopilot_cluster" {
+  type    = bool
 }
 
 variable "google_service_account" {

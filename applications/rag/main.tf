@@ -73,7 +73,7 @@ module "kuberay-operator" {
   name                   = "kuberay-operator"
   google_service_account = var.ray_service_account
   create_service_account = var.create_ray_service_account
-  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
+  autopilot_cluster      = data.google_container_cluster.default.enable_autopilot
 }
 
 module "gcs" {
@@ -98,6 +98,7 @@ module "jupyterhub" {
   gcs_bucket = var.gcs_bucket
   add_auth   = false # TODO: Replace with IAP.
 
+  autopilot_cluster                 = data.google_container_cluster.default.enable_autopilot
   workload_identity_service_account = var.jupyter_service_account
 
   # IAP Auth parameters
@@ -128,7 +129,7 @@ module "kuberay-cluster" {
   create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
   enable_tpu             = data.google_container_cluster.default.enable_tpu
   enable_gpu             = true
-  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
+  autopilot_cluster      = data.google_container_cluster.default.enable_autopilot
   google_service_account = var.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
 }
@@ -144,9 +145,10 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source     = "../../tutorials/hf-tgi"
-  depends_on = [module.kuberay-operator]
-  namespace  = var.kubernetes_namespace
+  source            = "../../tutorials/hf-tgi"
+  depends_on        = [module.kuberay-operator]
+  namespace         = var.kubernetes_namespace
+  autopilot_cluster = data.google_container_cluster.default.enable_autopilot
 }
 
 module "frontend" {
