@@ -38,7 +38,7 @@ accelerator_type       = "nvidia-tesla-t4"
 
 ### Installing the TPU Initialization Webhook
 
-The TPU Initialization Webhook automatically injects the `TPU_WORKER_ID`, `TPU_NAME`, and `TPU_WORKER_HOSTNAMES` environment variables necessary for multi-host TPU clusters. The webhook needs to be installed once per GKE cluster. The instructions can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/kuberay-tpu-webhook).
+The TPU Initialization Webhook automatically injects the `TPU_WORKER_ID`, `TPU_NAME`, and `TPU_WORKER_HOSTNAMES` environment variables necessary for multi-host TPU clusters. The webhook needs to be installed once per GKE cluster. The instructions can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/kuberay-tpu-webhook).
 
 ### Creating the Kuberay Cluster
 
