@@ -98,6 +98,7 @@ module "jupyterhub" {
   gcs_bucket = var.gcs_bucket
   add_auth   = false # TODO: Replace with IAP.
 
+  autopilot_cluster                 = data.google_container_cluster.default.enable_autopilot
   workload_identity_service_account = var.jupyter_service_account
 
   # IAP Auth parameters
