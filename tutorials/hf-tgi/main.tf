@@ -143,7 +143,3 @@ resource "kubernetes_deployment" "inference_deployment" {
     }
   }
 }
-
-resource "kubernetes_manifest" "pod_monitoring" {
-  manifest = yamldecode(templatefile("${path.module}/podmonitoring.yaml", { namespace: var.namespace}))
-}
