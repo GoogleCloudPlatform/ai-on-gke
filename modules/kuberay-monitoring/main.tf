@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# prometheus 
-resource "kubernetes_manifest" "manifests" {
-  for_each = fileset("${path.module}/config/", "*.yaml")
-  manifest = yamldecode(templatefile("${path.module}/config/${each.value}", { 
-    namespace: var.namespace
-    project_id: var.project_id
-    k8s_service_account: var.k8s_service_account
-    }))
+# google managed prometheus engine
+resource "helm_release" "gmp-engine" {
+  name = "gmp-engine"
+  chart            = "${path.module}/charts/gmp-engine/"
+  namespace        = var.namespace
+  create_namespace = var.create_namespace
+  # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment 
+  timeout = 1200
+  set {
+    name  = "projectID"
+    value = var.project_id
+  }
+
+  set {
+    name  = "serviceAccount"
+    value = var.k8s_service_account
+  }
 }
 
 # grafana
