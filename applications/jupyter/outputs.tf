@@ -13,10 +13,10 @@
 # limitations under the License.
 
 output "jupyterhub_uri" {
-  value = "http://${module.jupyterhub.uri}"
+  value = "http://${module.jupyterhub.jupyterhub_uri}"
 }
 
 output "jupyterhub_password" {
-  value     = module.jupyterhub.password
+  value     = module.jupyterhub.jupyterhub_password
   sensitive = true
 }
