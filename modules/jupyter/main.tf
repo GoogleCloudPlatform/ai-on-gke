@@ -113,17 +113,17 @@ resource "helm_release" "jupyterhub" {
   namespace        = var.namespace
   create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
   cleanup_on_fail  = "true"
-  # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment 
-  timeout          = 1200
+  # This timeout is sufficient and ensures terraform doesn't hang for 20 minutes on error.
+  # Autopilot deployment will complete even faster than Standard, as it relies on Ray Autoscaler to provision user pods.
+  timeout          = 300
 
-  values = [
-    templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
+  values = var.autopilot_cluster ? [ templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
       password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
       project_id          = var.project_id
       project_number      = data.google_project.project.number
 
       # Support legacy image.
-      service_id          = ""#var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
+      service_id          = "" # TODO(umeshkumhar): var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
       namespace           = var.namespace
       backend_config      = var.k8s_backend_config_name
       service_name        = var.k8s_backend_service_name
@@ -131,6 +131,23 @@ resource "helm_release" "jupyterhub" {
       service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.workload_identity_service_account
+      ephemeral_storage   = var.ephemeral_storage
+    })
+  ] : [ templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
+      password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
+      project_id          = var.project_id
+      project_number      = data.google_project.project.number
+
+      # Support legacy image.
+      service_id          = "" # TODO(umeshkumhar): var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
+      namespace           = var.namespace
+      backend_config      = var.k8s_backend_config_name
+      service_name        = var.k8s_backend_service_name
+      authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
+      service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
+      gcs_bucket          = var.gcs_bucket
+      k8s_service_account = var.workload_identity_service_account
+      ephemeral_storage   = var.ephemeral_storage
     })
   ]
   depends_on = [

@@ -107,3 +107,13 @@ variable "client_secret" {
   default     = ""
   sensitive   = false
 }
+
+variable "ephemeral_storage" {
+  type        = string
+  description = "The amount of ephemeral storage for each user"
+  default     = "20Gi"
+}
+
+variable "autopilot_cluster" {
+  type        = bool
+}
