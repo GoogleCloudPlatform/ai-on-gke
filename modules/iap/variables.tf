@@ -14,91 +14,19 @@
 
 variable "project_id" {
   type        = string
-  description = "GCP project id"
+  description = "GCP project ID"
 }
 
-variable "cluster_name" {
-  type = string
-}
-
-variable "cluster_membership_id" {
-  type        = string
-  description = "require to use connectgateway for private clusters, default: cluster_name"
-  default     = ""
-}
-
-variable "cluster_location" {
-  type = string
-}
-
-variable "kubernetes_namespace" {
+variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "rag"
-}
-
-variable "jupyter_service_account" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "jupyter-system-account"
-}
-
-variable "enable_grafana_on_ray_dashboard" {
-  type        = bool
-  description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
-  default     = false
-}
-variable "create_ray_service_account" {
-  type        = bool
-  description = "Creates a google IAM service account & k8s service account & configures workload identity"
-  default     = true
-}
-
-variable "ray_service_account" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "ray-system-account"
-}
-
-variable "create_rag_service_account" {
-  type        = bool
-  description = "Creates a google IAM service account & k8s service account & configures workload identity"
-  default     = true
-}
-
-variable "rag_service_account" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "rag-system-account"
-}
-
-variable "create_gcs_bucket" {
-  type = bool
-  default = false
-  description = "Enable flag to create gcs_bucket"
-}
-
-variable "gcs_bucket" {
-  type        = string
-  description = "GCS bucket name to store dataset"
-}
-
-variable "dataset_embeddings_table_name" {
-  type        = string
-  description = "Name of the table that stores vector embeddings for input dataset"
-}
-
-variable "brand" {
-  type        = string
-  description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"
-  default     = ""
 }
 
 # Frontend IAP settings
 variable "frontend_add_auth" {
   type        = bool
   description = "Enable iap authentication on frontend"
-  default     = true
+  default     = false
 }
 
 variable "frontend_k8s_ingress_name" {
@@ -133,7 +61,7 @@ variable "frontend_k8s_backend_service_name" {
 variable "frontend_k8s_backend_service_port" {
   type        = number
   description = "Name of the Backend Service Port"
-  default     = 8080
+  default = 8080
 }
 
 variable "frontend_url_domain_addr" {
@@ -175,7 +103,7 @@ variable "frontend_members_allowlist" {
 variable "jupyter_add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
-  default     = true
+  default     = false
 }
 
 variable "jupyter_k8s_ingress_name" {
@@ -186,7 +114,7 @@ variable "jupyter_k8s_ingress_name" {
 variable "jupyter_k8s_managed_cert_name" {
   type          = string
   description   = "Name for frontend managed certificate"
-  default       = "jupyter-managed-cert"
+  default       = "frontend-managed-cert"
 }
 
 variable "jupyter_k8s_iap_secret_name" {
@@ -210,7 +138,7 @@ variable "jupyter_k8s_backend_service_name" {
 variable "jupyter_k8s_backend_service_port" {
   type        = number
   description = "NName of the Backend Service Port"
-  default     = 80
+  default = 80
 }
 
 variable "jupyter_url_domain_addr" {
@@ -228,6 +156,7 @@ variable "jupyter_url_domain_name" {
 variable "jupyter_support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
+  default     = ""
 }
 
 variable "jupyter_client_id" {

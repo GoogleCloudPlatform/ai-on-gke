@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 
 data "kubernetes_service" "inference_service" {
   metadata {
@@ -28,6 +32,47 @@ data "kubernetes_secret" "db_secret" {
 
 locals {
     instance_connection_name = format("%s:%s:%s", var.project_id, var.region, "pgvector-instance")
+}
+
+# IAP Section: Enabled the IAP service
+resource "google_project_service" "project_service" {
+  count                      = var.add_auth ? 1 : 0
+  project                    = var.project_id
+  service                    = "iap.googleapis.com"
+
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
+# IAP Section: Creates the OAuth client used in IAP
+resource "google_iap_client" "iap_oauth_client" {
+  count        = var.add_auth && var.client_id == "" ? 1 : 0
+  display_name = "Frontend-Client"
+  brand        = var.brand == "" ? "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}" : var.brand
+}
+
+# IAP Section: Creates the GKE components
+module "iap_auth" {
+  count                     = var.add_auth ? 1 : 0
+  source                    = "../../../modules/iap"
+
+  project_id                         = var.project_id
+  namespace                          = var.namespace
+  frontend_add_auth                  = var.add_auth
+  frontend_k8s_ingress_name          = var.k8s_ingress_name
+  frontend_k8s_managed_cert_name     = var.k8s_managed_cert_name
+  frontend_k8s_iap_secret_name       = var.k8s_iap_secret_name
+  frontend_k8s_backend_config_name   = var.k8s_backend_config_name
+  frontend_k8s_backend_service_name  = var.k8s_backend_service_name
+  frontend_k8s_backend_service_port  = var.k8s_backend_service_port
+  frontend_client_id                 = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
+  frontend_client_secret             = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
+  frontend_url_domain_addr           = var.url_domain_addr
+  frontend_url_domain_name           = var.url_domain_name
+  depends_on                = [
+    google_project_service.project_service,
+    kubernetes_service.rag_frontend_service
+  ]
 }
 
 module "frontend-workload-identity" {
@@ -48,13 +93,13 @@ resource "kubernetes_service" "rag_frontend_service" {
     selector = {
       app = "rag-frontend"
     }
-    session_affinity = "ClientIP"
+    session_affinity = var.add_auth ? "None" : "ClientIP"
     port {
       port        = 8080
       target_port = 8080
     }
 
-    type = "ClusterIP"
+    type = var.add_auth ? "NodePort" : "ClientIP"
   }
 }
 
@@ -181,5 +226,13 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       }
     }
   }
+}
+
+data "kubernetes_service" "frontend-ingress" {
+  metadata {
+    name      = var.k8s_ingress_name
+    namespace = var.namespace
+  }
+  depends_on = [module.iap_auth]
 }
 

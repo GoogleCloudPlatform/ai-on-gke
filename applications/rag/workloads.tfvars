@@ -19,9 +19,9 @@ cluster_name     = "<cluster_name>"
 cluster_location = "us-central1"
 
 ## GKE environment variables
-kubernetes_namespace = "rag"
-create_gcs_bucket    = true
-gcs_bucket           = "rag-data-xyzu" # Choose a globally unique bucket name.
+kubernetes_namespace      = "rag"
+create_gcs_bucket         = true
+gcs_bucket                = "rag-data-xyzu" # Choose a globally unique bucket name.
 
 ## Service accounts
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
@@ -43,15 +43,36 @@ jupyter_service_account        = "jupyter-system-account"
 dataset_embeddings_table_name = "googlemaps_reviews_db"
 
 ## IAP config
-add_auth                = false # Set to true when using auth with IAP
 brand                   = "projects/<prj-number>/brands/<prj-number>"
-support_email           = "<email>"
-k8s_ingress_name          = "jupyter-ingress"
-k8s_backend_config_name   = "jupyter-iap-config"
-k8s_backend_service_name  = "proxy-public"
 
-url_domain_addr   = ""
-url_domain_name   = ""
-client_id         = ""
-client_secret     = ""
-members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+## Jupyter IAP Settings
+jupyter_add_auth                  = true # Set to true when using auth with IAP
+jupyter_support_email             = "<email>"
+jupyter_k8s_ingress_name          = "jupyter-ingress"
+jupyter_k8s_managed_cert_name     = "jupyter-managed-cert"
+jupyter_k8s_iap_secret_name       = "jupyter-iap-secret"
+jupyter_k8s_backend_config_name   = "jupyter-iap-config"
+jupyter_k8s_backend_service_name  = "proxy-public"
+jupyter_k8s_backend_service_port  = 80
+
+jupyter_url_domain_addr   = ""
+jupyter_url_domain_name   = ""
+jupyter_client_id         = ""
+jupyter_client_secret     = ""
+jupyter_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+
+## Frontend IAP Settings
+frontend_add_auth                  = true # Set to true when using auth with IAP
+frontend_support_email             = "<email>"
+frontend_k8s_ingress_name          = "frontend-ingress"
+frontend_k8s_managed_cert_name     = "frontend-managed-cert"
+frontend_k8s_iap_secret_name       = "frontend-iap-secret"
+frontend_k8s_backend_config_name   = "frontend-iap-config"
+frontend_k8s_backend_service_name  = "rag-frontend"
+frontend_k8s_backend_service_port  = 8080
+
+frontend_url_domain_addr   = ""
+frontend_url_domain_name   = ""
+frontend_client_id         = ""
+frontend_client_secret     = ""
+frontend_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]

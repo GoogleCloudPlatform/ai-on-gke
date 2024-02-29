@@ -44,10 +44,11 @@ variable "gcp_service_account_iam_roles" {
   default     = []
 }
 
+# TODO review all permissions
 variable "predefined_iam_roles" {
   description = "Predefined list of IAM roles to assign"
   type        = list(string)
-  default     = ["roles/compute.networkViewer", "roles/viewer", "roles/cloudsql.client", "roles/artifactregistry.reader", "roles/storage.admin", "roles/iam.serviceAccountAdmin", "roles/compute.loadBalancerServiceUser"]
+  default     = ["roles/compute.networkViewer", "roles/viewer", "roles/cloudsql.client", "roles/artifactregistry.reader", "roles/storage.admin", "roles/iam.serviceAccountAdmin", "roles/compute.loadBalancerServiceUser", "roles/iam.serviceAccountTokenCreator"]
 }
 
 variable "project_id" {
@@ -60,6 +61,17 @@ variable "k8s_ingress_name" {
   default = "jupyter-ingress"
 }
 
+variable "k8s_managed_cert_name" {
+  type          = string
+  description   = "Name for frontend managed certificate"
+  default       = "jupyter-managed-cert"
+}
+
+variable "k8s_iap_secret_name" {
+  type    = string
+  default = "jupyter-secret"
+}
+
 variable "k8s_backend_config_name" {
   type        = string
   description = "Name of the Backend Config on GCP"
@@ -70,6 +82,12 @@ variable "k8s_backend_service_name" {
   type        = string
   description = "Name of the Backend Service on GCP, this is defined by Jupyter hub"
   default     = "proxy-public"
+}
+
+variable "k8s_backend_service_port" {
+  type        = number
+  description = "Name of the Backend Service on GCP"
+  default     = 80
 }
 
 variable "brand" {

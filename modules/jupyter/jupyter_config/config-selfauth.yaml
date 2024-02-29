@@ -34,8 +34,6 @@ hub:
       namespace: '${namespace}'
       service_name: '${service_name}'
       project_number: '${project_number}'
-      # support legacy image
-      expected_audience: '/projects/${project_number}/global/backendServices/${service_id}'
     Authenticator:
       admin_users:
         - user1

@@ -31,16 +31,5 @@ gcs_bucket = "<gcs-bucket>"
 create_service_account        = true
 gcp_and_k8s_service_account   = "jupyter-service-account"
 
-# Jupyterhub with IAP
-add_auth = false
-brand = ""
-support_email = ""
-k8s_ingress_name          = "jupyter-ingress"
-k8s_backend_config_name   = "jupyter-iap-config"
-k8s_backend_service_name = "proxy-public"
-
-url_domain_addr = ""
-url_domain_name = ""
-client_id = ""
-client_secret = ""
-members_allowlist = ["allAuthenticatedUsers"]
+# Jupyterhub without IAP
+add_auth                  = false

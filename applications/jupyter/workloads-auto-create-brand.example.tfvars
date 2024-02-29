@@ -26,21 +26,23 @@ cluster_membership_id = "" # required only for private cluster, default: cluster
 #######################################################
 
 ## JupyterHub variables
-namespace              = "jupyter"
-create_gcs_bucket      = true
-gcs_bucket             = "<gcs-bucket>"
-create_service_account = true
-gcp_service_account    = "jupyter-service-account"
+namespace                                   = "jupyter"
+create_gcs_bucket                           = true
+gcs_bucket                                  = "<gcs-bucket>"
+workload_identity_service_account           = "jupyter-service-account"
 
 # Jupyterhub with IAP
-add_auth                = true
-brand                   = ""
-support_email           = "<email>"
-default_backend_service = "proxy-public"
-service_name            = "iap-config-default"
+add_auth                  = true
+brand                     = "" # Leave it empty to auto create
+support_email             = "<email>"
+k8s_ingress_name          = "jupyter-ingress"
+k8s_iap_secret_name       = "jupyter-iap-secret"
+k8s_backend_config_name   = "jupyter-iap-config"
+k8s_backend_service_name  = "proxy-public"
+k8s_backend_service_port  = 80
 
-url_domain_addr   = ""
-url_domain_name   = ""
-client_id         = ""
-client_secret     = ""
-members_allowlist = "allAuthenticatedUsers,user:<email>"
+url_domain_addr           = ""
+url_domain_name           = ""
+client_id                 = ""
+client_secret             = ""
+members_allowlist         = ["allAuthenticatedUsers", "user:<email>"]
