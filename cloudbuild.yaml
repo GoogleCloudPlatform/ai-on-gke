@@ -27,7 +27,7 @@ steps:
       terraform init -no-color
       terraform validate -no-color
     dir: 'applications/ray/'
-    waitFor: ['-']
+    waitFor: ['validate platform']
   
   - id: 'validate jupyterhub'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -35,7 +35,7 @@ steps:
       terraform init -no-color
       terraform validate -no-color
     dir: 'applications/jupyter/'
-    waitFor: ['-']
+    waitFor: ['validate platform']
   
   - id: 'validate rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -43,8 +43,9 @@ steps:
       terraform init -no-color
       terraform validate -no-color
     dir: 'applications/rag/'
-    waitFor: ['-']
+    waitFor: ['validate platform']
 
+  # Create cluster to test ray, jupyterhub
   - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     env:
@@ -54,13 +55,16 @@ steps:
       - '-c'
       - |
         set -e
-        terraform apply -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
+        terraform apply \
+        -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
+        -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=cluster_region=$_REGION -auto-approve -no-color
+        -var=cluster_region=$_REGION \
+        -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'infrastructure/'
     allowFailure: true
-    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub']
+    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
   
   - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -76,7 +80,7 @@ steps:
         --location $_REGION \
         --project $PROJECT_ID 
 
-        cd applications/ray/
+        cd /workspace/applications/ray/
         terraform apply \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
@@ -85,7 +89,7 @@ steps:
         -var=ray_namespace=ml-$SHORT_SHA \
         -var=gcp_service_account=ray-sa-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA \
-        -auto-approve -no-color
+        -auto-approve -no-color -lock=false
         echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
@@ -99,6 +103,28 @@ steps:
         echo "pass" > /workspace/ray_result.txt
     allowFailure: true
     waitFor: ['create gke cluster']
+
+  - id: 'cleanup ray cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        cd /workspace/applications/ray/
+        terraform destroy \
+        -var-file=workloads.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=cluster_location=$_REGION \
+        -var=ray_namespace=ml-$SHORT_SHA \
+        -var=gcp_service_account=ray-sa-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA \
+        -auto-approve -no-color
+
+    allowFailure: true
+    waitFor: ['test ray cluster']
 
   - id: 'test jupyterhub'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -119,7 +145,7 @@ steps:
         -var=namespace=ml-$SHORT_SHA \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA \
-        -auto-approve -no-color
+        -auto-approve -no-color -lock=false
         echo "pass" > /workspace/jupyterhub_tf_result.txt
 
         kubectl wait --all pods -n ml-$SHORT_SHA --for=condition=Ready --timeout=300s
@@ -131,9 +157,30 @@ steps:
         python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt)
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
-    waitFor: ['test ray cluster']
+    waitFor: ['cleanup ray cluster']
 
-  - id: 'test rag setup'
+  - id: 'cleanup jupyterhub'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        cd /workspace/applications/jupyter/
+        terraform destroy \
+        -var-file=workloads-without-iap.example.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
+        -var=namespace=ml-$SHORT_SHA \
+        -var=gcp_and_k8s_service_account=jupyter-sa-$SHORT_SHA \
+        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA \
+        -auto-approve -no-color
+
+    allowFailure: true
+    waitFor: ['test jupyterhub']
+
+  - id: 'test rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
     args:
@@ -150,7 +197,7 @@ steps:
         cd /workspace/modules/jupyter/tests
         python3 change_jupyter_config.py
 
-        cd applications/rag/
+        cd /workspace/applications/rag/
         terraform init
         terraform apply \
         -var-file=workloads.tfvars \
@@ -158,7 +205,7 @@ steps:
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=kubernetes_namespace=rag-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA \
-        -auto-approve -no-color
+        -auto-approve -no-color -lock=false
         echo "pass" > /workspace/rag_result.txt
 
         # Validate Ray: Make sure pods are running
@@ -168,7 +215,7 @@ steps:
         sleep 5s
 
         # Validate Ray: Check dashboard
-        ray job submit --working-dir ./example_ray_job_scripts \
+        ray job submit --working-dir ./tests \
         --address=http://127.0.0.1:8265 -- python ray_job.py 
         echo "pass" > /workspace/rag_ray_dashboard_result.txt
 
@@ -187,10 +234,14 @@ steps:
         # Wait port-forwarding to take its place
         sleep 5s
 
-    allowFailure: true
-    waitFor: ['create gke cluster']
+        cd /workspace/applications/rag/tests
+        python3 test_frontend.py "127.0.0.1:8081"
+        echo "pass" > /workspace/rag_frontend_result.txt
 
-  - id: 'clean gke cluster'
+    allowFailure: true
+    waitFor: ['cleanup jupyterhub']
+
+  - id: 'cleanup rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'bash'
     args:
@@ -228,12 +279,24 @@ steps:
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA \
         -auto-approve -no-color
 
+    allowFailure: true
+    waitFor: ['test rag']
+
+  - id: 'cleanup gke cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
         cd /workspace/infrastructure
         terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=cluster_region=$_REGION -auto-approve -no-color
+
     allowFailure: true
-    waitFor: ['test rag setup']
+    waitFor: ['cleanup rag']
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -265,7 +328,28 @@ steps:
           echo "jupyterhub test failed"
           exit 1
         fi
-    waitFor: ['clean gke cluster']
+
+        if [[ $(cat /workspace/rag_result.txt) != "pass" ]]; then
+          echo "jupyterhub test failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/rag_ray_dashboard_result.txt) != "pass" ]]; then
+          echo "jupyterhub test failed"
+          exit 1
+        fi
+        
+        if [[ $(cat /workspace/rag_jupyterhub_test_result.txt) != "pass" ]]; then
+          echo "jupyterhub test failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/rag_frontend_result.txt) != "pass" ]]; then
+          echo "rag frontend test failed"
+          exit 1
+        fi
+
+    waitFor: ['cleanup gke cluster']
         
 substitutions:
   _REGION: us-central1
