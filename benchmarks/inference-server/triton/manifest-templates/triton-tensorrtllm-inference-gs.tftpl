@@ -1,0 +1,81 @@
+# Copyright 20234Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triton-infer-gcs
+  namespace: ${namespace}  # Replace ${namespace} with your actual namespace
+  labels:
+    app: triton-infer-gcs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triton-infer-gcs
+  template:
+    metadata:
+      labels:
+        app: triton-infer-gcs
+    spec:
+      serviceAccountName: ${ksa}  # Replace ${ksa} with your Kubernetes Service Account name
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+        - name: all-models-volume
+          emptyDir: {}
+        - name: scripts-volume
+          emptyDir: {}
+      initContainers:
+        - name: init-gcs-download
+          image: google/cloud-sdk
+          serviceAccountName: ${ksa}
+          command: ["/bin/sh", "-c"] 
+          args:
+            - gsutil cp -r gs://your_gcs_repo/all_models ./ && gsutil cp -r gs://your_gcs_repo/scripts ./;
+          volumeMounts:
+            - name: all-models-volume
+              mountPath: /all_models
+            - name: scripts-volume
+              mountPath: /scripts
+      containers:
+        - name: triton-inference
+          image: "${image_path}"  # Replace ${image_path} with the actual image path
+          workingDir: /opt/tritonserver
+          command: ["/bin/bash", "-c"]
+          args: ["pip install sentencepiece protobuf && huggingface-cli login --token $HUGGINGFACE_TOKEN && python /scripts/launch_triton_server.py --model_repo /all_models/inflight_batcher_llm --world_size 1"]
+          ports:
+            - containerPort: 8000
+              name: http-triton
+            - containerPort: 8001
+              name: grpc-triton
+            - containerPort: 8002
+              name: metrics-triton
+          env:
+            - name: HUGGINGFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ${huggingface-secret}  # Replace ${huggingface-secret} with your secret's name
+                  key: token
+          resources:
+            limits:
+              nvidia.com/gpu: ${gpu_count}  # Replace ${gpu_count} with the number of GPUs
+          serviceAccountName: ${ksa}
+          volumeMounts:
+            - name: all-models-volume
+              mountPath: /all_models
+            - name: scripts-volume
+              mountPath: /scripts
