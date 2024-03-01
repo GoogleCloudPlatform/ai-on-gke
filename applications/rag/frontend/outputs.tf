@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "domain" {
-  value = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.default[0].address}.nip.io"
+output "frontend_uri" {
+  value = var.add_auth ? module.iap_auth[0].jupyter_domain : (data.kubernetes_service.frontend-ingress.status != null ? (data.kubernetes_service.frontend-ingress.status[0].load_balancer != null ? "${data.kubernetes_service.frontend-ingress.status[0].load_balancer[0].ingress[0].ip}" : "") : "")
 }

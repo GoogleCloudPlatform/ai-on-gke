@@ -86,8 +86,11 @@ module "jupyterhub" {
   client_id                 = var.client_id
   client_secret             = var.client_secret
   k8s_ingress_name          = var.k8s_ingress_name
+  k8s_managed_cert_name     = var.k8s_managed_cert_name
+  k8s_iap_secret_name       = var.k8s_iap_secret_name
   k8s_backend_config_name   = var.k8s_backend_config_name
   k8s_backend_service_name  = var.k8s_backend_service_name
+  k8s_backend_service_port  = var.k8s_backend_service_port
   url_domain_addr           = var.url_domain_addr
   url_domain_name           = var.url_domain_name
   members_allowlist         = var.members_allowlist

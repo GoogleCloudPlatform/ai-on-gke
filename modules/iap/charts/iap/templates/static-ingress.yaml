@@ -15,13 +15,14 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Values.iap.jupyterIngress.name }}
+  name: {{ .Values.iap.ingress.name }}
   annotations:
-    kubernetes.io/ingress.global-static-ip-name:  {{ .Values.iap.jupyterIngress.staticIpName }}
-    networking.gke.io/managed-certificates:  {{ .Values.iap.jupyterIngress.managedCertificates }}
+    kubernetes.io/ingress.global-static-ip-name:  {{ .Values.iap.ingress.staticIpName }}
+    networking.gke.io/managed-certificates:  {{ .Values.iap.managedCertificate.name }}
+    kubernetes.io/ingress.class: "gce"
 spec:
   defaultBackend:
     service:
-      name: {{ .Values.iap.jupyterIngress.defaultBackend }}
+      name: {{ .Values.iap.ingress.backendServiceName }}
       port:
-        number: 80
+        number: {{ .Values.iap.ingress.backendServicePort }}

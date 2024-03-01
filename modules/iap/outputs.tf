@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,20 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: cloud.google.com/v1
-kind: BackendConfig
-metadata:
-  name: {{ .Values.iap.backendConfig.name }}
-spec:
-  healthCheck:
-    checkIntervalSec: 15
-    timeoutSec: 15
-    healthyThreshold: 1
-    unhealthyThreshold: 2
-    type: HTTP
-    requestPath: /_chp_healthz
-    port: 8000
-  iap:
-    enabled: true
-    oauthclientCredentials:
-      secretName:  {{ .Values.iap.backendConfig.iapSecretName }}
+output "jupyter_domain" {
+  value = var.jupyter_add_auth && var.jupyter_url_domain_addr == "" ? "${google_compute_global_address.jupyter_ip_address[0].address}.nip.io" : var.jupyter_url_domain_addr
+}
+
+output "frontend_domain" {
+  value = var.frontend_add_auth && var.frontend_url_domain_addr == "" ? "${google_compute_global_address.frontend_ip_address[0].address}.nip.io" : var.frontend_url_domain_addr
+}
