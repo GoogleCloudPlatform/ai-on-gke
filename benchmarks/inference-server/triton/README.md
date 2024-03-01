@@ -66,7 +66,9 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 
    ```
    Replace `your_registry` with your actual Docker registry path.
+
    ***Method 2: Upload Model repository and the relevant scripts to gcs***
+   
    In this method we can directly upload the model engine and scripts to gcs
    ```
    gsutil cp -r gs://your_model_repo/scripts/ ./
@@ -113,7 +115,7 @@ Example `terraform.tfvars` content:
    gpu_count = 2
    ```
 
-####[optional] set-up credentials config with kubeconfig####
+#### [optional] set-up credentials config with kubeconfig 
 
 If you created your cluster with steps from `../../infra/` or with fleet management enabled, the existing `credentials_config` must use the fleet host credentials like this:
 ```bash
