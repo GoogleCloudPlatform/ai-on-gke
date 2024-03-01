@@ -92,7 +92,9 @@ resource "kubernetes_deployment" "inference_deployment" {
               "nvidia.com/gpu" = "2"
             }
             requests = {
-             "nvidia.com/gpu" = "2"
+              # Sufficient storage to fit the Mistral-7B-Instruct-v0.1 model
+              "ephemeral-storage" = "20Gi"
+              "nvidia.com/gpu" = "2"
             }
           }
 
@@ -131,19 +133,16 @@ resource "kubernetes_deployment" "inference_deployment" {
 
         volume {
           name = "data"
-          host_path {
-            path = "/mnt/stateful_partition/kube-ephemeral-ssd/mistral-data"
-          }
+          empty_dir {}
         }
 
-        node_selector = {
+        node_selector = merge({
           "cloud.google.com/gke-accelerator" = "nvidia-l4"
-        }
+        }, var.autopilot_cluster ? {
+          "cloud.google.com/gke-ephemeral-storage-local-ssd" = "true"
+          "cloud.google.com/compute-class" = "Accelerator"
+        } : {})
       }
     }
   }
-}
-
-resource "kubernetes_manifest" "pod_monitoring" {
-  manifest = yamldecode(templatefile("${path.module}/podmonitoring.yaml", { namespace: var.namespace}))
 }

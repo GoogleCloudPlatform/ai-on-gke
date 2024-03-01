@@ -34,6 +34,8 @@ hub:
       namespace: '${namespace}'
       service_name: '${service_name}'
       project_number: '${project_number}'
+      # support legacy image
+      expected_audience: '/projects/${project_number}/global/backendServices/${service_id}'
     Authenticator:
       admin_users:
         - admin
@@ -63,13 +65,15 @@ proxy:
 scheduling:
   userScheduler:
     enabled: false
+  userPlaceholder:
+    enabled: false
 
 singleuser:
   memory:
-    limit: 32G
-    guarantee: 8G
+    limit: 16G
+    guarantee: 16G
   cpu:
-    limit: 8
+    limit: 4
     guarantee: 4
   extraResource:
     limits:
@@ -93,7 +97,7 @@ singleuser:
     gke-gcsfuse/memory-limit: 250Mi
     gke-gcsfuse/ephemeral-storage-limit: 10Gi
   serviceAccountName: ${k8s_service_account}
-    # Configure csi for gcsfuse
+  # Configure csi for gcsfuse
   storage:
     dynamic:
       pvcNameTemplate: claim-{username}
@@ -107,57 +111,15 @@ singleuser:
     extraVolumeMounts:
         - name: test-vol
           mountPath: /persist-data
-# More info on kubespawner overrides: https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner
-#   profile example:
-#   - display_name: "Learning Data Science"
-#      description: "Datascience Environment with Sample Notebooks"
-#      kubespawner_override:
-#           cpu_limit: .5
-#           cpu_guarantee: .5
-#           mem_limit: 1G
-#           mem_guarantee: 1G
-#        image: jupyter/datascience-notebook:2343e33dec46
-#        lifecycle_hooks:
-#          postStart:
-#            exec:
-#              command:
-#                - "sh"
-#                - "-c"
-#                - >
-#                  gitpuller https://github.com/data-8/materials-fa17 master materials-fa;
   profileList:
-    - display_name: "CPU"
-      description: "Creates CPU VMs as the compute for notebook execution."
+    - display_name: "CPU (C3)"
+      description: "Creates CPU (C3) VMs as the compute for notebook execution."
       profile_options:
         storage:
           display_name: "Storage"
           choices:
             DefaultStorage:
-              display_name: "DefaultStorage"
-              kubespawner_override:
-                default: true
-            GCSFuse:
-              display_name: "GCSFuse"
-              kubespawner_override:
-                volume_mounts:
-                - name: gcs-fuse-csi-ephemeral
-                  mountPath: /home/jovyan
-                volumes:
-                - name: gcs-fuse-csi-ephemeral
-                  csi:
-                    driver: gcsfuse.csi.storage.gke.io
-                    volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
-      default: true
-    - display_name: "TPU"
-      description: "Creates TPUs VMs as the compute for notebook execution. Will only work if TPU is enabled."
-      profile_options:
-        storage:
-          display_name: "Storage"
-          choices:
-            DefaultStorage:
-              display_name: "DefaultStorage"
+              display_name: "Local (SSD)"
               kubespawner_override:
                 default: true
             GCSFuse:
@@ -174,20 +136,19 @@ singleuser:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
       kubespawner_override:
-        image: jupyter/tensorflow-notebook:python-3.10
-        extra_resource_limits:
-          google.com/tpu: "4"
         node_selector:
-          cloud.google.com/gke-tpu-accelerator: "tpu-v4-podslice"
-          cloud.google.com/gke-tpu-topology: "2x2x1"
-    - display_name: "GPU T4"
-      description: "Creates GPU VMs (T4) as the compute for notebook execution"
+          cloud.google.com/compute-class: "Performance"
+          cloud.google.com/machine-family: "c3"
+          cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+      default: true
+    - display_name: "GPU (T4)"
+      description: "Creates GPU VMs (T4) as the compute for notebook execution."
       profile_options:
         storage:
           display_name: "Storage"
           choices:
             DefaultStorage:
-              display_name: "DefaultStorage"
+              display_name: "Local (Standard)"
               kubespawner_override:
                 default: true
             GCSFuse:
@@ -206,19 +167,19 @@ singleuser:
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
-          # number of gpus needed on the node
           nvidia.com/gpu: "2"
-      #  possible values: nvidia-tesla-k80, nvidia-tesla-p100, nvidia-tesla-p4, nvidia-tesla-v100, nvidia-tesla-t4, nvidia-tesla-a100, nvidia-a100-80gb, nvidia-l4
+        extra_resource_guarantees:
+          nvidia.com/gpu: "2"
         node_selector:
           cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
-    - display_name: "GPU A100"
-      description: "Creates GPU VMs (A100) as the compute for notebook execution"
+    - display_name: "GPU (L4)"
+      description: "Creates GPU VMs (L4) as the compute for notebook execution."
       profile_options:
         storage:
           display_name: "Storage"
           choices:
             DefaultStorage:
-              display_name: "DefaultStorage"
+              display_name: "Local (SSD)"
               kubespawner_override:
                 default: true
             GCSFuse:
@@ -238,7 +199,39 @@ singleuser:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
           nvidia.com/gpu: "2"
-        # GPU requests
+        extra_resource_guarantees:
+          nvidia.com/gpu: "2"
+        node_selector:
+          cloud.google.com/compute-class: "Accelerator"
+          cloud.google.com/gke-accelerator: "nvidia-l4"
+          cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+    - display_name: "GPU (A100)"
+      description: "Creates GPU VMs (A100) as the compute for notebook execution."
+      profile_options:
+        storage:
+          display_name: "Storage"
+          choices:
+            DefaultStorage:
+              display_name: "Local (Standard)"
+              kubespawner_override:
+                default: true
+            GCSFuse:
+              display_name: "GCSFuse"
+              kubespawner_override:
+                volume_mounts:
+                - name: gcs-fuse-csi-ephemeral
+                  mountPath: /home/jovyan
+                volumes:
+                - name: gcs-fuse-csi-ephemeral
+                  csi:
+                    driver: gcsfuse.csi.storage.gke.io
+                    volumeAttributes:
+                      bucketName: gcsfuse-{username}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+      kubespawner_override:
+        image: jupyter/tensorflow-notebook:python-3.10
+        extra_resource_limits:
+          nvidia.com/gpu: "2"
         extra_resource_guarantees:
           nvidia.com/gpu: "2"
         node_selector:

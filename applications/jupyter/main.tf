@@ -77,6 +77,7 @@ module "jupyterhub" {
   namespace                         = var.namespace
   workload_identity_service_account = var.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket
+  autopilot_cluster                 = data.google_container_cluster.default.enable_autopilot
 
   # IAP Auth parameters
   add_auth                  = var.add_auth

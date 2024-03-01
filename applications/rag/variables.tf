@@ -18,7 +18,7 @@ variable "project_id" {
 }
 
 variable "cluster_name" {
-  type = string
+  type    = string
 }
 
 variable "cluster_membership_id" {
@@ -28,7 +28,7 @@ variable "cluster_membership_id" {
 }
 
 variable "cluster_location" {
-  type = string
+  type    = string
 }
 
 variable "kubernetes_namespace" {
@@ -73,8 +73,8 @@ variable "rag_service_account" {
 }
 
 variable "create_gcs_bucket" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "Enable flag to create gcs_bucket"
 }
 
@@ -246,3 +246,107 @@ variable "jupyter_members_allowlist" {
   type    = list(string)
   default = []
 }
+
+## GKE variables
+variable "create_cluster" {
+  type    = bool
+  default = true
+}
+
+variable "private_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "autopilot_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "cpu_pools" {
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = string
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+  }))
+  default = [{
+    name           = "cpu-pool"
+    machine_type   = "n1-standard-16"
+    node_locations = "us-central1-b,us-central1-c"
+    autoscaling    = true
+    min_count      = 1
+    max_count      = 3
+    disk_size_gb   = 100
+    disk_type      = "pd-standard"
+  }]
+}
+
+variable "gpu_pools" {
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = string
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+    accelerator_type       = optional(string, "nvidia-tesla-t4")
+    gpu_driver_version     = optional(string, "DEFAULT")
+  }))
+  default = [{
+    name               = "gpu-pool"
+    machine_type       = "n1-standard-16"
+    node_locations     = "us-central1-b,us-central1-c"
+    autoscaling        = true
+    min_count          = 1
+    max_count          = 3
+    disk_size_gb       = 100
+    disk_type          = "pd-standard"
+    accelerator_count  = 2
+    accelerator_type   = "nvidia-tesla-t4"
+    gpu_driver_version = "DEFAULT"
+    },
+    {
+      name               = "gpu-pool-l4"
+      machine_type       = "g2-standard-24"
+      node_locations     = "us-central1-a,us-central1-b"
+      autoscaling        = true
+      min_count          = 1
+      max_count          = 3
+      disk_size_gb       = 100
+      disk_type          = "pd-balanced"
+      enable_gcfs        = true
+      accelerator_count  = 2
+      accelerator_type   = "nvidia-l4"
+      gpu_driver_version = "DEFAULT"
+  }]
