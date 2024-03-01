@@ -109,9 +109,8 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 
 3. **Configure Your Deployment:**
 
-   Edit the `terraform.tfvars` file to include your specific configuration details. At a minimum, you must specify the `credentials_config` for accessing Google Cloud resources and the `image_path` to your Docker image in the registry. Update the gpu_count to make it consistent with the TensorRTLLM Engine configuration when it was [built](https://github.com/NVIDIA/TensorRT-LLM/tree/0f041b7b57d118037f943fd6107db846ed147b91/examples/llama).
-
-Example `terraform.tfvars` content:
+   Edit the `terraform.tfvars` file to include your specific configuration details with the variable `credentials_config`. 
+   Example 
 
    ```bash
    credentials_config = {
