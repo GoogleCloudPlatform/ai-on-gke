@@ -188,7 +188,7 @@ terraform apply
 | `model_id`           | Model used for inference.                                                                     | String  | `"meta-llama/Llama-2-7b-chat-hf"`         | No       |
 | `gpu_count`          | Parallelism based on number of gpus.                                                          | Number  | `1`                                       | No       |
 | `ksa`                | Kubernetes Service Account used for workload.                                                 | String  | `"default"`                               | No       |
-| `huggingface-secret` | Name of the kubectl huggingface secret token                                                  | String  | `"huggingface-secret"`                    | No       |
+| `huggingface-secret` | Name of the kubectl huggingface secret token                                                  | String  | `"huggingface-secret"`                    | Yes       |
 | `templates_path`     | Path where manifest templates will be read from.     | String  |                                    | No      |
 
 ## Notes
