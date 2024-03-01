@@ -90,7 +90,7 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
    cp sample-terraform.tfvars terraform.tfvars
    ```
 
-2. Define `template_path`, `image_path` and `gpu_count` variable  in `terraform.tfvars`.
+2. Define `template_path`, `image_path` and `gpu_count` variables  in `terraform.tfvars`.
    
    * If using method 1 In Step 1 above:
    ```bash
