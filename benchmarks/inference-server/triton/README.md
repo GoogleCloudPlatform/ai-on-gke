@@ -1,6 +1,6 @@
 # AI on GKE: Benchmark TensorRT LLM on Triton Server
 
-This guide provides instructions for deploying and benchmarking a TensorRT Large Language Model (LLM) on Triton Inference Server within a Google Kubernetes Engine (GKE) environment. The process involves building a Docker image with the TensorRT LLM engine and deploying it to a GKE cluster. 
+This guide provides instructions for deploying and benchmarking a TensorRT Large Language Model (LLM) on Triton Inference Server within a Google Kubernetes Engine (GKE) environment. The process involves building a Docker container with the TensorRT LLM engine and deploying it to a GKE cluster. 
 
 ## Prerequisites
 
