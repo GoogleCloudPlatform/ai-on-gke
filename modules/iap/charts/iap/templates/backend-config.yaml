@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "jupyter_domain" {
-  value = module.jupyterhub.jupyterhub_uri
-}
-
-output "jupyter_password" {
-  value     = module.jupyterhub.jupyterhub_password
-  sensitive = true
-}
-
-output "frontend_domain" {
-  value = module.frontend.frontend_uri
-}
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: {{ .Values.iap.backendConfig.name }}
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 15
+    healthyThreshold: 1
+    unhealthyThreshold: 2
+    type: HTTP
+    requestPath: /_chp_healthz
+    port: 8000
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName:  {{ .Values.iap.secret.name }}

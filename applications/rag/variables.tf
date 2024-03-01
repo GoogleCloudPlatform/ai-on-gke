@@ -37,12 +37,6 @@ variable "kubernetes_namespace" {
   default     = "rag"
 }
 
-variable "create_jupyter_service_account" {
-  type        = bool
-  description = "Creates a google IAM service account & k8s service account & configures workload identity"
-  default     = true
-}
-
 variable "jupyter_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
@@ -94,68 +88,163 @@ variable "dataset_embeddings_table_name" {
   description = "Name of the table that stores vector embeddings for input dataset"
 }
 
-variable "members_allowlist" {
-  type    = list(string)
-  default = []
-}
-
-variable "add_auth" {
-  type        = bool
-  description = "Enable iap authentication on jupyterhub"
-  default     = true
-}
-
-variable "k8s_ingress_name" {
-  type    = string
-  default = "jupyter-ingress"
-}
-
-variable "k8s_backend_config_name" {
-  type        = string
-  description = "Name of the Backend Config on GCP"
-  default     = "jupyter-iap-config"
-}
-
-variable "k8s_backend_service_name" {
-  type        = string
-  description = "Name of the Backend Config on GCP, this is defined by Jupyter hub"
-  default     = "proxy-public"
-}
 variable "brand" {
   type        = string
   description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"
   default     = ""
 }
 
-variable "url_domain_addr" {
+# Frontend IAP settings
+variable "frontend_add_auth" {
+  type        = bool
+  description = "Enable iap authentication on frontend"
+  default     = true
+}
+
+variable "frontend_k8s_ingress_name" {
+  type    = string
+  default = "frontend-ingress"
+}
+
+variable "frontend_k8s_managed_cert_name" {
+  type          = string
+  description   = "Name for frontend managed certificate"
+  default       = "frontend-managed-cert"
+}
+
+variable "frontend_k8s_iap_secret_name" {
+  type        = string
+  description = "Name for frontend iap secret"
+  default     = "frontend-iap-secret"
+}
+
+variable "frontend_k8s_backend_config_name" {
+  type        = string
+  description = "Name of the Kubernetes Backend Config"
+  default     = "frontend-iap-config"
+}
+
+variable "frontend_k8s_backend_service_name" {
+  type        = string
+  description = "Name of the Backend Service"
+  default     = "rag-frontend"
+}
+
+variable "frontend_k8s_backend_service_port" {
+  type        = number
+  description = "Name of the Backend Service Port"
+  default     = 8080
+}
+
+variable "frontend_url_domain_addr" {
   type        = string
   description = "Domain provided by the user. If it's empty, we will create one for you."
   default     = ""
 }
 
-variable "url_domain_name" {
+variable "frontend_url_domain_name" {
   type        = string
   description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
   default     = ""
 }
 
-variable "support_email" {
+variable "frontend_support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
   default     = ""
 }
 
-variable "client_id" {
+variable "frontend_client_id" {
   type        = string
   description = "Client ID used for enabling IAP"
   default     = ""
 }
 
-variable "client_secret" {
+variable "frontend_client_secret" {
   type        = string
   description = "Client secret used for enabling IAP"
   default     = ""
-  sensitive   = false
+}
+
+variable "frontend_members_allowlist" {
+  type    = list(string)
+  default = []
+}
+
+# Jupyter IAP settings
+variable "jupyter_add_auth" {
+  type        = bool
+  description = "Enable iap authentication on jupyterhub"
+  default     = true
+}
+
+variable "jupyter_k8s_ingress_name" {
+  type    = string
+  default = "jupyter-ingress"
+}
+
+variable "jupyter_k8s_managed_cert_name" {
+  type          = string
+  description   = "Name for frontend managed certificate"
+  default       = "jupyter-managed-cert"
+}
+
+variable "jupyter_k8s_iap_secret_name" {
+  type        = string
+  description = "Name for jupyter iap secret"
+  default     = "jupyter-iap-secret"
+}
+
+variable "jupyter_k8s_backend_config_name" {
+  type        = string
+  description = "Name of the Kubernetes Backend Config"
+  default     = "jupyter-iap-config"
+}
+
+variable "jupyter_k8s_backend_service_name" {
+  type        = string
+  description = "Name of the Backend Service"
+  default     = "proxy-public"
+}
+
+variable "jupyter_k8s_backend_service_port" {
+  type        = number
+  description = "NName of the Backend Service Port"
+  default     = 80
+}
+
+variable "jupyter_url_domain_addr" {
+  type        = string
+  description = "Domain provided by the user. If it's empty, we will create one for you."
+  default     = ""
+}
+
+variable "jupyter_url_domain_name" {
+  type        = string
+  description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
+  default     = ""
+}
+
+variable "jupyter_support_email" {
+  type        = string
+  description = "Email for users to contact with questions about their consent"
+}
+
+variable "jupyter_client_id" {
+  type        = string
+  description = "Client ID used for enabling IAP"
+  default     = ""
+}
+
+variable "jupyter_client_secret" {
+  type        = string
+  description = "Client secret used for enabling IAP"
+  default     = ""
+}
+
+variable "jupyter_members_allowlist" {
+  type    = list(string)
+  default = []
 }
 
 ## GKE variables
@@ -261,4 +350,3 @@ variable "gpu_pools" {
       accelerator_type   = "nvidia-l4"
       gpu_driver_version = "DEFAULT"
   }]
-}

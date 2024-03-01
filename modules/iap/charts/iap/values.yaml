@@ -6,9 +6,9 @@
 iap: 
   backendConfig:
     name: "iap-config-default"
-    iapSecretName: "my-secret"
 
   secret:
+    name: "iap-secret"
     client_id: ""
     client_secret: ""
 
@@ -16,10 +16,10 @@ iap:
     name: "iap-managed-cert"
     domain: ""
 
-  jupyterIngress:
-    name: "jupyter-ingress"
+  ingress:
+    name: "iap-ingress"
     staticIpName: "xyz"
-    managedCertificates: "iap-managed-cert"
-    defaultBackend: "proxy-public"
+    backendServiceName: "proxy-public"
+    backendServicePort: 80
 
 
