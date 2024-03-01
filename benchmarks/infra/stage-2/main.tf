@@ -15,21 +15,21 @@
  */
 
 module "gke-setup" {
-  source                        = "./modules/gke-setup/"
-  project_id                    = var.project_id
-  credentials_config            = var.credentials_config
-  namespace                     = var.namespace
-  namespace_create              = var.namespace_create
-  kubernetes_service_account    = var.kubernetes_service_account
-  google_service_account        = var.google_service_account
-  google_service_account_create = var.google_service_account_create
-  bucket_name                   = var.bucket_name
-  bucket_location               = var.bucket_location
-  output_bucket_name                       = var.output_bucket_name
-  output_bucket_location                   = var.output_bucket_location
+  source                                      = "./modules/gke-setup/"
+  project_id                                  = var.project_id
+  credentials_config                          = var.credentials_config
+  namespace                                   = var.namespace
+  namespace_create                            = var.namespace_create
+  kubernetes_service_account                  = var.kubernetes_service_account
+  google_service_account                      = var.google_service_account
+  google_service_account_create               = var.google_service_account_create
+  bucket_name                                 = var.bucket_name
+  bucket_location                             = var.bucket_location
+  output_bucket_name                          = var.output_bucket_name
+  output_bucket_location                      = var.output_bucket_location
   benchmark_runner_kubernetes_service_account = var.benchmark_runner_kubernetes_service_account
   benchmark_runner_google_service_account     = var.benchmark_runner_google_service_account
-  secret_create                 = var.secret_name == null ? false : true
-  secret_name                   = var.secret_name
-  secret_location               = var.secret_location
+  secret_create                               = var.secret_name == null ? false : true
+  secret_name                                 = var.secret_name
+  secret_location                             = var.secret_location
 }

@@ -14,7 +14,7 @@
 
 # google managed prometheus engine
 resource "helm_release" "gmp-engine" {
-  name = "gmp-engine"
+  name             = "gmp-engine"
   chart            = "${path.module}/charts/gmp-engine/"
   namespace        = var.namespace
   create_namespace = var.create_namespace
@@ -33,23 +33,23 @@ resource "helm_release" "gmp-engine" {
 
 # grafana
 resource "helm_release" "grafana" {
-  count      = var.enable_grafana_on_ray_dashboard ? 1 : 0
-  name       = "grafana"
-  repository = "https://grafana.github.io/helm-charts"
-  chart      = "grafana"
-  namespace  = var.namespace
+  count            = var.enable_grafana_on_ray_dashboard ? 1 : 0
+  name             = "grafana"
+  repository       = "https://grafana.github.io/helm-charts"
+  chart            = "grafana"
+  namespace        = var.namespace
   create_namespace = var.create_namespace
-  version    = "7.0.0"
-  wait       = "true"
-  values     = [templatefile("${path.module}/grafana/values.yaml", {
-    k8s_service_account: var.k8s_service_account
-    })]
+  version          = "7.0.0"
+  wait             = "true"
+  values = [templatefile("${path.module}/grafana/values.yaml", {
+    k8s_service_account : var.k8s_service_account
+  })]
 }
 
 data "kubernetes_service" "example" {
   metadata {
-    name = "grafana"
+    name      = "grafana"
     namespace = var.namespace
   }
-  depends_on = [ helm_release.grafana ]
+  depends_on = [helm_release.grafana]
 }

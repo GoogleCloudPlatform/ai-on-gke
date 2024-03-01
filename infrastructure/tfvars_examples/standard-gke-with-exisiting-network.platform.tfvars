@@ -24,7 +24,7 @@ network_name    = "demo-network"
 subnetwork_name = "subnet"
 
 ## gke variables
-private_cluster   = true ## Default true. Use false for a public cluster
+private_cluster = true ## Default true. Use false for a public cluster
 # master_ipv4_cidr_block = "172.16.0.0/28"
 # master_authorized_networks = [{
 #   cidr_block   = "10.100.0.0/16"

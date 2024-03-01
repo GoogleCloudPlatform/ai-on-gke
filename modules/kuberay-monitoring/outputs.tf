@@ -13,6 +13,6 @@
 # limitations under the License.
 
 output "grafana_uri" {
-  value = data.kubernetes_service.example.status != null ? ( data.kubernetes_service.example.status[0].load_balancer != null ? "${data.kubernetes_service.example.status[0].load_balancer[0].ingress[0].ip}" : "") : ""
+  value = data.kubernetes_service.example.status != null ? (data.kubernetes_service.example.status[0].load_balancer != null ? "${data.kubernetes_service.example.status[0].load_balancer[0].ingress[0].ip}" : "") : ""
 }
 

@@ -28,7 +28,7 @@ variable "namespace" {
 }
 
 variable "create_namespace" {
-  type    = bool
+  type = bool
 }
 
 variable "autopilot_cluster" {
