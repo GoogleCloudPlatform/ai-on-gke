@@ -17,7 +17,7 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 2. **Setup the Docker image:**
    
    ***Method 1: Add the Model repository and the relevant scripts to the image***
-   
+
    Inside the `tritonllm_backend` directory, create a Dockerfile with the following content ensuring the Triton Server is ready with the necessary models and scripts.
 
    ```Dockerfile
@@ -91,7 +91,7 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
    ```
 
 2. Define `template_path` variable  in `terraform.tfvars`
-   If usinng method 1 In Step 1 above:
+   If using method 1 In Step 1 above:
    ```bash
    template_path = "path_to_manifest_template/triton-tensorrtllm-inference.tftpl" 
    image_path = "path_to_your_registry/tritonserver_llm:latest"
