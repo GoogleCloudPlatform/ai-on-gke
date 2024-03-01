@@ -35,25 +35,21 @@ It addresses following personae and provides means to automate and simplify thei
 
 **CUJ 1** : Use ML tools like `ray` to perform their day to day tasks like data pre-processing, ML training etc.
 
-**CUJ 2** : Use a development environment like Jupyter Notebook for faster inner loop of ML development.
+**CUJ 2** : Use a development environment like Jupyter Notebook for faster inner loop of ML development. **[TBD]**
 
 ### Operators
 
 **CUJ 1**: Act as a bridge between the Platform admins and the ML Engineers by providing and maintaining softwares needed by the ML engineers so they can focus on their job.
 
-**CUJ 2**: Deploying the models.
+**CUJ 2**: Deploying the models. **[TBD]**
 
-**CUJ 3**: Building observability on the models.
+**CUJ 3**: Building observability on the models. **[TBD]**
 
-**CUJ 4**: Operationalizing the models.
+**CUJ 4**: Operationalizing the models. **[TBD]**
 
 ## Prerequistes
 
 1. This tutorial has been tested on [Cloud Shell](https://shell.cloud.google.com) which comes preinstalled with [Google Cloud SDK](https://cloud.google.com/sdk) is required to complete this tutorial.
-
-2. It is recommended to start the tutorial in a fresh project since the easiest way to clean up once complete is to delete the project. See [here](https://cloud.google.com/resource-manager/docs/creating-managing-projects) for more details.
-
-3. This tutorial requires a number of different GCP Quotas (>= 60 T4 GPUs and 400 CPU cores) in the region of your choosing. Please visit the [IAM -> Quotas page](https://console.cloud.google.com/iam-admin/quotas) in the context of your project and region to request additional quota before proceeding with this tutorial.
 
 ## Deploy resources.
 
