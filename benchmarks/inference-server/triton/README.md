@@ -68,8 +68,8 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
    Replace `your_registry` with your actual Docker registry path.
 
    ***Method 2: Upload Model repository and the relevant scripts to gcs***
-   
-   In this method we can directly upload the model engine and scripts to gcs
+
+   In this method we can directly upload the model engine and scripts to gcs and use the base image provided by Nvidia: 
    ```
    gsutil cp -r gs://your_model_repo/scripts/ ./
    gsutil cp -r gs://your_model_repo/all_models/ ./
@@ -91,14 +91,18 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 
 2. Define `template_path` variable  in `terraform.tfvars`
    If usinng method 1 In Step 1 above:
-   ``
+   ```bash
    template_path = "path_to_manifest_template/triton-tensorrtllm-inference.tftpl" 
-   ``
+   image_path = "path_to_your_registry/tritonserver_llm:latest"
+   gpu_count = X
+   ```
    If using method 2 In Step 1 above:
    
-   ``
+   ```bash
    template_path = "path_to_manifest_template/triton-tensorrtllm-inference-gs.tftpl"
-   ``
+   image_path = "nvcr.io/nvidia/tritonserver:23.10-trtllm-python-py3"
+   gpu_count = X
+   ```
    and also update the `triton-tensorrtllm-inference-gs.tftpl` with the path to the gcs repo under InitContainer and the command to launch the container under Container section.
 
 3. **Configure Your Deployment:**
@@ -111,8 +115,6 @@ Example `terraform.tfvars` content:
    credentials_config = {
      kubeconfig = "path/to/your/gcloud/credentials.json"
    }
-   image_path = "your_registry/tritonserver_llm:latest"
-   gpu_count = 2
    ```
 
 #### [optional] set-up credentials config with kubeconfig 
