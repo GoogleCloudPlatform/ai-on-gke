@@ -14,7 +14,7 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 
 1. **Build the TensorRT LLM Engine:** Follow the instructions provided in the [TensorRT LLM backend repository](https://github.com/triton-inference-server/tensorrtllm_backend/blob/main/README.md) to build the TensorRT LLM Engine.
 
-2. **Setup the Docker image:**
+2. **Setup the Docker container:**
    
    ***Method 1: Add the Model repository and the relevant scripts to the image***
 
