@@ -54,7 +54,7 @@ You just followed `GitOps` to promote changes from `dev` to higher environments.
 Open the configsync repo and go to `manifests/clusters`, you will see there is a cluster selector created for each cluster via yaml files.
 
 ### Install a cluster scoped software
-This section describes how platform admins will use the configsync repo to manage cluster scoped software or cluster level objects. These softwares could be used by multiple teams in their namespaces. An example of such softwares is [kuberay][kuberay] that can manage ray clusters in multiple namespace.
+This section describes how platform admins will use the configsync repo to manage cluster scoped software or cluster level objects. These software could be used by multiple teams in their namespaces. An example of such software is [kuberay][kuberay] that can manage ray clusters in multiple namespace.
 
 
 Let's install [Kuberay][kuberay] as a cluster level software that includes CRDs and deployments. Kuberay has a component called operator that facilitates `ray` on Kubernetes. We will install Kuberay operator in default namespace. The operator will then orchestrate `ray clusters` created in different namespace by different teams in the future.
