@@ -17,6 +17,7 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 2. **Setup the Docker image:**
    
    ***Method 1: Add the Model repository and the relevant scripts to the image***
+   
    Inside the `tritonllm_backend` directory, create a Dockerfile with the following content ensuring the Triton Server is ready with the necessary models and scripts.
 
    ```Dockerfile
