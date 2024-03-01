@@ -90,14 +90,15 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
    cp sample-terraform.tfvars terraform.tfvars
    ```
 
-2. Define `template_path`, `image_path` and `gpu_count` variable  in `terraform.tfvars`
-   If using method 1 In Step 1 above:
+2. Define `template_path`, `image_path` and `gpu_count` variable  in `terraform.tfvars`.
+   
+   * If using method 1 In Step 1 above:
    ```bash
    template_path = "path_to_manifest_template/triton-tensorrtllm-inference.tftpl" 
    image_path = "path_to_your_registry/tritonserver_llm:latest"
    gpu_count = X
    ```
-   If using method 2 In Step 1 above:
+   * If using method 2 In Step 1 above:
    
    ```bash
    template_path = "path_to_manifest_template/triton-tensorrtllm-inference-gs.tftpl"
