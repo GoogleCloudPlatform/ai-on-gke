@@ -16,12 +16,12 @@ resource "kubernetes_service" "inference_service" {
   metadata {
     name = "mistral-7b-instruct-service"
     labels = {
-      app="mistral-7b-instruct"
+      app = "mistral-7b-instruct"
     }
     namespace = var.namespace
     annotations = {
       "cloud.google.com/load-balancer-type" = "Internal"
-      "cloud.google.com/neg"                ="{\"ingress\":true}"
+      "cloud.google.com/neg"                = "{\"ingress\":true}"
     }
   }
   spec {
@@ -41,7 +41,7 @@ resource "kubernetes_service" "inference_service" {
 
 resource "kubernetes_deployment" "inference_deployment" {
   metadata {
-    name = "mistral-7b-instruct"
+    name      = "mistral-7b-instruct"
     namespace = var.namespace
   }
 
@@ -67,9 +67,9 @@ resource "kubernetes_deployment" "inference_deployment" {
           name  = "mistral-7b-instruct"
 
           port {
-            name = "metrics"
+            name           = "metrics"
             container_port = 8080
-            protocol = "TCP"
+            protocol       = "TCP"
           }
 
           env {
@@ -78,12 +78,12 @@ resource "kubernetes_deployment" "inference_deployment" {
           }
 
           env {
-            name = "NUM_SHARD"
+            name  = "NUM_SHARD"
             value = "2"
           }
 
           env {
-            name = "PORT"
+            name  = "PORT"
             value = "8080"
           }
 
@@ -94,7 +94,7 @@ resource "kubernetes_deployment" "inference_deployment" {
             requests = {
               # Sufficient storage to fit the Mistral-7B-Instruct-v0.1 model
               "ephemeral-storage" = "20Gi"
-              "nvidia.com/gpu" = "2"
+              "nvidia.com/gpu"    = "2"
             }
           }
 
@@ -109,18 +109,18 @@ resource "kubernetes_deployment" "inference_deployment" {
           }
 
           #liveness_probe {
-            #http_get {
-              #path = "/"
-              #port = 8080
+          #http_get {
+          #path = "/"
+          #port = 8080
 
-              #http_header {
-                #name  = "X-Custom-Header"
-                #value = "Awesome"
-              #}
-            #}
+          #http_header {
+          #name  = "X-Custom-Header"
+          #value = "Awesome"
+          #}
+          #}
 
-            #initial_delay_seconds = 3
-            #period_seconds        = 3
+          #initial_delay_seconds = 3
+          #period_seconds        = 3
           #}
         }
 
@@ -138,9 +138,9 @@ resource "kubernetes_deployment" "inference_deployment" {
 
         node_selector = merge({
           "cloud.google.com/gke-accelerator" = "nvidia-l4"
-        }, var.autopilot_cluster ? {
+          }, var.autopilot_cluster ? {
           "cloud.google.com/gke-ephemeral-storage-local-ssd" = "true"
-          "cloud.google.com/compute-class" = "Accelerator"
+          "cloud.google.com/compute-class"                   = "Accelerator"
         } : {})
       }
     }

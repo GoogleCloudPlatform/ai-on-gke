@@ -43,14 +43,14 @@ variable "ray_namespace" {
 }
 
 variable "enable_grafana_on_ray_dashboard" {
-  type    = bool
+  type        = bool
   description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
-  default = false  
+  default     = false
 }
 
 variable "create_gcs_bucket" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "Enable flag to create gcs_bucket"
 }
 

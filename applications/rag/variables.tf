@@ -18,7 +18,7 @@ variable "project_id" {
 }
 
 variable "cluster_name" {
-  type    = string
+  type = string
 }
 
 variable "cluster_membership_id" {
@@ -28,7 +28,7 @@ variable "cluster_membership_id" {
 }
 
 variable "cluster_location" {
-  type    = string
+  type = string
 }
 
 variable "kubernetes_namespace" {

@@ -87,8 +87,8 @@ resource "kubernetes_annotations" "hub" {
   api_version = "v1"
   kind        = "ServiceAccount"
   metadata {
-    name = "hub"
-    namespace = "${var.namespace}"
+    name      = "hub"
+    namespace = var.namespace
   }
   annotations = {
     "iam.gke.io/gcp-service-account" = "${var.workload_identity_service_account}@${var.project_id}.iam.gserviceaccount.com"
@@ -146,7 +146,7 @@ resource "helm_release" "jupyterhub" {
   cleanup_on_fail  = "true"
   # This timeout is sufficient and ensures terraform doesn't hang for 20 minutes on error.
   # Autopilot deployment will complete even faster than Standard, as it relies on Ray Autoscaler to provision user pods.
-  timeout          = 300
+  timeout = 300
 
   values = var.autopilot_cluster ? [ templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
       password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
@@ -161,10 +161,10 @@ resource "helm_release" "jupyterhub" {
       k8s_service_account = var.workload_identity_service_account
       ephemeral_storage   = var.ephemeral_storage
     })
-  ] : [ templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
-      password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
-      project_id          = var.project_id
-      project_number      = data.google_project.project.number
+    ] : [templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
+      password       = var.add_auth ? "dummy" : random_password.generated_password[0].result
+      project_id     = var.project_id
+      project_number = data.google_project.project.number
 
       # Support legacy image.
       service_id          = "" # TODO(umeshkumhar): var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
