@@ -39,7 +39,7 @@ It addresses following personae and provides means to automate and simplify thei
 
 ### Operators
 
-**CUJ 1**: Act as a bridge between the Platform admins and the ML Engineers by providing and maintaining softwares needed by the ML engineers so they can focus on their job.
+**CUJ 1**: Act as a bridge between the Platform admins and the ML Engineers by providing and maintaining software needed by the ML engineers so they can focus on their job.
 
 **CUJ 2**: Deploying the models. **[TBD]**
 
@@ -65,7 +65,7 @@ Follow these steps in order to build the platform and use it.
 
 - Run steps in [05_setup_teams][setup-teams]. This modules walks through how as platform admin you can set up spaces for ML teams on the cluster and transfer ownership to operators to maintain that space.
 
-- Run steps in [06_operating_teams][operating-teams]. This module walks through how as an operator you will provide the softwares required by ML engineers.
+- Run steps in [06_operating_teams][operating-teams]. This module walks through how as an operator you will provide the software required by ML engineers.
 
 
 [projects]: ./01_gcp_project/README.md
