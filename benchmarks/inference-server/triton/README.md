@@ -72,8 +72,8 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 
    In this method we can directly upload the model engine and scripts to gcs and use the base image provided by Nvidia: 
    ```
-   gsutil cp -r gs://your_model_repo/scripts/ ./
-   gsutil cp -r gs://your_model_repo/all_models/ ./
+   gsutil cp -r your_script_folder gs://your_model_repo/scripts/
+   gsutil cp -r your_model_folder gs://your_model_repo/all_models/ 
    ```
    Replace `your_model_repo` with your actual gcs repo path.
 
