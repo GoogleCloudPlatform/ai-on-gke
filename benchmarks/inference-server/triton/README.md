@@ -184,7 +184,7 @@ terraform apply
 | `gpu_count`          | Parallelism based on number of gpus.                                                          | Number  | `1`                                       | No       |
 | `ksa`                | Kubernetes Service Account used for workload.                                                 | String  | `"default"`                               | No       |
 | `huggingface-secret` | Name of the kubectl huggingface secret token                                                  | String  | `"huggingface-secret"`                    | No       |
-| `templates_path`     | Path where manifest templates will be read from. Set to null to use the default manifests     | String  | `null`                                    | Yes      |
+| `templates_path`     | Path where manifest templates will be read from.     | String  |                                    | No      |
 
 ## Notes
 

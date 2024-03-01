@@ -75,8 +75,8 @@ variable "huggingface-secret" {
 }
 
 variable "template_path" {
-  description = "Path where manifest templates will be read from. Set to null to use the default manifests"
+  description = "Path where manifest templates will be read from."
   type        = string
-  default     = null
+  nullable    = false
 }
 
