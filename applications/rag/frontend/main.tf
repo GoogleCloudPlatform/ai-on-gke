@@ -31,7 +31,7 @@ data "kubernetes_secret" "db_secret" {
 }
 
 locals {
-    instance_connection_name = format("%s:%s:%s", var.project_id, var.region, "pgvector-instance")
+  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, "pgvector-instance")
 }
 
 # IAP Section: Enabled the IAP service
@@ -86,7 +86,7 @@ module "frontend-workload-identity" {
 
 resource "kubernetes_service" "rag_frontend_service" {
   metadata {
-    name = "rag-frontend"
+    name      = "rag-frontend"
     namespace = var.namespace
   }
   spec {
@@ -105,7 +105,7 @@ resource "kubernetes_service" "rag_frontend_service" {
 
 resource "kubernetes_deployment" "rag_frontend_deployment" {
   metadata {
-    name = "rag-frontend"
+    name      = "rag-frontend"
     namespace = var.namespace
     labels = {
       app = "rag-frontend"
@@ -148,7 +148,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           }
 
           env {
-            name = "INFERENCE_ENDPOINT"
+            name  = "INFERENCE_ENDPOINT"
             value = data.kubernetes_service.inference_service.status.0.load_balancer.0.ingress.0.ip
           }
 
@@ -177,7 +177,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
             }
           }
 
-           env {
+          env {
             name = "DB_NAME"
             value_from {
               secret_key_ref {

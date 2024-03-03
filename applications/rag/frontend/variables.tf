@@ -53,7 +53,7 @@ variable "inference_service_name" {
 variable "inference_service_namespace" {
   type        = string
   description = "Model inference k8s service endpoint"
-  default = "rag"
+  default     = "rag"
 }
 
 variable "create_service_account" {

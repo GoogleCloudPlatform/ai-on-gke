@@ -14,7 +14,7 @@
 
 resource "kubernetes_config_map" "example" {
   metadata {
-    name = "fluentbit-config"
+    name      = "fluentbit-config"
     namespace = var.namespace
   }
 

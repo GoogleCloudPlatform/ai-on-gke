@@ -24,7 +24,7 @@ variable "namespace" {
 }
 
 variable "create_namespace" {
-  type        = bool
+  type = bool
 }
 
 variable "enable_tpu" {
@@ -40,7 +40,7 @@ variable "enable_gpu" {
 }
 
 variable "autopilot_cluster" {
-  type    = bool
+  type = bool
 }
 
 variable "google_service_account" {
@@ -55,5 +55,5 @@ variable "gcs_bucket" {
 }
 
 variable "grafana_host" {
-  type        = string
+  type = string
 }

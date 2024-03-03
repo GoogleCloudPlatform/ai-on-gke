@@ -38,7 +38,7 @@ resource "google_sql_database" "database" {
   name     = "pgvector-database"
   instance = "pgvector-instance"
 
-  depends_on = [ google_sql_database_instance.main ]
+  depends_on = [google_sql_database_instance.main]
 }
 
 resource "random_password" "pwd" {
@@ -54,7 +54,7 @@ resource "google_sql_user" "cloudsql_user" {
 
 resource "kubernetes_secret" "secret" {
   metadata {
-    name = "db-secret"
+    name      = "db-secret"
     namespace = var.namespace
   }
 

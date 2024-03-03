@@ -133,5 +133,5 @@ variable "ephemeral_storage" {
 }
 
 variable "autopilot_cluster" {
-  type        = bool
+  type = bool
 }

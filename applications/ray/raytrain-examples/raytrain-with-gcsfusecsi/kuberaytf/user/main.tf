@@ -38,10 +38,10 @@ module "service_accounts" {
   source = "./modules/service_accounts"
 
   # depends_on = [module.kubernetes]
-  project_id = var.project_id
-  namespace  = var.namespace
+  project_id      = var.project_id
+  namespace       = var.namespace
   service_account = var.service_account
-  gcs_bucket = var.gcs_bucket
+  gcs_bucket      = var.gcs_bucket
 }
 
 module "kuberay" {
@@ -51,5 +51,5 @@ module "kuberay" {
     # module.kubernetes,
     module.service_accounts
   ]
-  namespace  = var.namespace
+  namespace = var.namespace
 }

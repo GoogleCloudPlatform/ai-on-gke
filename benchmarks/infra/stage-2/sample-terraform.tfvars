@@ -8,14 +8,14 @@ credentials_config = {
 # terraform output -json  | jq '."project_id".value'
 project_id = "change-me"
 
-bucket_name = "ai-gke-benchmark-fuse"
+bucket_name     = "ai-gke-benchmark-fuse"
 bucket_location = "US"
 
-output_bucket_name = "benchmark-output"
+output_bucket_name     = "benchmark-output"
 output_bucket_location = "US"
 
 google_service_account     = "benchmark-sa"
 kubernetes_service_account = "benchmark-ksa"
 
-benchmark_runner_google_service_account = "sample-runner-sa"
+benchmark_runner_google_service_account     = "sample-runner-sa"
 benchmark_runner_kubernetes_service_account = "sample-runner-ksa"

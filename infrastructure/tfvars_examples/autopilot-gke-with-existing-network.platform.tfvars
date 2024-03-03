@@ -19,9 +19,9 @@ project_id = "<project-id>"
 ####    PLATFORM
 #######################################################
 ## network values
-create_network    = false
-network_name      = "demo-network"
-subnetwork_name   = "demo-subnet"
+create_network  = false
+network_name    = "demo-network"
+subnetwork_name = "demo-subnet"
 
 ## gke variables
 private_cluster   = true ## Default true. Use false for a public cluster
