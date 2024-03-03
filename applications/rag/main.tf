@@ -150,6 +150,7 @@ module "jupyterhub" {
 
 module "kuberay-logging" {
   source     = "../../modules/kuberay-logging"
+  providers  = { helm = helm.rag, kubernetes = kubernetes.rag }
   namespace  = var.kubernetes_namespace
   depends_on = [module.kuberay-operator]
 }
@@ -190,7 +191,7 @@ module "inference-server" {
 
 module "frontend" {
   source                        = "./frontend"
-  providers                     = { kubernetes = kubernetes.rag }
+  providers                     = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                    = var.project_id
   create_service_account        = var.create_rag_service_account
   google_service_account        = var.rag_service_account
