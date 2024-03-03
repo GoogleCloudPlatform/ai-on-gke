@@ -250,7 +250,7 @@ variable "jupyter_members_allowlist" {
 ## GKE variables
 variable "create_cluster" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "private_cluster" {
@@ -323,18 +323,19 @@ variable "gpu_pools" {
     accelerator_type       = optional(string, "nvidia-tesla-t4")
     gpu_driver_version     = optional(string, "DEFAULT")
   }))
-  default = [{
-    name               = "gpu-pool"
-    machine_type       = "n1-standard-16"
-    node_locations     = "us-central1-b,us-central1-c"
-    autoscaling        = true
-    min_count          = 1
-    max_count          = 3
-    disk_size_gb       = 100
-    disk_type          = "pd-standard"
-    accelerator_count  = 2
-    accelerator_type   = "nvidia-tesla-t4"
-    gpu_driver_version = "DEFAULT"
+  default = [
+    {
+      name               = "gpu-pool"
+      machine_type       = "n1-standard-16"
+      node_locations     = "us-central1-b,us-central1-c"
+      autoscaling        = true
+      min_count          = 1
+      max_count          = 3
+      disk_size_gb       = 100
+      disk_type          = "pd-standard"
+      accelerator_count  = 2
+      accelerator_type   = "nvidia-tesla-t4"
+      gpu_driver_version = "DEFAULT"
     },
     {
       name               = "gpu-pool-l4"
@@ -349,4 +350,6 @@ variable "gpu_pools" {
       accelerator_count  = 2
       accelerator_type   = "nvidia-l4"
       gpu_driver_version = "DEFAULT"
-  }]
+    }
+  ]
+}
