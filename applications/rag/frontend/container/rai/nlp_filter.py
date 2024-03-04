@@ -13,32 +13,32 @@
 # limitations under the License.
 
 import os
-from google.cloud import language_v1
-from . import retry
+import google.cloud.language as language
+from .retry import retry
 
 # Convert the project id into a full resource id.
 parent = os.environ.get('PROJECT_ID', 'NULL')
 
 # Instantiate a nlp client.
-nature_language_client = language_v1.LanguageServiceClient()
+nature_language_client = language.LanguageServiceClient()
 
 def is_nlp_api_enabled():
   if parent == 'NULL':
     return False
   # Check if the DLP API is enabled
   try:
-    sum_confidences("test")
+    sum_moderation_confidences("test")
     return True
   except Exception as e:
     print(f"Error: {e}")
     return False
 
-def sum_confidences(text):
-  document = language_v1.types.Document(
-      content=text, type_=language_v1.types.Document.Type.PLAIN_TEXT
+def sum_moderation_confidences(text):
+  document = language.types.Document(
+      content=text, type_=language.types.Document.Type.PLAIN_TEXT
   )
 
-  request = language_v1.ModerateTextRequest(
+  request = language.ModerateTextRequest(
       document=document,
   )
   # Detects the sentiment of the text
@@ -46,7 +46,7 @@ def sum_confidences(text):
       request=request, retry=retry.retry_policy
   )
 
-  # Parse response and sum the confidences
+  # Parse response and sum the confidences of moderation, the categories are from https://cloud.google.com/natural-language/docs/moderating-text
   total_confidence = 0.0
   categories = []
   for category in response.moderation_categories:
@@ -69,4 +69,4 @@ def is_content_inappropriate(text, nlp_filter_level):
     threshold = thresholds['mid']
   else:
     threshold = thresholds['low']
-  return sum_confidences(text) > threshold
+  return sum_moderation_confidences(text) > threshold

@@ -102,7 +102,7 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
     return pool
 
 @app.route('/get_nlp_status', methods=['GET'])
-def get_dlp_status():
+def get_nlp_status():
     nlp_enabled = nlp_filter.is_nlp_api_enabled()
     return jsonify({"nlpEnabled": nlp_enabled})
 
