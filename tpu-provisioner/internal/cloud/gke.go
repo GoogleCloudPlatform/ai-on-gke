@@ -111,7 +111,7 @@ func (g *GKE) DeleteNodePoolForNode(node *corev1.Node) error {
 	return waitForGkeOp(g.Service, g.ClusterContext, op)
 }
 
-var ErrDeletionOccurring = errors.New("deletion occuring")
+var ErrNodePoolStopping = errors.New("node pool stopping")
 
 func (g *GKE) nodePoolExists(name string) (bool, error) {
 	call := g.Service.Projects.Locations.Clusters.NodePools.Get(g.ClusterContext.NodePoolName(name))
@@ -123,7 +123,7 @@ func (g *GKE) nodePoolExists(name string) (bool, error) {
 		return false, nil
 	}
 	if np.Status == "STOPPING" {
-		return false, ErrDeletionOccurring
+		return false, ErrNodePoolStopping
 	}
 
 	return false, err

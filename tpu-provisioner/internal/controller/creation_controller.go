@@ -77,7 +77,7 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if err := r.Provider.EnsureNodePoolForPod(&pod); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
 			lg.Info("Ignoring duplicate request to create node pool")
-		} else if errors.Is(err, cloud.ErrDeletionOccurring) {
+		} else if errors.Is(err, cloud.ErrNodePoolStopping) {
 			wait := 5 * time.Second
 			lg.Info("Attempted to create a node pool that is currently undergoing deletion, retrying soon",
 				"wait", wait)
