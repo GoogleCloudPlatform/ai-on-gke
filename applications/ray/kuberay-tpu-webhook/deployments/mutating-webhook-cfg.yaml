@@ -15,10 +15,6 @@ webhooks:
         path: /mutate
     rules:
       - operations: ["CREATE"]
-        apiGroups: ["ray.io"]
-        apiVersions: ["v1"]
-        resources: ["rayclusters"]
-      - operations: ["CREATE"]
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
