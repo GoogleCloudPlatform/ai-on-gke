@@ -63,7 +63,7 @@ resource "helm_release" "iap_jupyter" {
   }
 
   set {
-    name = "iap.managedCertificate.name"
+    name  = "iap.managedCertificate.name"
     value = var.jupyter_k8s_managed_cert_name
   }
 
@@ -135,7 +135,7 @@ resource "helm_release" "iap_frontend" {
   }
 
   set {
-    name = "iap.managedCertificate.name"
+    name  = "iap.managedCertificate.name"
     value = var.frontend_k8s_managed_cert_name
   }
 

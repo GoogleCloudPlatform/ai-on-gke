@@ -65,7 +65,7 @@ variable "create_service_account" {
 variable "google_service_account" {
   type        = string
   description = "Google Service Account name"
-  default = "frontend-gcp-sa"
+  default     = "frontend-gcp-sa"
 }
 
 variable "add_auth" {
@@ -80,9 +80,9 @@ variable "k8s_ingress_name" {
 }
 
 variable "k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "frontend-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "frontend-managed-cert"
 }
 
 variable "k8s_iap_secret_name" {
@@ -127,9 +127,9 @@ variable "url_domain_name" {
 }
 
 variable "support_email" {
-  type            = string
-  description     = "Email for users to contact with questions about their consent"
-  default         = "<email>"
+  type        = string
+  description = "Email for users to contact with questions about their consent"
+  default     = "<email>"
 }
 
 variable "client_id" {

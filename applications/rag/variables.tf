@@ -107,9 +107,9 @@ variable "frontend_k8s_ingress_name" {
 }
 
 variable "frontend_k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "frontend-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "frontend-managed-cert"
 }
 
 variable "frontend_k8s_iap_secret_name" {
@@ -184,9 +184,9 @@ variable "jupyter_k8s_ingress_name" {
 }
 
 variable "jupyter_k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "jupyter-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "jupyter-managed-cert"
 }
 
 variable "jupyter_k8s_iap_secret_name" {

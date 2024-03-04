@@ -174,7 +174,7 @@ variable "enable_tpu" {
 }
 variable "enable_gpu" {
   type        = bool
-  description = "Set to true to create TPU node pool"
+  description = "Set to true to create GPU node pool"
   default     = true
 }
 
