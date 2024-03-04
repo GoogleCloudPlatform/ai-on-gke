@@ -145,7 +145,7 @@ class BenchmarkUser(FastHttpUser):
         logging.info(f"Sending request: {request}")
         test_start_time = time.time()
         with self.client.post("/generate", headers=headers, json=request, catch_response=True) as resp:
-            if resp.status_code == 200 and model_params['enable_custom_metric'] == 'true':
+            if resp.status_code == 200:
                 self.handle_successful_response(prompt, resp, test_start_time)  
             else:
                 self.handle_failed_response(request, resp)
