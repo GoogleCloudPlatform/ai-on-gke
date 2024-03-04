@@ -172,6 +172,7 @@ resource "helm_release" "jupyterhub" {
 }
 
 data "kubernetes_service" "jupyter-ingress" {
+  count       = var.add_auth ? 1 : 0
   metadata {
     name      = var.k8s_backend_service_name
     namespace = var.namespace

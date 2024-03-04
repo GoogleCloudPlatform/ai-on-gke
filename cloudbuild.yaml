@@ -173,7 +173,7 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=namespace=ml-$SHORT_SHA \
-        -var=gcp_and_k8s_service_account=jupyter-sa-$SHORT_SHA \
+        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA \
         -auto-approve -no-color
 
@@ -200,6 +200,8 @@ steps:
         cd /workspace/applications/rag/
         terraform apply \
         -var-file=workloads.tfvars \
+        -var=jupyter_add_auth=false \
+        -var=frontend_add_auth=false \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=kubernetes_namespace=rag-$SHORT_SHA \
