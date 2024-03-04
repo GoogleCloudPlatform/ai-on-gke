@@ -55,10 +55,12 @@ function onReady() {
         if (filterEnabled) {
             var inspectTemplate = document.getElementById('inspect-template-dropdown').value;
             var deidentifyTemplate = document.getElementById('deidentify-template-dropdown').value;
+            var nlpFilterValue = document.getElementById("nlp-range").value; // Get the NLP filter value
             body = JSON.stringify({
                 prompt: prompt,
                 inspectTemplate: inspectTemplate,
                 deidentifyTemplate: deidentifyTemplate,
+                nlpFilterLevel: nlpFilterValue
             })
         }
 
@@ -107,9 +109,33 @@ function autoResizeTextarea() {
         this.style.height = this.scrollHeight + 'px';
     });
 }
+
+// Function to handle the visibility of filter section
+function toggleNlpFilterSection(nlpEnabled) {
+    var filterOptions = document.getElementById("nlp-filter-section");
+
+    if (nlpEnabled) {
+        filterOptions.style.display = "block";
+    } else {
+        filterOptions.style.display = "none";
+    }
+}
+
+
+function fetchNLPEnabled() {
+    fetch('/get_nlp_status')
+        .then(response => response.json())
+        .then(data => {
+            var nlpEnabled = data.nlpEnabled;
+
+            toggleNlpFilterSection(nlpEnabled);
+        })
+        .catch(error => console.error('Error fetching NLP status:', error))
+}
+
 // Function to handle the visibility of filter section
 function toggleFilterSection(dlpEnabled) {
-    var filterOptions = document.getElementById("filter-section");
+    var filterOptions = document.getElementById("template-section");
 
     if (dlpEnabled) {
         filterOptions.style.display = "block";
