@@ -68,11 +68,10 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
    ```
    Replace `your_registry` with your actual Docker registry path.
 
-   ***Method 2: Upload Model repository and the relevant scripts to gcs***
+   ***Method 2: Upload Model repository to gcs***
 
-   In this method we can directly upload the model engine and scripts to gcs and use the base image provided by Nvidia: 
+   In this method we can directly upload the model engine to gcs and use the base image provided by Nvidia and specify the command to launch the triton server via the deployment yaml file: 
    ```
-   gsutil cp -r your_script_folder gs://your_model_repo/scripts/
    gsutil cp -r your_model_folder gs://your_model_repo/all_models/ 
    ```
    Replace `your_model_repo` with your actual gcs repo path.

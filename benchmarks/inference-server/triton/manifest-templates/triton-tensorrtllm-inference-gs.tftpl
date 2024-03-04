@@ -37,26 +37,23 @@ spec:
             sizeLimit: 1Gi
         - name: all-models-volume
           emptyDir: {}
-        - name: scripts-volume
-          emptyDir: {}
       initContainers:
         - name: init-gcs-download
           image: google/cloud-sdk
           serviceAccountName: ${ksa}
           command: ["/bin/sh", "-c"] 
           args:
-            - gsutil cp -r gs://your_gcs_repo/all_models ./ && gsutil cp -r gs://your_gcs_repo/scripts ./;
+            - gsutil cp -r gs://your_gcs_repo/all_models ./;
           volumeMounts:
             - name: all-models-volume
               mountPath: /all_models
-            - name: scripts-volume
-              mountPath: /scripts
       containers:
         - name: triton-inference
           image: "${image_path}"  # Replace ${image_path} with the actual image path
           workingDir: /opt/tritonserver
+          #command: ["/bin/sleep", "3600"]
           command: ["/bin/bash", "-c"]
-          args: ["pip install sentencepiece protobuf && huggingface-cli login --token $HUGGINGFACE_TOKEN && python /scripts/launch_triton_server.py --model_repo /all_models/inflight_batcher_llm --world_size 1"]
+          args: ["pip install sentencepiece protobuf && huggingface-cli login --token $HUGGINGFACE_TOKEN && mpirun --allow-run-as-root -n 1 /opt/tritonserver/bin/tritonserver --model-repository=/all_models/inflight_batcher_llm --disable-auto-complete-config --backend-config=python,shm-region-prefix-name=prefix0_ :"]
           ports:
             - containerPort: 8000
               name: http-triton
@@ -77,5 +74,3 @@ spec:
           volumeMounts:
             - name: all-models-volume
               mountPath: /all_models
-            - name: scripts-volume
-              mountPath: /scripts
