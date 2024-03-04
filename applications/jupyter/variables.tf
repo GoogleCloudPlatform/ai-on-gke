@@ -63,9 +63,9 @@ variable "k8s_ingress_name" {
 }
 
 variable "k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "jupyter-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "jupyter-managed-cert"
 }
 
 variable "k8s_iap_secret_name" {
@@ -86,9 +86,9 @@ variable "k8s_backend_service_name" {
 }
 
 variable "k8s_backend_service_port" {
-  type            = number
-  description     = "Name of the Backend Service on GCP"
-  default         = 80
+  type        = number
+  description = "Name of the Backend Service on GCP"
+  default     = 80
 }
 
 variable "brand" {
@@ -112,6 +112,7 @@ variable "url_domain_name" {
 variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
+  default     = ""
 }
 
 variable "client_id" {
@@ -128,7 +129,7 @@ variable "client_secret" {
 }
 
 variable "create_gcs_bucket" {
-  type          = bool
-  default       = false
-  description   = "Enable flag to create gcs_bucket"
+  type        = bool
+  default     = false
+  description = "Enable flag to create gcs_bucket"
 }

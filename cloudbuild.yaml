@@ -139,7 +139,7 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=namespace=ml-$SHORT_SHA \
-        -var=gcp_and_k8s_service_account=jupyter-sa-$SHORT_SHA \
+        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA \
         -auto-approve -no-color
 

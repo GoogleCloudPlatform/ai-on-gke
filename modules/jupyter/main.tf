@@ -56,20 +56,20 @@ module "iap_auth" {
   count  = var.add_auth ? 1 : 0
   source = "../../modules/iap"
 
-  project_id                        = var.project_id
-  namespace                         = var.namespace
-  jupyter_add_auth                  = var.add_auth
-  jupyter_k8s_ingress_name          = var.k8s_ingress_name
-  jupyter_k8s_managed_cert_name     = var.k8s_managed_cert_name
-  jupyter_k8s_iap_secret_name       = var.k8s_iap_secret_name
-  jupyter_k8s_backend_config_name   = var.k8s_backend_config_name
-  jupyter_k8s_backend_service_name  = var.k8s_backend_service_name
-  jupyter_k8s_backend_service_port  = var.k8s_backend_service_port
-  jupyter_client_id                 = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
-  jupyter_client_secret             = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
-  jupyter_url_domain_addr           = var.url_domain_addr
-  jupyter_url_domain_name           = var.url_domain_name
-  depends_on                = [
+  project_id                       = var.project_id
+  namespace                        = var.namespace
+  jupyter_add_auth                 = var.add_auth
+  jupyter_k8s_ingress_name         = var.k8s_ingress_name
+  jupyter_k8s_managed_cert_name    = var.k8s_managed_cert_name
+  jupyter_k8s_iap_secret_name      = var.k8s_iap_secret_name
+  jupyter_k8s_backend_config_name  = var.k8s_backend_config_name
+  jupyter_k8s_backend_service_name = var.k8s_backend_service_name
+  jupyter_k8s_backend_service_port = var.k8s_backend_service_port
+  jupyter_client_id                = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
+  jupyter_client_secret            = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
+  jupyter_url_domain_addr          = var.url_domain_addr
+  jupyter_url_domain_name          = var.url_domain_name
+  depends_on = [
     google_project_service.project_service,
     helm_release.jupyterhub
   ]
@@ -108,9 +108,9 @@ data "google_service_account" "sa" {
 }
 
 resource "google_service_account_iam_binding" "hub-workload-identity-user" {
-  count                     = var.add_auth ? 1 : 0
-  service_account_id        = data.google_service_account.sa.name
-  role                      = "roles/iam.workloadIdentityUser"
+  count              = var.add_auth ? 1 : 0
+  service_account_id = data.google_service_account.sa.name
+  role               = "roles/iam.workloadIdentityUser"
 
   members = [
     "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/hub]",
@@ -148,18 +148,18 @@ resource "helm_release" "jupyterhub" {
   # Autopilot deployment will complete even faster than Standard, as it relies on Ray Autoscaler to provision user pods.
   timeout = 300
 
-  values = var.autopilot_cluster ? [ templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
-      password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
-      project_id          = var.project_id
-      project_number      = data.google_project.project.number
-      namespace           = var.namespace
-      backend_config      = var.k8s_backend_config_name
-      service_name        = var.k8s_backend_service_name
-      authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
-      service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
-      gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.workload_identity_service_account
-      ephemeral_storage   = var.ephemeral_storage
+  values = var.autopilot_cluster ? [templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
+    password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
+    project_id          = var.project_id
+    project_number      = data.google_project.project.number
+    namespace           = var.namespace
+    backend_config      = var.k8s_backend_config_name
+    service_name        = var.k8s_backend_service_name
+    authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
+    service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
+    gcs_bucket          = var.gcs_bucket
+    k8s_service_account = var.workload_identity_service_account
+    ephemeral_storage   = var.ephemeral_storage
     })
     ] : [templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
       password       = var.add_auth ? "dummy" : random_password.generated_password[0].result
@@ -178,13 +178,13 @@ resource "helm_release" "jupyterhub" {
       ephemeral_storage   = var.ephemeral_storage
     })
   ]
-  depends_on = [ module.jupyterhub-workload-identity ]
+  depends_on = [module.jupyterhub-workload-identity]
 }
 
 data "kubernetes_service" "jupyter-ingress" {
   metadata {
-    name      = var.k8s_ingress_name
+    name      = var.k8s_backend_service_name
     namespace = var.namespace
   }
-  depends_on = [module.iap_auth]
+  depends_on = [module.iap_auth, helm_release.jupyterhub]
 }

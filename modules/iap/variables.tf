@@ -35,9 +35,9 @@ variable "frontend_k8s_ingress_name" {
 }
 
 variable "frontend_k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "frontend-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "frontend-managed-cert"
 }
 
 variable "frontend_k8s_iap_secret_name" {
@@ -61,7 +61,7 @@ variable "frontend_k8s_backend_service_name" {
 variable "frontend_k8s_backend_service_port" {
   type        = number
   description = "Name of the Backend Service Port"
-  default = 8080
+  default     = 8080
 }
 
 variable "frontend_url_domain_addr" {
@@ -112,9 +112,9 @@ variable "jupyter_k8s_ingress_name" {
 }
 
 variable "jupyter_k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "frontend-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "frontend-managed-cert"
 }
 
 variable "jupyter_k8s_iap_secret_name" {
@@ -138,7 +138,7 @@ variable "jupyter_k8s_backend_service_name" {
 variable "jupyter_k8s_backend_service_port" {
   type        = number
   description = "NName of the Backend Service Port"
-  default = 80
+  default     = 80
 }
 
 variable "jupyter_url_domain_addr" {
