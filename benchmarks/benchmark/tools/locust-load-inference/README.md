@@ -223,7 +223,7 @@ http://$LOCUST_SERVICE_IP:8089
 ```
 #### writing custom metrics
 
-If the variable `enable_custom_metric` is set to `true` then  custom metrics collected by the locust master is availabe in the following endpoints:
+If the variable `enable_custom_metric` is set to `true` then  custom metrics collected by the locust master is available at the following endpoints:
 * While the test is running
 ```
 http://$LOCUST_SERVICE_IP:8089/custom_metrics/custom_metrics.csv
