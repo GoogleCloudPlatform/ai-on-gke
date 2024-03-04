@@ -240,7 +240,6 @@ steps:
         echo "pass" > /workspace/rag_frontend_result.txt
 
     allowFailure: true
-    # waitFor: ['cleanup jupyterhub']
 
   - id: 'cleanup rag'
     name: 'gcr.io/$PROJECT_ID/terraform'

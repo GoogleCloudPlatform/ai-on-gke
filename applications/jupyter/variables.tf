@@ -112,7 +112,6 @@ variable "url_domain_name" {
 variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
-  default     = ""
 }
 
 variable "client_id" {
