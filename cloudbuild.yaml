@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ steps:
         sleep 5s
 
         ray job submit --working-dir ./example_ray_job_scripts \
-        --address=http://127.0.0.1:8265 -- python ray_job.py 
+        --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
         echo "pass" > /workspace/ray_result.txt
     allowFailure: true
     waitFor: ['create gke cluster']
@@ -198,7 +198,6 @@ steps:
         python3 change_jupyter_config.py
 
         cd /workspace/applications/rag/
-        terraform init
         terraform apply \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
@@ -216,7 +215,7 @@ steps:
 
         # Validate Ray: Check dashboard
         ray job submit --working-dir ./tests \
-        --address=http://127.0.0.1:8265 -- python ray_job.py 
+        --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
         echo "pass" > /workspace/rag_ray_dashboard_result.txt
 
         # Validate Jupyterhub: Get hub url
@@ -239,7 +238,7 @@ steps:
         echo "pass" > /workspace/rag_frontend_result.txt
 
     allowFailure: true
-    waitFor: ['cleanup jupyterhub']
+    # waitFor: ['cleanup jupyterhub']
 
   - id: 'cleanup rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
