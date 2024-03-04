@@ -48,10 +48,7 @@ type GKE struct {
 func (g *GKE) NodePoolLabelKey() string { return GKENodePoolNameLabel }
 
 func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod) error {
-	name, err := podToNodePoolName(p, GKENodePoolNamePrefix, "")
-	if err != nil {
-		return fmt.Errorf("determining node pool name: %w", err)
-	}
+	name := podToNodePoolName(p, GKENodePoolNamePrefix, "")
 
 	exists, err := g.nodePoolExists(name)
 	if err != nil {
@@ -114,15 +111,21 @@ func (g *GKE) DeleteNodePoolForNode(node *corev1.Node) error {
 	return waitForGkeOp(g.Service, g.ClusterContext, op)
 }
 
+var ErrDeletionOccurring = errors.New("deletion occuring")
+
 func (g *GKE) nodePoolExists(name string) (bool, error) {
 	call := g.Service.Projects.Locations.Clusters.NodePools.Get(g.ClusterContext.NodePoolName(name))
-	_, err := call.Do()
+	np, err := call.Do()
 	if err == nil {
 		return true, nil
 	}
 	if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
 		return false, nil
 	}
+	if np.Status == "STOPPING" {
+		return false, ErrDeletionOccurring
+	}
+
 	return false, err
 }
 
@@ -248,25 +251,15 @@ func sumTPURequests(p *corev1.Pod) (int, error) {
 	return n, nil
 }
 
-func podToNodePoolName(p *corev1.Pod, prefix, suffix string) (string, error) {
-	// If JobSet job key annotation (SHA1 hash of namespaced job key) exists,
-	// use it as the owner ID.
-	// This annotation is stable through Job recreations, so the node pool name
-	// generated here will be the same if the JobSet is restarted.
-	var ownerID string
-	if jobKey, exists := p.Annotations["jobset.sigs.k8s.io/job-key"]; exists {
-		ownerID = jobKey
+func podToNodePoolName(p *corev1.Pod, prefix, suffix string) string {
+	var uid string
+	ref := metav1.GetControllerOf(p)
+	if ref != nil {
+		uid = string(ref.UID)
 	} else {
-		// Otherwise, fall back to the Job UID. The Job UID is not stable through
-		// recreations, so if a Job is recreated, the node pool name generated here
-		// will be different.
-		ref := metav1.GetControllerOf(p)
-		if ref == nil {
-			return "", errors.New("no owner reference")
-		}
-		ownerID = string(ref.UID)
+		uid = string(p.UID)
 	}
-	return prefix + ownerID[0:12] + suffix, nil
+	return prefix + uid[0:12] + suffix
 }
 
 func tpuTopologyToNodeCount(accelerator, topo string) (int, error) {

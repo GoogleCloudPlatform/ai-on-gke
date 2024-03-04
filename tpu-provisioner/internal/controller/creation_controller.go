@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
 
@@ -76,6 +77,11 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if err := r.Provider.EnsureNodePoolForPod(&pod); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
 			lg.Info("Ignoring duplicate request to create node pool")
+		} else if errors.Is(err, cloud.ErrDeletionOccurring) {
+			wait := 5 * time.Second
+			lg.Info("Attempted to create a node pool that is currently undergoing deletion, retrying soon",
+				"wait", wait)
+			return ctrl.Result{RequeueAfter: wait}, nil
 		} else {
 			r.Recorder.Event(&pod, corev1.EventTypeWarning, EventFailedEnsuringNodePool, "Failed to ensure existance of Node Pool: "+err.Error())
 			return ctrl.Result{}, err
