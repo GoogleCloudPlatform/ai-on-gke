@@ -19,6 +19,6 @@ inference_server_framework = "tgi"
 tokenizer                  = "tiiuae/falcon-7b"
 
 # Benchmark configuration for triggering single test via Locust Runner
-test_duration = 60
+test_duration = 600
 test_users    = 1
 test_rate     = 5

@@ -41,6 +41,8 @@ locals {
       sax_model                  = var.sax_model
       tokenizer                  = var.tokenizer
       use_beam_search            = var.use_beam_search
+      enable_custom_metric       = var.enable_custom_metric
+      huggingface-secret         = var.huggingface-secret
     })) : data]
   ])
 }

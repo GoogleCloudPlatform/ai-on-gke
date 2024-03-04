@@ -190,3 +190,16 @@ variable "run_test_automatically" {
   type        = bool
   default     = false
 }
+
+variable "enable_custom_metric" {
+  description = "enable custom metric output in Locust"
+  type        = bool
+  default     = false
+}
+
+variable "huggingface-secret" {
+  description = "name of the kubectl huggingface secret token"
+  type        = string
+  nullable    = true
+  default     = "huggingface-secret"
+}

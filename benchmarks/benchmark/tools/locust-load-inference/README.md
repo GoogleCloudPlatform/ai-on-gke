@@ -10,12 +10,14 @@
     - [Step 4: create and give service account access to write to output gcs bucket](#step-4-create-and-give-service-account-access-to-write-to-output-gcs-bucket)
     - [Step 5: create artifact repository for automated Locust docker build](#step-5-create-artifact-repository-for-automated-locust-docker-build)
     - [Step 6: create and configure terraform.tfvars](#step-6-create-and-configure-terraformtfvars)
-      - [\[optional\] set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
+      - [optional: set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
+      - [optional: set up secret token in secret manager](#optional-set-up-secret-token-in-secret-manager)
     - [Step 7: login to gcloud](#step-7-login-to-gcloud)
     - [Step 8: terraform initialize, plan and apply](#step-8-terraform-initialize-plan-and-apply)
     - [Step 9: start an end to end benchmark](#step-9-start-an-end-to-end-benchmark)
       - [option 1: initiate a single end to end Locust benchmark run via curl command](#option-1-initiate-a-single-end-to-end-locust-benchmark-run-via-curl-command)
       - [option 2: interactive benchmark with locust web ui](#option-2-interactive-benchmark-with-locust-web-ui)
+      - [writing custom metrics](#writing-custom-metrics)
     - [Additional Tips](#additional-tips)
   - [Variables](#variables)
 <!-- END TOC -->
@@ -142,6 +144,17 @@ credentials_config = {
 }
 ```
 
+#### [optional] set up secret token in Secret Manager
+
+A model may require a security token to access it. For example, Llama2 from HuggingFace is a gated model that requires a [user access token](https://huggingface.co/docs/hub/en/security-tokens). If the model you want to run does not require this, skip this step.
+
+If you followed steps from `.../../infra/`, Secret Manager and the user access token should already be set up. Alternatively you can create a Kubernetes Secret to store your Hugging Face CLI token. You can do this from the command line with kubectl:
+```bash
+kubectl create secret generic huggingface-secret --from-literal=token='************'
+```
+
+This command creates a new Secret named huggingface-secret, which has a key token containing your Hugging Face CLI token.
+
 ### Step 7: login to gcloud
 
 Run the following gcloud command for authorization:
@@ -208,6 +221,17 @@ In a web browser, visit the following website:
 ```
 http://$LOCUST_SERVICE_IP:8089
 ```
+##### writing custom metrics
+
+If the variable `enable_custom_metric` is set to `true` then  custom metrics collected by the locust master is availabe in the following endpoints:
+* While the test is running
+```
+http://$LOCUST_SERVICE_IP:8089/custom_metrics/custom_metrics.csv
+```
+* After a test ends:
+```
+http://$LOCUST_SERVICE_IP:8089/custom_metrics/custom_metrics_final.csv
+```
 
 ### Additional Tips
 
@@ -237,4 +261,6 @@ To change the benchmark configuration, you will have to rerun terraform destroy 
 | <a name="input_sax_model"></a> [sax\_model](#input\_sax\_model)                                                      | Benchmark server configuration for sax model. Only required if framework is sax.                                            | `string`                                                                                                                                                                                                    | `""`                 |    no    |
 | <a name="input_tokenizer"></a> [tokenizer](#input\_tokenizer)                                                        | Benchmark server configuration for tokenizer.                                                                               | `string`                                                                                                                                                                                                    | `"tiiuae/falcon-7b"` |   yes    |
 | <a name="input_use_beam_search"></a> [use\_beam\_search](#input\_use\_beam\_search)                                  | Benchmark server configuration for use beam search.                                                                         | `bool`                                                                                                                                                                                                      | `false`              |    no    |
+ <a name="enable_custom_metric"></a> [enable\_custom\_metric](#input\_enable\_custom\_metric)                                  | To collected custom metrics like number of tokens sent and received                                                                          | `bool`                                                                                                                                                                                                      | `false`              |    no    |
+  <a name="huggingface-secret"></a> [huggingface-secret](#input\_huggingface-secret)                                  | Name of the kubectl huggingface secret token                                                                          | `string`                                                                                                                                                                                                      | `huggingface-secret`              |    no   |
 <!-- END_TF_DOCS -->

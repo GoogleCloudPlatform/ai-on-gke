@@ -44,3 +44,10 @@ spec:
               value: ${tokenizer}
             - name: USE_BEAM_SEARCH
               value: ${use_beam_search}
+            - name: ENABLE_CUSTOM_METRIC
+              value: ${enable_custom_metric}
+            - name: HUGGINGFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ${huggingface-secret}  # Replace ${huggingface-secret} with your secret's name
+                  key: token
