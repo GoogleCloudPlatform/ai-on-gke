@@ -7,13 +7,13 @@ backend and (NYI) vector database through [LangChain](https://python.langchain.c
 
 1. Configure inference internal loadbalancer service:
 ```
-export INFERENCE_DEPLOYMENT=mistral-7b-instruct  # Customize as needed
+export INFERENCE_DEPLOYMENT=gemma-7b-it  # Customize as needed
 kubectl create service loadbalancer $INFERENCE_DEPLOYMENT --tcp=80:8080 && \
 kubectl annotate service/$INFERENCE_DEPLOYMENT "cloud.google.com/load-balancer-type=Internal"
 
 # Record the LoadBalancer IP
 kubectl get service $INFERENCE_DEPLOYMENT --watch # Wait for external endpoint to be populated, then ^C
-export INFERENCE_ENDPOINT=$(kubectl get svc mistral-7b-instruct -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+export INFERENCE_ENDPOINT=$(kubectl get svc gemma-7b-it -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 ```
 
 2. Configure environment variables

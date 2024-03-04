@@ -5,7 +5,7 @@
 This is a sample to deploy a RAG application on GKE. Retrieval Augmented Generation (RAG) is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets. The basic idea is to have a semantically searchable knowledge base (often using vector search), which is used to retrieve relevant snippets for a given prompt to provide additional context to the LLM. Augmenting the knowledge base with additional data is typically cheaper than fine tuning and is more scalable when incorporating current events and other rapidly changing data spaces.
 
 Architecture:
-1. A k8s service serving Hugging Face TGI inference using `mistral-7b`.
+1. A k8s service serving Hugging Face TGI inference using `gemma-7b`.
 2. Cloud SQL `pgvector` instance with vector embeddings generated from the input dataset.
 3. A k8s front end chat interface to interact with the inference server and the vector DB.
 4. Ray cluster runs job to populate vector DB.
@@ -60,11 +60,17 @@ Next, set up the inference server, the `pgvector` instance, Jupyterhub, Kuberay 
     * The GCS bucket name needs to be globally unique so add some random suffix to it (ensure `gcloud storage buckets describe gs://<bucketname>` returns a 404).
     * Optionally choose the k8s namespace & service account to be used by the application. If not selected, these resources will be created based on the default values set.
 
-3. Run `terraform init`
+3. Create a secret with the Hugging Face API token since it is necessary to download the Gemma model.
+```
+export HF_TOKEN=<your-api-token>
+kubectl create secret generic hf-tgi --from-literal="HF_TOKEN=$HF_TOKEN" -n ${NAMESPACE:?}
+```
 
-4. Run `terraform apply --var-file workloads.tfvars`
+4. Run `terraform init`
 
-5. Optionally, enable Cloud Data Loss Prevention (DLP)
+5. Run `terraform apply --var-file workloads.tfvars`
+
+6. Optionally, enable Cloud Data Loss Prevention (DLP)
 
 We have two ways to enable the api:
 
@@ -99,7 +105,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 4. Verify the inference server is setup:
     * Start port forwarding:
 ```
-kubectl port-forward -n ${NAMESPACE:?} deployment/mistral-7b-instruct 8080:8080
+kubectl port-forward -n ${NAMESPACE:?} deployment/gemma-7b-it 8080:8080
 ```
     * In a new terminal, try a few prompts:
 ```
@@ -110,7 +116,7 @@ curl 127.0.0.1:8080/generate -X POST \
     -H 'Content-Type: application/json' \
     --data-binary @- <<EOF
 {
-    "inputs": "[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n${USER_PROMPT:?}[/INST]",
+    "inputs": "<start_of_turn>user\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n$USER_PROMPT<end_of_turn><start_of_turn>model",
     "parameters": {"max_new_tokens": 400}
 }
 EOF
@@ -154,7 +160,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 1. Setup port forwarding for the frontend [TBD: Replace with IAP]: `kubectl port-forward service/rag-frontend -n ${NAMESPACE:?} 8080:8080 &`
 
-2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
+2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`gemma-7b`) with the augmented prompt.
 
 3. TODO: Add some example prompts for the dataset.
 

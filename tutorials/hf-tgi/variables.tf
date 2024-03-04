@@ -21,3 +21,9 @@ variable "namespace" {
 variable "autopilot_cluster" {
   type = bool
 }
+
+variable "hf_secret" {
+  type = string
+  description = "Hugging Face secret which contains the API key"
+  default     = "hf-tgi"
+}
