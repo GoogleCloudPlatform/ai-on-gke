@@ -34,3 +34,9 @@ variable "db_user" {
   description = "Cloud SQL instance user"
   default     = "rag-user"
 }
+
+variable "instance_name" {
+  type        = string
+  description = "Name of the CloudSQL instance for RAG VectorDB"
+  default     = "pgvector-instance"
+}

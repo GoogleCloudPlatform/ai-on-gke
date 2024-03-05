@@ -236,6 +236,7 @@ worker:
         name: ray-logs
       - mountPath: /fluent-bit/etc/
         name: fluentbit-config
+
 # The map's key is used as the groupName.
 # For example, key:small-group in the map below
 # will be used as the groupName
@@ -243,78 +244,6 @@ additionalWorkerGroups:
   smallGroup:
     # Disabled by default
     disabled: true
-    replicas: 1
-    minReplicas: 1
-    maxReplicas: 3
-    type: worker
-    labels: {}
-    rayStartParams:
-      block: 'true'
-    initContainerImage: 'busybox:1.28'  # Enable users to specify the image for init container. Users can pull the busybox image from their private repositories.
-    # Security context for the init container.
-    initContainerSecurityContext: {}
-  # containerEnv specifies environment variables for the Ray container,
-  # Follows standard K8s container env schema.
-    containerEnv: []
-      # - name: EXAMPLE_ENV
-      #   value: "1"
-    envFrom: []
-        # - secretRef:
-        #     name: my-env-secret
-    # ports optionally allows specifying ports for the Ray container.
-    # ports: []
-  # resource requests and limits for the Ray head container.
-  # Modify as needed for your application.
-  # Note that the resources in this example are much too small for production;
-  # we don't recommend allocating less than 8G memory for a Ray pod in production.
-  # Ray pods should be sized to take up entire K8s nodes when possible.
-  # Always set CPU and memory limits for Ray pods.
-  # It is usually best to set requests equal to limits.
-  # See https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/config.html#resources
-  # for further guidance.
-    resources:
-      limits:
-        cpu: 1
-        memory: "1G"
-      requests:
-        cpu: 1
-        memory: "1G"
-    annotations:
-      key: value
-    nodeSelector: {}
-    tolerations: []
-    affinity: {}
-    # Ray container security context.
-    securityContext: {}
-    volumes:
-      - name: ray-logs
-        emptyDir: {}
-      - name: fluentbit-config
-        configMap:
-          name: fluentbit-config
-    # Ray writes logs to /tmp/ray/session_latests/logs
-    volumeMounts:
-      - mountPath: /tmp/ray
-        name: ray-logs
-    # sidecarContainers specifies additional containers to attach to the Ray pod.
-    # Follows standard K8s container spec.
-    sidecarContainers:
-      - name: fluentbit
-        image: fluent/fluent-bit:1.9.6
-        # These resource requests for Fluent Bit should be sufficient in production.
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-            ephemeral-storage: 2Gi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-            ephemeral-storage: 4Gi
-        volumeMounts:
-        - mountPath: /tmp/ray
-          name: ray-logs
-        - mountPath: /fluent-bit/etc/
-          name: fluentbit-config
+
 service:
   type: ClusterIP

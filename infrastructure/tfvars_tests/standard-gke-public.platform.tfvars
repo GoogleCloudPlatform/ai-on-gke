@@ -25,9 +25,9 @@ project_id = "<project-id>"
 # subnetwork_cidr   = "10.100.0.0/16"
 # subnetwork_region = "us-central1"
 
-create_network  = false
-network_name    = "default"
-subnetwork_name = "default"
+create_network    = false
+network_name      = "default"
+subnetwork_name   = "default"
 subnetwork_region = "us-central1"
 
 ## gke variables

@@ -22,33 +22,28 @@
 # Chart default values:     https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
 # Available chart versions: https://jupyterhub.github.io/helm-chart/
 hub:
-  image: 
+  image:
     name: us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class
     tag: latest
   config:
     JupyterHub:
       authenticator_class: ${authenticator_class}
-    GCPIAPAuthenticator: 
+    GCPIAPAuthenticator:
       header_name: 'X-Goog-IAP-JWT-Assertion'
       project_id: '${project_id}'
       namespace: '${namespace}'
       service_name: '${service_name}'
       project_number: '${project_number}'
-      # support legacy image
-      expected_audience: '/projects/${project_number}/global/backendServices/${service_id}'
     Authenticator:
       admin_users:
-        - user1
-        - user2
+        - admin
       allowed_users:
-        - user3
-        - user4
-    # ...
+        - user
     DummyAuthenticator:
       password: ${password}
   networkPolicy:
     enabled: false
-  
+
 prePuller:
   hook:
     enabled: false
@@ -59,7 +54,7 @@ proxy:
       enabled: false
   service:
     type: ${service_type}
-    annotations: 
+    annotations:
       beta.cloud.google.com/backend-config: '{"default": "${backend_config}"}'
   traefik:
     networkPolicy:
@@ -78,13 +73,13 @@ singleuser:
     guarantee: 4
   extraResource:
     limits:
-      ephemeral-storage: 20Gi
+      ephemeral-storage: ${ephemeral_storage}
     guarantees:
-      ephemeral-storage: 10Gi
+      ephemeral-storage: ${ephemeral_storage}
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
-# Used for GCSFuse to set the ephemeral storage as the home directory. If not set, it will show a permission error on the pod log when using GCSFuse. 
   extraEnv:
+    # Used for GCSFuse to set the ephemeral storage as the home directory. If not set, it will show a permission error on the pod log when using GCSFuse.
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   extraLabels:
     created-by: "jupyter-on-gke"
@@ -154,8 +149,6 @@ singleuser:
                     volumeAttributes:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
-              node_selector:
-                iam.gke.io/gke-metadata-server-enabled: "true"
       default: true
     - display_name: "TPU"
       description: "Creates TPUs VMs as the compute for notebook execution. Will only work if TPU is enabled."
@@ -180,8 +173,6 @@ singleuser:
                     volumeAttributes:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
-              node_selector:
-                iam.gke.io/gke-metadata-server-enabled: "true"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
@@ -212,8 +203,6 @@ singleuser:
                     volumeAttributes:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
-              node_selector:
-                iam.gke.io/gke-metadata-server-enabled: "true"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
@@ -245,13 +234,11 @@ singleuser:
                     volumeAttributes:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
-              node_selector:
-                iam.gke.io/gke-metadata-server-enabled: "true"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
           nvidia.com/gpu: "2"
-        # GPU requests 
+        # GPU requests
         extra_resource_guarantees:
           nvidia.com/gpu: "2"
         node_selector:
