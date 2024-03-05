@@ -90,3 +90,28 @@ variable "hugging_face_secret_version" {
   nullable    = true
   default     = null
 }
+
+variable "hpa_type" {
+  description = "How the TGI workload should be scaled."
+  type        = string
+  default     = null
+  nullable    = true
+  validation {
+    condition     = var.hpa_type == null ? true : contains(["cpu"], var.hpa_type)
+    error_message = "Allows values for hpa_type are {null, \"cpu\"}"
+  }
+}
+
+variable "hpa_min_replicas" {
+  description = "Minimum number of HPA replicas."
+  type        = number
+  default     = 1
+  nullable    = false
+}
+
+variable "hpa_max_replicas" {
+  description = "Maximum number of HPA replicas."
+  type        = number
+  default     = 5
+  nullable    = false
+}
