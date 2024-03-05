@@ -52,4 +52,4 @@ After deploying the webhook, follow the steps in ray/TPU_GUIDE to setup Ray on G
 
 ### Limitations
 
-The webhook stores unique `TPU_WORKER_ID`s in memory, and will fail to initialize the environment variables correctly if the webhook pod dies or restarts before intercepting all pods. Finally, environment vars are not updated or removed after the initial admission request.
+The webhook stores unique `TPU_WORKER_HOSTNAMES` and `TPU_WORKER_ID`s for each slice in memory, and will fail to initialize the environment variables correctly if the webhook pod dies or restarts before intercepting all pods.
