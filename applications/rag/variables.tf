@@ -228,6 +228,7 @@ variable "jupyter_url_domain_name" {
 variable "jupyter_support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
+  default     = ""
 }
 
 variable "jupyter_client_id" {
