@@ -29,6 +29,12 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "cloudsql_instance" {
+  type        = string
+  description = "Name of the CloudSQL instance for RAG VectorDB"
+  default     = "pgvector-instance"
+}
+
 variable "db_secret_name" {
   type        = string
   description = "CloudSQL user"
