@@ -3,7 +3,7 @@ module github.com/GoogleCloudPlatform/kuberay-tpu-webhook
 go 1.21
 
 require (
-	github.com/ray-project/kuberay/ray-operator v0.0.0-20240120000125-c45d959a2e14
+	github.com/ray-project/kuberay/ray-operator v1.1.0-rc.0
 	k8s.io/api v0.29.1
 	k8s.io/apimachinery v0.29.1
 	k8s.io/klog/v2 v2.120.1
@@ -53,7 +53,7 @@ require (
 	golang.org/x/tools v0.17.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
