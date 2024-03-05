@@ -25,20 +25,44 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+module "infra" {
+  source = "../../infrastructure"
+  count  = var.create_cluster ? 1 : 0
+
+  project_id        = var.project_id
+  cluster_name      = var.cluster_name
+  cluster_region    = var.cluster_location
+  autopilot_cluster = var.autopilot_cluster
+  private_cluster   = var.private_cluster
+  create_network    = false
+  network_name      = "default"
+  subnetwork_name   = "default"
+  cpu_pools         = var.cpu_pools
+  enable_gpu        = true
+  gpu_pools         = var.gpu_pools
+}
+
 data "google_container_cluster" "default" {
+  count    = var.create_cluster ? 0 : 1
   name     = var.cluster_name
   location = var.cluster_location
 }
 
 locals {
-  private_cluster       = data.google_container_cluster.default.private_cluster_config.0.enable_private_endpoint
+  endpoint              = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
+  ca_certificate        = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
+  private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
   cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
+  enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
+  enable_tpu            = var.create_cluster ? true : data.google_container_cluster.default[0].enable_tpu
+  host                  = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
 }
 
 provider "kubernetes" {
-  host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+  alias                  = "rag"
+  host                   = local.host
   token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
+  cluster_ca_certificate = local.private_cluster ? "" : local.ca_certificate
   dynamic "exec" {
     for_each = local.private_cluster ? [1] : []
     content {
@@ -49,10 +73,11 @@ provider "kubernetes" {
 }
 
 provider "helm" {
+  alias = "rag"
   kubernetes {
-    host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+    host                   = local.host
     token                  = data.google_client_config.default.access_token
-    cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
+    cluster_ca_certificate = local.private_cluster ? "" : local.ca_certificate
     dynamic "exec" {
       for_each = local.private_cluster ? [1] : []
       content {
@@ -63,95 +88,107 @@ provider "helm" {
   }
 }
 
-data "kubernetes_all_namespaces" "allns" {}
 
 module "kuberay-operator" {
-  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-operator"
-  project_id             = var.project_id
-  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
-  namespace              = var.kubernetes_namespace
+  source                 = "../../modules/kuberay-operator"
+  providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   name                   = "kuberay-operator"
+  project_id             = var.project_id
+  create_namespace       = true
+  namespace              = var.kubernetes_namespace
   google_service_account = var.ray_service_account
   create_service_account = var.create_ray_service_account
-  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
+  autopilot_cluster      = local.enable_autopilot
 }
 
 module "gcs" {
-  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs"
+  source      = "../../modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 module "cloudsql" {
-  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/cloudsql"
-  depends_on = [module.kuberay-operator]
-  project_id = var.project_id
-  namespace  = var.kubernetes_namespace
+  source          = "../../modules/cloudsql"
+  providers       = { kubernetes = kubernetes.rag }
+  project_id      = var.project_id
+  instance_name   = var.cloudsql_instance
+  namespace       = var.kubernetes_namespace
+  depends_on      = [module.kuberay-operator]
 }
 
 module "jupyterhub" {
-  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter"
-  depends_on = [module.kuberay-operator, module.gcs]
+  source     = "../../modules/jupyter"
+  providers  = { helm = helm.rag, kubernetes = kubernetes.rag }
   namespace  = var.kubernetes_namespace
   project_id = var.project_id
   gcs_bucket = var.gcs_bucket
-  add_auth   = false # TODO: Replace with IAP.
+  add_auth   = var.jupyter_add_auth
 
+  autopilot_cluster                 = local.enable_autopilot
   workload_identity_service_account = var.jupyter_service_account
 
   # IAP Auth parameters
-  brand                     = var.brand
-  support_email             = var.support_email
-  client_id                 = var.client_id
-  client_secret             = var.client_secret
-  k8s_ingress_name          = var.k8s_ingress_name
-  k8s_backend_config_name   = var.k8s_backend_config_name
-  k8s_backend_service_name  = var.k8s_backend_service_name
-  url_domain_addr           = var.url_domain_addr
-  url_domain_name           = var.url_domain_name
-  members_allowlist         = var.members_allowlist
+  brand                    = var.brand
+  support_email            = var.jupyter_support_email
+  client_id                = var.jupyter_client_id
+  client_secret            = var.jupyter_client_secret
+  k8s_ingress_name         = var.jupyter_k8s_ingress_name
+  k8s_managed_cert_name    = var.jupyter_k8s_managed_cert_name
+  k8s_backend_config_name  = var.jupyter_k8s_backend_config_name
+  k8s_backend_service_name = var.jupyter_k8s_backend_service_name
+  k8s_backend_service_port = var.jupyter_k8s_backend_service_port
+  url_domain_addr          = var.jupyter_url_domain_addr
+  url_domain_name          = var.jupyter_url_domain_name
+  members_allowlist        = var.jupyter_members_allowlist
+
+  depends_on = [module.kuberay-operator, module.gcs]
 }
 
 module "kuberay-logging" {
-  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-logging"
-  depends_on = [module.kuberay-operator]
+  source     = "../../modules/kuberay-logging"
+  providers  = { kubernetes = kubernetes.rag }
   namespace  = var.kubernetes_namespace
+  depends_on = [module.kuberay-operator]
 }
 
 module "kuberay-cluster" {
-  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster"
+  source                 = "../../modules/kuberay-cluster"
+  providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id             = var.project_id
-  depends_on             = [module.kuberay-operator, module.gcs, module.kuberay-monitoring]
   namespace              = var.kubernetes_namespace
-  gcs_bucket             = var.gcs_bucket
-  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
-  enable_tpu             = data.google_container_cluster.default.enable_tpu
+  create_namespace       = true
   enable_gpu             = true
-  enable_autopilot       = data.google_container_cluster.default.enable_autopilot
+  gcs_bucket             = var.gcs_bucket
+  enable_tpu             = local.enable_tpu
+  autopilot_cluster      = local.enable_autopilot
   google_service_account = var.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
+  depends_on             = [module.kuberay-operator, module.kuberay-monitoring]
 }
 
 module "kuberay-monitoring" {
-  source                          = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-monitoring"
-  depends_on                      = [module.kuberay-operator]
+  source                          = "../../modules/kuberay-monitoring"
+  providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
   namespace                       = var.kubernetes_namespace
-  create_namespace                = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
+  create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = var.ray_service_account
+  depends_on                      = [module.kuberay-operator]
 }
 
 module "inference-server" {
-  source     = "github.com/GoogleCloudPlatform/ai-on-gke//tutorials/hf-tgi"
-  depends_on = [module.kuberay-operator]
-  namespace  = var.kubernetes_namespace
+  source            = "../../tutorials/hf-tgi"
+  providers         = { kubernetes = kubernetes.rag }
+  namespace         = var.kubernetes_namespace
+  autopilot_cluster = local.enable_autopilot
+  depends_on        = [module.kuberay-operator]
 }
 
 module "frontend" {
   source                        = "./frontend"
-  depends_on                    = [module.cloudsql, module.gcs, module.inference-server]
+  providers                     = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                    = var.project_id
   create_service_account        = var.create_rag_service_account
   google_service_account        = var.rag_service_account
@@ -161,4 +198,21 @@ module "frontend" {
   db_secret_name                = module.cloudsql.db_secret_name
   db_secret_namespace           = module.cloudsql.db_secret_namespace
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
+
+  # IAP Auth parameters
+  add_auth                 = var.frontend_add_auth
+  brand                    = var.brand
+  support_email            = var.frontend_support_email
+  client_id                = var.frontend_client_id
+  client_secret            = var.frontend_client_secret
+  k8s_ingress_name         = var.frontend_k8s_ingress_name
+  k8s_managed_cert_name    = var.frontend_k8s_managed_cert_name
+  k8s_iap_secret_name      = var.frontend_k8s_iap_secret_name
+  k8s_backend_config_name  = var.frontend_k8s_backend_config_name
+  k8s_backend_service_name = var.frontend_k8s_backend_service_name
+  k8s_backend_service_port = var.frontend_k8s_backend_service_port
+  url_domain_addr          = var.frontend_url_domain_addr
+  url_domain_name          = var.frontend_url_domain_name
+  members_allowlist        = var.frontend_members_allowlist
+  depends_on = [ module.gcs ]
 }

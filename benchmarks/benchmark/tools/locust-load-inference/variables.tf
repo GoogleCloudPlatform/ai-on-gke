@@ -43,7 +43,7 @@ variable "namespace" {
 variable "project_id" {
   description = "Project id of existing or created project."
   type        = string
-  nullable = false
+  nullable    = false
 }
 
 variable "ksa" {
@@ -74,7 +74,7 @@ variable "num_locust_workers" {
 variable "inference_server_service" {
   description = "Inference server service"
   type        = string
-  nullable = false
+  nullable    = false
 }
 
 variable "inference_server_framework" {
@@ -97,7 +97,7 @@ variable "best_of" {
 variable "gcs_path" {
   description = "Benchmark server configuration for gcs_path for downloading prompts."
   type        = string
-  nullable = false
+  nullable    = false
 }
 
 variable "max_num_prompts" {

@@ -3,8 +3,8 @@ credentials_config = {
 }
 
 namespace = "benchmark"
-ksa  = "benchmark-ksa"
-model_id = "tiiuae/falcon-7b"
+ksa       = "benchmark-ksa"
+model_id  = "tiiuae/falcon-7b"
 gpu_count = 1
 
 # How to (horizontally) scale the workload. Allowed values are:

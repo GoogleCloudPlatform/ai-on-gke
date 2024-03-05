@@ -28,13 +28,13 @@ resource "google_storage_bucket_iam_member" "bucket-iam" {
 }
 
 resource "google_project_iam_member" "metrics-iam" {
-  role   = "roles/monitoring.viewer"
+  role    = "roles/monitoring.viewer"
   project = var.project_id
-  member = "serviceAccount:${var.google_service_account}"
+  member  = "serviceAccount:${var.google_service_account}"
 }
 
 resource "google_compute_address" "benchmark-tool-runner-endpoint" {
   project = var.project_id
-  region = var.cluster_region
-  name   = "benchmark-tool-runner-endpoint"
+  region  = var.cluster_region
+  name    = "benchmark-tool-runner-endpoint"
 }

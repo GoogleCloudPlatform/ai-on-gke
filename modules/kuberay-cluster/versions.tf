@@ -19,7 +19,7 @@ terraform {
       version = "~> 2.8.0"
     }
     kubernetes = {
-      source  = "hashicorp/kubernetes"
+      source = "hashicorp/kubernetes"
     }
   }
 }

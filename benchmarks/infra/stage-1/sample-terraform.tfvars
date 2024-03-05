@@ -2,10 +2,10 @@ project_id   = "change-me"
 cluster_name = "ai-benchmark"
 region       = "us-central1"
 gke_location = "us-central1-a"
-prefix = "ai-benchmark"
+prefix       = "ai-benchmark"
 
 vpc_create = {
-  name = "ai-benchmark"
+  name             = "ai-benchmark"
   enable_cloud_nat = true
 }
 

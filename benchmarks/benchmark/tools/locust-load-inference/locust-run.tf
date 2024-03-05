@@ -17,15 +17,15 @@ locals {
 
   all_runner_manifests = flatten([for manifest_file in local.runner_templates :
     [for data in split("---", templatefile(manifest_file, {
-      artifact_registry  = var.artifact_registry
-      namespace          = var.namespace
-      ksa                = var.locust_runner_kubernetes_service_account #var.ksa #var.locust_runner_kubernetes_service_account
-      project_id         = var.project_id
-      bucket             = var.output_bucket
+      artifact_registry       = var.artifact_registry
+      namespace               = var.namespace
+      ksa                     = var.locust_runner_kubernetes_service_account #var.ksa #var.locust_runner_kubernetes_service_account
+      project_id              = var.project_id
+      bucket                  = var.output_bucket
       runner_endpoint_ip_list = var.runner_endpoint_ip == null ? [] : [var.runner_endpoint_ip]
-      duration           = var.test_duration
-      users              = var.test_users
-      rate               = var.test_rate
+      duration                = var.test_duration
+      users                   = var.test_users
+      rate                    = var.test_rate
     })) : data]
   ])
 }

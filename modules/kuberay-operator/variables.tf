@@ -28,10 +28,10 @@ variable "namespace" {
 }
 
 variable "create_namespace" {
-  type    = bool
+  type = bool
 }
 
-variable "enable_autopilot" {
+variable "autopilot_cluster" {
   type = bool
 }
 
