@@ -32,7 +32,7 @@ type slice struct {
 type worker struct {
 	workerIndex  int  // TPU_WORKER_ID
 	replicaIndex int  // index of replica worker belongs to
-	isRunning      bool // true = pod is running, false = pod deleted or hasn't been created
+	isRunning    bool // true = pod is running, false = pod deleted or hasn't been created
 }
 
 // JSON patch describing mutate operation(s) for incoming object
@@ -452,7 +452,7 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		multiHostReplicaLabelValues := strings.Split(multiHostReplicaLabel, "-")
 		groupName := multiHostReplicaLabelValues[0]
 		replicaIndex, _ := strconv.Atoi(multiHostReplicaLabelValues[1]) // ignore error here since must be set
-		
+
 		containers := pod.Spec.Containers
 		if containers == nil {
 			return nil, errors.New("Pod spec missing containers")
@@ -480,7 +480,6 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 			}
 		}
 	}
-	
 
 	// Create AdmissionResponse - we never deny the deletion request
 	admissionResponse := &admissionv1.AdmissionResponse{
@@ -493,7 +492,6 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	}
 	return admissionResponse, nil
 }
-
 
 func writeCertfile(filename string, encodedData string) error {
 	data, err := base64.StdEncoding.DecodeString(encodedData)
