@@ -70,6 +70,13 @@ module "gcs" {
   bucket_name = var.gcs_bucket
 }
 
+# create namespace
+module "namespace" {
+  source           = "../../modules/kubernetes-namespace"
+  namespace        = var.namespace
+  create_namespace = true
+}
+
 # Creates jupyterhub
 module "jupyterhub" {
   source                            = "../../modules/jupyter"
@@ -94,5 +101,5 @@ module "jupyterhub" {
   url_domain_addr          = var.url_domain_addr
   url_domain_name          = var.url_domain_name
   members_allowlist        = var.members_allowlist
-  depends_on               = [module.gcs]
+  depends_on               = [module.gcs, module.namespace]
 }
