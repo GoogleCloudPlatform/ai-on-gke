@@ -106,10 +106,10 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 
 2. Verify Jupyterhub service is setup:
     * Fetch the service IP/Domain:
-      * IAP disable: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-      * IAP enabled: Read output in terminal or use commend: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
-          * Remeber login GCP to check if user has role `IAP-secured Web App User`
-          * Waiting for domain status to be `Active`
+      * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+      * IAP enabled: Read output in terminal or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+          * Remember login [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap) to check if user has role `IAP-secured Web App User`
+          * Wait for domain status to be `Active`
     * Go to the IP in a browser which should display the Jupyterlab login UI.
 
 3. Verify the instance `pgvector-instance` exists: `gcloud sql instances list | grep pgvector`
@@ -136,8 +136,16 @@ EOF
     * At the end of the smoke test with the TGI server, stop port forwarding by using Ctrl-C on the original terminal.
 
 5. Verify the frontend chat interface is setup:
-    * Verify the service exists: `kubectl get services rag-frontend -n ${NAMESPACE:?}`
-    * Verify the deployment exists: `kubectl get deployments rag-frontend -n ${NAMESPACE:?}` and ensure the deployment is in `READY` state.
+   * Verify the service exists: `kubectl get services rag-frontend -n ${NAMESPACE:?}`
+   * Verify the deployment exists: `kubectl get deployments rag-frontend -n ${NAMESPACE:?}` and ensure the deployment is in `READY` state.
+   * Verify the managed certificate is `Active`: 
+      ```
+     kubectl get managedcertificates jupyter-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'
+      ```
+   * Verify IAP is enabled: 
+      ```
+      gcloud compute backend-services list --format="table(name, backends, iap.enabled)"
+      ```
 
 ### Vector Embeddings for Dataset
 
