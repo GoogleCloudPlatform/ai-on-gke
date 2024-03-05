@@ -113,11 +113,12 @@ module "gcs" {
 }
 
 module "cloudsql" {
-  source     = "../../modules/cloudsql"
-  providers  = { kubernetes = kubernetes.rag }
-  project_id = var.project_id
-  namespace  = var.kubernetes_namespace
-  depends_on = [module.kuberay-operator]
+  source          = "../../modules/cloudsql"
+  providers       = { kubernetes = kubernetes.rag }
+  project_id      = var.project_id
+  instance_name   = var.cloudsql_instance
+  namespace       = var.kubernetes_namespace
+  depends_on      = [module.kuberay-operator]
 }
 
 module "jupyterhub" {
