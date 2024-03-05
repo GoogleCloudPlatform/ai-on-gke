@@ -31,7 +31,7 @@ data "kubernetes_secret" "db_secret" {
 }
 
 locals {
-  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, "pgvector-instance")
+  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, var.cloudsql_instance)
 }
 
 # IAP Section: Enabled the IAP service
@@ -99,7 +99,7 @@ resource "kubernetes_service" "rag_frontend_service" {
       target_port = 8080
     }
 
-    type = var.add_auth ? "NodePort" : "ClientIP"
+    type = var.add_auth ? "NodePort" : "ClusterIP"
   }
 }
 
