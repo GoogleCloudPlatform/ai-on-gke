@@ -105,7 +105,11 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `example-cluster-kuberay-head-` and `example-cluster-kuberay-worker-workergroup-`).
 
 2. Verify Jupyterhub service is setup:
-    * Fetch the service IP: `kubectl get services proxy-public -n ${NAMESPACE:?} --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+    * Fetch the service IP/Domain:
+      * IAP disable: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+      * IAP enabled: Read output in terminal or use commend: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+          * Remeber login GCP to check if user has role `IAP-secured Web App User`
+          * Waiting for domain status to be `Active`
     * Go to the IP in a browser which should display the Jupyterlab login UI.
 
 3. Verify the instance `pgvector-instance` exists: `gcloud sql instances list | grep pgvector`
@@ -141,8 +145,11 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 1. Create a CloudSQL user to access the database: `gcloud sql users create rag-user-notebook --password=<choose a password> --instance=pgvector-instance --host=%`
 
-2. Go to the Jupyterhub service endpoint in a browser: `kubectl get services proxy-public -n ${NAMESPACE:?} --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-
+2. Go to the Jupyterhub service endpoint in a browser:       
+   * IAP disable: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+   * IAP enabled: Read output in terminal or use commend: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+       * Remeber login GCP to check if user has role `IAP-secured Web App User`
+       * Waiting for domain status to be `Active`
 3. Login with placeholder credentials [TBD: replace with instructions for IAP]:
     * username: user
     * password: use `terraform output jupyter_password` to fetch the password value
@@ -166,11 +173,35 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 ### Launch the Frontend Chat Interface
 
-1. Setup port forwarding for the frontend [TBD: Replace with IAP]: `kubectl port-forward service/rag-frontend -n ${NAMESPACE:?} 8080:8080 &`
+#### Accessing the Frontend with IAP Disabled
+1. Setup port forwarding for the frontend: `kubectl port-forward service/rag-frontend -n $NAMESPACE 8080:8080 &`
 
 2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
 
-3. TODO: Add some example prompts for the dataset.
+#### Accessing the Frontend with IAP Enabled
+1. Verify IAP is Enabled
+
+   * Ensure that IAP is enabled on Google Cloud Platform (GCP) for your application. If you encounter any errors, try re-enabling IAP.
+
+2. Verify User Role
+
+   * Make sure you have the role `IAP-secured Web App User` assigned to your user account. This role is necessary to access the application through IAP.
+
+3. Verify Domain is Active
+   * Make sure the domain is active using commend:
+     `kubectl get managedcertificates jupyter-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+
+3. Retrieve the Domain
+
+   * Read output in terminal or use the following command to find the domain created by IAP for accessing your service:
+     `kubectl get managedcertificates frontend-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+
+4. Access the Frontend
+
+   * Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
+
+#### Prompts Example
+3. [TODO: Add some example prompts for the dataset].
 
 ### Cleanup
 
