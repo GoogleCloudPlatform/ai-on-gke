@@ -57,6 +57,7 @@ module "public-gke-standard-cluster" {
   cluster_name                         = var.cluster_name
   cluster_labels                       = var.cluster_labels
   kubernetes_version                   = var.kubernetes_version
+  release_channel                      = var.release_channel
   cluster_region                       = var.cluster_region
   cluster_zones                        = var.cluster_zones
   ip_range_pods                        = var.ip_range_pods
@@ -93,6 +94,7 @@ module "public-gke-autopilot-cluster" {
   cluster_name               = var.cluster_name
   cluster_labels             = var.cluster_labels
   kubernetes_version         = var.kubernetes_version
+  release_channel            = var.release_channel
   cluster_region             = var.cluster_region
   cluster_zones              = var.cluster_zones
   ip_range_pods              = var.ip_range_pods
@@ -117,6 +119,7 @@ module "private-gke-standard-cluster" {
   cluster_name                         = var.cluster_name
   cluster_labels                       = var.cluster_labels
   kubernetes_version                   = var.kubernetes_version
+  release_channel                      = var.release_channel
   cluster_region                       = var.cluster_region
   cluster_zones                        = var.cluster_zones
   ip_range_pods                        = var.ip_range_pods
@@ -154,6 +157,7 @@ module "private-gke-autopilot-cluster" {
   cluster_name               = var.cluster_name
   cluster_labels             = var.cluster_labels
   kubernetes_version         = var.kubernetes_version
+  release_channel            = var.release_channel
   cluster_region             = var.cluster_region
   cluster_zones              = var.cluster_zones
   ip_range_pods              = var.ip_range_pods
