@@ -103,7 +103,7 @@ variable "cluster_region" {
 }
 
 variable "cluster_zones" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 variable "ip_range_pods" {
@@ -120,7 +120,7 @@ variable "monitoring_enable_managed_prometheus" {
 }
 variable "gcs_fuse_csi_driver" {
   type    = bool
-  default = false
+  default = true
 }
 variable "deletion_protection" {
   type    = bool
@@ -174,7 +174,7 @@ variable "enable_tpu" {
 }
 variable "enable_gpu" {
   type        = bool
-  description = "Set to true to create TPU node pool"
+  description = "Set to true to create GPU node pool"
   default     = true
 }
 
@@ -202,15 +202,15 @@ variable "cpu_pools" {
     accelerator_count      = optional(number, 0)
   }))
   default = [{
-  name           = "cpu-pool"
-  machine_type   = "n1-standard-16"
-  node_locations = "us-central1-b,us-central1-c"
-  autoscaling    = true
-  min_count      = 1
-  max_count      = 3
-  disk_size_gb   = 100
-  disk_type      = "pd-standard"
-}]
+    name           = "cpu-pool"
+    machine_type   = "n1-standard-16"
+    node_locations = "us-central1-b,us-central1-c"
+    autoscaling    = true
+    min_count      = 1
+    max_count      = 3
+    disk_size_gb   = 100
+    disk_type      = "pd-standard"
+  }]
 }
 
 variable "gpu_pools" {
@@ -236,21 +236,21 @@ variable "gpu_pools" {
     initial_node_count     = optional(number, 1)
     accelerator_count      = optional(number, 0)
     accelerator_type       = optional(string, "nvidia-tesla-t4")
-    gpu_version            = optional(string, "DEFAULT")
+    gpu_driver_version     = optional(string, "DEFAULT")
   }))
   default = [{
-  name               = "gpu-pool"
-  machine_type       = "n1-standard-16"
-  node_locations     = "us-central1-b,us-central1-c"
-  autoscaling        = true
-  min_count          = 1
-  max_count          = 3
-  disk_size_gb       = 100
-  disk_type          = "pd-standard"
-  accelerator_count  = 2
-  accelerator_type   = "nvidia-tesla-t4"
-  gpu_driver_version = "DEFAULT"
-}]
+    name               = "gpu-pool"
+    machine_type       = "n1-standard-16"
+    node_locations     = "us-central1-b,us-central1-c"
+    autoscaling        = true
+    min_count          = 1
+    max_count          = 3
+    disk_size_gb       = 100
+    disk_type          = "pd-standard"
+    accelerator_count  = 2
+    accelerator_type   = "nvidia-tesla-t4"
+    gpu_driver_version = "DEFAULT"
+  }]
 }
 
 variable "tpu_pools" {

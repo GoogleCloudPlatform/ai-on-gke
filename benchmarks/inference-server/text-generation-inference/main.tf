@@ -18,10 +18,10 @@ locals {
 
   all_templates = concat(local.wl_templates, local.secret_templates)
 
-  hpa_cpu_template = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
+  hpa_cpu_template           = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
   hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.tgi.custom_metric.yaml.tftpl"
-  tgi_podmonitoring = "${path.module}/hpa-templates/tgi-podmonitoring.yaml.tftpl"
-  custom_metrics_enabled = !(var.hpa_type == null || var.hpa_type == "cpu")
+  tgi_podmonitoring          = "${path.module}/hpa-templates/tgi-podmonitoring.yaml.tftpl"
+  custom_metrics_enabled     = !(var.hpa_type == null || var.hpa_type == "cpu")
 
   wl_templates = [
     for f in fileset(local.wl_templates_path, "*tftpl") :
@@ -78,6 +78,8 @@ resource "kubernetes_manifest" "hpa-cpu" {
   manifest = yamldecode(templatefile(local.hpa_cpu_template, {
     namespace               = var.namespace
     hpa_averagevalue_target = var.hpa_averagevalue_target
+    hpa_min_replicas = var.hpa_min_replicas
+    hpa_max_replicas = var.hpa_max_replicas
   }))
 }
 

@@ -15,6 +15,7 @@
 project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
+create_cluster   = false # this flag will create a new standard public gke cluster in default network
 cluster_name     = "<cluster_name>"
 cluster_location = "us-central1"
 
@@ -36,22 +37,42 @@ rag_service_account        = "rag-system-account"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `jupyter_service_account` to use an existing IAM service account.
-create_jupyter_service_account = true
 jupyter_service_account        = "jupyter-system-account"
 
 ## Embeddings table name - change this to the TABLE_NAME used in the notebook.
 dataset_embeddings_table_name = "googlemaps_reviews_db"
 
 ## IAP config
-add_auth                = false # Set to true when using auth with IAP
-brand                   = "projects/<prj-number>/brands/<prj-number>"
-support_email           = "<email>"
-k8s_ingress_name          = "jupyter-ingress"
-k8s_backend_config_name   = "jupyter-iap-config"
-k8s_backend_service_name  = "proxy-public"
+brand = "projects/<prj-number>/brands/<prj-number>"
 
-url_domain_addr   = ""
-url_domain_name   = ""
-client_id         = ""
-client_secret     = ""
-members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+## Jupyter IAP Settings
+jupyter_add_auth                 = false # Set to true when using auth with IAP
+jupyter_support_email            = "<email>"
+jupyter_k8s_ingress_name         = "jupyter-ingress"
+jupyter_k8s_managed_cert_name    = "jupyter-managed-cert"
+jupyter_k8s_iap_secret_name      = "jupyter-iap-secret"
+jupyter_k8s_backend_config_name  = "jupyter-iap-config"
+jupyter_k8s_backend_service_name = "proxy-public"
+jupyter_k8s_backend_service_port = 80
+
+jupyter_url_domain_addr   = ""
+jupyter_url_domain_name   = ""
+jupyter_client_id         = ""
+jupyter_client_secret     = ""
+jupyter_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+
+## Frontend IAP Settings
+frontend_add_auth                 = false # Set to true when using auth with IAP
+frontend_support_email            = "<email>"
+frontend_k8s_ingress_name         = "frontend-ingress"
+frontend_k8s_managed_cert_name    = "frontend-managed-cert"
+frontend_k8s_iap_secret_name      = "frontend-iap-secret"
+frontend_k8s_backend_config_name  = "frontend-iap-config"
+frontend_k8s_backend_service_name = "rag-frontend"
+frontend_k8s_backend_service_port = 8080
+
+frontend_url_domain_addr   = ""
+frontend_url_domain_name   = ""
+frontend_client_id         = ""
+frontend_client_secret     = ""
+frontend_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]

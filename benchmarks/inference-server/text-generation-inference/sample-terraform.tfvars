@@ -30,4 +30,8 @@ hpa_type = null
 # optimal values).
 #hpa_averagevalue_target = 10
 
+# Adjust these if you want different min/max values
+# hpa_min_replicas = 1
+# hpa_max_replicas = 5
+
 project_id = "<project_id>"

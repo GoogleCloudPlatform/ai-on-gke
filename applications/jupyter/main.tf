@@ -64,7 +64,7 @@ provider "helm" {
 }
 
 module "gcs" {
-  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs"
+  source      = "../../modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
@@ -72,23 +72,27 @@ module "gcs" {
 
 # Creates jupyterhub
 module "jupyterhub" {
-  source                            = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter"
+  source                            = "../../modules/jupyter"
   project_id                        = var.project_id
   namespace                         = var.namespace
   workload_identity_service_account = var.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket
+  autopilot_cluster                 = data.google_container_cluster.default.enable_autopilot
 
   # IAP Auth parameters
-  add_auth                  = var.add_auth
-  brand                     = var.brand
-  support_email             = var.support_email
-  client_id                 = var.client_id
-  client_secret             = var.client_secret
-  k8s_ingress_name          = var.k8s_ingress_name
-  k8s_backend_config_name   = var.k8s_backend_config_name
-  k8s_backend_service_name  = var.k8s_backend_service_name
-  url_domain_addr           = var.url_domain_addr
-  url_domain_name           = var.url_domain_name
-  members_allowlist         = var.members_allowlist
-  depends_on                = [module.gcs]
+  add_auth                 = var.add_auth
+  brand                    = var.brand
+  support_email            = var.support_email
+  client_id                = var.client_id
+  client_secret            = var.client_secret
+  k8s_ingress_name         = var.k8s_ingress_name
+  k8s_managed_cert_name    = var.k8s_managed_cert_name
+  k8s_iap_secret_name      = var.k8s_iap_secret_name
+  k8s_backend_config_name  = var.k8s_backend_config_name
+  k8s_backend_service_name = var.k8s_backend_service_name
+  k8s_backend_service_port = var.k8s_backend_service_port
+  url_domain_addr          = var.url_domain_addr
+  url_domain_name          = var.url_domain_name
+  members_allowlist        = var.members_allowlist
+  depends_on               = [module.gcs]
 }

@@ -17,3 +17,7 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
   default     = "default"
 }
+
+variable "autopilot_cluster" {
+  type = bool
+}

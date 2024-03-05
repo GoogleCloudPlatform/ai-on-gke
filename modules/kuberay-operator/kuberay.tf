@@ -13,13 +13,13 @@
 # limitations under the License.
 
 resource "helm_release" "kuberay-operator" {
-  name       = var.name
-  repository = "https://ray-project.github.io/kuberay-helm/"
-  chart      = "kuberay-operator"
-  values     = var.enable_autopilot ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
-  version    = "1.0.0"
-  namespace       = var.namespace
-  cleanup_on_fail = "true"
+  name             = var.name
+  repository       = "https://ray-project.github.io/kuberay-helm/"
+  chart            = "kuberay-operator"
+  values           = var.autopilot_cluster ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
+  version          = "1.0.0"
+  namespace        = var.namespace
+  cleanup_on_fail  = "true"
   create_namespace = var.create_namespace
 }
 
@@ -30,5 +30,21 @@ module "kuberay-workload-identity" {
   namespace           = var.namespace
   project_id          = var.project_id
   roles               = ["roles/cloudsql.client", "roles/monitoring.viewer"]
-  depends_on          = [ helm_release.kuberay-operator ]
+
+  automount_service_account_token = true
+
+  depends_on = [helm_release.kuberay-operator]
+}
+
+resource "kubernetes_secret_v1" "service_account_token" {
+  metadata {
+    name      = "kuberay-sa-token"
+    namespace = var.namespace
+    annotations = {
+      "kubernetes.io/service-account.name" = var.google_service_account
+    }
+  }
+  type = "kubernetes.io/service-account-token"
+
+  depends_on = [module.kuberay-workload-identity]
 }

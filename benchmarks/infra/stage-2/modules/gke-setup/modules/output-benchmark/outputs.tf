@@ -18,7 +18,7 @@ output "created_resources" {
   description = "IDs of the resources created, if any."
   value = merge(
     {
-      bucket_name            = module.gcs-result-bucket.name
+      bucket_name                    = module.gcs-result-bucket.name
       benchmark_tool_runner_endpoint = resource.google_compute_address.benchmark-tool-runner-endpoint.address
     }
   )

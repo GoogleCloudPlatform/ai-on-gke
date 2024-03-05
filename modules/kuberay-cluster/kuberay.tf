@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "google_storage_bucket_iam_member"  "gcs-bucket-iam" {
-  bucket = "${var.gcs_bucket}"
-  role = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${var.google_service_account}@${var.project_id}.iam.gserviceaccount.com"
+resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
+  bucket = var.gcs_bucket
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${var.google_service_account}@${var.project_id}.iam.gserviceaccount.com"
 }
 
 resource "helm_release" "ray-cluster" {
@@ -24,22 +24,21 @@ resource "helm_release" "ray-cluster" {
   chart            = "ray-cluster"
   namespace        = var.namespace
   create_namespace = var.create_namespace
-  version          = "0.6.1"
-
+  version          = "1.0.0"
   values = [
-    var.enable_autopilot ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {
+    var.autopilot_cluster ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-    }) : var.enable_tpu ? templatefile("${path.module}/kuberay-tpu-values.yaml", {
+      }) : var.enable_tpu ? templatefile("${path.module}/kuberay-tpu-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-    }) : var.enable_gpu ? templatefile("${path.module}/kuberay-gpu-values.yaml", {
+      }) : var.enable_gpu ? templatefile("${path.module}/kuberay-gpu-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-    }) : templatefile("${path.module}/kuberay-values.yaml", {
+      }) : templatefile("${path.module}/kuberay-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
