@@ -102,6 +102,20 @@ variable "hpa_type" {
   }
 }
 
+variable "hpa_min_replicas" {
+  description = "Minimum number of HPA replicas."
+  type        = number
+  default     = 1
+  nullable    = false
+}
+
+variable "hpa_max_replicas" {
+  description = "Maximum number of HPA replicas."
+  type        = number
+  default     = 5
+  nullable    = false
+}
+
 # TODO: combine hpa variables into a single object (so that they can be
 # validated together)
 variable "hpa_averagevalue_target" {

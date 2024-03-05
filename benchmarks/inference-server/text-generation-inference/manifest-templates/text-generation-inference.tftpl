@@ -20,7 +20,6 @@ metadata:
   labels:
     app: tgi
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: tgi
@@ -79,10 +78,10 @@ spec:
           # request, and without that, autoscaling won't work. So generate one
           # request upon startup.
           startupProbe:
+            failureThreshold: 3600
+            periodSeconds: 10
+            timeoutSeconds: 60
             exec:
-              failureThreshold: 3600
-              periodSeconds: 10
-              timeoutSeconds: 60
               command:
                 - /usr/bin/curl
                 - http://localhost:80/generate

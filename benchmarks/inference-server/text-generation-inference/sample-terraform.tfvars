@@ -3,8 +3,8 @@ credentials_config = {
 }
 
 namespace = "benchmark"
-ksa  = "benchmark-ksa"
-model_id = "tiiuae/falcon-7b"
+ksa       = "benchmark-ksa"
+model_id  = "tiiuae/falcon-7b"
 gpu_count = 1
 
 # How to (horizontally) scale the workload. Allowed values are:
@@ -20,8 +20,14 @@ gpu_count = 1
 # See `autoscaling.md` for more details and recommendations.
 hpa_type = null
 
-# Sets the averagevalue target of the hpa metric. e.g for cpu scaling, this is
-# the cpu utilization, expressed as a value between 0-100.
-hpa_averagevalue_target = 123  # TODO: Experiment with this to determine optimal values
+# Sets the averagevalue target of the hpa metric.
+#
+# e.g for cpu scaling, this is the cpu utilization, expressed as a value
+# between 0-100. 50 is a reasonable starting point.
+#hpa_averagevalue_target = 50
+#
+# For tgi_batch_current_size, try 10. (TODO: experiment with this to determine
+# optimal values).
+#hpa_averagevalue_target = 10
 
 project_id = "<project_id>"

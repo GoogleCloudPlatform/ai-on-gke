@@ -23,26 +23,6 @@ resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter-wi"
   }
 }
 
-# This doesn't work. It fights with the service account for control over the
-# annotations, so subsequent runs of `terraform apply` will toggle between the
-# states of having this annotation and not having this annotation. This *might*
-# be related to
-# https://github.com/hashicorp/terraform-provider-kubernetes/issues/2247.
-/*
-resource "kubernetes_annotations" "cmsa-workload-identity-annotation" {
-  count = var.workload_identity.enabled ? 1 : 0
-  api_version = "v1"
-  kind        = "ServiceAccount"
-  metadata {
-    namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-    name      = kubernetes_service_account_v1.custom-metrics-stackdriver-adapter.metadata[0].name
-  }
-  annotations = {
-    "iam.gke.io/gcp-service-account" = google_service_account.cmsa-sa[0].email
-  }
-}
-*/
-
 resource "kubernetes_cluster_role_binding_v1" "custom-metrics-system-auth-delegator" {
   metadata {
     name = "custom-metrics:system:auth-delegator"
@@ -242,22 +222,6 @@ resource "kubernetes_api_service_v1" "v1beta1-external-metrics-k8s-io" {
     version = "v1beta1"
   }
 }
-
-# TODO: this pre-exists
-#apiVersion: rbac.authorization.k8s.io/v1
-#kind: ClusterRole
-#metadata:
-#  name: external-metrics-reader
-#rules:
-#- apiGroups:
-#  - "external.metrics.k8s.io"
-#  resources:
-#  - "*"
-#  verbs:
-#  - list
-#  - get
-#  - watch
-#---
 
 resource "kubernetes_cluster_role_binding_v1" "external-metrics-reader" {
   metadata {
