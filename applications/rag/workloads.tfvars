@@ -46,7 +46,7 @@ dataset_embeddings_table_name = "googlemaps_reviews_db"
 brand = "projects/<prj-number>/brands/<prj-number>"
 
 ## Jupyter IAP Settings
-jupyter_add_auth                 = true # Set to true when using auth with IAP
+jupyter_add_auth                 = false # Set to true when using auth with IAP
 jupyter_support_email            = "<email>"
 jupyter_k8s_ingress_name         = "jupyter-ingress"
 jupyter_k8s_managed_cert_name    = "jupyter-managed-cert"
@@ -62,7 +62,7 @@ jupyter_client_secret     = ""
 jupyter_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
 
 ## Frontend IAP Settings
-frontend_add_auth                 = true # Set to true when using auth with IAP
+frontend_add_auth                 = false # Set to true when using auth with IAP
 frontend_support_email            = "<email>"
 frontend_k8s_ingress_name         = "frontend-ingress"
 frontend_k8s_managed_cert_name    = "frontend-managed-cert"
