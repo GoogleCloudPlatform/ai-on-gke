@@ -64,6 +64,8 @@ resource "kubernetes_manifest" "default" {
 resource "kubernetes_manifest" "hpa-cpu" {
   count = var.hpa_type == "cpu" ? 1 : 0
   manifest = yamldecode(templatefile(local.hpa_cpu_template, {
-    namespace = var.namespace
+    namespace        = var.namespace
+    hpa_min_replicas = var.hpa_min_replicas
+    hpa_max_replicas = var.hpa_max_replicas
   }))
 }

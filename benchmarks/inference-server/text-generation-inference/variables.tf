@@ -101,3 +101,17 @@ variable "hpa_type" {
     error_message = "Allows values for hpa_type are {null, \"cpu\"}"
   }
 }
+
+variable "hpa_min_replicas" {
+  description = "Minimum number of HPA replicas."
+  type        = number
+  default     = 1
+  nullable    = false
+}
+
+variable "hpa_max_replicas" {
+  description = "Maximum number of HPA replicas."
+  type        = number
+  default     = 5
+  nullable    = false
+}

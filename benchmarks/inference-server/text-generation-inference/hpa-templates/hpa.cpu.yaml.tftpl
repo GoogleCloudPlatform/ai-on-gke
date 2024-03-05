@@ -8,6 +8,6 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: tgi
-  minReplicas: 1
-  maxReplicas: 5
+  minReplicas: ${hpa_min_replicas}
+  maxReplicas: ${hpa_max_replicas}
   targetCPUUtilizationPercentage: 50

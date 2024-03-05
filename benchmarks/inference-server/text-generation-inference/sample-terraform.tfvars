@@ -19,3 +19,7 @@ gpu_count = 1
 # things settle, and hpa scales down the replicas. This whole process could
 # take up to an hour.
 hpa_type = null
+
+# Adjust these if you want different min/max values
+# hpa_min_replicas = 1
+# hpa_max_replicas = 5
