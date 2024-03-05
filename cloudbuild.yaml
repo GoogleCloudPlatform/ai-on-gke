@@ -157,7 +157,7 @@ steps:
         python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt)
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
-    waitFor: ['cleanup ray cluster']
+    # waitFor: ['cleanup ray cluster']
 
   - id: 'cleanup jupyterhub'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -206,6 +206,9 @@ steps:
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=kubernetes_namespace=rag-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA \
+        -var=ray_service_account=ray-sa-$SHORT_SHA \
+        -var=rag_service_account=rag-sa-$SHORT_SHA \
+        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/rag_tf_result.txt
 
@@ -238,7 +241,7 @@ steps:
         cd /workspace/applications/rag/tests
         python3 test_frontend.py "127.0.0.1:8081"
         echo "pass" > /workspace/rag_frontend_result.txt
-
+    waitFor: ['cleanup jupyterhub']
     allowFailure: true
 
   - id: 'cleanup rag'
@@ -277,6 +280,9 @@ steps:
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
         -var=kubernetes_namespace=rag-$SHORT_SHA \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA \
+        -var=ray_service_account=ray-sa-$SHORT_SHA \
+        -var=rag_service_account=rag-sa-$SHORT_SHA \
+        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA \
         -auto-approve -no-color
 
     allowFailure: true
