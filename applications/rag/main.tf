@@ -88,17 +88,13 @@ provider "helm" {
   }
 }
 
-data "kubernetes_all_namespaces" "allns" {
-  provider   = kubernetes.rag
-  depends_on = [module.infra, data.google_container_cluster.default]
-}
 
 module "kuberay-operator" {
   source                 = "../../modules/kuberay-operator"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   name                   = "kuberay-operator"
   project_id             = var.project_id
-  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
+  create_namespace       = true
   namespace              = var.kubernetes_namespace
   google_service_account = var.ray_service_account
   create_service_account = var.create_ray_service_account
@@ -151,7 +147,7 @@ module "jupyterhub" {
 
 module "kuberay-logging" {
   source     = "../../modules/kuberay-logging"
-  providers  = { helm = helm.rag, kubernetes = kubernetes.rag }
+  providers  = { kubernetes = kubernetes.rag }
   namespace  = var.kubernetes_namespace
   depends_on = [module.kuberay-operator]
 }
@@ -161,7 +157,7 @@ module "kuberay-cluster" {
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id             = var.project_id
   namespace              = var.kubernetes_namespace
-  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
+  create_namespace       = true
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
   enable_tpu             = local.enable_tpu
@@ -176,7 +172,7 @@ module "kuberay-monitoring" {
   providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
   namespace                       = var.kubernetes_namespace
-  create_namespace                = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.kubernetes_namespace)
+  create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = var.ray_service_account
   depends_on                      = [module.kuberay-operator]
@@ -218,6 +214,5 @@ module "frontend" {
   url_domain_addr          = var.frontend_url_domain_addr
   url_domain_name          = var.frontend_url_domain_name
   members_allowlist        = var.frontend_members_allowlist
-
-  depends_on = [module.cloudsql, module.gcs, module.inference-server]
+  depends_on = [ module.gcs ]
 }
