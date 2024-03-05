@@ -98,6 +98,11 @@ variable "kubernetes_version" {
   default = "latest"
 }
 
+variable "release_channel" {
+  type    = string
+  default = "RAPID"
+}
+
 variable "cluster_region" {
   type = string
 }
