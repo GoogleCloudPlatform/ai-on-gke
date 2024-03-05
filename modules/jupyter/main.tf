@@ -16,13 +16,6 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-# create namespace
-module "namespace" {
-  source           = "../../modules/kubernetes-namespace"
-  namespace        = var.namespace
-  create_namespace = true
-}
-
 # Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
   count             = var.add_auth && var.brand == "" ? 1 : 0

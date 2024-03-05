@@ -346,7 +346,7 @@ variable "gpu_pools" {
     {
       name               = "gpu-pool-l4"
       machine_type       = "g2-standard-24"
-      node_locations     = "us-central1-a,us-central1-b"
+      node_locations     = "us-central1-a"
       autoscaling        = true
       min_count          = 1
       max_count          = 3
