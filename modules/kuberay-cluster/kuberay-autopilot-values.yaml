@@ -42,7 +42,8 @@ head:
   autoscalerOptions:
     upscalingMode: Default
     idleTimeoutSeconds: 60
-    securityContext: {}
+    securityContext:
+      ${indent(4, security_context)}
     env: []
     envFrom: []
     # resources specifies optional resource request and limit overrides for the autoscaler container.
@@ -111,7 +112,8 @@ head:
   tolerations: []
   affinity: {}
   # Ray container security context.
-  securityContext: {}
+  securityContext:
+    ${indent(4, security_context)}
   volumes:
     - name: ray-logs
       emptyDir: {}
@@ -213,7 +215,8 @@ additionalWorkerGroups:
     tolerations: []
     affinity: {}
     # Ray container security context.
-    securityContext: {}
+    securityContext:
+      ${indent(4, security_context)}
     volumes:
       - name: ray-logs
         emptyDir: {}
@@ -309,7 +312,8 @@ additionalWorkerGroups:
     tolerations: []
     affinity: {}
     # Ray container security context.
-    securityContext: {}
+    securityContext:
+      ${indent(4, security_context)}
     volumes:
       - name: ray-logs
         emptyDir: {}

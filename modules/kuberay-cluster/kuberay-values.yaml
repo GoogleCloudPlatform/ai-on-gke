@@ -102,7 +102,8 @@ head:
   tolerations: []
   affinity: {}
   # Ray container security context.
-  securityContext: {}
+  securityContext:
+    ${indent(4, security_context)}
   volumes:
     - name: ray-logs
       emptyDir: {}
@@ -196,7 +197,8 @@ worker:
   tolerations: []
   affinity: {}
   # Ray container security context.
-  securityContext: {}
+  securityContext:
+    ${indent(4, security_context)}
   volumes:
     - name: ray-logs
       emptyDir: {}
