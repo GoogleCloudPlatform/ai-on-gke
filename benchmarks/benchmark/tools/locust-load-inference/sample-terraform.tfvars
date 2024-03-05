@@ -12,7 +12,7 @@ artifact_registry                        = "us-central1-docker.pkg.dev/$PROJECT_
 inference_server_service                 = "tgi" # inference server service name
 locust_runner_kubernetes_service_account = "sample-runner-ksa"
 output_bucket                            = "benchmark-output"
-gcs_path                                 = "gs://ai-on-gke-benchmark/ShareGPT_V3_unfiltered_cleaned_split_filtered_prompts.txt"
+gcs_path                                 = "gs://${PROJECT_ID}-ai-gke-benchmark-fuse/ShareGPT_V3_unfiltered_cleaned_split_filtered_prompts.txt"
 
 # Benchmark configuration for Locust Docker accessing inference server
 inference_server_framework = "tgi"
