@@ -200,6 +200,7 @@ module "frontend" {
   google_service_account        = var.rag_service_account
   namespace                     = var.kubernetes_namespace
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
+  cloudsql_instance             = var.cloudsql_instance
   db_secret_name                = module.cloudsql.db_secret_name
   db_secret_namespace           = module.cloudsql.db_secret_namespace
   dataset_embeddings_table_name = var.dataset_embeddings_table_name

@@ -209,6 +209,7 @@ steps:
         -var=ray_service_account=ray-sa-$SHORT_SHA \
         -var=rag_service_account=rag-sa-$SHORT_SHA \
         -var=jupyter_service_account=jupyter-sa-$SHORT_SHA \
+        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/rag_tf_result.txt
 
@@ -241,7 +242,6 @@ steps:
         cd /workspace/applications/rag/tests
         python3 test_frontend.py "127.0.0.1:8081"
         echo "pass" > /workspace/rag_frontend_result.txt
-    waitFor: ['cleanup jupyterhub']
     allowFailure: true
 
   - id: 'cleanup rag'
@@ -283,6 +283,7 @@ steps:
         -var=ray_service_account=ray-sa-$SHORT_SHA \
         -var=rag_service_account=rag-sa-$SHORT_SHA \
         -var=jupyter_service_account=jupyter-sa-$SHORT_SHA \
+        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA \
         -auto-approve -no-color
 
     allowFailure: true
