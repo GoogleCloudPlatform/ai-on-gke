@@ -18,7 +18,7 @@
 project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-cluster_name     = "<your project ID>"
+cluster_name     = "<your cluster name>"
 cluster_location = "us-central1"
 
 #######################################################

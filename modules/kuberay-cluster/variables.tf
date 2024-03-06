@@ -66,26 +66,26 @@ variable "security_context" {
   type = object({
     allowPrivilegeEscalation = optional(bool)
     capabilities = optional(object({
-    # Not typically used
-    # add  = optional(list(string))
+      # Not typically used
+      # add  = optional(list(string))
       drop = optional(list(string))
     }))
-    privileged = optional(bool)
-    procMount  = optional(string)
+    privileged             = optional(bool)
+    procMount              = optional(string)
     readOnlyRootFilesystem = optional(bool)
     runAsGroup             = optional(number)
     runAsNonRoot           = optional(bool)
     runAsUser              = optional(number)
-    seLinuxOptions         = optional(object({
+    seLinuxOptions = optional(object({
       level = optional(string)
       role  = optional(string)
       type  = optional(string)
       user  = optional(string)
     }))
-    seccompProfile         = optional(object({
-    # Not typically used
-    # localhostProfile = optional(string)
-      type             = optional(string)
+    seccompProfile = optional(object({
+      # Not typically used
+      # localhostProfile = optional(string)
+      type = optional(string)
     }))
     windowsOptions = optional(object({
       gmsaCredentialSpec    = optional(string)
@@ -101,9 +101,9 @@ variable "security_context" {
       drop = ["ALL"]
     }
     # GKE will automatically mount GPUs and TPUs into unprivileged pods
-    privileged = false
+    privileged         = false
     readOnlyFileSystem = true
-    runAsNonRoot = true
+    runAsNonRoot       = true
     seccompProfile = {
       type = "RuntimeDefault"
     }

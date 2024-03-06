@@ -30,22 +30,22 @@ resource "helm_release" "ray-cluster" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({for k, v in var.security_context : k => v if v != null }))
+      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
       }) : var.enable_tpu ? templatefile("${path.module}/kuberay-tpu-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({for k, v in var.security_context : k => v if v != null }))
+      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
       }) : var.enable_gpu ? templatefile("${path.module}/kuberay-gpu-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({for k, v in var.security_context : k => v if v != null }))
+      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
       }) : templatefile("${path.module}/kuberay-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({for k, v in var.security_context : k => v if v != null }))
+      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
     })
   ]
 }

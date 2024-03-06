@@ -36,7 +36,7 @@ resource "helm_release" "iap_jupyter" {
   name             = "iap-jupyter"
   chart            = "${path.module}/charts/iap/"
   namespace        = var.namespace
-  create_namespace = true 
+  create_namespace = true
   # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment 
   timeout = 1200
   set {
@@ -108,7 +108,7 @@ resource "helm_release" "iap_frontend" {
   name             = "iap-frontend"
   chart            = "${path.module}/charts/iap/"
   namespace        = var.namespace
-  create_namespace = true 
+  create_namespace = true
   # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment
   timeout = 1200
   set {

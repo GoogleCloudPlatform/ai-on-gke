@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
 
 terraform {
   required_providers {
-    google = {
-      source = "hashicorp/google"
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.8.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "2.18.1"
     }
-  }
-  provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-kubernetes-engine:kuberay/v0.1.0"
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = "2.0.1"
+    }
   }
 }

@@ -1,0 +1,12 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: "tgi-podmonitoring"
+  namespace: ${namespace}
+spec:
+  selector:
+    matchLabels:
+      app: tgi
+  endpoints:
+  - port: 80
+    interval: 20s

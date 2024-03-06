@@ -31,6 +31,26 @@ module "gcs_pv_pvc" {
   gcs_bucket                  = var.gcs_bucket
 }
 
+module "ps_storage" {
+  source = "./modules/parallelstore_storage"
+  count  = var.paralllestore_csi_driver_enabled == "\"true\"" ? 1 : 0
+
+  pv_name                       = var.pv_name
+  pvc_name                      = var.pvc_name
+  gcs_bucket                    = var.gcs_bucket
+  ps_instance_name              = var.parallelstore_instance_name
+  ps_ip_address_1               = var.parallelstore_ip_address_1
+  ps_ip_address_2               = var.parallelstore_ip_address_2
+  ps_ip_address_3               = var.parallelstore_ip_address_3
+  ps_network_name               = var.parallelstore_network_name
+  location                      = var.parallelstore_location
+  storageclass                  = var.parallelstore_storageclass
+  project                       = var.parallelstore_project
+  k8s_service_account           = var.k8s_service_account
+  run_parallelstore_data_loader = var.run_parallelstore_data_loader
+  namespace                     = var.namespace
+}
+
 module "dlio" {
   source = "./modules/dlio"
 
@@ -43,6 +63,9 @@ module "dlio" {
   gcs_fuse_sidecar_cpu_limit               = var.gcs_fuse_sidecar_cpu_limit
   gcs_fuse_sidecar_memory_limit            = var.gcs_fuse_sidecar_memory_limit
   gcs_fuse_sidecar_ephemeral_storage_limit = var.gcs_fuse_sidecar_ephemeral_storage_limit
+  pscsi_driver_enabled                     = var.paralllestore_csi_driver_enabled
+  pscsi_sidecar_cpu_limit                  = var.pscsi_sidecar_cpu_limit
+  pscsi_sidecar_memory_limit               = var.pscsi_sidecar_memory_limit
   dlio_container_cpu_limit                 = var.dlio_container_cpu_limit
   dlio_container_memory_limit              = var.dlio_container_memory_limit
   dlio_container_ephemeral_storage         = var.dlio_container_ephemeral_storage

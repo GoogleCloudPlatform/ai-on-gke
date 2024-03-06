@@ -16,6 +16,9 @@ spec:
         gke-gcsfuse/cpu-limit: ${gcs_fuse_sidecar_cpu_limit}
         gke-gcsfuse/memory-limit: ${gcs_fuse_sidecar_memory_limit}
         gke-gcsfuse/ephemeral-storage-limit: ${gcs_fuse_sidecar_ephemeral_storage_limit}
+        gke-parallelstore/volumes: ${pscsi_driver_enabled}
+        gke-parallelstore/cpu-limit: ${pscsi_sidecar_cpu_limit}
+        gke-parallelstore/memory-limit: ${pscsi_sidecar_memory_limit}
     spec:
       containers:
       - name: dlio

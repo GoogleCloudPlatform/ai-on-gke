@@ -10,4 +10,4 @@ spec:
     name: tgi
   minReplicas: ${hpa_min_replicas}
   maxReplicas: ${hpa_max_replicas}
-  targetCPUUtilizationPercentage: 50
+  targetCPUUtilizationPercentage: ${hpa_averagevalue_target}
