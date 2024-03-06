@@ -21,6 +21,7 @@ module "gke" {
   cluster_resource_labels    = var.cluster_labels
   region                     = var.cluster_region
   kubernetes_version         = var.kubernetes_version
+  release_channel            = var.release_channel
   zones                      = var.cluster_zones
   network                    = var.network_name
   subnetwork                 = var.subnetwork_name
@@ -28,5 +29,4 @@ module "gke" {
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
   deletion_protection        = var.deletion_protection
-
 }

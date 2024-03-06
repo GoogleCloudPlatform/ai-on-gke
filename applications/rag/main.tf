@@ -88,6 +88,12 @@ provider "helm" {
   }
 }
 
+module "namespace" {
+  source = "../../modules/kubernetes-namespace"
+  providers              = { helm = helm.rag}
+  create_namespace = true
+  namespace = var.kubernetes_namespace
+}
 
 module "kuberay-operator" {
   source                 = "../../modules/kuberay-operator"
@@ -114,7 +120,7 @@ module "cloudsql" {
   project_id      = var.project_id
   instance_name   = var.cloudsql_instance
   namespace       = var.kubernetes_namespace
-  depends_on      = [module.kuberay-operator]
+  depends_on      = [module.namespace]
 }
 
 module "jupyterhub" {
@@ -142,14 +148,14 @@ module "jupyterhub" {
   url_domain_name          = var.jupyter_url_domain_name
   members_allowlist        = var.jupyter_members_allowlist
 
-  depends_on = [module.kuberay-operator, module.gcs]
+  depends_on = [module.namespace, module.gcs]
 }
 
 module "kuberay-logging" {
   source     = "../../modules/kuberay-logging"
   providers  = { kubernetes = kubernetes.rag }
   namespace  = var.kubernetes_namespace
-  depends_on = [module.kuberay-operator]
+  depends_on = [module.namespace]
 }
 
 module "kuberay-cluster" {
@@ -164,7 +170,7 @@ module "kuberay-cluster" {
   autopilot_cluster      = local.enable_autopilot
   google_service_account = var.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
-  depends_on             = [module.kuberay-operator, module.kuberay-monitoring]
+  depends_on             = [module.kuberay-operator]
 }
 
 module "kuberay-monitoring" {
@@ -175,7 +181,6 @@ module "kuberay-monitoring" {
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = var.ray_service_account
-  depends_on                      = [module.kuberay-operator]
 }
 
 module "inference-server" {
@@ -183,7 +188,7 @@ module "inference-server" {
   providers         = { kubernetes = kubernetes.rag }
   namespace         = var.kubernetes_namespace
   autopilot_cluster = local.enable_autopilot
-  depends_on        = [module.kuberay-operator]
+  depends_on        = [module.namespace]
 }
 
 module "frontend" {
@@ -193,8 +198,7 @@ module "frontend" {
   create_service_account        = var.create_rag_service_account
   google_service_account        = var.rag_service_account
   namespace                     = var.kubernetes_namespace
-  inference_service_name        = module.inference-server.inference_service_name
-  inference_service_namespace   = module.inference-server.inference_service_namespace
+  inference_service_endpoint    = module.inference-server.inference_service_endpoint
   db_secret_name                = module.cloudsql.db_secret_name
   db_secret_namespace           = module.cloudsql.db_secret_namespace
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
@@ -214,5 +218,5 @@ module "frontend" {
   url_domain_addr          = var.frontend_url_domain_addr
   url_domain_name          = var.frontend_url_domain_name
   members_allowlist        = var.frontend_members_allowlist
-  depends_on = [ module.gcs ]
+  depends_on = [ module.namespace ]
 }
