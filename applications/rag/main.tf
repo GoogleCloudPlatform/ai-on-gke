@@ -89,10 +89,10 @@ provider "helm" {
 }
 
 module "namespace" {
-  source = "../../modules/kubernetes-namespace"
-  providers              = { helm = helm.rag}
+  source           = "../../modules/kubernetes-namespace"
+  providers        = { helm = helm.rag }
   create_namespace = true
-  namespace = var.kubernetes_namespace
+  namespace        = var.kubernetes_namespace
 }
 
 module "kuberay-operator" {
@@ -115,12 +115,12 @@ module "gcs" {
 }
 
 module "cloudsql" {
-  source          = "../../modules/cloudsql"
-  providers       = { kubernetes = kubernetes.rag }
-  project_id      = var.project_id
-  instance_name   = var.cloudsql_instance
-  namespace       = var.kubernetes_namespace
-  depends_on      = [module.namespace]
+  source        = "../../modules/cloudsql"
+  providers     = { kubernetes = kubernetes.rag }
+  project_id    = var.project_id
+  instance_name = var.cloudsql_instance
+  namespace     = var.kubernetes_namespace
+  depends_on    = [module.namespace]
 }
 
 module "jupyterhub" {
@@ -220,5 +220,5 @@ module "frontend" {
   url_domain_addr          = var.frontend_url_domain_addr
   url_domain_name          = var.frontend_url_domain_name
   members_allowlist        = var.frontend_members_allowlist
-  depends_on               = [ module.namespace ]
+  depends_on               = [module.namespace, module.cloudsql]
 }
