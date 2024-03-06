@@ -51,10 +51,10 @@ locals {
 }
 
 module "custom_metrics_stackdriver_adapter" {
-  count = local.custom_metrics_enabled ? 1 : 0
+  count  = local.custom_metrics_enabled ? 1 : 0
   source = "./custom-metrics-stackdriver-adapter"
   workload_identity = {
-    enabled = true
+    enabled    = true
     project_id = var.project_id
   }
 }
@@ -78,8 +78,8 @@ resource "kubernetes_manifest" "hpa-cpu" {
   manifest = yamldecode(templatefile(local.hpa_cpu_template, {
     namespace               = var.namespace
     hpa_averagevalue_target = var.hpa_averagevalue_target
-    hpa_min_replicas = var.hpa_min_replicas
-    hpa_max_replicas = var.hpa_max_replicas
+    hpa_min_replicas        = var.hpa_min_replicas
+    hpa_max_replicas        = var.hpa_max_replicas
   }))
 }
 
