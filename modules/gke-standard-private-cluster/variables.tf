@@ -46,6 +46,10 @@ variable "kubernetes_version" {
   type = string
 }
 
+variable "release_channel" {
+  type = string
+}
+
 variable "cluster_regional" {
   type = bool
 }

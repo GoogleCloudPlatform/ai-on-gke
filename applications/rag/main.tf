@@ -181,6 +181,7 @@ module "kuberay-monitoring" {
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = var.ray_service_account
+  depends_on                      = [module.namespace]
 }
 
 module "inference-server" {
@@ -218,5 +219,5 @@ module "frontend" {
   url_domain_addr          = var.frontend_url_domain_addr
   url_domain_name          = var.frontend_url_domain_name
   members_allowlist        = var.frontend_members_allowlist
-  depends_on = [ module.namespace ]
+  depends_on               = [ module.namespace ]
 }
