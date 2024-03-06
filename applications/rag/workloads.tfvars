@@ -38,7 +38,7 @@ rag_service_account        = "rag-system-account"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `jupyter_service_account` to use an existing IAM service account.
-jupyter_service_account        = "jupyter-system-account"
+jupyter_service_account = "jupyter-system-account"
 
 ## Embeddings table name - change this to the TABLE_NAME used in the notebook.
 dataset_embeddings_table_name = "googlemaps_reviews_db"

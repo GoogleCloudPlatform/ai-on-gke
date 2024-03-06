@@ -265,9 +265,9 @@ variable "autopilot_cluster" {
 }
 
 variable "cloudsql_instance" {
-  type    = string
+  type        = string
   description = "Name of the CloudSQL instance for RAG VectorDB"
-  default = "pgvector-instance"
+  default     = "pgvector-instance"
 }
 
 variable "cpu_pools" {
