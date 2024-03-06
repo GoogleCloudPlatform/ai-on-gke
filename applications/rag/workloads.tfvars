@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project_id = "<your project ID>"
+project_id = "ai-on-gke-jss-sandbox"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
 create_cluster    = true # Create a GKE cluster in the specified network.
