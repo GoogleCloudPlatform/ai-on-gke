@@ -17,18 +17,18 @@ resource "random_id" "random_project_id_suffix" {
 }
 
 resource "google_project" "project_under_folder" {
-  for_each   = var.folder_id != null ? var.env : toset([])
-  name       = format("%s-%s",var.project_name,each.value)
-  project_id = format("%s-%s-%s",var.project_name,random_id.random_project_id_suffix.hex,each.value)
-  folder_id  = var.folder_id
+  for_each        = var.folder_id != null ? var.env : toset([])
+  name            = format("%s-%s", var.project_name, each.value)
+  project_id      = format("%s-%s-%s", var.project_name, random_id.random_project_id_suffix.hex, each.value)
+  folder_id       = var.folder_id
   billing_account = var.billing_account
 }
 
 resource "google_project" "project_under_org" {
-  for_each   = var.folder_id == null ? var.env : toset([])
-  name       = format("%s-%s",var.project_name,each.value)
-  project_id = format("%s-%s-%s",var.project_name,random_id.random_project_id_suffix.hex,each.value)
-  org_id     = var.org_id
+  for_each        = var.folder_id == null ? var.env : toset([])
+  name            = format("%s-%s", var.project_name, each.value)
+  project_id      = format("%s-%s-%s", var.project_name, random_id.random_project_id_suffix.hex, each.value)
+  org_id          = var.org_id
   billing_account = var.billing_account
 }
 
@@ -38,7 +38,7 @@ resource "google_project_service" "project_services" {
   service                    = "cloudresourcemanager.googleapis.com"
   disable_on_destroy         = true
   disable_dependent_services = true
-  depends_on = [google_project.project_under_folder,google_project.project_under_org]
+  depends_on                 = [google_project.project_under_folder, google_project.project_under_org]
 }
 
 resource "google_project_service" "project_services-1" {
@@ -47,25 +47,25 @@ resource "google_project_service" "project_services-1" {
   service                    = "iam.googleapis.com"
   disable_on_destroy         = true
   disable_dependent_services = true
-  depends_on = [google_project.project_under_folder,google_project.project_under_org]
+  depends_on                 = [google_project.project_under_folder, google_project.project_under_org]
 }
 
 resource "google_project_service" "project_services-2" {
-  for_each                   = var.folder_id == null ? google_project.project_under_org: google_project.project_under_folder
+  for_each                   = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
   project                    = each.value.id
   service                    = "container.googleapis.com"
   disable_on_destroy         = true
   disable_dependent_services = true
-  depends_on = [google_project.project_under_folder,google_project.project_under_org]
+  depends_on                 = [google_project.project_under_folder, google_project.project_under_org]
 }
 
 resource "google_project_service" "project_services-3" {
-  for_each                   = var.folder_id == null ? google_project.project_under_org: google_project.project_under_folder
+  for_each                   = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
   project                    = each.value.id
   service                    = "compute.googleapis.com"
   disable_on_destroy         = true
   disable_dependent_services = true
-  depends_on = [google_project.project_under_folder,google_project.project_under_org]
+  depends_on                 = [google_project.project_under_folder, google_project.project_under_org]
 }
 
 resource "google_project_service" "project_services-4" {
@@ -74,7 +74,7 @@ resource "google_project_service" "project_services-4" {
   service                    = "anthos.googleapis.com"
   disable_on_destroy         = true
   disable_dependent_services = true
-  depends_on = [google_project.project_under_folder,google_project.project_under_org]
+  depends_on                 = [google_project.project_under_folder, google_project.project_under_org]
 }
 
 resource "google_project_service" "project_services-5" {
@@ -83,7 +83,7 @@ resource "google_project_service" "project_services-5" {
   service                    = "anthosconfigmanagement.googleapis.com"
   disable_on_destroy         = true
   disable_dependent_services = true
-  depends_on = [google_project.project_under_folder,google_project.project_under_org]
+  depends_on                 = [google_project.project_under_folder, google_project.project_under_org]
 }
 
 resource "google_project_service" "project_services-6" {
@@ -92,5 +92,5 @@ resource "google_project_service" "project_services-6" {
   service                    = "gkehub.googleapis.com"
   disable_on_destroy         = true
   disable_dependent_services = true
-  depends_on = [google_project.project_under_folder,google_project.project_under_org]
+  depends_on                 = [google_project.project_under_folder, google_project.project_under_org]
 }

@@ -36,23 +36,23 @@ variable "zone" {
 }
 
 variable "master_auth_networks_ipcidr" {
-  type = string
+  type        = string
   description = "master authorized network"
 }
 
 variable "network" {
-  type = string
+  type        = string
   description = "VPC network where the cluster will be created"
 }
 
 variable "subnet" {
-  type = string
+  type        = string
   description = "subnetwork where the cluster will be created"
 
 }
 
 variable "env" {
-  type = string
+  type        = string
   description = "environment"
 
 }
