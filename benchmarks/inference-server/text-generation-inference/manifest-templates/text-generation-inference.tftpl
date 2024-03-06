@@ -20,7 +20,6 @@ metadata:
   labels:
     app: tgi
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: tgi
@@ -75,3 +74,21 @@ spec:
             - mountPath: "/var/secrets"
               name: hftoken
 %{ endfor ~}
+          # Hack: tgi won't generate any metrics until it's served at least one
+          # request, and without that, autoscaling won't work. So generate one
+          # request upon startup.
+          startupProbe:
+            failureThreshold: 3600
+            periodSeconds: 10
+            timeoutSeconds: 60
+            exec:
+              command:
+                - /usr/bin/curl
+                - http://localhost:80/generate
+                - -X
+                - POST
+                - -d
+                - '{"inputs":"test", "parameters":{"max_new_tokens":1}}'
+                - -H
+                - 'Content-Type: application/json'
+                - --fail
