@@ -1,3 +1,4 @@
+<!--
 Copyright 2024 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
+-->
 This doc describes how you as an App team member will use the configsync repo to manage your applications scoped to your namespace.
 We will demonstrate this with an example of installing `ray` in the namespace. Typically, you can install any software or deploy any application in your namespace in the same fashion.
 
