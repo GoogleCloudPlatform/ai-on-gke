@@ -50,6 +50,10 @@ variable "kubernetes_version" {
   type = string
 }
 
+variable "release_channel" {
+  type = string
+}
+
 variable "cluster_region" {
   type = string
 }

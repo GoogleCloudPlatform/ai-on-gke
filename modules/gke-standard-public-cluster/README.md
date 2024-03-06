@@ -35,6 +35,7 @@ No resources.
 | <a name="input_network_name"></a> [network\_name](#input\_network\_name) | # network variables | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project id | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | GCP project region or zone | `string` | `"us-central1"` | no |
+| <a name="input_release_channel"></a> [release\_channel](#input\_release\_channel) | n/a | `string` | n/a | yes |
 | <a name="input_subnetwork_name"></a> [subnetwork\_name](#input\_subnetwork\_name) | n/a | `string` | n/a | yes |
 | <a name="input_tpu_pools"></a> [tpu\_pools](#input\_tpu\_pools) | n/a | `list(map(any))` | n/a | yes |
 
