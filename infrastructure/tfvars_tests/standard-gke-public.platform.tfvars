@@ -66,8 +66,8 @@ gpu_pools = [{
   accelerator_count  = 2
   accelerator_type   = "nvidia-tesla-t4"
   gpu_driver_version = "LATEST"
-},
-{
+  },
+  {
     name               = "gpu-pool-l4"
     machine_type       = "g2-standard-24"
     node_locations     = "us-central1-a"
