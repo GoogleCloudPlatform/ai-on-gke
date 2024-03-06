@@ -17,6 +17,12 @@ variable "project_id" {
   description = "GCP project id"
 }
 
+variable "db_region" {
+  type        = string
+  description = "Cloud SQL instance region"
+  default     = "us-central1"
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
@@ -56,4 +62,10 @@ variable "gcs_bucket" {
 
 variable "grafana_host" {
   type = string
+}
+
+variable "db_secret_name" {
+  type        = string
+  description = "CloudSQL user credentials"
+  default     = "empty-secret"
 }

@@ -120,6 +120,7 @@ module "cloudsql" {
   project_id    = var.project_id
   instance_name = var.cloudsql_instance
   namespace     = var.kubernetes_namespace
+  region        = var.cloudsql_instance_region
   depends_on    = [module.namespace]
 }
 
@@ -179,6 +180,8 @@ module "kuberay-cluster" {
   enable_tpu             = local.enable_tpu
   autopilot_cluster      = local.enable_autopilot
   google_service_account = var.ray_service_account
+  db_secret_name         = module.cloudsql.db_secret_name
+  db_region              = var.cloudsql_instance_region
   grafana_host           = module.kuberay-monitoring.grafana_uri
   depends_on             = [module.kuberay-operator]
 }
@@ -212,7 +215,6 @@ module "frontend" {
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
   db_secret_name                = module.cloudsql.db_secret_name
-  db_secret_namespace           = module.cloudsql.db_secret_namespace
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
 
   # IAP Auth parameters
