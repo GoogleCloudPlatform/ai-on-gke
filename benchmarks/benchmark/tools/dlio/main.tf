@@ -20,7 +20,7 @@ provider "kubectl" {
 
 module "gcs_pv_pvc" {
   source = "./modules/storage"
-  count  = var.gcs_fuse_csi_driver_enabled == "\"true\"" ? 1 : 0
+  count  = var.run_with_gcs_fuse_csi == "\"true\"" ? 1 : 0
 
   namespace                   = var.namespace
   pv_name                     = var.pv_name
@@ -33,7 +33,7 @@ module "gcs_pv_pvc" {
 
 module "ps_storage" {
   source = "./modules/parallelstore_storage"
-  count  = var.paralllestore_csi_driver_enabled == "\"true\"" ? 1 : 0
+  count  = var.run_with_parallelstore_csi == "\"true\"" ? 1 : 0
 
   pv_name                       = var.pv_name
   pvc_name                      = var.pvc_name
@@ -59,11 +59,11 @@ module "dlio" {
   job_backoffLimit                         = var.job_backoffLimit
   job_completions                          = var.job_completions
   job_parallelism                          = var.job_parallelism
-  gcs_fuse_csi_driver_enabled              = var.gcs_fuse_csi_driver_enabled
+  gcs_fuse_csi_driver_enabled              = var.run_with_gcs_fuse_csi
   gcs_fuse_sidecar_cpu_limit               = var.gcs_fuse_sidecar_cpu_limit
   gcs_fuse_sidecar_memory_limit            = var.gcs_fuse_sidecar_memory_limit
   gcs_fuse_sidecar_ephemeral_storage_limit = var.gcs_fuse_sidecar_ephemeral_storage_limit
-  pscsi_driver_enabled                     = var.paralllestore_csi_driver_enabled
+  pscsi_driver_enabled                     = var.run_with_parallelstore_csi
   pscsi_sidecar_cpu_limit                  = var.pscsi_sidecar_cpu_limit
   pscsi_sidecar_memory_limit               = var.pscsi_sidecar_memory_limit
   dlio_container_cpu_limit                 = var.dlio_container_cpu_limit
@@ -84,6 +84,7 @@ module "dlio" {
   dlio_iostat_devices                      = var.dlio_iostat_devices
   dlio_read_threads                        = var.dlio_read_threads
   gcs_bucket                               = var.gcs_bucket
+  result_bucket                            = var.result_bucket
   k8s_service_account                      = var.k8s_service_account
   pvc_name                                 = var.pvc_name
 }
