@@ -138,7 +138,7 @@ variable "jupyter_k8s_backend_service_name" {
 variable "jupyter_k8s_backend_service_port" {
   type        = number
   description = "Name of the Backend Service Port"
-  default = 80
+  default     = 80
 }
 
 variable "jupyter_url_domain_addr" {

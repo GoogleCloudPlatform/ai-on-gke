@@ -24,5 +24,5 @@ output "inference_service_namespace" {
 
 output "inference_service_endpoint" {
   description = "Endpoint of model inference service"
-  value = kubernetes_service.inference_service.status != null ? (kubernetes_service.inference_service.status[0].load_balancer != null ? "${kubernetes_service.inference_service.status[0].load_balancer[0].ingress[0].ip}" : "") : ""
+  value       = kubernetes_service.inference_service.status != null ? (kubernetes_service.inference_service.status[0].load_balancer != null ? "${kubernetes_service.inference_service.status[0].load_balancer[0].ingress[0].ip}" : "") : ""
 }
