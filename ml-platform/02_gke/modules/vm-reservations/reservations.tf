@@ -15,7 +15,7 @@
 resource "google_compute_reservation" "machine_reservation" {
   project                       = var.project_id
   specific_reservation_required = true
-  name                          = format("%s-%s",var.cluster_name,"reservation")
+  name                          = format("%s-%s", var.cluster_name, "reservation")
   zone                          = var.zone
   specific_reservation {
     count = var.machine_reservation_count

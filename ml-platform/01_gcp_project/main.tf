@@ -13,10 +13,10 @@
 # limitations under the License.
 
 module "gcp-project" {
-  source = "./modules/projects"
-  org_id = var.org_id
-  folder_id = var.folder_id
-  env = var.env
+  source          = "./modules/projects"
+  org_id          = var.org_id
+  folder_id       = var.folder_id
+  env             = var.env
   billing_account = var.billing_account
-  project_name = var.project_name
+  project_name    = var.project_name
 }

@@ -14,32 +14,35 @@
 
 variable "lookup_state_bucket" {
   description = "GCS bucket to look up TF state from previous steps."
-  type = string
-  default = "YOUR_STATE_BUCKET"
+  type        = string
+  default     = "YOUR_STATE_BUCKET"
 }
 
 variable "configsync_repo_name" {
-  type = string
+  type        = string
   description = "Name of the GitHub repo that will be synced to the cluster with Config sync."
-  default = "config-sync-repo"
+  default     = "config-sync-repo"
 }
 
 variable "github_user" {
   description = "GitHub user name."
-  type = string
-  default = "YOUR_GIT_USER"
+  type        = string
+  default     = "YOUR_GIT_USER"
 }
+
 variable "github_email" {
   description = "GitHub user email."
-  type = string
-  default = "YOUR_GIT_USER_EMAIL"
+  type        = string
+  default     = "YOUR_GIT_USER_EMAIL"
 }
+
 variable "github_org" {
-  type = string
+  type        = string
   description = "GitHub org."
-  default = "YOUR_GIT_ORG"
+  default     = "YOUR_GIT_ORG"
 }
+
 variable "github_token" {
-  type = string
+  type        = string
   description = "GitHub token. It is a token with write permissions as it will create a repo in the GitHub org."
 }
