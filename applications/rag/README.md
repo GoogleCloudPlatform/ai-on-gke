@@ -1,6 +1,6 @@
 # RAG-on-GKE Application
 
-**NOTE:** This solution is in beta/a work in progress - please expect friction while using it.
+**NOTE:** This solution is in beta. Please expect friction while using it.
 
 This is a sample to deploy a RAG application on GKE. Retrieval Augmented Generation (RAG) is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets. The basic idea is to have a semantically searchable knowledge base (often using vector search), which is used to retrieve relevant snippets for a given prompt to provide additional context to the LLM. Augmenting the knowledge base with additional data is typically cheaper than fine tuning and is more scalable when incorporating current events and other rapidly changing data spaces.
 
@@ -32,7 +32,7 @@ CLUSTER_REGION=us-central1
 ```
 2. Use the following instructions to create a GKE cluster. We recommend using Autopilot for a simpler setup.
 
-##### Autopilot
+##### Autopilot (recommended)
 
 RAG requires the latest Autopilot features, available on GKE cluster version `1.29.1-gke.1575000`+
 ```
@@ -46,7 +46,7 @@ gcloud container clusters create-auto ${CLUSTER_NAME:?} \
   --cluster-version ${CLUSTER_VERSION:?}
 ```
 
-##### Standard (recommended)
+##### Standard
 
 1. To create a GKE Standard cluster using Terraform, follow the [instructions here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md). Use the preconfigured node pools in `/infrastructure/platform.tfvars` as this solution requires T4s and L4s.
 
@@ -105,6 +105,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 ```
 kubectl port-forward -n ${NAMESPACE:?} deployment/mistral-7b-instruct 8080:8080
 ```
+
     * In a new terminal, try a few prompts:
 ```
 export USER_PROMPT="How to deploy a container on K8s?"
@@ -119,6 +120,7 @@ curl 127.0.0.1:8080/generate -X POST \
 }
 EOF
 ```
+
     * At the end of the smoke test with the TGI server, stop port forwarding by using Ctrl-C on the original terminal.
 
 5. Verify the frontend chat interface is setup:
@@ -145,10 +147,10 @@ This step generates the vector embeddings for your input dataset. Currently, the
 1. Create a CloudSQL user to access the database: `gcloud sql users create rag-user-notebook --password=${SQL_PASSWORD:?} --instance=pgvector-instance --host=%`
 
 2. Go to the Jupyterhub service endpoint in a browser:       
-   * IAP disable: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-   * IAP enabled: Read terraform output `jupyter_uri` or use commend: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
-       * Remeber login GCP to check if user has role `IAP-secured Web App User`
-       * Waiting for domain status to be `Active`
+   * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+   * IAP enabled: Read terraform output `jupyter_uri` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+       * Open Google Cloud Console IAM to verify that the user has role `IAP-secured Web App User`
+       * Wait for the domain status to be `Active`
 3. Login with placeholder credentials [TBD: replace with instructions for IAP]:
     * username: user
     * password: use `terraform output jupyter_password` to fetch the password value
@@ -167,40 +169,28 @@ This step generates the vector embeddings for your input dataset. Currently, the
     * `os.environ['KAGGLE_KEY']`
 
 9. Run all the cells in the notebook. This will generate vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and store them in the `pgvector-instance` via a Ray job.
-    * Once submitted, Ray will take several minutes to create the runtime environment and optionally scale up Ray worker nodes. During this time, the job status will remain PENDING.
-    * When the job status is SUCCEEDED, the vector embeddings have been generated and we are ready to launch the frontend chat interface.
+    * If the Ray job has FAILED, re-run the cell.
+    * When the Ray job has SUCCEEDED, we are ready to launch the frontend chat interface.
 
-### Launch the Frontend Chat Interface
+### Access the Frontend Chat Interface
 
-#### Accessing the Frontend with IAP Disabled
+#### With IAP Disabled
 1. Setup port forwarding for the frontend: `kubectl port-forward service/rag-frontend -n $NAMESPACE 8080:8080 &`
 
 2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
 
-#### Accessing the Frontend with IAP Enabled
-1. Verify IAP is Enabled
+#### With IAP Enabled
+1. Verify that IAP is enabled on Google Cloud Platform (GCP) for your application. If you encounter any errors, try re-enabling IAP.
+2. Verify that you have the role `IAP-secured Web App User` assigned to your user account. This role is necessary to access the application through IAP.
+3. Verify the domain is active using command:
+    `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+3. Read terraform output `frontend_uri` or use the following command to find the domain created by IAP for accessing your service:
+    `kubectl get managedcertificates frontend-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+4.  Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
 
-   * Ensure that IAP is enabled on Google Cloud Platform (GCP) for your application. If you encounter any errors, try re-enabling IAP.
+#### Prompt Examples
 
-2. Verify User Role
-
-   * Make sure you have the role `IAP-secured Web App User` assigned to your user account. This role is necessary to access the application through IAP.
-
-3. Verify Domain is Active
-   * Make sure the domain is active using commend:
-     `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
-
-3. Retrieve the Domain
-
-   * Read terraform output `frontend_uri` or use the following command to find the domain created by IAP for accessing your service:
-     `kubectl get managedcertificates frontend-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
-
-4. Access the Frontend
-
-   * Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
-
-#### Prompts Example
-3. [TODO: Add some example prompts for the dataset].
+*TODO:* Add some example prompts for the dataset.
 
 ### Cleanup
 
