@@ -61,7 +61,7 @@ module "project-services" {
 }
 
 module "infra" {
-  source = "../../infrastructure"
+  source = "github.com/GoogleCloudPlatform/ai-on-gke//infrastructure"
   count  = var.create_cluster ? 1 : 0
 
   project_id        = var.project_id
@@ -142,14 +142,14 @@ provider "helm" {
 }
 
 module "namespace" {
-  source           = "../../modules/kubernetes-namespace"
-  providers        = { helm = helm.rag }
+  source = "../../modules/kubernetes-namespace"
+  providers              = { helm = helm.rag}
   create_namespace = true
   namespace        = local.kubernetes_namespace
 }
 
 module "kuberay-operator" {
-  source                 = "../../modules/kuberay-operator"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-operator"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   name                   = "kuberay-operator"
   project_id             = var.project_id
@@ -161,7 +161,7 @@ module "kuberay-operator" {
 }
 
 module "gcs" {
-  source      = "../../modules/gcs"
+  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
@@ -179,7 +179,7 @@ module "cloudsql" {
 }
 
 module "jupyterhub" {
-  source     = "../../modules/jupyter"
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter"
   providers  = { helm = helm.rag, kubernetes = kubernetes.rag }
   namespace  = local.kubernetes_namespace
   project_id = var.project_id
@@ -207,14 +207,14 @@ module "jupyterhub" {
 }
 
 module "kuberay-logging" {
-  source     = "../../modules/kuberay-logging"
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-logging"
   providers  = { kubernetes = kubernetes.rag }
   namespace  = local.kubernetes_namespace
   depends_on = [module.namespace]
 }
 
 module "kuberay-cluster" {
-  source                 = "../../modules/kuberay-cluster"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id             = var.project_id
   namespace              = local.kubernetes_namespace
@@ -246,7 +246,7 @@ module "kuberay-cluster" {
 }
 
 module "kuberay-monitoring" {
-  source                          = "../../modules/kuberay-monitoring"
+  source                          = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-monitoring"
   providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
   namespace                       = local.kubernetes_namespace
@@ -258,7 +258,7 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source            = "../../tutorials-and-examples/hf-tgi"
+  source            = "github.com/GoogleCloudPlatform/ai-on-gke//tutorials-and-examples/hf-tgi"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = local.kubernetes_namespace
   additional_labels = var.additional_labels
