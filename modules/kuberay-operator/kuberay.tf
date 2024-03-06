@@ -25,6 +25,7 @@ resource "helm_release" "kuberay-operator" {
 
 module "kuberay-workload-identity" {
   source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  version             = "30.0.0"
   use_existing_gcp_sa = !var.create_service_account
   name                = var.google_service_account
   namespace           = var.namespace
