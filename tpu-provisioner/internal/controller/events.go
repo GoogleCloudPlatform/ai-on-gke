@@ -9,6 +9,6 @@ const (
 	EventNodePoolEnsured         = "NodePoolEnsured"
 	EventDeletingNodePool        = "DeletingNodePool"
 	EventNodePoolDeleted         = "NodePoolDeleted"
-	DeletingNodePoolEventMessage = "Deleted Node Pool."
+	DeletingNodePoolEventMessage = "Deleting Node Pool."
 	DeletedNodePoolEventMessage  = "Deleted Node Pool."
 )

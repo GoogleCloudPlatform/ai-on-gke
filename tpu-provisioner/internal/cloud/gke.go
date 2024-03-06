@@ -105,6 +105,9 @@ func (g *GKE) DeleteNodePoolForNode(node *corev1.Node) error {
 
 	op, err := g.Service.Projects.Locations.Clusters.Delete(g.ClusterContext.NodePoolName(name)).Do()
 	if err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+			return nil
+		}
 		return fmt.Errorf("deleting node pool %q: %w", name, err)
 	}
 
