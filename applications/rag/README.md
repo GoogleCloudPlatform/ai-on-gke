@@ -135,9 +135,14 @@ EOF
 
 ### Vector Embeddings for Dataset
 
+Choose a password for your CloudSQL user:
+```
+SQL_PASSWORD=
+```
+
 This step generates the vector embeddings for your input dataset. Currently, the default dataset is [Google Maps Restaurant Reviews](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews). We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
 
-1. Create a CloudSQL user to access the database: `gcloud sql users create rag-user-notebook --password=<choose a password> --instance=pgvector-instance --host=%`
+1. Create a CloudSQL user to access the database: `gcloud sql users create rag-user-notebook --password=${SQL_PASSWORD:?} --instance=pgvector-instance --host=%`
 
 2. Go to the Jupyterhub service endpoint in a browser:       
    * IAP disable: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
@@ -161,9 +166,9 @@ This step generates the vector embeddings for your input dataset. Currently, the
     * `os.environ['KAGGLE_USERNAME']`
     * `os.environ['KAGGLE_KEY']`
 
-9. Run all the cells in the notebook. This generates vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and stores them in the `pgvector-instance` via a Ray job.
-    * When the last cell says the job has succeeded (eg: `Job 'raysubmit_APungAw6TyB55qxk' succeeded`), the vector embeddings have been generated and we can launch the frontend chat interface.
-    * Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. `Status message: Job has not started yet`).
+9. Run all the cells in the notebook. This will generate vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and store them in the `pgvector-instance` via a Ray job.
+    * Once submitted, Ray will take several minutes to create the runtime environment and optionally scale up Ray worker nodes. During this time, the job status will remain PENDING.
+    * When the job status is SUCCEEDED, the vector embeddings have been generated and we are ready to launch the frontend chat interface.
 
 ### Launch the Frontend Chat Interface
 
