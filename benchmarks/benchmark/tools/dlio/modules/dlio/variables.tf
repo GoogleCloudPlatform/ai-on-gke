@@ -68,6 +68,18 @@ variable "gcs_fuse_sidecar_ephemeral_storage_limit" {
   description = "The maximum amount of Ephemeral Storage resource that the sidecar container can use"
 }
 
+variable "pscsi_driver_enabled" {
+  type = string
+}
+
+variable "pscsi_sidecar_cpu_limit" {
+  type = string
+}
+
+variable "pscsi_sidecar_memory_limit" {
+  type = string
+}
+
 variable "dlio_container_cpu_limit" {
   type        = number
   description = "The maximum amount of CPU resource that the DLIO benchmark workload container can use"
