@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 image:
   # Replace this with your own image if needed.
   repository: rayproject/ray
-  tag: 2.6.1-py310-gpu
+  tag: 2.9.3-py310-gpu
   pullPolicy: IfNotPresent
 
 nameOverride: "kuberay"
@@ -65,8 +65,6 @@ head:
   # containerEnv specifies environment variables for the Ray container,
   # Follows standard K8s container env schema.
   containerEnv:
-  # - name: EXAMPLE_ENV
-  #   value: "1"
     - name: RAY_memory_monitor_refresh_ms
       value: "0"
     - name: RAY_GRAFANA_IFRAME_HOST
@@ -91,18 +89,18 @@ head:
   # for further guidance.
   resources:
     limits:
-      cpu: "8"
+      cpu: "1"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
-      memory: "20G"
+      memory: "8G"
       ephemeral-storage: 20Gi
     requests:
-      cpu: "8"
-      memory: "20G"
+      cpu: "1"
+      memory: "8G"
       ephemeral-storage: 20Gi
   annotations:
     gke-gcsfuse/volumes: "true"
-    gke-gcsfuse/cpu-limit: "2"
-    gke-gcsfuse/memory-limit: 20Gi
+    gke-gcsfuse/cpu-limit: "1"
+    gke-gcsfuse/memory-limit: 4Gi
     gke-gcsfuse/ephemeral-storage-limit: 20Gi
   nodeSelector:
     cloud.google.com/compute-class: "Performance"
@@ -160,8 +158,6 @@ worker:
   disabled: true
 
 # The map's key is used as the groupName.
-# For example, key:small-group in the map below
-# will be used as the groupName
 additionalWorkerGroups:
   cpuGroup:
     # Disabled by default
@@ -196,16 +192,16 @@ additionalWorkerGroups:
     resources:
       limits:
         cpu: 4
-        memory: "20G"
+        memory: "16G"
         ephemeral-storage: 20Gi
       requests:
         cpu: 4
-        memory: "20G"
+        memory: "16G"
         ephemeral-storage: 20Gi
     annotations:
       gke-gcsfuse/volumes: "true"
       gke-gcsfuse/cpu-limit: "2"
-      gke-gcsfuse/memory-limit: 20Gi
+      gke-gcsfuse/memory-limit: 8Gi
       gke-gcsfuse/ephemeral-storage-limit: 20Gi
     nodeSelector:
       cloud.google.com/compute-class: "Performance"
@@ -290,19 +286,19 @@ additionalWorkerGroups:
   # for further guidance.
     resources:
       limits:
-        cpu: "8"
+        cpu: "4"
         nvidia.com/gpu: "2"
-        memory: "40G"
+        memory: "16G"
         ephemeral-storage: 20Gi
       requests:
-        cpu: "8"
+        cpu: "4"
         nvidia.com/gpu: "2"
-        memory: "40G"
+        memory: "16G"
         ephemeral-storage: 20Gi
     annotations:
       gke-gcsfuse/volumes: "true"
       gke-gcsfuse/cpu-limit: "2"
-      gke-gcsfuse/memory-limit: 20Gi
+      gke-gcsfuse/memory-limit: 8Gi
       gke-gcsfuse/ephemeral-storage-limit: 20Gi
     nodeSelector:
       cloud.google.com/compute-class: "Accelerator"

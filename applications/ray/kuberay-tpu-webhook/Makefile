@@ -25,7 +25,7 @@ deploy:
 	kubectl apply -f deployments/  
   
 # Build the docker image  
-docker-build: webhook  
+docker-build:
 	docker build . -t ${IMG} 
   
 # Push the docker image  

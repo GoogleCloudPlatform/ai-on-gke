@@ -16,11 +16,20 @@ If you need to reinstall any resources, make sure to delete this file as well.
 
 ## Run DLIO Job
 1. Update the `variables.tf` file with your desired settings to run your machine learning benchmark workload
-2. Change the dlio image in `dlio/podspec.tpl`
+2. Change the dlio image in `modules/dlio/podspec.tpl`
 3. Run `terraform init`
 4. Run `terraform apply`
 5. After you finish your test, run `terraform destroy` to delete the
    resources
+
+## Run DLIO Job with Parallelstore
+Pre-reqs: right now you'll need to manually setup the VPC peering from the GKE cluster's network to `servicenetworking.googleapis.com`.
+
+1. update `variables.tf` file with your desired settings to run your machine learning benchmark workload, notably set `gcs_fuse_csi_driver_enabled` to `false` and `paralllestore_csi_driver_enabled` to `true`. If you want to use static provisioning, update the "parallelstore variables" and `parallelstore_storageclass` to `""`.
+2. Change the dlio image in `dlio/podspec.tpl` to a desired version. We have tested the job with dlio v0.5.1.
+3. run `terraform init`
+4. run `terraform apply -target=module.ps_storage`
+5. run `terraform apply` after the dataloader job is completed; pvc patch failure is OK for dynamic provisioning.
 
 ## Check Test Result
 The test result reports are located in the `${dlio_benchmark_result}` directory. For example,
