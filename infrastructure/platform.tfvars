@@ -29,7 +29,7 @@ private_cluster   = false ## true = private cluster, false = public cluster
 autopilot_cluster = false ## true = autopilot cluster, false = standard cluster
 cluster_name      = "ml-cluster"
 cluster_region    = "us-central1"
-cluster_zones     = ["us-central1-a", "us-central1-b", "us-central1-f"]
+cluster_zones     = ["us-central1-a", "us-central1-b", "us-central1-c"]
 
 cpu_pools = [{
   name           = "cpu-pool"
@@ -47,7 +47,7 @@ enable_gpu = true
 gpu_pools = [{
   name               = "gpu-pool"
   machine_type       = "n1-standard-16"
-  node_locations     = "us-central1-b,us-central1-c"
+  node_locations     = "us-central1-a"
   autoscaling        = true
   min_count          = 1
   max_count          = 3
@@ -60,7 +60,7 @@ gpu_pools = [{
   {
     name               = "gpu-pool-l4"
     machine_type       = "g2-standard-24"
-    node_locations     = "us-central1-b,us-central1-c"
+    node_locations     = "us-central1-a"
     autoscaling        = true
     min_count          = 1
     max_count          = 3

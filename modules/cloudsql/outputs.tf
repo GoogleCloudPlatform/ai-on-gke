@@ -21,3 +21,8 @@ output "db_secret_namespace" {
   description = "Cloud SQL DB secret namespace"
   value       = kubernetes_secret.secret.metadata[0].namespace
 }
+
+output "instance" {
+  description = "Cloud SQL Instance name"
+  value       = google_sql_database_instance.main.name
+}

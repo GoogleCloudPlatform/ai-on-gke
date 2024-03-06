@@ -47,7 +47,7 @@ resource "helm_release" "grafana" {
 }
 
 data "kubernetes_service" "example" {
-  count       = var.enable_grafana_on_ray_dashboard ? 1 : 0
+  count = var.enable_grafana_on_ray_dashboard ? 1 : 0
   metadata {
     name      = "grafana"
     namespace = var.namespace
