@@ -23,7 +23,7 @@ Assumes in your environment you:
 - have access to use google storage APIs via Application Default Credentials (ADC)
 
 You may need to do the following:
-- run "pip install wget google-cloud-storage" to install storage client library dependencies. (Optionally, you can run this within a venv, i.e. `python3 -m venv ./venv && source ./venv/bin/activate && pip install ...`)
+- run `pip install -r requirements.txt` to install the library dependencies. (Optionally, you can run this within a venv, i.e. `python3 -m venv ./venv && source ./venv/bin/activate && pip install ...`)
 - run "gcloud auth application-default login" to enable ADC
 
 For more information on running the google cloud storage API, see https://cloud.google.com/python/docs/reference/storage
