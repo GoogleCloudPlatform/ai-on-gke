@@ -13,19 +13,19 @@
 # limitations under the License.
 
 resource "google_container_node_pool" "node-pool" {
-  name       = format("%s-%s",var.cluster_name,var.node_pool_name)
-  project    = var.project_id
-  cluster    = var.cluster_name
-  location   = var.region
+  name     = format("%s-%s", var.cluster_name, var.node_pool_name)
+  project  = var.project_id
+  cluster  = var.cluster_name
+  location = var.region
   node_config {
     machine_type = var.machine_type
-    taint = var.taints
+    taint        = var.taints
     labels = {
       "resource-type" : var.resource_type
     }
 
     guest_accelerator {
-      type = var.accelerator
+      type  = var.accelerator
       count = var.accelerator_count
     }
     oauth_scopes = [
@@ -33,11 +33,11 @@ resource "google_container_node_pool" "node-pool" {
     ]
 
     dynamic "reservation_affinity" {
-      for_each = var.reservation_name != "" ? [1] : [ ]
+      for_each = var.reservation_name != "" ? [1] : []
       content {
         consume_reservation_type = "SPECIFIC_RESERVATION"
-        key = "compute.googleapis.com/reservation-name"
-        values = [var.reservation_name]
+        key                      = "compute.googleapis.com/reservation-name"
+        values                   = [var.reservation_name]
       }
     }
   }
