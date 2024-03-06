@@ -148,7 +148,6 @@ worker:
     created-by: ray-on-gke
   rayStartParams:
     block: 'true'
-    resources: '"{\"google.com/tpu\": 4}"'
   initContainerImage: 'busybox:1.28'  # Enable users to specify the image for init container. Users can pull the busybox image from their private repositories.
   # Security context for the init container.
   initContainerSecurityContext: {}
