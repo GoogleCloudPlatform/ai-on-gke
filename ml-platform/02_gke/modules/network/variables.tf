@@ -14,43 +14,46 @@
 
 variable "project_id" {
   description = "Id of the GCP project where VPC is to be created."
-  type = string
+  type        = string
 }
+
 variable "network_name" {
   description = "Name of the VPC network."
-  type = string
+  type        = string
 }
+
 variable "routing_mode" {
   description = "The network routing mode."
-  type = string
-  default = "GLOBAL"
+  type        = string
+  default     = "GLOBAL"
 }
+
 variable "subnet_01_name" {
   description = "Name of first subnet."
-  type = string
+  type        = string
 }
+
 variable "subnet_01_ip" {
   description = "IP range of first subnet."
-  type = string
+  type        = string
 }
+
 variable "subnet_01_region" {
   description = "Region of first subnet."
-  type = string
+  type        = string
 }
 
 variable "subnet_02_name" {
   description = "Name of the second subnet."
-  type = string
+  type        = string
 }
+
 variable "subnet_02_ip" {
   description = "IP range of second subnet."
-  type = string
+  type        = string
 }
+
 variable "subnet_02_region" {
   description = "Region of second subnet."
-  type = string
+  type        = string
 }
-//variable "default_route_name" {
-//  description = "Name of the default route to internet."
-//  type = string
-//}

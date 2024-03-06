@@ -17,16 +17,19 @@ variable "project_id" {
   description = "The GCP project where the resources will be created"
   default     = ""
 }
+
 variable "cluster_name" {
   type        = string
   description = "GKE cluster name"
   default     = ""
 }
+
 variable "zone" {
   type        = string
   description = "The GCP zone where the reservation will be created"
   default     = "us-central1-a"
 }
+
 variable "machine_type" {
   type        = string
   description = "The machine type to use."
@@ -44,6 +47,7 @@ variable "accelerator_count" {
   description = "The number of accelerators per machine."
   default     = 2
 }
+
 variable "machine_reservation_count" {
   type        = number
   description = "Number of machines reserved instances with GPUs"
