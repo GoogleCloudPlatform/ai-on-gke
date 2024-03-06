@@ -176,7 +176,7 @@ func TestTPUJobsets(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+		t.Run(c.name+"-deletion", func(t *testing.T) {
 			require.EventuallyWithT(t, func(t *assert.CollectT) {
 				var nodeList v1.NodeList
 				err := client.List(ctx, &nodeList, runtimeclient.MatchingLabels{testCaseLabel: c.name})
