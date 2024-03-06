@@ -1,6 +1,6 @@
 import ray
 
-@ray.remote(resources={"google.com/tpu": 4})
+@ray.remote(resources={"TPU": 4})
 def tpu_cores():
     import jax
 
