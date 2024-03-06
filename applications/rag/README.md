@@ -32,7 +32,7 @@ CLUSTER_REGION=us-central1
 ```
 2. Use the following instructions to create a GKE cluster. We recommend using Autopilot for a simpler setup.
 
-##### Autopilot (recommended)
+##### Autopilot
 
 RAG requires the latest Autopilot features, available on GKE cluster version `1.29.1-gke.1575000`+
 ```
@@ -46,23 +46,9 @@ gcloud container clusters create-auto ${CLUSTER_NAME:?} \
   --cluster-version ${CLUSTER_VERSION:?}
 ```
 
-##### Standard
+##### Standard (recommended)
 
-1. To create a GKE Standard cluster using Terraform, please follow the [instructions here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md).
-
-TODO: Add GKE cluster requirements for a successful installation.
-
-2. The inference server requires L4 GPUs. Create an additional node pool:
-```
-gcloud container node-pools create g2-standard-24 --cluster ${CLUSTER_NAME:?} \
-  --accelerator type=nvidia-l4,count=2,gpu-driver-version=latest \
-  --machine-type g2-standard-24 \
-  --ephemeral-storage-local-ssd=count=2 \
- --enable-image-streaming \
- --num-nodes=1 --min-nodes=1 --max-nodes=2 \
- --node-locations ${CLUSTER_REGION:?}-a,${CLUSTER_REGION:?}-b \
- --location=${CLUSTER_REGION:?}
-```
+1. To create a GKE Standard cluster using Terraform, follow the [instructions here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md). Use the preconfigured node pools in `/infrastructure/platform.tfvars` as this solution requires T4s and L4s.
 
 #### Setup Components
 

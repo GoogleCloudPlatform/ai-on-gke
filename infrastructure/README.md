@@ -2,7 +2,9 @@
 
 Platform module (to be renamed to Infra), creates the GKE cluster & other related resources for the AI applications / workloads to be deployed on them. 
 
-Update the ```platform.tfvars``` file with the required configuration. Kindly refer to ```tfvars_examples``` for sample configuration.
+1) Update the ```platform.tfvars``` file with the required configuration. Kindly refer to ```tfvars_examples``` for sample configuration.
+
+2) Run `terraform init` and `terraform apply --var-file=platform.tfvars`
 
 
 ## Prerequisites
