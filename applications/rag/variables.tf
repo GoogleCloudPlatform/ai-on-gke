@@ -228,6 +228,7 @@ variable "jupyter_url_domain_name" {
 variable "jupyter_support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
+  default     = ""
 }
 
 variable "jupyter_client_id" {
@@ -261,6 +262,12 @@ variable "private_cluster" {
 variable "autopilot_cluster" {
   type    = bool
   default = false
+}
+
+variable "cloudsql_instance" {
+  type    = string
+  description = "Name of the CloudSQL instance for RAG VectorDB"
+  default = "pgvector-instance"
 }
 
 variable "cpu_pools" {
@@ -340,7 +347,7 @@ variable "gpu_pools" {
     {
       name               = "gpu-pool-l4"
       machine_type       = "g2-standard-24"
-      node_locations     = "us-central1-a,us-central1-b"
+      node_locations     = "us-central1-a"
       autoscaling        = true
       min_count          = 1
       max_count          = 3

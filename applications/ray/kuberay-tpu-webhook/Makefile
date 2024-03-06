@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets  
-IMG ?= us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:latest
+IMG ?= us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.0
   
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)  
 ifeq (,$(shell go env GOBIN))  
@@ -21,7 +21,7 @@ run: webhook
 uninstall:  
 	kubectl delete -f deployments/
 
-deploy: webhook  
+deploy:  
 	kubectl apply -f deployments/  
   
 # Build the docker image  
@@ -38,10 +38,10 @@ install-cert-manager:
 uninstall-cert-manager:
 	kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
 
-deploy-cert: webhook
+deploy-cert:
 	kubectl apply -f certs/
 
-uninstall-cert: webhook
+uninstall-cert:
 	kubectl delete -f certs/
 
 install-reflector:
@@ -50,8 +50,8 @@ install-reflector:
 uninstall-reflector:
 	kubectl delete -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
 
-tests: webhook
+tests:
 	kubectl apply -f tests/
 
-delete-tests: webhook
+delete-tests:
 	kubectl delete -f tests/

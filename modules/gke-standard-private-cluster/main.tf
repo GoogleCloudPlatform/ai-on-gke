@@ -29,6 +29,7 @@ module "gke" {
   name                                 = var.cluster_name
   cluster_resource_labels              = var.cluster_labels
   kubernetes_version                   = var.kubernetes_version
+  release_channel                      = var.release_channel
   region                               = var.cluster_region
   zones                                = var.cluster_zones
   network                              = var.network_name

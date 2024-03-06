@@ -29,6 +29,12 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "cloudsql_instance" {
+  type        = string
+  description = "Name of the CloudSQL instance for RAG VectorDB"
+  default     = "pgvector-instance"
+}
+
 variable "db_secret_name" {
   type        = string
   description = "CloudSQL user"
@@ -45,15 +51,9 @@ variable "dataset_embeddings_table_name" {
   description = "Name of the table that stores vector embeddings for input dataset"
 }
 
-variable "inference_service_name" {
-  type        = string
-  description = "Model inference k8s service name"
-}
-
-variable "inference_service_namespace" {
+variable "inference_service_endpoint" {
   type        = string
   description = "Model inference k8s service endpoint"
-  default     = "rag"
 }
 
 variable "create_service_account" {

@@ -63,6 +63,8 @@ spec:
           resources:
             limits:
               nvidia.com/gpu: ${gpu_count} # number of gpu's allocated to workload
+            requests:
+              cpu: "1"
           serviceAccountName: ${ksa}
           volumeMounts:
             - mountPath: /dev/shm

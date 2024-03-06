@@ -16,22 +16,8 @@ data "google_project" "project" {
 }
 
 
-data "kubernetes_service" "inference_service" {
-  metadata {
-    name      = var.inference_service_name
-    namespace = var.inference_service_namespace
-  }
-}
-
-data "kubernetes_secret" "db_secret" {
-  metadata {
-    name      = var.db_secret_name
-    namespace = var.db_secret_namespace
-  }
-}
-
 locals {
-  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, "pgvector-instance")
+  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, var.cloudsql_instance)
 }
 
 # IAP Section: Enabled the IAP service
@@ -99,7 +85,7 @@ resource "kubernetes_service" "rag_frontend_service" {
       target_port = 8080
     }
 
-    type = var.add_auth ? "NodePort" : "ClientIP"
+    type = var.add_auth ? "NodePort" : "ClusterIP"
   }
 }
 
@@ -149,7 +135,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
 
           env {
             name  = "INFERENCE_ENDPOINT"
-            value = data.kubernetes_service.inference_service.status.0.load_balancer.0.ingress.0.ip
+            value = var.inference_service_endpoint
           }
 
           env {
@@ -161,7 +147,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
             name = "DB_USER"
             value_from {
               secret_key_ref {
-                name = data.kubernetes_secret.db_secret.metadata.0.name
+                name = var.db_secret_name
                 key  = "username"
               }
             }
@@ -171,7 +157,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
             name = "DB_PASSWORD"
             value_from {
               secret_key_ref {
-                name = data.kubernetes_secret.db_secret.metadata.0.name
+                name = var.db_secret_name
                 key  = "password"
               }
             }
@@ -181,7 +167,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
             name = "DB_NAME"
             value_from {
               secret_key_ref {
-                name = data.kubernetes_secret.db_secret.metadata.0.name
+                name = var.db_secret_name
                 key  = "database"
               }
             }

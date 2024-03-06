@@ -16,16 +16,6 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-# fetch all namespaces
-data "kubernetes_all_namespaces" "allns" {}
-
-# create namespace
-module "namespace" {
-  source           = "../../modules/kubernetes-namespace"
-  namespace        = var.namespace
-  create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
-}
-
 # Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
   count             = var.add_auth && var.brand == "" ? 1 : 0
@@ -142,7 +132,7 @@ resource "helm_release" "jupyterhub" {
   repository       = "https://jupyterhub.github.io/helm-chart"
   chart            = "jupyterhub"
   namespace        = var.namespace
-  create_namespace = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace)
+  create_namespace = true
   cleanup_on_fail  = "true"
   # This timeout is sufficient and ensures terraform doesn't hang for 20 minutes on error.
   # Autopilot deployment will complete even faster than Standard, as it relies on Ray Autoscaler to provision user pods.
