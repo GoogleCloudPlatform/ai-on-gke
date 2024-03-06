@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # Helm Chart 
-resource "helm_release" "namespace" {
-  name             = "namespace"
+resource "helm_release" "app-namespace" {
+  name             = "app-namespace"
   chart            = "${path.module}/charts/namespace/"
   namespace        = var.namespace
   create_namespace = var.create_namespace

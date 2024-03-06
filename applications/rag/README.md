@@ -107,7 +107,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 2. Verify Jupyterhub service is setup:
     * Fetch the service IP/Domain:
       * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-      * IAP enabled: Read output in terminal or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+      * IAP enabled: Read terraform output `jupyter_uri` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
           * Remember login [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap) to check if user has role `IAP-secured Web App User`
           * Wait for domain status to be `Active`
     * Go to the IP in a browser which should display the Jupyterlab login UI.
@@ -140,7 +140,7 @@ EOF
    * Verify the deployment exists: `kubectl get deployments rag-frontend -n ${NAMESPACE:?}` and ensure the deployment is in `READY` state.
    * Verify the managed certificate is `Active`: 
       ```
-     kubectl get managedcertificates jupyter-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'
+     kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'
       ```
    * Verify IAP is enabled: 
       ```
@@ -155,7 +155,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 2. Go to the Jupyterhub service endpoint in a browser:       
    * IAP disable: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-   * IAP enabled: Read output in terminal or use commend: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+   * IAP enabled: Read terraform output `jupyter_uri` or use commend: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
        * Remeber login GCP to check if user has role `IAP-secured Web App User`
        * Waiting for domain status to be `Active`
 3. Login with placeholder credentials [TBD: replace with instructions for IAP]:
@@ -197,11 +197,11 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 3. Verify Domain is Active
    * Make sure the domain is active using commend:
-     `kubectl get managedcertificates jupyter-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+     `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
 
 3. Retrieve the Domain
 
-   * Read output in terminal or use the following command to find the domain created by IAP for accessing your service:
+   * Read terraform output `frontend_uri` or use the following command to find the domain created by IAP for accessing your service:
      `kubectl get managedcertificates frontend-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
 
 4. Access the Frontend
