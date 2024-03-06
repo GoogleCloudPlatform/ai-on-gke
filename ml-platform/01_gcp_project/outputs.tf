@@ -13,5 +13,5 @@
 # limitations under the License.
 
 output "project_ids" {
-  value = {for k, v in "${module.gcp-project.project_ids}" : k => v.project_id}
+  value = { for k, v in "${module.gcp-project.project_ids}" : k => v.project_id }
 }

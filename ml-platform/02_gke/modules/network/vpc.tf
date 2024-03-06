@@ -13,34 +13,26 @@
 # limitations under the License.
 
 resource "google_compute_network" "vpc-network" {
-  project                                   = var.project_id
-  name                                      = var.network_name
-  auto_create_subnetworks                   = false
-  routing_mode                              = var.routing_mode
+  project                 = var.project_id
+  name                    = var.network_name
+  auto_create_subnetworks = false
+  routing_mode            = var.routing_mode
 }
 
 resource "google_compute_subnetwork" "subnet-1" {
-  project                                   = var.project_id
-  name = var.subnet_01_name
-  ip_cidr_range = var.subnet_01_ip
-  region = var.subnet_01_region
-  network = google_compute_network.vpc-network.id
+  project                  = var.project_id
+  name                     = var.subnet_01_name
+  ip_cidr_range            = var.subnet_01_ip
+  region                   = var.subnet_01_region
+  network                  = google_compute_network.vpc-network.id
   private_ip_google_access = true
 }
 
 resource "google_compute_subnetwork" "subnet-2" {
-  project                                   = var.project_id
-  name = var.subnet_02_name
-  ip_cidr_range = var.subnet_02_ip
-  region = var.subnet_02_region
-  network = google_compute_network.vpc-network.id
+  project                  = var.project_id
+  name                     = var.subnet_02_name
+  ip_cidr_range            = var.subnet_02_ip
+  region                   = var.subnet_02_region
+  network                  = google_compute_network.vpc-network.id
   private_ip_google_access = true
 }
-
-//resource "google_compute_route" "default-route" {
-//name        = var.default_route_name
-//dest_range  = "0.0.0.0/0"
-//network     = google_compute_network.vpc-network.id
-//priority    = 1000
-//next_hop_gateway = "default-internet-gateway"
-//}

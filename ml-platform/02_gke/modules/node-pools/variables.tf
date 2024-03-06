@@ -13,19 +13,22 @@
 # limitations under the License.
 
 variable "node_pool_name" {
-  type = string
+  type        = string
   description = "Name of the node pool"
 }
+
 variable "project_id" {
   type        = string
   description = "The GCP project where the resources will be created"
   default     = ""
 }
+
 variable "cluster_name" {
   type        = string
   description = "GKE cluster name"
   default     = ""
 }
+
 variable "region" {
   type        = string
   description = "The GCP zone where the reservation will be created"
@@ -49,10 +52,9 @@ variable "taints" {
 
 variable "resource_type" {
   description = "ondemand/spot/reserved."
-  type = string
-  default = "ondemand"
+  type        = string
+  default     = "ondemand"
 }
-
 
 variable "accelerator" {
   type        = string
@@ -65,6 +67,7 @@ variable "accelerator_count" {
   description = "The number of accelerators per machine."
   default     = 2
 }
+
 variable "machine_reservation_count" {
   type        = number
   description = "Number of machines reserved instances with GPUs"
@@ -72,12 +75,12 @@ variable "machine_reservation_count" {
 }
 
 variable "autoscaling" {
-  type = map
-  default = { "total_min_node_count" : 0, "total_max_node_count" : 24, "location_policy" : "ANY"}
+  type    = map(any)
+  default = { "total_min_node_count" : 0, "total_max_node_count" : 24, "location_policy" : "ANY" }
 }
 
 variable "reservation_name" {
   description = "reservation name to which the nodepool will be associated"
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }
