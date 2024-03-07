@@ -15,26 +15,8 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.region, var.cloudsql_instance)
-}
-
-# IAP Section: Enabled the IAP service
-resource "google_project_service" "project_service" {
-  count   = var.add_auth ? 1 : 0
-  project = var.project_id
-  service = "iap.googleapis.com"
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
-}
-
-# IAP Section: Creates the OAuth client used in IAP
-resource "google_iap_client" "iap_oauth_client" {
-  count        = var.add_auth && var.client_id == "" ? 1 : 0
-  display_name = "Frontend-Client"
-  brand        = var.brand == "" ? "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}" : var.brand
 }
 
 # IAP Section: Creates the GKE components
@@ -42,21 +24,21 @@ module "iap_auth" {
   count  = var.add_auth ? 1 : 0
   source = "../../../modules/iap"
 
-  project_id                        = var.project_id
-  namespace                         = var.namespace
-  frontend_add_auth                 = var.add_auth
-  frontend_k8s_ingress_name         = var.k8s_ingress_name
-  frontend_k8s_managed_cert_name    = var.k8s_managed_cert_name
-  frontend_k8s_iap_secret_name      = var.k8s_iap_secret_name
-  frontend_k8s_backend_config_name  = var.k8s_backend_config_name
-  frontend_k8s_backend_service_name = var.k8s_backend_service_name
-  frontend_k8s_backend_service_port = var.k8s_backend_service_port
-  frontend_client_id                = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
-  frontend_client_secret            = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
-  frontend_url_domain_addr          = var.url_domain_addr
-  frontend_url_domain_name          = var.url_domain_name
+  project_id               = var.project_id
+  namespace                = var.namespace
+  app_name                 = "frontend"
+  brand                    = var.brand
+  k8s_ingress_name         = var.k8s_ingress_name
+  k8s_managed_cert_name    = var.k8s_managed_cert_name
+  k8s_iap_secret_name      = var.k8s_iap_secret_name
+  k8s_backend_config_name  = var.k8s_backend_config_name
+  k8s_backend_service_name = var.k8s_backend_service_name
+  k8s_backend_service_port = var.k8s_backend_service_port
+  client_id                = var.client_id
+  client_secret            = var.client_secret
+  url_domain_addr          = var.url_domain_addr
+  url_domain_name          = var.url_domain_name
   depends_on = [
-    google_project_service.project_service,
     kubernetes_service.rag_frontend_service
   ]
 }
