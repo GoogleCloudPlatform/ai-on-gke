@@ -22,7 +22,7 @@ import (
 
 // our representation of a pod slice
 type slice struct {
-	rayClusterName string
+	clusterName string
 	groupName      string
 	replicaIndex   int
 	numOfHosts     int32
@@ -295,21 +295,23 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 }
 
 // get next replica ID to assign a pod to
-func getReplicaIndex() int {
+func getReplicaIndex(clusterName string) int {
 	if sliceToWorkers == nil {
 		return 0
 	}
 	next_lowest_id := math.MaxInt32
 	for slice, workerList := range sliceToWorkers {
-		runningPods := 0
-		for _, worker := range workerList {
-			if worker.isRunning {
-				runningPods++
+		if slice.clusterName == clusterName {
+			runningPods := 0
+			for _, worker := range workerList {
+				if worker.isRunning {
+					runningPods++
+				}
 			}
-		}
-		if runningPods < int(slice.numOfHosts) {
-			if slice.replicaIndex < next_lowest_id {
-				next_lowest_id = slice.replicaIndex
+			if runningPods < int(slice.numOfHosts) {
+				if slice.replicaIndex < next_lowest_id {
+					next_lowest_id = slice.replicaIndex
+				}
 			}
 		}
 	}
@@ -394,7 +396,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	if containerRequestingTPUs(containers...) {
 		// assign worker to the next unique ID in the pod slice and update map
 		numOfHosts, _ := getNumTPUHostsFromTopology(topology) // ignore error here because topology may not be set yet
-		replicaIndex := getReplicaIndex()
+		replicaIndex := getReplicaIndex(clusterName)
 		podSlice := slice{clusterName, groupName, replicaIndex, numOfHosts}
 		tpuWorkerID := getNextWorkerID(podSlice, replicaIndex)
 
