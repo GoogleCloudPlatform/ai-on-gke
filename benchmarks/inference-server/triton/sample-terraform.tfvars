@@ -6,5 +6,4 @@ namespace = "benchmark"
 ksa  = "benchmark-ksa"
 model_id = "meta-llama/Llama-2-7b-chat-hf"
 gpu_count = 1
-image_path = ""
 gcs_model_path = ""
