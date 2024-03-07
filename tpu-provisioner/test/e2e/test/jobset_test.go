@@ -39,56 +39,23 @@ const (
 )
 
 var (
-	/*
-		tpu_v4_2x2x2 = tpuConfig{
-			accelerator:  "tpu-v4-podslice",
-			topoX:        2,
-			topoY:        2,
-			topoZ:        2,
-			chipsPerNode: 4,
-			sliceCount:   1,
-		}
-		tpu_v4_2x2x4 = tpuConfig{
-			accelerator:  "tpu-v4-podslice",
-			topoX:        2,
-			topoY:        2,
-			topoZ:        4,
-			chipsPerNode: 4,
-			sliceCount:   1,
-		}
-
-		tpu_v5e_2x4 = tpuConfig{
-			accelerator:  "tpu-v5-lite-podslice",
-			topoX:        2,
-			topoY:        4,
-			chipsPerNode: 4,
-			sliceCount:   2,
-		}
-	*/
-
-	tpu_v5p_2x2x2 = tpuConfig{
-		accelerator:  "tpu-v5p-slice",
-		topoX:        2,
-		topoY:        2,
-		topoZ:        2,
-		chipsPerNode: 4,
-		sliceCount:   1,
-	}
+	spot        = os.Getenv("TEST_SPOT") == "true"
+	reservation = os.Getenv("TEST_RESERVATION")
 )
 
-func TestTPUJobsets(t *testing.T) {
-	var (
-		spot        = os.Getenv("TEST_SPOT") == "true"
-		reservation = os.Getenv("TEST_RESERVATION")
-	)
+type testCase struct {
+	name string
+	tpu  tpuConfig
 
-	cases := []struct {
-		name string
-		tpu  tpuConfig
+	overrideReservation string
 
-		uniqueNodeSelector bool
-		shouldReuse        bool
-	}{
+	uniqueNodeSelector bool
+	shouldReuse        bool
+	skipSuccessCheck   bool
+}
+
+func TestV5P(t *testing.T) {
+	cases := []testCase{
 		{
 			name:               "first-unique",
 			tpu:                tpu_v5p_2x2x2,
@@ -104,14 +71,31 @@ func TestTPUJobsets(t *testing.T) {
 			tpu:         tpu_v5p_2x2x2,
 			shouldReuse: true,
 		},
+		{
+			// This test case should result in a node pool that goes into an error state
+			// and gets cleaned up by the node pool garbage collector.
+			name:                "error-state-reservation-not-found",
+			overrideReservation: "non-existent-reservation-should-trigger-nodepool-failure",
+			tpu:                 tpu_v5p_2x2x2,
+			uniqueNodeSelector:  true,
+			skipSuccessCheck:    true,
+		},
 	}
 
+	runTestCases(t, cases)
+}
+
+func runTestCases(t *testing.T, cases []testCase) {
 	historicalNodePools := map[string]struct{}{}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			c.tpu.spot = spot
-			c.tpu.reservation = reservation
+			if c.overrideReservation != "" {
+				c.tpu.reservation = c.overrideReservation
+			} else {
+				c.tpu.reservation = reservation
+			}
 
 			js := newJobset(c.name, c.tpu, c.uniqueNodeSelector)
 			err := client.Create(ctx, js)
@@ -121,56 +105,58 @@ func TestTPUJobsets(t *testing.T) {
 				require.NoError(t, err)
 			})
 
-			var nodePoolName string
-			require.EventuallyWithT(t, func(t *assert.CollectT) {
-				var pods v1.PodList
-				err := client.List(ctx, &pods, runtimeclient.MatchingLabels{testCaseLabel: c.name})
-				assert.NoError(t, err, "Failed to list pods")
-				for _, pod := range pods.Items {
-					var err error
-					nodePoolName, err = podToNodePoolName(&pod)
-					if err != nil {
-						t.Errorf("pod to node pool name: %v", err)
-						return
+			if !c.skipSuccessCheck {
+				var nodePoolName string
+				require.EventuallyWithT(t, func(t *assert.CollectT) {
+					var pods v1.PodList
+					err := client.List(ctx, &pods, runtimeclient.MatchingLabels{testCaseLabel: c.name})
+					assert.NoError(t, err, "Failed to list pods")
+					for _, pod := range pods.Items {
+						var err error
+						nodePoolName, err = podToNodePoolName(&pod)
+						if err != nil {
+							t.Errorf("pod to node pool name: %v", err)
+							return
+						}
+						if nodePoolName != "" {
+							return
+						}
 					}
-					if nodePoolName != "" {
-						return
-					}
+					t.Errorf("no pods scheduled on node pool")
+				}, jobsetCompletionTimeout, time.Second, "Pods not scheduled")
+
+				require.NotEmpty(t, nodePoolName, "No node pool name found")
+				if c.shouldReuse {
+					require.Contains(t, historicalNodePools, nodePoolName, "Should reuse a previously created node pool")
 				}
-				t.Errorf("no pods scheduled on node pool")
-			}, jobsetCompletionTimeout, time.Second, "Pods not scheduled")
+				if c.uniqueNodeSelector {
+					require.NotContains(t, historicalNodePools, nodePoolName, "Expected new node pool to be created")
+				}
+				historicalNodePools[nodePoolName] = struct{}{}
 
-			require.NotEmpty(t, nodePoolName, "No node pool name found")
-			if c.shouldReuse {
-				require.Contains(t, historicalNodePools, nodePoolName, "Should reuse a previously created node pool")
+				// Example completed JobSet status:
+				//
+				// status:
+				//   conditions:
+				//   - lastTransitionTime: "2024-02-26T19:43:56Z"
+				//     message: jobset completed successfully
+				//     reason: AllJobsCompleted
+				//     status: "True"
+				//     type: Completed
+				//   replicatedJobsStatus:
+				//   - active: 0
+				//     failed: 0
+				//     name: testjob
+				//     ready: 0
+				//     succeeded: 1
+				require.EventuallyWithT(t, func(t *assert.CollectT) {
+					var createdJobset jobset.JobSet
+					err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(js), &createdJobset)
+					assert.NoError(t, err, "Failed to get JobSet")
+					assert.True(t, meta.IsStatusConditionTrue(createdJobset.Status.Conditions, string(jobset.JobSetCompleted)),
+						"JobSet is not completed")
+				}, jobsetCompletionTimeout, time.Second, "JobSet did not complete")
 			}
-			if c.uniqueNodeSelector {
-				require.NotContains(t, historicalNodePools, nodePoolName, "Expected new node pool to be created")
-			}
-			historicalNodePools[nodePoolName] = struct{}{}
-
-			// Example completed JobSet status:
-			//
-			// status:
-			//   conditions:
-			//   - lastTransitionTime: "2024-02-26T19:43:56Z"
-			//     message: jobset completed successfully
-			//     reason: AllJobsCompleted
-			//     status: "True"
-			//     type: Completed
-			//   replicatedJobsStatus:
-			//   - active: 0
-			//     failed: 0
-			//     name: testjob
-			//     ready: 0
-			//     succeeded: 1
-			require.EventuallyWithT(t, func(t *assert.CollectT) {
-				var createdJobset jobset.JobSet
-				err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(js), &createdJobset)
-				assert.NoError(t, err, "Failed to get JobSet")
-				assert.True(t, meta.IsStatusConditionTrue(createdJobset.Status.Conditions, string(jobset.JobSetCompleted)),
-					"JobSet is not completed")
-			}, jobsetCompletionTimeout, time.Second, "JobSet did not complete")
 
 		})
 	}
@@ -216,6 +202,44 @@ For slice_count >= 1, multi host options:
 8x16  (chips_per_node=4)
 16x16 (chips_per_node=4)
 */
+
+var (
+	/*
+		tpu_v4_2x2x2 = tpuConfig{
+			accelerator:  "tpu-v4-podslice",
+			topoX:        2,
+			topoY:        2,
+			topoZ:        2,
+			chipsPerNode: 4,
+			sliceCount:   1,
+		}
+		tpu_v4_2x2x4 = tpuConfig{
+			accelerator:  "tpu-v4-podslice",
+			topoX:        2,
+			topoY:        2,
+			topoZ:        4,
+			chipsPerNode: 4,
+			sliceCount:   1,
+		}
+
+		tpu_v5e_2x4 = tpuConfig{
+			accelerator:  "tpu-v5-lite-podslice",
+			topoX:        2,
+			topoY:        4,
+			chipsPerNode: 4,
+			sliceCount:   2,
+		}
+	*/
+
+	tpu_v5p_2x2x2 = tpuConfig{
+		accelerator:  "tpu-v5p-slice",
+		topoX:        2,
+		topoY:        2,
+		topoZ:        2,
+		chipsPerNode: 4,
+		sliceCount:   1,
+	}
+)
 
 type tpuConfig struct {
 	reservation string
