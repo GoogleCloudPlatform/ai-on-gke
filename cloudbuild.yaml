@@ -363,4 +363,4 @@ substitutions:
   _USER_NAME: github
 options:
   substitutionOption: 'ALLOW_LOOSE'
-
+  machineType: 'E2_HIGHCPU_8'
