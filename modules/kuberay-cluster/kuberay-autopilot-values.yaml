@@ -72,6 +72,10 @@ head:
       value: http://grafana:80
     - name: RAY_PROMETHEUS_HOST
       value: http://frontend:9090
+    - name: PROJECT_ID
+      value: ${project_id}
+    - name: DB_REGION
+      value: ${db_region}
   envFrom: []
     # - secretRef:
     #     name: my-env-secret
@@ -123,12 +127,19 @@ head:
         volumeAttributes:
           bucketName: ${gcs_bucket}
           mountOptions: "implicit-dirs,uid=1000,gid=100"
+    - name: secret-volume
+      secret:
+        secretName: ${secret_name}
+        optional: true
   # Ray writes logs to /tmp/ray/session_latests/logs
   volumeMounts:
     - mountPath: /tmp/ray
       name: ray-logs
     - name: gcs-fuse-csi-ephemeral
       mountPath: /data
+    - name: secret-volume
+      mountPath: /etc/secret-volume
+      readOnly: true
   # sidecarContainers specifies additional containers to attach to the Ray pod.
   # Follows standard K8s container spec.
   sidecarContainers:
@@ -170,9 +181,11 @@ additionalWorkerGroups:
       block: 'true'
   # containerEnv specifies environment variables for the Ray container,
   # Follows standard K8s container env schema.
-    containerEnv: []
-      # - name: EXAMPLE_ENV
-      #   value: "1"
+    containerEnv:
+      - name: PROJECT_ID
+        value: ${project_id}
+      - name: DB_REGION
+        value: ${db_region}
     envFrom: []
         # - secretRef:
         #     name: my-env-secret
@@ -223,6 +236,10 @@ additionalWorkerGroups:
           volumeAttributes:
             bucketName: ${gcs_bucket}
             mountOptions: "implicit-dirs,uid=1000,gid=100"
+      - name: secret-volume
+        secret:
+          secretName: ${secret_name}
+          optional: true
 
     # Ray writes logs to /tmp/ray/session_latests/logs
     volumeMounts:
@@ -230,6 +247,9 @@ additionalWorkerGroups:
         name: ray-logs
       - name: gcs-fuse-csi-ephemeral
         mountPath: /data
+      - name: secret-volume
+        mountPath: /etc/secret-volume
+        readOnly: true
     # sidecarContainers specifies additional containers to attach to the Ray pod.
     # Follows standard K8s container spec.
     sidecarContainers:
@@ -264,9 +284,11 @@ additionalWorkerGroups:
       block: 'true'
   # containerEnv specifies environment variables for the Ray container,
   # Follows standard K8s container env schema.
-    containerEnv: []
-      # - name: EXAMPLE_ENV
-      #   value: "1"
+    containerEnv:
+      - name: PROJECT_ID
+        value: ${project_id}
+      - name: DB_REGION
+        value: ${db_region}
     envFrom: []
         # - secretRef:
         #     name: my-env-secret
@@ -319,12 +341,19 @@ additionalWorkerGroups:
           volumeAttributes:
             bucketName: ${gcs_bucket}
             mountOptions: "implicit-dirs,uid=1000,gid=100"
+      - name: secret-volume
+        secret:
+          secretName: ${secret_name}
+          optional: true
     # Ray writes logs to /tmp/ray/session_latests/logs
     volumeMounts:
       - mountPath: /tmp/ray
         name: ray-logs
       - name: gcs-fuse-csi-ephemeral
         mountPath: /data
+      - name: secret-volume
+        mountPath: /etc/secret-volume
+        readOnly: true
 
     # sidecarContainers specifies additional containers to attach to the Ray pod.
     # Follows standard K8s container spec.

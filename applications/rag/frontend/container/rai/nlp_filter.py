@@ -14,7 +14,7 @@
 
 import os
 import google.cloud.language as language
-from .retry import retry
+from . import retry
 
 # Convert the project id into a full resource id.
 parent = os.environ.get('PROJECT_ID', 'NULL')
