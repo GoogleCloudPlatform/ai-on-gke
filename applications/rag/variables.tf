@@ -270,6 +270,12 @@ variable "cloudsql_instance" {
   default     = "pgvector-instance"
 }
 
+variable "cloudsql_instance_region" {
+  type        = string
+  description = "GCP region for CloudSQL instance"
+  default     = "us-central1"
+}
+
 variable "cpu_pools" {
   type = list(object({
     name                   = string

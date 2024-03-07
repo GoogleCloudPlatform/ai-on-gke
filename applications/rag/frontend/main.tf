@@ -99,11 +99,17 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:e2dd85e92f42e3684455a316dee5f98f61f1f3fba80b9368bd6f48d5e2e3475e"
+          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:3d3b03e4bc6c8fe218105bd69cc6f9cfafb18fc4b1bbb81f5c46f2598b5d5f10"
           name  = "rag-frontend"
 
           port {
             container_port = 8080
+          }
+
+          volume_mount {
+            name       = "secret-volume"
+            mount_path = "/etc/secret-volume"
+            read_only  = true
           }
 
           env {
@@ -126,36 +132,6 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
             value = var.dataset_embeddings_table_name
           }
 
-          env {
-            name = "DB_USER"
-            value_from {
-              secret_key_ref {
-                name = var.db_secret_name
-                key  = "username"
-              }
-            }
-          }
-
-          env {
-            name = "DB_PASSWORD"
-            value_from {
-              secret_key_ref {
-                name = var.db_secret_name
-                key  = "password"
-              }
-            }
-          }
-
-          env {
-            name = "DB_NAME"
-            value_from {
-              secret_key_ref {
-                name = var.db_secret_name
-                key  = "database"
-              }
-            }
-          }
-
           resources {
             limits = {
               cpu               = "3"
@@ -168,6 +144,13 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
               ephemeral-storage = "5Gi"
             }
           }
+        }
+
+        volume {
+          secret {
+            secret_name = var.db_secret_name
+          }
+          name = "secret-volume"
         }
 
         container {
