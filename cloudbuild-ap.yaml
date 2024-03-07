@@ -1,0 +1,303 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+  - id: 'validate platform'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: 'infrastructure/'
+    waitFor: ['-']
+  
+  - id: 'validate ray'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: 'applications/ray/'
+    waitFor: ['validate platform']
+  
+  - id: 'validate jupyterhub'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: 'applications/jupyter/'
+    waitFor: ['validate platform']
+  
+  - id: 'validate rag'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: 'applications/rag/'
+    waitFor: ['validate platform']
+
+  - id: 'test ray cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        # Get kube config
+        gcloud container clusters get-credentials \
+        github-ci-autopilot \
+        --location us-central1 \
+        --project $PROJECT_ID 
+
+        cd /workspace/applications/ray/
+        terraform apply \
+        -var-file=workloads.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_location=$_REGION \
+        -var=ray_namespace=ml-$SHORT_SHA-ap \
+        -var=gcp_service_account=ray-sa-$SHORT_SHA-ap \
+        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-ap \
+        -auto-approve -no-color -lock=false
+        echo "pass" > /workspace/user_result.txt
+
+        # Make sure pods are running
+        kubectl wait --all pods -n ml-$SHORT_SHA-ap --for=condition=Ready --timeout=300s
+        kubectl port-forward -n ml-$SHORT_SHA-ap service/example-cluster-kuberay-head-svc 8265:8265 &
+        # Wait port-forwarding to take its place
+        sleep 5s
+
+        ray job submit --working-dir ./example_ray_job_scripts \
+        --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
+        echo "pass" > /workspace/ray_result.txt
+    allowFailure: true
+    waitFor: ['validate rag', 'validate ray', 'validate platform', 'validate jupyterhub']
+
+  - id: 'cleanup ray cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        cd /workspace/applications/ray/
+        terraform destroy \
+        -var-file=workloads.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_location=$_REGION \
+        -var=ray_namespace=ml-$SHORT_SHA-ap \
+        -var=gcp_service_account=ray-sa-$SHORT_SHA-ap \
+        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-ap \
+        -auto-approve -no-color
+
+    allowFailure: true
+    waitFor: ['test ray cluster']
+
+  - id: 'test jupyterhub'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        cd /workspace/modules/jupyter/tests
+        python3 change_jupyter_config.py
+
+        cd /workspace/applications/jupyter
+        terraform apply \
+        -var-file=workloads-without-iap.example.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=github-ci-autopilot \
+        -var=namespace=ml-$SHORT_SHA-ap \
+        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-ap \
+        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-ap \
+        -auto-approve -no-color -lock=false
+        echo "pass" > /workspace/jupyterhub_tf_result.txt
+
+        kubectl wait --all pods -n ml-$SHORT_SHA-ap --for=condition=Ready --timeout=300s
+        kubectl get services -n ml-$SHORT_SHA-ap
+        kubectl get service proxy-public -n ml-$SHORT_SHA-ap --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/jupyterhub_host_url.txt
+        echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
+
+        cd /workspace/modules/jupyter/tests
+        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt)
+        echo "pass" > /workspace/jupyterhub_test_result.txt
+    allowFailure: true
+
+  - id: 'cleanup jupyterhub'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        cd /workspace/applications/jupyter/
+        terraform destroy \
+        -var-file=workloads-without-iap.example.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=github-ci-autopilot \
+        -var=namespace=ml-$SHORT_SHA-ap \
+        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-ap \
+        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-ap \
+        -auto-approve -no-color
+
+    allowFailure: true
+    waitFor: ['test jupyterhub']
+
+  - id: 'test rag'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        # Get kube config
+        gcloud container clusters get-credentials \
+        github-ci-autopilot \
+        --location us-central1 \
+        --project $PROJECT_ID 
+
+        cd /workspace/modules/jupyter/tests
+        python3 change_jupyter_config.py
+
+        cd /workspace/applications/rag/
+        terraform apply \
+        -var-file=workloads.tfvars \
+        -var=jupyter_add_auth=false \
+        -var=frontend_add_auth=false \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=github-ci-autopilot \
+        -var=kubernetes_namespace=rag-$SHORT_SHA-ap \
+        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-ap \
+        -var=ray_service_account=ray-sa-$SHORT_SHA-ap \
+        -var=rag_service_account=rag-sa-$SHORT_SHA-ap \
+        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-ap \
+        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-ap \
+        -auto-approve -no-color -lock=false
+        echo "pass" > /workspace/rag_tf_result.txt
+
+        # Validate Ray: Make sure pods are running
+        kubectl wait --all pods -n rag-$SHORT_SHA-ap --for=condition=Ready --timeout=300s
+        kubectl port-forward -n rag-$SHORT_SHA-ap service/example-cluster-kuberay-head-svc 8265:8265 &
+        # Wait port-forwarding to take its place
+        sleep 5s
+
+        # Validate Ray: Check dashboard
+        ray job submit --working-dir ./tests \
+        --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
+        echo "pass" > /workspace/rag_ray_dashboard_result.txt
+
+        # Validate Jupyterhub: Get hub url
+        kubectl get services -n rag-$SHORT_SHA-ap
+        kubectl get service proxy-public -n rag-$SHORT_SHA-ap --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/rag_jupyterhub_host_url.txt
+        echo "HOST URL is " $(cat /workspace/rag_jupyterhub_host_url.txt)
+
+        # Validate Jupyterhub: Test Hub
+        cd /workspace/modules/jupyter/tests
+        python3 test_hub.py $(cat /workspace/rag_jupyterhub_host_url.txt)
+        echo "pass" > /workspace/rag_jupyterhub_test_result.txt
+
+        # Validate RAG: Test rag frontend
+        kubectl port-forward -n rag-$SHORT_SHA-ap service/rag-frontend 8081:8080 &
+        # Wait port-forwarding to take its place
+        sleep 5s
+
+        cd /workspace/applications/rag/tests
+        python3 test_frontend.py "127.0.0.1:8081"
+        echo "pass" > /workspace/rag_frontend_result.txt
+    allowFailure: true
+    waitFor: ['cleanup jupyterhub', 'cleanup ray cluster']
+
+  - id: 'cleanup rag'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        cd /workspace/applications/rag/
+        terraform destroy \
+        -var-file=workloads.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=github-ci-autopilot \
+        -var=kubernetes_namespace=rag-$SHORT_SHA-ap \
+        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-ap \
+        -var=ray_service_account=ray-sa-$SHORT_SHA-ap \
+        -var=rag_service_account=rag-sa-$SHORT_SHA-ap \
+        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-ap \
+        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-ap \
+        -auto-approve -no-color
+
+    allowFailure: true
+    waitFor: ['test rag']
+
+  - id: 'check result'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [[ $(cat /workspace/ray_result.txt) != "pass" ]]; then
+          echo "ray API run failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/user_result.txt) != "pass" ]]; then
+          echo "ray cluster failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/jupyterhub_tf_result.txt) != "pass" ]]; then
+          echo "jupyterhub tf failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/jupyterhub_test_result.txt) != "pass" ]]; then
+          echo "jupyterhub test failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/rag_tf_result.txt) != "pass" ]]; then
+          echo "rag tf failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/rag_ray_dashboard_result.txt) != "pass" ]]; then
+          echo "rag ray dashboard test failed"
+          exit 1
+        fi
+        
+        if [[ $(cat /workspace/rag_jupyterhub_test_result.txt) != "pass" ]]; then
+          echo "rag jupyterhub test failed"
+          exit 1
+        fi
+
+        if [[ $(cat /workspace/rag_frontend_result.txt) != "pass" ]]; then
+          echo "rag frontend test failed"
+          exit 1
+        fi
+
+    waitFor: ['cleanup rag']
+        
+substitutions:
+  _REGION: us-central1
+  _USER_NAME: github
+options:
+  substitutionOption: 'ALLOW_LOOSE'
+
