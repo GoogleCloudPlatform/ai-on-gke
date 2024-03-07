@@ -274,7 +274,7 @@ variable "cpu_pools" {
   type = list(object({
     name                   = string
     machine_type           = string
-    node_locations         = string
+    node_locations         = optional(string, "")
     autoscaling            = optional(bool, false)
     min_count              = optional(number, 1)
     max_count              = optional(number, 3)
@@ -294,14 +294,13 @@ variable "cpu_pools" {
     accelerator_count      = optional(number, 0)
   }))
   default = [{
-    name           = "cpu-pool"
-    machine_type   = "n1-standard-16"
-    node_locations = "us-central1-b,us-central1-c"
-    autoscaling    = true
-    min_count      = 1
-    max_count      = 3
-    disk_size_gb   = 100
-    disk_type      = "pd-standard"
+    name         = "cpu-pool"
+    machine_type = "n1-standard-16"
+    autoscaling  = true
+    min_count    = 1
+    max_count    = 3
+    disk_size_gb = 100
+    disk_type    = "pd-standard"
   }]
 }
 
@@ -309,7 +308,7 @@ variable "gpu_pools" {
   type = list(object({
     name                   = string
     machine_type           = string
-    node_locations         = string
+    node_locations         = optional(string, "")
     autoscaling            = optional(bool, false)
     min_count              = optional(number, 1)
     max_count              = optional(number, 3)
@@ -330,24 +329,21 @@ variable "gpu_pools" {
     accelerator_type       = optional(string, "nvidia-tesla-t4")
     gpu_driver_version     = optional(string, "DEFAULT")
   }))
-  default = [
-    {
-      name               = "gpu-pool"
-      machine_type       = "n1-standard-16"
-      node_locations     = "us-central1-b,us-central1-c"
-      autoscaling        = true
-      min_count          = 1
-      max_count          = 3
-      disk_size_gb       = 100
-      disk_type          = "pd-standard"
-      accelerator_count  = 2
-      accelerator_type   = "nvidia-tesla-t4"
-      gpu_driver_version = "DEFAULT"
+  default = [{
+    name               = "gpu-pool"
+    machine_type       = "n1-standard-16"
+    autoscaling        = true
+    min_count          = 1
+    max_count          = 3
+    disk_size_gb       = 100
+    disk_type          = "pd-standard"
+    accelerator_count  = 2
+    accelerator_type   = "nvidia-tesla-t4"
+    gpu_driver_version = "DEFAULT"
     },
     {
       name               = "gpu-pool-l4"
       machine_type       = "g2-standard-24"
-      node_locations     = "us-central1-a"
       autoscaling        = true
       min_count          = 1
       max_count          = 3
@@ -357,6 +353,5 @@ variable "gpu_pools" {
       accelerator_count  = 2
       accelerator_type   = "nvidia-l4"
       gpu_driver_version = "DEFAULT"
-    }
-  ]
+  }]
 }

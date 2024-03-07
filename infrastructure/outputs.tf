@@ -20,8 +20,8 @@ output "cluster_name" {
   value = var.cluster_name
 }
 
-output "cluster_region" {
-  value = var.cluster_region
+output "cluster_location" {
+  value = var.cluster_location
 }
 
 output "endpoint" {

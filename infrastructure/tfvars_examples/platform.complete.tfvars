@@ -47,9 +47,7 @@ private_cluster                      = true ## Default true. Use false for a pub
 autopilot_cluster                    = true # false = standard cluster, true = autopilot cluster
 cluster_name                         = "ml-cluster"
 kubernetes_version                   = "1.28"
-cluster_regional                     = true
-cluster_region                       = "us-central1"
-cluster_zones                        = ["us-central1-a", "us-central1-b", "us-central1-f"]
+cluster_location                     = "us-central1"
 ip_range_pods                        = "us-central1-01-gke-01-pods-1"
 ip_range_services                    = "us-central1-01-gke-01-services-1"
 monitoring_enable_managed_prometheus = true

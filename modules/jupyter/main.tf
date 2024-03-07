@@ -153,12 +153,9 @@ resource "helm_release" "jupyterhub" {
     ephemeral_storage   = var.ephemeral_storage
     })
     ] : [templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
-      password       = var.add_auth ? "dummy" : random_password.generated_password[0].result
-      project_id     = var.project_id
-      project_number = data.google_project.project.number
-
-      # Support legacy image.
-      service_id          = "" # TODO(umeshkumhar): var.add_auth ? (data.google_compute_backend_service.jupyter-ingress[0].generated_id != null ? data.google_compute_backend_service.jupyter-ingress[0].generated_id : "no-id-yet") : "no-id-yet"
+      password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
+      project_id          = var.project_id
+      project_number      = data.google_project.project.number
       namespace           = var.namespace
       backend_config      = var.k8s_backend_config_name
       service_name        = var.k8s_backend_service_name
