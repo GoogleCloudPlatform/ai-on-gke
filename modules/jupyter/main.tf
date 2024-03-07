@@ -16,51 +16,26 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-# Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
-resource "google_iap_brand" "project_brand" {
-  count             = var.add_auth && var.brand == "" ? 1 : 0
-  support_email     = var.support_email
-  application_title = "Application"
-  project           = var.project_id
-}
-
-# IAP Section: Enabled the IAP service 
-resource "google_project_service" "project_service" {
-  count   = var.add_auth ? 1 : 0
-  project = var.project_id
-  service = "iap.googleapis.com"
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
-}
-
-# IAP Section: Creates the OAuth client used in IAP
-resource "google_iap_client" "iap_oauth_client" {
-  count        = var.add_auth && var.client_id == "" ? 1 : 0
-  display_name = "Jupyter-Client"
-  brand        = var.brand == "" ? "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}" : var.brand
-}
-
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
   source = "../../modules/iap"
 
-  project_id                       = var.project_id
-  namespace                        = var.namespace
-  jupyter_add_auth                 = var.add_auth
-  jupyter_k8s_ingress_name         = var.k8s_ingress_name
-  jupyter_k8s_managed_cert_name    = var.k8s_managed_cert_name
-  jupyter_k8s_iap_secret_name      = var.k8s_iap_secret_name
-  jupyter_k8s_backend_config_name  = var.k8s_backend_config_name
-  jupyter_k8s_backend_service_name = var.k8s_backend_service_name
-  jupyter_k8s_backend_service_port = var.k8s_backend_service_port
-  jupyter_client_id                = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
-  jupyter_client_secret            = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
-  jupyter_url_domain_addr          = var.url_domain_addr
-  jupyter_url_domain_name          = var.url_domain_name
+  project_id               = var.project_id
+  namespace                = var.namespace
+  app_name                 = "jupyter"
+  brand                    = var.brand
+  k8s_ingress_name         = var.k8s_ingress_name
+  k8s_managed_cert_name    = var.k8s_managed_cert_name
+  k8s_iap_secret_name      = var.k8s_iap_secret_name
+  k8s_backend_config_name  = var.k8s_backend_config_name
+  k8s_backend_service_name = var.k8s_backend_service_name
+  k8s_backend_service_port = var.k8s_backend_service_port
+  client_id                = var.client_id
+  client_secret            = var.client_secret
+  url_domain_addr          = var.url_domain_addr
+  url_domain_name          = var.url_domain_name
   depends_on = [
-    google_project_service.project_service,
     helm_release.jupyterhub
   ]
 }
