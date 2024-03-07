@@ -34,7 +34,7 @@ variable "credentials_config" {
 }
 
 variable "namespace" {
-  description = "Namespace used for Nvidia DCGM resources."
+  description = "Namespace used for Nvidia Triton resources."
   type        = string
   nullable    = false
   default     = "default"
@@ -44,6 +44,7 @@ variable "image_path" {
   description = "Image Path stored in Artifact Registry"
   type        = string
   nullable    = false
+  default     = "nvcr.io/nvidia/tritonserver:23.10-trtllm-python-py3"
 }
 
 variable "model_id" {
@@ -74,9 +75,17 @@ variable "huggingface-secret" {
   default     = "huggingface-secret"
 }
 
-variable "template_path" {
-  description = "Path where manifest templates will be read from."
+variable "gcs_model_path" {
+  description = "Path to the GCS repo where model is stored"
   type        = string
-  nullable    = false
+  nullable    = true
+  default     = null
+}
+
+variable "server_launch_command_string" {
+  description = "command to launch the triton server"
+  type        = string
+  nullable    = true
+  default     = "pip install sentencepiece protobuf && huggingface-cli login --token $HUGGINGFACE_TOKEN && /opt/tritonserver/bin/tritonserver --model-repository=/all_models/inflight_batcher_llm --disable-auto-complete-config --backend-config=python,shm-region-prefix-name=prefix0_"
 }
 

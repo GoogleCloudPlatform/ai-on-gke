@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
+ locals {
+  template_path = var.gcs_model_path == null ? "${path.module}/manifest-templates/triton-tensorrtllm-inference-docker.tftpl" : "${path.module}/manifest-templates/triton-tensorrtllm-inference-gs.tftpl"
+}
+
 resource "kubernetes_manifest" "default" {
-  manifest = yamldecode(templatefile(var.template_path, {
-    namespace            = var.namespace
-    ksa                  = var.ksa
-    image_path           = var.image_path
-    huggingface-secret   = var.huggingface-secret
-    gpu_count            = var.gpu_count
-    model_id             = var.model_id
+  manifest = yamldecode(templatefile(local.template_path, {
+    namespace                    = var.namespace
+    ksa                          = var.ksa
+    image_path                   = var.image_path
+    huggingface-secret           = var.huggingface-secret
+    gpu_count                    = var.gpu_count
+    model_id                     = var.model_id
+    gcs_model_path               = var.gcs_model_path
+    server_launch_command_string = var.server_launch_command_string
   }))
 }

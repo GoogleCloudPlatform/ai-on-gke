@@ -1,25 +1,30 @@
 # AI on GKE: Benchmark TensorRT LLM on Triton Server
 
-This guide provides instructions for deploying and benchmarking a TensorRT Large Language Model (LLM) on Triton Inference Server within a Google Kubernetes Engine (GKE) environment. The process involves building a Docker container with the TensorRT LLM engine and deploying it to a GKE cluster. 
+This guide outlines the steps for deploying and benchmarking a TensorRT Large Language Model (LLM) on the Triton Inference Server within Google Kubernetes Engine (GKE). It includes the process of building a Docker container equipped with the TensorRT LLM engine and deploying this container to a GKE cluster.
 
 ## Prerequisites
 
-- Docker
-- Google Cloud SDK
-- Kubernetes CLI (kubectl)
-- Hugging Face account for model access
-- NVIDIA GPU drivers and CUDA toolkit (to build the TensorRTLLM Engine)
-
+Ensure you have the following prerequisites installed and set up:
+- Docker for containerization
+- Google Cloud SDK for interacting with Google Cloud services
+- Kubernetes CLI (kubectl) for managing Kubernetes clusters
+- A Hugging Face account to access models
+- NVIDIA GPU drivers and CUDA toolkit for building the TensorRT LLM Engine
 ## Step 1: Build the TensorRT LLM Engine and Docker Image
 
 1. **Build the TensorRT LLM Engine:** Follow the instructions provided in the [TensorRT LLM backend repository](https://github.com/triton-inference-server/tensorrtllm_backend/blob/main/README.md) to build the TensorRT LLM Engine.
 
-2. **Setup the Docker container:**
+2. **Upload the Model to Google Cloud Storage (GCS)**
+
+   Transfer your model engine to GCS using:
+   ```
+   gsutil cp -r your_model_folder gs://your_model_repo/all_models/ 
+   ```
+   *Ensure to replace your_model_repo with your actual GCS repository path.**
    
-   ***Method 1: Add the Model repository and the relevant scripts to the image***
+   **Alternate method: Add the Model repository and the relevant scripts to the image**
 
-   Inside the `tritonllm_backend` directory, create a Dockerfile with the following content ensuring the Triton Server is ready with the necessary models and scripts.
-
+   Construct a new image from Nvidia's base image and integrate the model repository and necessary scripts directly into it, bypassing the need for GCS during runtime. In the `tritonllm_backend` directory, create a Dockerfile with the following content:
    ```Dockerfile
    FROM nvcr.io/nvidia/tritonserver:23.10-trtllm-python-py3
 
@@ -35,7 +40,7 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
    CMD ["/opt/scripts/start_triton_servers.sh"]
    ```
 
-   The Shell script `/opt/scripts/start_triton_servers.sh` is like below: 
+    For the initialization script located at `/opt/scripts/start_triton_servers.sh`, follow the structure below:
 
    ```start_triton_servers.sh
    #!/bin/bash
@@ -48,33 +53,25 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 
 
     # Launch the servers (modify this depending on the number of GPU used and the exact path to the model repo)
-    mpirun --allow-run-as-root -n 1 /opt/tritonserver/bin/tritonserver \
+    /opt/tritonserver/bin/tritonserver \
     --model-repository=/all_models/inflight_batcher_llm \
     --disable-auto-complete-config \
-    --backend-config=python,shm-region-prefix-name=prefix0_ : \
-    -n 1 /opt/tritonserver/bin/tritonserver \
+    --backend-config=python,shm-region-prefix-name=prefix0_\
+   /opt/tritonserver/bin/tritonserver \
     --model-repository=/all_models/inflight_batcher_llm \
     --disable-auto-complete-config \
-    --backend-config=python,shm-region-prefix-name=prefix1_ :```
+    --backend-config=python,shm-region-prefix-name=prefix1_```
    ```
-   *Build and Push the Docker Image:*
+    *Build and Push the Docker Image:*
 
-   Build the Docker image and push it to your container registry:
+    Build the Docker image and push it to your container registry:
 
    ```
    docker build -t your_registry/tritonserver_llm:latest .
    docker push your_registry/tritonserver_llm:latest
 
    ```
-   Replace `your_registry` with your actual Docker registry path.
-
-   ***Method 2: Upload Model repository to gcs***
-
-   In this method we can directly upload the model engine to gcs and use the base image provided by Nvidia and specify the command to launch the triton server via the deployment yaml file: 
-   ```
-   gsutil cp -r your_model_folder gs://your_model_repo/all_models/ 
-   ```
-   Replace `your_model_repo` with your actual gcs repo path.
+    Substitute `your_registry` with your Docker registry's path.
 
 
 
@@ -83,57 +80,42 @@ This guide provides instructions for deploying and benchmarking a TensorRT Large
 
 1. **Initialize Terraform Variables:**
 
-   Create a `terraform.tfvars` file by copying the provided example:
+   Start by creating a `terraform.tfvars` file from the provided template:
 
    ```bash
    cp sample-terraform.tfvars terraform.tfvars
    ```
 
-2. Define `template_path`, `image_path` and `gpu_count` variables  in `terraform.tfvars`.
+2. **Specify Essential Variables**
    
-   * If using method 1 In Step 1 above:
-   ```bash
-   template_path = "path_to_manifest_template/triton-tensorrtllm-inference.tftpl" 
+   At a minimum, configure the `gcs_model_path` in `terraform.tfvars` to point to your Google Cloud Storage (GCS) repository. You may also need to adjust `image_path`, `gpu_count`, and `server_launch_command_string` according to your specific requirements.
+   ```bash   
+   gcs_model_path = gs://path_to_model_repo/all_models
+   ```
+
+   If `gcs_model_path` is not defined, it is inferred that you are utilizing the method of direct image integration. In this scenario, ensure to update `image_path` along with any pertinent variables accordingly:
+
+  ```bash
    image_path = "path_to_your_registry/tritonserver_llm:latest"
-   gpu_count = X
    ```
-   * If using method 2 In Step 1 above:
-   
-   ```bash
-   template_path = "path_to_manifest_template/triton-tensorrtllm-inference-gs.tftpl"
-   image_path = "nvcr.io/nvidia/tritonserver:23.10-trtllm-python-py3"
-   gpu_count = X
-   ```
-   and also update the `triton-tensorrtllm-inference-gs.tftpl` with the path to the gcs repo under InitContainer and the command to launch the container under Container section.
 
 3. **Configure Your Deployment:**
 
-   Edit the `terraform.tfvars` file to include your specific configuration details with the variable `credentials_config`. 
-   Example 
+  Edit `terraform.tfvars` to tailor your deployment's configuration, particularly the `credentials_config`. Depending on your cluster's setup, this might involve specifying fleet host credentials or isolating your cluster's kubeconfig:
 
-   ```bash
-   credentials_config = {
-     kubeconfig = "path/to/your/gcloud/credentials.json"
-   }
-   ```
-
-#### [optional] set-up credentials config with kubeconfig 
-
-If you created your cluster with steps from `../../infra/` or with fleet management enabled, the existing `credentials_config` must use the fleet host credentials like this:
+  ***For Fleet Management Enabled Clusters:***
 ```bash
 credentials_config = {
   fleet_host = "https://connectgateway.googleapis.com/v1/projects/$PROJECT_NUMBER/locations/global/gkeMemberships/$CLUSTER_NAME"
 }
-```
-
-
-If you created your own cluster without fleet management enabled, you can use your cluster's kubeconfig in the `credentials_config`. You must isolate your cluster's kubeconfig from other clusters in the default kube.config file. To do this, run the following command:
-
+``` 
+  ***For Clusters without Fleet Management:***
+Separate your cluster's kubeconfig:
 ```bash
 KUBECONFIG=~/.kube/${CLUSTER_NAME}-kube.config gcloud container clusters get-credentials $CLUSTER_NAME --location $CLUSTER_LOCATION
 ```
 
-Then update your `terraform.tfvars` `credentials_config` to the following:
+And then update your `terraform.tfvars`  accordingly:
 
 ```bash
 credentials_config = {
@@ -143,7 +125,7 @@ credentials_config = {
 }
 ```
 
-#### [optional] set up secret token in Secret Manager
+#### [optional] Setting Up Secret Tokens
 
 A model may require a security token to access it. For example, Llama2 from HuggingFace is a gated model that requires a [user access token](https://huggingface.co/docs/hub/en/security-tokens). If the model you want to run does not require this, skip this step.
 
@@ -152,7 +134,8 @@ If you followed steps from `../../infra/stage-2`, Secret Manager and the user ac
 kubectl create secret generic huggingface-secret --from-literal=token='************'
 ```
 
-This command creates a new Secret named huggingface-secret, which has a key token containing your Hugging Face CLI token.
+Executing this command generates a new Secret named huggingface-secret, which incorporates a key named token that stores your Hugging Face CLI token. It is important to note that for any production or shared environments, directly storing user access tokens as literals is not advisable.
+
 
 ## Step 3: login to gcloud
 
@@ -183,12 +166,16 @@ terraform apply
 |----------------------|-----------------------------------------------------------------------------------------------|---------|-------------------------------------------|----------|
 | `credentials_config` | Configure how Terraform authenticates to the cluster.                                         | Object  |                                           | No       |
 | `namespace`          | Namespace used for Nvidia DCGM resources.                                                     | String  | `"default"`                               | No       |
-| `image_path`         | Image Path stored in Artifact Registry                                                        | String  |                                           | No       |
+| `image_path`         | Image Path stored in Artifact Registry                                                        | String  |    "nvcr.io/nvidia/tritonserver:23.10-trtllm-python-py3"                                       | No       |
 | `model_id`           | Model used for inference.                                                                     | String  | `"meta-llama/Llama-2-7b-chat-hf"`         | No       |
 | `gpu_count`          | Parallelism based on number of gpus.                                                          | Number  | `1`                                       | No       |
 | `ksa`                | Kubernetes Service Account used for workload.                                                 | String  | `"default"`                               | No       |
 | `huggingface-secret` | Name of the kubectl huggingface secret token                                                  | String  | `"huggingface-secret"`                    | Yes       |
-| `templates_path`     | Path where manifest templates will be read from.     | String  |                                    | No      |
+| `gcs_model_path`     | Path where model engine in gcs will be read from.     | String  |    ""                                | No      |
+| `server_launch_command_string`     | Command to launc the Triton Inference Server     | String  |   "pip install sentencepiece protobuf && huggingface-cli login --token $HUGGINGFACE_TOKEN && /opt/tritonserver/bin/tritonserver --model-repository=/all_models/inflight_batcher_llm --disable-auto-complete-config --backend-config=python,shm-region-prefix-name=prefix0_ :"                                 | No      |
+
+
+
 
 ## Notes
 
