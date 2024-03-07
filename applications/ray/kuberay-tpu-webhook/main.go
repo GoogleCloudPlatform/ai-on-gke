@@ -32,7 +32,7 @@ type slice struct {
 type worker struct {
 	workerIndex  int  // TPU_WORKER_ID
 	replicaIndex int  // index of replica worker belongs to
-	isRunning    bool // true = pod is running, false = pod deleted or hasn't been created
+	isCreated    bool // true = pod has been created, false = pod deleted / hasn't been created yet
 }
 
 // JSON patch describing mutate operation(s) for incoming object
@@ -294,7 +294,8 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 	return ""
 }
 
-// get next replica ID to assign a pod to
+// get next lowest-index pod slice to assign a pod to in the RayCluster
+// this will be the first pod slice with # created pods < NumOfHosts
 func getReplicaIndex(clusterName string) int {
 	if sliceToWorkers == nil {
 		return 0
@@ -302,13 +303,13 @@ func getReplicaIndex(clusterName string) int {
 	next_lowest_id := math.MaxInt32
 	for slice, workerList := range sliceToWorkers {
 		if slice.clusterName == clusterName {
-			runningPods := 0
+			createdPods := 0
 			for _, worker := range workerList {
-				if worker.isRunning {
-					runningPods++
+				if worker.isCreated {
+					createdPods++
 				}
 			}
-			if runningPods < int(slice.numOfHosts) {
+			if createdPods < int(slice.numOfHosts) {
 				if slice.replicaIndex < next_lowest_id {
 					next_lowest_id = slice.replicaIndex
 				}
@@ -329,7 +330,7 @@ func getNextWorkerID(podSlice slice, replicaIndex int) int {
 		replacePod := false
 		// iterate through existing workers and check if any have been deleted
 		for _, worker := range sliceToWorkers[podSlice] {
-			if worker.isRunning == false && worker.workerIndex < nextLowestID {
+			if worker.isCreated == false && worker.workerIndex < nextLowestID {
 				replacePod = true
 				nextLowestID = worker.workerIndex
 			}
@@ -337,9 +338,9 @@ func getNextWorkerID(podSlice slice, replicaIndex int) int {
 		// reassign next lowest TPU_WORKER_ID if pod has been deleted
 		if replacePod == true {
 			for _, worker := range sliceToWorkers[podSlice] {
-				// set worker.isRunning to true now that pod is being re-created
+				// set worker.isCreated to true now that pod is being re-created
 				if worker.workerIndex == nextLowestID {
-					worker.isRunning = true
+					worker.isCreated = true
 				}
 			}
 		} else {
@@ -511,7 +512,7 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 				// set the pod state to indicate it is not running
 				for _, worker := range sliceToWorkers[slice] {
 					if worker.workerIndex == tpuWorkerID {
-						worker.isRunning = false
+						worker.isCreated = false
 						break
 					}
 				}
