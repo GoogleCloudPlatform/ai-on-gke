@@ -13,14 +13,14 @@
 # limitations under the License.
 
 ##common variables
-project_id = "umeshkumhar"
+project_id = "<your project ID>"
 #######################################################
 ####    PLATFORM
 #######################################################
 ## network values
 create_network    = true
-network_name      = "ml-network0"
-subnetwork_name   = "ml-subnet0"
+network_name      = "ml-network"
+subnetwork_name   = "ml-subnet"
 subnetwork_cidr   = "10.100.0.0/16"
 subnetwork_region = "us-central1"
 
