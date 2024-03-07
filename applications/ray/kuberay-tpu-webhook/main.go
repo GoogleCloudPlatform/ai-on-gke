@@ -170,7 +170,6 @@ func injectPodAffinity(replicaIndex int, workerGroupName string, patches *[]patc
 	podAffinityPatch := patch{"op": "add"}
 	podAffinityPath := "/spec/affinity"
 	podAntiAffinityPatch := patch{"op": "add"}
-	podAntiAffinityPath := "/spec/affinity"
 
 	// construct pod affinity value to inject - schedule pods with the same multiHostReplica together
 	key := "multiHostReplica"
@@ -190,7 +189,7 @@ func injectPodAffinity(replicaIndex int, workerGroupName string, patches *[]patc
 
 	podAffinityPatch["path"] = podAffinityPath
 	podAffinityPatch["value"] = corev1.PodAffinity{RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{podAffinityValue}}
-	podAntiAffinityPatch["path"] = podAntiAffinityPath
+	podAntiAffinityPatch["path"] = podAffinityPath
 	podAntiAffinityPatch["value"] = corev1.PodAntiAffinity{RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{podAntiAffinityValue}}
 
 	*patches = append(*patches, podAffinityPatch, podAntiAffinityPatch)
