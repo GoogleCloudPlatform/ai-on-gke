@@ -37,13 +37,7 @@ variable "cloudsql_instance" {
 
 variable "db_secret_name" {
   type        = string
-  description = "CloudSQL user"
-}
-
-variable "db_secret_namespace" {
-  type        = string
-  description = "CloudSQL password"
-  default     = "rag"
+  description = "CloudSQL user credentials"
 }
 
 variable "dataset_embeddings_table_name" {

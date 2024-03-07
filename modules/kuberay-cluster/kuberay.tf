@@ -30,18 +30,30 @@ resource "helm_release" "ray-cluster" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
+      secret_name         = var.db_secret_name
+      project_id          = var.project_id
+      db_region           = var.db_region
       }) : var.enable_tpu ? templatefile("${path.module}/kuberay-tpu-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
+      secret_name         = var.db_secret_name
+      project_id          = var.project_id
+      db_region           = var.db_region
       }) : var.enable_gpu ? templatefile("${path.module}/kuberay-gpu-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
+      secret_name         = var.db_secret_name
+      project_id          = var.project_id
+      db_region           = var.db_region
       }) : templatefile("${path.module}/kuberay-values.yaml", {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
+      secret_name         = var.db_secret_name
+      project_id          = var.project_id
+      db_region           = var.db_region
     })
   ]
 }

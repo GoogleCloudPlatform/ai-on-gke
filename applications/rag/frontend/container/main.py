@@ -41,8 +41,14 @@ DB_NAME = "pgvector-database"
 # initialize parameters
 INFERENCE_ENDPOINT=os.environ.get('INFERENCE_ENDPOINT', '127.0.0.1:8081')
 INSTANCE_CONNECTION_NAME = os.environ.get('INSTANCE_CONNECTION_NAME', '')
-DB_USER = os.environ.get('DB_USER', '')
-DB_PASS = os.environ.get('DB_PASSWORD', '')
+
+db_username_file = open("/etc/secret-volume/username", "r")
+DB_USER = db_username_file.read()
+db_username_file.close()
+
+db_password_file = open("/etc/secret-volume/password", "r")
+DB_PASS = db_password_file.read()
+db_password_file.close()
 
 db = None
 filter_names = ['DlpFilter', 'WebRiskFilter']
