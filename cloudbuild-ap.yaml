@@ -114,7 +114,7 @@ steps:
         set -e
 
         cd /workspace/modules/jupyter/tests
-        python3 change_jupyter_config.py
+        python3 change_jupyter_config_autopilot.py
 
         cd /workspace/applications/jupyter
         terraform apply \
@@ -133,7 +133,7 @@ steps:
         echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
 
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt)
+        python3 test_hub_autopilot.py $(cat /workspace/jupyterhub_host_url.txt)
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
 
@@ -173,7 +173,7 @@ steps:
         --project $PROJECT_ID 
 
         cd /workspace/modules/jupyter/tests
-        python3 change_jupyter_config.py
+        python3 change_jupyter_config_autopilot.py
 
         cd /workspace/applications/rag/
         terraform apply \
@@ -209,7 +209,7 @@ steps:
 
         # Validate Jupyterhub: Test Hub
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py $(cat /workspace/rag_jupyterhub_host_url.txt)
+        python3 test_hub_autopilot.py $(cat /workspace/rag_jupyterhub_host_url.txt)
         echo "pass" > /workspace/rag_jupyterhub_test_result.txt
 
         # Validate RAG: Test rag frontend
