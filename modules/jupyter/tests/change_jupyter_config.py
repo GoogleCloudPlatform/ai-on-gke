@@ -1,9 +1,17 @@
 import yaml
+import sys
 
-with open("../jupyter_config/config-selfauth.yaml", "r") as yaml_file:
+config_file = "../jupyter_config/config-selfauth.yaml"
+if len(sys.argv) == 2:
+    autopilot = (sys.argv[1] == "autopilot")
+    if autopilot:
+        config_file = "../jupyter_config/config-selfauth-autopilot.yaml"
+
+
+with open(config_file, "r") as yaml_file:
     data = yaml.safe_load(yaml_file)
 
 data["hub"]["config"]["DummyAuthenticator"]["password"] = "dummy"
 
-with open("../jupyter_config/config-selfauth.yaml", 'w') as yaml_file:
+with open(config_file, 'w') as yaml_file:
     yaml.dump(data, yaml_file)

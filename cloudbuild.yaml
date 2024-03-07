@@ -252,27 +252,6 @@ steps:
       - |
         set -e
 
-        cd /workspace/applications/jupyter/
-        terraform destroy \
-        -var-file=workloads-without-iap.example.tfvars \
-        -var=project_id=$PROJECT_ID \
-        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=kubernetes_namespace=ml-$SHORT_SHA \
-        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA \
-        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA \
-        -auto-approve -no-color
-
-        cd /workspace/applications/ray/
-        terraform destroy \
-        -var-file=workloads.tfvars \
-        -var=project_id=$PROJECT_ID \
-        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=cluster_location=$_REGION \
-        -var=kubernetes_namespace=ml-$SHORT_SHA \
-        -var=workload_identity_service_account=ray-sa-$SHORT_SHA \
-        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA \
-        -auto-approve -no-color
-
         cd /workspace/applications/rag/
         terraform destroy \
         -var-file=workloads.tfvars \

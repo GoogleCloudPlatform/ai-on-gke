@@ -4,6 +4,12 @@ import yaml
 
 from packaging.version import Version as V
 
+config_file = "../jupyter_config/config-selfauth.yaml"
+if len(sys.argv) == 3:
+    autopilot = (sys.argv[2] == "autopilot")
+    if autopilot:
+        config_file = "../jupyter_config/config-selfauth-autopilot.yaml"
+
 
 def test_hub_up(hub_url):
     r = requests.get(hub_url)
@@ -32,7 +38,7 @@ def test_hub_login(hub_url):
     from /jupyter_config/config.yaml. After successfully login, user will be 
     redirected to /hub/spawn.
     """
-    with open("../jupyter_config/config-selfauth.yaml", "r") as yaml_file:
+    with open(config_file, "r") as yaml_file:
         data = yaml.safe_load(yaml_file)
 
     username = data["hub"]["config"]["Authenticator"]["admin_users"][0]

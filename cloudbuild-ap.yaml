@@ -55,7 +55,7 @@ steps:
 
         # Get kube config
         gcloud container clusters get-credentials \
-        github-ci-autopilot \
+        $_CLUSTER_NAME \
         --location us-central1 \
         --project $PROJECT_ID 
 
@@ -63,7 +63,7 @@ steps:
         terraform apply \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_name=$_CLUSTER_NAME \
         -var=cluster_location=$_REGION \
         -var=ray_namespace=ml-$SHORT_SHA-ap \
         -var=gcp_service_account=ray-sa-$SHORT_SHA-ap \
@@ -95,7 +95,7 @@ steps:
         terraform destroy \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_name=$_CLUSTER_NAME \
         -var=cluster_location=$_REGION \
         -var=ray_namespace=ml-$SHORT_SHA-ap \
         -var=gcp_service_account=ray-sa-$SHORT_SHA-ap \
@@ -114,13 +114,13 @@ steps:
         set -e
 
         cd /workspace/modules/jupyter/tests
-        python3 change_jupyter_config_autopilot.py
+        python3 change_jupyter_config.py autopilot
 
         cd /workspace/applications/jupyter
         terraform apply \
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_name=$_CLUSTER_NAME \
         -var=namespace=ml-$SHORT_SHA-ap \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-ap \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-ap \
@@ -133,7 +133,7 @@ steps:
         echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
 
         cd /workspace/modules/jupyter/tests
-        python3 test_hub_autopilot.py $(cat /workspace/jupyterhub_host_url.txt)
+        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) autopilot
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
 
@@ -149,7 +149,7 @@ steps:
         terraform destroy \
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_name=$_CLUSTER_NAME \
         -var=namespace=ml-$SHORT_SHA-ap \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-ap \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-ap \
@@ -168,12 +168,12 @@ steps:
 
         # Get kube config
         gcloud container clusters get-credentials \
-        github-ci-autopilot \
+        $_CLUSTER_NAME \
         --location us-central1 \
         --project $PROJECT_ID 
 
         cd /workspace/modules/jupyter/tests
-        python3 change_jupyter_config_autopilot.py
+        python3 change_jupyter_config.py autopilot
 
         cd /workspace/applications/rag/
         terraform apply \
@@ -181,7 +181,7 @@ steps:
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_name=$_CLUSTER_NAME \
         -var=kubernetes_namespace=rag-$SHORT_SHA-ap \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-ap \
         -var=ray_service_account=ray-sa-$SHORT_SHA-ap \
@@ -209,7 +209,7 @@ steps:
 
         # Validate Jupyterhub: Test Hub
         cd /workspace/modules/jupyter/tests
-        python3 test_hub_autopilot.py $(cat /workspace/rag_jupyterhub_host_url.txt)
+        python3 test_hub.py $(cat /workspace/rag_jupyterhub_host_url.txt) autopilot
         echo "pass" > /workspace/rag_jupyterhub_test_result.txt
 
         # Validate RAG: Test rag frontend
@@ -235,7 +235,7 @@ steps:
         terraform destroy \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=github-ci-autopilot \
+        -var=cluster_name=$_CLUSTER_NAME \
         -var=kubernetes_namespace=rag-$SHORT_SHA-ap \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-ap \
         -var=ray_service_account=ray-sa-$SHORT_SHA-ap \
@@ -298,6 +298,7 @@ steps:
 substitutions:
   _REGION: us-central1
   _USER_NAME: github
+  _CLUSTER_NAME: github-ci-autopilot
 options:
   substitutionOption: 'ALLOW_LOOSE'
 
