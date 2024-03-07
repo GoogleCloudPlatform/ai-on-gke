@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -198,6 +199,7 @@ func main() {
 				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
 				NodeTags:           cfg.GCPNodeTags,
 			},
+			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		}
 	case "mock":
 		provider = &cloud.Mock{}
@@ -209,7 +211,7 @@ func main() {
 	if err := (&controller.CreationReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("tpu-provisioner-creator"),
+		Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		Provider: provider,
 		PodCriteria: controller.PodCriteria{
 			ResourceType: cfg.PodResourceType,
@@ -222,7 +224,7 @@ func main() {
 	if err := (&controller.DeletionReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("tpu-provisioner-deleter"),
+		Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		Provider: provider,
 		NodeCriteria: controller.NodeCriteria{
 			MinLifetime: cfg.NodeMinLifespan,
@@ -241,10 +243,27 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
+	ctx := ctrl.SetupSignalHandler()
+
+	gc := &controller.NodePoolGarbageCollector{
+		Interval: time.Minute,
+		Client:   mgr.GetClient(),
+		Provider: provider,
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		gc.Run(ctx)
+		wg.Done()
+	}()
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
+	setupLog.Info("waiting for all goroutines to finish")
+	wg.Wait()
+	setupLog.Info("exiting")
 }

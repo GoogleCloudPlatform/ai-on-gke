@@ -13,6 +13,9 @@ import (
 	"google.golang.org/api/googleapi"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -37,9 +40,13 @@ const (
 	maxPodsPerNode = 15
 )
 
+var _ Provider = &GKE{}
+
 type GKE struct {
 	Service        *containerv1beta1.Service
 	ClusterContext GKEContext
+
+	Recorder record.EventRecorder
 
 	inProgressDeletes sync.Map
 	inProgressCreates sync.Map
@@ -47,7 +54,7 @@ type GKE struct {
 
 func (g *GKE) NodePoolLabelKey() string { return GKENodePoolNameLabel }
 
-func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod) error {
+func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 	name := podToNodePoolName(p, GKENodePoolNamePrefix, "")
 
 	exists, err := g.nodePoolExists(name)
@@ -62,8 +69,6 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod) error {
 	if err != nil {
 		return fmt.Errorf("determining node pool for pod: %w", err)
 	}
-
-	log.Info("creating node pool", "name", name, "nodeCount", np.InitialNodeCount)
 
 	req := &containerv1beta1.CreateNodePoolRequest{
 		NodePool: np,
@@ -80,20 +85,58 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod) error {
 	g.inProgressCreates.Store(name, struct{}{})
 	defer g.inProgressCreates.Delete(name)
 
+	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationStarted, "Starting creation of Node Pool %s (size = %v) because %s", name, np.InitialNodeCount, why)
 	call := g.Service.Projects.Locations.Clusters.NodePools.Create(g.ClusterContext.ClusterName(), req)
 	op, err := call.Do()
 	if err != nil {
+		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Request to create Node Pool %s failed: %v.", name, err)
 		return fmt.Errorf("do: %w", err)
 	}
 
-	return waitForGkeOp(g.Service, g.ClusterContext, op)
+	if err := waitForGkeOp(g.Service, g.ClusterContext, op); err != nil {
+		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Operation to create Node Pool %s failed: %v.", name, err)
+		return fmt.Errorf("waiting for operation: %w", err)
+	}
+
+	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationSucceeded, "Successfully created Node Pool %s.", name)
+
+	return nil
 }
 
-func (g *GKE) DeleteNodePoolForNode(node *corev1.Node) error {
+func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
+	var names []NodePoolRef
+
+	resp, err := g.Service.Projects.Locations.Clusters.NodePools.List(g.ClusterContext.ClusterName()).Do()
+	if err != nil {
+		return nil, fmt.Errorf("listing node pools: %w", err)
+
+	}
+
+	for _, np := range resp.NodePools {
+		names = append(names, NodePoolRef{
+			Name:     np.Name,
+			Error:    np.Status == "ERROR",
+			ErrorMsg: np.StatusMessage,
+			CreatedForPod: types.NamespacedName{
+				Name:      np.Config.Labels[LabelPodName],
+				Namespace: np.Config.Labels[LabelPodNamespace],
+			},
+		})
+	}
+
+	return names, nil
+}
+
+func (g *GKE) DeleteNodePoolForNode(node *corev1.Node, why string) error {
 	name, ok := node.GetLabels()[g.NodePoolLabelKey()]
 	if !ok {
 		return fmt.Errorf("node %q does not have node pool label", node.Name)
 	}
+
+	return g.DeleteNodePool(name, node, why)
+}
+
+func (g *GKE) DeleteNodePool(name string, eventObj client.Object, why string) error {
 	// Due to concurrent reconciles, multiple deletes for the same
 	// Node Pool will occur at the same time. The result is an error:
 	// To avoid a bunch of failed requests, we dedeuplicate here.
@@ -103,15 +146,25 @@ func (g *GKE) DeleteNodePoolForNode(node *corev1.Node) error {
 	g.inProgressDeletes.Store(name, struct{}{})
 	defer g.inProgressDeletes.Delete(name)
 
+	g.Recorder.Eventf(eventObj, corev1.EventTypeNormal, EventNodePoolDeletionStarted, "Starting deletion of Node Pool %s because %s", name, why)
 	op, err := g.Service.Projects.Locations.Clusters.Delete(g.ClusterContext.NodePoolName(name)).Do()
 	if err != nil {
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+			g.Recorder.Eventf(eventObj, corev1.EventTypeNormal, EventNodePoolNotFound, "Node pool not found - ignoring deletion attempt.", name)
 			return nil
 		}
+		g.Recorder.Eventf(eventObj, corev1.EventTypeWarning, EventNodePoolDeletionFailed, "Request to delete Node Pool %s failed: %v.", name, err)
 		return fmt.Errorf("deleting node pool %q: %w", name, err)
 	}
 
-	return waitForGkeOp(g.Service, g.ClusterContext, op)
+	if err := waitForGkeOp(g.Service, g.ClusterContext, op); err != nil {
+		g.Recorder.Eventf(eventObj, corev1.EventTypeWarning, EventNodePoolDeletionFailed, "Operation to delete Node Pool %s failed: %v.", name, err)
+		return err
+	}
+
+	g.Recorder.Eventf(eventObj, corev1.EventTypeNormal, EventNodePoolDeletionSucceeded, "Successfully deleted Node Pool %s.", name)
+
+	return nil
 }
 
 var ErrNodePoolStopping = errors.New("node pool stopping")
@@ -148,6 +201,9 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		LabelParentName: strings.ToLower(ref.Name),
 		// Assuming a Namespaced parent here...
 		LabelParentNamespace: strings.ToLower(p.Namespace),
+
+		LabelPodName:      p.Name,
+		LabelPodNamespace: p.Namespace,
 	}
 
 	for k, v := range p.Spec.NodeSelector {

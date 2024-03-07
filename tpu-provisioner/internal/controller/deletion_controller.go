@@ -18,7 +18,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -50,7 +50,7 @@ type NodeCriteria struct {
 //+kubebuilder:rbac:groups="",resources=nodes/finalizers,verbs=update
 
 func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	lg := log.FromContext(ctx)
+	lg := ctrllog.FromContext(ctx)
 
 	lg.V(3).Info("Reconciling Node")
 
@@ -142,17 +142,14 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// If this point is reached, the node pool has passed the deletion check twice
 	// and can be deleted.
 	lg.Info(fmt.Sprintf("Node pool %q passed deletion check twice. Ensuring Node Pool is deleted", nodePoolName))
-	r.Recorder.Event(&node, corev1.EventTypeNormal, EventDeletingNodePool, DeletingNodePoolEventMessage)
-	if err := r.Provider.DeleteNodePoolForNode(&node); err != nil {
+	if err := r.Provider.DeleteNodePoolForNode(&node, "no user Pods are running on any of the Nodes in this node pool"); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
 			lg.Info("Ignoring duplicate request to delete node pool")
 			return ctrl.Result{}, nil
 		} else {
-			r.Recorder.Event(&node, corev1.EventTypeWarning, EventFailedDeletingNodePool, "Failed to delete Node Pool: "+err.Error())
 			return ctrl.Result{}, err
 		}
 	}
-	r.Recorder.Event(&node, corev1.EventTypeNormal, EventNodePoolDeleted, DeletedNodePoolEventMessage)
 
 	// Remove node pool from the map tracking node pools marked for deletion, in case the JobSet
 	// is reran in the future, as this will result in node pools with the same name being recreated,
