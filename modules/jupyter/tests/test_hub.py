@@ -1,7 +1,6 @@
 import sys
 import requests
 import yaml
-import time
 
 from packaging.version import Version as V
 
@@ -40,9 +39,6 @@ def test_hub_login(hub_url):
     password = data["hub"]["config"]["DummyAuthenticator"]["password"]
     session = requests.Session()
 
-    print("username",username)
-    print("password",password)
-
     response = session.get(hub_url + "/hub/login")
     response.raise_for_status()
 
@@ -57,15 +53,12 @@ def test_hub_login(hub_url):
         allow_redirects=True,
     )
     response.raise_for_status()
-    print("response.url",response.url)
     assert response.url == (hub_url + "/hub/spawn")
     print("Jupyterhub login success.")
 
 
 hub_url = "http://" + sys.argv[1]
-print("hub_url",hub_url)
 
 test_hub_up(hub_url)
 test_api_root(hub_url)
-time.sleep(30)
 test_hub_login(hub_url)
