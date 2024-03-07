@@ -59,7 +59,7 @@ steps:
         -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=cluster_region=$_REGION \
+        -var=cluster_location=$_REGION \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'infrastructure/'
@@ -300,7 +300,7 @@ steps:
         cd /workspace/infrastructure
         terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-cluster \
-        -var=cluster_region=$_REGION -auto-approve -no-color
+        -var=cluster_location=$_REGION -auto-approve -no-color
 
     allowFailure: true
     waitFor: ['cleanup rag']
@@ -363,4 +363,4 @@ substitutions:
   _USER_NAME: github
 options:
   substitutionOption: 'ALLOW_LOOSE'
-
+  machineType: 'E2_HIGHCPU_8'

@@ -25,7 +25,10 @@ spec:
           title: Cluster Location
           section: cluster_details
           xGoogleProperty:
-            type: ET_GCE_LOCATION
+            type: ET_GCE_REGION
+            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+            gce_region:
+              allowlisted_regions: ["asia-east1","asia-northeast1","asia-northeast3","asia-south1","asia-southeast1","europe-west1","europe-west2","europe-west3","europe-west4","us-central1","us-east1","us-east4","us-west1","us-west4"]
         cluster_name:
           name: cluster_name
           title: Cluster Name
@@ -43,7 +46,6 @@ spec:
         autopilot_cluster:
           name: autopilot_cluster
           title: Autopilot Cluster
-          invisible: true
           section: cluster_details
         create_gcs_bucket:
           name: create_gcs_bucket
