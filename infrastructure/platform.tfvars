@@ -13,14 +13,14 @@
 # limitations under the License.
 
 ##common variables
-project_id = "<your project ID>"
+project_id = "umeshkumhar"
 #######################################################
 ####    PLATFORM
 #######################################################
 ## network values
 create_network    = true
-network_name      = "ml-network"
-subnetwork_name   = "ml-subnet"
+network_name      = "ml-network0"
+subnetwork_name   = "ml-subnet0"
 subnetwork_cidr   = "10.100.0.0/16"
 subnetwork_region = "us-central1"
 
@@ -28,7 +28,7 @@ subnetwork_region = "us-central1"
 private_cluster   = false ## true = private cluster, false = public cluster
 autopilot_cluster = false ## true = autopilot cluster, false = standard cluster
 cluster_name      = "ml-cluster"
-cluster_location  = "us-central1-a"
+cluster_location  = "us-central1"
 
 cpu_pools = [{
   name         = "cpu-pool"
@@ -45,7 +45,7 @@ enable_gpu = true
 gpu_pools = [{
   name               = "gpu-pool"
   machine_type       = "n1-standard-16"
-  # node_locations = ["us-central1-a"] uncomment to target GPU node location to specified zones only
+  node_locations     = "us-central1-a" ## comment to autofill node_location based on cluster_location
   autoscaling        = true
   min_count          = 1
   max_count          = 3
@@ -58,7 +58,7 @@ gpu_pools = [{
   {
     name               = "gpu-pool-l4"
     machine_type       = "g2-standard-24"
-    # node_locations = ["us-central1-a"] uncomment to target GPU node location to specified zones only
+    node_locations     = "us-central1-a" ## comment to autofill node_location based on cluster_location
     autoscaling        = true
     min_count          = 1
     max_count          = 3

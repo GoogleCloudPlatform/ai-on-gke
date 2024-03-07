@@ -19,20 +19,20 @@
 ## GPU locations where L4 & T4 are supported.
 locals {
   gpu_l4_t4_location = {
-    asia-east1 = "asia-east1-a,asia-east1-c"
+    asia-east1      = "asia-east1-a,asia-east1-c"
     asia-northeast1 = "asia-northeast1-a,asia-northeast1-c"
     asia-northeast3 = "asia-northeast3-b"
-    asia-south1 = "asia-south1-a,asia-south1-b"
+    asia-south1     = "asia-south1-a,asia-south1-b"
     asia-southeast1 = "asia-southeast1-a,asia-southeast1-b,asia-southeast1-c"
-    europe-west1  = "europe-west1-b,europe-west1-c"
-    europe-west2 = "europe-west2-a,europe-west2-b"
-    europe-west3 = "europe-west3-b"
-    europe-west4 = "europe-west4-a,europe-west4-b,europe-west4-c"
-    us-central1 = "us-central1-a,us-central1-b,us-central1-c"
-    us-east1 = "us-east1-c,us-east1-d"
-    us-east4 = "us-east4-a,us-east4-c"
-    us-west1 = "us-west1-a,us-west1-b"
-    us-west4 = "us-west4-a"
+    europe-west1    = "europe-west1-b,europe-west1-c"
+    europe-west2    = "europe-west2-a,europe-west2-b"
+    europe-west3    = "europe-west3-b"
+    europe-west4    = "europe-west4-a,europe-west4-b,europe-west4-c"
+    us-central1     = "us-central1-a,us-central1-b,us-central1-c"
+    us-east1        = "us-east1-c,us-east1-d"
+    us-east4        = "us-east4-a,us-east4-c"
+    us-west1        = "us-west1-a,us-west1-b"
+    us-west4        = "us-west4-a"
   }
 }
 
@@ -63,8 +63,10 @@ locals {
   region          = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
   regional        = local.region != "" ? true : false
   zone            = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : []
-  gpu_pools       = [ for elm in var.gpu_pools : local.regional && contains(keys(local.gpu_l4_t4_location), local.region) ? merge(elm, {node_locations : local.gpu_l4_t4_location[local.region]}) : elm  ]
+  # Update gpu_pools with node_locations according to region and zone gpu availibility, if not provided
+  gpu_pools = [for elm in var.gpu_pools : (local.regional && contains(keys(local.gpu_l4_t4_location), local.region) && elm["node_locations"] == "") ? merge(elm, { "node_locations" : local.gpu_l4_t4_location[local.region] }) : elm]
 }
+
 
 ## create public GKE standard
 module "public-gke-standard-cluster" {

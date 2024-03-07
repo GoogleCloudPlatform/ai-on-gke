@@ -31,7 +31,7 @@ module "infra" {
 
   project_id        = var.project_id
   cluster_name      = var.cluster_name
-  cluster_location    = var.cluster_location
+  cluster_location  = var.cluster_location
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
   create_network    = false
