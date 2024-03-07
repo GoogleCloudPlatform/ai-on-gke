@@ -51,7 +51,6 @@ spec:
         - name: triton-inference
           image: "${image_path}"  # Replace ${image_path} with the actual image path
           workingDir: /opt/tritonserver
-          #command: ["/bin/sleep", "3600"]
           command: ["/bin/bash", "-c"]
           args: ["${server_launch_command_string}"]
           ports:
