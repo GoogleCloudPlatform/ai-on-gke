@@ -77,6 +77,16 @@ module "namespace" {
   create_namespace = true
 }
 
+# IAP Section: Enabled the IAP service
+resource "google_project_service" "project_service" {
+  count   = var.add_auth ? 1 : 0
+  project = var.project_id
+  service = "iap.googleapis.com"
+
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
 # Creates jupyterhub
 module "jupyterhub" {
   source                            = "../../modules/jupyter"
