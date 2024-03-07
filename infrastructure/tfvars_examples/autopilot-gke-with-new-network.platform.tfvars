@@ -30,5 +30,4 @@ subnetwork_region = "us-central1"
 private_cluster   = true ## Default true. Use false for a public cluster
 autopilot_cluster = true # false = standard cluster, true = autopilot cluster
 cluster_name      = "demo-cluster"
-cluster_region    = "us-central1"
-cluster_zones     = ["us-central1-a", "us-central1-b", "us-central1-f"]
+cluster_location  = "us-central1" ## Zonal autopilot clusters are not supported.

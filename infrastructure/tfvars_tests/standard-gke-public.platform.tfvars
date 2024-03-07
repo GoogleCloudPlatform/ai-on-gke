@@ -31,23 +31,20 @@ subnetwork_name   = "default"
 subnetwork_region = "us-central1"
 
 ## gke variables
-private_cluster   = false ## Default true. Use false for a public cluster
-autopilot_cluster = false # false = standard cluster, true = autopilot cluster
-cluster_name      = "test-cluster"
-cluster_region    = "us-central1"
-cluster_zones     = ["us-central1-a", "us-central1-b", "us-central1-f"]
-
+private_cluster     = false ## Default true. Use false for a public cluster
+autopilot_cluster   = false # false = standard cluster, true = autopilot cluster
+cluster_name        = "test-cluster"
+cluster_location    = "us-central1"
 gcs_fuse_csi_driver = true
 
 cpu_pools = [{
-  name           = "cpu-pool"
-  machine_type   = "n1-standard-16"
-  node_locations = "us-central1-b,us-central1-c"
-  autoscaling    = true
-  min_count      = 1
-  max_count      = 3
-  disk_size_gb   = 100
-  disk_type      = "pd-standard"
+  name         = "cpu-pool"
+  machine_type = "n1-standard-16"
+  autoscaling  = true
+  min_count    = 1
+  max_count    = 3
+  disk_size_gb = 100
+  disk_type    = "pd-standard"
 }]
 
 ## make sure required gpu quotas are available in the corresponding region

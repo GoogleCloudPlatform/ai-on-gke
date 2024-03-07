@@ -20,7 +20,7 @@ spec:
       - name: add_auth
         description: Enable iap authentication on jupyterhub
         varType: bool
-        defaultValue: true
+        defaultValue: false
       - name: autopilot_cluster
         varType: bool
         defaultValue: false
