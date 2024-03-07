@@ -63,6 +63,7 @@ module "iap_auth" {
 
 module "frontend-workload-identity" {
   source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  version             = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
   use_existing_gcp_sa = !var.create_service_account
   name                = var.google_service_account
   namespace           = var.namespace
