@@ -172,7 +172,7 @@ terraform apply
 | `ksa`                | Kubernetes Service Account used for workload.                                                 | String  | `"default"`                               | No       |
 | `huggingface-secret` | Name of the kubectl huggingface secret token                                                  | String  | `"huggingface-secret"`                    | Yes       |
 | `gcs_model_path`     | Path where model engine in gcs will be read from.     | String  |    ""                                | No      |
-| `server_launch_command_string`     | Command to launc the Triton Inference Server     | String  |   "pip install sentencepiece protobuf && huggingface-cli login --token $HUGGINGFACE_TOKEN && /opt/tritonserver/bin/tritonserver --model-repository=/all_models/inflight_batcher_llm --disable-auto-complete-config --backend-config=python,shm-region-prefix-name=prefix0_ :"                                 | No      |
+| `server_launch_command_string`     | Command to launc the Triton Inference Server     | String  |   "pip install sentencepiece protobuf && huggingface-cli login --token $HUGGINGFACE_TOKEN && /opt/tritonserver/bin/tritonserver --model-repository=/all_models/inflight_batcher_llm --disable-auto-complete-config --backend-config=python,shm-region-prefix-name=prefix0_"                                 | No      |
 
 
 
