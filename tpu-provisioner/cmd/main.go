@@ -77,6 +77,7 @@ func main() {
 
 		GCPNodeTags          []string `envconfig:"GCP_NODE_TAGS"`
 		GCPNodeSecondaryDisk string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
+		GCPNodeSecureBoot    bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
 
 		// NodeMinLifespan is the amount of time that should pass between a Node object
 		// creation and a cleanup of that Node. This needs to be long enough to allow
@@ -198,6 +199,7 @@ func main() {
 				NodeServiceAccount: cfg.GCPNodeServiceAccount,
 				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
 				NodeTags:           cfg.GCPNodeTags,
+				NodeSecureBoot:     cfg.GCPNodeSecureBoot,
 			},
 			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		}

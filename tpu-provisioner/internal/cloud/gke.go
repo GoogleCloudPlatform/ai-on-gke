@@ -264,7 +264,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 			ServiceAccount: g.ClusterContext.NodeServiceAccount,
 			ShieldedInstanceConfig: &containerv1beta1.ShieldedInstanceConfig{
 				EnableIntegrityMonitoring: true,
-				EnableSecureBoot:          true,
+				EnableSecureBoot:          g.ClusterContext.NodeSecureBoot,
 			},
 			Tags: g.ClusterContext.NodeTags,
 			// NOTE: vendor/ was manually updated to include the field because
