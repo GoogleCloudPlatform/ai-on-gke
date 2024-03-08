@@ -18,6 +18,10 @@ resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
   member = "serviceAccount:${var.google_service_account}@${var.project_id}.iam.gserviceaccount.com"
 }
 
+locals {
+  security_context = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+}
+
 resource "helm_release" "ray-cluster" {
   name             = "example-cluster"
   repository       = "https://ray-project.github.io/kuberay-helm/"
@@ -30,7 +34,7 @@ resource "helm_release" "ray-cluster" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+      security_context    = local.security_context
       secret_name         = var.db_secret_name
       project_id          = var.project_id
       db_region           = var.db_region
@@ -38,7 +42,7 @@ resource "helm_release" "ray-cluster" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+      security_context    = local.security_context
       secret_name         = var.db_secret_name
       project_id          = var.project_id
       db_region           = var.db_region
@@ -46,7 +50,7 @@ resource "helm_release" "ray-cluster" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+      security_context    = local.security_context
       secret_name         = var.db_secret_name
       project_id          = var.project_id
       db_region           = var.db_region
@@ -54,7 +58,7 @@ resource "helm_release" "ray-cluster" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.google_service_account
       grafana_host        = var.grafana_host
-      security_context    = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+      security_context    = local.security_context
       secret_name         = var.db_secret_name
       project_id          = var.project_id
       db_region           = var.db_region
