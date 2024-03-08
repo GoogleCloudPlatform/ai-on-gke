@@ -197,7 +197,7 @@ variable "enable_custom_metric" {
   default     = false
 }
 
-variable "huggingface-secret" {
+variable "huggingface_secret" {
   description = "name of the kubectl huggingface secret token"
   type        = string
   nullable    = true

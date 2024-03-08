@@ -49,5 +49,5 @@ spec:
             - name: HUGGINGFACE_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: ${huggingface-secret}  # Replace ${huggingface-secret} with your secret's name
+                  name: ${huggingface_secret}  # Replace ${huggingface_secret} with your secret's name
                   key: token
