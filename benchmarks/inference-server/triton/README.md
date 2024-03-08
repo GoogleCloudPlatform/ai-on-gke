@@ -60,7 +60,7 @@ Ensure you have the following prerequisites installed and set up:
    /opt/tritonserver/bin/tritonserver \
     --model-repository=/all_models/inflight_batcher_llm \
     --disable-auto-complete-config \
-    --backend-config=python,shm-region-prefix-name=prefix1_```
+    --backend-config=python,shm-region-prefix-name=prefix1_
    ```
     *Build and Push the Docker Image:*
 
