@@ -29,10 +29,6 @@ variable "namespace" {
   default     = "ray-system"
 }
 
-variable "create_namespace" {
-  type = bool
-}
-
 variable "enable_tpu" {
   type        = bool
   description = "Set to true to request TPUs in Ray cluster"

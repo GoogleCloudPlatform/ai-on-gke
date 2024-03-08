@@ -14,6 +14,9 @@ spec:
   ui:
     input:
       variables:    
+        goog_cm_deployment_name:
+          name: goog_cm_deployment_name
+          title: Goog Cm Deployment Name
         create_cluster:
           name: create_cluster
           title: Create GKE Cluster
@@ -45,8 +48,26 @@ spec:
           section: cluster_details
         autopilot_cluster:
           name: autopilot_cluster
-          title: Autopilot Cluster
+          title: GKE Cluster Type
           section: cluster_details
+          enumValueLabels:
+            - label: Autopilot Cluster
+              value: "true"
+            - label: Standard Cluster
+              value: "false"
+        kubernetes_namespace:
+          name: kubernetes_namespace
+          title: Kubernetes Namespace
+          section: cluster_details
+        private_cluster:
+          name: private_cluster
+          title: Private Cluster
+          invisible: true
+          section: cluster_details
+        project_id:
+          name: project_id
+          title: Project Id
+          invisible: true
         create_gcs_bucket:
           name: create_gcs_bucket
           title: Create Gcs Bucket
@@ -78,31 +99,25 @@ spec:
           section: rag
           xGoogleProperty:
             type: ET_GCS_BUCKET
+        cloudsql_instance:
+          name: cloudsql_instance
+          title: CloudSQL Instance
+          section: rag
         jupyter_service_account:
           name: jupyter_service_account
           title: Jupyter Service Account
           section: rag
-        kubernetes_namespace:
-          name: kubernetes_namespace
-          title: Kubernetes Namespace
-          section: cluster_details
-        private_cluster:
-          name: private_cluster
-          title: Private Cluster
-          invisible: true
-          section: cluster_details
-        project_id:
-          name: project_id
-          title: Project Id
           invisible: true
         rag_service_account:
           name: rag_service_account
           title: Rag Service Account
           section: rag
+          invisible: true
         ray_service_account:
           name: ray_service_account
           title: Ray Service Account
           section: rag
+          invisible: true
         add_auth:
           name: add_auth
           title: Enable IAP Authentication
