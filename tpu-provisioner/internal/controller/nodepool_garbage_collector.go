@@ -30,7 +30,7 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 		case <-t.C:
 		}
 
-		log.Info("starting node pool garbage collection")
+		log.Info("starting node pool garbage collection loop")
 
 		nodepools, err := g.Provider.ListNodePools()
 		if err != nil {
@@ -39,7 +39,11 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 		}
 
 		for _, np := range nodepools {
-			log = log.WithValues("nodepool", np.Name)
+			log := log.WithValues(
+				"nodepool", np.Name,
+				"createdForPodName", np.CreatedForPod.Name,
+				"createdForPodNamespace", np.CreatedForPod.Namespace,
+			)
 
 			if !np.Error {
 				continue
