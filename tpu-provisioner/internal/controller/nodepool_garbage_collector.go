@@ -18,7 +18,7 @@ type NodePoolGarbageCollector struct {
 }
 
 func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
-	log := ctrllog.Log
+	log := ctrllog.Log.WithName("nodepool-garbage-collector")
 
 	t := time.NewTicker(g.Interval)
 
@@ -39,7 +39,14 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 		}
 
 		for _, np := range nodepools {
+			log = log.WithValues("nodepool", np.Name)
+
 			if !np.Error {
+				continue
+			}
+
+			if np.CreatedForPod.Name == "" || np.CreatedForPod.Namespace == "" {
+				log.Info("skipping garbage collection of node pool, no pod reference")
 				continue
 			}
 
@@ -47,7 +54,6 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 			err := g.Get(ctx, np.CreatedForPod, &v1.Pod{})
 			if err == nil {
 				log.Info("skipping garbage collection of node pool, pod still exists",
-					"nodepool", np.Name,
 					"podName", np.CreatedForPod.Name,
 					"podNamespace", np.CreatedForPod.Namespace,
 				)
@@ -66,17 +72,15 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 				continue
 			}
 			if len(nodes.Items) > 0 {
-				log.Info("skipping garbage collection of node pool, nodes exist",
-					"nodepool", np.Name,
-				)
+				log.Info("skipping garbage collection of node pool, nodes exist")
 				continue
 			}
 
-			log.Info("garbage collecting node pool in error state", "nodepool", np.Name)
+			log.Info("garbage collecting node pool in error state")
 			// TODO: Lookup namespace from env with downward API.
 			if err := g.Provider.DeleteNodePool(np.Name, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "tpu-provisioner-system"}},
 				"the node pool has no corresponding Nodes, the Pod that triggered its creation no longer exists, and node pool is in an error state: "+np.ErrorMsg); err != nil {
-				log.Error(err, "failed to garbage colelct node pool", "nodepool", np.Name)
+				log.Error(err, "failed to garbage colelct node pool")
 				continue
 			}
 		}

@@ -104,7 +104,7 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 }
 
 func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
-	var names []NodePoolRef
+	var refs []NodePoolRef
 
 	resp, err := g.Service.Projects.Locations.Clusters.NodePools.List(g.ClusterContext.ClusterName()).Do()
 	if err != nil {
@@ -113,7 +113,7 @@ func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
 	}
 
 	for _, np := range resp.NodePools {
-		names = append(names, NodePoolRef{
+		refs = append(refs, NodePoolRef{
 			Name:     np.Name,
 			Error:    np.Status == "ERROR",
 			ErrorMsg: np.StatusMessage,
@@ -124,7 +124,7 @@ func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
 		})
 	}
 
-	return names, nil
+	return refs, nil
 }
 
 func (g *GKE) DeleteNodePoolForNode(node *corev1.Node, why string) error {
