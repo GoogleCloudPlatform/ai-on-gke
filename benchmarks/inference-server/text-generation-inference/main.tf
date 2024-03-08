@@ -20,11 +20,11 @@ locals {
 
   hpa_cpu_template           = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
   hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.tgi.custom_metric.yaml.tftpl"
-  tgi_podmonitoring          = "${path.module}/hpa-templates/tgi-podmonitoring.yaml.tftpl"
-  dcgm_podmonitoring         = "${path.module}/hpa-templates/dcgm-podmonitoring.yaml.tftpl"
-  dcgm_metrics_enabled       = var.hpa_type == null ? false : length(regexall("DCGM_.*", var.hpa_type)) > 0
-  tgi_metrics_enabled        = var.hpa_type == null ? false : length(regexall("tgi_.*", var.hpa_type)) > 0
-  custom_metrics_enabled     = local.dcgm_metrics_enabled || local.tgi_metrics_enabled
+  tgi_podmonitoring          = "${path.module}/monitoring-templates/tgi-podmonitoring.yaml.tftpl"
+  dcgm_podmonitoring_for_hpa = "${path.module}/hpa-templates/dcgm-podmonitoring.yaml.tftpl"
+  use_dcgm_metrics_for_hpa   = var.hpa_type == null ? false : length(regexall("DCGM_.*", var.hpa_type)) > 0
+  use_tgi_metrics_for_hpa    = var.hpa_type == null ? false : length(regexall("tgi_.*", var.hpa_type)) > 0
+  custom_metrics_enabled     = local.use_dcgm_metrics_for_hpa || local.use_tgi_metrics_for_hpa
 
   wl_templates = [
     for f in fileset(local.wl_templates_path, "*tftpl") :
@@ -87,15 +87,14 @@ resource "kubernetes_manifest" "hpa-cpu" {
 }
 
 resource "kubernetes_manifest" "tgi-pod-monitoring" {
-  count = local.tgi_metrics_enabled ? 1 : 0
   manifest = yamldecode(templatefile(local.tgi_podmonitoring, {
     namespace = var.namespace
   }))
 }
 
-resource "kubernetes_manifest" "dcgm-pod-monitoring" {
-  count = local.dcgm_metrics_enabled ? 1 : 0
-  manifest = yamldecode(templatefile(local.dcgm_podmonitoring, {
+resource "kubernetes_manifest" "dcgm-pod-monitoring-for-hpa" {
+  count = local.use_dcgm_metrics_for_hpa ? 1 : 0
+  manifest = yamldecode(templatefile(local.dcgm_podmonitoring_for_hpa, {
     custom_metric_name = var.hpa_type
   }))
 }
