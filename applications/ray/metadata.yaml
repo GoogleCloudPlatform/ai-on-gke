@@ -1,0 +1,82 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: Ray on GKE
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/ray
+    actuationTool:
+      flavor: Terraform
+    description: {}
+  content: {}
+  interfaces:
+    variables:
+      - name: autopilot_cluster
+        varType: string
+        defaultValue: "false"
+      - name: cluster_location
+        varType: string
+        required: true
+        defaultValue: "us-central1"
+      - name: cluster_membership_id
+        description: "require to use connectgateway for private clusters, default: cluster_name"
+        varType: string
+        defaultValue: ""
+      - name: cluster_name
+        varType: string
+        required: true
+      - name: create_cluster
+        varType: bool
+        defaultValue: false
+      - name: create_gcs_bucket
+        description: Enable flag to create gcs_bucket
+        varType: bool
+        defaultValue: false
+      - name: create_ray_cluster
+        description: Create Ray Cluster.
+        varType: bool
+        defaultValue: true
+      - name: create_service_account
+        description: Creates a google IAM service account & k8s service account & configures workload identity
+        varType: bool
+        defaultValue: true
+      - name: enable_gpu
+        varType: bool
+        defaultValue: true
+      - name: enable_grafana_on_ray_dashboard
+        description: Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access.
+        varType: bool
+        defaultValue: false
+      - name: workload_identity_service_account
+        description: Google Cloud IAM service account for authenticating with GCP services for GCS
+        varType: string
+        required: true
+        defaultValue: "ray-service-account"
+      - name: gcs_bucket
+        varType: string
+        required: true
+      - name: goog_cm_deployment_name
+        varType: string
+        defaultValue: ""
+      - name: private_cluster
+        varType: bool
+        defaultValue: false
+      - name: project_id
+        description: GCP project id
+        varType: string
+        required: true
+      - name: kubernetes_namespace
+        description: Kubernetes namespace where resources are deployed
+        varType: string
+        defaultValue: ai-on-gke
+      - name: ray_version
+        varType: string
+        defaultValue: v2.7.1
+    outputs:
+      - name: grafana_uri

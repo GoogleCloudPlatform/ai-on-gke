@@ -31,8 +31,7 @@ module "kuberay-workload-identity" {
   namespace           = var.namespace
   project_id          = var.project_id
   roles               = ["roles/cloudsql.client", "roles/monitoring.viewer"]
-
-  depends_on = [helm_release.kuberay-operator]
+  depends_on          = [helm_release.kuberay-operator]
 }
 
 resource "kubernetes_secret_v1" "service_account_token" {
