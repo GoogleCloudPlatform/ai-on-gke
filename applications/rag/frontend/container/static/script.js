@@ -84,8 +84,8 @@ function onReady() {
 
     // Handle templates
     document.getElementById("toggle-filters").addEventListener("change", function() {
-        var filterOptions = document.getElementById("template-section");
-        filterOptions.style.display = this.checked ? "block" : "none";
+        fetchNLPEnabled();
+        fetchDLPEnabled();
     });
 }
 if (document.readyState != "loading") onReady();
@@ -113,8 +113,9 @@ function autoResizeTextarea() {
 // Function to handle the visibility of filter section
 function toggleNlpFilterSection(nlpEnabled) {
     var filterOptions = document.getElementById("nlp-filter-section");
+    var checkbox = document.getElementById('toggle-filters');
 
-    if (nlpEnabled) {
+    if (nlpEnabled && checkbox.checked) {
         filterOptions.style.display = "block";
     } else {
         filterOptions.style.display = "none";
@@ -136,8 +137,8 @@ function fetchNLPEnabled() {
 // Function to handle the visibility of filter section
 function toggleFilterSection(dlpEnabled) {
     var filterOptions = document.getElementById("template-section");
-
-    if (dlpEnabled) {
+    var checkbox = document.getElementById('toggle-filters');
+    if (dlpEnabled && checkbox.checked) {
         filterOptions.style.display = "block";
     } else {
         filterOptions.style.display = "none";
