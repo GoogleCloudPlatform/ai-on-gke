@@ -56,9 +56,12 @@ Next, set up the inference server, the `pgvector` instance, Jupyterhub, Kuberay 
 
 1. `cd ai-on-gke/applications/rag`
 
+2. (Optional) [Enable IAP and Set up Brand](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/jupyter/authentication/README.MD#enable_iap_service) (Recommend)
+
 2. Edit `workloads.tfvars` with your project ID, cluster name, location and a GCS bucket name.
     * The GCS bucket name needs to be globally unique so add some random suffix to it (ensure `gcloud storage buckets describe gs://<bucketname>` returns a 404).
     * Optionally choose the k8s namespace & service account to be used by the application. If not selected, these resources will be created based on the default values set.
+    * Optionally, set add_auth to be true to create load balancer and IAP
 
 3. Run `terraform init`
 
@@ -93,7 +96,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 2. Verify Jupyterhub service is setup:
     * Fetch the service IP/Domain:
       * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-      * IAP enabled: Read terraform output: `terraform output jupyter_uri` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+      * IAP enabled: Read terraform output: `terraform output jupyter_domain` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
           * From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the allowlisted user has role `IAP-secured Web App User`
           * Wait for domain status to be `Active`
     * Go to the IP in a browser which should display the Jupyterlab login UI.
@@ -141,7 +144,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 1. Fetch the Jupyterhub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:       
    * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-   * IAP enabled: Read terraform output: `terraform output jupyter_uri` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
+   * IAP enabled: Read terraform output: `terraform output jupyter_domain` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
        * From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the allowlisted user has role `IAP-secured Web App User`.
        * Wait for the domain status to be `Active`
 
@@ -182,7 +185,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 2. From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the allowlisted user has role `IAP-secured Web App User`. This role is necessary to access the application through IAP.
 3. Verify the domain is active using command:
     `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
-3. Read terraform output: `terraform output frontend_uri` or use the following command to find the domain created by IAP for accessing your service:
+3. Read terraform output: `terraform output frontend_domain` or use the following command to find the domain created by IAP for accessing your service:
     `kubectl get managedcertificates frontend-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
 4.  Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
 
