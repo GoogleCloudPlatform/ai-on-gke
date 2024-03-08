@@ -60,6 +60,58 @@ variable "grafana_host" {
   type = string
 }
 
+# Commenting out underutilized, nested variables because they're harder to
+# strip from the YAML encoding. Add these back if we can easily strip out
+# the null values.
+variable "security_context" {
+  description = "Kubernetes security context to set on all ray cluster pods"
+  type = object({
+    allowPrivilegeEscalation = optional(bool)
+    capabilities = optional(object({
+      # Not typically used
+      # add  = optional(list(string))
+      drop = optional(list(string))
+    }))
+    privileged             = optional(bool)
+    procMount              = optional(string)
+    readOnlyRootFilesystem = optional(bool)
+    runAsGroup             = optional(number)
+    runAsNonRoot           = optional(bool)
+    runAsUser              = optional(number)
+    seLinuxOptions = optional(object({
+      level = optional(string)
+      role  = optional(string)
+      type  = optional(string)
+      user  = optional(string)
+    }))
+    seccompProfile = optional(object({
+      # Not typically used
+      # localhostProfile = optional(string)
+      type = optional(string)
+    }))
+    windowsOptions = optional(object({
+      gmsaCredentialSpec    = optional(string)
+      gmsaCredentiaSpecName = optional(string)
+      hostProcess           = bool
+      runAsUserName         = string
+    }))
+  })
+
+  default = {
+    allowPrivilegeEscalation = false
+    capabilities = {
+      drop = ["ALL"]
+    }
+    # GKE will automatically mount GPUs and TPUs into unprivileged pods
+    privileged         = false
+    readOnlyFileSystem = true
+    runAsNonRoot       = true
+    seccompProfile = {
+      type = "RuntimeDefault"
+    }
+  }
+}
+
 variable "db_secret_name" {
   type        = string
   description = "CloudSQL user credentials"
