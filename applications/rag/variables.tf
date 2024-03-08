@@ -301,6 +301,12 @@ variable "jupyter_members_allowlist" {
   ## keeping it string type to support single field input for marketplace UI.
 }
 
+variable "cloudsql_instance" {
+  type        = string
+  description = "Name of the CloudSQL instance for RAG VectorDB"
+  default     = "pgvector-instance"
+}
+
 ## GKE variables
 variable "create_cluster" {
   type    = bool
