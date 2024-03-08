@@ -86,7 +86,7 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 			whyDelete := fmt.Sprintf("the node pool has no corresponding Nodes, the Pod (%s/%s) that triggered its creation no longer exists, and node pool is in an error state: %s",
 				np.CreatedForPod.Namespace, np.CreatedForPod.Name, np.ErrorMsg)
 			if err := g.Provider.DeleteNodePool(np.Name, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "tpu-provisioner-system"}}, whyDelete); err != nil {
-				log.Error(err, "failed to garbage colelct node pool")
+				log.Error(err, "failed to garbage collect node pool")
 				continue
 			}
 		}
