@@ -1,0 +1,44 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: nvidia-dcgm-exporter-for-hpa
+  namespace: gmp-public
+  labels:
+    app.kubernetes.io/name: nvidia-dcgm-exporter
+    app.kubernetes.io/part-of: google-cloud-managed-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: nvidia-dcgm-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      metricRelabeling:
+        # Change the DCGM metric name that we want to use in HPA to lowercase.
+        # This is because HPA doesn't work with uppercase external metrics:
+        # https://github.com/kubernetes/kubernetes/issues/72996
+        #
+        # GMP will generate two metrics here. A gauge metric, suffixed with
+        # `unknown` and a counter metric, suffixed with `unknown:counter`.
+        # https://cloud.google.com/stackdriver/docs/managed-prometheus/troubleshooting#unknown-double-written
+        - action: keep
+          sourceLabels: [__name__]
+        - action: replace
+          sourceLabels: [__name__]
+          targetLabel: __name__
+          regex: ${custom_metric_name}
+          replacement: ${lower(custom_metric_name)}
