@@ -154,6 +154,7 @@ kubectl create secret generic huggingface-secret --from-literal=token='*********
 ```
 
 This command creates a new Secret named huggingface-secret, which has a key token containing your Hugging Face CLI token.
+It is important to note that for any production or shared environments, directly storing user access tokens as literals is not advisable.
 
 ### Step 7: login to gcloud
 

@@ -155,11 +155,11 @@ class BenchmarkUser(FastHttpUser):
         global model_params
         if model_params['enable_custom_metric'] == 'true':
             test_time = time.time() - start_time
-            request_succesful_bool = 1
+            request_successful_bool = 1
             tokens_sent, tokens_received = get_token_count(prompt, reponse)
             
-            logging.info(f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_succesful_bool]}')
-            self.environment.runner.send_message("metric_update", [tokens_sent, tokens_received, test_time, request_succesful_bool])
+            logging.info(f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
+            self.environment.runner.send_message("metric_update", [tokens_sent, tokens_received, test_time, request_successful_bool])
             
     def handle_failed_response(self, request, response):
         global model_params
@@ -169,29 +169,30 @@ class BenchmarkUser(FastHttpUser):
             tokens_sent = -1
             tokens_received = -1
             test_time = -1
-            request_succesful_bool = 0
+            request_successful_bool = 0
             
-            logging.info(f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_succesful_bool]}')
-            self.environment.runner.send_message("metric_update", [tokens_sent, tokens_received, test_time, request_succesful_bool])
+            logging.info(f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
+            self.environment.runner.send_message("metric_update", [tokens_sent, tokens_received, test_time, request_successful_bool])
             
         
 """
-methods for the locust master to write custome metrics
+methods for the locust master to write custom metrics
 """      
 def collect_metrics(msg, **_kwargs):
-    """locust master collects the metrics emiited by the locust workers and updates the metric_collector object"""
+    """locust master collects the metrics emitted by the locust workers and updates the metric_collector object"""
     sent = msg.data[0]
     received = msg.data[1]
     test_time = msg.data[2]
-    request_succesful_bool = msg.data[3]
+    request_successful_bool = msg.data[3]
     logging.info(f'recevied from worker {msg.data}')
-    metric_collector.add_metric(sent, received, test_time, request_succesful_bool)              
+    metric_collector.add_metric(sent, received, test_time, request_successful_bool)              
 
 def periodically_write_metrics():
+    global model_params
     metric_collector.write_to_csv()
-    threading.Timer(60, periodically_write_metrics).start()
+    threading.Timer(model_params.csv_upload_frequency, periodically_write_metrics).start()
 
-def setup_periodic_metrics_writer(environment):
+def setup_periodic_metrics_writer(environment,  **_kwargs):
     """locust master periodically writes the collected metrics to csv"""
     periodically_write_metrics()  
         
@@ -233,6 +234,8 @@ def _(parser):
                         include_in_web_ui=False, default="", help="Tokenizer to use for token calculations")
     parser.add_argument("--enable_custom_metric", type=str, env_var="ENABLE_CUSTOM_METRIC",
                         include_in_web_ui=True, default="false", help="enable custom metric")
+    parser.add_argument("--csv_upload_frequency", type=int, env_var="CSV_UPLOAD_FREQUENCY",
+                        include_in_web_ui=True, default=60, help="upload custom metrics every X seconds")
 
 
 @events.init.add_listener
@@ -262,6 +265,7 @@ def _(environment, **kwargs):
             "use_beam_search": environment.parsed_options.use_beam_search,
             "tokenizer": environment.parsed_options.tokenizer,
             "enable_custom_metric" : environment.parsed_options.enable_custom_metric,
+            "csv_upload_frequency" : environment.parsed_options.csv_upload_frequency,
         }
         logging.info(
             f"Using the following benchmark parameters:\n {model_params}")

@@ -9,8 +9,8 @@ class TokenMetricCollector:
         self.failure_count = 0
         
 
-    def add_metric(self, sent, received, test_time, request_succesful_bool):
-        if request_succesful_bool==1:
+    def add_metric(self, sent, received, test_time, request_successful_bool):
+        if request_successful_bool==1:
             self.tokens_sent.append(sent)
             self.tokens_received.append(received)
             self.test_time.append(test_time)
