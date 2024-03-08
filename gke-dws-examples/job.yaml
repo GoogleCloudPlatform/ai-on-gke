@@ -11,8 +11,6 @@ spec:
   suspend: true
   template:
     spec:
-      nodeSelector:
-        cloud.google.com/gke-nodepool: dws-nodepool
       tolerations:
       - key: "nvidia.com/gpu"
         operator: "Exists"
