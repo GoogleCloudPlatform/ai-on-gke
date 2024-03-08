@@ -191,7 +191,7 @@ variable "run_test_automatically" {
   default     = false
 }
 
-variable "enable_custom_metric" {
+variable "enable_custom_metrics" {
   description = "enable custom metric output in Locust"
   type        = bool
   default     = false

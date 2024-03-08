@@ -44,8 +44,8 @@ spec:
               value: ${tokenizer}
             - name: USE_BEAM_SEARCH
               value: ${use_beam_search}
-            - name: ENABLE_CUSTOM_METRIC
-              value: ${enable_custom_metric}
+            - name: ENABLE_CUSTOM_METRICS
+              value: ${enable_custom_metrics}
             - name: HUGGINGFACE_TOKEN
               valueFrom:
                 secretKeyRef:
