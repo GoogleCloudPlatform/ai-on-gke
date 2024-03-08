@@ -18,7 +18,8 @@
 project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-cluster_name     = "<your cluster name>"
+create_cluster   = false # this flag will create a new standard public gke cluster in default network
+cluster_name     = "<cluster name>"
 cluster_location = "us-central1"
 
 #######################################################
@@ -26,14 +27,12 @@ cluster_location = "us-central1"
 #######################################################
 
 ## GKE environment variables
-
-## GKE environment variables
 ray_namespace = "ml"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-# Set to false & update the variable `gcp_service_account` to use an existing IAM service account.
-create_service_account = true
-gcp_service_account    = "ray-service-account"
+# Set to false & update the variable `workload_identity_service_account` to use an existing IAM service account.
+create_service_account            = true
+workload_identity_service_account = "ray-service-account"
 
 # Bucket name should be globally unique.
 create_gcs_bucket               = true

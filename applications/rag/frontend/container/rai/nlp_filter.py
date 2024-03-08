@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-import google.cloud.language as language
+import google.cloud.language_v1 as language
 from . import retry
 
 # Convert the project id into a full resource id.
@@ -45,14 +45,13 @@ def sum_moderation_confidences(text):
   response = nature_language_client.moderate_text(
       request=request, retry=retry.retry_policy
   )
-
+  print(f'get response: {response}')
   # Parse response and sum the confidences of moderation, the categories are from https://cloud.google.com/natural-language/docs/moderating-text
   total_confidence = 0.0
-  categories = []
   for category in response.moderation_categories:
     total_confidence += category.confidence
-    categories.append(category.name)
-  return total_confidence, categories
+  print(f'total confidence is: {total_confidence}')
+  return total_confidence
 
 def is_content_inappropriate(text, nlp_filter_level):
   # Define thresholds
@@ -63,9 +62,9 @@ def is_content_inappropriate(text, nlp_filter_level):
   }
 
   # Map the filter level to a threshold
-  if nlp_filter_level <= 20:
+  if int(nlp_filter_level) <= 20:
     threshold = thresholds['high']
-  elif nlp_filter_level <= 50:
+  elif int(nlp_filter_level) <= 50:
     threshold = thresholds['mid']
   else:
     threshold = thresholds['low']

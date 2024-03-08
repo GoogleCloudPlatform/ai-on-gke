@@ -38,7 +38,7 @@ limitations under the License.
       <label for="toggle-filters">Enable Filters:</label>
       <input type="checkbox" id="toggle-filters">
 
-      <!-- Dropdown for inspect_templates and deidentify_templates -->
+      <!-- Dropdown for inspect_templates and deidentify_templates for dlp filter -->
       <div id="template-section" style="display: none;">
         <select id="inspect-template-dropdown">
           <!-- Options will be dynamically added here -->
@@ -49,7 +49,7 @@ limitations under the License.
       </div>
 
       <!-- NLP Filter Slider -->
-      <div id="nlp-filter-section">
+      <div id="nlp-filter-section" style="display: none;">
         <label for="nlp-range">NLP Filter Level:</label>
         <input type="range" id="nlp-range" min="0" max="100" value="50">
       </div>

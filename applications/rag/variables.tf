@@ -98,7 +98,7 @@ variable "brand" {
 variable "frontend_add_auth" {
   type        = bool
   description = "Enable iap authentication on frontend"
-  default     = true
+  default     = false
 }
 
 variable "frontend_k8s_ingress_name" {
@@ -175,7 +175,7 @@ variable "frontend_members_allowlist" {
 variable "jupyter_add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
-  default     = true
+  default     = false
 }
 
 variable "jupyter_k8s_ingress_name" {
@@ -360,4 +360,9 @@ variable "gpu_pools" {
       accelerator_type   = "nvidia-l4"
       gpu_driver_version = "DEFAULT"
   }]
+}
+
+variable "goog_cm_deployment_name" {
+  type    = string
+  default = ""
 }

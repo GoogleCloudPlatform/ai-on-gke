@@ -58,6 +58,14 @@ locals {
   host                  = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
 }
 
+## Generated names for marketplace deployment
+locals {
+  ray_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.ray_service_account}" : var.ray_service_account
+  jupyter_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.jupyter_service_account}" : var.jupyter_service_account
+  rag_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.rag_service_account}" : var.rag_service_account
+}
+
+
 provider "kubernetes" {
   alias                  = "rag"
   host                   = local.host
@@ -102,7 +110,7 @@ module "kuberay-operator" {
   project_id             = var.project_id
   create_namespace       = true
   namespace              = var.kubernetes_namespace
-  google_service_account = var.ray_service_account
+  google_service_account = local.ray_service_account
   create_service_account = var.create_ray_service_account
   autopilot_cluster      = local.enable_autopilot
 }
@@ -143,7 +151,7 @@ module "jupyterhub" {
   add_auth   = var.jupyter_add_auth
 
   autopilot_cluster                 = local.enable_autopilot
-  workload_identity_service_account = var.jupyter_service_account
+  workload_identity_service_account = local.jupyter_service_account
 
   # IAP Auth parameters
   brand                    = var.brand
@@ -174,14 +182,13 @@ module "kuberay-cluster" {
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id             = var.project_id
   namespace              = var.kubernetes_namespace
-  create_namespace       = true
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
   enable_tpu             = local.enable_tpu
   autopilot_cluster      = local.enable_autopilot
-  google_service_account = var.ray_service_account
   db_secret_name         = module.cloudsql.db_secret_name
   db_region              = var.cloudsql_instance_region
+  google_service_account = local.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
   depends_on             = [module.kuberay-operator]
 }
@@ -193,8 +200,9 @@ module "kuberay-monitoring" {
   namespace                       = var.kubernetes_namespace
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
-  k8s_service_account             = var.ray_service_account
-  depends_on                      = [module.namespace]
+  k8s_service_account             = local.ray_service_account
+  # TODO(umeshkumhar): remove kuberay-operator depends, figure out service account dependency
+  depends_on = [module.namespace, module.kuberay-operator]
 }
 
 module "inference-server" {
@@ -210,7 +218,7 @@ module "frontend" {
   providers                     = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                    = var.project_id
   create_service_account        = var.create_rag_service_account
-  google_service_account        = var.rag_service_account
+  google_service_account        = local.rag_service_account
   namespace                     = var.kubernetes_namespace
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
@@ -234,3 +242,4 @@ module "frontend" {
   members_allowlist        = var.frontend_members_allowlist
   depends_on               = [module.namespace]
 }
+
