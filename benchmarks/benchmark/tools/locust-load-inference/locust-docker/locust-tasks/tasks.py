@@ -187,14 +187,13 @@ def collect_metrics(msg, **_kwargs):
     logging.info(f'recevied from worker {msg.data}')
     metric_collector.add_metric(sent, received, test_time, request_successful_bool)              
 
-def periodically_write_metrics():
-    global model_params
+def periodically_write_metrics(environment):
     metric_collector.write_to_csv()
-    threading.Timer(model_params.csv_upload_frequency, periodically_write_metrics).start()
+    threading.Timer(environment.parsed_options.csv_upload_frequency, periodically_write_metrics, args=(environment,)).start()
 
 def setup_periodic_metrics_writer(environment,  **_kwargs):
     """locust master periodically writes the collected metrics to csv"""
-    periodically_write_metrics()  
+    periodically_write_metrics(environment)  
         
 def setup_custom_route(environment, **_kwargs):
     """Sets up custom routes in the locust master for serving CSV files."""
@@ -232,10 +231,10 @@ def _(parser):
                         include_in_web_ui=True, help="Whether to use beam search instead of sampling.")
     parser.add_argument("--tokenizer", type=str, env_var="TOKENIZER",
                         include_in_web_ui=False, default="", help="Tokenizer to use for token calculations")
-    parser.add_argument("--enable_custom_metrics", type=str, env_var="enable_custom_metrics",
+    parser.add_argument("--enable_custom_metrics", type=str, env_var="ENABLE_CUSTOM_METRICS",
                         include_in_web_ui=True, default="false", help="enable custom metric")
     parser.add_argument("--csv_upload_frequency", type=int, env_var="CSV_UPLOAD_FREQUENCY",
-                        include_in_web_ui=True, default=60, help="upload custom metrics every X seconds")
+                        include_in_web_ui=True, default=10, help="upload custom metrics every X seconds")
 
 
 @events.init.add_listener

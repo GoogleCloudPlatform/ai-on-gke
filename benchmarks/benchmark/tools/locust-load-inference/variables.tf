@@ -203,3 +203,10 @@ variable "huggingface_secret" {
   nullable    = true
   default     = "huggingface-secret"
 }
+
+variable "csv_upload_frequency" {
+  description = "how frequently, in seconds, to upload csv if custom metrics is turned on"
+  type        = number
+  nullable    = true
+  default     = 10
+}

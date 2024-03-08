@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 class TokenMetricCollector:
@@ -37,4 +38,5 @@ class TokenMetricCollector:
             writer.writerow(['Avg Tokens Sent Per Req', avg_sent])
             writer.writerow(['Avg Tokens Received Per Req', avg_received])
             writer.writerow(['Avg Test Time', avg_test_time])
+            writer.writerow(['Timestamp', datetime.datetime.now()])
             
