@@ -68,7 +68,7 @@ variable "ksa" {
   default     = "default"
 }
 
-variable "huggingface-secret" {
+variable "huggingface_secret" {
   description = "name of the kubectl huggingface secret token"
   type        = string
   nullable    = true

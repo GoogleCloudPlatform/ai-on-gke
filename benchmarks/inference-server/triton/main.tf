@@ -15,9 +15,12 @@
  */
 
  locals {
-  template_path = var.gcs_model_path == null 
+  
+  template_path = (
+    var.gcs_model_path == null 
   ? "${path.module}/manifest-templates/triton-tensorrtllm-inference-docker.tftpl" 
   : "${path.module}/manifest-templates/triton-tensorrtllm-inference-gs.tftpl"
+  )
 }
 
 resource "kubernetes_manifest" "default" {
@@ -25,7 +28,7 @@ resource "kubernetes_manifest" "default" {
     namespace                    = var.namespace
     ksa                          = var.ksa
     image_path                   = var.image_path
-    huggingface-secret           = var.huggingface-secret
+    huggingface_secret           = var.huggingface_secret
     gpu_count                    = var.gpu_count
     model_id                     = var.model_id
     gcs_model_path               = var.gcs_model_path

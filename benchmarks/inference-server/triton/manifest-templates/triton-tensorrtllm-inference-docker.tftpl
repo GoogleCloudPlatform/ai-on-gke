@@ -50,7 +50,7 @@ spec:
           - name: HUGGINGFACE_TOKEN
             valueFrom:
               secretKeyRef:
-                name: ${huggingface-secret}
+                name: ${huggingface_secret}
                 key: token
           resources:
             limits:
