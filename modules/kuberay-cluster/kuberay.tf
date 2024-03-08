@@ -23,7 +23,7 @@ resource "helm_release" "ray-cluster" {
   repository       = "https://ray-project.github.io/kuberay-helm/"
   chart            = "ray-cluster"
   namespace        = var.namespace
-  create_namespace = var.create_namespace
+  create_namespace = true
   version          = "1.0.0"
   values = [
     var.autopilot_cluster ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {

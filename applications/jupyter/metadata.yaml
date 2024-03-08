@@ -29,7 +29,6 @@ spec:
       dir: /applications/jupyter
     actuationTool:
       flavor: Terraform
-      version: ">= 1.5"
     description: {}
   content: {}
   interfaces:
@@ -38,10 +37,13 @@ spec:
         description: Enable iap authentication on jupyterhub
         varType: bool
         defaultValue: false
+      - name: autopilot_cluster
+        varType: string
+        defaultValue: "false"
       - name: brand
         description: name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty
         varType: string
-        defaultValue: "projects/<prj-number>/brands/<prj-number>"
+        defaultValue: ""
       - name: client_id
         description: Client ID used for enabling IAP
         varType: string
@@ -60,37 +62,61 @@ spec:
       - name: cluster_name
         varType: string
         required: true
-      - name: default_backend_service
-        varType: string
-        defaultValue: proxy-public
-      - name: workload_identity_service_account
-        description: Workload Identity Service Account
-        varType: string
-        required: true
-        defaultValue: "jupyter-service-account"
+      - name: create_cluster
+        varType: bool
+        defaultValue: false
+      - name: create_gcs_bucket
+        description: Enable flag to create gcs_bucket
+        varType: bool
+        defaultValue: false
       - name: gcs_bucket
         description: GCS bucket to mount on the notebook via GCSFuse and CSI
         varType: string
         required: true
-      - name: members_allowlist
+      - name: goog_cm_deployment_name
         varType: string
-        defaultValue: "allAuthenticatedUsers"
-      - name: namespace
+        defaultValue: ""
+      - name: k8s_backend_config_name
+        description: Name of the Backend Config on GCP
+        varType: string
+        defaultValue: jupyter-iap-config
+      - name: k8s_backend_service_name
+        description: Name of the Backend Config on GCP, this is defined by Jupyter hub
+        varType: string
+        defaultValue: proxy-public
+      - name: k8s_backend_service_port
+        description: Name of the Backend Service on GCP
+        varType: number
+        defaultValue: 80
+      - name: k8s_iap_secret_name
+        varType: string
+        defaultValue: jupyter-secret
+      - name: k8s_ingress_name
+        varType: string
+        defaultValue: jupyter-ingress
+      - name: k8s_managed_cert_name
+        description: Name for frontend managed certificate
+        varType: string
+        defaultValue: jupyter-managed-cert
+      - name: kubernetes_namespace
         description: Kubernetes namespace where resources are deployed
         varType: string
         required: true
-        defaultValue: "ai-on-gke"
+        defaultValue: ai-on-gke
+      - name: members_allowlist
+        varType: list(string)
+        defaultValue: []
+      - name: private_cluster
+        varType: bool
+        defaultValue: false
       - name: project_id
         description: GCP project id
         varType: string
         required: true
-      - name: service_name
-        description: Name of the BackendConfig Service on GCP
-        varType: string
-        defaultValue: iap-config-default
       - name: support_email
         description: Email for users to contact with questions about their consent
         varType: string
+        defaultValue: ""
       - name: url_domain_addr
         description: Domain provided by the user. If it's empty, we will create one for you.
         varType: string
@@ -99,8 +125,11 @@ spec:
         description: Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty
         varType: string
         defaultValue: ""
+      - name: workload_identity_service_account
+        description: workload identity service account
+        varType: string
+        required: true
+        defaultValue: jupyter-service-account
     outputs:
-      - name: jupyterhub_uri
-        description: Domain name to access deployment.
       - name: jupyterhub_password
-        description: Sensitive login password for application
+      - name: jupyterhub_uri

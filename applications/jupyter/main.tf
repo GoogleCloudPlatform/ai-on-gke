@@ -25,20 +25,47 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+module "infra" {
+  source = "../../infrastructure"
+  count  = var.create_cluster ? 1 : 0
+
+  project_id        = var.project_id
+  cluster_name      = var.cluster_name
+  cluster_location  = var.cluster_location
+  autopilot_cluster = var.autopilot_cluster
+  private_cluster   = var.private_cluster
+  create_network    = false
+  network_name      = "default"
+  subnetwork_name   = "default"
+  cpu_pools         = var.cpu_pools
+  enable_gpu        = false
+}
+
 data "google_container_cluster" "default" {
+  count    = var.create_cluster ? 0 : 1
   name     = var.cluster_name
   location = var.cluster_location
 }
 
 locals {
-  private_cluster       = data.google_container_cluster.default.private_cluster_config.0.enable_private_endpoint
+  endpoint              = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
+  ca_certificate        = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
+  private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
   cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
+  enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
+  enable_tpu            = var.create_cluster ? true : data.google_container_cluster.default[0].enable_tpu
+  host                  = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
+}
+
+locals {
+  workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
 }
 
 provider "kubernetes" {
-  host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+  alias                  = "jupyter"
+  host                   = local.host
   token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
+  cluster_ca_certificate = local.private_cluster ? "" : local.ca_certificate
   dynamic "exec" {
     for_each = local.private_cluster ? [1] : []
     content {
@@ -49,10 +76,11 @@ provider "kubernetes" {
 }
 
 provider "helm" {
+  alias = "jupyter"
   kubernetes {
-    host                   = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : "https://${data.google_container_cluster.default.endpoint}"
+    host                   = local.host
     token                  = data.google_client_config.default.access_token
-    cluster_ca_certificate = local.private_cluster ? "" : base64decode(data.google_container_cluster.default.master_auth[0].cluster_ca_certificate)
+    cluster_ca_certificate = local.private_cluster ? "" : local.ca_certificate
     dynamic "exec" {
       for_each = local.private_cluster ? [1] : []
       content {
@@ -73,7 +101,8 @@ module "gcs" {
 # create namespace
 module "namespace" {
   source           = "../../modules/kubernetes-namespace"
-  namespace        = var.namespace
+  providers        = { helm = helm.jupyter }
+  namespace        = var.kubernetes_namespace
   create_namespace = true
 }
 
@@ -90,11 +119,12 @@ resource "google_project_service" "project_service" {
 # Creates jupyterhub
 module "jupyterhub" {
   source                            = "../../modules/jupyter"
+  providers                         = { helm = helm.jupyter, kubernetes = kubernetes.jupyter }
   project_id                        = var.project_id
-  namespace                         = var.namespace
-  workload_identity_service_account = var.workload_identity_service_account
+  namespace                         = var.kubernetes_namespace
+  workload_identity_service_account = local.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket
-  autopilot_cluster                 = data.google_container_cluster.default.enable_autopilot
+  autopilot_cluster                 = local.enable_autopilot
 
   # IAP Auth parameters
   add_auth                 = var.add_auth
