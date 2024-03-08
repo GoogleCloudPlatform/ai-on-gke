@@ -17,7 +17,7 @@
  locals {
   
   template_path = (
-    var.gcs_model_path == null 
+  var.gcs_model_path == null 
   ? "${path.module}/manifest-templates/triton-tensorrtllm-inference-docker.tftpl" 
   : "${path.module}/manifest-templates/triton-tensorrtllm-inference-gs.tftpl"
   )
