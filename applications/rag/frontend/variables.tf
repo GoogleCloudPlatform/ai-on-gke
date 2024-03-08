@@ -29,15 +29,15 @@ variable "region" {
   default     = "us-central1"
 }
 
-variable "db_secret_name" {
+variable "cloudsql_instance" {
   type        = string
-  description = "CloudSQL user"
+  description = "Name of the CloudSQL instance for RAG VectorDB"
+  default     = "pgvector-instance"
 }
 
-variable "db_secret_namespace" {
+variable "db_secret_name" {
   type        = string
-  description = "CloudSQL password"
-  default     = "rag"
+  description = "CloudSQL user credentials"
 }
 
 variable "dataset_embeddings_table_name" {
@@ -45,15 +45,9 @@ variable "dataset_embeddings_table_name" {
   description = "Name of the table that stores vector embeddings for input dataset"
 }
 
-variable "inference_service_name" {
-  type        = string
-  description = "Model inference k8s service name"
-}
-
-variable "inference_service_namespace" {
+variable "inference_service_endpoint" {
   type        = string
   description = "Model inference k8s service endpoint"
-  default     = "rag"
 }
 
 variable "create_service_account" {
@@ -65,7 +59,7 @@ variable "create_service_account" {
 variable "google_service_account" {
   type        = string
   description = "Google Service Account name"
-  default = "frontend-gcp-sa"
+  default     = "frontend-gcp-sa"
 }
 
 variable "add_auth" {
@@ -80,9 +74,9 @@ variable "k8s_ingress_name" {
 }
 
 variable "k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "frontend-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "frontend-managed-cert"
 }
 
 variable "k8s_iap_secret_name" {
@@ -127,9 +121,9 @@ variable "url_domain_name" {
 }
 
 variable "support_email" {
-  type            = string
-  description     = "Email for users to contact with questions about their consent"
-  default         = "<email>"
+  type        = string
+  description = "Email for users to contact with questions about their consent"
+  default     = "<email>"
 }
 
 variable "client_id" {

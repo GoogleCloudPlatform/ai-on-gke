@@ -20,10 +20,12 @@ cluster_name     = "<cluster_name>"
 cluster_location = "us-central1"
 
 ## GKE environment variables
-kubernetes_namespace      = "rag"
-create_gcs_bucket         = true
-gcs_bucket                = "rag-data-xyzu" # Choose a globally unique bucket name.
+kubernetes_namespace = "rag"
+create_gcs_bucket    = true
+gcs_bucket           = "rag-data-xyzu" # Choose a globally unique bucket name.
 
+cloudsql_instance        = "pgvector-instance"
+cloudsql_instance_region = "us-central1"
 ## Service accounts
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `ray_service_account` to use an existing IAM service account.
@@ -37,24 +39,23 @@ rag_service_account        = "rag-system-account"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `jupyter_service_account` to use an existing IAM service account.
-create_jupyter_service_account = true
-jupyter_service_account        = "jupyter-system-account"
+jupyter_service_account = "jupyter-system-account"
 
 ## Embeddings table name - change this to the TABLE_NAME used in the notebook.
 dataset_embeddings_table_name = "googlemaps_reviews_db"
 
 ## IAP config
-brand                   = "projects/<prj-number>/brands/<prj-number>"
+brand = "projects/<prj-number>/brands/<prj-number>"
 
 ## Jupyter IAP Settings
-jupyter_add_auth                  = true # Set to true when using auth with IAP
-jupyter_support_email             = "<email>"
-jupyter_k8s_ingress_name          = "jupyter-ingress"
-jupyter_k8s_managed_cert_name     = "jupyter-managed-cert"
-jupyter_k8s_iap_secret_name       = "jupyter-iap-secret"
-jupyter_k8s_backend_config_name   = "jupyter-iap-config"
-jupyter_k8s_backend_service_name  = "proxy-public"
-jupyter_k8s_backend_service_port  = 80
+jupyter_add_auth                 = false # Set to true when using auth with IAP
+jupyter_support_email            = "<email>"
+jupyter_k8s_ingress_name         = "jupyter-ingress"
+jupyter_k8s_managed_cert_name    = "jupyter-managed-cert"
+jupyter_k8s_iap_secret_name      = "jupyter-iap-secret"
+jupyter_k8s_backend_config_name  = "jupyter-iap-config"
+jupyter_k8s_backend_service_name = "proxy-public"
+jupyter_k8s_backend_service_port = 80
 
 jupyter_url_domain_addr   = ""
 jupyter_url_domain_name   = ""
@@ -63,14 +64,14 @@ jupyter_client_secret     = ""
 jupyter_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
 
 ## Frontend IAP Settings
-frontend_add_auth                  = true # Set to true when using auth with IAP
-frontend_support_email             = "<email>"
-frontend_k8s_ingress_name          = "frontend-ingress"
-frontend_k8s_managed_cert_name     = "frontend-managed-cert"
-frontend_k8s_iap_secret_name       = "frontend-iap-secret"
-frontend_k8s_backend_config_name   = "frontend-iap-config"
-frontend_k8s_backend_service_name  = "rag-frontend"
-frontend_k8s_backend_service_port  = 8080
+frontend_add_auth                 = false # Set to true when using auth with IAP
+frontend_support_email            = "<email>"
+frontend_k8s_ingress_name         = "frontend-ingress"
+frontend_k8s_managed_cert_name    = "frontend-managed-cert"
+frontend_k8s_iap_secret_name      = "frontend-iap-secret"
+frontend_k8s_backend_config_name  = "frontend-iap-config"
+frontend_k8s_backend_service_name = "rag-frontend"
+frontend_k8s_backend_service_port = 8080
 
 frontend_url_domain_addr   = ""
 frontend_url_domain_name   = ""

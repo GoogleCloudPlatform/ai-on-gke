@@ -64,13 +64,10 @@ provider "helm" {
   }
 }
 
-# fetch all namespaces
-data "kubernetes_all_namespaces" "allns" {}
-
 module "kuberay-operator" {
   source                 = "../../modules/kuberay-operator"
   name                   = "kuberay-operator"
-  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
+  create_namespace       = true
   namespace              = var.ray_namespace
   project_id             = var.project_id
   autopilot_cluster      = data.google_container_cluster.default.enable_autopilot
@@ -90,7 +87,7 @@ module "kuberay-monitoring" {
   source                          = "../../modules/kuberay-monitoring"
   project_id                      = var.project_id
   namespace                       = var.ray_namespace
-  create_namespace                = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
+  create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = var.gcp_service_account
   depends_on                      = [module.kuberay-operator]
@@ -106,7 +103,7 @@ module "gcs" {
 module "kuberay-cluster" {
   count                  = var.create_ray_cluster == true ? 1 : 0
   source                 = "../../modules/kuberay-cluster"
-  create_namespace       = !contains(data.kubernetes_all_namespaces.allns.namespaces, var.ray_namespace)
+  create_namespace       = true
   namespace              = var.ray_namespace
   project_id             = var.project_id
   enable_tpu             = data.google_container_cluster.default.enable_tpu

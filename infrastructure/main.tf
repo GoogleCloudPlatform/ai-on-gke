@@ -16,6 +16,26 @@
 ####    PLATFORM
 #######################################################
 
+## GPU locations where L4 & T4 are supported.
+locals {
+  gpu_l4_t4_location = {
+    asia-east1      = "asia-east1-a,asia-east1-c"
+    asia-northeast1 = "asia-northeast1-a,asia-northeast1-c"
+    asia-northeast3 = "asia-northeast3-b"
+    asia-south1     = "asia-south1-a,asia-south1-b"
+    asia-southeast1 = "asia-southeast1-a,asia-southeast1-b,asia-southeast1-c"
+    europe-west1    = "europe-west1-b,europe-west1-c"
+    europe-west2    = "europe-west2-a,europe-west2-b"
+    europe-west3    = "europe-west3-b"
+    europe-west4    = "europe-west4-a,europe-west4-b,europe-west4-c"
+    us-central1     = "us-central1-a,us-central1-b,us-central1-c"
+    us-east1        = "us-east1-c,us-east1-d"
+    us-east4        = "us-east4-a,us-east4-c"
+    us-west1        = "us-west1-a,us-west1-b"
+    us-west4        = "us-west4-a"
+  }
+}
+
 module "custom-network" {
   source       = "terraform-google-modules/network/google"
   version      = "8.0.0"
@@ -40,7 +60,13 @@ module "custom-network" {
 locals {
   network_name    = var.create_network ? module.custom-network[0].network_name : var.network_name
   subnetwork_name = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
+  region          = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
+  regional        = local.region != "" ? true : false
+  zone            = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : []
+  # Update gpu_pools with node_locations according to region and zone gpu availibility, if not provided
+  gpu_pools = [for elm in var.gpu_pools : (local.regional && contains(keys(local.gpu_l4_t4_location), local.region) && elm["node_locations"] == "") ? merge(elm, { "node_locations" : local.gpu_l4_t4_location[local.region] }) : elm]
 }
+
 
 ## create public GKE standard
 module "public-gke-standard-cluster" {
@@ -53,12 +79,13 @@ module "public-gke-standard-cluster" {
   subnetwork_name = local.subnetwork_name
 
   ## gke variables
-  cluster_regional                     = var.cluster_regional
+  cluster_regional                     = local.regional
+  cluster_region                       = local.region
+  cluster_zones                        = local.zone
   cluster_name                         = var.cluster_name
   cluster_labels                       = var.cluster_labels
   kubernetes_version                   = var.kubernetes_version
-  cluster_region                       = var.cluster_region
-  cluster_zones                        = var.cluster_zones
+  release_channel                      = var.release_channel
   ip_range_pods                        = var.ip_range_pods
   ip_range_services                    = var.ip_range_services
   monitoring_enable_managed_prometheus = var.monitoring_enable_managed_prometheus
@@ -69,7 +96,7 @@ module "public-gke-standard-cluster" {
   ## pools config variables
   cpu_pools                   = var.cpu_pools
   enable_gpu                  = var.enable_gpu
-  gpu_pools                   = var.gpu_pools
+  gpu_pools                   = local.gpu_pools
   enable_tpu                  = var.enable_tpu
   tpu_pools                   = var.tpu_pools
   all_node_pools_oauth_scopes = var.all_node_pools_oauth_scopes
@@ -89,12 +116,13 @@ module "public-gke-autopilot-cluster" {
   subnetwork_name = local.subnetwork_name
 
   ## gke variables
-  cluster_regional           = var.cluster_regional
+  cluster_regional           = local.regional
+  cluster_region             = local.region
+  cluster_zones              = local.zone
   cluster_name               = var.cluster_name
   cluster_labels             = var.cluster_labels
   kubernetes_version         = var.kubernetes_version
-  cluster_region             = var.cluster_region
-  cluster_zones              = var.cluster_zones
+  release_channel            = var.release_channel
   ip_range_pods              = var.ip_range_pods
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
@@ -113,12 +141,13 @@ module "private-gke-standard-cluster" {
   subnetwork_name = local.subnetwork_name
 
   ## gke variables
-  cluster_regional                     = var.cluster_regional
+  cluster_regional                     = local.regional
+  cluster_region                       = local.region
+  cluster_zones                        = local.zone
   cluster_name                         = var.cluster_name
   cluster_labels                       = var.cluster_labels
   kubernetes_version                   = var.kubernetes_version
-  cluster_region                       = var.cluster_region
-  cluster_zones                        = var.cluster_zones
+  release_channel                      = var.release_channel
   ip_range_pods                        = var.ip_range_pods
   ip_range_services                    = var.ip_range_services
   monitoring_enable_managed_prometheus = var.monitoring_enable_managed_prometheus
@@ -130,7 +159,7 @@ module "private-gke-standard-cluster" {
   ## pools config variables
   cpu_pools                   = var.cpu_pools
   enable_gpu                  = var.enable_gpu
-  gpu_pools                   = var.gpu_pools
+  gpu_pools                   = local.gpu_pools
   enable_tpu                  = var.enable_tpu
   tpu_pools                   = var.tpu_pools
   all_node_pools_oauth_scopes = var.all_node_pools_oauth_scopes
@@ -150,12 +179,13 @@ module "private-gke-autopilot-cluster" {
   subnetwork_name = local.subnetwork_name
 
   ## gke variables
-  cluster_regional           = var.cluster_regional
+  cluster_regional           = local.regional
+  cluster_region             = local.region
+  cluster_zones              = local.zone
   cluster_name               = var.cluster_name
   cluster_labels             = var.cluster_labels
   kubernetes_version         = var.kubernetes_version
-  cluster_region             = var.cluster_region
-  cluster_zones              = var.cluster_zones
+  release_channel            = var.release_channel
   ip_range_pods              = var.ip_range_pods
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks

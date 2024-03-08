@@ -30,6 +30,20 @@ variable "gcs_bucket" {
   default     = "<your gcs bucket>"
 }
 
+// at most one of the below trigers can be set to true
+variable "gcs_fuse_csi_driver_enabled" {
+  type        = string
+  description = "Set to true if running DLIO on GCSFuse and the Cloud Storage FUSE CSI driver is enabled on your cluster"
+  default     = "\"true\""
+}
+
+variable "paralllestore_csi_driver_enabled" {
+  type        = string
+  description = "Set to true if running DLIO on Parallelstore and the Parallelstore CSI driver is enabled on your cluster"
+  default     = "\"false\""
+}
+// at most one of the above triggeres can be set to true
+
 // DLIO Job configurations
 variable "job_backoffLimit" {
   type        = number
@@ -49,12 +63,6 @@ variable "job_parallelism" {
   default     = 1
 }
 
-variable "gcs_fuse_csi_driver_enabled" {
-  type        = string
-  description = "Set to true if the Cloud Storage FUSE CSI driver is enabled on your cluster"
-  default     = "\"true\""
-}
-
 variable "gcs_fuse_sidecar_cpu_limit" {
   type        = string
   description = "The maximum amount of CPU resource that the sidecar container can use"
@@ -71,6 +79,18 @@ variable "gcs_fuse_sidecar_ephemeral_storage_limit" {
   type        = string
   description = "The maximum amount of Ephemeral Storage resource that the sidecar container can use"
   default     = "\"100Gi\""
+}
+
+variable "pscsi_sidecar_cpu_limit" {
+  type        = string
+  description = "The maximum amount of CPU resource that the sidecar container can use"
+  default     = "\"20\""
+}
+
+variable "pscsi_sidecar_memory_limit" {
+  type        = string
+  description = "The maximum amount of Memory resource that the sidecar container can use"
+  default     = "\"20Gi\""
 }
 
 variable "dlio_container_cpu_limit" {
@@ -208,4 +228,60 @@ variable "gcsfuse_type_cache_ttl" {
   type        = string
   description = "Specifies how long Cloud Storage FUSE caches the mapping of objects in Cloud Storage to their corresponding type, such as files or directories"
   default     = "120m0s"
+}
+
+// parallelstore variables
+variable "run_parallelstore_data_loader" {
+  type        = string
+  description = "Set to true if running the dataloader for parallelstore"
+  default     = "\"true\""
+}
+
+variable "parallelstore_instance_name" {
+  type        = string
+  description = "instance name of parallelstore"
+  default     = "<instance name>"
+}
+
+// The IPs are listed as "accessPoints" in the result of instance describe command
+variable "parallelstore_ip_address_1" {
+  type        = string
+  description = "ip address of the parallelstore instance's accessPoints"
+  default     = "<ip-address>"
+}
+
+variable "parallelstore_ip_address_2" {
+  type        = string
+  description = "ip address of the parallelstore instance's accessPoints"
+  default     = "<ip-address>"
+}
+
+variable "parallelstore_ip_address_3" {
+  type        = string
+  description = "ip address of the parallelstore instance's accessPoints"
+  default     = "<ip-address>"
+}
+
+variable "parallelstore_network_name" {
+  type        = string
+  description = "network name of the parallelstore instance"
+  default     = "<network name>"
+}
+
+variable "parallelstore_location" {
+  type        = string
+  description = "location of the parallelstore instance, e.g. us-central1-a"
+  default     = "<location>"
+}
+
+variable "parallelstore_storageclass" {
+  type        = string
+  description = "the storage class used for dynamic provisioning. if using static provisioning, set it to nil"
+  default     = "parallelstore-rwx"
+}
+
+variable "parallelstore_project" {
+  type        = string
+  description = "the project name of the parallelstore instance"
+  default     = "<project name>"
 }

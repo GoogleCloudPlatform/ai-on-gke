@@ -20,7 +20,6 @@ metadata:
   labels:
     app: tgi
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: tgi
@@ -50,7 +49,7 @@ spec:
         - name: text-generation-inference
           ports:
             - containerPort: 80
-          image: "ghcr.io/huggingface/text-generation-inference:1.1.1"
+          image: "ghcr.io/huggingface/text-generation-inference:1.4.2"
           args: ["--model-id", "${model_id}", "--num-shard", "${gpu_count}"] # , "{token}" tensor parallelism, should correspond to number of gpus below
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
           env:
@@ -63,6 +62,8 @@ spec:
           resources:
             limits:
               nvidia.com/gpu: ${gpu_count} # number of gpu's allocated to workload
+            requests:
+              cpu: "1"
           serviceAccountName: ${ksa}
           volumeMounts:
             - mountPath: /dev/shm
@@ -73,3 +74,21 @@ spec:
             - mountPath: "/var/secrets"
               name: hftoken
 %{ endfor ~}
+          # Hack: tgi won't generate any metrics until it's served at least one
+          # request, and without that, autoscaling won't work. So generate one
+          # request upon startup.
+          startupProbe:
+            failureThreshold: 3600
+            periodSeconds: 10
+            timeoutSeconds: 60
+            exec:
+              command:
+                - /usr/bin/curl
+                - http://localhost:80/generate
+                - -X
+                - POST
+                - -d
+                - '{"inputs":"test", "parameters":{"max_new_tokens":1}}'
+                - -H
+                - 'Content-Type: application/json'
+                - --fail

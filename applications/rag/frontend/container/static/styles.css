@@ -144,3 +144,12 @@ input[type="submit"]:disabled {
 #template-section input[type="checkbox"] {
     margin-top: 10px;
 }
+
+#nlp-filter-section {
+    margin-top: 20px;
+}
+
+#nlp-range {
+    width: 100%;
+    margin: 10px 0;
+}

@@ -15,68 +15,37 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-
-data "kubernetes_service" "inference_service" {
-  metadata {
-    name      = var.inference_service_name
-    namespace = var.inference_service_namespace
-  }
-}
-
-data "kubernetes_secret" "db_secret" {
-  metadata {
-    name      = var.db_secret_name
-    namespace = var.db_secret_namespace
-  }
-}
-
 locals {
-  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, "pgvector-instance")
-}
-
-# IAP Section: Enabled the IAP service
-resource "google_project_service" "project_service" {
-  count                      = var.add_auth ? 1 : 0
-  project                    = var.project_id
-  service                    = "iap.googleapis.com"
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
-}
-
-# IAP Section: Creates the OAuth client used in IAP
-resource "google_iap_client" "iap_oauth_client" {
-  count        = var.add_auth && var.client_id == "" ? 1 : 0
-  display_name = "Frontend-Client"
-  brand        = var.brand == "" ? "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}" : var.brand
+  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, var.cloudsql_instance)
 }
 
 # IAP Section: Creates the GKE components
 module "iap_auth" {
-  count                     = var.add_auth ? 1 : 0
-  source                    = "../../../modules/iap"
+  count  = var.add_auth ? 1 : 0
+  source = "../../../modules/iap"
 
-  project_id                         = var.project_id
-  namespace                          = var.namespace
-  frontend_add_auth                  = var.add_auth
-  frontend_k8s_ingress_name          = var.k8s_ingress_name
-  frontend_k8s_managed_cert_name     = var.k8s_managed_cert_name
-  frontend_k8s_iap_secret_name       = var.k8s_iap_secret_name
-  frontend_k8s_backend_config_name   = var.k8s_backend_config_name
-  frontend_k8s_backend_service_name  = var.k8s_backend_service_name
-  frontend_k8s_backend_service_port  = var.k8s_backend_service_port
-  frontend_client_id                 = var.client_id != "" ? var.client_id : google_iap_client.iap_oauth_client[0].client_id
-  frontend_client_secret             = var.client_id != "" ? var.client_secret : google_iap_client.iap_oauth_client[0].secret
-  frontend_url_domain_addr           = var.url_domain_addr
-  frontend_url_domain_name           = var.url_domain_name
-  depends_on                = [
-    google_project_service.project_service,
+  project_id               = var.project_id
+  namespace                = var.namespace
+  app_name                 = "frontend"
+  brand                    = var.brand
+  k8s_ingress_name         = var.k8s_ingress_name
+  k8s_managed_cert_name    = var.k8s_managed_cert_name
+  k8s_iap_secret_name      = var.k8s_iap_secret_name
+  k8s_backend_config_name  = var.k8s_backend_config_name
+  k8s_backend_service_name = var.k8s_backend_service_name
+  k8s_backend_service_port = var.k8s_backend_service_port
+  client_id                = var.client_id
+  client_secret            = var.client_secret
+  url_domain_addr          = var.url_domain_addr
+  url_domain_name          = var.url_domain_name
+  depends_on = [
     kubernetes_service.rag_frontend_service
   ]
 }
 
 module "frontend-workload-identity" {
   source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  version             = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
   use_existing_gcp_sa = !var.create_service_account
   name                = var.google_service_account
   namespace           = var.namespace
@@ -99,7 +68,7 @@ resource "kubernetes_service" "rag_frontend_service" {
       target_port = 8080
     }
 
-    type = var.add_auth ? "NodePort" : "ClientIP"
+    type = var.add_auth ? "NodePort" : "ClusterIP"
   }
 }
 
@@ -130,11 +99,17 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:e2dd85e92f42e3684455a316dee5f98f61f1f3fba80b9368bd6f48d5e2e3475e"
+          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:3d3b03e4bc6c8fe218105bd69cc6f9cfafb18fc4b1bbb81f5c46f2598b5d5f10"
           name  = "rag-frontend"
 
           port {
             container_port = 8080
+          }
+
+          volume_mount {
+            name       = "secret-volume"
+            mount_path = "/etc/secret-volume"
+            read_only  = true
           }
 
           env {
@@ -149,42 +124,12 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
 
           env {
             name  = "INFERENCE_ENDPOINT"
-            value = data.kubernetes_service.inference_service.status.0.load_balancer.0.ingress.0.ip
+            value = var.inference_service_endpoint
           }
 
           env {
             name  = "TABLE_NAME"
             value = var.dataset_embeddings_table_name
-          }
-
-          env {
-            name = "DB_USER"
-            value_from {
-              secret_key_ref {
-                name = data.kubernetes_secret.db_secret.metadata.0.name
-                key  = "username"
-              }
-            }
-          }
-
-          env {
-            name = "DB_PASSWORD"
-            value_from {
-              secret_key_ref {
-                name = data.kubernetes_secret.db_secret.metadata.0.name
-                key  = "password"
-              }
-            }
-          }
-
-          env {
-            name = "DB_NAME"
-            value_from {
-              secret_key_ref {
-                name = data.kubernetes_secret.db_secret.metadata.0.name
-                key  = "database"
-              }
-            }
           }
 
           resources {
@@ -199,6 +144,13 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
               ephemeral-storage = "5Gi"
             }
           }
+        }
+
+        volume {
+          secret {
+            secret_name = var.db_secret_name
+          }
+          name = "secret-volume"
         }
 
         container {

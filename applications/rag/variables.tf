@@ -107,9 +107,9 @@ variable "frontend_k8s_ingress_name" {
 }
 
 variable "frontend_k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "frontend-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "frontend-managed-cert"
 }
 
 variable "frontend_k8s_iap_secret_name" {
@@ -184,9 +184,9 @@ variable "jupyter_k8s_ingress_name" {
 }
 
 variable "jupyter_k8s_managed_cert_name" {
-  type          = string
-  description   = "Name for frontend managed certificate"
-  default       = "jupyter-managed-cert"
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "jupyter-managed-cert"
 }
 
 variable "jupyter_k8s_iap_secret_name" {
@@ -209,7 +209,7 @@ variable "jupyter_k8s_backend_service_name" {
 
 variable "jupyter_k8s_backend_service_port" {
   type        = number
-  description = "NName of the Backend Service Port"
+  description = "Name of the Backend Service Port"
   default     = 80
 }
 
@@ -228,6 +228,7 @@ variable "jupyter_url_domain_name" {
 variable "jupyter_support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
+  default     = ""
 }
 
 variable "jupyter_client_id" {
@@ -250,7 +251,7 @@ variable "jupyter_members_allowlist" {
 ## GKE variables
 variable "create_cluster" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "private_cluster" {
@@ -263,11 +264,23 @@ variable "autopilot_cluster" {
   default = false
 }
 
+variable "cloudsql_instance" {
+  type        = string
+  description = "Name of the CloudSQL instance for RAG VectorDB"
+  default     = "pgvector-instance"
+}
+
+variable "cloudsql_instance_region" {
+  type        = string
+  description = "GCP region for CloudSQL instance"
+  default     = "us-central1"
+}
+
 variable "cpu_pools" {
   type = list(object({
     name                   = string
     machine_type           = string
-    node_locations         = string
+    node_locations         = optional(string, "")
     autoscaling            = optional(bool, false)
     min_count              = optional(number, 1)
     max_count              = optional(number, 3)
@@ -287,14 +300,13 @@ variable "cpu_pools" {
     accelerator_count      = optional(number, 0)
   }))
   default = [{
-    name           = "cpu-pool"
-    machine_type   = "n1-standard-16"
-    node_locations = "us-central1-b,us-central1-c"
-    autoscaling    = true
-    min_count      = 1
-    max_count      = 3
-    disk_size_gb   = 100
-    disk_type      = "pd-standard"
+    name         = "cpu-pool"
+    machine_type = "n1-standard-16"
+    autoscaling  = true
+    min_count    = 1
+    max_count    = 3
+    disk_size_gb = 100
+    disk_type    = "pd-standard"
   }]
 }
 
@@ -302,7 +314,7 @@ variable "gpu_pools" {
   type = list(object({
     name                   = string
     machine_type           = string
-    node_locations         = string
+    node_locations         = optional(string, "")
     autoscaling            = optional(bool, false)
     min_count              = optional(number, 1)
     max_count              = optional(number, 3)
@@ -326,7 +338,6 @@ variable "gpu_pools" {
   default = [{
     name               = "gpu-pool"
     machine_type       = "n1-standard-16"
-    node_locations     = "us-central1-b,us-central1-c"
     autoscaling        = true
     min_count          = 1
     max_count          = 3
@@ -339,7 +350,6 @@ variable "gpu_pools" {
     {
       name               = "gpu-pool-l4"
       machine_type       = "g2-standard-24"
-      node_locations     = "us-central1-a,us-central1-b"
       autoscaling        = true
       min_count          = 1
       max_count          = 3
@@ -350,3 +360,4 @@ variable "gpu_pools" {
       accelerator_type   = "nvidia-l4"
       gpu_driver_version = "DEFAULT"
   }]
+}

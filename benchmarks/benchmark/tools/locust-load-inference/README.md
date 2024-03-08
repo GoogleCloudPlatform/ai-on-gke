@@ -60,7 +60,7 @@ The Locust workload requires storage.admin access to view the dataset in the giv
 To give viewer permissions on the gcs bucket to the gcloud service account, run the following:
 
 ```
-gcloud storage buckets add-iam-policy-binding  gs://$BUCKET/$DATASET_FILENAME
+gcloud storage buckets add-iam-policy-binding  gs://$BUCKET
 --member=serviceAccount:$GOOGLE_SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com --role=roles/storage.admin
 ```
 

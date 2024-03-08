@@ -25,6 +25,7 @@ from langchain.chains import LLMChain
 from langchain.llms import HuggingFaceTextGenInference
 from langchain.prompts import PromptTemplate
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
+from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 from werkzeug.exceptions import HTTPException
 from google.cloud.sql.connector import Connector
 from sentence_transformers import SentenceTransformer
@@ -40,8 +41,14 @@ DB_NAME = "pgvector-database"
 # initialize parameters
 INFERENCE_ENDPOINT=os.environ.get('INFERENCE_ENDPOINT', '127.0.0.1:8081')
 INSTANCE_CONNECTION_NAME = os.environ.get('INSTANCE_CONNECTION_NAME', '')
-DB_USER = os.environ.get('DB_USER', '')
-DB_PASS = os.environ.get('DB_PASSWORD', '')
+
+db_username_file = open("/etc/secret-volume/username", "r")
+DB_USER = db_username_file.read()
+db_username_file.close()
+
+db_password_file = open("/etc/secret-volume/password", "r")
+DB_PASS = db_password_file.read()
+db_password_file.close()
 
 db = None
 filter_names = ['DlpFilter', 'WebRiskFilter']
@@ -99,6 +106,11 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
         creator=getconn,
     )
     return pool
+
+@app.route('/get_nlp_status', methods=['GET'])
+def get_nlp_status():
+    nlp_enabled = nlp_filter.is_nlp_api_enabled()
+    return jsonify({"nlpEnabled": nlp_enabled})
 
 @app.route('/get_dlp_status', methods=['GET'])
 def get_dlp_status():
@@ -160,7 +172,10 @@ def handlePrompt():
             "context": context,
             "user_prompt": user_prompt
         })
-        if 'inspectTemplate' in data and 'deidentifyTemplate' in data:
+        if 'nlpFilterLevel' in data:
+            if nlp_filter.is_content_inappropriate(response['text'], data.get['nlpFilterLevel']):
+                response['text'] = 'The response is deemed inappropriate for display.'
+        elif 'inspectTemplate' in data and 'deidentifyTemplate' in data:
             inspect_template_path = data['inspectTemplate']
             deidentify_template_path = data['deidentifyTemplate']
             if inspect_template_path != "" and deidentify_template_path != "":

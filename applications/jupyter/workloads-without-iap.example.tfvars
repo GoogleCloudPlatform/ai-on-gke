@@ -26,10 +26,10 @@ cluster_membership_id = "" # required only for private clusters, default: cluste
 #######################################################
 
 ## JupyterHub variables
-namespace                   = "jupyter"
-gcs_bucket                  = "<gcs-bucket>"
-create_service_account      = true
-gcp_and_k8s_service_account = "jupyter-service-account"
+namespace                         = "jupyter"
+gcs_bucket                        = "<gcs-bucket>"
+create_gcs_bucket                 = true
+workload_identity_service_account = "jupyter-service-account"
 
 # Jupyterhub without IAP
-add_auth                  = false
+add_auth = false

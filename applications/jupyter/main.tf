@@ -70,6 +70,23 @@ module "gcs" {
   bucket_name = var.gcs_bucket
 }
 
+# create namespace
+module "namespace" {
+  source           = "../../modules/kubernetes-namespace"
+  namespace        = var.namespace
+  create_namespace = true
+}
+
+# IAP Section: Enabled the IAP service
+resource "google_project_service" "project_service" {
+  count   = var.add_auth ? 1 : 0
+  project = var.project_id
+  service = "iap.googleapis.com"
+
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
 # Creates jupyterhub
 module "jupyterhub" {
   source                            = "../../modules/jupyter"
@@ -80,19 +97,19 @@ module "jupyterhub" {
   autopilot_cluster                 = data.google_container_cluster.default.enable_autopilot
 
   # IAP Auth parameters
-  add_auth                  = var.add_auth
-  brand                     = var.brand
-  support_email             = var.support_email
-  client_id                 = var.client_id
-  client_secret             = var.client_secret
-  k8s_ingress_name          = var.k8s_ingress_name
-  k8s_managed_cert_name     = var.k8s_managed_cert_name
-  k8s_iap_secret_name       = var.k8s_iap_secret_name
-  k8s_backend_config_name   = var.k8s_backend_config_name
-  k8s_backend_service_name  = var.k8s_backend_service_name
-  k8s_backend_service_port  = var.k8s_backend_service_port
-  url_domain_addr           = var.url_domain_addr
-  url_domain_name           = var.url_domain_name
-  members_allowlist         = var.members_allowlist
-  depends_on                = [module.gcs]
+  add_auth                 = var.add_auth
+  brand                    = var.brand
+  support_email            = var.support_email
+  client_id                = var.client_id
+  client_secret            = var.client_secret
+  k8s_ingress_name         = var.k8s_ingress_name
+  k8s_managed_cert_name    = var.k8s_managed_cert_name
+  k8s_iap_secret_name      = var.k8s_iap_secret_name
+  k8s_backend_config_name  = var.k8s_backend_config_name
+  k8s_backend_service_name = var.k8s_backend_service_name
+  k8s_backend_service_port = var.k8s_backend_service_port
+  url_domain_addr          = var.url_domain_addr
+  url_domain_name          = var.url_domain_name
+  members_allowlist        = var.members_allowlist
+  depends_on               = [module.gcs, module.namespace]
 }

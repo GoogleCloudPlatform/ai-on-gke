@@ -90,3 +90,42 @@ variable "hugging_face_secret_version" {
   nullable    = true
   default     = null
 }
+
+variable "hpa_type" {
+  description = "How the TGI workload should be scaled."
+  type        = string
+  default     = null
+  nullable    = true
+  validation {
+    condition     = var.hpa_type == null ? true : contains(["cpu", "tgi_queue_size", "tgi_batch_current_size", "tgi_batch_current_max_tokens"], var.hpa_type)
+    error_message = "Allows values for hpa_type are {null, \"cpu\", \"tgi_queue_size\", \"tgi_batch_current_size\", \"tgi_batch_current_max_tokens\"}"
+  }
+}
+
+variable "hpa_min_replicas" {
+  description = "Minimum number of HPA replicas."
+  type        = number
+  default     = 1
+  nullable    = false
+}
+
+variable "hpa_max_replicas" {
+  description = "Maximum number of HPA replicas."
+  type        = number
+  default     = 5
+  nullable    = false
+}
+
+# TODO: combine hpa variables into a single object (so that they can be
+# validated together)
+variable "hpa_averagevalue_target" {
+  description = "AverageValue target for the `hpa_type` metric. Must be set if `hpa_type` is not null."
+  type        = number
+  default     = null
+  nullable    = true
+}
+
+variable "project_id" {
+  description = "Project id of existing or created project."
+  type        = string
+}

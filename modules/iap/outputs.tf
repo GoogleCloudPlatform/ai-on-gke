@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "jupyter_domain" {
-  value = var.jupyter_add_auth && var.jupyter_url_domain_addr == "" ? "${google_compute_global_address.jupyter_ip_address[0].address}.nip.io" : var.jupyter_url_domain_addr
-}
-
-output "frontend_domain" {
-  value = var.frontend_add_auth && var.frontend_url_domain_addr == "" ? "${google_compute_global_address.frontend_ip_address[0].address}.nip.io" : var.frontend_url_domain_addr
+output "domain" {
+  value = var.url_domain_addr == "" ? "${google_compute_global_address.ip_address[0].address}.nip.io" : var.url_domain_addr
 }

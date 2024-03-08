@@ -18,6 +18,11 @@ locals {
 
   all_templates = concat(local.wl_templates, local.secret_templates)
 
+  hpa_cpu_template           = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
+  hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.tgi.custom_metric.yaml.tftpl"
+  tgi_podmonitoring          = "${path.module}/hpa-templates/tgi-podmonitoring.yaml.tftpl"
+  custom_metrics_enabled     = !(var.hpa_type == null || var.hpa_type == "cpu")
+
   wl_templates = [
     for f in fileset(local.wl_templates_path, "*tftpl") :
     "${local.wl_templates_path}/${f}"
@@ -45,6 +50,15 @@ locals {
   )
 }
 
+module "custom_metrics_stackdriver_adapter" {
+  count  = local.custom_metrics_enabled ? 1 : 0
+  source = "./custom-metrics-stackdriver-adapter"
+  workload_identity = {
+    enabled    = true
+    project_id = var.project_id
+  }
+}
+
 resource "kubernetes_manifest" "default" {
   for_each = toset(local.all_templates)
   manifest = yamldecode(templatefile(each.value, {
@@ -57,4 +71,32 @@ resource "kubernetes_manifest" "default" {
   timeouts {
     create = "60m"
   }
+}
+
+resource "kubernetes_manifest" "hpa-cpu" {
+  count = var.hpa_type == "cpu" ? 1 : 0
+  manifest = yamldecode(templatefile(local.hpa_cpu_template, {
+    namespace               = var.namespace
+    hpa_averagevalue_target = var.hpa_averagevalue_target
+    hpa_min_replicas        = var.hpa_min_replicas
+    hpa_max_replicas        = var.hpa_max_replicas
+  }))
+}
+
+resource "kubernetes_manifest" "tgi-pod-monitoring" {
+  count = local.custom_metrics_enabled ? 1 : 0
+  manifest = yamldecode(templatefile(local.tgi_podmonitoring, {
+    namespace = var.namespace
+  }))
+}
+
+resource "kubernetes_manifest" "hpa_custom_metric" {
+  count = local.custom_metrics_enabled ? 1 : 0
+  manifest = yamldecode(templatefile(local.hpa_custom_metric_template, {
+    namespace               = var.namespace
+    custom_metric_name      = var.hpa_type
+    hpa_averagevalue_target = var.hpa_averagevalue_target
+    hpa_min_replicas        = var.hpa_min_replicas
+    hpa_max_replicas        = var.hpa_max_replicas
+  }))
 }

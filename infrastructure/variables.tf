@@ -98,14 +98,15 @@ variable "kubernetes_version" {
   default = "latest"
 }
 
-variable "cluster_region" {
+variable "release_channel" {
+  type    = string
+  default = "RAPID"
+}
+
+variable "cluster_location" {
   type = string
 }
 
-variable "cluster_zones" {
-  type    = list(string)
-  default = []
-}
 variable "ip_range_pods" {
   type    = string
   default = ""
@@ -174,7 +175,7 @@ variable "enable_tpu" {
 }
 variable "enable_gpu" {
   type        = bool
-  description = "Set to true to create TPU node pool"
+  description = "Set to true to create GPU node pool"
   default     = true
 }
 
@@ -182,7 +183,7 @@ variable "cpu_pools" {
   type = list(object({
     name                   = string
     machine_type           = string
-    node_locations         = string
+    node_locations         = optional(string, "")
     autoscaling            = optional(bool, false)
     min_count              = optional(number, 1)
     max_count              = optional(number, 3)
@@ -202,14 +203,13 @@ variable "cpu_pools" {
     accelerator_count      = optional(number, 0)
   }))
   default = [{
-    name           = "cpu-pool"
-    machine_type   = "n1-standard-16"
-    node_locations = "us-central1-b,us-central1-c"
-    autoscaling    = true
-    min_count      = 1
-    max_count      = 3
-    disk_size_gb   = 100
-    disk_type      = "pd-standard"
+    name         = "cpu-pool"
+    machine_type = "n1-standard-16"
+    autoscaling  = true
+    min_count    = 1
+    max_count    = 3
+    disk_size_gb = 100
+    disk_type    = "pd-standard"
   }]
 }
 
@@ -217,7 +217,7 @@ variable "gpu_pools" {
   type = list(object({
     name                   = string
     machine_type           = string
-    node_locations         = string
+    node_locations         = optional(string, "")
     autoscaling            = optional(bool, false)
     min_count              = optional(number, 1)
     max_count              = optional(number, 3)
@@ -241,7 +241,6 @@ variable "gpu_pools" {
   default = [{
     name               = "gpu-pool"
     machine_type       = "n1-standard-16"
-    node_locations     = "us-central1-b,us-central1-c"
     autoscaling        = true
     min_count          = 1
     max_count          = 3
