@@ -80,9 +80,9 @@ resource "google_service_account_iam_binding" "hub-workload-identity-user" {
 
 
 resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
-  bucket = var.gcs_bucket
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${module.jupyterhub-workload-identity.gcp_service_account_email}"
+  bucket     = var.gcs_bucket
+  role       = "roles/storage.objectAdmin"
+  member     = "serviceAccount:${module.jupyterhub-workload-identity.gcp_service_account_email}"
 }
 
 resource "random_password" "generated_password" {
