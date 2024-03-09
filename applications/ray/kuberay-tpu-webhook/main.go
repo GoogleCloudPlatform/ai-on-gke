@@ -93,22 +93,16 @@ func getNumTPUHostsFromTopology(topology string, acceleratorType string) (int32,
 	}
 	// calculate the # of VMs using # of chips per host
 	acceleratorTypeValues := strings.Split(acceleratorType, "-")
-	var vms int32
+	chipsPerHost := 4 // default to 4 chips per VM
 	if acceleratorTypeValues[0] == "v5litepod" {
 		// v5e TPU VMs can have 1, 4 or 8 chips
 		chipsPerHost, err := strconv.Atoi(acceleratorTypeValues[1])
 		if err != nil {
 			klog.Errorf("Unexpected acceleratorType: %s", acceleratorType)
 		}
-		if chipsPerHost > 8 {
-			chipsPerHost = 4
-		}
-		vms = int32(max(chips/chipsPerHost, 1))
-	} else {
-		// otherwise default to 4 chips per VM
-		vms = int32(max(chips/4, 1))
+		chipsPerHost = min(chipsPerHost, 8) // max of 8 chips per host
 	}
-	return vms, nil
+	return int32(max(chips/chipsPerHost, 1)), nil
 }
 
 // check if request is for TPU multi-host
