@@ -102,10 +102,6 @@ spec:
           title: Ray Version
           section: ray
           enumValueLabels:
-            - label: v2.7.1
-              value: "v2.7.1"
-            - label: v2.8.1
-              value: "v2.8.1"
             - label: v2.9.3
               value: "v2.9.3"
       sections:
