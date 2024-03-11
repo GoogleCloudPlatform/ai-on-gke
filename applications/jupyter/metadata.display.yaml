@@ -168,6 +168,7 @@ spec:
           description: The application has been configured with no external IP or domain.
       outputs:
         jupyterhub_password: {}
+        jupyterhub_user: {}
         jupyterhub_uri:
           openInNewTab: true
           showInNotification: true
