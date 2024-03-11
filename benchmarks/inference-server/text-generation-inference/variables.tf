@@ -58,6 +58,18 @@ variable "gpu_count" {
   }
 }
 
+variable "max_concurrent_requests" {
+  description = "Max concurrent requests allowed for TGI to handle at once. TGI will drop all requests once it hits this max-concurrent-requests limit."
+  type        = number
+  nullable    = false
+  # TODO: default is same as tgi's default for now, update with reasonable number.
+  default = 128
+  validation {
+    condition     = var.max_concurrent_requests > 0
+    error_message = "Max conccurent requests must be greater than 0."
+  }
+}
+
 variable "ksa" {
   description = "Kubernetes Service Account used for workload."
   type        = string

@@ -68,6 +68,7 @@ resource "kubernetes_manifest" "default" {
     namespace                      = var.namespace
     model_id                       = var.model_id
     gpu_count                      = var.gpu_count
+    max_concurrent_requests        = var.max_concurrent_requests
     ksa                            = var.ksa
     hugging_face_token_secret_list = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
   }))

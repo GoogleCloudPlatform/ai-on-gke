@@ -50,7 +50,7 @@ spec:
           ports:
             - containerPort: 80
           image: "ghcr.io/huggingface/text-generation-inference:1.4.2"
-          args: ["--model-id", "${model_id}", "--num-shard", "${gpu_count}"] # , "{token}" tensor parallelism, should correspond to number of gpus below
+          args: ["--model-id", "${model_id}", "--num-shard", "${gpu_count}", "--max-concurrent-requests", "${max_concurrent_requests}"]
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
           env:
             - name: HUGGING_FACE_HUB_TOKEN # Related token consumption
