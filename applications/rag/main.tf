@@ -63,7 +63,7 @@ locals {
   ray_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.ray_service_account}" : var.ray_service_account
   jupyter_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.jupyter_service_account}" : var.jupyter_service_account
   rag_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.rag_service_account}" : var.rag_service_account
-  frontend_default_uri    = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
+  frontend_default_uri =  "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
 
 }
 
