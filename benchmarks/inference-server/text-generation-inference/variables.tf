@@ -97,8 +97,8 @@ variable "hpa_type" {
   default     = null
   nullable    = true
   validation {
-    condition     = var.hpa_type == null ? true : contains(["cpu", "tgi_queue_size", "tgi_batch_current_size", "tgi_batch_current_max_tokens"], var.hpa_type)
-    error_message = "Allows values for hpa_type are {null, \"cpu\", \"tgi_queue_size\", \"tgi_batch_current_size\", \"tgi_batch_current_max_tokens\"}"
+    condition     = var.hpa_type == null ? true : length(regexall("cpu|tgi_.*|DCGM_.*", var.hpa_type)) > 0
+    error_message = "Allows values for hpa_type are {null, \"cpu\", TGI metrics (e.g., \"tgi_queue_size\", \"tgi_batch_current_size\") or DCGM metrics (e.g., \"DCGM_FI_DEV_MEM_COPY_UTIL\") }"
   }
 }
 
