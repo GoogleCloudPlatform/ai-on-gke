@@ -317,7 +317,7 @@ resource "google_gke_hub_feature_membership" "feature_member" {
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/create_cluster_yamls.sh ${var.github_org} ${github_repository.acm_repo.full_name} ${var.github_user} ${var.github_email} ${each.value["env"]} ${each.value["cluster_name"]} ${index(keys(local.parsed_gke_info), each.key)}"
+    command = "${path.module}/scripts/create_cluster_yamls.sh ${var.github_org} ${github_repository.acm_repo.full_name} ${var.github_user} ${var.github_email} ${each.value["env"]} ${each.value["cluster_name"]} ${index(keys(local.parsed_gke_info), each.key)}"
   }
 
   depends_on = [google_project_service.project_services-gkecon, google_project_service.project_services-gkeh, google_project_service.project_services-an, google_project_service.project_services-anc]
@@ -329,7 +329,7 @@ resource "null_resource" "create_git_cred_cms" {
     timestamp = timestamp()
   }
   provisioner "local-exec" {
-    command = "${path.module}/create_git_cred.sh ${each.key} ${each.value} ${var.github_user} config-management-system ${index(keys(local.gke_project_map), each.key)}"
+    command = "${path.module}/scripts/create_git_cred.sh ${each.key} ${each.value} ${var.github_user} config-management-system ${index(keys(local.gke_project_map), each.key)}"
   }
   depends_on = [google_gke_hub_feature_membership.feature_member, module.gke, module.node_pool-reserved, module.node_pool-ondemand, module.node_pool-spot, module.cloud-nat]
 }
@@ -340,7 +340,7 @@ resource "null_resource" "install_kuberay_operator" {
     timestamp = timestamp()
   }
   provisioner "local-exec" {
-    command = "${path.module}/install_kuberay_operator.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user}"
+    command = "${path.module}/scripts/install_kuberay_operator.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user}"
   }
   depends_on = [google_gke_hub_feature_membership.feature_member, null_resource.create_git_cred_cms]
 }
@@ -351,7 +351,7 @@ resource "null_resource" "create_namespace" {
     timestamp = timestamp()
   }
   provisioner "local-exec" {
-    command = "${path.module}/create_namespace.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
+    command = "${path.module}/scripts/create_namespace.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
   }
   depends_on = [google_gke_hub_feature_membership.feature_member, null_resource.install_kuberay_operator]
 }
@@ -362,7 +362,7 @@ resource "null_resource" "create_git_cred_ns" {
     timestamp = timestamp()
   }
   provisioner "local-exec" {
-    command = "${path.module}/create_git_cred.sh ${local.parsed_gke_info[var.default_env].cluster_name} ${local.parsed_gke_info[var.default_env].gke_project_id} ${var.github_user} ${var.namespace}"
+    command = "${path.module}/scripts/create_git_cred.sh ${local.parsed_gke_info[var.default_env].cluster_name} ${local.parsed_gke_info[var.default_env].gke_project_id} ${var.github_user} ${var.namespace}"
   }
   depends_on = [ google_gke_hub_feature_membership.feature_member, null_resource.create_namespace ]
 }
