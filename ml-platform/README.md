@@ -105,32 +105,73 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   - Click "Generate new token" >> "Generate new token (classic)".
   - You will be directed to a screen to created the new token. Provide the note and expiration.
   - Choose the following two access:
-    - [x] repo
-    - [x] delete_repo
+    - [x] repo - Full control of private repositories
+    - [x] delete_repo - Delete repositories
   - Click "Generate token"
-  - Store the token safely.
+  - Store the token in a secure file.
+
+    ```
+    # Create a secure directory
+    mkdir -p ${HOME}/secrets/
+    chmod go-rwx ${HOME}/secrets
+
+    # Create a secure file
+    touch ${HOME}/secrets/mlp-github-token
+    chmod go-rwx ${HOME}/secrets/mlp-github-token
+
+    # Put the token in the secure file using your prefered editor
+    nano ${HOME}/secrets/mlp-github-token
+    ```
 
 ### Run Terraform
 
-- Clone the repo and change dir
+- Clone the repository and change directory to the `ml-platform` directory
 
   ```
   git clone https://github.com/GoogleCloudPlatform/ai-on-gke
-
   cd ml-platform
   ```
 
-- Perform variable replacement.
+- Set environment variables
 
   ```
-  sed -i "s/YOUR_STATE_BUCKET/${STATE_BUCKET}/g" terraform/backend.tf
+  export MLP_BASE_DIR=$(pwd) && \
+  echo "export MLP_BASE_DIR=${MLP_BASE_DIR}" >> ${HOME}/.bashrc
+  ```
 
-  sed -i "s/YOUR_PROJECT_ID/${PROJECT_ID}/g" terraform/mlp.auto.tfvars
+- Set the configuration variables
+
+  ```
+  sed -i "s/YOUR_STATE_BUCKET/${STATE_BUCKET}/g" ${MLP_BASE_DIR}/terraform/backend.tf
+  sed -i "s/YOUR_GITHUB_EMAIL/${GITHUB_EMAIL}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_ORG/${GITHUB_ORG}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_USER/${GITHUB_USER}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_PROJECT_ID/${PROJECT_ID}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  ```
+
+- Create the resources
+
+  ```
+  cd ${MLP_BASE_DIR}/terraform && \
+  terraform init && \
+  terraform plan -input=false -var github_token="$(cat ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
+  terraform apply -input=false tfplan && \
+  rm tfplan
   ```
 
 Typically, you would want to have dev, staging and production environments created in separate projects. To have such isolation, pass `env` input variable as `[ "dev", "staging", "prod" ]`. This will create one project for dev, staging and prod environments. You can update the input variable `env` based on how many environments/projects you want to create.
 
 However, if you want to use a single project for multiple environments, you can create just one project by passing one element to `env` input variable list e.g [ "dev" ] or ["my-playground"] etc.
+
+### Cleanup
+
+- Destroy the resources
+
+  ```
+  cd ${MLP_BASE_DIR}/terraform && \
+  terraform init && \
+  terraform destroy -auto-approve -var github_token="$(cat ${HOME}/secrets/mlp-github-token)"
+  ```
 
 [gitops]: https://about.gitlab.com/topics/gitops/
 [repo-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields
