@@ -148,7 +148,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 2. Login to Jupyterhub:
    * IAP disabled: Use placeholder credentials:
-        * username: user
+        * username: admin
         * password: use `terraform output jupyter_password` to fetch the password value
    * IAP enabled: Login with your Google credentials.
    
@@ -165,13 +165,6 @@ This step generates the vector embeddings for your input dataset. Currently, the
     * Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. `Status message: Job has not started yet`).
 
 ### Launch the Frontend Chat Interface
-
-1. Access from the frontend domain. Open the browser and paste the domain got from terraform output. Make sure you have permission role `IAP-secured Web App User` 
-2. Run all the cells in the notebook. This will generate vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and store them in the `pgvector-instance` via a Ray job.
-    * If the Ray job has FAILED, re-run the cell.
-    * When the Ray job has SUCCEEDED, we are ready to launch the frontend chat interface.
-
-### Access the Frontend Chat Interface
 
 #### With IAP Disabled
 1. Setup port forwarding for the frontend: `kubectl port-forward service/rag-frontend -n $NAMESPACE 8080:8080 &`
