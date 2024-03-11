@@ -175,7 +175,7 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   ```
       
    Replace <PROJECT_ID> with the id of the project that you created in the previous step or the id of an already existing project that you want to use.
-      
+   **If you are using an already existing project, get `roles/owner` role on the project**  
 - Update ~/bashrc to automatically point to the required project when a new instance of the `cloudshell` is created:
   ```
   echo gcloud config set project $PROJECT_ID >> ~/.bashrc && source ~/.bashrc
@@ -195,8 +195,11 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   export GITHUB_ORG=<GITHUB_ORGANIZATION>  >> ~/.bashrc 
   export GITHUB_EMAIL=<GITHUB_EMAIL>  >> ~/.bashrc 
   source ~/.bashrc
+  export TF_VAR_github_token=<GITHUB_TOKEN>
   ```
-  
+  Replace your GitHub configuration in the placeholders. 
+  Note that GITHUB_TOKEN is a sensitive value and therefore, it's not stored in ~/.bashrc. If you launch a new session of the `cloudshell`, you will need to run export GITHUB_TOKEN=<GITHUB_TOKEN> again. 
+
 - Create a [Personal Access Token][personal-access-token] in [GitHub][github]:
   
   Note: It is recommended to use a [machine user account][machine-user-account] for this but you can use a personal user account just to try this reference architecture.
@@ -222,12 +225,86 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   ```
   sed -i "s/YOUR_STATE_BUCKET/${STATE_BUCKET}/g" backend.tf
   
-  sed -i "s/YOUR_PROJECT_ID/${PROJECT_ID}/g" terraform.tfvars 
+  sed -i "s/YOUR_PROJECT_ID/${PROJECT_ID}/g" mlenv.auto.tfvars 
   ```
 
-Typically, you would want to have dev, staging and production environments created in separate projects. To have such isolation, pass `env` input variable as `[ "dev", "staging", "prod" ]`. This will create one project for dev, staging and prod environments. You can update the input variable `env` based on how many environments/projects you want to create.
+- terraform init
 
-However, if you want to use a single project for multiple environments, you can create just one project by passing one element to `env` input variable list e.g [ "dev" ] or ["my-playground"] etc.
+- terraform plan
+
+- terraform apply --auto-approve
+
+### Review the resources
+
+**Review GKE clusters and ConfigSync**
+- Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Clusters. You should see three clusters.
+
+- Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Config. If you haven't enabled GKE Enterprise in the project earlier, Click `LEARN AND ENABLE` button and then `ENABLE GKE ENTERPRISE`. You should see a RootSync and RepoSync object.
+  ![platform-architecture](resources/configsync.png)
+
+**Review software installed via RepoSync and Reposync**
+
+Open `cloudshell` to execute the following commands:
+
+- Store your GKE cluster name in env variable:
+
+  ```export GKE_CLUSTER=<GKE_CLUSTER_NAME>```
+
+- Get cluster credentials:
+
+  ```
+  gcloud container fleet memberships get-credentials ${GKE_CLUSTER}
+  ```
+- Fetch kuberay operator CRDs
+
+  ```
+  kubectl get crd | grep ray
+  ```
+  The output will be similar to the following:
+  ```
+  rayclusters.ray.io   2024-02-12T21:19:06Z
+  rayjobs.ray.io       2024-02-12T21:19:09Z
+  rayservices.ray.io   2024-02-12T21:19:12Z
+  ```
+- Fetch kuberay operator pod
+  ```
+  kubectl get pods
+  ```
+  The output will be similar to the following:
+  ```
+  NAME                                READY   STATUS    RESTARTS   AGE
+  kuberay-operator-56b8d98766-2nvht   1/1     Running   0          6m26s
+  ```
+
+- Check the namespace `ml-team` created:
+   ```
+   kubectl get ns | grep ml-team
+  ```
+
+- Check the RepoSync object created `ml-team` namespace:
+  ```
+  kubectl get reposync -n ml-team
+  ```
+- Check the `raycluster` in `ml-team` namespace
+  ```
+  kubectl get raycluster -n ml-team
+  ```
+  The output will be similar to the following:
+  ```
+  NAME                  DESIRED WORKERS   AVAILABLE WORKERS   STATUS   AGE
+  ray-cluster-kuberay   1                 1                   ready    29m
+  ```
+
+- Check the head and worker pods of kuberay` in `ml-team` namespace
+  ```
+  kubectl get pods -n  -n ml-team
+  ```
+  The output will be similar to the following:
+  ```
+  NAME                                           READY   STATUS    RESTARTS   AGE
+  ray-cluster-kuberay-head-sp6dg                 2/2     Running   0          3m21s
+  ray-cluster-kuberay-worker-workergroup-rzpjw   2/2     Running   0          3m21s
+  ```
 
 
 [gitops]: https://about.gitlab.com/topics/gitops/
