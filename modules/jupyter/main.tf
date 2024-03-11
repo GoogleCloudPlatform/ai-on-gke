@@ -64,14 +64,6 @@ resource "kubernetes_annotations" "hub" {
   ]
 }
 
-# data "google_service_account" "sa" {
-#   account_id = var.workload_identity_service_account
-#   depends_on = [
-#     helm_release.jupyterhub,
-#     module.jupyterhub-workload-identity
-#   ]
-# }
-
 resource "google_service_account_iam_binding" "hub-workload-identity-user" {
   count              = var.add_auth ? 1 : 0
   service_account_id = module.jupyterhub-workload-identity.gcp_service_account

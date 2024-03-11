@@ -82,7 +82,7 @@ crNamespacedRbacEnable: true
 #   (Please note that this excludes the CRDs, which can only be installed at the cluster scope.)
 # - If "watchNamespace" is not set, the KubeRay operator will, by default, only listen
 #   to resource events within its own namespace.
-singleNamespaceInstall: true
+singleNamespaceInstall: false
 
 # The KubeRay operator will watch the custom resources in the namespaces listed in the "watchNamespace" parameter.
 # watchNamespace:
