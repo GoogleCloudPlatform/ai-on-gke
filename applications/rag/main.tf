@@ -161,6 +161,7 @@ module "jupyterhub" {
   client_id                = var.jupyter_client_id
   client_secret            = var.jupyter_client_secret
   k8s_ingress_name         = var.jupyter_k8s_ingress_name
+  k8s_iap_secret_name      = var.jupyter_k8s_iap_secret_name
   k8s_managed_cert_name    = var.jupyter_k8s_managed_cert_name
   k8s_backend_config_name  = var.jupyter_k8s_backend_config_name
   k8s_backend_service_name = var.jupyter_k8s_backend_service_name
