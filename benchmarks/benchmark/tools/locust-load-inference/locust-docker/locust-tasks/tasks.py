@@ -107,7 +107,7 @@ class BenchmarkUser(FastHttpUser):
         prompt = test_data[random.randrange(0, len(test_data))]
 
         request = generate_request(model_params, prompt)
-        headers = {"User-Agent": "Benchmark Client"}
+        headers = {"User-Agent": "Benchmark Client", "Connection": "close"}
         logging.info(f"Sending request: {request}")
         with self.client.post("/generate", headers=headers, json=request, catch_response=True) as resp:
             if resp.status_code != 200:
