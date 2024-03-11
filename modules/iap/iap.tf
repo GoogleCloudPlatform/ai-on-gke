@@ -110,9 +110,9 @@ resource "helm_release" "iap" {
 
 resource "kubernetes_annotations" "annotation" {
   api_version = "v1"
-  kind = "Service"
+  kind        = "Service"
   metadata {
-    name = var.k8s_backend_service_name
+    name      = var.k8s_backend_service_name
     namespace = var.namespace
   }
   annotations = {
