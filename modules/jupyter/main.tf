@@ -57,25 +57,16 @@ resource "kubernetes_annotations" "hub" {
     namespace = var.namespace
   }
   annotations = {
-    "iam.gke.io/gcp-service-account" = "${var.workload_identity_service_account}@${var.project_id}.iam.gserviceaccount.com"
+    "iam.gke.io/gcp-service-account" = module.jupyterhub-workload-identity.gcp_service_account_email
   }
   depends_on = [
     helm_release.jupyterhub,
-    module.jupyterhub-workload-identity
-  ]
-}
-
-data "google_service_account" "sa" {
-  account_id = var.workload_identity_service_account
-  depends_on = [
-    helm_release.jupyterhub,
-    module.jupyterhub-workload-identity
   ]
 }
 
 resource "google_service_account_iam_binding" "hub-workload-identity-user" {
   count              = var.add_auth ? 1 : 0
-  service_account_id = data.google_service_account.sa.name
+  service_account_id = module.jupyterhub-workload-identity.gcp_service_account
   role               = "roles/iam.workloadIdentityUser"
 
   members = [
@@ -83,18 +74,15 @@ resource "google_service_account_iam_binding" "hub-workload-identity-user" {
     "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${var.workload_identity_service_account}]",
   ]
   depends_on = [
-    helm_release.jupyterhub,
-    module.jupyterhub-workload-identity
+    helm_release.jupyterhub
   ]
 }
 
 
-
 resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
-  bucket     = var.gcs_bucket
-  role       = "roles/storage.objectAdmin"
-  member     = "serviceAccount:${var.workload_identity_service_account}@${var.project_id}.iam.gserviceaccount.com"
-  depends_on = [module.jupyterhub-workload-identity]
+  bucket = var.gcs_bucket
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${module.jupyterhub-workload-identity.gcp_service_account_email}"
 }
 
 resource "random_password" "generated_password" {

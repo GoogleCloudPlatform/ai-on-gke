@@ -135,3 +135,4 @@ spec:
     outputs:
       - name: jupyterhub_password
       - name: jupyterhub_uri
+      - name: frontend_uri

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "jupyter_domain" {
-  value = module.jupyterhub.jupyterhub_uri
+output "jupyterhub_uri" {
+  value = "http://${module.jupyterhub.jupyterhub_uri}"
 }
 
 output "jupyter_password" {
@@ -21,6 +21,6 @@ output "jupyter_password" {
   sensitive = true
 }
 
-output "frontend_domain" {
-  value = module.frontend.frontend_uri
+output "frontend_uri" {
+  value = module.frontend.frontend_uri != "" ? "http://${module.frontend.frontend_uri}" : local.frontend_default_uri
 }
