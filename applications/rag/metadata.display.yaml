@@ -186,13 +186,18 @@ spec:
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-        - heading: No external IP configured
+        - heading: Execute RAG sample Google Maps Restaurant Reviews
           description: |-
-            The VM instance has been configured with no external IP or internet access. Connecting 
-            to it directly may not be possible. Consider using a <a href="https://cloud.google.com/compute/docs/instances/connecting-advanced#bastion_host">bastion host</a> 
-            to access this VM.
+            Once logged in, choose the <b>CPU</b> preset. Go to File -> Open From URL & upload the notebook <i>rag-kaggle-ray-sql.ipynb</i> from 
+            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb">https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb</a>.
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md">Readme.md</a> for detailed instructions.
+        - heading: Execute RAG sample Google Maps Restaurant Reviews
+          description: |-
+            Once logged in, launch Fronted Chat app and prompt the LLM - this will fetch context from the previously generated vector embeddings
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md">Readme.md</a> for detailed instructions.
       outputs:
         jupyterhub_password: {}
+        jupyterhub_user: {}
         jupyterhub_uri:
           openInNewTab: true
           showInNotification: true
