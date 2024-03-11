@@ -11,6 +11,11 @@ Preinstall on your computer:
 - Helm
 - Gcloud
 
+When installing using terraform ensure that:
+- GKE cluster is created with version 1.28+
+- Kuberay Operator version is set to v1.1+ 
+    - can edit operator version in ai-on-gke/modules/kuberay-operator/kuberay.tf before running `terraform apply`
+
 ### Installing the GKE Platform
 
 1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
