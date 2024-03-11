@@ -80,3 +80,4 @@ spec:
         defaultValue: v2.7.1
     outputs:
       - name: grafana_uri
+      - name: ray_cluster_uri

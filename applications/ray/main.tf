@@ -62,6 +62,7 @@ locals {
 
 locals {
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
+  ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
 }
 
 provider "kubernetes" {
@@ -144,6 +145,7 @@ module "kuberay-cluster" {
   count                  = var.create_ray_cluster == true ? 1 : 0
   source                 = "../../modules/kuberay-cluster"
   providers              = { helm = helm.ray, kubernetes = kubernetes.ray }
+  name                   = var.ray_cluster_name
   namespace              = var.kubernetes_namespace
   project_id             = var.project_id
   enable_tpu             = local.enable_tpu

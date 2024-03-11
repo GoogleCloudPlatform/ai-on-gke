@@ -27,7 +27,7 @@ cluster_location = "us-central1"
 #######################################################
 
 ## GKE environment variables
-ray_namespace = "ml"
+kubernetes_namespace = "ml"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `workload_identity_service_account` to use an existing IAM service account.
@@ -38,4 +38,5 @@ workload_identity_service_account = "ray-service-account"
 create_gcs_bucket               = true
 gcs_bucket                      = "ray-bucket-zydg"
 create_ray_cluster              = true
+ray_cluster_name                = "example-cluster"
 enable_grafana_on_ray_dashboard = false

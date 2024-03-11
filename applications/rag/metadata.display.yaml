@@ -186,24 +186,34 @@ spec:
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-        - heading: Execute RAG sample Google Maps Restaurant Reviews
+        - heading: "Step 1: Generate Vector Embeddings for the Dataset"
           description: |-
-            Once logged in, choose the <b>CPU</b> preset. Go to File -> Open From URL & upload the notebook <i>rag-kaggle-ray-sql.ipynb</i> from 
-            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb">https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb</a>.
-            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md">Readme.md</a> for detailed instructions.
-        - heading: Execute RAG sample Google Maps Restaurant Reviews
+            Go to the JupyterHub Application, log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).
+            Once logged in, choose the <b>CPU</b> preset. Go to File -> Open From URL & upload and execute the notebook 
+            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#vector-embeddings-for-dataset">README.md</a> for detailed instructions.
+          showIf: '!variables.add_auth'
+        - heading: "Step 1: Generate Vector Embeddings for the Dataset"
           description: |-
-            Once logged in, launch Fronted Chat app and prompt the LLM - this will fetch context from the previously generated vector embeddings
-            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md">Readme.md</a> for detailed instructions.
+            Go to the JupyterHub Application, log in with your organization's credentials.
+            Once logged in, choose the <b>CPU</b> preset. Go to File -> Open From URL & upload and execute the notebook 
+            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#vector-embeddings-for-dataset">README.md</a> for detailed instructions.
+          showIf: 'variables.add_auth'
+        - heading: "Step 2: Prompt the Inference Server via a Chatbot"
+          description: |-
+            Go to the RAG Frontend Application, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application.
+            Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button and prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings,
+            augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.
       outputs:
         jupyterhub_password: {}
         jupyterhub_user: {}
         jupyterhub_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to Jupyter Application
+          label: Go to JupyterHub Application
         frontend_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to Rag Frontend Application
+          label: Go to RAG Frontend Application
           

@@ -17,6 +17,12 @@ variable "project_id" {
   description = "GCP project id"
 }
 
+variable "name" {
+  type        = string
+  description = "Name of the ray cluster"
+  default     = "example-cluster"
+}
+
 variable "db_region" {
   type        = string
   description = "Cloud SQL instance region"
