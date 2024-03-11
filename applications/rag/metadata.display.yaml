@@ -197,3 +197,8 @@ spec:
           openInNewTab: true
           showInNotification: true
           label: Go to Jupyter Application
+        frontend_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Go to Rag Frontend Application
+          

@@ -13,21 +13,21 @@
 # limitations under the License.
 
 ##common variables
-project_id = "<your project ID>"
+project_id = "ai-on-gke-jss-sandbox"
 #######################################################
 ####    PLATFORM
 #######################################################
 ## network values
 create_network    = true
-network_name      = "ml-network"
-subnetwork_name   = "ml-subnet"
+network_name      = "ml-network99"
+subnetwork_name   = "ml-subnet99"
 subnetwork_cidr   = "10.100.0.0/16"
 subnetwork_region = "us-central1"
 
 ## gke variables
 private_cluster   = false ## true = private cluster, false = public cluster
 autopilot_cluster = false ## true = autopilot cluster, false = standard cluster
-cluster_name      = "ml-cluster"
+cluster_name      = "ml-cluster99"
 cluster_location  = "us-central1"
 
 cpu_pools = [{
