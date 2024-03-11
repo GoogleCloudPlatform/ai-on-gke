@@ -107,3 +107,16 @@ resource "helm_release" "iap" {
     value = var.k8s_backend_service_port
   }
 }
+
+resource "kubernetes_annotations" "annotation" {
+  api_version = "v1"
+  kind = "Service"
+  metadata {
+    name = var.k8s_backend_service_name
+    namespace = var.namespace
+  }
+  annotations = {
+    "beta.cloud.google.com/backend-config" = "{\"default\": \"${var.k8s_backend_config_name}\"}"
+  }
+  depends_on = [helm_release.iap]
+}
