@@ -59,6 +59,7 @@ Next, set up the inference server, the `pgvector` instance, Jupyterhub, Kuberay 
 2. Edit `workloads.tfvars` with your project ID, cluster name, location and a GCS bucket name.
     * The GCS bucket name needs to be globally unique so add some random suffix to it (ensure `gcloud storage buckets describe gs://<bucketname>` returns a 404).
     * Optionally choose the k8s namespace & service account to be used by the application. If not selected, these resources will be created based on the default values set.
+    * (Recommended) set `add_auth` to be true to create load balancer and IAP and [enable IAP and set up brand](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/jupyter/authentication/README.MD#enable_iap_service)
 
 3. Run `terraform init`
 
@@ -93,9 +94,9 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 2. Verify Jupyterhub service is setup:
     * Fetch the service IP/Domain:
       * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-      * IAP enabled: Read terraform output: `terraform output jupyter_uri` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
-          * From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the allowlisted user has role `IAP-secured Web App User`
-          * Wait for domain status to be `Active`
+      * IAP enabled: Read terraform output: `terraform output jupyter_domain`: 
+          * From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the target user has role `IAP-secured Web App User`
+          * Wait for domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
     * Go to the IP in a browser which should display the Jupyterlab login UI.
 
 3. Verify the instance `pgvector-instance` exists: `gcloud sql instances list | grep pgvector`
@@ -141,9 +142,9 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 1. Fetch the Jupyterhub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:       
    * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-   * IAP enabled: Read terraform output: `terraform output jupyter_uri` or use command: `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
-       * From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the allowlisted user has role `IAP-secured Web App User`.
-       * Wait for the domain status to be `Active`
+   * IAP enabled: Read terraform output: `terraform output jupyter_domain`.
+       * From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the target user has role `IAP-secured Web App User`.
+       * Wait for the domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
 
 2. Login to Jupyterhub:
    * IAP disabled: Use placeholder credentials:
@@ -165,8 +166,8 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 ### Launch the Frontend Chat Interface
 
-1. Setup port forwarding for the frontend [TBD: Replace with IAP]: `kubectl port-forward service/rag-frontend -n ${NAMESPACE:?} 8080:8080 &`
-9. Run all the cells in the notebook. This will generate vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and store them in the `pgvector-instance` via a Ray job.
+1. Access from the frontend domain. Open the browser and paste the domain got from terraform output. Make sure you have permission role `IAP-secured Web App User` 
+2. Run all the cells in the notebook. This will generate vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and store them in the `pgvector-instance` via a Ray job.
     * If the Ray job has FAILED, re-run the cell.
     * When the Ray job has SUCCEEDED, we are ready to launch the frontend chat interface.
 
@@ -178,13 +179,12 @@ This step generates the vector embeddings for your input dataset. Currently, the
 2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
 
 #### With IAP Enabled
-1. Verify that IAP is enabled on Google Cloud Platform (GCP) for your application. If you encounter any errors, try re-enabling IAP.
-2. From [Google Cloud Platform IAP](https://pantheon.corp.google.com/security/iap), check if the allowlisted user has role `IAP-secured Web App User`. This role is necessary to access the application through IAP.
+1. Verify that IAP is enabled on [Google Cloud Platform (GCP) IAP](https://console.cloud.google.com/security/iap)(make sure you are logged in) for your application. If you encounter any errors, try re-enabling IAP.
+2. From *Google Cloud Platform IAP*, check if the target user has role `IAP-secured Web App User`. This role is necessary to access the application through IAP.
 3. Verify the domain is active using command:
     `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
-3. Read terraform output: `terraform output frontend_uri` or use the following command to find the domain created by IAP for accessing your service:
-    `kubectl get managedcertificates frontend-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].domain}'`
-4.  Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
+4. Read terraform output: `terraform output frontend_domain` to find the domain created by IAP for accessing your service.
+5. Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
 
 #### Prompt Examples
 
