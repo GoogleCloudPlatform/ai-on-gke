@@ -166,8 +166,8 @@ This step generates the vector embeddings for your input dataset. Currently, the
 
 ### Launch the Frontend Chat Interface
 
-1. Access from the frontend domain.
-9. Run all the cells in the notebook. This will generate vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and store them in the `pgvector-instance` via a Ray job.
+1. Access from the frontend domain. Open the browser and paste the domain got from terraform output. Make sure you have permission role `IAP-secured Web App User` 
+2. Run all the cells in the notebook. This will generate vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and store them in the `pgvector-instance` via a Ray job.
     * If the Ray job has FAILED, re-run the cell.
     * When the Ray job has SUCCEEDED, we are ready to launch the frontend chat interface.
 
@@ -179,7 +179,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
 
 #### With IAP Enabled
-1. Verify that IAP is enabled on Google Cloud Platform (GCP) for your application. If you encounter any errors, try re-enabling IAP.
+1. Verify that IAP is enabled on [Google Cloud Platform (GCP) IAP](https://console.cloud.google.com/security/iap)(make sure you are logged in) for your application. If you encounter any errors, try re-enabling IAP.
 2. From *Google Cloud Platform IAP*, check if the target user has role `IAP-secured Web App User`. This role is necessary to access the application through IAP.
 3. Verify the domain is active using command:
     `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
