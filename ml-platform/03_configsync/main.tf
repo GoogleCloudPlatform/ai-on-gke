@@ -15,14 +15,14 @@
 data "terraform_remote_state" "gke-clusters" {
   backend = "gcs"
   config = {
-    bucket  = var.lookup_state_bucket
-    prefix  = "02_gke"
+    bucket = var.lookup_state_bucket
+    prefix = "02_gke"
   }
 }
 
 locals {
   parsed_gke_info = data.terraform_remote_state.gke-clusters.outputs.gke_cluster
-  project_id_list = [for k,v in "${data.terraform_remote_state.gke-clusters.outputs.gke_cluster}" : v.gke_project_id]
+  project_id_list = [for k, v in "${data.terraform_remote_state.gke-clusters.outputs.gke_cluster}" : v.gke_project_id]
 }
 
 //resource "google_gke_hub_feature" "configmanagement_acm_feature" {
@@ -40,20 +40,20 @@ resource "google_gke_hub_membership" "membership" {
   membership_id = each.value["cluster_name"]
   endpoint {
     gke_cluster {
-      resource_link = format("%s/%s","//container.googleapis.com",each.value["cluster_id"])
+      resource_link = format("%s/%s", "//container.googleapis.com", each.value["cluster_id"])
     }
   }
   lifecycle {
     ignore_changes = [
-      "labels","description"
+      "labels", "description"
     ]
   }
   #depends_on = [ google_gke_hub_feature.configmanagement_acm_feature ]
 }
 
 resource "github_repository" "acm_repo" {
-  name        =  var.configsync_repo_name
-  description = "Repo for Config Sync"
+  name         = var.configsync_repo_name
+  description  = "Repo for Config Sync"
   visibility   = "private"
   has_issues   = false
   has_projects = false
@@ -63,27 +63,27 @@ resource "github_repository" "acm_repo" {
   allow_squash_merge     = true
   allow_rebase_merge     = true
   delete_branch_on_merge = false
-  auto_init            = true
-  vulnerability_alerts = true
+  auto_init              = true
+  vulnerability_alerts   = true
 }
 //Create a branch for each env
 resource "github_branch" "branch" {
   for_each   = local.parsed_gke_info
-  repository = split("/",github_repository.acm_repo.full_name)[1]
+  repository = split("/", github_repository.acm_repo.full_name)[1]
   branch     = each.key
   depends_on = [github_repository.acm_repo]
 }
 //Set default branch as the lowest env
 resource "github_branch_default" "default_branch" {
-  repository = split("/",github_repository.acm_repo.full_name)[1]
+  repository = split("/", github_repository.acm_repo.full_name)[1]
   branch     = tostring(keys(local.parsed_gke_info)[0])
   #rename     = true
   depends_on = [github_branch.branch]
 }
 #Protect branches other than the default branch
 resource "github_branch_protection_v3" "branch_protection" {
-  for_each = local.parsed_gke_info
-  repository = split("/",github_repository.acm_repo.full_name)[1]
+  for_each   = local.parsed_gke_info
+  repository = split("/", github_repository.acm_repo.full_name)[1]
   branch     = each.key
   required_pull_request_reviews {
     required_approving_review_count = 1
@@ -98,7 +98,7 @@ resource "github_branch_protection_v3" "branch_protection" {
 
 resource "google_gke_hub_feature_membership" "feature_member" {
   provider   = google-beta
-  for_each      = local.parsed_gke_info
+  for_each   = local.parsed_gke_info
   project    = each.value["gke_project_id"]
   location   = "global"
   feature    = "configmanagement"
@@ -108,21 +108,21 @@ resource "google_gke_hub_feature_membership" "feature_member" {
     config_sync {
       source_format = "unstructured"
       git {
-        sync_repo = "https://github.com/${github_repository.acm_repo.full_name}.git"
+        sync_repo   = "https://github.com/${github_repository.acm_repo.full_name}.git"
         sync_branch = each.value["env"]
         policy_dir  = "manifests/clusters"
         secret_type = "token"
       }
     }
     policy_controller {
-      enabled = true
+      enabled                    = true
       template_library_installed = true
-      referential_rules_enabled = true
+      referential_rules_enabled  = true
     }
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/create_cluster_yamls.sh ${var.github_org} ${github_repository.acm_repo.full_name} ${var.github_user} ${var.github_email} ${each.value["env"]} ${each.value["cluster_name"]} ${index(keys(local.parsed_gke_info),each.key)}"
+    command = "${path.module}/create_cluster_yamls.sh ${var.github_org} ${github_repository.acm_repo.full_name} ${var.github_user} ${var.github_email} ${each.value["env"]} ${each.value["cluster_name"]} ${index(keys(local.parsed_gke_info), each.key)}"
   }
 
   #depends_on = [

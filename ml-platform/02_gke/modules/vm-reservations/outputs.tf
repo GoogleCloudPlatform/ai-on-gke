@@ -13,5 +13,5 @@
 # limitations under the License.
 
 output "reservation_name" {
-  value = split("/",google_compute_reservation.machine_reservation.id)[5]
+  value = split("/", google_compute_reservation.machine_reservation.id)[5]
 }

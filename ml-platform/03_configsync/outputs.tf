@@ -15,6 +15,7 @@
 output "membership" {
   value = google_gke_hub_membership.membership
 }
-output "val"{
-value = local.parsed_gke_info
+
+output "val" {
+  value = local.parsed_gke_info
 }
