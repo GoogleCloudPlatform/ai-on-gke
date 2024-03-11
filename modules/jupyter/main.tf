@@ -23,6 +23,7 @@ module "iap_auth" {
 
   project_id               = var.project_id
   namespace                = var.namespace
+  support_email            = var.support_email
   app_name                 = "jupyter"
   brand                    = var.brand
   k8s_ingress_name         = var.k8s_ingress_name

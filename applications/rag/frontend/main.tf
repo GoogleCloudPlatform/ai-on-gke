@@ -26,6 +26,7 @@ module "iap_auth" {
 
   project_id               = var.project_id
   namespace                = var.namespace
+  support_email            = var.support_email
   app_name                 = "frontend"
   brand                    = var.brand
   k8s_ingress_name         = var.k8s_ingress_name
@@ -57,6 +58,9 @@ resource "kubernetes_service" "rag_frontend_service" {
   metadata {
     name      = "rag-frontend"
     namespace = var.namespace
+    annotations = var.add_auth ? {
+      "beta.cloud.google.com/backend-config" : jsonencode({ "default" = var.k8s_backend_config_name })
+    } : {}
   }
   spec {
     selector = {
