@@ -1,11 +1,10 @@
-
 ## Let's get started!
 
 Welcome to the Cloudshell tutorial for AI on GKE!
 
 This guide will show you how to prepare a GKE cluster and install the AI applications on GKE. It'll also walk you through the configuration files that can be provided with custom inputs and commands that will complete the tutorial.
 
-**Time to complete**: About 40 minutes
+**Time to complete**:
 <walkthrough-tutorial-duration duration="40"></walkthrough-tutorial-duration>
 
 **Prerequisites**: GCP project linked with a Cloud Billing account
@@ -36,7 +35,7 @@ You'll be performing the following activities:
 
 To get started, click **Next**.
 
-##Set your project
+## Step 0:Set your project
 
 To set your Cloud Platform project for this terminal session use:
 ```bash
@@ -46,15 +45,6 @@ All the resources will be created in this project
 
 <walkthrough-project-setup billing="true"></walkthrough-project-setup>
 
-## Step 0: Clone git Repo
-Clone the GitHub repository to Cloud Shell.
-https://github.com/genai-llm/genai-gke/tree/main/stable-diffusion2:
-```bash
-git clone https://github.com/genai-llm/genai-gke/
-
-cd $HOME/applications/genai-gke/platform/
-```
-All the resources will be created in this project
 
 ## Step 1: Provide Inputs Parameters for Terraform to Provision GKE Cluster
 
@@ -105,7 +95,7 @@ Refer [here](https://cloud.google.com/docs/terraform/resource-management/store-s
 
 Run Terrform plan and check the resources to be created , please make changes if any required to terraform files as required and then run terrafrom apply
 ```bash
-cd ~/applications/genai-gke/platform/
+cd platform
 terraform init
 terraform plan
 terraform apply
@@ -134,9 +124,9 @@ Copy the name and acquire the credentials using the following
 ## Step 6: Provide Inputs Parameters for Terraform to Provision jupyternotebook workloads
 
 Let's setup the Jupyter Notebook cluster on the GKE
-Navigate to ~/genai-gke/jupyternotebook
+Navigate to jupyternotebook
 
-```cd ~/genai-gke/jupyternotebook```
+```cd jupyternotebook```
 
 Update the terraform variable file (located in ./jupyternotebook/variables.tf) to provide the input parameters (project_id, location and cluster name) to allow terraform code execution to provision Jupyternotebook.
 
@@ -156,7 +146,7 @@ Update the bucket name in the Backend here
 
 Run Terrform plan and check the resources to be created , please make changes if any required to terraform files as required and then run terrafrom apply
 ```bash
-cd ~/genai-gke/jupyternotebook
+cd jupyternotebook
 terraform init
 terraform plan
 terraform apply
@@ -171,19 +161,19 @@ Copy the content from the stable-diffusion2 pynb files and paste it on the open 
 <walkthrough-editor-open-file filePath="./stable-diffusion2/stable_diffusion_inference_on_ray.ipynb"> Demo stablediffusion1 pynb
 </walkthrough-editor-open-file>
 
-<walkthrough-editor-open-file filePath="./lstable-diffusion2/stable_diffusion_on_ray.ipynb"> Demo stablediffusion2 pynb
+<walkthrough-editor-open-file filePath="./lstable-diffusion2/stable_diffusion.ipynb"> Demo stablediffusion2 pynb
 </walkthrough-editor-open-file>
 
 ## Step 9: Delete resources created
 
-You can now delete the resources by running below command in the ~/genai-gke/jupyternotebook and then in  ~/applications/genai-gke/platform folders
+You can now delete the resources by running below command in the ~/applications/genai-on-gke/jupyternotebook and then in  ~/applications/genai-on-gke/platform/ folders
 
 
 ```bash
-cd ~/applications/genai-gke/jupyternotebook
+cd ~/applications/genai-on-gke/jupyternotebook
 terraform destroy
 
-cd ~/applications/genai-gke/platform
+cd ~/applications/genai-on-gke/platform/
 terraform destroy
 ```
 

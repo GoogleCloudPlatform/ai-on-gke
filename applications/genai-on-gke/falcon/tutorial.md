@@ -4,7 +4,8 @@ Welcome to the Cloudshell tutorial for AI on GKE!
 
 This guide will show you how to prepare a GKE cluster and install the AI applications on GKE. It'll also walk you through the configuration files that can be provided with custom inputs and commands that will complete the tutorial.
 
-**Time to complete**: About 40 minutes
+**Time to complete**:
+<walkthrough-tutorial-duration duration="40"></walkthrough-tutorial-duration>
 
 **Prerequisites**: GCP project linked with a Cloud Billing account
 
@@ -34,35 +35,29 @@ You'll be performing the following activities:
 
 To get started, click **Next**.
 
-## Step 0: Set your project
+## Step 0:Set your project
 To set your Cloud Platform project for this terminal session use:
 ```bash
 gcloud config set project [PROJECT_ID]
 ```
 All the resources will be created in this project
 
-## Step 0: Clone git Repo
-Clone the GitHub repository to Cloud Shell.
-https://github.com/genai-llm/genai-gke/tree/main/stable-diffusion2:
-```bash
-git clone https://github.com/genai-llm/genai-gke/
+<walkthrough-project-setup billing="true"></walkthrough-project-setup>
 
-cd $HOME/genai-gke/platform/platform/
-```
-All the resources will be created in this project
+
 
 ## Step 1: Provide Inputs Parameters for Terraform to Provision GKE Cluster
 
-Here on step 1 you need to update the terraform tfvars file (located in ./platform/platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include the input parameters in the form of key value pairs. Update the values as per your requirements.
+Here on step 1 you need to update the terraform tfvars file (located in .applications/genai-on-gke/platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include the input parameters in the form of key value pairs. Update the values as per your requirements.
 
-<walkthrough-editor-open-file filePath="$HOME/genai-gke/platform/platform/terraform.tfvars"> Open terraform.tfvars
+<walkthrough-editor-open-file filePath="platform/terraform.tfvars"> Open terraform.tfvars
 </walkthrough-editor-open-file>
 
 Update all values where required.
 
 **Tip**: Click the highlighted text above to open the file in your cloudshell editor.
 
-You can find tfvars examples in the tfvars_examples folder at location ./platform.
+You can find tfvars examples in the tfvars_examples folder at location ./infrastructure/tfvars_examples.
 
 
 ## Step 2: Configure Terraform GCS backend
@@ -80,8 +75,8 @@ gcloud storage buckets create gs://BUCKET_NAME
 
 ### Modify PLATFORM Terraform State Backend
 
-Modify the ./platform/backend.tf and uncomment the code and update the backend bucket name.
-<walkthrough-editor-open-file filePath="$HOME/genai-gke/platform/platform/backend.tf"> Open ./platform/platform/backend.tf
+Modify the backend.tf and uncomment the code and update the backend bucket name.
+<walkthrough-editor-open-file filePath="platform/backend.tf"> Open ./platform/backend.tf
 </walkthrough-editor-open-file>
 
 After changes file will look like below:
@@ -100,7 +95,7 @@ Refer [here](https://cloud.google.com/docs/terraform/resource-management/store-s
 
 Run Terrform plan and check the resources to be created , please make changes if any required to terraform files as required and then run terrafrom apply
 ```bash
-cd ~/genai-gke/platform/platform/
+cd platform
 terraform init
 terraform plan
 terraform apply
@@ -122,18 +117,18 @@ List the container list to list down the cluster that you just created.
 
 ```gcloud container fleet memberships list```
 
-Copy the name and acquire the credentials using the following 
+Copy the name and acquire the credentials using the following
 
 ```gcloud container fleet memberships get-credentials [container-fleet-membership-name]```
 
 ## Step 6: Provide Inputs Parameters for Terraform to Provision jupyternotebook workloads
 
 Let's setup the Jupyter Notebook cluster on the GKE
-Navigate to ~/genai-gke/jupyternotebook
+Navigate to jupyternotebook
 
-```cd ~/genai-gke/jupyternotebook```
+```cd jupyternotebook```
 
-Update the terraform variable file (located in ./jupyternotebook/variables.tf) to provide the input parameters (project_id, location and cluster name) to allow terraform code execution to provision Jupyternotebook. 
+Update the terraform variable file (located in ./jupyternotebook/variables.tf) to provide the input parameters (project_id, location and cluster name) to allow terraform code execution to provision Jupyternotebook.
 
 <walkthrough-editor-open-file filePath="./jupyternotebook/variables.tf"> Open variables.tf
 </walkthrough-editor-open-file>
@@ -151,7 +146,7 @@ Update the bucket name in the Backend here
 
 Run Terrform plan and check the resources to be created , please make changes if any required to terraform files as required and then run terrafrom apply
 ```bash
-cd ~/genai-gke/jupyternotebook
+cd jupyternotebook
 terraform init
 terraform plan
 terraform apply
@@ -168,13 +163,14 @@ Copy the content from the falcon pynb file and paste it on the open notebook and
 
 ## Step 9: Delete resources created
 
-You can now delete the resources by running below command in the ~/genai-gke/jupyternotebook and then in  ~/genai-gke/platform/platform/ folders
+You can now delete the resources by running below command in the ~/applications/genai-on-gke/jupyternotebook and then in  ~/applications/genai-on-gke/platform/ folders
+
 
 ```bash
-cd ~/genai-gke/jupyternotebook
+cd ~/applications/genai-on-gke/jupyternotebook
 terraform destroy
 
-cd ~/genai-gke/platform/platform/
+cd ~/applications/genai-on-gke/platform/
 terraform destroy
 ```
 

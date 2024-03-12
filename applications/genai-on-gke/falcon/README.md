@@ -174,7 +174,7 @@ There are two ways to deploy the falcon workloads on GCP
 
 Click button below to get started
 #
-[![Deploy using Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/GoogleCloudPlatform/ai-on-gke.git&git_branch=genai-on-gke&cloudshell_tutorial=applications/genai-on-gke/falcon/tutorial.md&cloudshell_workspace=./)
+[![Deploy using Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/GoogleCloudPlatform/ai-on-gke.git&git_branch=genai-on-gke&cloudshell_tutorial=applications/genai-on-gke/falcon/tutorial.md&cloudshell_workspace=applications/genai-on-gke)
 
 ## Deploy using the Terraform CLI
 
