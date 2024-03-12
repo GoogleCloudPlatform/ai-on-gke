@@ -67,7 +67,7 @@ resource "kubernetes_annotations" "hub" {
 
 resource "google_service_account_iam_binding" "hub-workload-identity-user" {
   count              = var.add_auth ? 1 : 0
-  service_account_id = module.jupyterhub-workload-identity.gcp_service_account
+  service_account_id = module.jupyterhub-workload-identity.gcp_service_account.name
   role               = "roles/iam.workloadIdentityUser"
 
   members = [

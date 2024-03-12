@@ -17,14 +17,6 @@ kind: BackendConfig
 metadata:
   name: {{ .Values.iap.backendConfig.name }}
 spec:
-  healthCheck:
-    checkIntervalSec: 15
-    timeoutSec: 15
-    healthyThreshold: 1
-    unhealthyThreshold: 2
-    type: HTTP
-    requestPath: /_chp_healthz
-    port: 8000
   iap:
     enabled: true
     oauthclientCredentials:
