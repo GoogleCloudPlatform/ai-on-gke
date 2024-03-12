@@ -396,7 +396,7 @@ resource "null_resource" "manage_ray_ns" {
 resource "google_compute_firewall" "iap_ssh" {
   for_each      = local.parsed_project_id
   name          = "iap-ssh"
-  project_id    = each.value
+  project    = each.value
   network       = module.create-vpc[each.key].vpc
   direction     = "INGRESS"
   source_ranges = ["35.235.240.0/20"]
@@ -408,7 +408,7 @@ resource "google_compute_firewall" "iap_ssh" {
 
 resource "google_service_account" "sa" {
   for_each      = local.parsed_project_id
-  project_id    = each.value
+  project    = each.value
   account_id   = "compute-${each.key}"
   display_name = "Compute SA for ${each.key}"
 }
