@@ -444,7 +444,7 @@ yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install kubectl  >> /tmp/
 yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install google-cloud-sdk-gke-gcloud-auth-plugin  >> /tmp/log
 sleep 120
 pwd >> /tmp/pwd
-export KUBECONFIG .
+export KUBECONFIG=`pwd`
 echo $KUBECONFIG >> /tmp/pwd
 gcloud container clusters get-credentials gke-ml-dev --zone us-central1  >> /tmp/log
 nohup kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265 &  >> /tmp/log
