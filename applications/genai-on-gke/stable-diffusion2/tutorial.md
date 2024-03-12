@@ -54,16 +54,16 @@ All the resources will be created in this project
 
 ## Step 1: Provide Inputs Parameters for Terraform to Provision GKE Cluster
 
-Here on step 1 you need to update the terraform tfvars file (located in ./platform/platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include the input parameters in the form of key value pairs. Update the values as per your requirements.
+Here on step 1 you need to update the terraform tfvars file (located in .applications/genai-on-gke/platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include the input parameters in the form of key value pairs. Update the values as per your requirements.
 
-<walkthrough-editor-open-file filePath="$HOME/genai-gke/platform/platform/terraform.tfvars"> Open terraform.tfvars
+<walkthrough-editor-open-file filePath="$HOME/applications/genai-on-gke/platform/terraform.tfvars"> Open terraform.tfvars
 </walkthrough-editor-open-file>
 
 Update all values where required.
 
 **Tip**: Click the highlighted text above to open the file in your cloudshell editor.
 
-You can find tfvars examples in the tfvars_examples folder at location ./platform.
+You can find tfvars examples in the tfvars_examples folder at location ./infrastructure/tfvars_examples.
 
 
 ## Step 2: Configure Terraform GCS backend
@@ -82,7 +82,7 @@ gcloud storage buckets create gs://BUCKET_NAME
 ### Modify PLATFORM Terraform State Backend
 
 Modify the ./platform/backend.tf and uncomment the code and update the backend bucket name.
-<walkthrough-editor-open-file filePath="$HOME/genai-gke/platform/platform/backend.tf"> Open ./platform/platform/backend.tf
+<walkthrough-editor-open-file filePath="$HOME/applications/genai-on-gke/platform/backend.tf"> Open ./applications/genai-on-gke/platform/backend.tf
 </walkthrough-editor-open-file>
 
 After changes file will look like below:
@@ -123,7 +123,7 @@ List the container list to list down the cluster that you just created.
 
 ```gcloud container fleet memberships list```
 
-Copy the name and acquire the credentials using the following 
+Copy the name and acquire the credentials using the following
 
 ```gcloud container fleet memberships get-credentials [container-fleet-membership-name]```
 
@@ -134,7 +134,7 @@ Navigate to ~/genai-gke/jupyternotebook
 
 ```cd ~/genai-gke/jupyternotebook```
 
-Update the terraform variable file (located in ./jupyternotebook/variables.tf) to provide the input parameters (project_id, location and cluster name) to allow terraform code execution to provision Jupyternotebook. 
+Update the terraform variable file (located in ./jupyternotebook/variables.tf) to provide the input parameters (project_id, location and cluster name) to allow terraform code execution to provision Jupyternotebook.
 
 <walkthrough-editor-open-file filePath="./jupyternotebook/variables.tf"> Open variables.tf
 </walkthrough-editor-open-file>
