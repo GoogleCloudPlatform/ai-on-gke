@@ -53,14 +53,14 @@ Ensure you have the following prerequisites installed and set up:
 
 
     # Launch the servers (modify this depending on the number of GPU used and the exact path to the model repo)
-    /opt/tritonserver/bin/tritonserver \
+    mpirun --allow-run-as-root  -n 1 /opt/tritonserver/bin/tritonserver \
     --model-repository=/all_models/inflight_batcher_llm \
     --disable-auto-complete-config \
-    --backend-config=python,shm-region-prefix-name=prefix0_\
-   /opt/tritonserver/bin/tritonserver \
+    --backend-config=python,shm-region-prefix-name=prefix0_ : \
+    -n 1 /opt/tritonserver/bin/tritonserver \
     --model-repository=/all_models/inflight_batcher_llm \
     --disable-auto-complete-config \
-    --backend-config=python,shm-region-prefix-name=prefix1_
+    --backend-config=python,shm-region-prefix-name=prefix1_ :
    ```
     *Build and Push the Docker Image:*
 
