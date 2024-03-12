@@ -3,6 +3,7 @@ Terraform templates associated with them.
 
 The current supported options are:
 - Text Generation Inference (aka TGI)
+- TensorRT-LLM on Triton Inference Server 
 
 You may also choose to manually deploy your own inference server.
 
