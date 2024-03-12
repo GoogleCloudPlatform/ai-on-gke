@@ -34,7 +34,7 @@ done
 
 secret_exists=$(kubectl get secret git-creds -n ${namespace} -o name)
 if [[ "${secret_exists}" == "secret/git-creds" ]]; then
-  exit 0
+  kubectl create secret generic git-creds --namespace="${namespace}" --save-config --dry-run=client --from-literal=username="${git_user}" --from-literal=token="${GIT_TOKEN}" -o yaml | kubectl apply -f -
 else
-  kubectl create secret generic git-creds --namespace="${namespace}" --from-literal=username="${git_user}" --from-literal=token="${GIT_TOKEN}"
+  kubectl create secret generic git-creds --namespace="${namespace}" --save-config --from-literal=username="${git_user}" --from-literal=token="${GIT_TOKEN}"
 fi

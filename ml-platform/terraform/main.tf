@@ -332,7 +332,7 @@ resource "null_resource" "create_cluster_yamls" {
   for_each = local.parsed_gke_info
   triggers = {
     md5_script = filemd5("${path.module}/scripts/create_cluster_yamls.sh")
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template", "*") : md5("${path.module}/templates/acm-template/${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template", "**") : md5("${path.module}/templates/acm-template/${f}")]))
   }
 
   provisioner "local-exec" {
@@ -373,7 +373,7 @@ resource "null_resource" "install_kuberay_operator" {
   count = var.install_kuberay
   triggers = {
     md5_script = filemd5("${path.module}/scripts/install_kuberay_operator.sh")
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/kuberay", "*") : md5("${path.module}/templates/acm-template/templates/_cluster_template/kuberay/${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/kuberay", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/kuberay/${f}")]))
   }
 
   provisioner "local-exec" {
@@ -392,12 +392,15 @@ resource "null_resource" "install_kuberay_operator" {
 resource "null_resource" "create_namespace" {
   count = var.create_namespace
   triggers = {
-    md5       = filemd5("${path.module}/scripts/create_namespace.sh")
-    timestamp = timestamp()
+    md5_script = filemd5("${path.module}/scripts/create_namespace.sh")
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/team", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/team/${f}")]))
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_namespace.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
+    command = "${path.module}/scripts/create_namespace.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${var.default_env}"
+    environment = {
+      GIT_TOKEN = var.github_token
+    }
   }
 
   depends_on = [
@@ -409,8 +412,8 @@ resource "null_resource" "create_namespace" {
 resource "null_resource" "create_git_cred_ns" {
   count = var.create_namespace
   triggers = {
-    md5       = filemd5("${path.module}/scripts/create_git_cred.sh")
-    timestamp = timestamp()
+    md5_script      = filemd5("${path.module}/scripts/create_git_cred.sh")
+    md5_credentials = md5(join("", [var.github_user, var.github_token]))
   }
 
   provisioner "local-exec" {
@@ -426,8 +429,8 @@ resource "null_resource" "create_git_cred_ns" {
 resource "null_resource" "install_ray_cluster" {
   count = var.install_ray_in_ns
   triggers = {
-    md5       = filemd5("${path.module}/scripts/install_ray_cluster.sh")
-    timestamp = timestamp()
+    md5_script = filemd5("${path.module}/scripts/install_ray_cluster.sh")
+    timestamp  = timestamp()
   }
 
   provisioner "local-exec" {
@@ -443,8 +446,8 @@ resource "null_resource" "install_ray_cluster" {
 resource "null_resource" "manage_ray_ns" {
   count = var.install_ray_in_ns
   triggers = {
-    md5       = filemd5("${path.module}/scripts/manage_ray_ns.sh")
-    timestamp = timestamp()
+    md5_script = filemd5("${path.module}/scripts/manage_ray_ns.sh")
+    timestamp  = timestamp()
   }
 
   provisioner "local-exec" {
