@@ -243,7 +243,7 @@ This is the quick-start deployment. It can be used to quickly set up an environm
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Clusters. You should see three clusters.
 
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Config. If you haven't enabled GKE Enterprise in the project earlier, Click `LEARN AND ENABLE` button and then `ENABLE GKE ENTERPRISE`. You should see a RootSync and RepoSync object.
-  ![platform-architecture](resources/configsync.png)
+  ![configsync](resources/configsync.png)
 
 **Review software installed via RepoSync and Reposync**
 
@@ -309,6 +309,24 @@ Open `cloudshell` to execute the following commands:
   ray-cluster-kuberay-worker-workergroup-rzpjw   2/2     Running   0          3m21s
   ```
 
+### View ray dashboard
+The GKE clusters you created are private clusters and you connect to them via [Connect Gateway][connect-gateway].
+In this example , you will do a port forwarding on the Ray service to view the dashboard. However, [Connect Gateway][connect-gateway] doesn't not allow port forwarding yet.
+So, you will use a bastion VM in the same subnet as the GKE cluster to perform port forwarding on the ray service and access the dashboard from `cloudshell`. The VM and related resources required to do port forwarding have already been created with the Terraform.
+
+- Open `cloudshell` and run the following command:
+
+  ```
+  gcloud compute ssh bastion --project ${PROJECT_ID}  --zone us-central1-a  -- -NL 8265:localhost:8265
+  ```
+- Click `Change port` .  
+  ![cloudshell](resources/cloudshell.png)
+
+- You will be presented with the following screen. Provide 8265 in the dialog box. Then click, `CHANGE AND PREVIEW`. 
+  ![cloudshell2](resources/cloudshell2.png)
+
+- You will be directed to the ray dashboard.
+  ![raydashboard](resources/raydashboard.png)
 
 [gitops]: https://about.gitlab.com/topics/gitops/
 [repo-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields
@@ -322,4 +340,4 @@ Open `cloudshell` to execute the following commands:
 [gcp-project]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
 [personal-access-token]: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
 [machine-user-account]: https://docs.github.com/en/get-started/learning-about-github/types-of-github-accounts
-
+[connect-gateway]: https://cloud.google.com/anthos/multicluster-management/gateway/using
