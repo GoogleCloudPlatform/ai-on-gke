@@ -443,8 +443,8 @@ sudo apt-get update >> /tmp/log
 yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install kubectl  >> /tmp/log
 yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install google-cloud-sdk-gke-gcloud-auth-plugin  >> /tmp/log
 sleep 120
-pwd > /tmp/pwd
-gcloud container clusters get-credentials gke-ml-dev --zone us-central1
+pwd >> /tmp/pwd
+gcloud container clusters get-credentials gke-ml-dev --zone us-central1  >> /tmp/log
 nohup kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265 &  >> /tmp/log
 SCRIPT
 depends_on = [ null_resource.manage_ray_ns ]
