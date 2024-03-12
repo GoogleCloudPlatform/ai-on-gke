@@ -48,7 +48,7 @@ https://github.com/genai-llm/genai-gke/tree/main/stable-diffusion2:
 ```bash
 git clone https://github.com/genai-llm/genai-gke/
 
-cd $HOME/genai-gke/platform/platform/
+cd $HOME/applications/genai-gke/platform/
 ```
 All the resources will be created in this project
 
@@ -56,7 +56,7 @@ All the resources will be created in this project
 
 Here on step 1 you need to update the terraform tfvars file (located in .applications/genai-on-gke/platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include the input parameters in the form of key value pairs. Update the values as per your requirements.
 
-<walkthrough-editor-open-file filePath="$HOME/applications/genai-on-gke/platform/terraform.tfvars"> Open terraform.tfvars
+<walkthrough-editor-open-file filePath="~/cloudshell_open/ai-on-gke/applications/genai-on-gke/platform/terraform.tfvars"> Open terraform.tfvars
 </walkthrough-editor-open-file>
 
 Update all values where required.
@@ -101,7 +101,7 @@ Refer [here](https://cloud.google.com/docs/terraform/resource-management/store-s
 
 Run Terrform plan and check the resources to be created , please make changes if any required to terraform files as required and then run terrafrom apply
 ```bash
-cd ~/genai-gke/platform/platform/
+cd ~/applications/genai-gke/platform/
 terraform init
 terraform plan
 terraform apply
@@ -172,14 +172,14 @@ Copy the content from the stable-diffusion2 pynb files and paste it on the open 
 
 ## Step 9: Delete resources created
 
-You can now delete the resources by running below command in the ~/genai-gke/jupyternotebook and then in  ~/genai-gke/platform/platform/ folders
+You can now delete the resources by running below command in the ~/genai-gke/jupyternotebook and then in  ~/applications/genai-gke/platform folders
 
 
 ```bash
-cd ~/genai-gke/jupyternotebook
+cd ~/applications/genai-gke/jupyternotebook
 terraform destroy
 
-cd ~/genai-gke/platform/platform/
+cd ~/applications/genai-gke/platform
 terraform destroy
 ```
 
