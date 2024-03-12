@@ -49,7 +49,10 @@ def sum_moderation_confidences(text):
   # Parse response and sum the confidences of moderation, the categories are from https://cloud.google.com/natural-language/docs/moderating-text
   total_confidence = 0.0
   count = 0.0
+  excluding_names = ["Health", "Politics", "Finance", "Legal"]
   for category in response.moderation_categories:
+    if category.name in excluding_names:
+      continue
     total_confidence += category.confidence
     count+=1.0
   print(f'total confidence is: {total_confidence}')
