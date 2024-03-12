@@ -26,6 +26,8 @@ spec:
               value: http://${inference_server_service}
             - name: BACKEND
               value: ${inference_server_framework}
+            - name: ENABLE_CUSTOM_METRICS
+              value: ${enable_custom_metrics}
           ports:
             - name: loc-master-web
               containerPort: 8089
