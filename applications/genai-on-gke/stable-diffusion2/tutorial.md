@@ -161,7 +161,7 @@ Copy the content from the stable-diffusion2 pynb files and paste it on the open 
 <walkthrough-editor-open-file filePath="./stable-diffusion2/stable_diffusion_inference_on_ray.ipynb"> Demo stablediffusion1 pynb
 </walkthrough-editor-open-file>
 
-<walkthrough-editor-open-file filePath="./lstable-diffusion2/stable_diffusion.ipynb"> Demo stablediffusion2 pynb
+<walkthrough-editor-open-file filePath="./stable-diffusion2/stable_diffusion.ipynb"> Demo stablediffusion2 pynb
 </walkthrough-editor-open-file>
 
 ## Step 9: Delete resources created
