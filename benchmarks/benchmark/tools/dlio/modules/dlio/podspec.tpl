@@ -12,7 +12,7 @@ spec:
       labels:
         app: dlio-job
       annotations:
-        gke-gcsfuse/volumes: ${gcs_fuse_csi_driver_enabled}
+        gke-gcsfuse/volumes: "true"
         gke-gcsfuse/cpu-limit: ${gcs_fuse_sidecar_cpu_limit}
         gke-gcsfuse/memory-limit: ${gcs_fuse_sidecar_memory_limit}
         gke-gcsfuse/ephemeral-storage-limit: ${gcs_fuse_sidecar_ephemeral_storage_limit}
@@ -51,8 +51,8 @@ spec:
               python dlio_postprocessor.py --output-folder $OUTPUT_FOLDER;
               rm $OUTPUT_FOLDER/\.*\.pfw;
               echo 'copying results';
-              mkdir -p ${dlio_data_mount_path}/${dlio_benchmark_result}/$MY_POD_NAME;
-              cp -r $OUTPUT_FOLDER ${dlio_data_mount_path}/${dlio_benchmark_result}/$MY_POD_NAME;
+              mkdir -p /dlio_results/${dlio_benchmark_result}/$MY_POD_NAME;
+              cp -r $OUTPUT_FOLDER /dlio_results/${dlio_benchmark_result}/$MY_POD_NAME;
               echo 'done';
             fi
         env:
@@ -67,11 +67,18 @@ spec:
           mountPath: ${dlio_data_mount_path}
         - name: dshm
           mountPath: /dev/shm
+        - name: results
+          mountPath: /dlio_results
       serviceAccountName: ${service_account}
       volumes:
       - name: ml-perf-volume
         persistentVolumeClaim:
           claimName: ${pvc_name}
+      - name: results
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: ${result_bucket}
       - name: dshm
         emptyDir:
           medium: Memory
