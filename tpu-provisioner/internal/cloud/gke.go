@@ -114,9 +114,9 @@ func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
 
 	for _, np := range resp.NodePools {
 		refs = append(refs, NodePoolRef{
-			Name:     np.Name,
-			Error:    np.Status == "ERROR",
-			ErrorMsg: np.StatusMessage,
+			Name:    np.Name,
+			Error:   np.Status == "ERROR",
+			Message: np.StatusMessage,
 			CreatedForPod: types.NamespacedName{
 				Name:      np.Config.Labels[LabelPodName],
 				Namespace: np.Config.Labels[LabelPodNamespace],

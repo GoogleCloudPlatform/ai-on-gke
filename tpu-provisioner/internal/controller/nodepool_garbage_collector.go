@@ -12,6 +12,10 @@ import (
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+// NodePoolGarbageCollector deletes node pools that have no Nodes,
+// are in an errored state, and where the Pod that created the node pool
+// no longer exists (the deletion reconciler would not see these b/c there
+// are no Node objects).
 type NodePoolGarbageCollector struct {
 	Interval time.Duration
 	client.Client
@@ -84,7 +88,7 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 			log.Info("garbage collecting node pool in error state")
 			// TODO: Lookup namespace from env with downward API.
 			whyDelete := fmt.Sprintf("the node pool has no corresponding Nodes, the Pod (%s/%s) that triggered its creation no longer exists, and node pool is in an error state: %s",
-				np.CreatedForPod.Namespace, np.CreatedForPod.Name, np.ErrorMsg)
+				np.CreatedForPod.Namespace, np.CreatedForPod.Name, np.Message)
 			if err := g.Provider.DeleteNodePool(np.Name, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "tpu-provisioner-system"}}, whyDelete); err != nil {
 				log.Error(err, "failed to garbage collect node pool")
 				continue

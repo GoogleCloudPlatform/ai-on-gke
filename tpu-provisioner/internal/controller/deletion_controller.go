@@ -23,13 +23,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// nodePoolDeletionCheckInterval is the interval between the first and
-// second node pool deletion checks. Once the node pool deletion check
-// has passed twice, the node pool can be safely deleted. This second
-// check is ensure the node pool is not prematurely deleted, in the case
-// where a JobSet is restarted, but no pods have been created yet.
-var nodePoolDeletionCheckInterval = 30 * time.Second
-
 // DeletionReconciler watches Pods and Nodes and deletes Node Pools.
 type DeletionReconciler struct {
 	client.Client
@@ -43,6 +36,13 @@ type DeletionReconciler struct {
 
 type NodeCriteria struct {
 	MinLifetime time.Duration
+
+	// PoolDeletionDelay is the interval between the first and
+	// second node pool deletion checks. Once the node pool deletion check
+	// has passed twice, the node pool can be safely deleted. This second
+	// check is ensure the node pool is not prematurely deleted, in the case
+	// where a JobSet is restarted, but no pods have been created yet.
+	PoolDeletionDelay time.Duration
 }
 
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch;create;update;patch;delete
@@ -128,14 +128,14 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if !exists {
 		lg.Info(fmt.Sprintf("Node pool %q passed deletion check once", nodePoolName))
 		r.NodePoolsMarkedForDeletion.Store(nodePoolName, time.Now())
-		return ctrl.Result{RequeueAfter: nodePoolDeletionCheckInterval}, nil
+		return ctrl.Result{RequeueAfter: r.NodeCriteria.PoolDeletionDelay}, nil
 	}
 
 	// If we haven't reached the node pool deletion check interval, this reconcile was
 	// caused by something else, we can return early, and wait for the manually requeued
 	// reconcile we did after the first deletion check passed.
 	firstDeletionCheckTime := value.(time.Time)
-	if time.Now().Sub(firstDeletionCheckTime) < nodePoolDeletionCheckInterval {
+	if time.Now().Sub(firstDeletionCheckTime) < r.NodeCriteria.PoolDeletionDelay {
 		return ctrl.Result{}, nil
 	}
 

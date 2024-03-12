@@ -84,6 +84,8 @@ func main() {
 		// the node to become Ready and for a pending Pod to be scheduled on it.
 		NodeMinLifespan time.Duration `envconfig:"NODE_MIN_LIFESPAN" default:"3m"`
 
+		NodepoolDeletionDelay time.Duration `envconfig:"NODEPOOL_DELETION_DELAY" default:"30s"`
+
 		PodResourceType string `envconfig:"POD_RESOURCE_TYPE" default:"google.com/tpu"`
 
 		Concurrency int `envconfig:"CONCURRENCY" default:"3"`
@@ -229,7 +231,8 @@ func main() {
 		Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		Provider: provider,
 		NodeCriteria: controller.NodeCriteria{
-			MinLifetime: cfg.NodeMinLifespan,
+			MinLifetime:       cfg.NodeMinLifespan,
+			PoolDeletionDelay: cfg.NodepoolDeletionDelay,
 		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DeletionReconciler")
