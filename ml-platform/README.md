@@ -175,8 +175,10 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   ```
       
    Replace <PROJECT_ID> with the id of the project that you created in the previous step or the id of an already existing project that you want to use.
+
    **If you are using an already existing project, get `roles/owner` role on the project**  
-- Update ~/bashrc to automatically point to the required project when a new instance of the `cloudshell` is created:
+
+- Update ~/.bashrc to automatically point to the required project when a new instance of the `cloudshell` is created:
   ```
   echo gcloud config set project $PROJECT_ID >> ~/.bashrc && source ~/.bashrc
   ```
@@ -225,6 +227,7 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   ```
   sed -i "s/YOUR_STATE_BUCKET/${STATE_BUCKET}/g" backend.tf
   
+
   sed -i "s/YOUR_PROJECT_ID/${PROJECT_ID}/g" mlenv.auto.tfvars 
   ```
 
@@ -319,3 +322,4 @@ Open `cloudshell` to execute the following commands:
 [gcp-project]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
 [personal-access-token]: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
 [machine-user-account]: https://docs.github.com/en/get-started/learning-about-github/types-of-github-accounts
+
