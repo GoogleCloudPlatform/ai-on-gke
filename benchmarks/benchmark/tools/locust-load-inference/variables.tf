@@ -190,3 +190,23 @@ variable "run_test_automatically" {
   type        = bool
   default     = false
 }
+
+variable "enable_custom_metrics" {
+  description = "enable custom metric output in Locust"
+  type        = bool
+  default     = false
+}
+
+variable "huggingface_secret" {
+  description = "name of the kubectl huggingface secret token"
+  type        = string
+  nullable    = true
+  default     = "huggingface-secret"
+}
+
+variable "csv_upload_frequency" {
+  description = "how frequently, in seconds, to upload csv if custom metrics is turned on"
+  type        = number
+  nullable    = true
+  default     = 10
+}
