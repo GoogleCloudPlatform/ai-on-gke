@@ -126,7 +126,7 @@ variable "network_policy_allow_namespaces_by_label" {
 }
 
 variable "network_policy_allow_pods_by_label" {
-  description = "Namespaces allowed to access this kuberay cluster"
+  description = "Pods allowed to access this kuberay cluster"
   type        = list(map(string))
   default     = []
 }

@@ -366,3 +366,9 @@ variable "goog_cm_deployment_name" {
   type    = string
   default = ""
 }
+
+variable "disable_ray_cluster_network_policy" {
+  description = "Disables Kubernetes Network Policy for Ray Clusters for this demo. Defaulting to 'true' aka disabled pending fixes to the kuberay-monitoring module. This should be defaulted to false."
+  type        = bool
+  default     = true
+}

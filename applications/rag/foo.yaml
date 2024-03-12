@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: terraform-kuberay-allow-cluster-network-policy
+  namespace: rag
+spec:
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: rag
+    ports:
+    - protocol: TCP
+  podSelector:
+    matchLabels:
+      ray.io/is-ray-node: "yes"
+  policyTypes:
+  - Ingress
