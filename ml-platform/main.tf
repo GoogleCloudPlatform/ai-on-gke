@@ -428,8 +428,8 @@ resource "google_compute_instance" "bastion_vm" {
   boot_disk {
     initialize_params {
       image = "debian-cloud/debian-11"
-      auto_delete = true
     }
+    auto_delete = true
   }
   network_interface {
     network = module.create-vpc[each.key].vpc
