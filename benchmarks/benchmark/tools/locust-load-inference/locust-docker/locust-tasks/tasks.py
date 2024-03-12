@@ -30,6 +30,7 @@ from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from custom_metric_aggregator import TokenMetricCollector
 metric_collector = TokenMetricCollector()
+local_metric_collector = TokenMetricCollector()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -112,9 +113,13 @@ def get_token_count(prompt, resp):
     if backend == "vllm":
         number_of_output_tokens = 0  # to be added
     elif backend == "tgi":
-        number_of_output_tokens = 0  # to be added
+        resp_dict = json.loads(resp.content.decode('utf-8'))
+        number_of_output_tokens = len(
+            tokenizer.encode(resp_dict['generated_text']))
     elif backend == "tensorrt_llm_triton":
         resp_dict = json.loads(resp.content.decode('utf-8'))
+        number_of_output_tokens = len(
+            tokenizer.encode(resp_dict['text_output']))
         number_of_output_tokens = len(
             tokenizer.encode(resp_dict['text_output']))
     elif backend == "sax":
@@ -165,6 +170,8 @@ class BenchmarkUser(FastHttpUser):
             request_successful_bool = 1
             tokens_sent, tokens_received = get_token_count(prompt, reponse)
 
+            local_metric_collector.add_metric(
+                tokens_sent, tokens_received, test_time, request_successful_bool)
             logging.info(
                 f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
             self.environment.runner.send_message("metric_update", [
@@ -180,6 +187,8 @@ class BenchmarkUser(FastHttpUser):
             test_time = -1
             request_successful_bool = 0
 
+            local_metric_collector.add_metric(
+                tokens_sent, tokens_received, test_time, request_successful_bool)
             logging.info(
                 f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
             self.environment.runner.send_message("metric_update", [
@@ -197,7 +206,7 @@ def collect_metrics(msg, **_kwargs):
     received = msg.data[1]
     test_time = msg.data[2]
     request_successful_bool = msg.data[3]
-    logging.info(f'recevied from worker {msg.data}')
+    logging.info(f'received from worker {msg.data}')
     metric_collector.add_metric(
         sent, received, test_time, request_successful_bool)
 
@@ -232,6 +241,40 @@ def on_test_stop(environment, **kwargs):
         metric_collector.write_to_csv('custom_metrics_final.csv')
         metric_collector.__init__()
         metric_collector.write_to_csv()
+        local_metric_collector.__init__()
+
+
+"""
+Methods for collecting request latencies to share to master webui
+"""
+
+
+@events.report_to_master.add_listener
+def on_report_to_master(client_id, data):
+    """
+    This event is triggered on the worker instances every time a stats report is
+    to be sent to the locust master. It will allow us to add our local workers metrics
+    to the dict that is being sent, and then we clear the local stats in the worker, so
+    as to avoid sending duplicate data to the master on the next run.
+    """
+    tokens_sent, tokens_recieved, test_time, success_count, failure_count = local_metric_collector.share_stats()
+    data["tokens-sent"] = tokens_sent
+    data["tokens-received"] = tokens_recieved
+    data["test-time"] = test_time
+    data["success-count"] = success_count
+    data["failure-count"] = failure_count
+    local_metric_collector.__init__
+
+
+@events.worker_report.add_listener
+def on_worker_report(client_id, data):
+    """
+    This event is triggered on the master instance when a new stats report arrives
+    from a worker. Here we just add the local stats to the master's aggregated
+    stats dict.
+    """
+    local_metric_collector.add_metrics(
+        data["tokens-sent"], data["tokens-received"], data["test-time"], data["success-count"], data["failure-count"])
 
 
 @events.init_command_line_parser.add_listener
@@ -260,6 +303,7 @@ def _(environment, **kwargs):
         global model_params
         global test_data
         global metric_collector
+        global local_metric_collector
         global tokenizer
 
         tokenizer = AutoTokenizer.from_pretrained(
@@ -292,3 +336,22 @@ def _(environment, **kwargs):
         setup_periodic_metrics_writer(environment)
         setup_custom_route(environment)
         environment.runner.register_message("metric_update", collect_metrics)
+
+
+@events.init.add_listener
+def locust_init(environment, **kwargs):
+    """
+    We need somewhere to store the stats 
+
+    On the master node the metric_collector will contain the aggregated sum of all content-lengths,
+    while on the worker nodes this will be the sum of the content-lengths since the
+    last stats report was sent to the master
+    """
+    if environment.web_ui:
+        # this code is only run on the master node (the web_ui instance doesn't exist on workers)
+        @environment.web_ui.app.route("/stats/custom_metrics")
+        def total_content_length():
+            """
+            Add a route to the Locust web app, where we can see the total content-length
+            """
+            return local_metric_collector.json_dump_report()
