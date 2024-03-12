@@ -388,3 +388,64 @@ resource "null_resource" "manage_ray_ns" {
   }
   depends_on = [google_gke_hub_feature_membership.feature_member, null_resource.create_git_cred_ns, null_resource.install_ray_cluster]
 }
+# The following section is needed to port forward on the kuberay service to access
+# the ray dashboard.Currently connect gateway doesn't allow port forwarding so we have
+# to create a VM in the same subnet as the provate GKE cluster
+
+# --- IAP firewall for SSH'ing into the VMs ---
+resource "google_compute_firewall" "iap_ssh" {
+  for_each      = local.parsed_project_id
+  name          = "iap-ssh"
+  project_id    = each.value
+  network       = module.create-vpc[each.key].vpc
+  direction     = "INGRESS"
+  source_ranges = ["35.235.240.0/20"]
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+}
+
+resource "google_service_account" "sa" {
+  for_each      = local.parsed_project_id
+  project_id    = each.value
+  account_id   = "compute-${each.key}"
+  display_name = "Compute SA for ${each.key}"
+}
+
+resource "google_project_iam_member" "sa-con-developer" {
+  for_each      = local.parsed_project_id
+  project_id    = each.value
+  role    = "roles/container.developer"
+  member  = "serviceAccount:${google_service_account.sa[each.key].email}"
+}
+resource "google_compute_instance" "bastion_vm" {
+  for_each      = local.parsed_project_id
+  name         = "bastion"
+  machine_type = "e2-micro"
+  zone         = "us-central1-a"
+  can_ip_forward = false
+  disk {
+    source_image = "debian-cloud/debian-11"
+    auto_delete  = true
+    boot         = true
+  }
+  network_interface {
+    module.create-vpc[each.key].vpc
+  }
+
+  metadata_startup_script = <<SCRIPT
+#!/bin/bash
+apt update && apt upgrade
+sudo apt-get install kubectl
+sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
+gcloud container clusters get-credentials gke-ml-dev --zone us-central1
+nohup kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265 &
+SCRIPT
+depends_on = [ null_resource.manage_ray_ns ]
+service_account {
+#
+email  = google_service_account.sa[each.key].email
+scopes = ["cloud-platform"]
+}
+}
