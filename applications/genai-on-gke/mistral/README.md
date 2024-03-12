@@ -175,7 +175,7 @@ There are two ways to deploy the mistral workloads on GCP
 Click button below to get started
 
 #
-[![Deploy using Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/GoogleCloudPlatform/ai-on-gke.git&git_branch=genai-on-gke&cloudshell_tutorial=mistral/tutorial.md&cloudshell_workspace=applications/genai-on-gke)
+[![Deploy using Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/GoogleCloudPlatform/ai-on-gke.git&git_branch=genai-on-gke&cloudshell_tutorial=applications/genai-on-gke/mistral/tutorial.md)
 
 ## Deploy using the Terraform CLI
 
