@@ -153,6 +153,7 @@ worker:
   replicas: 1
   minReplicas: 1 
   maxReplicas: 1
+  numOfHosts: 1
   type: worker
   labels:
     cloud.google.com/gke-ray-node-type: worker
