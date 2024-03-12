@@ -6,6 +6,7 @@ Welcome to the Cloudshell tutorial for AI on GKE!
 This guide will show you how to prepare a GKE cluster and install the AI applications on GKE. It'll also walk you through the configuration files that can be provided with custom inputs and commands that will complete the tutorial.
 
 **Time to complete**: About 40 minutes
+<walkthrough-tutorial-duration duration="40"></walkthrough-tutorial-duration>
 
 **Prerequisites**: GCP project linked with a Cloud Billing account
 
@@ -35,12 +36,15 @@ You'll be performing the following activities:
 
 To get started, click **Next**.
 
-## Step 0: Set your project
+##Set your project
+
 To set your Cloud Platform project for this terminal session use:
 ```bash
 gcloud config set project [PROJECT_ID]
 ```
 All the resources will be created in this project
+
+<walkthrough-project-setup billing="true"></walkthrough-project-setup>
 
 ## Step 0: Clone git Repo
 Clone the GitHub repository to Cloud Shell.
@@ -81,8 +85,8 @@ gcloud storage buckets create gs://BUCKET_NAME
 
 ### Modify PLATFORM Terraform State Backend
 
-Modify the ./platform/backend.tf and uncomment the code and update the backend bucket name.
-<walkthrough-editor-open-file filePath="platform/backend.tf"> Open ./applications/genai-on-gke/platform/backend.tf
+Modify the backend.tf and uncomment the code and update the backend bucket name.
+<walkthrough-editor-open-file filePath="platform/backend.tf"> Open ./platform/backend.tf
 </walkthrough-editor-open-file>
 
 After changes file will look like below:
