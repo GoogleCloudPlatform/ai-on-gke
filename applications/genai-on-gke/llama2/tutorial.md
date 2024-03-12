@@ -56,7 +56,7 @@ Update all values where required.
 
 **Tip**: Click the highlighted text above to open the file in your cloudshell editor.
 
-You can find tfvars examples in the tfvars_examples folder at location ./infrastructure/tfvars_examples.
+You can find tfvars examples in the tfvars_examples folder at location ~/infrastructure/tfvars_examples.
 
 
 ## Step 2: Configure Terraform GCS backend
