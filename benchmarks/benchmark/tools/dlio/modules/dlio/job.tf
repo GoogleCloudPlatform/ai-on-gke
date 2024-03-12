@@ -43,6 +43,7 @@ resource "local_file" "podspec" {
     dlio_iostat_devices                      = "${var.dlio_iostat_devices}"
     dlio_read_threads                        = "${var.dlio_read_threads}"
     gcs_bucket                               = "${var.gcs_bucket}"
+    result_bucket                            = "${var.result_bucket}"
     service_account                          = "${var.k8s_service_account}"
     pvc_name                                 = "${var.pvc_name}"
   })

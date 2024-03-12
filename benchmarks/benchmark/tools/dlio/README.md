@@ -14,6 +14,8 @@ Preinstall the following on your computer:
 Note: Terraform keeps state metadata in a local file called `terraform.tfstate`.
 If you need to reinstall any resources, make sure to delete this file as well.
 
+The workload identity and `k8s_service_account` should be set up for the `gcs_bucket` and `result_bucket` correctly ahead of time because DLIO jobs need to read from and write to them respectively.
+
 ## Run DLIO Job
 1. Update the `variables.tf` file with your desired settings to run your machine learning benchmark workload
 2. Change the dlio image in `modules/dlio/podspec.tpl`
@@ -22,20 +24,22 @@ If you need to reinstall any resources, make sure to delete this file as well.
 5. After you finish your test, run `terraform destroy` to delete the
    resources
 
-## Run DLIO Job with Parallelstore
-Pre-reqs: right now you'll need to manually setup the VPC peering from the GKE cluster's network to `servicenetworking.googleapis.com`.
+*__Important__*: To isolate results from different runs, `${dlio_benchmark_result}` should be unique to each run.
 
-1. update `variables.tf` file with your desired settings to run your machine learning benchmark workload, notably set `gcs_fuse_csi_driver_enabled` to `false` and `paralllestore_csi_driver_enabled` to `true`. If you want to use static provisioning, update the "parallelstore variables" and `parallelstore_storageclass` to `""`.
+## Run DLIO Job with Parallelstore
+Pre-reqs:
+- You'll need to manually setup the VPC peering from the GKE cluster's network to `servicenetworking.googleapis.com`.
+
+1. update `variables.tf` file with your desired settings to run your machine learning benchmark workload, notably set `run_with_gcs_fuse_csi` to `false` and `run_with_parallelstore_csi` to `true`. If you want to use static provisioning, update the "parallelstore variables" and `parallelstore_storageclass` to `""`.
 2. Change the dlio image in `dlio/podspec.tpl` to a desired version. We have tested the job with dlio v0.5.1.
 3. run `terraform init`
 4. run `terraform apply -target=module.ps_storage`
 5. run `terraform apply` after the dataloader job is completed; pvc patch failure is OK for dynamic provisioning.
 
+*__Important__*: To isolate results from different runs, `${dlio_benchmark_result}` should be unique to each run.
+
 ## Check Test Result
-The test result reports are located in the `${dlio_benchmark_result}` directory. For example,
-if you use a GCS bucket to store the training dataset, the GCS bucket will be mounted at
-`${dlio_data_mount_path}`, and you can find the test result reports at `${dlio_data_mount_path}/${dlio_benchmark_result}`
-or in the folder with the same name as `${dlio_benchmark_result}` in your GCS bucket.
+The test result reports are located in provided GCS bucket `${result_bucket}` in a directory named `${dlio_benchmark_result}`.
 
 ## Debug Workload
 
