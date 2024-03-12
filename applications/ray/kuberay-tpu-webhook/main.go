@@ -177,32 +177,20 @@ func injectMultiHostReplicaLabel(replicaIndex int, workerGroupName string, patch
 
 // inject pod affinity and anti-affinity scheduling constraints using multiHostReplica label
 func injectPodAffinity(replicaIndex int, workerGroupName string, patches *[]patch) {
-	podAffinityPatch := patch{"op": "add"}
-	podAffinityPath := "/spec/affinity"
-	podAntiAffinityPatch := patch{"op": "add"}
-
-	// construct pod affinity value to inject - schedule pods with the same multiHostReplica together
 	key := "multiHostReplica"
-	value := []string{workerGroupName + strconv.Itoa(replicaIndex)}
-	affinitySelectorRequirement := metav1.LabelSelectorRequirement{key, metav1.LabelSelectorOpIn, value}
+	value := workerGroupName + "-" + strconv.Itoa(replicaIndex)
+	topologyKey := "cloud.google.com/gke-nodepool"
+
+	// construct affinity value to inject - schedule pods with the same multiHostReplica together
+	podAffinityPatch := patch{"op": "add"}
+	podAffinityPatch["path"] = "/spec/affinity/podAffinity"
+	affinitySelectorRequirement := metav1.LabelSelectorRequirement{key, metav1.LabelSelectorOpIn, []string{value}}
 	affinityMatchExpressions := []metav1.LabelSelectorRequirement{affinitySelectorRequirement}
 	affinityLabelSelector := metav1.LabelSelector{MatchExpressions: affinityMatchExpressions}
-	podAffinityValue := corev1.PodAffinityTerm{LabelSelector: &affinityLabelSelector}
+	podAffinityTerms := []corev1.PodAffinityTerm{corev1.PodAffinityTerm{LabelSelector: &affinityLabelSelector, TopologyKey: topologyKey}}
+	podAffinityPatch["value"] = corev1.PodAffinity{RequiredDuringSchedulingIgnoredDuringExecution: podAffinityTerms}
 
-	// construct pod anti-affinity value to inject -  our requirement is that we don't
-	// schedule any other pods with the multi-host replica pods when the multiHostReplica label exists
-	antiSelectorRequirement := metav1.LabelSelectorRequirement{key, metav1.LabelSelectorOpNotIn, value}
-	labelExistsRequirement := metav1.LabelSelectorRequirement{key, metav1.LabelSelectorOpExists, value}
-	antiMatchExpressions := []metav1.LabelSelectorRequirement{antiSelectorRequirement, labelExistsRequirement}
-	antiLabelSelector := metav1.LabelSelector{MatchExpressions: antiMatchExpressions}
-	podAntiAffinityValue := corev1.PodAffinityTerm{LabelSelector: &antiLabelSelector}
-
-	podAffinityPatch["path"] = podAffinityPath
-	podAffinityPatch["value"] = corev1.PodAffinity{RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{podAffinityValue}}
-	podAntiAffinityPatch["path"] = podAffinityPath
-	podAntiAffinityPatch["value"] = corev1.PodAntiAffinity{RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{podAntiAffinityValue}}
-
-	*patches = append(*patches, podAffinityPatch, podAntiAffinityPatch)
+	*patches = append(*patches, podAffinityPatch)
 }
 
 // check that the # of Ray TPU worker pods equals the # of hosts defined in the topology key
