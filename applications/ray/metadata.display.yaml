@@ -1,0 +1,118 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke-display
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: Ray on GKE
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/ray
+  ui:
+    input:
+      variables:
+        goog_cm_deployment_name:
+          name: goog_cm_deployment_name
+          title: Goog Cm Deployment Name
+        create_cluster:
+          name: create_cluster
+          title: Create GKE Cluster
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_CREATE_RESOURCE
+        cluster_location:
+          name: cluster_location
+          title: Cluster Location
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GCE_REGION
+        cluster_name:
+          name: cluster_name
+          title: Cluster Name
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GKE_CLUSTER
+            gkeCluster:
+              clusterCreationVariable: create_cluster
+              locationVariable: cluster_location
+        cluster_membership_id:
+          name: cluster_membership_id
+          title: Cluster Membership Id
+          invisible: true
+          section: cluster_details
+        autopilot_cluster:
+          name: autopilot_cluster
+          title: GKE Cluster Type
+          section: cluster_details
+          enumValueLabels:
+            - label: Autopilot Cluster
+              value: "true"
+            - label: Standard Cluster
+              value: "false"
+        kubernetes_namespace:
+          name: kubernetes_namespace
+          title: Kubernetes Namespace
+          section: cluster_details
+        private_cluster:
+          name: private_cluster
+          title: Private Cluster
+          invisible: true
+          section: cluster_details
+        create_gcs_bucket:
+          name: create_gcs_bucket
+          title: Create Gcs Bucket
+          invisible: true
+        create_ray_cluster:
+          name: create_ray_cluster
+          title: Create Ray Cluster
+          section: ray
+          invisible: true
+        create_service_account:
+          name: create_service_account
+          title: Create Service Account
+          invisible: true
+        enable_gpu:
+          name: enable_gpu
+          title: Enable GPU
+          section: ray
+        enable_grafana_on_ray_dashboard:
+          name: enable_grafana_on_ray_dashboard
+          title: Enable Grafana On Ray Dashboard
+          section: ray
+        workload_identity_service_account:
+          name: workload_identity_service_account
+          title: GCP Workload Identity Service Account
+          section: ray
+          invisible: true
+        gcs_bucket:
+          name: gcs_bucket
+          title: Gcs Bucket
+          section: ray
+          xGoogleProperty:
+            type: ET_GCS_BUCKET
+        project_id:
+          name: project_id
+          title: Project Id
+          invisible: true
+        ray_version:
+          name: ray_version
+          title: Ray Version
+          section: ray
+          enumValueLabels:
+            - label: v2.7.1
+              value: "v2.7.1"
+            - label: v2.8.1
+              value: "v2.8.1"
+            - label: v2.9.3
+              value: "v2.9.3"
+      sections:
+        - name: cluster_details
+          title: Cluster Details
+          tooltip: Select or Create GKE cluster
+        - name: ray
+          title: Ray Application
+        - name: iap_auth
+          title: IAP Authentication

@@ -26,7 +26,7 @@ variable "cluster_membership_id" {
   default     = ""
 }
 
-variable "namespace" {
+variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
 }
@@ -39,6 +39,7 @@ variable "gcs_bucket" {
 variable "workload_identity_service_account" {
   type        = string
   description = "workload identity service account"
+  default     = "jupyter-service-account"
 }
 
 variable "project_id" {
@@ -54,7 +55,7 @@ variable "members_allowlist" {
 variable "add_auth" {
   type        = bool
   description = "Enable iap authentication on jupyterhub"
-  default     = true
+  default     = false
 }
 
 variable "k8s_ingress_name" {
@@ -132,4 +133,87 @@ variable "create_gcs_bucket" {
   type        = bool
   default     = false
   description = "Enable flag to create gcs_bucket"
+}
+
+## GKE variables
+variable "create_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "private_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "autopilot_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "cpu_pools" {
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = optional(string, "")
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+  }))
+  default = [{
+    name         = "cpu-pool"
+    machine_type = "n1-standard-16"
+    autoscaling  = true
+    min_count    = 1
+    max_count    = 3
+    disk_size_gb = 100
+    disk_type    = "pd-standard"
+  }]
+}
+
+variable "gpu_pools" {
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = optional(string, "")
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+    accelerator_type       = optional(string, "nvidia-tesla-t4")
+    gpu_driver_version     = optional(string, "DEFAULT")
+  }))
+  default = []
+}
+
+variable "goog_cm_deployment_name" {
+  type    = string
+  default = ""
 }

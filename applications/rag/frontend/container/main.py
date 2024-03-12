@@ -18,6 +18,7 @@ import logging as log
 import google.cloud.logging as logging
 import sqlalchemy
 import pymysql
+import traceback
 import json
 
 from flask import Flask, render_template, request, jsonify
@@ -173,7 +174,7 @@ def handlePrompt():
             "user_prompt": user_prompt
         })
         if 'nlpFilterLevel' in data:
-            if nlp_filter.is_content_inappropriate(response['text'], data.get['nlpFilterLevel']):
+            if nlp_filter.is_content_inappropriate(response['text'], data['nlpFilterLevel']):
                 response['text'] = 'The response is deemed inappropriate for display.'
         elif 'inspectTemplate' in data and 'deidentifyTemplate' in data:
             inspect_template_path = data['inspectTemplate']
@@ -185,6 +186,7 @@ def handlePrompt():
         return {'response': response}
     except Exception as err:
         log.info(f"exception from llm: {err}")
+        traceback.print_exc()
         return str(err), 500
 
 

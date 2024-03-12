@@ -36,7 +36,7 @@ variable "ray_version" {
   default = "v2.7.1"
 }
 
-variable "ray_namespace" {
+variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
   default     = "myray"
@@ -64,9 +64,10 @@ variable "create_service_account" {
   default     = true
 }
 
-variable "gcp_service_account" {
+variable "workload_identity_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
+  default     = "ray-service-account"
 }
 
 variable "create_ray_cluster" {
@@ -77,4 +78,98 @@ variable "create_ray_cluster" {
 variable "enable_gpu" {
   type    = bool
   default = false
+}
+
+## GKE variables
+variable "create_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "private_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "autopilot_cluster" {
+  type    = bool
+  default = false
+}
+
+variable "cpu_pools" {
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = optional(string, "")
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+  }))
+  default = [{
+    name         = "cpu-pool"
+    machine_type = "n1-standard-16"
+    autoscaling  = true
+    min_count    = 1
+    max_count    = 3
+    disk_size_gb = 100
+    disk_type    = "pd-standard"
+  }]
+}
+
+variable "gpu_pools" {
+  type = list(object({
+    name                   = string
+    machine_type           = string
+    node_locations         = optional(string, "")
+    autoscaling            = optional(bool, false)
+    min_count              = optional(number, 1)
+    max_count              = optional(number, 3)
+    local_ssd_count        = optional(number, 0)
+    spot                   = optional(bool, false)
+    disk_size_gb           = optional(number, 100)
+    disk_type              = optional(string, "pd-standard")
+    image_type             = optional(string, "COS_CONTAINERD")
+    enable_gcfs            = optional(bool, false)
+    enable_gvnic           = optional(bool, false)
+    logging_variant        = optional(string, "DEFAULT")
+    auto_repair            = optional(bool, true)
+    auto_upgrade           = optional(bool, true)
+    create_service_account = optional(bool, true)
+    preemptible            = optional(bool, false)
+    initial_node_count     = optional(number, 1)
+    accelerator_count      = optional(number, 0)
+    accelerator_type       = optional(string, "nvidia-tesla-t4")
+    gpu_driver_version     = optional(string, "DEFAULT")
+  }))
+  default = [{
+    name               = "gpu-pool"
+    machine_type       = "n1-standard-16"
+    autoscaling        = true
+    min_count          = 1
+    max_count          = 3
+    disk_size_gb       = 100
+    disk_type          = "pd-standard"
+    accelerator_count  = 2
+    accelerator_type   = "nvidia-tesla-t4"
+    gpu_driver_version = "DEFAULT"
+  }]
+}
+
+variable "goog_cm_deployment_name" {
+  type    = string
+  default = ""
 }

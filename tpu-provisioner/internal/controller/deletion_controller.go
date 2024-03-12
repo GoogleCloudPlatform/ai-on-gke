@@ -28,7 +28,7 @@ import (
 // has passed twice, the node pool can be safely deleted. This second
 // check is ensure the node pool is not prematurely deleted, in the case
 // where a JobSet is restarted, but no pods have been created yet.
-var nodePoolDeletionCheckInterval = 4 * time.Second
+var nodePoolDeletionCheckInterval = 30 * time.Second
 
 // DeletionReconciler watches Pods and Nodes and deletes Node Pools.
 type DeletionReconciler struct {

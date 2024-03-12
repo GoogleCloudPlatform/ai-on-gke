@@ -20,8 +20,11 @@ locals {
 
   hpa_cpu_template           = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
   hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.tgi.custom_metric.yaml.tftpl"
-  tgi_podmonitoring          = "${path.module}/hpa-templates/tgi-podmonitoring.yaml.tftpl"
-  custom_metrics_enabled     = !(var.hpa_type == null || var.hpa_type == "cpu")
+  tgi_podmonitoring          = "${path.module}/monitoring-templates/tgi-podmonitoring.yaml.tftpl"
+  dcgm_podmonitoring_for_hpa = "${path.module}/hpa-templates/dcgm-podmonitoring.yaml.tftpl"
+  use_dcgm_metrics_for_hpa   = var.hpa_type == null ? false : length(regexall("DCGM_.*", var.hpa_type)) > 0
+  use_tgi_metrics_for_hpa    = var.hpa_type == null ? false : length(regexall("tgi_.*", var.hpa_type)) > 0
+  custom_metrics_enabled     = local.use_dcgm_metrics_for_hpa || local.use_tgi_metrics_for_hpa
 
   wl_templates = [
     for f in fileset(local.wl_templates_path, "*tftpl") :
@@ -65,6 +68,7 @@ resource "kubernetes_manifest" "default" {
     namespace                      = var.namespace
     model_id                       = var.model_id
     gpu_count                      = var.gpu_count
+    max_concurrent_requests        = var.max_concurrent_requests
     ksa                            = var.ksa
     hugging_face_token_secret_list = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
   }))
@@ -84,9 +88,15 @@ resource "kubernetes_manifest" "hpa-cpu" {
 }
 
 resource "kubernetes_manifest" "tgi-pod-monitoring" {
-  count = local.custom_metrics_enabled ? 1 : 0
   manifest = yamldecode(templatefile(local.tgi_podmonitoring, {
     namespace = var.namespace
+  }))
+}
+
+resource "kubernetes_manifest" "dcgm-pod-monitoring-for-hpa" {
+  count = local.use_dcgm_metrics_for_hpa ? 1 : 0
+  manifest = yamldecode(templatefile(local.dcgm_podmonitoring_for_hpa, {
+    custom_metric_name = var.hpa_type
   }))
 }
 

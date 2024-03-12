@@ -30,15 +30,15 @@ spec:
   ui:
     input:
       variables:
-        cluster_name:
-          name: cluster_name
-          title: Cluster Name
+        autopilot_cluster:
+          name: autopilot_cluster
+          title: GKE Cluster Type
           section: cluster_details
-          xGoogleProperty:
-            type: ET_GKE_CLUSTER
-            gkeCluster:
-              clusterCreationVariable: create_cluster
-              locationVariable: cluster_location
+          enumValueLabels:
+            - label: Autopilot Cluster
+              value: "true"
+            - label: Standard Cluster
+              value: "false"
         cluster_location:
           name: cluster_location
           title: Cluster Location
@@ -48,27 +48,54 @@ spec:
         cluster_membership_id:
           name: cluster_membership_id
           title: Cluster Membership Id
-          section: cluster_details
           invisible: true
-        default_backend_service:
-          name: default_backend_service
-          title: Default Backend Service
+          section: cluster_details
+        cluster_name:
+          name: cluster_name
+          title: Cluster Name
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_GKE_CLUSTER
+            gkeCluster:
+              locationVariable: cluster_location
+              clusterCreationVariable: create_cluster
+        create_cluster:
+          name: create_cluster
+          title: Create GKE Cluster
+          section: cluster_details
+          xGoogleProperty:
+            type: ET_CREATE_RESOURCE
+        create_gcs_bucket:
+          name: create_gcs_bucket
+          title: Create Gcs Bucket
+          invisible: true
+        gcs_bucket:
+          name: gcs_bucket
+          title: GCS Bucket
           section: jupyterhub
+          xGoogleProperty:
+            type: ET_GCS_BUCKET
+        goog_cm_deployment_name:
+          name: goog_cm_deployment_name
+          title: Goog Cm Deployment Name
+        kubernetes_namespace:
+          name: kubernetes_namespace
+          title: Kubernetes Namespace
+          section: cluster_details
+        private_cluster:
+          name: private_cluster
+          title: Private Cluster
+          invisible: true
+          section: cluster_details
+        project_id:
+          name: project_id
+          title: Project Id
           invisible: true
         workload_identity_service_account:
           name: workload_identity_service_account
           title: GCP Workload Identity Service Account
           section: jupyterhub
-        gcs_bucket:
-          name: gcs_bucket
-          title: GCS Bucket
-          section: jupyterhub 
-          xGoogleProperty:
-            type: ET_GCS_BUCKET      
-        namespace:
-          name: namespace
-          title: Kubernetes Namespace
-          section: jupyterhub
+          invisible: true
         add_auth:
           name: add_auth
           title: Enable IAP Authentication
@@ -90,12 +117,24 @@ spec:
           level: 1
         client_secret:
           name: client_secret
-          title: Client Secret    
-          section: iap_auth  
-          level: 1  
-        service_name:
-          name: service_name
-          title: Service Name
+          title: Client Secret
+          section: iap_auth
+          level: 1
+        k8s_backend_config_name:
+          name: k8s_backend_config_name
+          title: K8s Backend Config Name
+          section: iap_auth
+          invisible: true
+          level: 1
+        k8s_backend_service_name:
+          name: k8s_backend_service_name
+          title: K8s Backend Service Name
+          section: iap_auth
+          invisible: true
+          level: 1
+        k8s_ingress_name:
+          name: k8s_ingress_name
+          title: K8s Ingress Name
           section: iap_auth
           invisible: true
           level: 1
@@ -114,10 +153,6 @@ spec:
           title: Members Allowlist
           section: iap_auth
           level: 1
-        project_id:
-          name: project_id
-          title: Project Id
-          invisible: true
       sections:
         - name: cluster_details
           title: Cluster Details
@@ -126,16 +161,14 @@ spec:
           title: JupyterHub Application
         - name: iap_auth
           title: JupyterHub IAP Authentication
-          #subtext: Provide IAP details
     runtime:
-        outputMessage: Deployment can take several minutes to complete.
-        suggestedActions:
+      outputMessage: Deployment can take several minutes to complete.
+      suggestedActions:
         - heading: No external IP configured
-          description: "The application has been configured with no external IP or domain."
-        outputs:
-          jupyterhub_uri:
-            open_in_new_tab: true
-            show_in_notification: true
-            label: "Go to Jupyter Application"
-          jupyterhub_password: {}
-          
+          description: The application has been configured with no external IP or domain.
+      outputs:
+        jupyterhub_password: {}
+        jupyterhub_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Go to Jupyter Application

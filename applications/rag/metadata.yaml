@@ -17,13 +17,17 @@ spec:
   content: {}
   interfaces:
     variables:
+      - name: goog_cm_deployment_name
+        description: The name of the deployment.
+        varType: string
+        required: true
       - name: add_auth
         description: Enable iap authentication on jupyterhub
         varType: bool
         defaultValue: false
       - name: autopilot_cluster
-        varType: bool
-        defaultValue: false
+        varType: string
+        defaultValue: "false"
       - name: brand
         description: name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty
         varType: string
@@ -124,6 +128,11 @@ spec:
         description: Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty
         varType: string
         defaultValue: ""
+      - name: cloudsql_instance
+        description: Name of the new cloudsql instance 
+        varType: string
+        defaultValue: "pgvector-instance"
     outputs:
       - name: jupyterhub_password
       - name: jupyterhub_uri
+      - name: frontend_uri

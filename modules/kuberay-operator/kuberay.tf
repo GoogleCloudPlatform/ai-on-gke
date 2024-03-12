@@ -32,6 +32,8 @@ module "kuberay-workload-identity" {
   project_id          = var.project_id
   roles               = ["roles/cloudsql.client", "roles/monitoring.viewer"]
 
+  automount_service_account_token = true
+
   depends_on = [helm_release.kuberay-operator]
 }
 

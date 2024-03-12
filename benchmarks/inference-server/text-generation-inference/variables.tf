@@ -58,6 +58,18 @@ variable "gpu_count" {
   }
 }
 
+variable "max_concurrent_requests" {
+  description = "Max concurrent requests allowed for TGI to handle at once. TGI will drop all requests once it hits this max-concurrent-requests limit."
+  type        = number
+  nullable    = false
+  # TODO: default is same as tgi's default for now, update with reasonable number.
+  default = 128
+  validation {
+    condition     = var.max_concurrent_requests > 0
+    error_message = "Max conccurent requests must be greater than 0."
+  }
+}
+
 variable "ksa" {
   description = "Kubernetes Service Account used for workload."
   type        = string
@@ -97,8 +109,8 @@ variable "hpa_type" {
   default     = null
   nullable    = true
   validation {
-    condition     = var.hpa_type == null ? true : contains(["cpu", "tgi_queue_size", "tgi_batch_current_size", "tgi_batch_current_max_tokens"], var.hpa_type)
-    error_message = "Allows values for hpa_type are {null, \"cpu\", \"tgi_queue_size\", \"tgi_batch_current_size\", \"tgi_batch_current_max_tokens\"}"
+    condition     = var.hpa_type == null ? true : length(regexall("cpu|tgi_.*|DCGM_.*", var.hpa_type)) > 0
+    error_message = "Allows values for hpa_type are {null, \"cpu\", TGI metrics (e.g., \"tgi_queue_size\", \"tgi_batch_current_size\") or DCGM metrics (e.g., \"DCGM_FI_DEV_MEM_COPY_UTIL\") }"
   }
 }
 
