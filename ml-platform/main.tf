@@ -432,7 +432,7 @@ resource "google_compute_instance" "bastion_vm" {
     auto_delete = true
   }
   network_interface {
-    network = module.create-vpc[each.key].vpc
+    subnetwork = module.create-vpc[each.key].subnet-1
   }
 
   metadata_startup_script = <<SCRIPT
