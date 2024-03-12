@@ -431,7 +431,7 @@ resource "google_compute_instance" "bastion_vm" {
     boot         = true
   }
   network_interface {
-    module.create-vpc[each.key].vpc
+    network = module.create-vpc[each.key].vpc
   }
 
   metadata_startup_script = <<SCRIPT
