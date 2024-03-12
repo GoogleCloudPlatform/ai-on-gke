@@ -154,7 +154,7 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   ```
   cd ${MLP_BASE_DIR}/terraform && \
   terraform init && \
-  terraform plan -input=false -var github_token="$(cat ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
+  terraform plan -input=false -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
   terraform apply -input=false tfplan && \
   rm tfplan
   ```
@@ -170,7 +170,7 @@ However, if you want to use a single project for multiple environments, you can 
   ```
   cd ${MLP_BASE_DIR}/terraform && \
   terraform init && \
-  terraform destroy -auto-approve -var github_token="$(cat ${HOME}/secrets/mlp-github-token)"
+  terraform destroy -auto-approve -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)"
   ```
 
 [gitops]: https://about.gitlab.com/topics/gitops/
