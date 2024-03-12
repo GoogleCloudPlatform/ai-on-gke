@@ -122,3 +122,9 @@ variable "gpu_pools" {
 variable "tpu_pools" {
   type = list(map(any))
 }
+
+variable "datapath_provider" {
+  description = "Enable Dataplanev2 by default"
+  type        = string
+  default     = "ADVANCED_DATAPATH"
+}

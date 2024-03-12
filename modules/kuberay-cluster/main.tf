@@ -87,3 +87,100 @@ data "kubernetes_service" "head-svc" {
   }
   depends_on = [helm_release.ray-cluster]
 }
+
+# Allow ingress to the kuberay head from outside the cluster
+resource "kubernetes_network_policy" "kuberay-head-network-policy" {
+  count = var.disable_network_policy ? 0 : 1
+  metadata {
+    name      = "terraform-kuberay-head-network-policy"
+    namespace = var.namespace
+  }
+
+  spec {
+    pod_selector {
+      match_labels = {
+        "ray.io/is-ray-node" : "yes"
+      }
+    }
+
+    ingress {
+      # Ray Client server
+      ports {
+        port     = "10001"
+        protocol = "TCP"
+      }
+      # Ray Dashboard
+      ports {
+        port     = "8265"
+        protocol = "TCP"
+      }
+
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = var.namespace
+          }
+        }
+        dynamic "namespace_selector" {
+          for_each = var.network_policy_allow_namespaces_by_label
+          content {
+            match_labels = {
+              each.key = each.value
+            }
+          }
+        }
+
+        dynamic "pod_selector" {
+          for_each = var.network_policy_allow_pods_by_label
+          content {
+            match_labels = {
+              each.key = each.value
+            }
+          }
+        }
+
+        dynamic "ip_block" {
+          for_each = var.network_policy_allow_ips
+          content {
+            cidr = each.key
+          }
+        }
+      }
+    }
+
+    policy_types = ["Ingress"]
+  }
+}
+
+# Allow all intranamespace traffic to allow intracluster traffic
+resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
+  count = var.disable_network_policy ? 0 : 1
+  metadata {
+    name      = "terraform-kuberay-allow-cluster-network-policy"
+    namespace = var.namespace
+  }
+
+  spec {
+    pod_selector {
+      match_labels = {
+        "ray.io/is-ray-node" : "yes"
+      }
+    }
+
+    ingress {
+      ports {
+        protocol = "TCP"
+      }
+
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = var.namespace
+          }
+        }
+      }
+    }
+
+    policy_types = ["Ingress"]
+  }
+}

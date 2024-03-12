@@ -118,8 +118,33 @@ variable "security_context" {
   }
 }
 
+# By default, intra-namespace ingress is allowed to let the cluster talk to itself
+variable "network_policy_allow_namespaces_by_label" {
+  description = "Namespaces allowed to access this kuberay cluster"
+  type        = list(map(string))
+  default     = []
+}
+
+variable "network_policy_allow_pods_by_label" {
+  description = "Namespaces allowed to access this kuberay cluster"
+  type        = list(map(string))
+  default     = []
+}
+
+variable "network_policy_allow_ips" {
+  description = "CIDR ranges allowed to access this kuberay cluster"
+  type        = list(string)
+  default     = []
+}
+
 variable "db_secret_name" {
   type        = string
   description = "CloudSQL user credentials"
   default     = "empty-secret"
+}
+
+variable "disable_network_policy" {
+  description = "Set to true to remove network policy / firewalls from your Ray clusters. Not recommended."
+  type        = bool
+  default     = false
 }

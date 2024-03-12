@@ -38,6 +38,7 @@ module "gke" {
   ip_range_services                    = var.ip_range_services
   gcs_fuse_csi_driver                  = var.gcs_fuse_csi_driver
   deletion_protection                  = var.deletion_protection
+  datapath_provider                    = var.datapath_provider
   remove_default_node_pool             = true
   logging_enabled_components           = ["SYSTEM_COMPONENTS", "WORKLOADS"]
   monitoring_enabled_components        = ["SYSTEM_COMPONENTS"]
