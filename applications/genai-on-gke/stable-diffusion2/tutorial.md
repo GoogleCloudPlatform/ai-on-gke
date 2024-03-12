@@ -82,7 +82,7 @@ gcloud storage buckets create gs://BUCKET_NAME
 ### Modify PLATFORM Terraform State Backend
 
 Modify the ./platform/backend.tf and uncomment the code and update the backend bucket name.
-<walkthrough-editor-open-file filePath="$HOME/applications/genai-on-gke/platform/backend.tf"> Open ./applications/genai-on-gke/platform/backend.tf
+<walkthrough-editor-open-file filePath="platform/backend.tf"> Open ./applications/genai-on-gke/platform/backend.tf
 </walkthrough-editor-open-file>
 
 After changes file will look like below:
