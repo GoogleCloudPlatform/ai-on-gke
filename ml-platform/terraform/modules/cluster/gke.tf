@@ -104,6 +104,13 @@ resource "google_container_cluster" "gke_batch" {
       ]
     }
   }
+  node_pool_defaults {
+    node_config_defaults {
+      gcfs_config {
+        enabled = true
+      }
+    }
+  }
   release_channel {
     channel = "STABLE"
   }
@@ -121,5 +128,3 @@ resource "google_container_cluster" "gke_batch" {
   }
   ip_allocation_policy {}
 }
-
-
