@@ -176,19 +176,27 @@ func injectMultiHostReplicaLabel(replicaIndex int, workerGroupName string, patch
 }
 
 // inject pod affinity and anti-affinity scheduling constraints using multiHostReplica label
-func injectPodAffinity(replicaIndex int, workerGroupName string, patches *[]patch) {
+func injectPodAffinity(pod *corev1.Pod, replicaIndex int, workerGroupName string, patches *[]patch) {
 	key := "multiHostReplica"
 	value := workerGroupName + "-" + strconv.Itoa(replicaIndex)
 	topologyKey := "cloud.google.com/gke-nodepool"
 
 	// construct affinity value to inject - schedule pods with the same multiHostReplica together
 	podAffinityPatch := patch{"op": "add"}
-	podAffinityPatch["path"] = "/spec/affinity/podAffinity"
+
 	affinitySelectorRequirement := metav1.LabelSelectorRequirement{key, metav1.LabelSelectorOpIn, []string{value}}
 	affinityMatchExpressions := []metav1.LabelSelectorRequirement{affinitySelectorRequirement}
 	affinityLabelSelector := metav1.LabelSelector{MatchExpressions: affinityMatchExpressions}
 	podAffinityTerms := []corev1.PodAffinityTerm{corev1.PodAffinityTerm{LabelSelector: &affinityLabelSelector, TopologyKey: topologyKey}}
-	podAffinityPatch["value"] = corev1.PodAffinity{RequiredDuringSchedulingIgnoredDuringExecution: podAffinityTerms}
+	podAffinity := corev1.PodAffinity{RequiredDuringSchedulingIgnoredDuringExecution: podAffinityTerms}
+
+	if pod.Spec.Affinity != nil {
+		podAffinityPatch["path"] = "/spec/affinity/podAffinity"
+		podAffinityPatch["value"] = podAffinity
+	} else {
+		podAffinityPatch["path"] = "/spec/affinity"
+		podAffinityPatch["value"] = corev1.Affinity{PodAffinity: &podAffinity}
+	}
 
 	*patches = append(*patches, podAffinityPatch)
 }
@@ -420,7 +428,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 			injectMultiHostReplicaLabel(replicaIndex, groupName, &patches)
 
 			// inject pod affinity/anti-affinity for scheduling
-			injectPodAffinity(replicaIndex, groupName, &patches)
+			injectPodAffinity(pod, replicaIndex, groupName, &patches)
 		}
 
 		// inject all environment variables into the container requesting TPUs
