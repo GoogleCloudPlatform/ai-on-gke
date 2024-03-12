@@ -85,6 +85,11 @@ variable "enable_gpu" {
   default = false
 }
 
+variable "enable_tpu" {
+  type    = bool
+  default = false
+}
+
 ## GKE variables
 variable "create_cluster" {
   type    = bool
