@@ -64,63 +64,67 @@ variable "network_name" {
   description = "VPC network where GKE cluster will be created"
   type        = string
 }
+
 variable "routing_mode" {
   default     = "GLOBAL"
   description = "VPC routing mode."
   type        = string
 }
+
 variable "subnet_01_name" {
   default     = "ml-vpc-subnet-01"
   description = "Name of the first subnet in the VPC network."
   type        = string
 }
+
 variable "subnet_01_ip" {
   default     = "10.40.0.0/22"
   description = "CIDR of the first subnet."
   type        = string
 }
+
 variable "subnet_01_region" {
   default     = "us-central1"
   description = "Region of the first subnet."
   type        = string
 }
+
 variable "subnet_01_description" {
   default     = "subnet 01"
   description = "Description of the first subnet."
   type        = string
 }
+
 variable "subnet_02_name" {
   default     = "gke-vpc-subnet-02"
   description = "Name of the second subnet in the VPC network."
   type        = string
 }
+
 variable "subnet_02_ip" {
   default     = "10.12.0.0/22"
   description = "CIDR of the second subnet."
   type        = string
 }
+
 variable "subnet_02_region" {
   default     = "us-west2"
   description = "Region of the second subnet."
   type        = string
 }
+
 variable "subnet_02_description" {
   default     = "subnet 02"
   description = "Description of the second subnet."
   type        = string
 }
-//
-//variable "lookup_state_bucket" {
-//  description = "GCS bucket to look up TF state from previous steps."
-//  type = string
-//  default = "YOUR_STATE_BUCKET"
-//}
 
 variable "cluster_name" {
   description = "Name of the GKE cluster"
   default     = "gke-ml"
   type        = string
 }
+
 variable "reserved_taints" {
   description = "Taints to be applied to the reserved node pool."
   type = list(object({
@@ -173,14 +177,17 @@ variable "github_user" {
   description = "GitHub user name."
   type        = string
 }
+
 variable "github_email" {
   description = "GitHub user email."
   type        = string
 }
+
 variable "github_org" {
   type        = string
   description = "GitHub org."
 }
+
 variable "github_token" {
   type        = string
   description = "GitHub token. It is a token with write permissions as it will create a repo in the GitHub org."
@@ -214,4 +221,10 @@ variable "install_ray_in_ns" {
   type        = number
   description = "Flag to install ray cluster in the namespace created with the demo."
   default     = 1
+}
+
+variable "config_management_version" {
+  type        = string
+  description = "Version of Config Management to enable"
+  default     = "1.17.1"
 }
