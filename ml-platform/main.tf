@@ -418,6 +418,7 @@ resource "google_project_iam_member" "sa-con-developer" {
   project    = each.value
   role    = "roles/container.developer"
   member  = "serviceAccount:${google_service_account.sa[each.key].email}"
+  depends_on = [google_project_service.project_services-iam]
 }
 resource "google_compute_instance" "bastion_vm" {
   for_each      = local.parsed_project_id
@@ -437,9 +438,11 @@ resource "google_compute_instance" "bastion_vm" {
 
   metadata_startup_script = <<SCRIPT
 #!/bin/bash
-apt update && apt upgrade
-sudo apt-get install kubectl
-sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
+sudo apt-get update >> /tmp/log
+#yes | sudo DEBIAN_FRONTEND=noninteractive sudo apt -yqq upgrade
+yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install kubectl  >> /tmp/log
+yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install google-cloud-sdk-gke-gcloud-auth-plugin  >> /tmp/log
+
 gcloud container clusters get-credentials gke-ml-dev --zone us-central1
 nohup kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265 &
 SCRIPT
