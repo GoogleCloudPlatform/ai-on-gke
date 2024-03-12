@@ -48,24 +48,12 @@ def sum_moderation_confidences(text):
   print(f'get response: {response}')
   # Parse response and sum the confidences of moderation, the categories are from https://cloud.google.com/natural-language/docs/moderating-text
   total_confidence = 0.0
+  count = 0.0
   for category in response.moderation_categories:
     total_confidence += category.confidence
+    count+=1.0
   print(f'total confidence is: {total_confidence}')
-  return total_confidence
+  return int(total_confidence * 100 / count) # Average
 
 def is_content_inappropriate(text, nlp_filter_level):
-  # Define thresholds
-  thresholds = {
-      'low': 1.0,  # 100% confidence for low sensitivity
-      'mid': 0.5,  # 50% confidence for medium sensitivity
-      'high': 0.2,  # 20% confidence for high sensitivity
-  }
-
-  # Map the filter level to a threshold
-  if int(nlp_filter_level) <= 20:
-    threshold = thresholds['high']
-  elif int(nlp_filter_level) <= 50:
-    threshold = thresholds['mid']
-  else:
-    threshold = thresholds['low']
-  return sum_moderation_confidences(text) > threshold
+  return sum_moderation_confidences(text) > int(nlp_filter_level)
