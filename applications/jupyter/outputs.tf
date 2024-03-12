@@ -16,6 +16,10 @@ output "jupyterhub_uri" {
   value = "http://${module.jupyterhub.jupyterhub_uri}"
 }
 
+output "jupyterhub_user" {
+  value = module.jupyterhub.jupyterhub_user
+}
+
 output "jupyterhub_password" {
   value     = module.jupyterhub.jupyterhub_password
   sensitive = true

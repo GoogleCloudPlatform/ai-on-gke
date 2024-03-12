@@ -134,5 +134,10 @@ spec:
         defaultValue: "pgvector-instance"
     outputs:
       - name: jupyterhub_password
-      - name: jupyterhub_uri
+        description: "JupyterHub password is only required for standard authentication. Ignore, in case of IAP authentication"
+      - name: jupyterhub_user
+        description: "JupyterHub user is only required for standard authentication. Ignore, in case of IAP authentication"
       - name: frontend_uri
+        description: "RAG Frontend Endpoint to access user interface. In case of private IP, consider port-forwarding."
+      - name: jupyterhub_uri
+        description: "JupyterHub Endpoint to access user interface. In case of private IP, consider port-forwarding."

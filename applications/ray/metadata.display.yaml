@@ -116,3 +116,17 @@ spec:
           title: Ray Application
         - name: iap_auth
           title: IAP Authentication
+    runtime:
+      outputMessage: Deployment can take several minutes to complete.
+      suggestedActions:
+        - heading: "Connect to Ray Cluster"
+          description: |-
+            Connect to Ray Cluster, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray cluster head node.
+        - heading: "Submit Ray Jobs"
+          description: |-
+            Open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button and submit ray jobs following these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/applications/ray#using-ray-with-ray-jobs-api">instructions</a>. 
+      outputs:
+        ray_cluster_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Connect to Ray Cluster
