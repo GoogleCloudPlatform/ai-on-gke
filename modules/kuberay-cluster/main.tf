@@ -23,7 +23,7 @@ locals {
 }
 
 resource "helm_release" "ray-cluster" {
-  name             = "example-cluster"
+  name             = var.name
   repository       = "https://ray-project.github.io/kuberay-helm/"
   chart            = "ray-cluster"
   namespace        = var.namespace
@@ -69,7 +69,8 @@ resource "helm_release" "ray-cluster" {
 resource "kubernetes_service" "tpu-worker-svc" {
   count = var.enable_tpu ? 1 : 0
   metadata {
-    name = "${helm_release.ray-cluster.name}-kuberay-tpu-worker-svc"
+    name      = "${helm_release.ray-cluster.name}-kuberay-tpu-worker-svc"
+    namespace = var.namespace
   }
   spec {
     selector = {
@@ -77,4 +78,12 @@ resource "kubernetes_service" "tpu-worker-svc" {
     }
     cluster_ip = "None"
   }
+}
+
+data "kubernetes_service" "head-svc" {
+  metadata {
+    name      = "${helm_release.ray-cluster.name}-kuberay-head-svc"
+    namespace = var.namespace
+  }
+  depends_on = [helm_release.ray-cluster]
 }

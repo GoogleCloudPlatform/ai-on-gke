@@ -75,6 +75,11 @@ variable "create_ray_cluster" {
   default = false
 }
 
+variable "ray_cluster_name" {
+  type    = string
+  default = "example-cluster"
+}
+
 variable "enable_gpu" {
   type    = bool
   default = false
