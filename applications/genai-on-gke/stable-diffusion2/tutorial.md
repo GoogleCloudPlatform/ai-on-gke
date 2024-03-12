@@ -56,7 +56,7 @@ All the resources will be created in this project
 
 Here on step 1 you need to update the terraform tfvars file (located in .applications/genai-on-gke/platform/terraform.tfvars) to provide the input parameters to allow terraform code execution to provision GKE resources. This will include the input parameters in the form of key value pairs. Update the values as per your requirements.
 
-<walkthrough-editor-open-file filePath="~/cloudshell_open/ai-on-gke/applications/genai-on-gke/platform/terraform.tfvars"> Open terraform.tfvars
+<walkthrough-editor-open-file filePath="platform/terraform.tfvars"> Open terraform.tfvars
 </walkthrough-editor-open-file>
 
 Update all values where required.
