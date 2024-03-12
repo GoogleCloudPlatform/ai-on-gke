@@ -349,11 +349,14 @@ resource "null_resource" "create_git_cred_cms" {
   for_each = var.secret_for_rootsync == 1 ? local.gke_project_map : {}
   triggers = {
     md5       = filemd5("${path.module}/scripts/create_git_cred.sh")
-    timestamp = timestamp()
+    md5_credentials = md5(join("", [var.github_user, var.github_token]))
   }
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/create_git_cred.sh ${each.key} ${each.value} ${var.github_user} config-management-system ${index(keys(local.gke_project_map), each.key)}"
+    environment = {
+      GIT_TOKEN = var.github_token
+    }
   }
 
   depends_on = [
