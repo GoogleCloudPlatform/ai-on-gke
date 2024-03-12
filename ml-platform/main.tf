@@ -415,7 +415,7 @@ resource "google_service_account" "sa" {
 
 resource "google_project_iam_member" "sa-con-developer" {
   for_each      = local.parsed_project_id
-  project_id    = each.value
+  project    = each.value
   role    = "roles/container.developer"
   member  = "serviceAccount:${google_service_account.sa[each.key].email}"
 }
@@ -425,7 +425,7 @@ resource "google_compute_instance" "bastion_vm" {
   machine_type = "e2-micro"
   zone         = "us-central1-a"
   can_ip_forward = false
-  disk {
+  boot_disk {
     source_image = "debian-cloud/debian-11"
     auto_delete  = true
     boot         = true
