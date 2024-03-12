@@ -54,7 +54,6 @@ locals {
   private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
   cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
   enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
-  enable_tpu            = var.create_cluster ? true : data.google_container_cluster.default[0].enable_tpu
   host                  = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
 }
 
@@ -187,7 +186,7 @@ module "kuberay-cluster" {
   namespace              = var.kubernetes_namespace
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
-  enable_tpu             = local.enable_tpu
+  enable_tpu             = false
   autopilot_cluster      = local.enable_autopilot
   db_secret_name         = module.cloudsql.db_secret_name
   db_region              = var.cloudsql_instance_region
