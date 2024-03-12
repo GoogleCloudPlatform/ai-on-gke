@@ -348,7 +348,7 @@ resource "null_resource" "create_cluster_yamls" {
 resource "null_resource" "create_git_cred_cms" {
   for_each = var.secret_for_rootsync == 1 ? local.gke_project_map : {}
   triggers = {
-    md5       = filemd5("${path.module}/scripts/create_git_cred.sh")
+    md5_script      = filemd5("${path.module}/scripts/create_git_cred.sh")
     md5_credentials = md5(join("", [var.github_user, var.github_token]))
   }
 
@@ -372,12 +372,15 @@ resource "null_resource" "create_git_cred_cms" {
 resource "null_resource" "install_kuberay_operator" {
   count = var.install_kuberay
   triggers = {
-    md5       = filemd5("${path.module}/scripts/install_kuberay_operator.sh")
-    timestamp = timestamp()
+    md5_script = filemd5("${path.module}/scripts/install_kuberay_operator.sh")
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/kuberay", "*") : md5("${path.module}/templates/acm-template/templates/_cluster_template/kuberay/${f}")]))
   }
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/install_kuberay_operator.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user}"
+    environment = {
+      GIT_TOKEN = var.github_token
+    }
   }
 
   depends_on = [
