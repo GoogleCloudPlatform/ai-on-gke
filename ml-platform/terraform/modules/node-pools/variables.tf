@@ -72,7 +72,7 @@ variable "machine_reservation_count" {
 }
 
 variable "autoscaling" {
-  type    = map
+  type    = map(any)
   default = { "total_min_node_count" : 0, "total_max_node_count" : 24, "location_policy" : "ANY" }
 }
 
