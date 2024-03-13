@@ -42,66 +42,27 @@ This reference architecture demonstrates how to build a GKE platform that facili
 
 ## Prerequistes
 
-1. This tutorial has been tested on [Cloud Shell](https://shell.cloud.google.com) which comes preinstalled with [Google Cloud SDK](https://cloud.google.com/sdk) is required to complete this tutorial.
-2. Familiarity with [Google Kubernetes Engine][gke], [Terraform][terraform], [root-sync][root-sync] , [repo-sync][repo-sync] , [Git][git], [GitHub][github]
+- This guide is meant to be run on [Cloud Shell](https://shell.cloud.google.com) which comes preinstalled with the [Google Cloud SDK](https://cloud.google.com/sdk) and other tools that are required to complete this tutorial.
+- Familiarity with following
+  - [Google Kubernetes Engine][gke]
+  - [Terraform][terraform]
+  - [git][git]
+  - [Google Configuration Management root-sync][root-sync]
+  - [Google Configuration Managementrepo-sync][repo-sync]
+  - [GitHub][github]
 
-# Workflow
+## Deploy a single environment reference architecture
 
-This reference architecture can be implemented in one of the following ways:
+This is the quick-start deployment guide. It can be used to set up an environment to familiarize yourself with the architecture and get an understanding of the concepts.
 
-- Deploy a single env reference architecture.
-- Deploy a multi env reference architecture in single [GCP project][gcp-project]
-- Deploy a multi env reference architecture with each env in its own [GCP project][gcp-project]
+### Requirements
 
-## Deploy a single env reference architecture
-
-This is the quick-start deployment. It can be used to quickly set up an environment and start playing with it to get an understanding of the flow. Single env reference architecture can be deployed with the provided default values.
+- New Google Cloud Project, preferably with no APIs enabled
+- `roles/owner` IAM permissions on the project
+- GitHub Personal Access Token, steps to create the token are provided below
 
 ### Configuration
 
-- You can either create a new GCP project or use an existing one. Skip this step if you choose to use an already existing project.
-  - To create a new project, open `cloudshell` and run the following command:
-    ```
-    gcloud projects create <PROJECT_ID>
-    ```
-  - Associate billing account to the project:
-    ```
-    gcloud beta billing projects link <PROJECT_ID> \
-    --billing-account <BILLING_ACCOUNT_ID>
-    ```
-- Set up PROJECT_ID in environment variable in `cloudshell` :
-
-  ```
-  export PROJECT_ID="<PROJECT_ID>" >> ~/.bashrc
-  ```
-
-  Replace <PROJECT_ID> with the id of the project that you created in the previous step or the id of an already existing project that you want to use.
-
-  **If you are using an already existing project, get `roles/owner` role on the project**
-
-- Update ~/bashrc to automatically point to the required project when a new instance of the `cloudshell` is created:
-
-  ```
-  echo gcloud config set project $PROJECT_ID >> ~/.bashrc && source ~/.bashrc
-  ```
-
-- Create a GCS bucket in the project for storing TF state.
-
-  - To create a new bucket, run the following command in `cloudshell` :
-
-    ```
-    export STATE_BUCKET="${PROJECT_ID}-tf-state" >> ~/.bashrc  && source ~/.bashrc
-
-    gcloud storage buckets create gs://${STATE_BUCKET}
-    ```
-
-- Store github configurations in environment variables:
-  ```
-  export GITHUB_USER=<GITHUB_USER>  >> ~/.bashrc
-  export GITHUB_ORG=<GITHUB_ORGANIZATION>  >> ~/.bashrc
-  export GITHUB_EMAIL=<GITHUB_EMAIL>  >> ~/.bashrc
-  source ~/.bashrc
-  ```
 - Create a [Personal Access Token][personal-access-token] in [GitHub][github]:
 
   Note: It is recommended to use a [machine user account][machine-user-account] for this but you can use a personal user account just to try this reference architecture.
@@ -128,6 +89,37 @@ This is the quick-start deployment. It can be used to quickly set up an environm
     nano ${HOME}/secrets/mlp-github-token
     ```
 
+- Set the project environment variables in Cloud Shell
+
+  Replace the following values
+
+  - `<PROJECT_ID>` is the ID of your existing Google Cloud project
+
+  ```
+  export MLP_PROJECT_ID="<PROJECT_ID>"
+  export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-tf-state"
+  ```
+
+- Set the GitHub environment variables in Cloud Shell
+
+  Replace the following values:
+
+  - `<GITHUB_ORGANIZATION>` is the GitHub organization or user namespace to use for the repositories
+  - `<GITHUB_USER>` is the GitHub account to use for authentication
+  - `<GITHUB_EMAIL>` is the email address to use for commit
+
+  ```
+  export MLP_GITHUB_ORG="<GITHUB_ORGANIZATION>"
+  export MLP_GITHUB_USER="<GITHUB_USER>"
+  export MLP_GITHUB_EMAIL="<GITHUB_EMAIL>"
+  ```
+
+- Create a Cloud Storage bucket to store the Terraform state
+
+  ```
+  gcloud storage buckets create gs://${MLP_STATE_BUCKET} --project ${MLP_PROJECT_ID}
+  ```
+
 ### Run Terraform
 
 - Clone the repository and change directory to the `ml-platform` directory
@@ -147,10 +139,11 @@ This is the quick-start deployment. It can be used to quickly set up an environm
 - Set the configuration variables
 
   ```
-  sed -i "s/YOUR_STATE_BUCKET/${STATE_BUCKET}/g" ${MLP_BASE_DIR}/terraform/backend.tf
-  sed -i "s/YOUR_GITHUB_EMAIL/${GITHUB_EMAIL}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_ORG/${GITHUB_ORG}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_USER/${GITHUB_USER}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_STATE_BUCKET/${MLP_STATE_BUCKET}/g" ${MLP_BASE_DIR}/terraform/backend.tf
+
+  sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
   sed -i "s/YOUR_PROJECT_ID/${PROJECT_ID}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
   ```
 
