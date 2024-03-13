@@ -273,7 +273,7 @@ variable "cloudsql_instance" {
 variable "cloudsql_instance_region" {
   type        = string
   description = "GCP region for CloudSQL instance"
-  default     = "us-central1"
+  default     = ""
 }
 
 variable "cpu_pools" {
