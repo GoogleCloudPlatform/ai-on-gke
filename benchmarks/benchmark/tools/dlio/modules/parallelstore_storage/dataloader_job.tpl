@@ -10,8 +10,8 @@ spec:
       name: data-loader-job
       annotations:
         gke-parallelstore/volumes: "true"
-        gke-parallelstore/cpu-limit: 5
-        gke-parallelstore/memory-limit: 5Gi
+        gke-parallelstore/cpu-limit: "10"
+        gke-parallelstore/memory-limit: 20Gi
     spec:
       restartPolicy: Never
       containers:
