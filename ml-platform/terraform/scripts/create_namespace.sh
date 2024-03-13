@@ -13,30 +13,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 configsync_repo_name=${1}
 github_email=${2}
 github_org=${3}
 github_user=${4}
 namespace=${5}
+cluster_env=${6}
 
 logfile=$(pwd)/log
-random=$(echo $RANDOM | md5sum | head -c 20; echo)
+random=$(
+  echo $RANDOM | md5sum | head -c 20
+  echo
+)
 download_acm_repo_name="/tmp/$(echo ${configsync_repo_name} | awk -F "/" '{print $2}')-${random}"
 git config --global user.name ${github_user}
 git config --global user.email ${github_emai}
-git clone https://${github_user}:${TF_VAR_github_token}@github.com/${configsync_repo_name} ${download_acm_repo_name}
+git clone https://${github_user}:${GIT_TOKEN}@github.com/${configsync_repo_name} ${download_acm_repo_name} || exit 1
 cd ${download_acm_repo_name}/manifests/clusters
 
 if [ -d "${namespace}" ]; then
   exit 0
 fi
+
+#TODO: This most likely needs to be fixed for multiple environments
 chars_in_namespace=$(echo -n ${namespace} | wc -c)
-#adding 4 for number of chars in "dev-"
-chars_in_reposync_name=$(expr $chars_in_namespace + 4)
+chars_in_cluster_env=$(echo -n ${cluster_env} | wc -c)
+chars_in_reposync_name=$(expr $chars_in_namespace + ${chars_in_cluster_env} + 1)
 mkdir ${namespace} || exit 1
 cp -r ../../templates/_cluster_template/team/* ${namespace}
 sed -i "s?NAMESPACE?$namespace?g" ${namespace}/*
 sed -ni '/#END OF SINGLE ENV DECLARATION/q;p' ${namespace}/reposync.yaml
+sed -i "s?ENV?$cluster_env?g" ${namespace}/reposync.yaml
 sed -i "s?GIT_REPO?https://github.com/$configsync_repo_name?g" ${namespace}/reposync.yaml
 sed -i "s?<NUMBER_OF_CHARACTERS_IN_REPOSYNC_NAME>?$chars_in_reposync_name?g" ${namespace}/reposync.yaml
 
@@ -53,5 +61,4 @@ git config --global user.email ${github_email}
 git commit -m "Adding manifests to create a new namespace."
 git push origin
 
-cd -
 rm -rf ${download_acm_repo_name}
