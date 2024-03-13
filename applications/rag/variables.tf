@@ -40,7 +40,7 @@ variable "kubernetes_namespace" {
 variable "jupyter_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "jupyter-system-account"
+  default     = "jupyter"
 }
 
 variable "enable_grafana_on_ray_dashboard" {
@@ -57,7 +57,7 @@ variable "create_ray_service_account" {
 variable "ray_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "ray-system-account"
+  default     = "ray-sa"
 }
 
 variable "create_rag_service_account" {
@@ -69,7 +69,7 @@ variable "create_rag_service_account" {
 variable "rag_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "rag-system-account"
+  default     = "rag-sa"
 }
 
 variable "create_gcs_bucket" {

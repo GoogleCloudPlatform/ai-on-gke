@@ -16,7 +16,7 @@ data "google_project" "project" {
 }
 
 locals {
-  instance_connection_name = format("%s:%s:%s", var.project_id, var.region, var.cloudsql_instance)
+  instance_connection_name = format("%s:%s:%s", var.project_id, var.cloudsql_instance_region, var.cloudsql_instance)
 }
 
 # IAP Section: Creates the GKE components

@@ -62,7 +62,9 @@ locals {
   subnetwork_name = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
   region          = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
   regional        = local.region != "" ? true : false
-  zone            = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : []
+  # zone needs to be set even for regional clusters, otherwise this module picks random zones that don't have GPU availability:
+  # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/blob/af354afdf13b336014cefbfe8f848e52c17d4415/main.tf#L46 
+  zone = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : split(",", local.gpu_l4_t4_location[local.region])
   # Update gpu_pools with node_locations according to region and zone gpu availibility, if not provided
   gpu_pools = [for elm in var.gpu_pools : (local.regional && contains(keys(local.gpu_l4_t4_location), local.region) && elm["node_locations"] == "") ? merge(elm, { "node_locations" : local.gpu_l4_t4_location[local.region] }) : elm]
 }

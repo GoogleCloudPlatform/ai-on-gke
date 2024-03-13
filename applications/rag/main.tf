@@ -225,6 +225,7 @@ module "frontend" {
   namespace                     = var.kubernetes_namespace
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
+  cloudsql_instance_region      = var.cloudsql_instance_region
   db_secret_name                = module.cloudsql.db_secret_name
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
 
