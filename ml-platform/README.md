@@ -70,10 +70,15 @@ This is the quick-start deployment. It can be used to quickly set up an environm
     --billing-account <BILLING_ACCOUNT_ID>
     ```
 - Set up PROJECT_ID in environment variable in `cloudshell` :
+
   ```
   export PROJECT_ID="<PROJECT_ID>" >> ~/.bashrc
   ```
+
   Replace <PROJECT_ID> with the id of the project that you created in the previous step or the id of an already existing project that you want to use.
+
+  **If you are using an already existing project, get `roles/owner` role on the project**
+
 - Update ~/bashrc to automatically point to the required project when a new instance of the `cloudshell` is created:
 
   ```
@@ -159,9 +164,89 @@ This is the quick-start deployment. It can be used to quickly set up an environm
   rm tfplan
   ```
 
-Typically, you would want to have dev, staging and production environments created in separate projects. To have such isolation, pass `env` input variable as `[ "dev", "staging", "prod" ]`. This will create one project for dev, staging and prod environments. You can update the input variable `env` based on how many environments/projects you want to create.
+### Review the resources
 
-However, if you want to use a single project for multiple environments, you can create just one project by passing one element to `env` input variable list e.g [ "dev" ] or ["my-playground"] etc.
+#### GKE clusters and ConfigSync
+
+- Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Clusters. You should see three clusters.
+
+- Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Config. If you haven't enabled GKE Enterprise in the project earlier, Click `LEARN AND ENABLE` button and then `ENABLE GKE ENTERPRISE`. You should see a RootSync and RepoSync object.
+  ![configsync](docs/images/configsync.png)
+
+#### Software installed via RepoSync and Reposync
+
+Open `cloudshell` to execute the following commands:
+
+- Store your GKE cluster name in env variable:
+
+  `export GKE_CLUSTER=<GKE_CLUSTER_NAME>`
+
+- Get cluster credentials:
+
+  ```
+  gcloud container fleet memberships get-credentials ${GKE_CLUSTER}
+  ```
+
+- Fetch kuberay operator CRDs
+
+  ```
+  kubectl get crd | grep ray
+  ```
+
+  The output will be similar to the following:
+
+  ```
+  rayclusters.ray.io   2024-02-12T21:19:06Z
+  rayjobs.ray.io       2024-02-12T21:19:09Z
+  rayservices.ray.io   2024-02-12T21:19:12Z
+  ```
+
+- Fetch kuberay operator pod
+
+  ```
+  kubectl get pods
+  ```
+
+  The output will be similar to the following:
+
+  ```
+  NAME                                READY   STATUS    RESTARTS   AGE
+  kuberay-operator-56b8d98766-2nvht   1/1     Running   0          6m26s
+  ```
+
+- Check the namespace `ml-team` created:
+
+  ```
+  kubectl get ns | grep ml-team
+  ```
+
+- Check the RepoSync object created `ml-team` namespace:
+  ```
+  kubectl get reposync -n ml-team
+  ```
+- Check the `raycluster` in `ml-team` namespace
+
+  ```
+  kubectl get raycluster -n ml-team
+  ```
+
+  The output will be similar to the following:
+
+  ```
+  NAME                  DESIRED WORKERS   AVAILABLE WORKERS   STATUS   AGE
+  ray-cluster-kuberay   1                 1                   ready    29m
+  ```
+
+- Check the head and worker pods of kuberay`in`ml-team` namespace
+  ```
+  kubectl get pods -n  -n ml-team
+  ```
+  The output will be similar to the following:
+  ```
+  NAME                                           READY   STATUS    RESTARTS   AGE
+  ray-cluster-kuberay-head-sp6dg                 2/2     Running   0          3m21s
+  ray-cluster-kuberay-worker-workergroup-rzpjw   2/2     Running   0          3m21s
+  ```
 
 ### Cleanup
 
