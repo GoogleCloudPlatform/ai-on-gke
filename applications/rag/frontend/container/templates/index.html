@@ -35,17 +35,31 @@ limitations under the License.
 
     <!-- Filter Options Section -->
     <div id="filter-section">
-      <label for="toggle-filters">Enable Filters:</label>
-      <input type="checkbox" id="toggle-filters">
+      <div id="filter-section-toggle">
+        <label for="toggle-filters">Enable Filters:</label>
+        <input type="checkbox" id="toggle-filters">
+      </div>
+
+      <!-- Checkbox to toggle template-section -->
+      <div id="toggle-dlp-filter-section-div" style="display: none;">
+        <label for="toggle-dlp-filter-section">Show DLP Templates:</label>
+        <input type="checkbox" id="toggle-dlp-filter-section">
+      </div>
 
       <!-- Dropdown for inspect_templates and deidentify_templates for dlp filter -->
-      <div id="template-section" style="display: none;">
+      <div id="dlp-filter-section" style="display: none;">
         <select id="inspect-template-dropdown">
           <!-- Options will be dynamically added here -->
         </select>
         <select id="deidentify-template-dropdown">
           <!-- Options will be dynamically added here -->
         </select>
+      </div>
+
+      <!-- Checkbox to toggle nlp-filter-section -->
+      <div id="toggle-nlp-filter-section-div" style="display: none;">
+        <label for="toggle-nlp-filter-section">Show NLP Filter Range:</label>
+        <input type="checkbox" id="toggle-nlp-filter-section">
       </div>
 
       <!-- NLP Filter Slider -->
