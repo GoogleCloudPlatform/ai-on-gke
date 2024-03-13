@@ -118,8 +118,51 @@ variable "security_context" {
   }
 }
 
+# Note: By default, intra-namespace ingress is allowed to let the cluster talk to itself
+#
+# This is a list of maps of arbitrary key/value pairs of namespace labels allowed to access
+# a Ray cluster's job submission API and Dashboard. These labels act as ORs, not ANDs.
+#
+# Example:
+# network_policy_allow_namespaces_by_label = [{user: "jane"}, {"kubernetes.io/metadata.name": "janespace"}]
+#
+variable "network_policy_allow_namespaces_by_label" {
+  description = "Namespaces allowed to access this kuberay cluster"
+  type        = list(map(string))
+  default     = []
+}
+
+# This is a list of maps of arbitrary key/value pairs of pod labels allowed to access
+# a Ray cluster's job submission API and Dashboard. These labels act as ORs, not ANDs.
+#
+# Example:
+# network_policy_allow_pods_by_label = [{role: "frontend"}, {"app": "jupyter"}]
+#
+variable "network_policy_allow_pods_by_label" {
+  description = "Pods allowed to access this kuberay cluster"
+  type        = list(map(string))
+  default     = []
+}
+
+# This is a list of CIDR ranges allowed to access a Ray cluster's job submission API and Dashboard.
+#
+# Example:
+# network_policy_allow_ips = ['10.0.0.0/8', '192.168.0.0/24']
+#
+variable "network_policy_allow_ips" {
+  description = "CIDR ranges allowed to access this kuberay cluster"
+  type        = list(string)
+  default     = []
+}
+
 variable "db_secret_name" {
   type        = string
   description = "CloudSQL user credentials"
   default     = "empty-secret"
+}
+
+variable "disable_network_policy" {
+  description = "Set to true to remove network policy / firewalls from your Ray clusters. Not recommended."
+  type        = bool
+  default     = false
 }
