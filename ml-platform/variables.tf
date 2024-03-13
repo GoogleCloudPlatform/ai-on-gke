@@ -215,3 +215,9 @@ variable "install_ray_in_ns" {
   description = "Flag to install ray cluster in the namespace created with the demo."
   default     = 1
 }
+
+variable "run_ray_task" {
+  type        = number
+  description = "Flag to run a ray task in the ray cluster in the namespace created with the demo."
+  default     = 1
+}

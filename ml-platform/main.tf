@@ -388,3 +388,83 @@ resource "null_resource" "manage_ray_ns" {
   }
   depends_on = [google_gke_hub_feature_membership.feature_member, null_resource.create_git_cred_ns, null_resource.install_ray_cluster]
 }
+# The following section is needed to port forward on the kuberay service to access
+# the ray dashboard.Currently connect gateway doesn't allow port forwarding so we have
+# to create a VM in the same subnet as the provate GKE cluster
+
+# --- IAP firewall for SSH'ing into the VMs ---
+resource "google_compute_firewall" "iap_ssh" {
+  for_each      = local.parsed_project_id
+  name          = "iap-ssh"
+  project    = each.value
+  network       = module.create-vpc[each.key].vpc
+  direction     = "INGRESS"
+  source_ranges = ["35.235.240.0/20"]
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+}
+
+resource "google_service_account" "sa" {
+  for_each      = local.parsed_project_id
+  project    = each.value
+  account_id   = "compute-${each.key}"
+  display_name = "Compute SA for ${each.key}"
+}
+
+resource "google_project_iam_member" "sa-con-developer" {
+  for_each      = local.parsed_project_id
+  project    = each.value
+  role    = "roles/container.developer"
+  member  = "serviceAccount:${google_service_account.sa[each.key].email}"
+  depends_on = [google_project_service.project_services-iam]
+}
+resource "google_compute_instance" "bastion_vm" {
+  for_each      = local.parsed_project_id
+  name         = "bastion"
+  machine_type = "e2-micro"
+  zone         = "us-central1-a"
+  can_ip_forward = false
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-11"
+    }
+    auto_delete = true
+  }
+  network_interface {
+    subnetwork = module.create-vpc[each.key].subnet-1
+  }
+
+  metadata_startup_script = <<SCRIPT
+#!/bin/bash
+sudo apt-get update >> /tmp/log
+yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install kubectl
+yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install google-cloud-sdk-gke-gcloud-auth-plugin
+sleep 120
+kubeconfigdir="${"$"}(pwd)/.kube"
+kubeconfig="${"$"}(pwd)/.kube/config"
+mkdir -p "${"$"}{kubeconfigdir}" && touch "${"$"}{kubeconfig}"  && export KUBECONFIG="${"$"}{kubeconfig}"
+gcloud container clusters get-credentials gke-ml-dev --zone us-central1
+nohup kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265 &
+SCRIPT
+depends_on = [ null_resource.manage_ray_ns ]
+service_account {
+#
+email  = google_service_account.sa[each.key].email
+scopes = ["cloud-platform"]
+}
+}
+
+#The following code submits a ray task on the ray cluster in the namespace
+
+resource "null_resource" "manage_ray_ns" {
+  count = var.run_ray_task
+  triggers = {
+    timestamp = timestamp()
+  }
+  provisioner "local-exec" {
+    command = "${path.module}/run_ray_task.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
+  }
+  depends_on = [ google_gke_hub_feature_membership.feature_member, null_resource.manage_ray_ns,google_compute_instance.bastion_vm ]
+}
