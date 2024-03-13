@@ -465,11 +465,13 @@ resource "null_resource" "manage_ray_ns" {
   count = var.install_ray_in_ns
   triggers = {
     md5_script = filemd5("${path.module}/scripts/manage_ray_ns.sh")
-    timestamp  = timestamp()
   }
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/manage_ray_ns.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
+    environment = {
+      GIT_TOKEN = var.github_token
+    }
   }
 
   depends_on = [
