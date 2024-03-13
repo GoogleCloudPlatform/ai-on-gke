@@ -439,16 +439,14 @@ resource "google_compute_instance" "bastion_vm" {
   metadata_startup_script = <<SCRIPT
 #!/bin/bash
 sudo apt-get update >> /tmp/log
-#yes | sudo DEBIAN_FRONTEND=noninteractive sudo apt -yqq upgrade
-yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install kubectl  >> /tmp/log
-yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install google-cloud-sdk-gke-gcloud-auth-plugin  >> /tmp/log
+yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install kubectl
+yes | sudo DEBIAN_FRONTEND=noninteractive apt-get -yqq install google-cloud-sdk-gke-gcloud-auth-plugin
 sleep 120
 kubeconfigdir="${"$"}(pwd)/.kube"
 kubeconfig="${"$"}(pwd)/.kube/config"
 mkdir -p "${"$"}{kubeconfigdir}" && touch "${"$"}{kubeconfig}"  && export KUBECONFIG="${"$"}{kubeconfig}"
-echo $KUBECONFIG >> /tmp/pwd
-gcloud container clusters get-credentials gke-ml-dev --zone us-central1  >> /tmp/log
-nohup kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265 &  >> /tmp/log
+gcloud container clusters get-credentials gke-ml-dev --zone us-central1
+nohup kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265 &
 SCRIPT
 depends_on = [ null_resource.manage_ray_ns ]
 service_account {
@@ -456,4 +454,17 @@ service_account {
 email  = google_service_account.sa[each.key].email
 scopes = ["cloud-platform"]
 }
+}
+
+#The following code submits a ray task on the ray cluster in the namespace
+
+resource "null_resource" "manage_ray_ns" {
+  count = var.run_ray_task
+  triggers = {
+    timestamp = timestamp()
+  }
+  provisioner "local-exec" {
+    command = "${path.module}/run_ray_task.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
+  }
+  depends_on = [ google_gke_hub_feature_membership.feature_member, null_resource.manage_ray_ns,google_compute_instance.bastion_vm ]
 }

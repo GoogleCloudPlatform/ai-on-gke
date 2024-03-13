@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-task
+  namespace: ml-team
+spec:
+  selector:
+    matchLabels:
+      app: ray-task
+  template:
+    metadata:
+      labels:
+        app: ray-task
+    spec:
+      containers:
+      - name: ray-task
+        image: python:3.10.8
+        command: ["pip install ray[client] && python /home/ray/samples/sample_code.py"]
+        #command:  [ "sh", "-c", "sleep 1h" ]
+        ports:
+        volumeMounts:
+        - mountPath: /home/ray/samples
+          name: code-sample
+      volumes:
+      - name: code-sample
+        configMap:
+          name: ray-task
+          items:
+          - key: sample_code.py
+            path: sample_code.py
+      tolerations:
+      - key: "ray.io/node-type"
+        operator: "Equal"
+        value: "worker"
+        effect: "NoSchedule"
+      - key: "reserved"
+        operator: "Exists"
+        effect: NoSchedule
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: NoSchedule
+      - key: "spot"
+        operator: "Exists"
+        effect: NoSchedule
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-l4"
+
+
+######################Ray code sample#################################
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ray-task
+  namespace: ml-team
+data:
+  sample_code.py: |
+    import ray
+    ray.init("ray://ray-cluster-kuberay-head-svc:10001")
+    @ray.remote
+    def do_work(x):
+      return(x*x)
+    do_work.remote(2)
+    ray.shutdown()

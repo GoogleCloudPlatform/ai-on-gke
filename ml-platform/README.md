@@ -309,7 +309,7 @@ Open `cloudshell` to execute the following commands:
   ray-cluster-kuberay-worker-workergroup-rzpjw   2/2     Running   0          3m21s
   ```
 
-### View ray dashboard
+### View Ray dashboard
 The GKE clusters you created are private clusters and you connect to them via [Connect Gateway][connect-gateway].
 In this example , you will do a port forwarding on the Ray service to view the dashboard. However, [Connect Gateway][connect-gateway] doesn't not allow port forwarding yet.
 So, you will use a bastion VM in the same subnet as the GKE cluster to perform port forwarding on the ray service and access the dashboard from `cloudshell`. The VM and related resources required to do port forwarding have already been created with the Terraform.
@@ -327,6 +327,18 @@ So, you will use a bastion VM in the same subnet as the GKE cluster to perform p
 
 - You will be directed to the ray dashboard.
   ![raydashboard](resources/raydashboard.png)
+
+  If you do not see the ray dashboard loading, possibly the port forwarding from the bastion VM is not working. In order to fix it, perform the following steps:
+  - Log on to the bastion VM
+    ```
+    gcloud compute ssh bastion --project ${PROJECT_ID} --zone us-central1-a 
+    ```
+  - Initiate port forwarding:
+    ```
+    kubectl port-forward -n ml-team service/ray-cluster-kuberay-head-svc 8265:8265
+    ```
+  Follow the steps again in [View Ray dashboard](view-ray-dashboard) section to view the dashboard.
+
 
 [gitops]: https://about.gitlab.com/topics/gitops/
 [repo-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields
