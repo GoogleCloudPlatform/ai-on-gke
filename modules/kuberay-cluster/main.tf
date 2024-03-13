@@ -19,7 +19,8 @@ resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
 }
 
 locals {
-  security_context = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+  security_context                  = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+  cloudsql_instance_connection_name = format("%s:%s:%s", var.project_id, var.db_region, var.cloudsql_instance_name)
 }
 
 resource "helm_release" "ray-cluster" {
@@ -31,37 +32,33 @@ resource "helm_release" "ray-cluster" {
   version          = "1.0.0"
   values = [
     var.autopilot_cluster ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {
-      gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.google_service_account
-      grafana_host        = var.grafana_host
-      security_context    = local.security_context
-      secret_name         = var.db_secret_name
-      project_id          = var.project_id
-      db_region           = var.db_region
+      gcs_bucket                        = var.gcs_bucket
+      k8s_service_account               = var.google_service_account
+      grafana_host                      = var.grafana_host
+      security_context                  = local.security_context
+      secret_name                       = var.db_secret_name
+      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
       }) : var.enable_tpu ? templatefile("${path.module}/kuberay-tpu-values.yaml", {
-      gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.google_service_account
-      grafana_host        = var.grafana_host
-      security_context    = local.security_context
-      secret_name         = var.db_secret_name
-      project_id          = var.project_id
-      db_region           = var.db_region
+      gcs_bucket                        = var.gcs_bucket
+      k8s_service_account               = var.google_service_account
+      grafana_host                      = var.grafana_host
+      security_context                  = local.security_context
+      secret_name                       = var.db_secret_name
+      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
       }) : var.enable_gpu ? templatefile("${path.module}/kuberay-gpu-values.yaml", {
-      gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.google_service_account
-      grafana_host        = var.grafana_host
-      security_context    = local.security_context
-      secret_name         = var.db_secret_name
-      project_id          = var.project_id
-      db_region           = var.db_region
+      gcs_bucket                        = var.gcs_bucket
+      k8s_service_account               = var.google_service_account
+      grafana_host                      = var.grafana_host
+      security_context                  = local.security_context
+      secret_name                       = var.db_secret_name
+      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
       }) : templatefile("${path.module}/kuberay-values.yaml", {
-      gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.google_service_account
-      grafana_host        = var.grafana_host
-      security_context    = local.security_context
-      secret_name         = var.db_secret_name
-      project_id          = var.project_id
-      db_region           = var.db_region
+      gcs_bucket                        = var.gcs_bucket
+      k8s_service_account               = var.google_service_account
+      grafana_host                      = var.grafana_host
+      security_context                  = local.security_context
+      secret_name                       = var.db_secret_name
+      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
     })
   ]
 }

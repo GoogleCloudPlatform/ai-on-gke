@@ -54,7 +54,6 @@ locals {
   private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
   cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
   enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
-  enable_tpu            = var.create_cluster ? true : data.google_container_cluster.default[0].enable_tpu
   host                  = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
 }
 
@@ -64,7 +63,8 @@ locals {
   jupyter_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.jupyter_service_account}" : var.jupyter_service_account
   rag_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.rag_service_account}" : var.rag_service_account
   frontend_default_uri    = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
-
+  ## if cloudsql_instance_region not specified, then default to cluster_location region
+  cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
 }
 
 
@@ -130,7 +130,7 @@ module "cloudsql" {
   project_id    = var.project_id
   instance_name = var.cloudsql_instance
   namespace     = var.kubernetes_namespace
-  region        = var.cloudsql_instance_region
+  region        = local.cloudsql_instance_region
   depends_on    = [module.namespace]
 }
 
@@ -187,10 +187,11 @@ module "kuberay-cluster" {
   namespace              = var.kubernetes_namespace
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
-  enable_tpu             = local.enable_tpu
+  enable_tpu             = false
   autopilot_cluster      = local.enable_autopilot
   db_secret_name         = module.cloudsql.db_secret_name
-  db_region              = var.cloudsql_instance_region
+  cloudsql_instance_name = var.cloudsql_instance
+  db_region              = local.cloudsql_instance_region
   google_service_account = local.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
   disable_network_policy = var.disable_ray_cluster_network_policy
@@ -226,6 +227,7 @@ module "frontend" {
   namespace                     = var.kubernetes_namespace
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
+  cloudsql_instance_region      = local.cloudsql_instance_region
   db_secret_name                = module.cloudsql.db_secret_name
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
 

@@ -30,14 +30,20 @@ variable "gcs_bucket" {
   default     = "<your gcs bucket>"
 }
 
-// at most one of the below trigers can be set to true
-variable "gcs_fuse_csi_driver_enabled" {
+variable "result_bucket" {
   type        = string
-  description = "Set to true if running DLIO on GCSFuse and the Cloud Storage FUSE CSI driver is enabled on your cluster"
+  description = "GCS Bucket name to store dlio results"
+  default     = "<result bucket>"
+}
+
+// at most one of the below trigers can be set to true
+variable "run_with_gcs_fuse_csi" {
+  type        = string
+  description = "Set to true if running DLIO on GCSFuse"
   default     = "\"true\""
 }
 
-variable "paralllestore_csi_driver_enabled" {
+variable "run_with_parallelstore_csi" {
   type        = string
   description = "Set to true if running DLIO on Parallelstore and the Parallelstore CSI driver is enabled on your cluster"
   default     = "\"false\""
@@ -119,8 +125,8 @@ variable "dlio_data_mount_path" {
 
 variable "dlio_benchmark_result" {
   type        = string
-  description = "The path stores benchmark result reports"
-  default     = "results"
+  description = "The path stores benchmark result reports for a specific DLIO run. When doing multi-pod runs, this folder stores results logged from all the pods, needs to be changed every run to guarantee result isolation."
+  default     = "<a result folder name unique to your run>"
 }
 
 // DLIO configurations, detailed explanation check

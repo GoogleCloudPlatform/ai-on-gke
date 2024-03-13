@@ -176,7 +176,8 @@ def handlePrompt():
         if 'nlpFilterLevel' in data:
             if nlp_filter.is_content_inappropriate(response['text'], data['nlpFilterLevel']):
                 response['text'] = 'The response is deemed inappropriate for display.'
-        elif 'inspectTemplate' in data and 'deidentifyTemplate' in data:
+                return {'response': response}
+        if 'inspectTemplate' in data and 'deidentifyTemplate' in data:
             inspect_template_path = data['inspectTemplate']
             deidentify_template_path = data['deidentifyTemplate']
             if inspect_template_path != "" and deidentify_template_path != "":
@@ -187,7 +188,13 @@ def handlePrompt():
     except Exception as err:
         log.info(f"exception from llm: {err}")
         traceback.print_exc()
-        return str(err), 500
+        error_traceback = traceback.format_exc()
+        response = jsonify({
+            "error": "An error occurred",
+            "message": f"Error: {err}\nTraceback:\n{error_traceback}"
+        })
+        response.status_code = 500
+        return response
 
 
 if __name__ == '__main__':

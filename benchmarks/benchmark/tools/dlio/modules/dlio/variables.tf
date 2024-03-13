@@ -27,6 +27,11 @@ variable "gcs_bucket" {
   description = "GCS Bucket name"
 }
 
+variable "result_bucket" {
+  type        = string
+  description = "GCS Bucket name"
+}
+
 variable "pvc_name" {
   type        = string
   description = "Name of the PersistentVolumeClaim used for DLIO dataset"
