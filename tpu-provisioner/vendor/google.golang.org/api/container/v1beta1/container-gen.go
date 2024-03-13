@@ -5320,15 +5320,6 @@ type NodeConfig struct {
 	// SandboxConfig: Sandbox configuration for this node.
 	SandboxConfig *SandboxConfig `json:"sandboxConfig,omitempty"`
 
-	// NOTE(nstogner): Added this field temporarily until it is supported upstream.
-//            "secondaryBootDisks": [
-//                {
-//                    "diskImage": "global/images/some-image",
-//                    "mode": "CONTAINER_IMAGE_CACHE"
-//                }
-//            ]
-	SecondaryBootDisks []SecondaryBootDisk `json:"secondaryBootDisks,omitempty"`
-
 	// ServiceAccount: The Google Cloud Platform Service Account to be used
 	// by the node VMs. Specify the email address of the Service Account;
 	// otherwise, if no Service Account is specified, the "default" service
@@ -5380,16 +5371,6 @@ type NodeConfig struct {
 	// null. It is an error if a field in this list has a non-empty value.
 	// This may be used to include null fields in Patch requests.
 	NullFields []string `json:"-"`
-}
-
-// NOTE(nstogner): Added this struct.
-// {
-//     "diskImage": "global/images/some-image",
-//     "mode": "CONTAINER_IMAGE_CACHE"
-// }
-type SecondaryBootDisk struct {
-	DiskImage string `json:"diskImage,omitempty"`
-	Mode string `json:"mode,omitempty"`
 }
 
 func (s *NodeConfig) MarshalJSON() ([]byte, error) {
