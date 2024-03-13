@@ -16,6 +16,44 @@
 apiVersion: configsync.gke.io/v1beta1
 kind: RepoSync
 metadata:
+  name: ENV-NAMESPACE
+  namespace: NAMESPACE
+  annotations:
+    configmanagement.gke.io/cluster-selector: ENV
+spec:
+  sourceType: git
+  # Since this is for a namespace repository, the format is unstructured
+  sourceFormat: unstructured
+  git:
+    repo: "GIT_REPO"
+    revision: "ENV"
+    #branch: NAMESPACE_BRANCH
+    dir: "manifests/apps/NAMESPACE"
+    auth: token
+    secretRef:
+      name: git-creds
+---
+#ROOT_REPO/namespaces/NAMESPACE/sync-rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ENV-rb-NAMESPACE
+  namespace: NAMESPACE
+  annotations:
+    configmanagement.gke.io/cluster-selector: ENV
+subjects:
+- kind: ServiceAccount
+  name: ns-reconciler-NAMESPACE-ENV-NAMESPACE-<NUMBER_OF_CHARACTERS_IN_REPOSYNC_NAME>
+  namespace: config-management-system
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+#END OF SINGLE ENV DECLARATION
+apiVersion: configsync.gke.io/v1beta1
+kind: RepoSync
+metadata:
   name: dev-NAMESPACE
   namespace: NAMESPACE
   annotations:
@@ -50,7 +88,6 @@ roleRef:
   name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
 ---
-#END OF SINGLE ENV DECLARATION
 #ROOT_SOURCE/namespaces/NAMESPACE/repo-sync.yaml
 apiVersion: configsync.gke.io/v1beta1
 kind: RepoSync

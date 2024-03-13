@@ -11,11 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-//output "project_ids" {
-//  value = {for k, v in "${module.gcp-project.project_ids}" : k => v.project_id}
-//}
-
-output "project_ids" {
-  value = var.create_projects == 1 ? { for k, v in "${module.gcp-project.project_ids}" : k => v.project_id } : ""
-}

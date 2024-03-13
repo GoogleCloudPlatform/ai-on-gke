@@ -18,6 +18,9 @@ resource "google_container_node_pool" "node-pool" {
   cluster  = var.cluster_name
   location = var.region
   node_config {
+    gcfs_config {
+      enabled = true
+    }
     machine_type = var.machine_type
     dynamic "taint" {
       for_each = var.taints
