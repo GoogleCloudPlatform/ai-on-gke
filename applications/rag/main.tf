@@ -63,7 +63,8 @@ locals {
   jupyter_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.jupyter_service_account}" : var.jupyter_service_account
   rag_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.rag_service_account}" : var.rag_service_account
   frontend_default_uri    = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
-
+  ## if cloudsql_instance_region not specified, then default to cluster_location region
+  cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
 }
 
 
@@ -129,9 +130,8 @@ module "cloudsql" {
   project_id    = var.project_id
   instance_name = var.cloudsql_instance
   namespace     = var.kubernetes_namespace
-  ## if cloudsql_instance_region not specified, then default to cluster_location region
-  region     = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
-  depends_on = [module.namespace]
+  region        = local.cloudsql_instance_region
+  depends_on    = [module.namespace]
 }
 
 # IAP Section: Enabled the IAP service
@@ -191,7 +191,7 @@ module "kuberay-cluster" {
   autopilot_cluster      = local.enable_autopilot
   db_secret_name         = module.cloudsql.db_secret_name
   cloudsql_instance_name = var.cloudsql_instance
-  db_region              = var.cloudsql_instance_region
+  db_region              = local.cloudsql_instance_region
   google_service_account = local.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
   disable_network_policy = var.disable_ray_cluster_network_policy
@@ -227,7 +227,7 @@ module "frontend" {
   namespace                     = var.kubernetes_namespace
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
-  cloudsql_instance_region      = var.cloudsql_instance_region
+  cloudsql_instance_region      = local.cloudsql_instance_region
   db_secret_name                = module.cloudsql.db_secret_name
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
 
