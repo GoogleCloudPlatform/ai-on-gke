@@ -83,7 +83,7 @@ spec:
       - name: jupyter_service_account
         description: Google Cloud IAM service account for authenticating with GCP services
         varType: string
-        defaultValue: jupyter-system-account
+        defaultValue: jupyter
       - name: k8s_backend_config_name
         description: Name of the Backend Config on GCP
         varType: string
@@ -112,11 +112,11 @@ spec:
       - name: rag_service_account
         description: Google Cloud IAM service account for authenticating with GCP services
         varType: string
-        defaultValue: rag-system-account
+        defaultValue: rag-sa
       - name: ray_service_account
         description: Google Cloud IAM service account for authenticating with GCP services
         varType: string
-        defaultValue: ray-system-account
+        defaultValue: ray-sa
       - name: support_email
         description: Email for users to contact with questions about their consent
         varType: string

@@ -29,6 +29,12 @@ variable "db_region" {
   default     = "us-central1"
 }
 
+variable "cloudsql_instance_name" {
+  type        = string
+  description = "Cloud SQL instance name"
+  default     = "pgvector-instance"
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"

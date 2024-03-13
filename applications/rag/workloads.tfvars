@@ -30,16 +30,16 @@ cloudsql_instance_region = "us-central1"
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `ray_service_account` to use an existing IAM service account.
 create_ray_service_account      = true
-ray_service_account             = "ray-system-account"
+ray_service_account             = "ray-sa"
 enable_grafana_on_ray_dashboard = false
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `rag_service_account` to use an existing IAM service account.
 create_rag_service_account = true
-rag_service_account        = "rag-system-account"
+rag_service_account        = "rag-sa"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `jupyter_service_account` to use an existing IAM service account.
-jupyter_service_account = "jupyter-system-account"
+jupyter_service_account = "jupyter"
 
 ## Embeddings table name - change this to the TABLE_NAME used in the notebook.
 dataset_embeddings_table_name = "googlemaps_reviews_db"
