@@ -25,7 +25,7 @@ create_gcs_bucket    = true
 gcs_bucket           = "rag-data-xyzu" # Choose a globally unique bucket name.
 
 cloudsql_instance        = "pgvector-instance"
-cloudsql_instance_region = "us-central1"
+cloudsql_instance_region = "us-central1" # defaults to cluster_location, if not specified
 ## Service accounts
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `ray_service_account` to use an existing IAM service account.
