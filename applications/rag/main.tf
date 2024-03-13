@@ -192,6 +192,7 @@ module "kuberay-cluster" {
   db_region              = var.cloudsql_instance_region
   google_service_account = local.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
+  disable_network_policy = var.disable_ray_cluster_network_policy
   depends_on             = [module.kuberay-operator]
 }
 
