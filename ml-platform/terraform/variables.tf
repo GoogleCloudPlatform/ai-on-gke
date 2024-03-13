@@ -55,7 +55,7 @@ variable "create_projects" {
 }
 
 variable "project_id" {
-  type        = map
+  type        = map(any)
   description = "The GCP project where the resources will be created. It is a map with environments as keys and project_ids s values"
 }
 
