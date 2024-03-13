@@ -15,7 +15,12 @@ spec:
       containers:
       - name: ray-task
         image: python:3.10.8
-        command: ["pip install ray[client] && python /home/ray/samples/sample_code.py"]
+        resources:
+          requests:
+            memory: "100Mi"
+          limits:
+            memory: "200Mi"
+        command: ["sh", "-c", "pip install ray[client] && python /home/ray/samples/sample_code.py"]
         #command:  [ "sh", "-c", "sleep 1h" ]
         ports:
         volumeMounts:
@@ -57,9 +62,12 @@ metadata:
 data:
   sample_code.py: |
     import ray
+    import time
     ray.init("ray://ray-cluster-kuberay-head-svc:10001")
     @ray.remote
-    def do_work(x):
-      return(x*x)
-    do_work.remote(2)
-    ray.shutdown()
+    def slow_function():
+     time.sleep(10)
+     return 1
+    
+    for _ in range(4):
+      slow_function.remote()
