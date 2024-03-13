@@ -104,6 +104,7 @@ resource "kubernetes_network_policy" "kuberay-head-network-policy" {
             "kubernetes.io/metadata.name" = var.namespace
           }
         }
+
         dynamic "namespace_selector" {
           for_each = var.network_policy_allow_namespaces_by_label
           content {
@@ -165,5 +166,17 @@ resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
     }
 
     policy_types = ["Ingress"]
+  }
+}
+
+# Assign resource quotas to Ray namespace to ensure that they don't overutilize resources
+resource "kubernetes_resource_quota" "ray_namespace_resource_quota" {
+  metadata {
+    name      = "ray-namespace-quota"
+    namespace = var.namespace
+  }
+
+  spec {
+    hard = var.resource_quotas
   }
 }

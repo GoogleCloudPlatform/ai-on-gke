@@ -172,3 +172,15 @@ variable "disable_network_policy" {
   type        = bool
   default     = false
 }
+
+# These default resource quotas are set intentionally high as an example that won't be limiting for most clusters.
+# Consult https://kubernetes.io/docs/concepts/policy/resource-quotas/ for additional quotas that may be set.
+variable "resource_quotas" {
+  description = "Kubernetes ResourceQuota object to attach to the Ray cluster's namespace"
+  type        = map(any)
+  default = {
+    cpu                       = "1000"
+    memory                    = "10Ti"
+    "requests.nvidia.com/gpu" = "100"
+  }
+}
