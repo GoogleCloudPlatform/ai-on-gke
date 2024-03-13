@@ -25,8 +25,8 @@ gcloud container node-pools create g2-standard-24 --cluster l4-demo \
  --num-nodes=1 --min-nodes=1 --max-nodes=2 \
  --node-locations $REGION-a,$REGION-b --region $REGION
  ```
-4. Apply job yaml: `kubectl apply -f mistral-deploy.yaml`
-5. Make sure app started ok: `kubectl logs -l app=mistral-7b-instruct`
+4. Apply job yaml: `kubectl apply -f gemma-deploy.yaml`
+5. Make sure app started ok: `kubectl logs -l app=gemma-7b-it`
 6. Set up managed metrics collection to monarch `kubectl apply -f podmonitoring.yaml`
 7. \[optional\] set up target status so that kubectl can display pod monitoring objects (kubectl describe PodMonitoring [object name]). 
 ```
@@ -34,7 +34,7 @@ kubectl apply -f targetstatus.yaml
 ```
 8. Set up port forward
 ```
-kubectl port-forward deployment/mistral-7b-instruct 8080:8080 &
+kubectl port-forward deployment/gemma-7b-it 8080:8080 &
 ```
 9. Try a few prompts:
 ```
@@ -45,7 +45,7 @@ curl 127.0.0.1:8080/generate -X POST \
     -H 'Content-Type: application/json' \
     --data-binary @- <<EOF
 {
-    "inputs": "[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n$USER_PROMPT[/INST]",
+    "inputs": "<start_of_turn>user\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n$USER_PROMPT<end_of_turn><start_of_turn>model",
     "parameters": {"max_new_tokens": 400}
 }
 EOF

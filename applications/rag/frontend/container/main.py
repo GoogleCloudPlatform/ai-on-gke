@@ -65,7 +65,7 @@ llm = HuggingFaceTextGenInference(
 )
 
 prompt_template = """
-### [INST]
+### <start_of_turn>user
 Instruction: Always assist with care, respect, and truth. Respond with utmost utility yet securely.
 Avoid harmful, unethical, prejudiced, or negative content.
 Ensure replies promote fairness and positivity.
@@ -76,7 +76,8 @@ Here is context to help:
 ### QUESTION:
 {user_prompt}
 
-[/INST]
+<end_of_turn>
+<start_of_turn>model
  """
 
 # Create prompt from prompt template

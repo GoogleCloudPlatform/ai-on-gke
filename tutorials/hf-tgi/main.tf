@@ -14,9 +14,9 @@
 
 resource "kubernetes_service" "inference_service" {
   metadata {
-    name = "mistral-7b-instruct-service"
+    name = "gemma-7b-it-service"
     labels = {
-      app = "mistral-7b-instruct"
+      app="gemma-7b-it"
     }
     namespace = var.namespace
     annotations = {
@@ -26,7 +26,7 @@ resource "kubernetes_service" "inference_service" {
   }
   spec {
     selector = {
-      app = "mistral-7b-instruct"
+      app = "gemma-7b-it"
     }
     session_affinity = "ClientIP"
     port {
@@ -41,7 +41,7 @@ resource "kubernetes_service" "inference_service" {
 
 resource "kubernetes_deployment" "inference_deployment" {
   metadata {
-    name      = "mistral-7b-instruct"
+    name      = "gemma-7b-it"
     namespace = var.namespace
   }
 
@@ -50,21 +50,21 @@ resource "kubernetes_deployment" "inference_deployment" {
 
     selector {
       match_labels = {
-        app = "mistral-7b-instruct"
+        app = "gemma-7b-it"
       }
     }
 
     template {
       metadata {
         labels = {
-          app = "mistral-7b-instruct"
+          app = "gemma-7b-it"
         }
       }
 
       spec {
         container {
-          image = "ghcr.io/huggingface/text-generation-inference:1.1.0"
-          name  = "mistral-7b-instruct"
+          image = "ghcr.io/huggingface/text-generation-inference:1.4.2"
+          name  = "gemma-7b-it"
 
           port {
             name           = "metrics"
@@ -74,7 +74,7 @@ resource "kubernetes_deployment" "inference_deployment" {
 
           env {
             name  = "MODEL_ID"
-            value = "mistralai/Mistral-7B-Instruct-v0.1"
+            value = "google/gemma-7b-it"
           }
 
           env {
@@ -87,12 +87,22 @@ resource "kubernetes_deployment" "inference_deployment" {
             value = "8080"
           }
 
+          env {
+            name  = "HUGGING_FACE_HUB_TOKEN"
+            value_from {
+              secret_key_ref {
+                name = var.hf_secret
+                key  = "HF_TOKEN"
+              }
+            }
+          }
+
           resources {
             limits = {
               "nvidia.com/gpu" = "2"
             }
             requests = {
-              # Sufficient storage to fit the Mistral-7B-Instruct-v0.1 model
+              # Sufficient storage to fit the Gemma-7b-it model
               "ephemeral-storage" = "20Gi"
               "nvidia.com/gpu"    = "2"
             }
@@ -107,21 +117,6 @@ resource "kubernetes_deployment" "inference_deployment" {
             mount_path = "/data"
             name       = "data"
           }
-
-          #liveness_probe {
-          #http_get {
-          #path = "/"
-          #port = 8080
-
-          #http_header {
-          #name  = "X-Custom-Header"
-          #value = "Awesome"
-          #}
-          #}
-
-          #initial_delay_seconds = 3
-          #period_seconds        = 3
-          #}
         }
 
         volume {
