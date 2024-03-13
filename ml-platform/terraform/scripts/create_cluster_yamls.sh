@@ -22,17 +22,20 @@ cluster_env=${5}
 cluster_name=${6}
 index=${7}
 sleep_time=20
-sleep_index=$((${index}+1))
-sleep_total=$((${sleep_time}*${sleep_index}))
+sleep_index=$((${index} + 1))
+sleep_total=$((${sleep_time} * ${sleep_index}))
 sleep $sleep_total
-random=$(echo $RANDOM | md5sum | head -c 20; echo)
+random=$(
+  echo $RANDOM | md5sum | head -c 20
+  echo
+)
 log="$(pwd)/log"
 flag=0
 
 download_acm_repo_name="/tmp/$(echo ${acm_repo_name} | awk -F "/" '{print $2}')-${random}"
 git config --global user.name ${github_user}
 git config --global user.email ${github_emai}
-git clone https://${github_user}:${TF_VAR_github_token}@github.com/${acm_repo_name} ${download_acm_repo_name}
+git clone https://${github_user}:${GIT_TOKEN}@github.com/${acm_repo_name} ${download_acm_repo_name} || exit 1
 
 if [ ! -d "${download_acm_repo_name}/manifests" ] && [ ! -d "${download_acm_repo_name}/templates" ]; then
   echo "copying files"
@@ -47,11 +50,9 @@ fi
 cp ../../templates/_cluster_template/cluster.yaml ./${cluster_name}-cluster.yaml
 cp ../../templates/_cluster_template/selector.yaml ./${cluster_env}-selector.yaml
 
-find . -type f -name ${cluster_name}-cluster.yaml -exec  sed -i "s/CLUSTER_NAME/${cluster_name}/g" {} +
-find . -type f -name ${cluster_name}-cluster.yaml -exec  sed -i "s/ENV/${cluster_env}/g" {} +
-find . -type f -name ${cluster_env}-selector.yaml -exec  sed -i "s/ENV/${cluster_env}/g" {} +
-
-#cp ../../templates/_cluster_template/kuberay .
+find . -type f -name ${cluster_name}-cluster.yaml -exec sed -i "s/CLUSTER_NAME/${cluster_name}/g" {} +
+find . -type f -name ${cluster_name}-cluster.yaml -exec sed -i "s/ENV/${cluster_env}/g" {} +
+find . -type f -name ${cluster_env}-selector.yaml -exec sed -i "s/ENV/${cluster_env}/g" {} +
 
 git add ../../.
 git config --global user.name ${github_user}
@@ -59,5 +60,4 @@ git config --global user.email ${github_email}
 git commit -m "Adding ${cluster_name} cluster to the ${cluster_env} environment."
 git push origin
 
-cd -
 rm -rf ${download_acm_repo_name}
