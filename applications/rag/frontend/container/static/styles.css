@@ -120,36 +120,41 @@ input[type="submit"]:disabled {
 /* Filter Section Styles */
 #filter-section {
     width: 30%;
-    margin-right: 2%; /* Space between filter section and chat */
+    margin-right: 2%; /* Space between filter section and the next section, adjust as needed */
+    border: 1px solid #ccc; /* Optional: adds a border around the filter section */
+    padding: 20px; /* Adds some space inside the filter section */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds a slight shadow for depth */
 }
 
-#template-section {
+#filter-section-toggle {
+    margin-bottom: 20px;
+}
+
+#dlp-filter-section,
+#nlp-filter-section {
+    display: none; /* Initially hidden, shown when respective toggle is checked */
     margin-top: 20px;
-    display: none;
 }
 
-#template-section select {
+select {
     width: 100%;
     padding: 10px;
     margin-top: 10px;
-    border-radius: 2px;
+    border: 1px solid #ccc; /* Adds a border to the dropdowns */
+    border-radius: 4px; /* Rounds the corners of the dropdowns */
 }
 
-#template-section label {
+label {
     display: block;
     margin-top: 15px;
     font-weight: bold;
 }
 
-#template-section input[type="checkbox"] {
-    margin-top: 10px;
-}
-
-#nlp-filter-section {
-    margin-top: 20px;
+input[type="checkbox"] {
+    margin-right: 10px; /* Space between checkbox and its label */
 }
 
 #nlp-range {
     width: 100%;
-    margin: 10px 0;
+    margin-top: 10px; /* Adjusted for consistency */
 }

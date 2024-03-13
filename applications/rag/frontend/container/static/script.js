@@ -53,15 +53,20 @@ function onReady() {
             prompt: prompt,
         })
         if (filterEnabled) {
-            var inspectTemplate = document.getElementById('inspect-template-dropdown').value;
-            var deidentifyTemplate = document.getElementById('deidentify-template-dropdown').value;
-            var nlpFilterValue = document.getElementById("nlp-range").value; // Get the NLP filter value
-            body = JSON.stringify({
+            let data = {
                 prompt: prompt,
-                inspectTemplate: inspectTemplate,
-                deidentifyTemplate: deidentifyTemplate,
-                nlpFilterLevel: nlpFilterValue
-            })
+            }
+
+            if (document.getElementById('toggle-nlp-filter-section').checked) {
+                data.nlpFilterLevel = document.getElementById("nlp-range").value
+            }
+
+            if (document.getElementById('toggle-dlp-filter-section').checked) {
+                data.inspectTemplate = document.getElementById('inspect-template-dropdown').value;
+                data.deidentifyTemplate = document.getElementById('deidentify-template-dropdown').value;
+            }
+
+            body = JSON.stringify(data)
         }
 
 
@@ -82,10 +87,24 @@ function onReady() {
         }).finally(() => enableForm(true));
     });
 
-    // Handle templates
     document.getElementById("toggle-filters").addEventListener("change", function() {
-        fetchNLPEnabled();
-        fetchDLPEnabled();
+        if (this.checked) {
+            document.getElementById('toggle-dlp-filter-section-div').style.display = 'block'
+            document.getElementById('toggle-nlp-filter-section-div').style.display = 'block'
+        } else {
+            document.getElementById('toggle-dlp-filter-section-div').style.display = 'none'
+            document.getElementById('toggle-nlp-filter-section-div').style.display = 'none'
+        }
+        fetchDLPEnabled()
+        fetchNLPEnabled()
+    });
+
+    document.getElementById("toggle-dlp-filter-section").addEventListener("change", function() {
+        fetchDLPEnabled()
+    });
+
+    document.getElementById("toggle-nlp-filter-section").addEventListener("change", function() {
+        fetchNLPEnabled()
     });
 }
 if (document.readyState != "loading") onReady();
@@ -114,8 +133,9 @@ function autoResizeTextarea() {
 function toggleNlpFilterSection(nlpEnabled) {
     var filterOptions = document.getElementById("nlp-filter-section");
     var checkbox = document.getElementById('toggle-filters');
+    var nlpCheckbox = document.getElementById('toggle-nlp-filter-section');
 
-    if (nlpEnabled && checkbox.checked) {
+    if (nlpEnabled && checkbox.checked && nlpCheckbox.checked) {
         filterOptions.style.display = "block";
     } else {
         filterOptions.style.display = "none";
@@ -135,10 +155,11 @@ function fetchNLPEnabled() {
 }
 
 // Function to handle the visibility of filter section
-function toggleFilterSection(dlpEnabled) {
-    var filterOptions = document.getElementById("template-section");
+function toggleDLPFilterSection(dlpEnabled) {
+    var filterOptions = document.getElementById("dlp-filter-section");
     var checkbox = document.getElementById('toggle-filters');
-    if (dlpEnabled && checkbox.checked) {
+    var dlpCheckbox = document.getElementById('toggle-dlp-filter-section');
+    if (dlpEnabled && checkbox.checked && dlpCheckbox.checked) {
         filterOptions.style.display = "block";
     } else {
         filterOptions.style.display = "none";
@@ -152,7 +173,7 @@ function fetchDLPEnabled() {
         .then(data => {
             var dlpEnabled = data.dlpEnabled;
 
-            toggleFilterSection(dlpEnabled);
+            toggleDLPFilterSection(dlpEnabled);
         })
         .catch(error => console.error('Error fetching DLP status:', error))
 }
