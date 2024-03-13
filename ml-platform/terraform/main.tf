@@ -389,6 +389,18 @@ resource "null_resource" "install_kuberay_operator" {
   ]
 }
 
+resource "google_service_account" "namespace_default" {
+  account_id   = "wi-${var.namespace}-default"
+  display_name = "${var.namespace} Default Workload Identity Service Account"
+  project      = local.parsed_project_id[var.default_env]
+}
+
+resource "google_service_account_iam_member" "wi_cymbal_bank_backend_workload_identity_user" {
+  member             = "serviceAccount:${local.parsed_project_id[var.default_env]}.svc.id.goog[${var.namespace}/${var.namespace}-default]"
+  role               = "roles/iam.workloadIdentityUser"
+  service_account_id = google_service_account.namespace_default.id
+}
+
 resource "null_resource" "create_namespace" {
   count = var.create_namespace
   triggers = {
@@ -418,6 +430,9 @@ resource "null_resource" "create_git_cred_ns" {
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/create_git_cred.sh ${local.parsed_gke_info[var.default_env].cluster_name} ${local.parsed_gke_info[var.default_env].gke_project_id} ${var.github_user} ${var.namespace}"
+    environment = {
+      GIT_TOKEN = var.github_token
+    }
   }
 
   depends_on = [
@@ -430,11 +445,14 @@ resource "null_resource" "install_ray_cluster" {
   count = var.install_ray_in_ns
   triggers = {
     md5_script = filemd5("${path.module}/scripts/install_ray_cluster.sh")
-    timestamp  = timestamp()
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template//templates/_namespace_template/app", "**") : md5("${path.module}/templates/acm-template//templates/_namespace_template/app/${f}")]))
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/install_ray_cluster.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
+    command = "${path.module}/scripts/install_ray_cluster.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${google_service_account.namespace_default.email}"
+    environment = {
+      GIT_TOKEN = var.github_token
+    }
   }
 
   depends_on = [

@@ -13,17 +13,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 configsync_repo_name=${1}
 github_email=${2}
 github_org=${3}
 github_user=${4}
 namespace=${5}
+google_service_account=${6}
+kubernetes_service_account="${namespace}-default"
 
-random=$(echo $RANDOM | md5sum | head -c 20; echo)
+random=$(
+  echo $RANDOM | md5sum | head -c 20
+  echo
+)
 download_acm_repo_name="/tmp/$(echo ${configsync_repo_name} | awk -F "/" '{print $2}')-${random}"
 git config --global user.name ${github_user}
 git config --global user.email ${github_emai}
-git clone https://${github_user}:${TF_VAR_github_token}@github.com/${configsync_repo_name} ${download_acm_repo_name}
+git clone https://${github_user}:${GIT_TOKEN}@github.com/${configsync_repo_name} ${download_acm_repo_name} || exit 1
 cd ${download_acm_repo_name}/manifests/apps
 if [ ! -d "${namespace}" ]; then
   echo "${namespace} folder doesnt exist in the configsync repo"
@@ -37,6 +43,8 @@ fi
 
 cp -r ../../templates/_namespace_template/app/* ${namespace}/
 sed -i "s?NAMESPACE?${namespace}?g" ${namespace}/*
+sed -i "s?GOOGLE_SERVICE_ACCOUNT?$google_service_account?g" ${namespace}/*
+sed -i "s?KUBERNETES_SERVICE_ACCOUNT?$kubernetes_service_account?g" ${namespace}/*
 
 git add .
 git config --global user.name ${github_user}
@@ -44,5 +52,4 @@ git config --global user.email ${github_email}
 git commit -m "Installing ray cluster in ${namespace} namespace."
 git push origin
 
-cd -
 rm -rf ${download_acm_repo_name}
