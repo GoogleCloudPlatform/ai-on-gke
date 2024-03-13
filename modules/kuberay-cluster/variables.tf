@@ -177,7 +177,7 @@ variable "disable_network_policy" {
 # Consult https://kubernetes.io/docs/concepts/policy/resource-quotas/ for additional quotas that may be set.
 variable "resource_quotas" {
   description = "Kubernetes ResourceQuota object to attach to the Ray cluster's namespace"
-  type        = map(any)
+  type        = map(string)
   default = {
     cpu                       = "1000"
     memory                    = "10Ti"
