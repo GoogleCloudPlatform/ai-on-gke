@@ -243,7 +243,9 @@ This is the quick-start deployment. It can be used to quickly set up an environm
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Clusters. You should see three clusters.
 
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Config. If you haven't enabled GKE Enterprise in the project earlier, Click `LEARN AND ENABLE` button and then `ENABLE GKE ENTERPRISE`. You should see a RootSync and RepoSync object.
+
   ![configsync](resources/configsync.png)
+
 
 **Review software installed via RepoSync and Reposync**
 
@@ -340,6 +342,7 @@ So, you will use a bastion VM in the same subnet as the GKE cluster to perform p
   Follow the steps again in [View Ray dashboard](view-ray-dashboard) section to view the dashboard.
 
 
+
 [gitops]: https://about.gitlab.com/topics/gitops/
 [repo-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields
 [root-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields
@@ -353,3 +356,4 @@ So, you will use a bastion VM in the same subnet as the GKE cluster to perform p
 [personal-access-token]: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
 [machine-user-account]: https://docs.github.com/en/get-started/learning-about-github/types-of-github-accounts
 [connect-gateway]: https://cloud.google.com/anthos/multicluster-management/gateway/using
+
