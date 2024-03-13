@@ -19,7 +19,12 @@ LOCUS_OPTS="-f /locust-tasks/tasks.py --host=$TARGET_HOST"
 LOCUST_MODE=${LOCUST_MODE:-standalone}
 
 if [[ "$LOCUST_MODE" = "master" ]]; then
-    LOCUS_OPTS="$LOCUS_OPTS --master --stop-timeout 300"
+    # Locust stop-timeout default is 0s. Only used in distributed mode.
+    # Master will wait $stop-timout amount of time for the User to complete it's task.
+    # For inferencing workloads with large payload having no wait time is unreasonable.
+    # This timeout is set to large amount to avoid user tasks being killed too early.
+    # TODO: turn timeout into a variable.
+    LOCUS_OPTS="$LOCUS_OPTS --master --stop-timeout 10800"
 elif [[ "$LOCUST_MODE" = "worker" ]]; then
     huggingface-cli login --token $HUGGINGFACE_TOKEN
     FILTER_PROMPTS="python /locust-tasks/load_data.py"
