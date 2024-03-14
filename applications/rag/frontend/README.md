@@ -11,8 +11,7 @@ backend and vector database through [LangChain](https://python.langchain.com/doc
 #### Data Loss Prevention (DLP): 
 Our DLP system is engineered to actively identify and safeguard sensitive information. It achieves this through advanced detection methods that redact sensitive data from both outputs and, where applicable, within the data itself. This approach prioritizes the robust protection of critical information. Please note, the current implementation of our DLP solution does not extend support for specific data protection compliance regulations. The primary objective is to ensure a strong foundation of data security that can be customized or augmented to align with compliance requirements as needed.
 #### Text moderation from Cloud Natural Language API: 
-Using the text moderation API from Cloud Natural Language API to analyzes text for sentiment, context, and content categorization, filtering out inappropriate material based on predefined categories such as Health, Finance, Politics, and Legal.
-
+Use text moderation capabilities from the Cloud Natural Language API to analyze user input and LLM responses for sentiment, content, and content categorization. Filter out inappropriate material based on predefined categories such as health, finance, politics, and legal.
 ### Pre-requirement
 1. Enable Cloud Data Loss Prevention (DLP)
 
