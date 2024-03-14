@@ -13,34 +13,39 @@
 # limitations under the License.
 
 resource "google_container_node_pool" "node-pool" {
-  name     = format("%s-%s", var.cluster_name, var.node_pool_name)
-  project  = var.project_id
   cluster  = var.cluster_name
   location = var.region
+  name     = format("%s-%s", var.cluster_name, var.node_pool_name)
+  project  = var.project_id
+
+  autoscaling {
+    location_policy      = var.autoscaling["location_policy"]
+    total_max_node_count = var.autoscaling["total_max_node_count"]
+    total_min_node_count = var.autoscaling["total_min_node_count"]
+  }
+
+  network_config {
+    enable_private_nodes = true
+  }
+
   node_config {
-    gcfs_config {
-      enabled = true
-    }
     machine_type = var.machine_type
-    dynamic "taint" {
-      for_each = var.taints
-      content {
-        key    = taint.value.key
-        value  = taint.value.value
-        effect = taint.value.effect
-      }
-    }
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
     labels = {
       "resource-type" : var.resource_type
     }
 
-    guest_accelerator {
-      type  = var.accelerator
-      count = var.accelerator_count
+    gcfs_config {
+      enabled = true
     }
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
-    ]
+
+    guest_accelerator {
+      count = var.accelerator_count
+      type  = var.accelerator
+    }
 
     dynamic "reservation_affinity" {
       for_each = var.reservation_name != "" ? [1] : []
@@ -50,16 +55,15 @@ resource "google_container_node_pool" "node-pool" {
         values                   = [var.reservation_name]
       }
     }
-  }
-  autoscaling {
-    total_min_node_count = var.autoscaling["total_min_node_count"]
-    total_max_node_count = var.autoscaling["total_max_node_count"]
-    location_policy      = var.autoscaling["location_policy"]
-  }
 
-  timeouts {
-    create = "30m"
-    update = "20m"
+    dynamic "taint" {
+      for_each = var.taints
+      content {
+        effect = taint.value.effect
+        key    = taint.value.key
+        value  = taint.value.value
+      }
+    }
   }
 
   lifecycle {
@@ -68,7 +72,9 @@ resource "google_container_node_pool" "node-pool" {
       node_config[0].taint,
     ]
   }
-  network_config {
-    enable_private_nodes = true
+
+  timeouts {
+    create = "30m"
+    update = "20m"
   }
 }

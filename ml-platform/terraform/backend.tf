@@ -18,4 +18,3 @@ terraform {
     bucket = "YOUR_STATE_BUCKET"
   }
 }
-

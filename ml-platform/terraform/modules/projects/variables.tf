@@ -12,32 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "org_id" {
-  type        = string
-  description = "The GCP orig id"
+variable "billing_account" {
   default     = ""
+  description = "GCP billing account"
+  type        = string
 }
 
 variable "env" {
-  type        = set(string)
-  description = "List of environments"
   default     = ["dev"]
+  description = "List of environments"
+  type        = set(string)
 }
 
 variable "folder_id" {
-  type        = string
-  description = "Folder id where the GCP projects will be created"
   default     = null
+  description = "Folder id where the GCP projects will be created"
+  type        = string
 }
 
-variable "billing_account" {
-  type        = string
-  description = "GCP billing account"
+variable "org_id" {
   default     = ""
+  type        = string
+  description = "The GCP orig id"
 }
 
 variable "project_name" {
-  type        = string
-  description = "GCP project name"
   default     = ""
+  description = "GCP project name"
+  type        = string
 }

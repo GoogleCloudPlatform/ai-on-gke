@@ -12,24 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-//terraform {
-//  required_providers {
-//
-//    google = {
-//      source  = "hashicorp/google"
-//      #version = ">= 4.51, < 5.0"
-//      version = "4.72.1"
-//    }
-//
-//    random = {
-//      source  = "hashicorp/random"
-//      version = "~> 2.2"
-//    }
-//  }
-//
-//}
 terraform {
   required_providers {
+    github = {
+      source  = "integrations/github"
+      version = "6.0.1"
+    }
     google = {
       source  = "hashicorp/google"
       version = "5.19.0"
@@ -37,10 +25,6 @@ terraform {
     google-beta = {
       source  = "hashicorp/google-beta"
       version = "5.19.0"
-    }
-    github = {
-      source  = "integrations/github"
-      version = "6.0.1"
     }
     random = {
       source  = "hashicorp/random"
