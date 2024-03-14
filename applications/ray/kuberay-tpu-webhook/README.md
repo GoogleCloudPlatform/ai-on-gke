@@ -47,9 +47,7 @@ accelerator_type       = "nvidia-tesla-t4"
 
 2. `make deploy`
     - this will create the webhook deployment, configs, and service in the "ray-system" namespace
-    - the "ray-system" namespace is created if it does not already exist
-    - to change the namespace, edit the "namespace" value in the Makefile as well as in each .yaml
-    in deployments/ and certs/
+    - to change the namespace, edit the "namespace" value in each .yaml in deployments/ and certs/
 
 3. `make deploy-cert`
 
