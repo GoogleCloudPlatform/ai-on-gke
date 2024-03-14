@@ -12,72 +12,79 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "node_pool_name" {
+variable "accelerator" {
+  default     = "nvidia-l4"
+  description = "The GPU accelerator to use."
   type        = string
-  description = "Name of the node pool"
 }
-variable "project_id" {
-  type        = string
-  description = "The GCP project where the resources will be created"
-  default     = ""
+
+variable "accelerator_count" {
+  default     = 2
+  description = "The number of accelerators per machine."
+  type        = number
 }
+
+variable "autoscaling" {
+  default = {
+    "total_min_node_count" : 0,
+    "total_max_node_count" : 24,
+    "location_policy" : "ANY"
+  }
+  type = map(any)
+}
+
 variable "cluster_name" {
-  type        = string
-  description = "GKE cluster name"
   default     = ""
-}
-variable "region" {
+  description = "GKE cluster name"
   type        = string
-  description = "The GCP zone where the reservation will be created"
-  default     = "us-central1-a"
+}
+
+variable "machine_reservation_count" {
+  default     = 4
+  description = "Number of machines reserved instances with GPUs"
+  type        = number
 }
 
 variable "machine_type" {
-  type        = string
-  description = "The machine type to use."
   default     = "g2-standard-24"
+  description = "The machine type to use."
+  type        = string
+}
+
+variable "node_pool_name" {
+  description = "Name of the node pool"
+  type        = string
+}
+
+variable "project_id" {
+  default     = ""
+  description = "The GCP project where the resources will be created"
+  type        = string
+}
+
+variable "region" {
+  default     = "us-central1-a"
+  description = "The GCP zone where the reservation will be created"
+  type        = string
+}
+
+variable "reservation_name" {
+  default     = ""
+  description = "reservation name to which the nodepool will be associated"
+  type        = string
+}
+
+variable "resource_type" {
+  default     = "ondemand"
+  description = "ondemand/spot/reserved."
+  type        = string 
 }
 
 variable "taints" {
   description = "Taints to be applied to the on-demand node pool."
   type = list(object({
+    effect = string
     key    = string
     value  = any
-    effect = string
   }))
-}
-
-variable "resource_type" {
-  description = "ondemand/spot/reserved."
-  type        = string
-  default     = "ondemand"
-}
-
-
-variable "accelerator" {
-  type        = string
-  description = "The GPU accelerator to use."
-  default     = "nvidia-l4"
-}
-
-variable "accelerator_count" {
-  type        = number
-  description = "The number of accelerators per machine."
-  default     = 2
-}
-variable "machine_reservation_count" {
-  type        = number
-  description = "Number of machines reserved instances with GPUs"
-  default     = 4
-}
-
-variable "autoscaling" {
-  type    = map(any)
-  default = { "total_min_node_count" : 0, "total_max_node_count" : 24, "location_policy" : "ANY" }
-}
-
-variable "reservation_name" {
-  description = "reservation name to which the nodepool will be associated"
-  type        = string
-  default     = ""
 }

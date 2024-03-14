@@ -12,40 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "project_id" {
-  type        = string
-  description = "The GCP project where the resources will be created"
-  default     = ""
-}
-variable "cluster_name" {
-  type        = string
-  description = "GKE cluster name"
-  default     = ""
-}
-variable "zone" {
-  type        = string
-  description = "The GCP zone where the reservation will be created"
-  default     = "us-central1-a"
-}
-variable "machine_type" {
-  type        = string
-  description = "The machine type to use."
-  default     = "g2-standard-24"
-}
-
 variable "accelerator" {
-  type        = string
-  description = "The GPU accelerator to use."
   default     = "nvidia-l4"
+  description = "The GPU accelerator to use."
+  type        = string
 }
 
 variable "accelerator_count" {
-  type        = number
+  default     = 2
   description = "The number of accelerators per machine."
-  default     = 2
-}
-variable "machine_reservation_count" {
   type        = number
-  description = "Number of machines reserved instances with GPUs"
+}
+
+variable "cluster_name" {
+  default     = ""
+  description = "GKE cluster name"
+  type        = string
+}
+
+variable "machine_reservation_count" {
   default     = 2
+  description = "Number of machines reserved instances with GPUs"
+  type        = number
+}
+
+variable "machine_type" {
+  default     = "g2-standard-24"
+  description = "The machine type to use."
+  type        = string
+}
+
+variable "project_id" {
+  default     = ""
+  description = "The GCP project where the resources will be created"
+  type        = string
+}
+
+variable "zone" {
+  default     = "us-central1-a"
+  description = "The GCP zone where the reservation will be created"
+  type        = string
 }

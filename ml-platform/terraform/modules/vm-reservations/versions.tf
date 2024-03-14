@@ -12,19 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-//terraform {
-//  required_providers {
-//    google-beta = {
-//      source  = "hashicorp/google-beta"
-//      version = "4.72.1"
-//    }
-//    google = {
-//      source  = "hashicorp/google"
-//      version = "4.72.1"
-//    }
-//  }
-//}
-
 terraform {
   required_providers {
     google = {
