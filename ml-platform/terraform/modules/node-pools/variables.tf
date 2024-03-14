@@ -77,7 +77,7 @@ variable "reservation_name" {
 variable "resource_type" {
   default     = "ondemand"
   description = "ondemand/spot/reserved."
-  type        = string 
+  type        = string
 }
 
 variable "taints" {
