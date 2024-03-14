@@ -1,0 +1,20 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validate-raycluster-webhook-cfg
+  annotations:
+    cert-manager.io/inject-ca-from: default/kuberay-tpu-webhook-certs
+webhooks:
+  - name: kuberay-tpu-webhook.default.svc
+    admissionReviewVersions: [v1]
+    sideEffects: NoneOnDryRun
+    clientConfig:
+      service:
+        name: kuberay-tpu-webhook
+        namespace: ray-system
+        path: /validate
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: ["ray.io"]
+        apiVersions: ["*"]
+        resources: ["rayclusters"]

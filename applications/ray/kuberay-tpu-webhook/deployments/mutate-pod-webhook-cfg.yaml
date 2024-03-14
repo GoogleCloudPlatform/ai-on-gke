@@ -1,7 +1,7 @@
 apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
+kind: MutatingWebhookConfiguration
 metadata:
-  name: validating-kuberay-tpu-webhook-cfg
+  name: mutate-pod-webhook-cfg
   annotations:
     cert-manager.io/inject-ca-from: default/kuberay-tpu-webhook-certs
 webhooks:
@@ -11,17 +11,13 @@ webhooks:
     clientConfig:
       service:
         name: kuberay-tpu-webhook
-        namespace: default
-        path: /validate
+        namespace: ray-system
+        path: /mutate
     rules:
-      - operations: ["DELETE"]
+      - operations: ["CREATE"]
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
-      - operations: ["CREATE"]
-        apiGroups: ["ray.io"]
-        apiVersions: ["*"]
-        resources: ["rayclusters"]
     objectSelector:
       matchLabels:
         app.kubernetes.io/name: kuberay

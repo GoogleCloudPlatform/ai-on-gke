@@ -1,5 +1,9 @@
 # Image URL to use all building/pushing image targets  
 IMG ?= us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.1
+
+# Namespace to deploy webhook, service, and certificates to
+# If editing this value: also change namespace value for each .yaml in deployments/
+namespace = "ray-system"
   
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)  
 ifeq (,$(shell go env GOBIN))  
@@ -21,8 +25,10 @@ run: webhook
 uninstall:  
 	kubectl delete -f deployments/
 
-deploy:  
-	kubectl apply -f deployments/  
+# Create ray-system namespace (if it doesn't already exist) and deploy the webhook in-cluster
+deploy:
+	kubectl get namespace | grep -q ^${namespace} || kubectl create namespace ${namespace}
+	kubectl apply -f deployments/
   
 # Build the docker image  
 docker-build:

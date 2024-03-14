@@ -46,8 +46,15 @@ accelerator_type       = "nvidia-tesla-t4"
 1. `make install-cert-manager` - it may take up to two minutes for the certificate to become ready
 
 2. If deploying webhook across multiple namespaces: `make install-reflector`
+    - this will automatically mirror the k8s secret to other namespaces
+    - this is only needed if editing deployments/ to create the webhook in a different namespace
+    than certs/
 
 6. `make deploy`
+    - this will create the webhook deployment, configs, and service in the "ray-system" namespace
+    - the "ray-system" namespace is created if it does not already exist
+    - to change the namespace, edit the "namespace" value in the Makefile as well as in each .yaml
+    in deployments/ and certs/
 
 7. `make deploy-cert`
 
