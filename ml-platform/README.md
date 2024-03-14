@@ -122,11 +122,11 @@ This is the quick-start deployment guide. It can be used to set up an environmen
 
 ### Run Terraform
 
-- Clone the repository and change directory to the `ml-platform` directory
+- Clone the repository and change directory to the guide directory
 
   ```
   git clone https://github.com/GoogleCloudPlatform/ai-on-gke
-  cd ml-platform
+  cd ai-on-gke/ml-platform
   ```
 
 - Set environment variables
