@@ -18,7 +18,7 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-resource "google_container_cluster" "gke_batch" {
+resource "google_container_cluster" "mlp" {
   provider            = google-beta
   deletion_protection = false
   name                = var.cluster_name

@@ -12,22 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+output "cluster_id" {
+  value = google_container_cluster.mlp.id
+}
+
+
 output "cluster_location" {
-  value = google_container_cluster.gke_batch.location
+  value = google_container_cluster.mlp.location
 }
 
 output "cluster_name" {
-  value = google_container_cluster.gke_batch.name
-}
-
-output "cluster_id" {
-  value = google_container_cluster.gke_batch.id
-}
-
-output "gke_project_id" {
-  value = var.project_id
+  value = google_container_cluster.mlp.name
 }
 
 output "env" {
   value = var.env
+}
+
+output "gke_project_id" {
+  value = var.project_id
 }
