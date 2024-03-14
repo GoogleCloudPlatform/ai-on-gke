@@ -56,6 +56,11 @@ resource "google_container_node_pool" "node-pool" {
       }
     }
 
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+    }
+
     dynamic "taint" {
       for_each = var.taints
       content {
