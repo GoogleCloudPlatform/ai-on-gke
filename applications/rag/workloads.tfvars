@@ -52,11 +52,11 @@ jupyter_service_account = "jupyter"
 dataset_embeddings_table_name = "googlemaps_reviews_db"
 
 ## IAP config - if you choose to disable IAP authenticated access for your endpoints, ignore everthing below this line.
-brand = "projects/<prj-number>/brands/<prj-number>"
+create_brand  = false
+support_email = "<email>" ## specify if create_brand=true
 
 ## Jupyter IAP Settings
-jupyter_add_auth                 = false     # Set to true when using auth with IAP
-jupyter_support_email            = "<email>" # Only needed if `jupyter_add_auth = true`
+jupyter_add_auth                 = false # Set to true when using auth with IAP
 jupyter_k8s_ingress_name         = "jupyter-ingress"
 jupyter_k8s_managed_cert_name    = "jupyter-managed-cert"
 jupyter_k8s_iap_secret_name      = "jupyter-iap-secret"
@@ -64,15 +64,13 @@ jupyter_k8s_backend_config_name  = "jupyter-iap-config"
 jupyter_k8s_backend_service_name = "proxy-public"
 jupyter_k8s_backend_service_port = 80
 
-jupyter_url_domain_addr   = ""
-jupyter_url_domain_name   = ""
+jupyter_domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
 jupyter_client_id         = ""
 jupyter_client_secret     = ""
 jupyter_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
 
 ## Frontend IAP Settings
-frontend_add_auth                 = false     # Set to true when using auth with IAP
-frontend_support_email            = "<email>" # Only needed if `frontend_add_auth = true`
+frontend_add_auth                 = false # Set to true when using auth with IAP
 frontend_k8s_ingress_name         = "frontend-ingress"
 frontend_k8s_managed_cert_name    = "frontend-managed-cert"
 frontend_k8s_iap_secret_name      = "frontend-iap-secret"
@@ -80,8 +78,7 @@ frontend_k8s_backend_config_name  = "frontend-iap-config"
 frontend_k8s_backend_service_name = "rag-frontend"
 frontend_k8s_backend_service_port = 8080
 
-frontend_url_domain_addr   = ""
-frontend_url_domain_name   = ""
+frontend_domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
 frontend_client_id         = ""
 frontend_client_secret     = ""
 frontend_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]

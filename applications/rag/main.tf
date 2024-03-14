@@ -156,8 +156,8 @@ module "jupyterhub" {
   workload_identity_service_account = local.jupyter_service_account
 
   # IAP Auth parameters
-  brand                    = var.brand
-  support_email            = var.jupyter_support_email
+  create_brand             = var.create_brand
+  support_email            = var.support_email
   client_id                = var.jupyter_client_id
   client_secret            = var.jupyter_client_secret
   k8s_ingress_name         = var.jupyter_k8s_ingress_name
@@ -166,8 +166,7 @@ module "jupyterhub" {
   k8s_backend_config_name  = var.jupyter_k8s_backend_config_name
   k8s_backend_service_name = var.jupyter_k8s_backend_service_name
   k8s_backend_service_port = var.jupyter_k8s_backend_service_port
-  url_domain_addr          = var.jupyter_url_domain_addr
-  url_domain_name          = var.jupyter_url_domain_name
+  domain                   = var.jupyter_domain
   members_allowlist        = var.jupyter_members_allowlist
 
   depends_on = [module.namespace, module.gcs]
@@ -232,8 +231,8 @@ module "frontend" {
 
   # IAP Auth parameters
   add_auth                 = var.frontend_add_auth
-  brand                    = var.brand
-  support_email            = var.frontend_support_email
+  create_brand             = var.create_brand
+  support_email            = var.support_email
   client_id                = var.frontend_client_id
   client_secret            = var.frontend_client_secret
   k8s_ingress_name         = var.frontend_k8s_ingress_name
@@ -242,8 +241,7 @@ module "frontend" {
   k8s_backend_config_name  = var.frontend_k8s_backend_config_name
   k8s_backend_service_name = var.frontend_k8s_backend_service_name
   k8s_backend_service_port = var.frontend_k8s_backend_service_port
-  url_domain_addr          = var.frontend_url_domain_addr
-  url_domain_name          = var.frontend_url_domain_name
+  domain                   = var.frontend_domain
   members_allowlist        = var.frontend_members_allowlist
   depends_on               = [module.namespace]
 }

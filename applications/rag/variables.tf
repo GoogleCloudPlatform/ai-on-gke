@@ -89,10 +89,10 @@ variable "dataset_embeddings_table_name" {
   default     = "googlemaps_reviews_db"
 }
 
-variable "brand" {
-  type        = string
-  description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"
-  default     = ""
+variable "create_brand" {
+  type        = bool
+  description = "Create Brand OAuth Screen"
+  default     = false
 }
 
 # Frontend IAP settings
@@ -137,21 +137,9 @@ variable "frontend_k8s_backend_service_port" {
   default     = 8080
 }
 
-variable "frontend_url_domain_addr" {
+variable "frontend_domain" {
   type        = string
-  description = "Domain provided by the user. If it's empty, we will create one for you."
-  default     = ""
-}
-
-variable "frontend_url_domain_name" {
-  type        = string
-  description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
-  default     = ""
-}
-
-variable "frontend_support_email" {
-  type        = string
-  description = "Email for users to contact with questions about their consent"
+  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
   default     = ""
 }
 
@@ -214,19 +202,13 @@ variable "jupyter_k8s_backend_service_port" {
   default     = 80
 }
 
-variable "jupyter_url_domain_addr" {
+variable "jupyter_domain" {
   type        = string
-  description = "Domain provided by the user. If it's empty, we will create one for you."
+  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
   default     = ""
 }
 
-variable "jupyter_url_domain_name" {
-  type        = string
-  description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
-  default     = ""
-}
-
-variable "jupyter_support_email" {
+variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
   default     = ""

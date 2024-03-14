@@ -13,5 +13,5 @@
 # limitations under the License.
 
 output "domain" {
-  value = var.url_domain_addr == "" ? "${google_compute_global_address.ip_address[0].address}.nip.io" : var.url_domain_addr
+  value = var.domain == "" ? "${google_compute_global_address.ip_address.address}.nip.io" : var.domain
 }
