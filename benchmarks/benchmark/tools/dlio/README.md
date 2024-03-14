@@ -18,7 +18,7 @@ The workload identity and `k8s_service_account` should be set up for the `gcs_bu
 
 ## Run DLIO Job
 1. Update the `variables.tf` file with your desired settings to run your machine learning benchmark workload
-2. Change the dlio image in `modules/dlio/podspec.tpl`
+2. Change the dlio image in `modules/dlio/podspec.tpl` to a desired version. We have tested the job with dlio [commit `ca8d6a3c`](https://github.com/argonne-lcf/dlio_benchmark/tree/ca8d6a3c4159af18397bec95218bf446d6699677).
 3. Run `terraform init`
 4. Run `terraform apply`
 5. After you finish your test, run `terraform destroy` to delete the
@@ -31,7 +31,7 @@ Pre-reqs:
 - You'll need to manually setup the VPC peering from the GKE cluster's network to `servicenetworking.googleapis.com`.
 
 1. update `variables.tf` file with your desired settings to run your machine learning benchmark workload, notably set `run_with_gcs_fuse_csi` to `false` and `run_with_parallelstore_csi` to `true`. If you want to use static provisioning, update the "parallelstore variables" and `parallelstore_storageclass` to `""`.
-2. Change the dlio image in `dlio/podspec.tpl` to a desired version. We have tested the job with dlio v0.5.1.
+2. Change the dlio image in `modules/dlio/podspec.tpl` to a desired version. We have tested the job with dlio [commit `ca8d6a3c`](https://github.com/argonne-lcf/dlio_benchmark/tree/ca8d6a3c4159af18397bec95218bf446d6699677).
 3. run `terraform init`
 4. run `terraform apply -target=module.ps_storage`
 5. run `terraform apply` after the dataloader job is completed; pvc patch failure is OK for dynamic provisioning.
