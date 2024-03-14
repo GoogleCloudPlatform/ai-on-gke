@@ -44,6 +44,17 @@ resource "google_project_service" "containerfilesystem_googleapis_com" {
   service                    = "containerfilesystem.googleapis.com"
 }
 
+resource "google_project_service" "serviceusage_googleapis_com" {
+  for_each = local.parsed_project_id
+
+  depends_on = [module.gcp-project]
+
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = each.value
+  service                    = "serviceusage.googleapis.com"
+}
+
 resource "google_project_service" "project_services-cr" {
   for_each = local.parsed_project_id
 
