@@ -161,7 +161,7 @@ This is the quick-start deployment guide. It can be used to set up an environmen
 
 #### GKE clusters and ConfigSync
 
-- Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Clusters. You should see three clusters.
+- Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Clusters. You should see one cluster.
 
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Config. If you haven't enabled GKE Enterprise in the project earlier, Click `LEARN AND ENABLE` button and then `ENABLE GKE ENTERPRISE`. You should see a RootSync and RepoSync object.
   ![configsync](docs/images/configsync.png)
