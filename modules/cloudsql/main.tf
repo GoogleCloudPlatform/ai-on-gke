@@ -50,6 +50,7 @@ resource "google_sql_user" "cloudsql_user" {
   name     = var.db_user
   instance = google_sql_database_instance.main.name
   password = random_password.pwd.result
+  deletion_policy = "ABANDON"
 }
 
 resource "kubernetes_secret" "secret" {

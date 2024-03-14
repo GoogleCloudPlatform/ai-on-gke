@@ -22,7 +22,7 @@ output "jupyterhub_user" {
   value       = module.jupyterhub.jupyterhub_user
 }
 
-output "jupyter_password" {
+output "jupyterhub_password" {
   description = "JupyterHub password is only required for standard authentication. Ignore, in case of IAP authentication"
   value       = module.jupyterhub.jupyterhub_password
   sensitive   = true

@@ -13,16 +13,25 @@ spec:
       dir: /applications/rag
   ui:
     input:
-      variables:    
-        goog_cm_deployment_name:
-          name: goog_cm_deployment_name
-          title: Goog Cm Deployment Name
-        create_cluster:
-          name: create_cluster
-          title: Create GKE Cluster
+      variables:
+        autopilot_cluster:
+          name: autopilot_cluster
+          title: GKE Cluster Type
           section: cluster_details
-          xGoogleProperty:
-            type: ET_CREATE_RESOURCE
+          enumValueLabels:
+            - label: Autopilot Cluster
+              value: "true"
+            - label: Standard Cluster
+              value: "false"
+        cloudsql_instance:
+          name: cloudsql_instance
+          title: CloudSQL Instance
+          section: rag
+        cloudsql_instance_region:
+          name: cloudsql_instance_region
+          title: Cloudsql Instance Region
+          section: rag
+          invisible: true
         cluster_location:
           name: cluster_location
           title: Cluster Location
@@ -39,22 +48,179 @@ spec:
           xGoogleProperty:
             type: ET_GKE_CLUSTER
             gkeCluster:
-              clusterCreationVariable: create_cluster
               locationVariable: cluster_location
-        cluster_membership_id:
-          name: cluster_membership_id
-          title: Cluster Membership Id
+              clusterCreationVariable: create_cluster
+        cpu_pools:
+          name: cpu_pools
+          title: Cpu Pools
           invisible: true
+        create_brand:
+          name: create_brand
+          title: Create Brand
+          invisible: true
+        create_cluster:
+          name: create_cluster
+          title: Create GKE Cluster
           section: cluster_details
-        autopilot_cluster:
-          name: autopilot_cluster
-          title: GKE Cluster Type
-          section: cluster_details
-          enumValueLabels:
-            - label: Autopilot Cluster
-              value: "true"
-            - label: Standard Cluster
-              value: "false"
+          xGoogleProperty:
+            type: ET_CREATE_RESOURCE
+        create_gcs_bucket:
+          name: create_gcs_bucket
+          title: Create Gcs Bucket
+          invisible: true
+          section: rag
+        create_jupyter_service_account:
+          name: create_jupyter_service_account
+          title: Create Jupyter Service Account
+          invisible: true
+          section: rag
+        create_rag_service_account:
+          name: create_rag_service_account
+          title: Create Rag Service Account
+          invisible: true
+          section: rag
+        create_ray_service_account:
+          name: create_ray_service_account
+          title: Create Ray Service Account
+          invisible: true
+          section: rag
+        dataset_embeddings_table_name:
+          name: dataset_embeddings_table_name
+          title: Dataset Embeddings Table Name
+          invisible: true
+          section: rag
+        disable_ray_cluster_network_policy:
+          name: disable_ray_cluster_network_policy
+          title: Disable Ray Cluster Network Policy
+          invisible: true
+          section: rag
+        enable_grafana_on_ray_dashboard:
+          name: enable_grafana_on_ray_dashboard
+          title: Enable Grafana On Ray Dashboard
+          invisible: true
+          section: rag
+        frontend_add_auth:
+          name: frontend_add_auth
+          title: Enable IAP for Frontend Application
+          section: rag_iap_auth
+        frontend_client_id:
+          name: frontend_client_id
+          title: Frontend Client Id
+          section: rag_iap_auth
+          invisible: true
+        frontend_client_secret:
+          name: frontend_client_secret
+          title: Frontend Client Secret
+          section: rag_iap_auth
+          invisible: true
+        frontend_domain:
+          name: frontend_domain
+          title: Frontend Domain
+          section: rag_iap_auth
+        frontend_k8s_backend_config_name:
+          name: frontend_k8s_backend_config_name
+          title: Frontend K8s Backend Config Name
+          section: rag_iap_auth
+          invisible: true
+        frontend_k8s_backend_service_name:
+          name: frontend_k8s_backend_service_name
+          title: Frontend K8s Backend Service Name
+          section: rag_iap_auth
+          invisible: true
+        frontend_k8s_backend_service_port:
+          name: frontend_k8s_backend_service_port
+          title: Frontend K8s Backend Service Port
+          section: rag_iap_auth
+          invisible: true
+        frontend_k8s_iap_secret_name:
+          name: frontend_k8s_iap_secret_name
+          title: Frontend K8s Iap Secret Name
+          section: rag_iap_auth
+          invisible: true
+        frontend_k8s_ingress_name:
+          name: frontend_k8s_ingress_name
+          title: Frontend K8s Ingress Name
+          section: rag_iap_auth
+          invisible: true
+        frontend_k8s_managed_cert_name:
+          name: frontend_k8s_managed_cert_name
+          title: Frontend K8s Managed Cert Name
+          section: rag_iap_auth
+          invisible: true
+        frontend_members_allowlist:
+          name: frontend_members_allowlist
+          title: Frontend Members Allowlist
+          section: rag_iap_auth
+        gcs_bucket:
+          name: gcs_bucket
+          title: Gcs Bucket
+          section: rag
+          xGoogleProperty:
+            type: ET_GCS_BUCKET
+        goog_cm_deployment_name:
+          name: goog_cm_deployment_name
+          title: Goog Cm Deployment Name
+        gpu_pools:
+          name: gpu_pools
+          title: Gpu Pools
+          invisible: true
+        jupyter_add_auth:
+          name: jupyter_add_auth
+          title: Enable IAP for JupyterHub Application
+          section: jupyter_iap_auth
+        jupyter_client_id:
+          name: jupyter_client_id
+          title: Jupyter Client Id
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_client_secret:
+          name: jupyter_client_secret
+          title: Jupyter Client Secret
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_domain:
+          name: jupyter_domain
+          title: Jupyter Domain
+          section: jupyter_iap_auth
+        jupyter_k8s_backend_config_name:
+          name: jupyter_k8s_backend_config_name
+          title: Jupyter K8s Backend Config Name
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_k8s_backend_service_name:
+          name: jupyter_k8s_backend_service_name
+          title: Jupyter K8s Backend Service Name
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_k8s_backend_service_port:
+          name: jupyter_k8s_backend_service_port
+          title: Jupyter K8s Backend Service Port
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_k8s_iap_secret_name:
+          name: jupyter_k8s_iap_secret_name
+          title: Jupyter K8s Iap Secret Name
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_k8s_ingress_name:
+          name: jupyter_k8s_ingress_name
+          title: Jupyter K8s Ingress Name
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_k8s_managed_cert_name:
+          name: jupyter_k8s_managed_cert_name
+          title: Jupyter K8s Managed Cert Name
+          section: jupyter_iap_auth
+          invisible: true
+        jupyter_members_allowlist:
+          name: jupyter_members_allowlist
+          title: Jupyter Members Allowlist
+          section: jupyter_iap_auth
+        jupyter_service_account:
+          name: jupyter_service_account
+          title: Jupyter Service Account
+          invisible: true
+          section: rag
         kubernetes_namespace:
           name: kubernetes_namespace
           title: Kubernetes Namespace
@@ -68,152 +234,59 @@ spec:
           name: project_id
           title: Project Id
           invisible: true
-        create_gcs_bucket:
-          name: create_gcs_bucket
-          title: Create Gcs Bucket
-          invisible: true
-        create_jupyter_service_account:
-          name: create_jupyter_service_account
-          title: Create Jupyter Service Account
-          invisible: true
-        create_rag_service_account:
-          name: create_rag_service_account
-          title: Create Rag Service Account
-          invisible: true
-        create_ray_service_account:
-          name: create_ray_service_account
-          title: Create Ray Service Account
-          invisible: true
-        dataset_embeddings_table_name:
-          name: dataset_embeddings_table_name
-          title: Dataset Embeddings Table Name
-          invisible: true
-        enable_grafana_on_ray_dashboard:
-          name: enable_grafana_on_ray_dashboard
-          title: Enable Grafana On Ray Dashboard
-          section: rag
-          invisible: true
-        gcs_bucket:
-          name: gcs_bucket
-          title: Gcs Bucket
-          section: rag
-          xGoogleProperty:
-            type: ET_GCS_BUCKET
-        cloudsql_instance:
-          name: cloudsql_instance
-          title: CloudSQL Instance
-          section: rag
-        jupyter_service_account:
-          name: jupyter_service_account
-          title: Jupyter Service Account
-          section: rag
-          invisible: true
         rag_service_account:
           name: rag_service_account
           title: Rag Service Account
-          section: rag
           invisible: true
+          section: rag
         ray_service_account:
           name: ray_service_account
           title: Ray Service Account
-          section: rag
           invisible: true
-        add_auth:
-          name: add_auth
-          title: Enable IAP Authentication
-          section: iap_auth
-        brand:
-          name: brand
-          title: Brand
-          section: iap_auth
-          level: 1
+          section: rag
         support_email:
           name: support_email
           title: Support Email
-          section: iap_auth
-          level: 1
-        client_id:
-          name: client_id
-          title: Client Id
-          section: iap_auth
-          level: 1
-        client_secret:
-          name: client_secret
-          title: Client Secret
-          section: iap_auth
-          level: 1
-        k8s_backend_config_name:
-          name: k8s_backend_config_name
-          title: K8s Backend Config Name
-          section: iap_auth
           invisible: true
-          level: 1
-        k8s_backend_service_name:
-          name: k8s_backend_service_name
-          title: K8s Backend Service Name
-          section: iap_auth
-          invisible: true
-          level: 1
-        k8s_ingress_name:
-          name: k8s_ingress_name
-          title: K8s Ingress Name
-          section: iap_auth
-          invisible: true
-          level: 1
-        url_domain_addr:
-          name: url_domain_addr
-          title: Url Domain Addr
-          section: iap_auth
-          level: 1
-        url_domain_name:
-          name: url_domain_name
-          title: Url Domain Name
-          section: iap_auth
-          level: 1
-        members_allowlist:
-          name: members_allowlist
-          title: Members Allowlist
-          section: iap_auth
-          level: 1
       sections:
         - name: cluster_details
-          title: Cluster Details
+          title: GKE Cluster Configuration
           tooltip: Select or Create GKE cluster
         - name: rag
-          title: Rag Application
-        - name: iap_auth
-          title: IAP Authentication
+          title: Other Configuration
+        - name: rag_iap_auth
+          title: Configure IAP for Frontend
+          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to Internal.
+        - name: jupyter_iap_auth
+          title:  Configure IAP for JupyterHub
+          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to Internal.
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-        - heading: "Step 1: Generate Vector Embeddings for the Dataset"
+        - heading: "Step 1: Go to JupyterHub Application"
           description: |-
-            Go to the JupyterHub Application, log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).
-            Once logged in, choose the <b>CPU</b> preset. Go to File -> Open From URL & upload and execute the notebook 
+             - If IAP is enabled, log in with your organization's credentials. 
+             - If IAP is disabled, log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section). 
+             - Once logged in, choose the <b>CPU</b> preset.
+        - heading: "Step 2: Generate Vector Embeddings for the Dataset"
+          description: |-
+            Go to File -> Open From URL & upload and execute the notebook 
             <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
             Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#vector-embeddings-for-dataset">README.md</a> for detailed instructions.
-          showIf: '!variables.add_auth'
-        - heading: "Step 1: Generate Vector Embeddings for the Dataset"
+        - heading: "Step 3: Prompt the Inference Server via a Chatbot"
           description: |-
-            Go to the JupyterHub Application, log in with your organization's credentials.
-            Once logged in, choose the <b>CPU</b> preset. Go to File -> Open From URL & upload and execute the notebook 
-            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
-            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#vector-embeddings-for-dataset">README.md</a> for detailed instructions.
-          showIf: 'variables.add_auth'
-        - heading: "Step 2: Prompt the Inference Server via a Chatbot"
-          description: |-
-            Go to the RAG Frontend Application, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application.
-            Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button and prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings,
-            augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.
+            - Go to the RAG Frontend Application
+            - If IAP is enabled, the existing session's credentials will be used.
+            - If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button. 
+            - Prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.
       outputs:
-        jupyterhub_password: {}
-        jupyterhub_user: {}
-        jupyterhub_uri:
-          openInNewTab: true
-          showInNotification: true
-          label: Go to JupyterHub Application
         frontend_uri:
           openInNewTab: true
           showInNotification: true
           label: Go to RAG Frontend Application
-          
+        jupyterhub_password: {}
+        jupyterhub_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Go to JupyterHub Application
+        jupyterhub_user: {}
