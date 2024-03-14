@@ -19,91 +19,105 @@ data "google_project" "project" {
 }
 
 resource "google_container_cluster" "mlp" {
-  provider            = google-beta
+  provider = google-beta
+
   deletion_protection = false
-  name                = var.cluster_name
-  project             = var.project_id
-  location            = var.region
-  network             = var.network
-  subnetwork          = var.subnet
-  node_locations      = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
   initial_node_count  = 2
-  workload_identity_config {
-    workload_pool = "${var.project_id}.svc.id.goog"
-  }
+  location            = var.region
+  name                = var.cluster_name
+  network             = var.network
+  node_locations      = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
+  project             = var.project_id
+  subnetwork          = var.subnet
+
   addons_config {
     gcp_filestore_csi_driver_config {
       enabled = true
     }
+
     gcs_fuse_csi_driver_config {
       enabled = true
     }
+
     gce_persistent_disk_csi_driver_config {
       enabled = true
     }
   }
+
   cluster_autoscaling {
-    enabled             = true
     autoscaling_profile = "OPTIMIZE_UTILIZATION"
-    resource_limits {
-      resource_type = "cpu"
-      minimum       = 4
-      maximum       = 600
-    }
-    resource_limits {
-      resource_type = "memory"
-      minimum       = 16
-      maximum       = 2400
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-t4"
-      maximum       = 300
-    }
-    resource_limits {
-      resource_type = "nvidia-l4"
-      maximum       = 30
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-a100"
-      maximum       = 50
-    }
-    resource_limits {
-      resource_type = "nvidia-a100-80gb"
-      maximum       = 30
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-v100"
-      maximum       = 30
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-p100"
-      maximum       = 30
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-p4"
-      maximum       = 30
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-k80"
-      maximum       = 30
-    }
+    enabled             = true
+
     auto_provisioning_defaults {
+      oauth_scopes = [
+        "https://www.googleapis.com/auth/cloud-platform"
+      ]
+
       management {
         auto_repair  = true
         auto_upgrade = true
       }
 
       upgrade_settings {
-        strategy        = "SURGE"
         max_surge       = 0
         max_unavailable = 1
+        strategy        = "SURGE"
       }
+    }
 
-      oauth_scopes = [
-        "https://www.googleapis.com/auth/cloud-platform"
-      ]
+    resource_limits {
+      resource_type = "cpu"
+      minimum       = 4
+      maximum       = 600
+    }
+
+    resource_limits {
+      resource_type = "memory"
+      minimum       = 16
+      maximum       = 2400
+    }
+
+    resource_limits {
+      resource_type = "nvidia-a100-80gb"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-l4"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-t4"
+      maximum       = 300
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-a100"
+      maximum       = 50
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-k80"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-p4"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-p100"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-v100"
+      maximum       = 30
     }
   }
+
   logging_config {
     enable_components = [
       "APISERVER",
@@ -113,6 +127,17 @@ resource "google_container_cluster" "mlp" {
       "WORKLOADS"
     ]
   }
+
+  ip_allocation_policy {
+  }
+
+  master_authorized_networks_config {
+    cidr_blocks {
+      cidr_block   = var.master_auth_networks_ipcidr
+      display_name = "vpc-cidr"
+    }
+  }
+
   monitoring_config {
     enable_components = [
       "APISERVER",
@@ -126,10 +151,12 @@ resource "google_container_cluster" "mlp" {
       "STORAGE",
       "SYSTEM_COMPONENTS"
     ]
+    
     managed_prometheus {
       enabled = true
     }
   }
+
   node_pool_defaults {
     node_config_defaults {
       gcfs_config {
@@ -137,20 +164,18 @@ resource "google_container_cluster" "mlp" {
       }
     }
   }
-  release_channel {
-    channel = "STABLE"
-  }
+
   private_cluster_config {
     enable_private_nodes    = true
     enable_private_endpoint = true
     master_ipv4_cidr_block  = "172.16.0.32/28"
   }
-  master_authorized_networks_config {
 
-    cidr_blocks {
-      cidr_block   = var.master_auth_networks_ipcidr
-      display_name = "vpc-cidr"
-    }
+  release_channel {
+    channel = "STABLE"
   }
-  ip_allocation_policy {}
+
+  workload_identity_config {
+    workload_pool = "${var.project_id}.svc.id.goog"
+  }
 }

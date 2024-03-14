@@ -12,47 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "project_id" {
-  type        = string
-  description = "The GCP project where the resources will be created"
-  default     = ""
-}
 variable "cluster_name" {
-  type        = string
-  description = "GKE cluster name"
   default     = ""
-}
-
-variable "region" {
+  description = "GKE cluster name"
   type        = string
-  description = "The GCP region where the GKE cluster will be created"
-  default     = "us-central1"
-}
-
-variable "zone" {
-  type        = string
-  description = "The GCP zone where the reservation will be created"
-  default     = "us-central1-a"
-}
-
-variable "master_auth_networks_ipcidr" {
-  type        = string
-  description = "master authorized network"
-}
-
-variable "network" {
-  type        = string
-  description = "VPC network where the cluster will be created"
-}
-
-variable "subnet" {
-  type        = string
-  description = "subnetwork where the cluster will be created"
-
 }
 
 variable "env" {
-  type        = string
   description = "environment"
+  type        = string
+}
 
+variable "master_auth_networks_ipcidr" {
+  description = "master authorized network"
+  type        = string
+}
+
+variable "network" {
+  description = "VPC network where the cluster will be created"
+  type        = string
+}
+
+variable "project_id" {
+  default     = ""
+  description = "The GCP project where the resources will be created"
+  type        = string
+}
+
+variable "region" {
+  default     = "us-central1"
+  description = "The GCP region where the GKE cluster will be created"
+  type        = string
+}
+
+variable "subnet" {
+  description = "subnetwork where the cluster will be created"
+  type        = string
+}
+
+variable "zone" {
+  default     = "us-central1-a"
+  description = "The GCP zone where the reservation will be created"
+  type        = string
 }
