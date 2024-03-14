@@ -3,18 +3,15 @@
 This directory contains the code for a frontend flask webserver integrating with the inference
 backend and (NYI) vector database through [LangChain](https://python.langchain.com/docs/get_started/introduction).
 
-The image is hosted on `us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke` and used by the frontend deployment.
-
 ## Sensitive Data Protection
-Data Loss Prevention (DLP) and Natural Language Protection (NLP) System. Our integrated solution leverages the latest in data protection and language understanding technologies to safeguard sensitive information and ensure content appropriateness across digital platforms.
+[Data Loss Prevention (DLP)](https://cloud.google.com/security/products/dlp?hl=en) from [Sensitive Data Protection (SDP)](https://cloud.google.com/sensitive-data-protection/docs) and [Text moderation](https://cloud.google.com/natural-language/docs/moderating-text) System. Our integrated solution leverages the latest in data protection and language understanding technologies to safeguard sensitive information and ensure content appropriateness across digital platforms.
 
 ### Features:
 
 #### Data Loss Prevention (DLP): 
-Identifies, monitors, and protects sensitive data through detection techniques, ensuring compliance with data protection regulations. 
-
-#### Natural Language Proctection (NLP): 
-Using  the text moderation API from Cloud Natural Language API to analyzes text for sentiment, context, and content categorization, filtering out inappropriate material based on predefined categories such as Health, Finance, Politics, and Legal.
+Our DLP system is engineered to actively identify and safeguard sensitive information. It achieves this through advanced detection methods that redact sensitive data from both outputs and, where applicable, within the data itself. This approach prioritizes the robust protection of critical information. Please note, the current implementation of our DLP solution does not extend support for specific data protection compliance regulations. The primary objective is to ensure a strong foundation of data security that can be customized or augmented to align with compliance requirements as needed.
+#### Text moderation from Cloud Natural Language API: 
+Using the text moderation API from Cloud Natural Language API to analyzes text for sentiment, context, and content categorization, filtering out inappropriate material based on predefined categories such as Health, Finance, Politics, and Legal.
 
 ### Pre-requirement
 1. Enable Cloud Data Loss Prevention (DLP)
@@ -29,8 +26,6 @@ This filter can auto fetch the templates in your project. Please refer to the fo
     1. Inspect templates: https://cloud.google.com/dlp/docs/creating-templates-inspect
     2. De-identification templates: https://cloud.google.com/dlp/docs/creating-templates-deid
 
-2. Enable Cloud Nature Language Protection NLP
+2. Enable Cloud Natural Language API
 
-Follow the instruction to [enable Nature Language API](https://cloud.google.com/natural-language/docs/setup#api)
-
-The NLP (Nature Language Protection) System uses advanced NLP technologies to filter and moderate text, excluding content related to Health, Finance, Politics, and Legal categories to ensure appropriateness.
+Follow these instructions to [enable the Cloud Natural Language API](https://cloud.google.com/natural-language/docs/setup#api)
