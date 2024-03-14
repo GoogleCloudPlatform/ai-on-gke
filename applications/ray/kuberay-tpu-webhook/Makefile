@@ -50,12 +50,6 @@ deploy-cert:
 uninstall-cert:
 	kubectl delete -f certs/
 
-install-reflector:
-	kubectl apply -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
-
-uninstall-reflector:
-	kubectl delete -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
-
 tests:
 	kubectl apply -f tests/
 
