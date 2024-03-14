@@ -104,6 +104,11 @@ resource "google_container_cluster" "gke_batch" {
       ]
     }
   }
+  monitoring_config {
+    managed_prometheus {
+      enabled = true
+    }
+  }
   node_pool_defaults {
     node_config_defaults {
       gcfs_config {
