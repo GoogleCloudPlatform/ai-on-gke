@@ -139,7 +139,19 @@ variable "frontend_k8s_backend_service_port" {
 
 variable "frontend_domain" {
   type        = string
-  description = "Domain used for SSL certificate. If it's empty, *.nip.io DNS is used."
+  description = "Domain provided by the user. If it's empty, we will create one for you."
+  default     = ""
+}
+
+variable "frontend_url_domain_name" {
+  type        = string
+  description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
+  default     = ""
+}
+
+variable "frontend_support_email" {
+  type        = string
+  description = "Email for users to contact with questions about their consent"
   default     = ""
 }
 
@@ -205,7 +217,7 @@ variable "jupyter_k8s_backend_service_port" {
 
 variable "jupyter_domain" {
   type        = string
-  description = "Domain used for SSL certificate. If it's empty, *.nip.io DNS is used."
+  description = "Domain provided by the user. If it's empty, we will create one for you."
   default     = ""
 }
 

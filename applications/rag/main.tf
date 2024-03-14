@@ -166,8 +166,9 @@ module "jupyterhub" {
   k8s_backend_config_name  = var.jupyter_k8s_backend_config_name
   k8s_backend_service_name = var.jupyter_k8s_backend_service_name
   k8s_backend_service_port = var.jupyter_k8s_backend_service_port
-  domain                   = var.jupyter_domain
-  members_allowlist        = split(",", var.jupyter_members_allowlist)
+  url_domain_addr          = var.jupyter_url_domain_addr
+  url_domain_name          = var.jupyter_url_domain_name
+  members_allowlist        = var.jupyter_members_allowlist
 
   depends_on = [module.namespace, module.gcs]
 }
@@ -241,8 +242,9 @@ module "frontend" {
   k8s_backend_config_name  = var.frontend_k8s_backend_config_name
   k8s_backend_service_name = var.frontend_k8s_backend_service_name
   k8s_backend_service_port = var.frontend_k8s_backend_service_port
-  domain                   = var.frontend_domain
-  members_allowlist        = split(",", var.frontend_members_allowlist)
+  url_domain_addr          = var.frontend_url_domain_addr
+  url_domain_name          = var.frontend_url_domain_name
+  members_allowlist        = var.frontend_members_allowlist
   depends_on               = [module.namespace]
 }
 
