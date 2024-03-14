@@ -1,7 +1,7 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: mutate-pod-webhook-cfg
+  name: kuberay-tpu-mutate-pod-cfg
   annotations:
     cert-manager.io/inject-ca-from: default/kuberay-tpu-webhook-certs
 webhooks:
