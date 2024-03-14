@@ -4,7 +4,7 @@
 
 This reference architecture demonstrates how to build a GKE platform that facilitates Machine Learning. The reference architecture is based on the following principles:
 
-- The platform admin will create the GKE platform using IaC tool like [Terraform][terraform]. The IaC will come with re-usuable modules that can be referred to create more resources as the demand grows.
+- The platform admin will create the GKE platform using IaC tool like [Terraform][terraform]. The IaC will come with re-usable modules that can be referred to create more resources as the demand grows.
 - The platform will be based on [GitOps][gitops].
 - After the GKE platform has been created, cluster scoped resources on it will be created through [Config Sync][config-sync] by the admins.
 - Platform admins will create a namespace per application and provide the application team member full access to it.
@@ -40,7 +40,7 @@ This reference architecture demonstrates how to build a GKE platform that facili
 
 **CUJ 4**: Operationalizing the models. **[TBD]**
 
-## Prerequistes
+## Prerequisites
 
 - This guide is meant to be run on [Cloud Shell](https://shell.cloud.google.com) which comes preinstalled with the [Google Cloud SDK](https://cloud.google.com/sdk) and other tools that are required to complete this tutorial.
 - Familiarity with following
@@ -48,7 +48,7 @@ This reference architecture demonstrates how to build a GKE platform that facili
   - [Terraform][terraform]
   - [git][git]
   - [Google Configuration Management root-sync][root-sync]
-  - [Google Configuration Managementrepo-sync][repo-sync]
+  - [Google Configuration Management repo-sync][repo-sync]
   - [GitHub][github]
 
 ## Deploy a single environment reference architecture
@@ -85,7 +85,7 @@ This is the quick-start deployment guide. It can be used to set up an environmen
     touch ${HOME}/secrets/mlp-github-token
     chmod go-rwx ${HOME}/secrets/mlp-github-token
 
-    # Put the token in the secure file using your prefered editor
+    # Put the token in the secure file using your preferred editor
     nano ${HOME}/secrets/mlp-github-token
     ```
 
@@ -166,9 +166,9 @@ This is the quick-start deployment guide. It can be used to set up an environmen
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Config. If you haven't enabled GKE Enterprise in the project earlier, Click `LEARN AND ENABLE` button and then `ENABLE GKE ENTERPRISE`. You should see a RootSync and RepoSync object.
   ![configsync](docs/images/configsync.png)
 
-#### Software installed via RepoSync and Reposync
+#### Software installed via RepoSync and RootSync
 
-Open `cloudshell` to execute the following commands:
+Open Cloud Shell to execute the following commands:
 
 - Store your GKE cluster name in env variable:
 
@@ -180,7 +180,7 @@ Open `cloudshell` to execute the following commands:
   gcloud container fleet memberships get-credentials ${GKE_CLUSTER}
   ```
 
-- Fetch kuberay operator CRDs
+- Fetch KubeRay operator CRDs
 
   ```
   kubectl get crd | grep ray
@@ -194,7 +194,7 @@ Open `cloudshell` to execute the following commands:
   rayservices.ray.io   2024-02-12T21:19:12Z
   ```
 
-- Fetch kuberay operator pod
+- Fetch KubeRay operator pod
 
   ```
   kubectl get pods
@@ -230,9 +230,9 @@ Open `cloudshell` to execute the following commands:
   ray-cluster-kuberay   1                 1                   ready    29m
   ```
 
-- Check the head and worker pods of kuberay`in`ml-team` namespace
+- Check the head and worker pods of kuberay in `ml-team` namespace
   ```
-  kubectl get pods -n  -n ml-team
+  kubectl get pods -n ml-team
   ```
   The output will be similar to the following:
   ```
