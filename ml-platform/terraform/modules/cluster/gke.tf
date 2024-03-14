@@ -104,7 +104,28 @@ resource "google_container_cluster" "gke_batch" {
       ]
     }
   }
+  logging_config {
+    enable_components = [
+      "APISERVER",
+      "CONTROLLER_MANAGER",
+      "SCHEDULER",
+      "SYSTEM_COMPONENTS",
+      "WORKLOADS"
+    ]
+  }
   monitoring_config {
+    enable_components = [
+      "APISERVER",
+      "CONTROLLER_MANAGER",
+      "DAEMONSET",
+      "DEPLOYMENT",
+      "HPA",
+      "POD",
+      "SCHEDULER",
+      "STATEFULSET",
+      "STORAGE",
+      "SYSTEM_COMPONENTS"
+    ]
     managed_prometheus {
       enabled = true
     }
