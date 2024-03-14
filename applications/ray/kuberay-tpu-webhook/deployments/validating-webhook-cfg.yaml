@@ -1,0 +1,36 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: kuberay-tpu-validating-webhook-cfg
+  annotations:
+    cert-manager.io/inject-ca-from: ray-system/kuberay-tpu-webhook-certs
+webhooks:
+  - name: pods-kuberay-tpu-webhook.default.svc
+    admissionReviewVersions: [v1]
+    sideEffects: NoneOnDryRun
+    clientConfig:
+      service:
+        name: kuberay-tpu-webhook
+        namespace: ray-system
+        path: /validate
+    rules:
+      - operations: ["DELETE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    objectSelector:
+      matchLabels:
+        app.kubernetes.io/name: kuberay
+  - name: raycluster-kuberay-tpu-webhook.default.svc
+    admissionReviewVersions: [v1]
+    sideEffects: NoneOnDryRun
+    clientConfig:
+      service:
+        name: kuberay-tpu-webhook
+        namespace: ray-system
+        path: /validate
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: ["ray.io"]
+        apiVersions: ["*"]
+        resources: ["rayclusters"]
