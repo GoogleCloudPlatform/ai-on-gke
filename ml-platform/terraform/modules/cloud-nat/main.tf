@@ -42,20 +42,20 @@ resource "google_compute_router" "router" {
 resource "google_compute_router_nat" "main" {
   enable_dynamic_port_allocation      = var.enable_dynamic_port_allocation
   enable_endpoint_independent_mapping = var.enable_endpoint_independent_mapping
-  icmp_idle_timeout_sec              = var.icmp_idle_timeout_sec
-  max_ports_per_vm                   = var.enable_dynamic_port_allocation ? var.max_ports_per_vm : null
-  min_ports_per_vm                   = var.min_ports_per_vm
-  name                               = local.name
-  nat_ip_allocate_option             = local.nat_ip_allocate_option
-  nat_ips                            = var.nat_ips
-  project                            = var.project_id
-  region                             = var.region
-  router                             = local.router
-  source_subnetwork_ip_ranges_to_nat = var.source_subnetwork_ip_ranges_to_nat
-  tcp_established_idle_timeout_sec   = var.tcp_established_idle_timeout_sec
-  tcp_time_wait_timeout_sec          = var.tcp_time_wait_timeout_sec
-  tcp_transitory_idle_timeout_sec    = var.tcp_transitory_idle_timeout_sec
-  udp_idle_timeout_sec               = var.udp_idle_timeout_sec
+  icmp_idle_timeout_sec               = var.icmp_idle_timeout_sec
+  max_ports_per_vm                    = var.enable_dynamic_port_allocation ? var.max_ports_per_vm : null
+  min_ports_per_vm                    = var.min_ports_per_vm
+  name                                = local.name
+  nat_ip_allocate_option              = local.nat_ip_allocate_option
+  nat_ips                             = var.nat_ips
+  project                             = var.project_id
+  region                              = var.region
+  router                              = local.router
+  source_subnetwork_ip_ranges_to_nat  = var.source_subnetwork_ip_ranges_to_nat
+  tcp_established_idle_timeout_sec    = var.tcp_established_idle_timeout_sec
+  tcp_time_wait_timeout_sec           = var.tcp_time_wait_timeout_sec
+  tcp_transitory_idle_timeout_sec     = var.tcp_transitory_idle_timeout_sec
+  udp_idle_timeout_sec                = var.udp_idle_timeout_sec
 
   dynamic "log_config" {
     for_each = var.log_config_enable == true ? [{

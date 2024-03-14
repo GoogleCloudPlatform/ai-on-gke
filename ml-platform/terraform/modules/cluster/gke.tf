@@ -151,7 +151,7 @@ resource "google_container_cluster" "mlp" {
       "STORAGE",
       "SYSTEM_COMPONENTS"
     ]
-    
+
     managed_prometheus {
       enabled = true
     }
