@@ -14,7 +14,7 @@ Data Loss Prevention (DLP) and Natural Language Protection (NLP) System. Our int
 Identifies, monitors, and protects sensitive data through detection techniques, ensuring compliance with data protection regulations. 
 
 #### Natural Language Proctection (NLP): 
-Analyzes text for sentiment, context, and content categorization, filtering out inappropriate material based on predefined categories such as Health, Finance, Politics, and Legal.
+Using  the text moderation API from Cloud Natural Language API to analyzes text for sentiment, context, and content categorization, filtering out inappropriate material based on predefined categories such as Health, Finance, Politics, and Legal.
 
 ### Pre-requirement
 1. Enable Cloud Data Loss Prevention (DLP)
