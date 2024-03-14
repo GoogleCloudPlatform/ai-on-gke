@@ -45,6 +45,28 @@ steps:
     dir: 'applications/rag/'
     waitFor: ['validate platform']
 
+  - id: 'create gke cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    env:
+      - "KUBE_LOAD_CONFIG_FILE=false"
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        terraform apply \
+        -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
+        -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
+        -var=cluster_location=$_REGION \
+        -auto-approve -no-color -lock=false
+        echo "pass" > /workspace/gke_cluster_result.txt
+    dir: 'infrastructure/'
+    allowFailure: true
+    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
+
   - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
@@ -55,7 +77,7 @@ steps:
 
         # Get kube config
         gcloud container clusters get-credentials \
-        $_CLUSTER_NAME \
+        ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
         --location us-central1 \
         --project $PROJECT_ID 
 
@@ -63,17 +85,17 @@ steps:
         terraform apply \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=$_CLUSTER_NAME \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
         -var=cluster_location=$_REGION \
-        -var=ray_namespace=ml-$SHORT_SHA-ap \
-        -var=gcp_service_account=ray-sa-$SHORT_SHA-ap \
-        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-ap \
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_SUFFIX \
+        -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_SUFFIX \
+        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_SUFFIX \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
-        kubectl wait --all pods -n ml-$SHORT_SHA-ap --for=condition=Ready --timeout=300s
-        kubectl port-forward -n ml-$SHORT_SHA-ap service/example-cluster-kuberay-head-svc 8265:8265 &
+        kubectl wait --all pods -n ml-$SHORT_SHA-$_SUFFIX --for=condition=Ready --timeout=300s
+        kubectl port-forward -n ml-$SHORT_SHA-$_SUFFIX service/example-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
 
@@ -81,7 +103,7 @@ steps:
         --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
         echo "pass" > /workspace/ray_result.txt
     allowFailure: true
-    waitFor: ['validate rag', 'validate ray', 'validate platform', 'validate jupyterhub']
+    waitFor: [create gke cluster]
 
   - id: 'cleanup ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -95,12 +117,12 @@ steps:
         terraform destroy \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=$_CLUSTER_NAME \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
         -var=cluster_location=$_REGION \
-        -var=ray_namespace=ml-$SHORT_SHA-ap \
-        -var=gcp_service_account=ray-sa-$SHORT_SHA-ap \
-        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-ap \
-        -auto-approve -no-color
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_SUFFIX \
+        -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_SUFFIX \
+        -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_SUFFIX \
+        -auto-approve -no-color -lock=false
 
     allowFailure: true
     waitFor: ['test ray cluster']
@@ -120,16 +142,16 @@ steps:
         terraform apply \
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=$_CLUSTER_NAME \
-        -var=namespace=ml-$SHORT_SHA-ap \
-        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-ap \
-        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-ap \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
+        -var=namespace=ml-$SHORT_SHA-$_SUFFIX \
+        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_SUFFIX \
+        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_SUFFIX \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/jupyterhub_tf_result.txt
 
-        kubectl wait --all pods -n ml-$SHORT_SHA-ap --for=condition=Ready --timeout=300s
-        kubectl get services -n ml-$SHORT_SHA-ap
-        kubectl get service proxy-public -n ml-$SHORT_SHA-ap --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/jupyterhub_host_url.txt
+        kubectl wait --all pods -n ml-$SHORT_SHA-$_SUFFIX --for=condition=Ready --timeout=300s
+        kubectl get services -n ml-$SHORT_SHA-$_SUFFIX
+        kubectl get service proxy-public -n ml-$SHORT_SHA-$_SUFFIX --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/jupyterhub_host_url.txt
         echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
 
         cd /workspace/modules/jupyter/tests
@@ -149,10 +171,10 @@ steps:
         terraform destroy \
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=$_CLUSTER_NAME \
-        -var=namespace=ml-$SHORT_SHA-ap \
-        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-ap \
-        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-ap \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
+        -var=namespace=ml-$SHORT_SHA-$_SUFFIX \
+        -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_SUFFIX \
+        -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_SUFFIX \
         -auto-approve -no-color
 
     allowFailure: true
@@ -168,7 +190,7 @@ steps:
 
         # Get kube config
         gcloud container clusters get-credentials \
-        $_CLUSTER_NAME \
+        ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
         --location us-central1 \
         --project $PROJECT_ID 
 
@@ -181,19 +203,19 @@ steps:
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=$_CLUSTER_NAME \
-        -var=kubernetes_namespace=rag-$SHORT_SHA-ap \
-        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-ap \
-        -var=ray_service_account=ray-sa-$SHORT_SHA-ap \
-        -var=rag_service_account=rag-sa-$SHORT_SHA-ap \
-        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-ap \
-        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-ap \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
+        -var=kubernetes_namespace=rag-$SHORT_SHA-$_SUFFIX \
+        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_SUFFIX \
+        -var=ray_service_account=ray-sa-$SHORT_SHA-$_SUFFIX \
+        -var=rag_service_account=rag-sa-$SHORT_SHA-$_SUFFIX \
+        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_SUFFIX \
+        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_SUFFIX \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/rag_tf_result.txt
 
         # Validate Ray: Make sure pods are running
-        kubectl wait --all pods -n rag-$SHORT_SHA-ap --for=condition=Ready --timeout=300s
-        kubectl port-forward -n rag-$SHORT_SHA-ap service/example-cluster-kuberay-head-svc 8265:8265 &
+        kubectl wait --all pods -n rag-$SHORT_SHA-$_SUFFIX --for=condition=Ready --timeout=300s
+        kubectl port-forward -n rag-$SHORT_SHA-$_SUFFIX service/example-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
 
@@ -203,8 +225,8 @@ steps:
         echo "pass" > /workspace/rag_ray_dashboard_result.txt
 
         # Validate Jupyterhub: Get hub url
-        kubectl get services -n rag-$SHORT_SHA-ap
-        kubectl get service proxy-public -n rag-$SHORT_SHA-ap --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/rag_jupyterhub_host_url.txt
+        kubectl get services -n rag-$SHORT_SHA-$_SUFFIX
+        kubectl get service proxy-public -n rag-$SHORT_SHA-$_SUFFIX --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/rag_jupyterhub_host_url.txt
         echo "HOST URL is " $(cat /workspace/rag_jupyterhub_host_url.txt)
 
         # Validate Jupyterhub: Test Hub
@@ -213,7 +235,7 @@ steps:
         echo "pass" > /workspace/rag_jupyterhub_test_result.txt
 
         # Validate RAG: Test rag frontend
-        kubectl port-forward -n rag-$SHORT_SHA-ap service/rag-frontend 8081:8080 &
+        kubectl port-forward -n rag-$SHORT_SHA-$_SUFFIX service/rag-frontend 8081:8080 &
         # Wait port-forwarding to take its place
         sleep 5s
 
@@ -235,17 +257,33 @@ steps:
         terraform destroy \
         -var-file=workloads.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=cluster_name=$_CLUSTER_NAME \
-        -var=kubernetes_namespace=rag-$SHORT_SHA-ap \
-        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-ap \
-        -var=ray_service_account=ray-sa-$SHORT_SHA-ap \
-        -var=rag_service_account=rag-sa-$SHORT_SHA-ap \
-        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-ap \
-        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-ap \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
+        -var=kubernetes_namespace=rag-$SHORT_SHA-$_SUFFIX \
+        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_SUFFIX \
+        -var=ray_service_account=ray-sa-$SHORT_SHA-$_SUFFIX \
+        -var=rag_service_account=rag-sa-$SHORT_SHA-$_SUFFIX \
+        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_SUFFIX \
+        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_SUFFIX \
         -auto-approve -no-color
 
     allowFailure: true
     waitFor: ['test rag']
+
+  - id: 'cleanup gke cluster'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        cd /workspace/infrastructure
+        terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
+        -var=cluster_location=$_REGION -auto-approve -no-color
+
+    allowFailure: true
+    waitFor: ['cleanup rag']
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -298,7 +336,7 @@ steps:
 substitutions:
   _REGION: us-central1
   _USER_NAME: github
-  _CLUSTER_NAME: github-ci-autopilot
+  _AUTOPILOT_CLUSTER: "false"
+  _SUFFIX: std
 options:
   substitutionOption: 'ALLOW_LOOSE'
-
