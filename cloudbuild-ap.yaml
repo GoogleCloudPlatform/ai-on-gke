@@ -136,14 +136,14 @@ steps:
         set -e
 
         cd /workspace/modules/jupyter/tests
-        python3 change_jupyter_config.py autopilot
+        python3 change_jupyter_config.py $_AUTOPILOT_CLUSTER
 
         cd /workspace/applications/jupyter
         terraform apply \
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
-        -var=namespace=ml-$SHORT_SHA-$_SUFFIX \
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_SUFFIX \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_SUFFIX \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_SUFFIX \
         -auto-approve -no-color -lock=false
@@ -155,7 +155,7 @@ steps:
         echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
 
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) autopilot
+        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
 
@@ -172,10 +172,10 @@ steps:
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
-        -var=namespace=ml-$SHORT_SHA-$_SUFFIX \
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_SUFFIX \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_SUFFIX \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_SUFFIX \
-        -auto-approve -no-color
+        -auto-approve -no-color -lock=false
 
     allowFailure: true
     waitFor: ['test jupyterhub']
@@ -195,7 +195,7 @@ steps:
         --project $PROJECT_ID 
 
         cd /workspace/modules/jupyter/tests
-        python3 change_jupyter_config.py autopilot
+        python3 change_jupyter_config.py $_AUTOPILOT_CLUSTER
 
         cd /workspace/applications/rag/
         terraform apply \
@@ -231,7 +231,7 @@ steps:
 
         # Validate Jupyterhub: Test Hub
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py $(cat /workspace/rag_jupyterhub_host_url.txt) autopilot
+        python3 test_hub.py $(cat /workspace/rag_jupyterhub_host_url.txt) $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/rag_jupyterhub_test_result.txt
 
         # Validate RAG: Test rag frontend
@@ -280,6 +280,7 @@ steps:
         cd /workspace/infrastructure
         terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_SUFFIX-cluster \
+        -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION -auto-approve -no-color
 
     allowFailure: true
@@ -331,7 +332,7 @@ steps:
           exit 1
         fi
 
-    waitFor: ['cleanup rag']
+    waitFor: ['cleanup gke cluster']
         
 substitutions:
   _REGION: us-central1

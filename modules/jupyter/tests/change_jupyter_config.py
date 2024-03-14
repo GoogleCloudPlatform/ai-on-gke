@@ -3,7 +3,7 @@ import sys
 
 config_file = "../jupyter_config/config-selfauth.yaml"
 if len(sys.argv) == 2:
-    autopilot = (sys.argv[1] == "autopilot")
+    autopilot = (sys.argv[1] == "true")
     if autopilot:
         config_file = "../jupyter_config/config-selfauth-autopilot.yaml"
 

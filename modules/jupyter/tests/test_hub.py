@@ -6,7 +6,7 @@ from packaging.version import Version as V
 
 config_file = "../jupyter_config/config-selfauth.yaml"
 if len(sys.argv) == 3:
-    autopilot = (sys.argv[2] == "autopilot")
+    autopilot = (sys.argv[2] == "true")
     if autopilot:
         config_file = "../jupyter_config/config-selfauth-autopilot.yaml"
 
