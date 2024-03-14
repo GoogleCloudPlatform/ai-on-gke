@@ -13,44 +13,47 @@
 # limitations under the License.
 
 variable "project_id" {
+  type        = string
   description = "Id of the GCP project where VPC is to be created."
-  type        = string
 }
+
 variable "network_name" {
+  type        = string
   description = "Name of the VPC network."
-  type        = string
 }
+
 variable "routing_mode" {
-  description = "The network routing mode."
-  type        = string
   default     = "GLOBAL"
-}
-variable "subnet_01_name" {
-  description = "Name of first subnet."
-  type        = string
-}
-variable "subnet_01_ip" {
-  description = "IP range of first subnet."
-  type        = string
-}
-variable "subnet_01_region" {
-  description = "Region of first subnet."
+  description = "The network routing mode."
   type        = string
 }
 
-variable "subnet_02_name" {
-  description = "Name of the second subnet."
+variable "subnet_01_ip" {
   type        = string
+  description = "IP range of first subnet."
 }
+
+variable "subnet_01_name" {
+  type        = string
+  description = "Name of first subnet."
+}
+
+variable "subnet_01_region" {
+  type        = string
+  description = "Region of first subnet."
+}
+
 variable "subnet_02_ip" {
+  type        = string
   description = "IP range of second subnet."
-  type        = string
 }
+
+variable "subnet_02_name" {
+  type        = string
+  description = "Name of the second subnet."
+}
+
 variable "subnet_02_region" {
-  description = "Region of second subnet."
   type        = string
+  description = "Region of second subnet."
 }
-//variable "default_route_name" {
-//  description = "Name of the default route to internet."
-//  type = string
-//}

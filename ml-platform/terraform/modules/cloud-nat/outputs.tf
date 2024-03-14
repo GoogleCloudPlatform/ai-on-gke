@@ -31,4 +31,3 @@ output "router_name" {
   description = "Cloud NAT router name"
   value       = local.router
 }
-

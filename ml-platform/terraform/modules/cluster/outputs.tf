@@ -16,7 +16,6 @@ output "cluster_id" {
   value = google_container_cluster.mlp.id
 }
 
-
 output "cluster_location" {
   value = google_container_cluster.mlp.location
 }

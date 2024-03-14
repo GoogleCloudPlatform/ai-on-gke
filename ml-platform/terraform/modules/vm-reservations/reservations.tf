@@ -13,17 +13,20 @@
 # limitations under the License.
 
 resource "google_compute_reservation" "machine_reservation" {
+  name                          = format("%s-%s", var.cluster_name, "reservation")
   project                       = var.project_id
   specific_reservation_required = true
-  name                          = format("%s-%s", var.cluster_name, "reservation")
   zone                          = var.zone
+
   specific_reservation {
     count = var.machine_reservation_count
+
     instance_properties {
       machine_type = var.machine_type
+
       guest_accelerators {
-        accelerator_type  = var.accelerator
         accelerator_count = var.accelerator_count
+        accelerator_type  = var.accelerator
       }
     }
   }
