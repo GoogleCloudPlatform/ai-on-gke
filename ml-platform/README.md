@@ -144,7 +144,7 @@ This is the quick-start deployment guide. It can be used to set up an environmen
   sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
   sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
   sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
-  sed -i "s/YOUR_PROJECT_ID/${PROJECT_ID}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
   ```
 
 - Create the resources
