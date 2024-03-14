@@ -1,7 +1,7 @@
 # RAG-on-GKE Frontend Webserver
 
 This directory contains the code for a frontend flask webserver integrating with the inference
-backend and (NYI) vector database through [LangChain](https://python.langchain.com/docs/get_started/introduction).
+backend and vector database through [LangChain](https://python.langchain.com/docs/get_started/introduction).
 
 ## Sensitive Data Protection
 [Data Loss Prevention (DLP)](https://cloud.google.com/security/products/dlp?hl=en) from [Sensitive Data Protection (SDP)](https://cloud.google.com/sensitive-data-protection/docs) and [Text moderation](https://cloud.google.com/natural-language/docs/moderating-text) System. Our integrated solution leverages the latest in data protection and language understanding technologies to safeguard sensitive information and ensure content appropriateness across digital platforms.
