@@ -45,11 +45,11 @@ accelerator_type       = "nvidia-tesla-t4"
 
 1. `make install-cert-manager` - it may take up to two minutes for the certificate to become ready
 
-2. If deploying webhook across multiple namespaces: `make install-reflector`
+2. `make deploy`
+    - this will create the webhook deployment, configs, and service in the "ray-system" namespace
+    - to change the namespace, edit the "namespace" value in each .yaml in deployments/ and certs/
 
-6. `make deploy`
-
-7. `make deploy-cert`
+3. `make deploy-cert`
 
 ### Injecting TPU Environment Variables
 
