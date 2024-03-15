@@ -14,8 +14,8 @@ metadata:
 spec:
   secretName: kuberay-tpu-webhook-certs
   dnsNames:
-    - kuberay-tpu-webhook.default.svc
-    - kuberay-tpu-webhook.default.svc.cluster.local
+    - kuberay-tpu-webhook.ray-system.svc
+    - kuberay-tpu-webhook.ray-system.svc.cluster.local
   issuerRef:
     name: selfsigned-issuer
   secretTemplate:

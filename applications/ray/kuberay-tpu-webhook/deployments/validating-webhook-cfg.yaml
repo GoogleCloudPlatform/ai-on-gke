@@ -5,7 +5,7 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: ray-system/kuberay-tpu-webhook-certs
 webhooks:
-  - name: pods-kuberay-tpu-webhook.default.svc
+  - name: pods-kuberay-tpu-webhook.ray-system.svc
     admissionReviewVersions: [v1]
     sideEffects: NoneOnDryRun
     namespaceSelector:
@@ -29,7 +29,7 @@ webhooks:
     objectSelector:
       matchLabels:
         app.kubernetes.io/name: kuberay
-  - name: raycluster-kuberay-tpu-webhook.default.svc
+  - name: raycluster-kuberay-tpu-webhook.ray-system.svc
     admissionReviewVersions: [v1]
     sideEffects: NoneOnDryRun
     namespaceSelector:

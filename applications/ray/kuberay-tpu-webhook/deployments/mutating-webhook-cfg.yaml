@@ -5,7 +5,7 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: ray-system/kuberay-tpu-webhook-certs
 webhooks:
-  - name: kuberay-tpu-webhook.default.svc
+  - name: kuberay-tpu-webhook.ray-system.svc
     admissionReviewVersions: [v1]
     sideEffects: NoneOnDryRun
     namespaceSelector:
