@@ -24,3 +24,6 @@ output "jupyterhub_password" {
   value     = var.add_auth ? "" : random_password.generated_password[0].result
   sensitive = true
 }
+output "jupyterhub_ip_address" {
+  value =  var.add_auth ? module.iap_auth[0].ip_address : ""
+}

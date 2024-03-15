@@ -15,3 +15,7 @@
 output "domain" {
   value = var.domain == "" ? "${google_compute_global_address.ip_address.address}.nip.io" : var.domain
 }
+
+output "ip_address" {
+  value = google_compute_global_address.ip_address.address
+}
