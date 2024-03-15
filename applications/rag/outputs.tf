@@ -19,7 +19,7 @@ output "jupyterhub_uri" {
 
 output "jupyterhub_ip_address" {
   description = "JupyterHub gloabl IP address"
-  value = module.jupyterhub.jupyterhub_ip_address
+  value       = module.jupyterhub.jupyterhub_ip_address
 }
 
 output "jupyterhub_user" {
@@ -40,5 +40,5 @@ output "frontend_uri" {
 
 output "frontend_ip_address" {
   description = "Frontend gloabl IP address"
-  value = module.frontend.frontend_ip_address
+  value       = module.frontend.frontend_ip_address
 }
