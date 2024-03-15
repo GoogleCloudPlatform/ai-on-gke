@@ -153,7 +153,7 @@ spec:
           section: rag_iap_auth
         gcs_bucket:
           name: gcs_bucket
-          title: Gcs Bucket
+          title: GCS Bucket
           section: rag
           xGoogleProperty:
             type: ET_GCS_BUCKET
@@ -263,22 +263,25 @@ spec:
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-        - heading: "Step 1: Go to JupyterHub Application"
+        - heading: "Step 1: Create DNS A Record for domain"
           description: |-
-             - If IAP is enabled, log in with your organization's credentials. 
-             - If IAP is disabled, log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section). 
-             - Once logged in, choose the <b>CPU</b> preset.
-        - heading: "Step 2: Generate Vector Embeddings for the Dataset"
+            If IAP is enabled and custom domain is provided, then create a DNS A record set using the global IP address. Allow 10-15 minutes for DNS propogation and SSL certificate creation.
+        - heading: "Step 2: Go to JupyterHub Application"
+          description: |-
+             <li>If IAP is enabled, log in with your organization's credentials.</li>
+             <li>If IAP is disabled, log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
+             <li> Once logged in, choose the <b>CPU</b> preset.</li>
+        - heading: "Step 3: Generate Vector Embeddings for the Dataset"
           description: |-
             Go to File -> Open From URL & upload and execute the notebook 
             <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
             Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#vector-embeddings-for-dataset">README.md</a> for detailed instructions.
-        - heading: "Step 3: Prompt the Inference Server via a Chatbot"
+        - heading: "Step 4: Prompt the Inference Server via a Chatbot"
           description: |-
-            - Go to the RAG Frontend Application
-            - If IAP is enabled, the existing session's credentials will be used.
-            - If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button. 
-            - Prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.
+            <li> Go to the RAG Frontend Application</li>
+            <li>If IAP is enabled, the existing session's credentials will be used.</li>
+            <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button. </li>
+            <li>Prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.</li>
       outputs:
         frontend_uri:
           openInNewTab: true
@@ -290,3 +293,5 @@ spec:
           showInNotification: true
           label: Go to JupyterHub Application
         jupyterhub_user: {}
+        jupyterhub_ip_address: {}
+        frontend_ip_address: {}

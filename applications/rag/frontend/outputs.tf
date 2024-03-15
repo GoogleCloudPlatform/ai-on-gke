@@ -15,3 +15,7 @@
 output "frontend_uri" {
   value = var.add_auth ? module.iap_auth[0].domain : (data.kubernetes_service.frontend-ingress.status != null ? (data.kubernetes_service.frontend-ingress.status[0].load_balancer != null ? "${data.kubernetes_service.frontend-ingress.status[0].load_balancer[0].ingress[0].ip}" : "") : "")
 }
+
+output "frontend_ip_address" {
+  value = var.add_auth ? module.iap_auth[0].ip_address : ""
+}

@@ -156,8 +156,9 @@ variable "frontend_client_secret" {
 }
 
 variable "frontend_members_allowlist" {
-  type    = list(string)
-  default = []
+  type    = string
+  default = ""
+  ## keeping it string type to support single field input for marketplace UI.
 }
 
 # Jupyter IAP settings
@@ -227,8 +228,9 @@ variable "jupyter_client_secret" {
 }
 
 variable "jupyter_members_allowlist" {
-  type    = list(string)
-  default = []
+  type    = string
+  default = ""
+  ## keeping it string type to support single field input for marketplace UI.
 }
 
 ## GKE variables

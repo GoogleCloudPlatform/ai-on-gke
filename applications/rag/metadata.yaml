@@ -108,7 +108,7 @@ spec:
         varType: string
         defaultValue: frontend-managed-cert
       - name: frontend_members_allowlist
-        description: "For example - user:example@google.com,user:example1@google.com,group:group@google.com"
+        description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
         defaultValue: ""
       - name: gcs_bucket
@@ -157,7 +157,7 @@ spec:
         varType: string
         defaultValue: jupyter-managed-cert
       - name: jupyter_members_allowlist
-        description: "For example - user:example@google.com,user:example1@google.com,group:group@google.com"
+        description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
         defaultValue: ""
       - name: jupyter_service_account
@@ -196,3 +196,7 @@ spec:
         description: JupyterHub Endpoint to access user interface. In case of private IP, consider port-forwarding.
       - name: jupyterhub_user
         description: JupyterHub user is only required for standard authentication. Ignore, in case of IAP authentication
+      - name: frontend_ip_address
+        description: Frontend gloabl IP address
+      - name: jupyterhub_ip_address
+        description: JupyterHub gloabl IP address

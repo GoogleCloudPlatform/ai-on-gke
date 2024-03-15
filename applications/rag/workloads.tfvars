@@ -67,7 +67,7 @@ jupyter_k8s_backend_service_port = 80
 jupyter_domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
 jupyter_client_id         = ""
 jupyter_client_secret     = ""
-jupyter_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+jupyter_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
 
 ## Frontend IAP Settings
 frontend_add_auth                 = false # Set to true when using auth with IAP
@@ -81,4 +81,4 @@ frontend_k8s_backend_service_port = 8080
 frontend_domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
 frontend_client_id         = ""
 frontend_client_secret     = ""
-frontend_members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+frontend_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
