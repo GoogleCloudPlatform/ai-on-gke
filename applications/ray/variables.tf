@@ -33,7 +33,7 @@ variable "cluster_membership_id" {
 
 variable "ray_version" {
   type    = string
-  default = "v2.7.1"
+  default = "v2.9.3"
 }
 
 variable "kubernetes_namespace" {

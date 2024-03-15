@@ -19,7 +19,7 @@
 image:
   # Replace this with your own image if needed.
   repository: rayproject/ray
-  tag: 2.7.1-py310-gpu
+  tag: 2.9.3-py310-gpu
   pullPolicy: IfNotPresent
 nameOverride: "kuberay"
 fullnameOverride: ""
