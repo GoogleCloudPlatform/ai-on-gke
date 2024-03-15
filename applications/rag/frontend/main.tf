@@ -24,7 +24,7 @@ resource "google_project_service" "dlp_api" {
   disable_on_destroy         = false
 }
 
-# Enabled the DLP service
+# Enabled the Nature language api service
 resource "google_project_service" "nature_language_api" {
   project = var.project_id
   service = "language.googleapis.com"
