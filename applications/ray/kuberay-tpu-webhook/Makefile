@@ -21,8 +21,9 @@ run: webhook
 uninstall:  
 	kubectl delete -f deployments/
 
-deploy:  
-	kubectl apply -f deployments/  
+# Deploy the webhook in-cluster
+deploy:
+	kubectl apply -f deployments/
   
 # Build the docker image  
 docker-build:
@@ -43,12 +44,6 @@ deploy-cert:
 
 uninstall-cert:
 	kubectl delete -f certs/
-
-install-reflector:
-	kubectl apply -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
-
-uninstall-reflector:
-	kubectl delete -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
 
 tests:
 	kubectl apply -f tests/
