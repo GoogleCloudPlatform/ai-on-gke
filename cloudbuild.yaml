@@ -364,3 +364,5 @@ substitutions:
 options:
   substitutionOption: 'ALLOW_LOOSE'
   machineType: 'E2_HIGHCPU_8'
+## increase timeout to make sure job completes, else will lead to residual resources
+timeout: 5400s
