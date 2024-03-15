@@ -59,6 +59,11 @@ resource "google_container_cluster" "mlp" {
         auto_upgrade = true
       }
 
+      shielded_instance_config {
+        enable_integrity_monitoring = true
+        enable_secure_boot          = true
+      }      
+
       upgrade_settings {
         max_surge       = 0
         max_unavailable = 1
