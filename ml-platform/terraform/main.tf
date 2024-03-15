@@ -497,6 +497,8 @@ resource "google_service_account" "namespace_default" {
 }
 
 resource "google_service_account_iam_member" "wi_cymbal_bank_backend_workload_identity_user" {
+  depends_on = [module.gke]
+
   member             = "serviceAccount:${local.parsed_project_id[var.default_env]}.svc.id.goog[${var.namespace}/${var.namespace}-default]"
   role               = "roles/iam.workloadIdentityUser"
   service_account_id = google_service_account.namespace_default.id
