@@ -55,6 +55,10 @@ head:
     block: 'true'
   # containerEnv specifies environment variables for the Ray container,
   # Follows standard K8s container env schema.
+  image:
+    repository: rayproject/ray  
+    tag: 2.7.1-py310
+    pullPolicy: IfNotPresent  
   containerEnv:
   # - name: EXAMPLE_ENV
   #   value: "1"
@@ -76,24 +80,18 @@ head:
   # for further guidance.
   resources:
     limits:
-      cpu: "8"
-      nvidia.com/gpu: "1"
+      cpu: "4"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
-      memory: "20G"
+      memory: "10G"
       ephemeral-storage: 20Gi
     requests:
-      cpu: "8"
-      nvidia.com/gpu: "1"
-      memory: "20G"
+      cpu: "4"
+      memory: "10G"
       ephemeral-storage: 10Gi
   annotations: {}
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
-    cloud.google.com/gke-accelerator: "nvidia-l4"
   tolerations:
-  - key: "nvidia.com/gpu"
-    operator: "Exists"
-    effect: "NoSchedule"
   - key: "reserved"
     operator: "Exists"
     effect: "NoSchedule"
@@ -143,6 +141,7 @@ worker:
     created-by: ray-on-gke
   rayStartParams:
     block: 'true'
+    resources: '"{\"accelerator_type_l4\": 2}"'
   initContainerImage: 'busybox:1.28'  # Enable users to specify the image for init container. Users can pull the busybox image from their private repositories.
   # Security context for the init container.
   initContainerSecurityContext: {}
@@ -167,14 +166,14 @@ worker:
   # for further guidance.
   resources:
     limits:
-      cpu: "1"
-      nvidia.com/gpu: "1"
-      memory: "20G"
+      cpu: "22"
+      nvidia.com/gpu: "2"
+      memory: "90G"
       ephemeral-storage: 20Gi
     requests:
-      cpu: "1"
-      nvidia.com/gpu: "1"
-      memory: "20G"
+      cpu: "22"
+      nvidia.com/gpu: "2"
+      memory: "90G"
       ephemeral-storage: 10Gi
   annotations:
     key: value
