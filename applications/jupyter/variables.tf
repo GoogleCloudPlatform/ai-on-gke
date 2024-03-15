@@ -95,6 +95,7 @@ variable "k8s_backend_service_port" {
 variable "create_brand" {
   type        = bool
   description = "Create Brand OAuth Screen"
+  default     = false
 }
 
 variable "domain" {
