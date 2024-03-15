@@ -31,13 +31,13 @@ class GenerateRequest(pydantic.BaseModel):
   server: Optional[str] = "127.0.0.1"
   port: Optional[str] = "9000"
   session_cache: Optional[str] = ""
-  prompt: Optional[str] = "AB"
+  prompt: Optional[str] = "This is an example prompt"
   priority: Optional[int] = 0
-  max_tokens: Optional[int] = 3
+  max_tokens: Optional[int] = 100
 
 
 app = fastapi.FastAPI()
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=200)
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=1000)
 
 channel = grpc.insecure_channel("127.0.0.1:9000")
 grpc.channel_ready_future(channel).result()

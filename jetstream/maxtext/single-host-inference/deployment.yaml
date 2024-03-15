@@ -17,14 +17,13 @@ spec:
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       containers:
       - name: maxengine-server
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v1.0.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:dev
         securityContext:
           privileged: true
         args:
         - model_name=gemma-7b
         - tokenizer_path=assets/tokenizer.gemma
-        - per_device_batch_size=1
-        - run_name=maxtext_jetstream_run
+        - per_device_batch_size=12
         - max_prefill_predict_length=1024
         - max_target_length=2048
         - steps=10
@@ -41,7 +40,7 @@ spec:
           limits:
             google.com/tpu: 8
       - name: jetstream-http
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v1.0.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:dev
         ports:
         - containerPort: 8000
 ---

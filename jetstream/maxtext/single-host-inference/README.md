@@ -37,7 +37,7 @@ You have created the following resources:
 - One v5e TPU node pool with 2 nodes, each with 8 chips.
 
 ### Configure Applications to use Workload Identity
-Prequisite: make sure you have the following roles
+Prerequisite: make sure you have the following roles
 
 ```
 roles/container.admin
@@ -49,7 +49,7 @@ Follow [these steps](https://cloud.google.com/kubernetes-engine/docs/how-to/work
 ```
 # Get credentials for your cluster
 $ gcloud container clusters get-credentials jetstream-maxtext \
-    --region=${REGION}
+    --zone=${ZONE}
 
 # Create an IAM service account.
 $ gcloud iam service-accounts create jetstream-iam-sa
@@ -73,24 +73,34 @@ $ kubectl annotate serviceaccount default \
     iam.gke.io/gcp-service-account=jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
+## Convert the Gemma-7b checkpoint
+
+You can follow [these instructions](https://github.com/google/maxtext/blob/main/end_to_end/test_gemma.sh#L14) to convert the Gemma-7b checkpoint from orbax to a MaxText compatible checkpoint.
+
 ## Deploy Maxengine Server and HTTP Server
 
-You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#optionals)
+In this example, we will deploy a Maxengine server targeting Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#optionals).
 
-Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
+Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden. 
 
-Use a checkpoint by adding `load_parameters_path=<GCS bucket path to your checkpoint>` under `args`
+Configure the model checkpoint by adding `load_parameters_path=<GCS bucket path to your checkpoint>` under `args`, you can optionally deploy `deployment.yaml` without adding the checkpoint path. 
 
-Deploy the manifest file for the Maxengine server and HTTP server
+Deploy the manifest file for the Maxengine server and HTTP server:
 ```
 kubectl apply -f deployment.yaml
 ```
 
 ## Verify the deployment
 
-Check that the model has been loaded and compiled:
+Wait for the containers to finish creating:
+```
+kubectl get deployment
 
-Check the Maxengine pod’s logs, and verify the compilation is done. You will see similar repeated logs of the following:
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+maxengine-server   1/1     1            1           2m45s
+```
+
+Check the Maxengine pod’s logs, and verify the compilation is done. You will see similar logs of the following:
 ```
 kubectl logs deploy/maxengine-server -f -c maxengine-server
 
@@ -103,7 +113,7 @@ kubectl logs deploy/maxengine-server -f -c maxengine-server
 2024-03-14 06:03:39,797 - root - INFO - Generate engine 0 step 3 - slots free : 96 / 96, took 3.35ms
 ```
 
-Check http server logs, this can take a couple minutes
+Check http server logs, this can take a couple minutes:
 ```
 kubectl logs deploy/maxengine-server -f -c jetstream-http
 
