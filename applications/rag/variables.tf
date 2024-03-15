@@ -80,7 +80,7 @@ variable "create_gcs_bucket" {
 
 variable "gcs_bucket" {
   type        = string
-  description = "GCS bucket name to store dataset"
+  description = "Bucket name to store the dataset"
 }
 
 variable "dataset_embeddings_table_name" {
@@ -251,7 +251,7 @@ variable "autopilot_cluster" {
 
 variable "cloudsql_instance" {
   type        = string
-  description = "Name of the CloudSQL instance for RAG VectorDB"
+  description = "Cloud SQL pgvector instance name to store generated vector embeddings for the dataset"
   default     = "pgvector-instance"
 }
 

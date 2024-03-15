@@ -21,7 +21,7 @@ spec:
         varType: string
         defaultValue: false
       - name: cloudsql_instance
-        description: Name of the CloudSQL instance for RAG VectorDB
+        description: Cloud SQL pgvector instance name to store generated vector embeddings for the dataset
         varType: string
         defaultValue: pgvector-instance
       - name: cloudsql_instance_region
@@ -112,7 +112,7 @@ spec:
         varType: string
         defaultValue: ""
       - name: gcs_bucket
-        description: GCS bucket name to store dataset
+        description: Bucket name to store the dataset
         varType: string
         required: true
       - name: goog_cm_deployment_name

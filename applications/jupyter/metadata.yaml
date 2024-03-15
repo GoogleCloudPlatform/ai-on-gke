@@ -34,16 +34,11 @@ spec:
   interfaces:
     variables:
       - name: add_auth
-        description: Enable iap authentication on jupyterhub
         varType: bool
         defaultValue: false
       - name: autopilot_cluster
         varType: string
         defaultValue: "false"
-      - name: brand
-        description: name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty
-        varType: string
-        defaultValue: ""
       - name: client_id
         description: Client ID used for enabling IAP
         varType: string
@@ -62,6 +57,10 @@ spec:
       - name: cluster_name
         varType: string
         required: true
+      - name: create_brand
+        description: Create Brand OAuth Screen
+        varType: bool
+        defaultValue: false
       - name: create_cluster
         varType: bool
         defaultValue: false
@@ -69,8 +68,12 @@ spec:
         description: Enable flag to create gcs_bucket
         varType: bool
         defaultValue: false
+      - name: domain
+        description: Domain used for SSL certificate. If it's empty, *.nip.io DNS is used.
+        varType: string
+        defaultValue: ""
       - name: gcs_bucket
-        description: GCS bucket to mount on the notebook via GCSFuse and CSI
+        description: Bucket name to store the dataset
         varType: string
         required: true
       - name: goog_cm_deployment_name
@@ -104,8 +107,9 @@ spec:
         required: true
         defaultValue: ai-on-gke
       - name: members_allowlist
-        varType: list(string)
-        defaultValue: []
+        description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
+        varType: string
+        defaultValue: ""
       - name: private_cluster
         varType: bool
         defaultValue: false
@@ -117,23 +121,16 @@ spec:
         description: Email for users to contact with questions about their consent
         varType: string
         defaultValue: ""
-      - name: url_domain_addr
-        description: Domain provided by the user. If it's empty, we will create one for you.
-        varType: string
-        defaultValue: ""
-      - name: url_domain_name
-        description: Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty
-        varType: string
-        defaultValue: ""
       - name: workload_identity_service_account
         description: workload identity service account
         varType: string
-        required: true
         defaultValue: jupyter-service-account
     outputs:
+      - name: jupyterhub_ip_address
+        description: JupyterHub gloabl IP address
       - name: jupyterhub_password
-        description: "JupyterHub password is only required for standard authentication. Ignore in case of IAP authentication"
-      - name: jupyterhub_user
-        description: "JupyterHub user is only required for standard authentication. Ignore in case of IAP authentication"
+        description: JupyterHub password is only required for standard authentication. Ignore, in case of IAP authentication
       - name: jupyterhub_uri
-        description: "JupyterHub Endpoint to access user interface. In case of private IP consider port-forwarding."
+        description: JupyterHub Endpoint to access user interface. In case of private IP, consider port-forwarding.
+      - name: jupyterhub_user
+        description: JupyterHub user is only required for standard authentication. Ignore, in case of IAP authentication

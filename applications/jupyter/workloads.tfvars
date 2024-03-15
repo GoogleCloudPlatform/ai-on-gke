@@ -28,9 +28,9 @@ cluster_membership_id = "" # required for private cluster, defaults to `cluster_
 
 ## JupyterHub variables
 namespace                         = "ml"
-gcs_bucket                        = "gcs-bucket-dsfhfh"
 create_gcs_bucket                 = true
-workload_identity_service_account = "jupyter-service-account"
+gcs_bucket                        = "gcs-bucket-dsfhfh"
+workload_identity_service_account = "jupyter-sa"
 
 # IAP Configs
 create_brand  = false
@@ -48,4 +48,5 @@ k8s_backend_service_port = 80
 domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
 client_id         = "" ## Ensure brand is Internal, to autogenerate client credentials
 client_secret     = ""
-members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
+

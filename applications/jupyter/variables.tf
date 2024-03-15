@@ -33,13 +33,13 @@ variable "kubernetes_namespace" {
 
 variable "gcs_bucket" {
   type        = string
-  description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
+  description = "Bucket name to store the dataset"
 }
 
 variable "workload_identity_service_account" {
   type        = string
   description = "workload identity service account"
-  default     = "jupyter-service-account"
+  default     = "jupyter-sa"
 }
 
 variable "project_id" {
@@ -48,8 +48,9 @@ variable "project_id" {
 }
 
 variable "members_allowlist" {
-  type    = list(string)
-  default = []
+  type    = string
+  default = ""
+  ## keeping it string type to support single field input for marketplace UI.
 }
 
 variable "add_auth" {
