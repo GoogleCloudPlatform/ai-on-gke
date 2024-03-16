@@ -43,7 +43,7 @@ variable "namespace" {
 
 variable "enable_tpu" {
   type        = bool
-  description = "Set to true to request TPUs in Ray cluster"
+  description = "Set to true to request TPUs in Ray cluster (not supported on GKE Autopilot)"
   default     = false
 }
 

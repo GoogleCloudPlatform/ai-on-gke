@@ -187,7 +187,6 @@ module "kuberay-cluster" {
   namespace              = var.kubernetes_namespace
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
-  enable_tpu             = false
   autopilot_cluster      = local.enable_autopilot
   db_secret_name         = module.cloudsql.db_secret_name
   cloudsql_instance_name = var.cloudsql_instance
