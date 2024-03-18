@@ -47,16 +47,16 @@ def sum_moderation_confidences(text):
   )
   print(f'get response: {response}')
   # Parse response and sum the confidences of moderation, the categories are from https://cloud.google.com/natural-language/docs/moderating-text
-  total_confidence = 0.0
-  count = 0.0
+  largest_confidence = 0.0
   excluding_names = ["Health", "Politics", "Finance", "Legal"]
   for category in response.moderation_categories:
     if category.name in excluding_names:
       continue
-    total_confidence += category.confidence
-    count+=1.0
-  print(f'total confidence is: {total_confidence}')
-  return int(total_confidence * 100 / count) # Average
+    if category.confidence > largest_confidence:
+      largest_confidence = category.confidence
+
+  print(f'largest confidence is: {largest_confidence}')
+  return int(largest_confidence * 100)
 
 def is_content_inappropriate(text, nlp_filter_level):
   return sum_moderation_confidences(text) > int(nlp_filter_level)
