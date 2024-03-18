@@ -16,60 +16,61 @@ limitations under the License.
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RAG on GKE</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}" ></script>
+  <title>RAG on GKE</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}" ></script>
 </head>
 <body>
-  <div class="content-container">
-    <div id="chat-and-form">
-      <div id="chat">
-          <p class="instruct">Submit your query below.</p>
-      </div>
-      <form id="form" action="/" method="post">
-          <textarea id="prompt" name="prompt" placeholder="Enter your prompt..." autofocus rows="1"></textarea>
-          <input id="submit" type="submit" value="Submit">
-      </form>
+<div class="content-container">
+  <div id="chat-and-form">
+    <div id="chat">
+      <p class="instruct">Submit your query below.</p>
     </div>
-
-    <!-- Filter Options Section -->
-    <div id="filter-section">
-      <div id="filter-section-toggle">
-        <label for="toggle-filters">Enable Filters:</label>
-        <input type="checkbox" id="toggle-filters">
-      </div>
-
-      <!-- Checkbox to toggle template-section -->
-      <div id="toggle-dlp-filter-section-div" style="display: none;">
-        <label for="toggle-dlp-filter-section">Show DLP Templates:</label>
-        <input type="checkbox" id="toggle-dlp-filter-section">
-      </div>
-
-      <!-- Dropdown for inspect_templates and deidentify_templates for dlp filter -->
-      <div id="dlp-filter-section" style="display: none;">
-        <select id="inspect-template-dropdown">
-          <!-- Options will be dynamically added here -->
-        </select>
-        <select id="deidentify-template-dropdown">
-          <!-- Options will be dynamically added here -->
-        </select>
-      </div>
-
-      <!-- Checkbox to toggle nlp-filter-section -->
-      <div id="toggle-nlp-filter-section-div" style="display: none;">
-        <label for="toggle-nlp-filter-section">Show NLP Filter Range:</label>
-        <input type="checkbox" id="toggle-nlp-filter-section">
-      </div>
-
-      <!-- NLP Filter Slider -->
-      <div id="nlp-filter-section" style="display: none;">
-        <label for="nlp-range">NLP Filter Level:</label>
-        <input type="range" id="nlp-range" min="0" max="100" value="50">
-      </div>
-
-      </div>
-    </div>
+    <form id="form" action="/" method="post">
+      <textarea id="prompt" name="prompt" placeholder="Enter your prompt..." autofocus rows="1"></textarea>
+      <input id="submit" type="submit" value="Submit">
+    </form>
   </div>
+
+  <!-- Filter Options Section -->
+  <div id="filter-section">
+    <div id="filter-section-toggle">
+      <label for="toggle-filters">Enable Filters:</label>
+      <input type="checkbox" id="toggle-filters">
+    </div>
+
+    <!-- Checkbox to toggle template-section -->
+    <div id="toggle-dlp-filter-section-div" style="display: none;">
+      <label for="toggle-dlp-filter-section">Show Sensitive Data Protection Templates:</label>
+      <input type="checkbox" id="toggle-dlp-filter-section">
+    </div>
+
+    <!-- Dropdown for inspect_templates and deidentify_templates for dlp filter -->
+    <div id="dlp-filter-section" style="display: none;">
+      <select id="inspect-template-dropdown">
+        <!-- Options will be dynamically added here -->
+      </select>
+      <select id="deidentify-template-dropdown">
+        <!-- Options will be dynamically added here -->
+      </select>
+    </div>
+
+    <!-- Checkbox to toggle nlp-filter-section -->
+    <div id="toggle-nlp-filter-section-div" style="display: none;">
+      <label for="toggle-nlp-filter-section">Show NLP Filter Range:</label>
+      <input type="checkbox" id="toggle-nlp-filter-section">
+    </div>
+
+    <!-- NLP Filter Slider -->
+    <div id="nlp-filter-section" style="display: none;">
+      <label for="nlp-range">NLP Filter Level:</label>
+      <input type="range" id="nlp-range" min="0" max="100" value="50">
+      <span id="nlp-value">50</span>
+    </div>
+
+  </div>
+</div>
+</div>
 </body>
 </html>

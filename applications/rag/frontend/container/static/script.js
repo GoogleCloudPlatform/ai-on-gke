@@ -16,7 +16,7 @@ limitations under the License.
 function onReady() {
     autoResizeTextarea()
     populateDropdowns()
-    fetchDLPEnabled()
+    updateNLPValue()
 
     document.getElementById("prompt").addEventListener("keydown", e => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -142,6 +142,42 @@ function toggleNlpFilterSection(nlpEnabled) {
     }
 }
 
+function updateNLPValue() {
+    const rangeInput = document.getElementById('nlp-range');
+    const valueDisplay = document.getElementById('nlp-value');
+
+    // Function to update the slider's display value and color
+    const updateSliderAppearance = (value) => {
+        // Update the display text
+        valueDisplay.textContent = value;
+
+        // Determine the color based on the value
+        let color;
+        if (value <= 25) {
+            color = '#4285F4';
+        } else if (value <= 50) {
+            color = '#34A853';
+        } else if (value <= 75) {
+            color = '#FBBC05';
+        } else {
+            color = '#EA4335';
+        }
+
+        // Apply the color to the slider through a gradient
+        // This gradient visually fills the track up to the thumb's current position
+        const percentage = (value - rangeInput.min) / (rangeInput.max - rangeInput.min) * 100;
+        rangeInput.style.background = `linear-gradient(90deg, ${color} ${percentage}%, #ddd ${percentage}%)`;
+        rangeInput.style.setProperty('--thumb-color', color);
+    };
+
+    // Initialize the slider's appearance
+    updateSliderAppearance(rangeInput.value);
+
+    // Update slider's appearance whenever its value changes
+    rangeInput.addEventListener('input', (event) => {
+        updateSliderAppearance(event.target.value);
+    });
+}
 
 function fetchNLPEnabled() {
     fetch('/get_nlp_status')
