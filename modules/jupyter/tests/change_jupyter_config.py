@@ -7,7 +7,6 @@ if len(sys.argv) == 2:
     if autopilot:
         config_file = "../jupyter_config/config-selfauth-autopilot.yaml"
 
-
 with open(config_file, "r") as yaml_file:
     data = yaml.safe_load(yaml_file)
 
