@@ -15,6 +15,24 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+# Enabled the DLP service
+resource "google_project_service" "dlp_api" {
+  project = var.project_id
+  service = "dlp.googleapis.com"
+
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
+# Enabled the Nature language api service
+resource "google_project_service" "nature_language_api" {
+  project = var.project_id
+  service = "language.googleapis.com"
+
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.cloudsql_instance_region, var.cloudsql_instance)
 }
@@ -100,7 +118,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:6f99042decb02c3187cdb2d7236af895364e29e00dea394bfca466c687a9b535"
+          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:8f40b9485739fb2b2b4d77e18f101e1030abff63d4a6240c4cfbf2c333b593fc"
           name  = "rag-frontend"
 
           port {
