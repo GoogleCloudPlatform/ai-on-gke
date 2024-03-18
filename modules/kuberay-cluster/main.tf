@@ -19,7 +19,7 @@ resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
 }
 
 locals {
-  security_context                  = chomp(yamlencode({ for k, v in var.security_context : k => v if v != null }))
+  security_context                  = { for k, v in var.security_context : k => v if v != null }
   cloudsql_instance_connection_name = format("%s:%s:%s", var.project_id, var.db_region, var.cloudsql_instance_name)
 }
 
@@ -30,35 +30,53 @@ resource "helm_release" "ray-cluster" {
   namespace        = var.namespace
   create_namespace = true
   version          = "1.0.0"
+
   values = [
-    var.autopilot_cluster ? templatefile("${path.module}/kuberay-autopilot-values.yaml", {
+    templatefile("${path.module}/values.yaml", {
       gcs_bucket                        = var.gcs_bucket
       k8s_service_account               = var.google_service_account
       grafana_host                      = var.grafana_host
       security_context                  = local.security_context
       secret_name                       = var.db_secret_name
       cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
-      }) : var.enable_tpu ? templatefile("${path.module}/kuberay-tpu-values.yaml", {
-      gcs_bucket                        = var.gcs_bucket
-      k8s_service_account               = var.google_service_account
-      grafana_host                      = var.grafana_host
-      security_context                  = local.security_context
-      secret_name                       = var.db_secret_name
-      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
-      }) : var.enable_gpu ? templatefile("${path.module}/kuberay-gpu-values.yaml", {
-      gcs_bucket                        = var.gcs_bucket
-      k8s_service_account               = var.google_service_account
-      grafana_host                      = var.grafana_host
-      security_context                  = local.security_context
-      secret_name                       = var.db_secret_name
-      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
-      }) : templatefile("${path.module}/kuberay-values.yaml", {
-      gcs_bucket                        = var.gcs_bucket
-      k8s_service_account               = var.google_service_account
-      grafana_host                      = var.grafana_host
-      security_context                  = local.security_context
-      secret_name                       = var.db_secret_name
-      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
+      image_tag                         = var.enable_gpu ? "2.9.3-py310-gpu" : "2.9.3-py310"
+      resource_requests = var.enable_gpu ? {
+        "cpu"               = "8"
+        "memory"            = "32G"
+        "ephemeral-storage" = "20Gi"
+        "nvidia.com/gpu"    = "1"
+        } : {
+        "cpu"               = "8"
+        "memory"            = "32G"
+        "ephemeral-storage" = "20Gi"
+      }
+      annotations = {
+        "gke-gcsfuse/volumes" : "true"
+        "gke-gcsfuse/cpu-limit" : "2"
+        "gke-gcsfuse/memory-limit" : "8Gi"
+        "gke-gcsfuse/ephemeral-storage-limit" : "20Gi"
+      }
+      node_selectors = var.autopilot_cluster ? var.enable_gpu ? {
+        "cloud.google.com/compute-class" : "Accelerator"
+        "cloud.google.com/gke-accelerator" : "nvidia-l4"
+        "cloud.google.com/gke-ephemeral-storage-local-ssd" : "true"
+        "iam.gke.io/gke-metadata-server-enabled" : "true"
+        } : {
+        "cloud.google.com/compute-class" : "Performance"
+        "cloud.google.com/machine-family" : "c3"
+        "cloud.google.com/gke-ephemeral-storage-local-ssd" : "true"
+        "iam.gke.io/gke-metadata-server-enabled" : "true"
+        } : var.enable_gpu ? {
+        "iam.gke.io/gke-metadata-server-enabled" : "true"
+        "cloud.google.com/gke-accelerator" : "nvidia-tesla-t4"
+        } : var.enable_tpu ? {
+        "iam.gke.io/gke-metadata-server-enabled" : "true"
+        "cloud.google.com/gke-tpu-accelerator" : "tpu-v4-podslice"
+        "cloud.google.com/gke-tpu-topology" : "2x2x1"
+        "cloud.google.com/gke-placement-group" : "tpu-pool"
+        } : {
+        "iam.gke.io / gke-metadata-server-enabled" : "true"
+      }
     })
   ]
 }
