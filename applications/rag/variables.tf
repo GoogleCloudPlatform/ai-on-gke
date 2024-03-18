@@ -86,6 +86,7 @@ variable "gcs_bucket" {
 variable "dataset_embeddings_table_name" {
   type        = string
   description = "Name of the table that stores vector embeddings for input dataset"
+  default     = "googlemaps_reviews_db"
 }
 
 variable "brand" {
@@ -261,7 +262,7 @@ variable "private_cluster" {
 
 variable "autopilot_cluster" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "cloudsql_instance" {

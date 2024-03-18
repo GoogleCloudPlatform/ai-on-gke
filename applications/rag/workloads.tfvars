@@ -15,23 +15,30 @@
 project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-create_cluster   = false # this flag will create a new standard public gke cluster in default network
-cluster_name     = "<cluster_name>"
-cluster_location = "us-central1"
+create_cluster    = false # Create a GKE cluster in the default network.
+autopilot_cluster = true
+cluster_name      = "<cluster_name>"
+cluster_location  = "us-central1"
 
 ## GKE environment variables
 kubernetes_namespace = "rag"
 create_gcs_bucket    = true
-gcs_bucket           = "rag-data-xyzu" # Choose a globally unique bucket name.
+
+# The bucket name must be globally unique (across all of Google Cloud).
+# To verify, check that `gcloud storage buckets describe gs://<bucketname>` returns a 404.
+gcs_bucket = "rag-data-<username>"
 
 cloudsql_instance        = "pgvector-instance"
 cloudsql_instance_region = "us-central1" # defaults to cluster_location, if not specified
+
 ## Service accounts
+
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `ray_service_account` to use an existing IAM service account.
 create_ray_service_account      = true
 ray_service_account             = "ray-sa"
 enable_grafana_on_ray_dashboard = false
+
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `rag_service_account` to use an existing IAM service account.
 create_rag_service_account = true
