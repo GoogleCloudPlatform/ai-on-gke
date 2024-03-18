@@ -186,13 +186,31 @@ def handlePrompt():
         log.info(f"response: {response}")
         return {'response': response}
     except Exception as err:
-        log.info(f"exception from llm: {err}")
-        traceback.print_exc()
-        error_traceback = traceback.format_exc()
-        response = jsonify({
-            "error": "An error occurred",
-            "statusText": f"Error: {err}\nTraceback:\n{error_traceback}"
-        })
+        log.info(f"exception from llm with context: {err}")
+        try:
+            response = llm_chain.invoke({
+            "user_prompt": user_prompt
+            })
+            if 'nlpFilterLevel' in data:
+                if nlp_filter.is_content_inappropriate(response['text'], data['nlpFilterLevel']):
+                    response['text'] = 'The response is deemed inappropriate for display.'
+                    return {'response': response}
+            if 'inspectTemplate' in data and 'deidentifyTemplate' in data:
+                inspect_template_path = data['inspectTemplate']
+                deidentify_template_path = data['deidentifyTemplate']
+                if inspect_template_path != "" and deidentify_template_path != "":
+                    # filter the output with inspect setting. Customer can pick any category from https://cloud.google.com/dlp/docs/concepts-infotypes
+                    response['text'] = dlp_filter.inspect_content(inspect_template_path, deidentify_template_path, response['text'])
+            log.info(f"response: {response}")
+            return {'response': response}
+        except Exception as err:
+            log.info(f"exception from llm without context: {err}")
+            traceback.print_exc()
+            error_traceback = traceback.format_exc()
+            response = jsonify({
+                "error": "An error occurred",
+                "message": f"Error: {err}\nTraceback:\n{error_traceback}"
+            })
         response.status_code = 500
         return response
 
