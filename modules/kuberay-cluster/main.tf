@@ -178,6 +178,7 @@ resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
         namespace_selector {
           match_labels = {
             "kubernetes.io/metadata.name" = var.namespace
+            "kubernetes.io/metadata.name" = "gke-gmp-system"
           }
         }
       }
