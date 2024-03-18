@@ -182,5 +182,6 @@ variable "resource_quotas" {
     cpu                       = "1000"
     memory                    = "10Ti"
     "requests.nvidia.com/gpu" = "100"
+    "requests.google.com/tpu" = "100"
   }
 }
