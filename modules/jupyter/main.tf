@@ -99,9 +99,7 @@ resource "helm_release" "jupyterhub" {
   namespace        = var.namespace
   create_namespace = true
   cleanup_on_fail  = "true"
-  # This timeout is sufficient and ensures terraform doesn't hang for 20 minutes on error.
-  # Autopilot deployment will complete even faster than Standard, as it relies on Ray Autoscaler to provision user pods.
-  timeout = 300
+  timeout          = 600
 
   values = var.autopilot_cluster ? [templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
     password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
