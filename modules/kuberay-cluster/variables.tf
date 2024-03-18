@@ -185,3 +185,9 @@ variable "resource_quotas" {
     "requests.google.com/tpu" = "100"
   }
 }
+
+variable "disable_resource_quotas" {
+  description = "Set to true to remove resource quotas from your Ray clusters. Not recommended"
+  type        = bool
+  default     = true
+}
