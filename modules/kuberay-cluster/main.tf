@@ -68,7 +68,7 @@ resource "helm_release" "ray-cluster" {
         "iam.gke.io/gke-metadata-server-enabled" : "true"
         } : var.enable_gpu ? {
         "iam.gke.io/gke-metadata-server-enabled" : "true"
-        "cloud.google.com/gke-accelerator" : "nvidia-tesla-t4"
+        "cloud.google.com/gke-accelerator" : "nvidia-l4"
         } : var.enable_tpu ? {
         "iam.gke.io/gke-metadata-server-enabled" : "true"
         "cloud.google.com/gke-tpu-accelerator" : "tpu-v4-podslice"
