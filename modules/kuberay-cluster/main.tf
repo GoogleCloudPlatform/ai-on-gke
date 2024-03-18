@@ -190,7 +190,7 @@ resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
 
 # Assign resource quotas to Ray namespace to ensure that they don't overutilize resources
 resource "kubernetes_resource_quota" "ray_namespace_resource_quota" {
-  count = var.disable_resource_quota ? 0 : 1
+  count = var.disable_resource_quotas ? 0 : 1
   metadata {
     name      = "ray-resource-quota"
     namespace = var.namespace
