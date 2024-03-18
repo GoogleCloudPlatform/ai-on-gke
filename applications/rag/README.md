@@ -53,12 +53,12 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
 
 5. Optionally, enable Cloud Data Loss Prevention (DLP)
 
-We have two ways to enable the api:
+    We have two ways to enable the api:
 
     1. Go to https://console.developers.google.com/apis/api/dlp.googleapis.com/overview click enable api.
     2. Run command: `gcloud services enable dlp.googleapis.com`
 
-This filter can auto fetch the templates in your project. Please refer to the following links to create templates:
+    This filter can auto fetch the templates in your project. Please refer to the following links to create templates:
 
     1. Inspect templates: https://cloud.google.com/dlp/docs/creating-templates-inspect
     2. De-identification templates: https://cloud.google.com/dlp/docs/creating-templates-deid
@@ -89,25 +89,23 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 
 4. Verify the inference server is setup:
     * Start port forwarding:
-```
-kubectl port-forward -n ${NAMESPACE:?} deployment/mistral-7b-instruct 8080:8080
-```
-
+    ```
+    kubectl port-forward -n ${NAMESPACE:?} deployment/mistral-7b-instruct 8080:8080
+    ```
     * In a new terminal, try a few prompts:
-```
-export USER_PROMPT="How to deploy a container on K8s?"
-```
-```
-curl 127.0.0.1:8080/generate -X POST \
-    -H 'Content-Type: application/json' \
-    --data-binary @- <<EOF
-{
-    "inputs": "[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n${USER_PROMPT:?}[/INST]",
-    "parameters": {"max_new_tokens": 400}
-}
-EOF
-```
 
+    ```
+    export USER_PROMPT="How to deploy a container on K8s?"
+
+    curl 127.0.0.1:8080/generate -X POST \
+        -H 'Content-Type: application/json' \
+        --data-binary @- <<EOF
+    {
+        "inputs": "[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n${USER_PROMPT:?}[/INST]",
+        "parameters": {"max_new_tokens": 400}
+    }
+    EOF
+    ```
     * At the end of the smoke test with the TGI server, stop port forwarding by using Ctrl-C on the original terminal.
 
 5. Verify the frontend chat interface is setup:
