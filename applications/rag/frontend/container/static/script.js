@@ -154,13 +154,13 @@ function updateNLPValue() {
         // Determine the color based on the value
         let color;
         if (value <= 25) {
-            color = '#4285F4';
-        } else if (value <= 50) {
-            color = '#34A853';
-        } else if (value <= 75) {
-            color = '#FBBC05';
-        } else {
             color = '#EA4335';
+        } else if (value <= 50) {
+            color = '#FBBC05';
+        } else if (value <= 75) {
+            color = '#34A853';
+        } else {
+            color = '#4285F4';
         }
 
         // Apply the color to the slider through a gradient
