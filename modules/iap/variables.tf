@@ -86,3 +86,8 @@ variable "client_secret" {
   description = "Client secret used for enabling IAP"
   default     = ""
 }
+
+variable "members_allowlist" {
+  type    = list(string)
+  default = []
+}

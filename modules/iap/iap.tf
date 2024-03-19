@@ -107,3 +107,11 @@ resource "helm_release" "iap" {
     value = var.k8s_backend_service_port
   }
 }
+
+## TODO(@umeshkumhar): grant permission to specific backend_service
+resource "google_project_iam_member" "project" {
+  for_each = toset(var.members_allowlist)
+  project  = var.project_id
+  role     = "roles/iap.httpsResourceAccessor"
+  member   = each.key
+}

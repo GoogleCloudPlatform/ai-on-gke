@@ -35,6 +35,7 @@ module "iap_auth" {
   client_id                = var.client_id
   client_secret            = var.client_secret
   domain                   = var.domain
+  members_allowlist        = var.members_allowlist
   depends_on = [
     helm_release.jupyterhub
   ]

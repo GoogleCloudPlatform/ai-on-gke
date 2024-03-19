@@ -56,6 +56,7 @@ module "iap_auth" {
   client_id                = var.client_id
   client_secret            = var.client_secret
   domain                   = var.domain
+  members_allowlist        = var.members_allowlist
   depends_on = [
     kubernetes_service.rag_frontend_service, kubernetes_deployment.rag_frontend_deployment
   ]
