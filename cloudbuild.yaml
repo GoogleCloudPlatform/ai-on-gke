@@ -95,7 +95,7 @@ steps:
         echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
-        kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=300s
+        kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=1000s
         kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID service/example-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
@@ -216,7 +216,7 @@ steps:
         echo "pass" > /workspace/rag_tf_result.txt
 
         # Validate Ray: Make sure pods are running
-        kubectl wait --all pods -n rag-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=300s
+        kubectl wait --all pods -n rag-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=1000s
         kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/example-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
