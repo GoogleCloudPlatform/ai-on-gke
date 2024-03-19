@@ -47,9 +47,9 @@ resource "random_password" "pwd" {
 }
 
 resource "google_sql_user" "cloudsql_user" {
-  name            = var.db_user
-  instance        = google_sql_database_instance.main.name
-  password        = random_password.pwd.result
+  name     = var.db_user
+  instance = google_sql_database_instance.main.name
+  password = random_password.pwd.result
   ## Fixes SQL Instance force deletion and doesnot wait for SQL user deletion, rather focus on instance deletion.
   deletion_policy = "ABANDON"
 }

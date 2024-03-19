@@ -19,7 +19,7 @@ spec:
     variables:
       - name: autopilot_cluster
         varType: string
-        defaultValue: false
+        defaultValue: true
       - name: cloudsql_instance
         description: Cloud SQL pgvector instance name to store generated vector embeddings for the dataset
         varType: string
@@ -44,7 +44,7 @@ spec:
         defaultValue: false
       - name: create_cluster
         varType: bool
-        defaultValue: false
+        defaultValue: true
       - name: create_gcs_bucket
         description: Enable flag to create gcs_bucket
         varType: bool
@@ -81,9 +81,9 @@ spec:
         varType: string
         defaultValue: ""
       - name: frontend_domain
-        description: Domain used for SSL certificate. If it's empty, *.nip.io DNS is used.
+        description: Domain used for application and SSL certificate. 
         varType: string
-        defaultValue: ""
+        defaultValue: "example.com"
       - name: frontend_k8s_backend_config_name
         description: Name of the Kubernetes Backend Config
         varType: string
@@ -130,9 +130,9 @@ spec:
         varType: string
         defaultValue: ""
       - name: jupyter_domain
-        description: Domain used for SSL certificate. If it's empty, *.nip.io DNS is used.
+        description: Domain used for application and SSL certificate.
         varType: string
-        defaultValue: ""
+        defaultValue: "example.com"
       - name: jupyter_k8s_backend_config_name
         description: Name of the Kubernetes Backend Config
         varType: string
