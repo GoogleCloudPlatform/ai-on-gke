@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.11.5
+# Base image:
+
+# FROM python:3.11.5
+# RUN pip install -r requirements.txt
+
+# Use base image from /applications/rag/frontend/main.tf - "rag-frontend" container.
+# Remember to update the image here to the old image, and the one in "rag-frontend" to the updated image.
+FROM us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:8f40b9485739fb2b2b4d77e18f101e1030abff63d4a6240c4cfbf2c333b593fc
 
 ADD ./ /workspace/frontend
 WORKDIR /workspace/frontend
-
-RUN pip install -r requirements.txt
 
 CMD ["python", "main.py"]
