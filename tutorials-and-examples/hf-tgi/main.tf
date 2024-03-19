@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+locals {
+  additional_labels = tomap({
+    for item in var.additional_labels :
+    split("=", item)[0] => split("=", item)[1]
+  })
+}
+
 resource "kubernetes_service" "inference_service" {
   metadata {
     name = "mistral-7b-instruct-service"
@@ -45,7 +52,7 @@ resource "kubernetes_deployment" "inference_deployment" {
     namespace = var.namespace
     labels = merge({
       app = "mistral-7b-instruct"
-    }, var.additional_labels)
+    }, local.additional_labels)
   }
 
   spec {
@@ -54,14 +61,14 @@ resource "kubernetes_deployment" "inference_deployment" {
     selector {
       match_labels = merge({
         app = "mistral-7b-instruct"
-      }, var.additional_labels)
+      }, local.additional_labels)
     }
 
     template {
       metadata {
         labels = merge({
           app = "mistral-7b-instruct"
-        }, var.additional_labels)
+        }, local.additional_labels)
       }
 
       spec {

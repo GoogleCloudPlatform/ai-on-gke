@@ -121,6 +121,7 @@ module "jupyterhub" {
   providers                         = { helm = helm.jupyter, kubernetes = kubernetes.jupyter }
   project_id                        = var.project_id
   namespace                         = var.kubernetes_namespace
+  additional_labels                 = var.additional_labels
   workload_identity_service_account = local.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket
   autopilot_cluster                 = local.enable_autopilot

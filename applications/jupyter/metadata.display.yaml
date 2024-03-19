@@ -139,6 +139,11 @@ spec:
           name: members_allowlist
           title: Members Allowlist
           section: iap_auth
+        additional_labels:
+          name: additional_labels
+          title: Additional Labels
+          section: cluster_details
+          invisible: true
         private_cluster:
           name: private_cluster
           title: Private Cluster

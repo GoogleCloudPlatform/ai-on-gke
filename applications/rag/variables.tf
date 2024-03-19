@@ -38,11 +38,10 @@ variable "kubernetes_namespace" {
 }
 
 variable "additional_labels" {
-  type        = map(string)
-  description = "Additional Kubernetes labels to add to Kubernetes resources."
-  default = {
-    created-by = "rag-on-gke"
-  }
+  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
+  type        = list(string)
+  description = "Additional labels to add to Kubernetes resources."
+  default     = ["created-by=rag-on-gke"]
 }
 
 variable "jupyter_service_account" {

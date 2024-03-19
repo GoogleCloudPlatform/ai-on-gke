@@ -75,6 +75,10 @@ spec:
         description: Kubernetes namespace where resources are deployed
         varType: string
         defaultValue: ai-on-gke
+      - name: additional_labels
+        description: Additional labels to apply to Kubenetes resources
+        varType: list(string)
+        defaultValue: ["created-by=ray-on-gke-qss"]
       - name: ray_version
         varType: string
         defaultValue: v2.9.3

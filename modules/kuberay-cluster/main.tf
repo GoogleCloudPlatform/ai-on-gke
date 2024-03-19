@@ -21,6 +21,10 @@ resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
 locals {
   security_context                  = { for k, v in var.security_context : k => v if v != null }
   cloudsql_instance_connection_name = format("%s:%s:%s", var.project_id, var.db_region, var.cloudsql_instance_name)
+  additional_labels = tomap({
+    for item in var.additional_labels :
+    split("=", item)[0] => split("=", item)[1]
+  })
 }
 
 resource "helm_release" "ray-cluster" {
@@ -35,7 +39,7 @@ resource "helm_release" "ray-cluster" {
     templatefile("${path.module}/values.yaml", {
       gcs_bucket                        = var.gcs_bucket
       k8s_service_account               = var.google_service_account
-      additional_labels                 = var.additional_labels
+      additional_labels                 = local.additional_labels
       grafana_host                      = var.grafana_host
       security_context                  = local.security_context
       secret_name                       = var.db_secret_name
