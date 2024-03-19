@@ -51,8 +51,9 @@ var (
 )
 
 const (
-	resourceName    = "test.com/tpu"
-	minNodeLifetime = time.Second
+	resourceName          = "test.com/tpu"
+	minNodeLifetime       = time.Second
+	nodepoolDeletionDelay = 5 * time.Second
 )
 
 func TestAPIs(t *testing.T) {
@@ -103,7 +104,8 @@ var _ = BeforeSuite(func() {
 		Recorder: mgr.GetEventRecorderFor("tpu-provisioner-deleter"),
 		Provider: provider,
 		NodeCriteria: NodeCriteria{
-			MinLifetime: minNodeLifetime,
+			MinLifetime:       minNodeLifetime,
+			PoolDeletionDelay: nodepoolDeletionDelay,
 		},
 	}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
