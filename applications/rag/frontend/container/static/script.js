@@ -77,7 +77,11 @@ function onReady() {
             headers: { "Content-Type": "application/json" },
             body: body
         }).then(response => {
-            if (!response.ok) throw new Error(response.statusText);
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.errorMessage);
+                });
+            }
             return response.json();
         }).then(data => {
             responseEl.textContent = data.response.text;
@@ -154,13 +158,13 @@ function updateNLPValue() {
         // Determine the color based on the value
         let color;
         if (value <= 25) {
-            color = '#EA4335';
+            color = '#EA4335'; // Red
         } else if (value <= 50) {
-            color = '#FBBC05';
+            color = '#FBBC05'; // Yellow
         } else if (value <= 75) {
-            color = '#34A853';
+            color = '#34A853'; // Green
         } else {
-            color = '#4285F4';
+            color = '#4285F4'; // Blue
         }
 
         // Apply the color to the slider through a gradient
