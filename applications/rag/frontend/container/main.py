@@ -191,7 +191,7 @@ def handlePrompt():
         error_traceback = traceback.format_exc()
         response = jsonify({
             "error": "An error occurred",
-            "statusText": f"Error: {err}\nTraceback:\n{error_traceback}"
+            "errorMessage": f"Error: {err}\nTraceback:\n{error_traceback}"
         })
         response.status_code = 500
         return response
