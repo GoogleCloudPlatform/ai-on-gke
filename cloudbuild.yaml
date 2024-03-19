@@ -193,7 +193,7 @@ steps:
         gcloud container clusters get-credentials \
         ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         --location $_REGION \
-        --project $PROJECT_ID 
+        --project $PROJECT_ID
 
         cd /workspace/modules/jupyter/tests
         python3 change_jupyter_config.py $_AUTOPILOT_CLUSTER
@@ -201,6 +201,7 @@ steps:
         cd /workspace/applications/rag/
         terraform apply \
         -var-file=workloads.tfvars \
+        -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
         -var=project_id=$PROJECT_ID \
