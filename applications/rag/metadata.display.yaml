@@ -255,10 +255,10 @@ spec:
         - name: rag
           title: Other Configuration
         - name: rag_iap_auth
-          title: Configure IAP for Frontend
+          title: Configure Authenticated Access for Frontend
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to Internal.
         - name: jupyter_iap_auth
-          title:  Configure IAP for JupyterHub
+          title:  Configure Authenticated Access for JupyterHub
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to Internal.
     runtime:
       outputMessage: Deployment can take several minutes to complete.

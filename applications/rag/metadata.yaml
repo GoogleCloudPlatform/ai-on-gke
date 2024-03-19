@@ -112,7 +112,7 @@ spec:
         varType: string
         defaultValue: ""
       - name: gcs_bucket
-        description: Bucket name to store the dataset
+        description: Bucket name to store the dataset. The bucket name must be globally unique across google cloud projects
         varType: string
         required: true
       - name: goog_cm_deployment_name
