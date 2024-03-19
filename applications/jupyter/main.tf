@@ -127,7 +127,7 @@ module "jupyterhub" {
 
   # IAP Auth parameters
   add_auth                 = var.add_auth
-  brand                    = var.brand
+  create_brand             = var.create_brand
   support_email            = var.support_email
   client_id                = var.client_id
   client_secret            = var.client_secret
@@ -137,8 +137,7 @@ module "jupyterhub" {
   k8s_backend_config_name  = var.k8s_backend_config_name
   k8s_backend_service_name = var.k8s_backend_service_name
   k8s_backend_service_port = var.k8s_backend_service_port
-  url_domain_addr          = var.url_domain_addr
-  url_domain_name          = var.url_domain_name
-  members_allowlist        = var.members_allowlist
+  domain                   = var.domain
+  members_allowlist        = split(",", var.members_allowlist)
   depends_on               = [module.gcs, module.namespace]
 }
