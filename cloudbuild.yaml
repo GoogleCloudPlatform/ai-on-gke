@@ -258,6 +258,9 @@ steps:
         cd /workspace/applications/rag/
         terraform destroy \
         -var-file=workloads.tfvars \
+        -var=create_cluster=false \
+        -var=jupyter_add_auth=false \
+        -var=frontend_add_auth=false \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
