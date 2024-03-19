@@ -155,5 +155,6 @@ module "kuberay-cluster" {
   google_service_account = local.workload_identity_service_account
   grafana_host           = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
   depends_on             = [module.gcs, module.kuberay-operator]
+  disable_network_policy = false
 }
 
