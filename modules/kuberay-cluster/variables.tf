@@ -189,5 +189,5 @@ variable "resource_quotas" {
 variable "disable_resource_quotas" {
   description = "Set to true to remove resource quotas from your Ray clusters. Not recommended"
   type        = bool
-  default     = true
+  default     = false
 }
