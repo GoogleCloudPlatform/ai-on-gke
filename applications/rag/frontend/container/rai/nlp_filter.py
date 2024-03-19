@@ -17,7 +17,7 @@ import google.cloud.language_v1 as language
 from . import retry
 
 # Convert the project id into a full resource id.
-parent = os.environ.get('PROJECT_ID', 'NULL')
+parent = "projects/{0}".format(os.environ.get('PROJECT_ID', 'NULL'))
 
 # Instantiate a nlp client.
 nature_language_client = language.LanguageServiceClient()

@@ -26,7 +26,6 @@ variable "namespace" {
 variable "region" {
   type        = string
   description = "GCP project region"
-  default     = "us-central1"
 }
 
 variable "cloudsql_instance" {
@@ -38,7 +37,6 @@ variable "cloudsql_instance" {
 variable "cloudsql_instance_region" {
   type        = string
   description = "Name of the CloudSQL instance for RAG VectorDB"
-  default     = "us-central1"
 }
 
 variable "db_secret_name" {
@@ -46,9 +44,27 @@ variable "db_secret_name" {
   description = "CloudSQL user credentials"
 }
 
+variable "base_image" {
+  type        = string
+  description = "Base image for the application"
+  default     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:8f40b9485739fb2b2b4d77e18f101e1030abff63d4a6240c4cfbf2c333b593fc"
+}
+
+variable "chat_history_image" {
+  type        = string
+  description = "Image that enables chat history via langchain + CloudSQL extensions"
+  default     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend-langchain@sha256:9524c6bc07b7316284e7565bae8b97525993922d361873123a00d25bfeed4de6"
+}
+
 variable "dataset_embeddings_table_name" {
   type        = string
   description = "Name of the table that stores vector embeddings for input dataset"
+}
+
+variable "enable_chat_history" {
+  type        = bool
+  description = "Enables chat history"
+  default     = false
 }
 
 variable "inference_service_endpoint" {

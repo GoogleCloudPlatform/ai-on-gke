@@ -35,6 +35,7 @@ resource "google_project_service" "nature_language_api" {
 
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.cloudsql_instance_region, var.cloudsql_instance)
+  image = var.enable_chat_history ? var.chat_history_image : var.base_image
 }
 
 # IAP Section: Creates the GKE components
@@ -101,7 +102,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
   }
 
   spec {
-    replicas = 3
+    replicas = 2
     selector {
       match_labels = {
         app = "rag-frontend"
@@ -118,7 +119,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:2f9215708b49e93b61a7808e6af95ed9498b42e9859cc2faa46376d4fe9368e9"
+          image = local.image
           name  = "rag-frontend"
 
           port {
@@ -133,7 +134,17 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
 
           env {
             name  = "PROJECT_ID"
-            value = "projects/${var.project_id}"
+            value = "${var.project_id}"
+          }
+
+          env {
+            name  = "REGION"
+            value = "${var.region}"
+          }
+
+          env {
+            name  = "INSTANCE"
+            value = "${var.cloudsql_instance}"
           }
 
           env {
@@ -149,6 +160,11 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           env {
             name  = "TABLE_NAME"
             value = var.dataset_embeddings_table_name
+          }
+
+          env {
+            name  = "ENABLE_CHAT_HISTORY"
+            value = var.enable_chat_history
           }
 
           resources {

@@ -17,7 +17,7 @@ import google.cloud.dlp
 from . import retry
 
 # Convert the project id into a full resource id.
-parent = os.environ.get('PROJECT_ID', 'NULL')
+parent = "projects/{0}".format(os.environ.get('PROJECT_ID', 'NULL'))
 
 # Instantiate a dlp client.
 dlp_client = google.cloud.dlp_v2.DlpServiceClient()

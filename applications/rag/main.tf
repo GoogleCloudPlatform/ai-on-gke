@@ -221,6 +221,7 @@ module "frontend" {
   source                        = "./frontend"
   providers                     = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                    = var.project_id
+  region                        = var.cluster_location
   create_service_account        = var.create_rag_service_account
   google_service_account        = local.rag_service_account
   namespace                     = var.kubernetes_namespace
@@ -229,6 +230,7 @@ module "frontend" {
   cloudsql_instance_region      = local.cloudsql_instance_region
   db_secret_name                = module.cloudsql.db_secret_name
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
+  enable_chat_history           = true # enabling this uses langchain + CloudSQL integrations to store & use chat history. See (https://github.com/googleapis/langchain-google-cloud-sql-pg-python/blob/main/README.md)
 
   # IAP Auth parameters
   add_auth                 = var.frontend_add_auth
