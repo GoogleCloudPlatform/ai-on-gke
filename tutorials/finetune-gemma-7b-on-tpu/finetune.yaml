@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: headless-svc
+spec:
+  clusterIP: None
+  selector:
+    job-name: tpu-job
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tpu-job
+spec:
+  backoffLimit: 0
+  completions: 4
+  parallelism: 4
+  completionMode: Indexed
+  template:
+    spec:
+      subdomain: headless-svc
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-tpu-accelerator: tpu-v4-podslice
+        cloud.google.com/gke-tpu-topology: 2x2x4
+      containers:
+      - name: tpu-job
+        image: <YOUR_IMAGE>
+        ports:
+        - containerPort: 8471 # Default port using which TPU VMs communicate
+        - containerPort: 8431 # Port to export TPU runtime metrics, if supported.
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            google.com/tpu: "4"
+          limits:
+            google.com/tpu: "4"
+        env:
+        - name: PJRT_DEVICE
+          value: "TPU"
+        - name: XLA_USE_SPMD
+          value: "1"
+        - name: XLA_USE_BF16
+          value: "1"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+        - name: NEW_MODEL_ID
+          value: <FINETUNED_MODEL_ID>
+        - name: LIMIT
+          value: "10000"
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
