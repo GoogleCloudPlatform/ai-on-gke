@@ -13,7 +13,7 @@
 # limitations under the License.
 
 output "jupyterhub_uri" {
-  value = "http://${module.jupyterhub.jupyterhub_uri}"
+  value = module.jupyterhub.jupyterhub_uri != "" ? "http://${module.jupyterhub.jupyterhub_uri}" : ""
 }
 
 output "jupyterhub_user" {
