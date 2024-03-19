@@ -33,6 +33,14 @@ variable "gcs_bucket" {
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
+variable "additional_labels" {
+  type        = map(string)
+  description = "Additional Kubernetes labels to add to Kubernetes resources."
+  default = {
+    created-by = "jupyter-on-gke"
+  }
+}
+
 variable "workload_identity_service_account" {
   type        = string
   description = "workload identity service account"

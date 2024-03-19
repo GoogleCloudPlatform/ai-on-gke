@@ -29,6 +29,7 @@ variable "db_region" {
   default     = "us-central1"
 }
 
+
 variable "cloudsql_instance_name" {
   type        = string
   description = "Cloud SQL instance name"
@@ -39,6 +40,14 @@ variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
   default     = "ray-system"
+}
+
+variable "additional_labels" {
+  type        = map(string)
+  description = "Additional Kubernetes labels to add to Kubernetes resources."
+  default = {
+    created-by = "ray-on-gke"
+  }
 }
 
 variable "enable_tpu" {

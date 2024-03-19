@@ -37,6 +37,14 @@ variable "kubernetes_namespace" {
   default     = "rag"
 }
 
+variable "additional_labels" {
+  type        = map(string)
+  description = "Additional Kubernetes labels to add to Kubernetes resources."
+  default = {
+    created-by = "rag-on-gke"
+  }
+}
+
 variable "jupyter_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"

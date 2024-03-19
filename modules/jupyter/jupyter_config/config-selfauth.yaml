@@ -25,6 +25,8 @@ hub:
   image:
     name: us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class
     tag: latest
+  labels:
+    ${indent(4, chomp(yamlencode(additional_labels)))}
   config:
     JupyterHub:
       authenticator_class: ${authenticator_class}
@@ -82,7 +84,7 @@ singleuser:
     # Used for GCSFuse to set the ephemeral storage as the home directory. If not set, it will show a permission error on the pod log when using GCSFuse.
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
   extraLabels:
-    created-by: "jupyter-on-gke"
+    ${indent(4, chomp(yamlencode(additional_labels)))}
   image:
     name: jupyter/tensorflow-notebook
     tag: python-3.10

@@ -106,6 +106,7 @@ resource "helm_release" "jupyterhub" {
     project_id          = var.project_id
     project_number      = data.google_project.project.number
     namespace           = var.namespace
+    additional_labels   = var.additional_labels
     backend_config      = var.k8s_backend_config_name
     service_name        = var.k8s_backend_service_name
     authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
@@ -119,6 +120,7 @@ resource "helm_release" "jupyterhub" {
       project_id          = var.project_id
       project_number      = data.google_project.project.number
       namespace           = var.namespace
+      additional_labels   = var.additional_labels
       backend_config      = var.k8s_backend_config_name
       service_name        = var.k8s_backend_service_name
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"

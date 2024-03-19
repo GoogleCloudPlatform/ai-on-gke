@@ -212,6 +212,7 @@ module "inference-server" {
   source            = "../../tutorials-and-examples/hf-tgi"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = var.kubernetes_namespace
+  additional_labels = var.additional_labels
   autopilot_cluster = local.enable_autopilot
   depends_on        = [module.namespace]
 }
@@ -223,6 +224,7 @@ module "frontend" {
   create_service_account        = var.create_rag_service_account
   google_service_account        = local.rag_service_account
   namespace                     = var.kubernetes_namespace
+  additional_labels             = var.additional_labels
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
   cloudsql_instance_region      = local.cloudsql_instance_region

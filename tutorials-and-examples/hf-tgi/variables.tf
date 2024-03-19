@@ -18,6 +18,12 @@ variable "namespace" {
   default     = "default"
 }
 
+variable "additional_labels" {
+  type        = map(string)
+  description = "Additional Kubernetes labels to add to Kubernetes resources."
+  default     = {}
+}
+
 variable "autopilot_cluster" {
   type = bool
 }

@@ -43,22 +43,25 @@ resource "kubernetes_deployment" "inference_deployment" {
   metadata {
     name      = "mistral-7b-instruct"
     namespace = var.namespace
+    labels = merge({
+      app = "mistral-7b-instruct"
+    }, var.additional_labels)
   }
 
   spec {
     replicas = 1
 
     selector {
-      match_labels = {
+      match_labels = merge({
         app = "mistral-7b-instruct"
-      }
+      }, var.additional_labels)
     }
 
     template {
       metadata {
-        labels = {
+        labels = merge({
           app = "mistral-7b-instruct"
-        }
+        }, var.additional_labels)
       }
 
       spec {

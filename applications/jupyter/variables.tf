@@ -31,6 +31,14 @@ variable "kubernetes_namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
+variable "additional_labels" {
+  type        = map(string)
+  description = "Additional Kubernetes labels to add to Kubernetes resources."
+  default = {
+    created-by = "jupyter-on-gke"
+  }
+}
+
 variable "gcs_bucket" {
   type        = string
   description = "Bucket name to store the dataset"

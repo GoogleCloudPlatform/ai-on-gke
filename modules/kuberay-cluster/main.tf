@@ -35,6 +35,7 @@ resource "helm_release" "ray-cluster" {
     templatefile("${path.module}/values.yaml", {
       gcs_bucket                        = var.gcs_bucket
       k8s_service_account               = var.google_service_account
+      additional_labels                 = var.additional_labels
       grafana_host                      = var.grafana_host
       security_context                  = local.security_context
       secret_name                       = var.db_secret_name

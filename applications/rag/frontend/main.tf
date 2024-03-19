@@ -103,24 +103,24 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
   metadata {
     name      = "rag-frontend"
     namespace = var.namespace
-    labels = {
+    labels = merge({
       app = "rag-frontend"
-    }
+    }, var.additional_labels)
   }
 
   spec {
     replicas = 3
     selector {
-      match_labels = {
+      match_labels = merge({
         app = "rag-frontend"
-      }
+      }, var.additional_labels)
     }
 
     template {
       metadata {
-        labels = {
+        labels = merge({
           app = "rag-frontend"
-        }
+        }, var.additional_labels)
       }
 
       spec {
