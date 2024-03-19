@@ -63,7 +63,53 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
     1. Inspect templates: https://cloud.google.com/dlp/docs/creating-templates-inspect
     2. De-identification templates: https://cloud.google.com/dlp/docs/creating-templates-deid
 
-#### Verify setup
+**NOTE:** Refer to the `Troubleshooting` section below to debug/verify your setup.
+
+### Generate vector embeddings for dataset
+
+This step generates the vector embeddings for your input dataset. Currently, the default dataset is [Google Maps Restaurant Reviews](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews). We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
+
+1. Fetch the Jupyterhub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:
+   * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+   * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`.
+       * To add additional users to your application, go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/proxy-public` service and add principals with the role `IAP-secured Web App User`.
+       * Wait for the domain status to be `Active` (takes upto 20 minutes): `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
+
+2. Login to Jupyterhub:
+   * IAP disabled: Use placeholder credentials:
+        * username: admin
+        * password: use `terraform output jupyter_password` to fetch the password value
+   * IAP enabled: Login with your Google credentials.
+
+3. Once logged in, choose the `CPU` preset. Go to File -> Open From URL & upload the notebook `rag-kaggle-ray-sql.ipynb` from `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb`. This path can also be found by going to the [notebook location](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb) and selecting `Raw`.
+
+4. Create a Kaggle account and navigate to https://www.kaggle.com/settings/account and generate an API token. See https://www.kaggle.com/docs/api#authentication how to create one from https://kaggle.com/settings. This token is used in the notebook to access the [Google Maps Restaurant Reviews dataset](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews)
+
+5. Replace the variables in the 1st cell with your Kaggle credentials (can be found in the `kaggle.json` file created by Step 4):
+    * `KAGGLE_USERNAME`
+    * `KAGGLE_KEY`
+
+6. Run all the cells in the notebook. This generates vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and stores them in the `pgvector-instance` via a Ray job.
+    * When the last cell says the job has succeeded (eg: `Job 'raysubmit_APungAw6TyB55qxk' succeeded`), the vector embeddings have been generated and we can launch the frontend chat interface.
+    * Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. `Status message: Job has not started yet`).
+
+### Launch the frontend chat interface
+
+#### With IAP disabled
+1. Setup port forwarding for the frontend: `kubectl port-forward service/rag-frontend -n $NAMESPACE 8080:8080 &`
+2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
+
+#### With IAP enabled
+1. Read terraform output: `terraform output frontend_uri` to find the domain created by IAP for accessing your service.
+2. To add additional users to your application, go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/rag-frontend` service and add principals with the role `IAP-secured Web App User`.
+       * Wait for the domain status to be `Active` (takes upto 20 minutes): `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
+5. Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
+
+### Cleanup
+
+1. Run `terraform destroy --var-file="workloads.tfvars"`
+
+#### Troubleshooting
 
 Set your namespace from `workloads.tfvars`:
 ```
@@ -78,12 +124,11 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `example-cluster-kuberay-head-` and `example-cluster-kuberay-worker-workergroup-`).
 
 2. Verify Jupyterhub service is setup:
-    * Fetch the service IP/Domain:
+    * Fetch the service service endpoint:
       * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-      * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`:
-          * From [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), check if the target user has role `IAP-secured Web App User`
+      * IAP enabled: `terraform output jupyterhub_uri`:
           * Wait for domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
-    * Go to the IP in a browser which should display the Jupyterlab login UI.
+    * Go to the service endpoint in a browser which should display the Jupyterlab login UI.
 
 3. Verify the instance `pgvector-instance` exists: `gcloud sql instances list | grep pgvector`
 
@@ -115,58 +160,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
       ```
      kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'
       ```
-   * Verify IAP is enabled:
+   * Verify IAP is enabled (if you chose to use IAP). If you encounter any auth errors, try re-enabling IAP for the `rag/rag-frontend` service [here](https://console.cloud.google.com/security/iap):
       ```
       gcloud compute backend-services list --format="table(name, backends, iap.enabled)"
       ```
-
-### Vector embeddings for dataset
-
-This step generates the vector embeddings for your input dataset. Currently, the default dataset is [Google Maps Restaurant Reviews](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews). We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
-
-1. Fetch the Jupyterhub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:
-   * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-   * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`.
-       * From [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), check if the target user has role `IAP-secured Web App User`.
-       * Wait for the domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
-
-2. Login to Jupyterhub:
-   * IAP disabled: Use placeholder credentials:
-        * username: admin
-        * password: use `terraform output jupyter_password` to fetch the password value
-   * IAP enabled: Login with your Google credentials.
-
-3. Once logged in, choose the `CPU` preset. Go to File -> Open From URL & upload the notebook `rag-kaggle-ray-sql.ipynb` from `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb`. This path can also be found by going to the [notebook location](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb) and selecting `Raw`.
-
-4. Create a Kaggle account and navigate to https://www.kaggle.com/settings/account and generate an API token. See https://www.kaggle.com/docs/api#authentication how to create one from https://kaggle.com/settings. This token is used in the notebook to access the [Google Maps Restaurant Reviews dataset](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews)
-
-5. Replace the variables in the 1st cell with your Kaggle credentials (can be found in the `kaggle.json` file created by Step 4):
-    * `KAGGLE_USERNAME`
-    * `KAGGLE_KEY`
-
-6. Run all the cells in the notebook. This generates vector embeddings for the input dataset (`denizbilginn/google-maps-restaurant-reviews`) and stores them in the `pgvector-instance` via a Ray job.
-    * When the last cell says the job has succeeded (eg: `Job 'raysubmit_APungAw6TyB55qxk' succeeded`), the vector embeddings have been generated and we can launch the frontend chat interface.
-    * Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. `Status message: Job has not started yet`).
-
-### Launch the frontend chat interface
-
-#### With IAP disabled
-1. Setup port forwarding for the frontend: `kubectl port-forward service/rag-frontend -n $NAMESPACE 8080:8080 &`
-
-2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
-
-#### With IAP enabled
-1. Verify that IAP is enabled on [Google Cloud Platform (GCP) IAP](https://console.cloud.google.com/security/iap)(make sure you are logged in) for your application. If you encounter any errors, try re-enabling IAP.
-2. From *Google Cloud Platform IAP*, check if the target user has role `IAP-secured Web App User`. This role is necessary to access the application through IAP.
-3. Verify the domain is active using command:
-    `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
-4. Read terraform output: `terraform output frontend_uri` to find the domain created by IAP for accessing your service.
-5. Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
-
-#### Prompt examples
-
-*TODO:* Add some example prompts for the dataset.
-
-### Cleanup
-
-1. Run `terraform destroy --var-file="workloads.tfvars"`
