@@ -152,11 +152,12 @@ steps:
 
         kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=300s
         kubectl get services -n ml-$SHORT_SHA-$_BUILD_ID
-        kubectl get service proxy-public -n ml-$SHORT_SHA-$_BUILD_ID --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/jupyterhub_host_url.txt
-        echo "HOST URL is " $(cat /workspace/jupyterhub_host_url.txt)
+        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
+        # Wait port-forwarding to take its place
+        sleep 5s
 
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) $_AUTOPILOT_CLUSTER
+        python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
 
@@ -227,12 +228,13 @@ steps:
 
         # Validate Jupyterhub: Get hub url
         kubectl get services -n rag-$SHORT_SHA-$_BUILD_ID
-        kubectl get service proxy-public -n rag-$SHORT_SHA-$_BUILD_ID --output jsonpath='{.status.loadBalancer.ingress[0].ip}' > /workspace/rag_jupyterhub_host_url.txt
-        echo "HOST URL is " $(cat /workspace/rag_jupyterhub_host_url.txt)
+        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
+        # Wait port-forwarding to take its place
+        sleep 5s
 
         # Validate Jupyterhub: Test Hub
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py $(cat /workspace/rag_jupyterhub_host_url.txt) $_AUTOPILOT_CLUSTER
+        python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/rag_jupyterhub_test_result.txt
 
         # Validate RAG: Test rag frontend
