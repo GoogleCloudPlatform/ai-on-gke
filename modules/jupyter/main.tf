@@ -109,7 +109,7 @@ resource "helm_release" "jupyterhub" {
     backend_config      = var.k8s_backend_config_name
     service_name        = var.k8s_backend_service_name
     authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
-    service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
+    service_type        = var.add_auth ? "NodePort" : "ClusterIP"
     gcs_bucket          = var.gcs_bucket
     k8s_service_account = var.workload_identity_service_account
     ephemeral_storage   = var.ephemeral_storage
@@ -122,7 +122,7 @@ resource "helm_release" "jupyterhub" {
       backend_config      = var.k8s_backend_config_name
       service_name        = var.k8s_backend_service_name
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
-      service_type        = var.add_auth ? "NodePort" : "LoadBalancer"
+      service_type        = var.add_auth ? "NodePort" : "ClusterIP"
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.workload_identity_service_account
       ephemeral_storage   = var.ephemeral_storage

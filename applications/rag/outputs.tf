@@ -14,7 +14,7 @@
 
 output "jupyterhub_uri" {
   description = "JupyterHub Endpoint to access user interface. In case of private IP, consider port-forwarding."
-  value       = "http://${module.jupyterhub.jupyterhub_uri}"
+  value       = var.add_auth ? "http://${module.jupyterhub.jupyterhub_uri}" : ""
 }
 
 output "jupyterhub_user" {
