@@ -29,7 +29,7 @@ cluster_membership_id = "" # required for private cluster, defaults to `cluster_
 ## JupyterHub variables
 namespace                         = "ml"
 create_gcs_bucket                 = true
-gcs_bucket                        = "gcs-bucket-dsfhfh"
+gcs_bucket                        = "gcs-bucket-<unique-suffix>" # Choose a globally unique bucket name.
 workload_identity_service_account = "jupyter-sa"
 
 # IAP Configs
