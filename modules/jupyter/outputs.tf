@@ -13,7 +13,7 @@
 # limitations under the License.
 
 output "jupyterhub_uri" {
-  value = var.add_auth ? module.iap_auth[0].domain : (data.kubernetes_service.jupyter-ingress.status != null ? (data.kubernetes_service.jupyter-ingress.status[0].load_balancer != null ? "${data.kubernetes_service.jupyter-ingress.status[0].load_balancer[0].ingress[0].ip}" : "") : "")
+  value = var.add_auth ? module.iap_auth[0].domain : (data.kubernetes_service.jupyter.status != null ? (data.kubernetes_service.jupyter.status[0].load_balancer != null ? "${data.kubernetes_service.jupyter.status[0].load_balancer[0].ingress[0].ip}" : "") : "")
 }
 
 output "jupyterhub_user" {
