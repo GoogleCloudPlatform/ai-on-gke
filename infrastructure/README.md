@@ -21,7 +21,7 @@ Following service APIs are enabled,
 
 if not already enabled, use the following command:
 ```
-gcloud services enable container.googleapis.com gkehub.googleapis.com
+gcloud services enable container.googleapis.com gkehub.googleapis.com cloudresourcemanager.googleapis.com
 ```
 ## Network Connectivity
 
