@@ -55,6 +55,7 @@ func main() {
 	serviceAccount := flag.String("service-account", "default", "Service Account email assigned to the GCE instance used for creating the disk image.")
 	diskType := flag.String("disk-type", "pd-ssd", "disk type to generate the disk image")
 	diskSizeGb := flag.Int64("disk-size-gb", 60, "disk size to unpack container images")
+	instanceDiskSizeGb := flag.Int64("instance-disk-size-gb", 100, "disk size of the GCE instance used for disk image creation")
 	gcpOAuth := flag.String("gcp-oauth", "", "path to GCP service account credential file")
 	imagePullAuth := flag.String("image-pull-auth", "None", "auth mechanism to pull the container image, valid values: [None, ServiceAccountToken].\nNone means that the images are publically available and no authentication is required to pull them.\nServiceAccountToken means the service account oauth token will be used to pull the images.\nFor more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications")
 	timeout := flag.String("timeout", "20m", "Default timout for each step, defaults to 20m")
@@ -110,6 +111,7 @@ func main() {
 		ServiceAccount:        *serviceAccount,
 		DiskType:              *diskType,
 		DiskSizeGB:            *diskSizeGb,
+		InstanceDiskSizeGB:    *instanceDiskSizeGb,
 		GCPOAuth:              *gcpOAuth,
 		Network:               fmt.Sprintf("projects/%s/global/networks/%s", *projectName, *network),
 		Subnet:                fmt.Sprintf("projects/%s/regions/%s/subnetworks/%s", *projectName, regionForZone(*zone), *subnet),

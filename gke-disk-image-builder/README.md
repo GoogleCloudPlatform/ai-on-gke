@@ -51,6 +51,7 @@ Flag                | Required | Default | Description
 *--container-image* | Yes      | nil     | Container image to include in the disk image. This flag can be specified multiple times
 *--gcp-oauth*       | No       | nil     | Path to GCP service account credential file
 *--disk-size-gb*    | No       | 10      | Size of a disk that will host the unpacked images
+*--instance-disk-size-gb*| No  | 100     | Size of the disk attached to the instance used for creating the disk image
 *--image-pull-auth* | No       | 'None'  | Auth mechanism to pull the container image, valid values: [None, ServiceAccountToken]. None means that the images are publically available and no authentication is required to pull them. ServiceAccountToken means the service account oauth token will be used to pull the images. For more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications
 *--timeout*         | No       | '20m'   | Default timeout for each step. Must be set to a proper value if the image is large to account for the pull and image creation time step.
 *--network*         | No       | 'default'   | VPC network used by the GCE resources used for creating the disk image.

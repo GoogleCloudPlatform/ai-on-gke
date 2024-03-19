@@ -56,6 +56,7 @@ type Request struct {
 	MachineType           string
 	DiskType              string
 	DiskSizeGB            int64
+	InstanceDiskSizeGB    int64
 	GCPOAuth              string
 	Network               string
 	Subnet                string
@@ -195,7 +196,7 @@ func GenerateDiskImage(ctx context.Context, req Request) error {
 									DeviceName: fmt.Sprintf("%s-bootable-disk", req.JobName),
 									Mode:       "READ_WRITE",
 									InitializeParams: &compute.AttachedDiskInitializeParams{
-										DiskSizeGb:  req.DiskSizeGB,
+										DiskSizeGb:  req.InstanceDiskSizeGB,
 										DiskType:    fmt.Sprintf("projects/%s/zones/%s/diskTypes/%s", req.ProjectName, req.Zone, req.DiskType),
 										SourceImage: "projects/debian-cloud/global/images/debian-11-bullseye-v20230912",
 									},
