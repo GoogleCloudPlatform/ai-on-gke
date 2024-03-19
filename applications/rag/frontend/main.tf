@@ -46,7 +46,7 @@ module "iap_auth" {
   namespace                = var.namespace
   support_email            = var.support_email
   app_name                 = "frontend"
-  brand                    = var.brand
+  create_brand             = var.create_brand
   k8s_ingress_name         = var.k8s_ingress_name
   k8s_managed_cert_name    = var.k8s_managed_cert_name
   k8s_iap_secret_name      = var.k8s_iap_secret_name
@@ -55,10 +55,10 @@ module "iap_auth" {
   k8s_backend_service_port = var.k8s_backend_service_port
   client_id                = var.client_id
   client_secret            = var.client_secret
-  url_domain_addr          = var.url_domain_addr
-  url_domain_name          = var.url_domain_name
+  domain                   = var.domain
+  members_allowlist        = var.members_allowlist
   depends_on = [
-    kubernetes_service.rag_frontend_service
+    kubernetes_service.rag_frontend_service, kubernetes_deployment.rag_frontend_deployment
   ]
 }
 
@@ -76,6 +76,9 @@ resource "kubernetes_service" "rag_frontend_service" {
   metadata {
     name      = "rag-frontend"
     namespace = var.namespace
+    annotations = var.add_auth ? {
+      "beta.cloud.google.com/backend-config" = "{\"default\": \"${var.k8s_backend_config_name}\"}"
+    } : {}
   }
   spec {
     selector = {
@@ -88,6 +91,11 @@ resource "kubernetes_service" "rag_frontend_service" {
     }
 
     type = var.add_auth ? "NodePort" : "ClusterIP"
+  }
+  lifecycle {
+    ignore_changes = [
+      metadata[0].annotations,
+    ]
   }
 }
 
@@ -199,13 +207,5 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       }
     }
   }
-}
-
-data "kubernetes_service" "frontend-ingress" {
-  metadata {
-    name      = var.k8s_ingress_name
-    namespace = var.namespace
-  }
-  depends_on = [module.iap_auth]
 }
 

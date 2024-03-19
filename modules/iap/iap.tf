@@ -19,9 +19,9 @@ data "google_project" "project" {
 
 # Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
-  count             = var.brand == "" ? 1 : 0
+  count             = var.create_brand ? 1 : 0
   support_email     = var.support_email
-  application_title = "${var.app_name}-Application"
+  application_title = "Web Application"
   project           = var.project_id
 }
 
@@ -29,7 +29,8 @@ resource "google_iap_brand" "project_brand" {
 resource "google_iap_client" "iap_oauth_client" {
   count        = var.client_id == "" ? 1 : 0
   display_name = "${var.app_name}-Client"
-  brand        = var.brand == "" ? "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}" : var.brand
+  brand        = "projects/${data.google_project.project.number}/brands/${data.google_project.project.number}"
+  depends_on   = [google_iap_brand.project_brand]
 }
 
 # Used to generate ip address
@@ -41,7 +42,6 @@ resource "random_string" "random" {
 
 # IAP
 resource "google_compute_global_address" "ip_address" {
-  count        = var.url_domain_addr == "" ? 1 : 0
   provider     = google-beta
   project      = var.project_id
   name         = "${var.app_name}-address-${random_string.random.result}"
@@ -84,12 +84,12 @@ resource "helm_release" "iap" {
 
   set {
     name  = "iap.managedCertificate.domain"
-    value = var.url_domain_addr != "" ? var.url_domain_addr : "${google_compute_global_address.ip_address[0].address}.nip.io"
+    value = var.domain != "" ? var.domain : "${google_compute_global_address.ip_address.address}.nip.io"
   }
 
   set {
     name  = "iap.ingress.staticIpName"
-    value = var.url_domain_addr != "" ? var.url_domain_name : "${google_compute_global_address.ip_address[0].name}"
+    value = google_compute_global_address.ip_address.name
   }
 
   set {
@@ -108,15 +108,10 @@ resource "helm_release" "iap" {
   }
 }
 
-resource "kubernetes_annotations" "annotation" {
-  api_version = "v1"
-  kind        = "Service"
-  metadata {
-    name      = var.k8s_backend_service_name
-    namespace = var.namespace
-  }
-  annotations = {
-    "beta.cloud.google.com/backend-config" = "{\"default\": \"${var.k8s_backend_config_name}\"}"
-  }
-  depends_on = [helm_release.iap]
+## TODO(@umeshkumhar): grant permission to specific backend_service
+resource "google_project_iam_member" "project" {
+  for_each = toset(var.members_allowlist)
+  project  = var.project_id
+  role     = "roles/iap.httpsResourceAccessor"
+  member   = each.key
 }
