@@ -253,7 +253,7 @@ variable "jupyter_members_allowlist" {
 ## GKE variables
 variable "create_cluster" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "private_cluster" {
