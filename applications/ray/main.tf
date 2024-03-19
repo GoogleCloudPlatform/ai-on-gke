@@ -167,4 +167,6 @@ resource "kubernetes_resource_quota" "ray_namespace_resource_quota" {
   spec {
     hard = var.resource_quotas
   }
+
+  depends_on = [module.namespace]
 }
