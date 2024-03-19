@@ -183,3 +183,22 @@ variable "goog_cm_deployment_name" {
   type    = string
   default = ""
 }
+
+# These default resource quotas are set intentionally high as an example that won't be limiting for most clusters.
+# Consult https://kubernetes.io/docs/concepts/policy/resource-quotas/ for additional quotas that may be set.
+variable "resource_quotas" {
+  description = "Kubernetes ResourceQuota object to attach to the Ray cluster's namespace"
+  type        = map(string)
+  default = {
+    cpu                       = "1000"
+    memory                    = "10Ti"
+    "requests.nvidia.com/gpu" = "100"
+    "requests.google.com/tpu" = "100"
+  }
+}
+
+variable "disable_resource_quotas" {
+  description = "Set to true to remove resource quotas from your Ray clusters. Not recommended"
+  type        = bool
+  default     = false
+}

@@ -75,7 +75,7 @@ resource "helm_release" "ray-cluster" {
         "cloud.google.com/gke-tpu-topology" : "2x2x1"
         "cloud.google.com/gke-placement-group" : "tpu-pool"
         } : {
-        "iam.gke.io / gke-metadata-server-enabled" : "true"
+        "iam.gke.io/gke-metadata-server-enabled" : "true"
       }
     })
   ]
@@ -90,7 +90,7 @@ data "kubernetes_service" "head-svc" {
 }
 
 # Allow ingress to the kuberay head from outside the cluster
-resource "kubernetes_network_policy" "kuberay-head-network-policy" {
+resource "kubernetes_network_policy" "kuberay-job-and-dashboard-network-policy" {
   count = var.disable_network_policy ? 0 : 1
   metadata {
     name      = "terraform-kuberay-head-network-policy"
@@ -105,12 +105,7 @@ resource "kubernetes_network_policy" "kuberay-head-network-policy" {
     }
 
     ingress {
-      # Ray Client server
-      ports {
-        port     = "10001"
-        protocol = "TCP"
-      }
-      # Ray Dashboard
+      # Ray job submission and dashboard
       ports {
         port     = "8265"
         protocol = "TCP"
@@ -118,32 +113,18 @@ resource "kubernetes_network_policy" "kuberay-head-network-policy" {
 
       from {
         namespace_selector {
-          match_labels = {
-            "kubernetes.io/metadata.name" = var.namespace
+          match_expressions {
+            key      = "kubernetes.io/metadata.name"
+            operator = "In"
+            values   = var.network_policy_allow_namespaces
           }
         }
+      }
 
-        dynamic "namespace_selector" {
-          for_each = var.network_policy_allow_namespaces_by_label
-          content {
-            match_labels = {
-              each.key = each.value
-            }
-          }
-        }
-
-        dynamic "pod_selector" {
-          for_each = var.network_policy_allow_pods_by_label
-          content {
-            match_labels = {
-              each.key = each.value
-            }
-          }
-        }
-
-        dynamic "ip_block" {
-          for_each = var.network_policy_allow_ips
-          content {
+      dynamic "from" {
+        for_each = var.network_policy_allow_cidrs
+        content {
+          ip_block {
             cidr = each.key
           }
         }
@@ -154,7 +135,7 @@ resource "kubernetes_network_policy" "kuberay-head-network-policy" {
   }
 }
 
-# Allow all intranamespace traffic to allow intracluster traffic
+# Allow all same namespace and gmp traffic
 resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
   count = var.disable_network_policy ? 0 : 1
   metadata {
@@ -176,27 +157,15 @@ resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
 
       from {
         namespace_selector {
-          match_labels = {
-            "kubernetes.io/metadata.name" = var.namespace
-            "kubernetes.io/metadata.name" = "gke-gmp-system"
+          match_expressions {
+            key      = "kubernetes.io/metadata.name"
+            operator = "In"
+            values   = [var.namespace, "gke-gmp-system"]
           }
         }
       }
     }
 
     policy_types = ["Ingress"]
-  }
-}
-
-# Assign resource quotas to Ray namespace to ensure that they don't overutilize resources
-resource "kubernetes_resource_quota" "ray_namespace_resource_quota" {
-  count = var.disable_resource_quotas ? 0 : 1
-  metadata {
-    name      = "ray-resource-quota"
-    namespace = var.namespace
-  }
-
-  spec {
-    hard = var.resource_quotas
   }
 }
