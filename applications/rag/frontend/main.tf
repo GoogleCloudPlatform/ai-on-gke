@@ -57,7 +57,7 @@ module "iap_auth" {
   client_secret            = var.client_secret
   domain                   = var.domain
   depends_on = [
-    kubernetes_service.rag_frontend_service
+    kubernetes_service.rag_frontend_service, kubernetes_deployment.rag_frontend_deployment
   ]
 }
 
@@ -90,6 +90,11 @@ resource "kubernetes_service" "rag_frontend_service" {
     }
 
     type = var.add_auth ? "NodePort" : "ClusterIP"
+  }
+  lifecycle {
+    ignore_changes = [
+      metadata[0].annotations,
+    ]
   }
 }
 
@@ -201,13 +206,5 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       }
     }
   }
-}
-
-data "kubernetes_service" "frontend-ingress" {
-  metadata {
-    name      = var.k8s_ingress_name
-    namespace = var.namespace
-  }
-  depends_on = [module.iap_auth]
 }
 

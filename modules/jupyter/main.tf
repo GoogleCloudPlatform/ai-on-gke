@@ -138,18 +138,3 @@ data "kubernetes_service" "jupyter" {
   depends_on = [module.iap_auth, helm_release.jupyterhub]
 }
 
-# The data of the GCP backend service. IAP is enabled on this backend service
-data "google_compute_backend_service" "jupyter" {
-  count   = var.add_auth && length(var.members_allowlist) > 0 ? 1 : 0
-  name    = data.kubernetes_service.jupyter.metadata != null ? (data.kubernetes_service.jupyter.metadata[0].annotations != null ? jsondecode(data.kubernetes_service.jupyter.metadata[0].annotations["cloud.google.com/neg-status"]).network_endpoint_groups[var.k8s_backend_service_port] : "not-found") : "not-found"
-  project = var.project_id
-}
-
-# Binds the list of principals in the allowlist file to roles/iap.httpsResourceAccessor
-resource "google_iap_web_backend_service_iam_binding" "binding" {
-  count               = var.add_auth && length(var.members_allowlist) > 0 ? 1 : 0
-  project             = var.project_id
-  web_backend_service = data.google_compute_backend_service.jupyter[0].generated_id != null ? "${data.google_compute_backend_service.jupyter[0].name}" : ""
-  role                = "roles/iap.httpsResourceAccessor"
-  members             = toset(var.members_allowlist)
-}
