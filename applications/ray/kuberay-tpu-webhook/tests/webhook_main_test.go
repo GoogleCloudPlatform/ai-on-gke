@@ -44,7 +44,7 @@ func setupTest(t *testing.T) {
 	headNodeIP = "1.2.3.4"
 	groupNameStr = "workergroup"
 
-	// 1 head pod + 1 worker - doesn't request TPUs
+	// 1 CPU head pod + 1 worker - doesn't request TPUs
 	testCPUPods = []runtime.Object{
 		&corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -304,68 +304,254 @@ func setupTest(t *testing.T) {
 		},
 	}
 
+	testPodAdmissionReviews = &admissionv1.AdmissionReview{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Request: &admissionv1.AdmissionRequest{
+			UID: "uid",
+			Kind: metav1.GroupVersionKind{
+				Group:   "",
+				Version: "v1",
+				Kind:    "Pod",
+			},
+			Resource: metav1.GroupVersionResource{
+				Group:    "",
+				Version:  "v1",
+				Resource: "Pod",
+			},
+			// Object: runtime.RawExtension{
+			// 	Raw:    json.Marshal(testCPUPods),
+			// 	Object: testCPUPods,
+			// },
+		},
+	}
+
+	// RayCluster requesting no TPU resources - pass-through
+	testRayClusterNoTPUs = &rayv1.RayCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instanceName,
+			Namespace: namespaceStr,
+		},
+		Spec: rayv1.RayClusterSpec{
+			HeadGroupSpec: rayv1.HeadGroupSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name: "ray-head",
+							},
+						},
+					},
+				},
+			},
+			WorkerGroupSpecs: []rayv1.WorkerGroupSpec{
+				{
+					Replicas:    pointer.Int32(1),
+					MinReplicas: pointer.Int32(0),
+					MaxReplicas: pointer.Int32(10000),
+					NumOfHosts:  1,
+					GroupName:   groupNameStr,
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name: "ray-worker",
+									Env: []corev1.EnvVar{
+										{
+											Name: "MY_POD_IP",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													FieldPath: "status.podIP",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// RayCluster with 2x2x1 TPU topology worker group
+	testRayClusterSingleHostTPU = &rayv1.RayCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instanceName,
+			Namespace: namespaceStr,
+		},
+		Spec: rayv1.RayClusterSpec{
+			HeadGroupSpec: rayv1.HeadGroupSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name: "ray-head",
+							},
+						},
+					},
+				},
+			},
+			WorkerGroupSpecs: []rayv1.WorkerGroupSpec{
+				{
+					Replicas:    pointer.Int32(1),
+					MinReplicas: pointer.Int32(0),
+					MaxReplicas: pointer.Int32(10000),
+					NumOfHosts:  1,
+					GroupName:   groupNameStr,
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name: "ray-worker",
+									Env: []corev1.EnvVar{
+										{
+											Name: "MY_POD_IP",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													FieldPath: "status.podIP",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// RayCluster with 2x2x4 TPU topology worker group
+	testRayClusterMultiHostTPU = &rayv1.RayCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instanceName,
+			Namespace: namespaceStr,
+		},
+		Spec: rayv1.RayClusterSpec{
+			HeadGroupSpec: rayv1.HeadGroupSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name: "ray-head",
+							},
+						},
+					},
+				},
+			},
+			WorkerGroupSpecs: []rayv1.WorkerGroupSpec{
+				{
+					Replicas:    pointer.Int32(1),
+					MinReplicas: pointer.Int32(0),
+					MaxReplicas: pointer.Int32(10000),
+					NumOfHosts:  4,
+					GroupName:   groupNameStr,
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name: "ray-worker",
+									Env: []corev1.EnvVar{
+										{
+											Name: "MY_POD_IP",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													FieldPath: "status.podIP",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
-func Test_ContainerRequestingTPUs() {
+func Test_ContainerRequestingTPUs(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_GetNumTPUHostsFromTopology() {
+func Test_GetNumTPUHostsFromTopology(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_IsTPUMultiHost() {
+func Test_IsTPUMultiHost(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_ExtractRayCluster() {
+func Test_ExtractRayCluster(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_GetDNSHostnames() {
+func Test_GetDNSHostnames(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_InjectHostnames() {
+func Test_InjectHostnames(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_InjectMultiHostReplicaLabel() {
+func Test_InjectMultiHostReplicaLabel(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_InjectPodAffinity() {
+func Test_InjectPodAffinity(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_CheckWorkersMatchTopology() {
+func Test_CheckWorkersMatchTopology(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_ValidateRayCluster() {
+func Test_ValidateRayCluster(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_GetEnvironmentVariable() {
+func Test_GetEnvironmentVariable(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_GetReplicaIndex() {
+func Test_GetReplicaIndex(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_GetNextWorkerID() {
+func Test_GetNextWorkerID(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_ExtractPod() {
+func Test_ExtractPod(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_MutatePod() {
+func Test_MutatePod(t *testing.T) {
+	setupTest(t)
 
 }
 
-func Test_DeletePod() {
+func Test_DeletePod(t *testing.T) {
+	setupTest(t)
 
 }
