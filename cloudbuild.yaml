@@ -71,10 +71,11 @@ steps:
         --location $_REGION \
         --project $PROJECT_ID 
 
-        # Create Baloon Pods to be used for AP clusters
+        # Create balloon pods
         kubectl apply -f tests/priority-class.yaml
-        kubectl apply -f tests/baloon-pods.yaml
-
+        kubectl apply -f tests/balloon-pods.yaml
+        
+        kubectl wait deployments placeholder -n default --for=condition=Available --timeout=300s
         kubectl wait --all pods -n gke-gmp-system --for=condition=Ready --timeout=300s
 
     dir: 'infrastructure/'

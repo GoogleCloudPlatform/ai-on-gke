@@ -15,11 +15,11 @@ spec:
       priorityClassName: placeholder-priority
       terminationGracePeriodSeconds: 0
       containers:
-      - name: ubuntu
-        image: ubuntu
+      - name: busybox
+        image: busybox
         command: ["sleep"]
         args: ["infinity"]
         resources:
             requests:
-              cpu: 200m
-              memory: 250Mi
+              cpu: 10m
+              memory: 25Mi
