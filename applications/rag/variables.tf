@@ -168,6 +168,66 @@ variable "frontend_members_allowlist" {
   ## keeping it string type to support single field input for marketplace UI.
 }
 
+# Ray-dashboard IAP settings
+variable "ray_dashboard_add_auth" {
+  type        = bool
+  description = "Enable iap authentication on frontend"
+  default     = true
+}
+
+variable "ray_dashboard_k8s_ingress_name" {
+  type    = string
+  default = "ray-dashboard-ingress"
+}
+
+variable "ray_dashboard_k8s_managed_cert_name" {
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "ray-dashboard-managed-cert"
+}
+
+variable "ray_dashboard_k8s_iap_secret_name" {
+  type    = string
+  default = "ray-dashboard-secret"
+}
+
+variable "ray_dashboard_k8s_backend_config_name" {
+  type        = string
+  description = "Name of the Backend Config on GCP"
+  default     = "ray-dashboard-iap-config"
+}
+
+variable "ray_dashboard_k8s_backend_service_port" {
+  type        = number
+  description = "Name of the K8s Backend Service Port"
+  default     = 8265
+}
+
+variable "ray_dashboard_domain" {
+  type        = string
+  description = "Domain used for SSL certificate. If it's empty, *.nip.io DNS is used."
+  default     = ""
+}
+
+variable "ray_dashboard_client_id" {
+  type        = string
+  description = "Client ID used for enabling IAP"
+  default     = ""
+}
+
+variable "ray_dashboard_client_secret" {
+  type        = string
+  description = "Client secret used for enabling IAP"
+  default     = ""
+  sensitive   = false
+}
+
+variable "ray_dashboard_members_allowlist" {
+  type    = string
+  default = ""
+  ## keeping it string type to support single field input for marketplace UI.
+}
+
 # Jupyter IAP settings
 variable "jupyter_add_auth" {
   type        = bool

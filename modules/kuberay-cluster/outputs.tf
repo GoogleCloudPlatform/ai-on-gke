@@ -18,3 +18,7 @@ output "ray_cluster_uri" {
       length(data.kubernetes_service.head-svc.status[0].load_balancer[0].ingress) > 0 ?
   "${data.kubernetes_service.head-svc.status[0].load_balancer[0].ingress[0].ip}" : "") : "") : ""
 }
+
+output "ray_dashboard_uri" {
+  value = var.add_auth ? module.iap_auth[0].domain : ""
+}

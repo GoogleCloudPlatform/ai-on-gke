@@ -40,3 +40,20 @@ gcs_bucket                      = "ray-bucket-zydg"
 create_ray_cluster              = true
 ray_cluster_name                = "example-cluster"
 enable_grafana_on_ray_dashboard = false
+
+## IAP config - if you choose to disable IAP authenticated access for your endpoints, ignore everthing below this line.
+create_brand = false
+
+## Ray Dashboard IAP Settings
+ray_dashboard_add_auth                 = false # Set to true when using auth with IAP
+ray_dashboard_support_email            = "<email>"
+ray_dashboard_k8s_ingress_name         = "ray-dashboard-ingress"
+ray_dashboard_k8s_managed_cert_name    = "ray-dashboard-managed-cert"
+ray_dashboard_k8s_iap_secret_name      = "ray-dashboard-iap-secret"
+ray_dashboard_k8s_backend_config_name  = "ray-dashboard-iap-config"
+ray_dashboard_k8s_backend_service_port = 8265
+
+ray_dashboard_domain            = ""
+ray_dashboard_client_id         = ""
+ray_dashboard_client_secret     = ""
+ray_dashboard_members_allowlist = "user:<email>"

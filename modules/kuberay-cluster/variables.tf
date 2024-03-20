@@ -180,3 +180,75 @@ variable "disable_network_policy" {
   type        = bool
   default     = false
 }
+
+# -----------------IAP----------------------------
+variable "create_brand" {
+  type        = bool
+  description = "Create Brand OAuth Screen"
+  default     = false
+}
+
+variable "add_auth" {
+  type        = bool
+  description = "Enable iap authentication on frontend"
+  default     = false
+}
+
+variable "k8s_ingress_name" {
+  type    = string
+  default = "ray-dashboard-ingress"
+}
+
+variable "k8s_managed_cert_name" {
+  type        = string
+  description = "Name for frontend managed certificate"
+  default     = "ray-dashboard-managed-cert"
+}
+
+variable "k8s_iap_secret_name" {
+  type    = string
+  default = "ray-dashboard-secret"
+}
+
+variable "k8s_backend_config_name" {
+  type        = string
+  description = "Name of the Backend Config on GCP"
+  default     = "ray-dashboard-iap-config"
+}
+
+variable "k8s_backend_service_port" {
+  type        = number
+  description = "Name of the K8s Backend Service Port"
+  default     = 8265
+}
+
+variable "domain" {
+  type        = string
+  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
+  default     = ""
+}
+
+variable "support_email" {
+  type        = string
+  description = "Email for users to contact with questions about their consent"
+  default     = "<email>"
+}
+
+variable "client_id" {
+  type        = string
+  description = "Client ID used for enabling IAP"
+  default     = ""
+}
+
+variable "client_secret" {
+  type        = string
+  description = "Client secret used for enabling IAP"
+  default     = ""
+  sensitive   = false
+}
+
+variable "members_allowlist" {
+  type    = string
+  default = ""
+  ## keeping it string type to support single field input for marketplace UI.
+}

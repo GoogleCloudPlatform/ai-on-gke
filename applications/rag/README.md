@@ -44,7 +44,7 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
 
 2. Edit `workloads.tfvars` to set your project ID, location, cluster name, and GCS bucket name. Optionally, make the following changes:
     * Set `create_cluster = false` if you are using an existing cluster.
-    * (Recommended) Set `jupyter_add_auth = true` and `frontend_add_auth = true` to create load balancers with IAP for your Jupyter notebook and TGI frontend.
+    * (Recommended) Set `jupyter_add_auth = true`, `frontend_add_auth = true` and `ray_dashboard_add_auth = true` to create load balancers with IAP for your Jupyter notebook, TGI frontend and Ray Dashboard.
     * Choose a custom k8s namespace and service account to be used by the application.
 
 3. Run `terraform init`

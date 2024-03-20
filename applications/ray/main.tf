@@ -155,5 +155,19 @@ module "kuberay-cluster" {
   google_service_account = local.workload_identity_service_account
   grafana_host           = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
   depends_on             = [module.gcs, module.kuberay-operator]
+
+  # IAP Auth parameters
+  add_auth                 = var.ray_dashboard_add_auth
+  create_brand             = var.create_brand
+  support_email            = var.ray_dashboard_support_email
+  client_id                = var.ray_dashboard_client_id
+  client_secret            = var.ray_dashboard_client_secret
+  k8s_ingress_name         = var.ray_dashboard_k8s_ingress_name
+  k8s_iap_secret_name      = var.ray_dashboard_k8s_iap_secret_name
+  k8s_managed_cert_name    = var.ray_dashboard_k8s_managed_cert_name
+  k8s_backend_config_name  = var.ray_dashboard_k8s_backend_config_name
+  k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
+  domain                   = var.ray_dashboard_domain
+  members_allowlist        = var.ray_dashboard_members_allowlist
 }
 
