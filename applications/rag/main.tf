@@ -167,7 +167,7 @@ module "jupyterhub" {
   k8s_backend_service_name = var.jupyter_k8s_backend_service_name
   k8s_backend_service_port = var.jupyter_k8s_backend_service_port
   domain                   = var.jupyter_domain
-  members_allowlist        = split(",", var.jupyter_members_allowlist)
+  members_allowlist        = var.jupyter_members_allowlist != "" ? split(",", var.jupyter_members_allowlist) : []
 
   depends_on = [module.namespace, module.gcs]
 }
@@ -242,7 +242,7 @@ module "frontend" {
   k8s_backend_service_name = var.frontend_k8s_backend_service_name
   k8s_backend_service_port = var.frontend_k8s_backend_service_port
   domain                   = var.frontend_domain
-  members_allowlist        = split(",", var.frontend_members_allowlist)
+  members_allowlist        = var.frontend_members_allowlist != "" ? split(",", var.frontend_members_allowlist) : []
   depends_on               = [module.namespace]
 }
 
