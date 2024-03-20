@@ -64,8 +64,21 @@ steps:
         -var=cluster_location=$_REGION \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
+
+        # Get kube config
+        gcloud container clusters get-credentials \
+        ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+        --location $_REGION \
+        --project $PROJECT_ID 
+
+        # Create Baloon Pods to be used for AP clusters
+        kubectl apply -f tests/priority-class.yaml
+        kubectl apply -f tests/baloon-pods.yaml
+
+        kubectl wait --all pods -n gke-gmp-system --for=condition=Ready --timeout=300s
+
     dir: 'infrastructure/'
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
     waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
 
   - id: 'test ray cluster'
@@ -75,12 +88,6 @@ steps:
       - '-c'
       - |
         set -e
-
-        # Get kube config
-        gcloud container clusters get-credentials \
-        ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-        --location $_REGION \
-        --project $PROJECT_ID 
 
         cd /workspace/applications/ray/
         terraform apply \
@@ -103,7 +110,7 @@ steps:
         ray job submit \
         --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
         echo "pass" > /workspace/ray_result.txt
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
     waitFor: ['create gke cluster']
 
   - id: 'cleanup ray cluster'
@@ -125,7 +132,7 @@ steps:
         -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_BUILD_ID \
         -auto-approve -no-color -lock=false
 
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
     waitFor: ['test ray cluster']
 
   - id: 'test jupyterhub'
@@ -158,7 +165,7 @@ steps:
         cd /workspace/modules/jupyter/tests
         python3 test_hub.py $(cat /workspace/jupyterhub_host_url.txt) $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/jupyterhub_test_result.txt
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
 
   - id: 'cleanup jupyterhub'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -178,7 +185,7 @@ steps:
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
         -auto-approve -no-color -lock=false
 
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
     waitFor: ['test jupyterhub']
 
   - id: 'test rag'
@@ -244,7 +251,7 @@ steps:
         cd /workspace/applications/rag/tests
         python3 test_frontend.py "127.0.0.1:8081"
         echo "pass" > /workspace/rag_frontend_result.txt
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
     waitFor: ['cleanup jupyterhub', 'cleanup ray cluster']
 
   - id: 'cleanup rag'
@@ -271,7 +278,7 @@ steps:
         -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
         -auto-approve -no-color
 
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
     waitFor: ['test rag']
 
   - id: 'cleanup gke cluster'
@@ -288,7 +295,7 @@ steps:
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION -auto-approve -no-color
 
-    allowFailure: $_ALLOW_FAILURE
+    allowFailure: true
     waitFor: ['cleanup rag']
 
   - id: 'check result'
@@ -349,7 +356,6 @@ substitutions:
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
-  _ALLOW_FAILURE: true
 options:
   substitutionOption: 'ALLOW_LOOSE'
   machineType: 'E2_HIGHCPU_8'
