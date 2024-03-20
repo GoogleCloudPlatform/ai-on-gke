@@ -24,8 +24,8 @@ locals {
 resource "kubernetes_namespace" "namespace" {
   count = local.namespace_exists ? 0 : 1
   metadata {
-    name = var.namespace
+    name        = var.namespace
     annotations = var.annotations
-    labels = var.labels
+    labels      = var.labels
   }
 }

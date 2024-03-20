@@ -96,9 +96,9 @@ provider "helm" {
 }
 
 module "namespace" {
-  source           = "../../modules/kubernetes-namespace"
-  providers        = { kubernetes = kubernetes.ray }
-  namespace        = var.kubernetes_namespace
+  source    = "../../modules/kubernetes-namespace"
+  providers = { kubernetes = kubernetes.ray }
+  namespace = var.kubernetes_namespace
 }
 
 module "kuberay-operator" {
@@ -110,7 +110,7 @@ module "kuberay-operator" {
   autopilot_cluster      = local.enable_autopilot
   google_service_account = local.workload_identity_service_account
   create_service_account = var.create_service_account
-  depends_on = [module.namespace]
+  depends_on             = [module.namespace]
 }
 
 module "kuberay-logging" {

@@ -24,11 +24,11 @@ locals {
 }
 
 resource "helm_release" "ray-cluster" {
-  name             = var.name
-  repository       = "https://ray-project.github.io/kuberay-helm/"
-  chart            = "ray-cluster"
-  namespace        = var.namespace
-  version          = "1.0.0"
+  name       = var.name
+  repository = "https://ray-project.github.io/kuberay-helm/"
+  chart      = "ray-cluster"
+  namespace  = var.namespace
+  version    = "1.0.0"
 
   values = [
     templatefile("${path.module}/values.yaml", {

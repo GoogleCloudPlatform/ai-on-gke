@@ -13,13 +13,13 @@
 # limitations under the License.
 
 resource "helm_release" "kuberay-operator" {
-  name             = var.name
-  repository       = "https://ray-project.github.io/kuberay-helm/"
-  chart            = "kuberay-operator"
-  values           = var.autopilot_cluster ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
-  version          = "1.0.0"
-  namespace        = var.namespace
-  cleanup_on_fail  = "true"
+  name            = var.name
+  repository      = "https://ray-project.github.io/kuberay-helm/"
+  chart           = "kuberay-operator"
+  values          = var.autopilot_cluster ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
+  version         = "1.0.0"
+  namespace       = var.namespace
+  cleanup_on_fail = "true"
 }
 
 module "kuberay-workload-identity" {

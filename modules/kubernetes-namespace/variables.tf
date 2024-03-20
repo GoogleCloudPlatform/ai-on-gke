@@ -20,12 +20,12 @@ variable "namespace" {
 
 variable "labels" {
   description = "Kubernetes labels to add to the namespace"
-  type = map
-  default = {}
+  type        = map(any)
+  default     = {}
 }
 
 variable "annotations" {
   description = "Kubernetes annotations to add to the namespace"
-  type = map
-  default = {}
+  type        = map(any)
+  default     = {}
 }

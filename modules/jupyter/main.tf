@@ -93,12 +93,12 @@ resource "random_password" "generated_password" {
 }
 
 resource "helm_release" "jupyterhub" {
-  name             = "jupyterhub"
-  repository       = "https://jupyterhub.github.io/helm-chart"
-  chart            = "jupyterhub"
-  namespace        = var.namespace
-  cleanup_on_fail  = "true"
-  timeout          = 600
+  name            = "jupyterhub"
+  repository      = "https://jupyterhub.github.io/helm-chart"
+  chart           = "jupyterhub"
+  namespace       = var.namespace
+  cleanup_on_fail = "true"
+  timeout         = 600
 
   values = var.autopilot_cluster ? [templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
     password            = var.add_auth ? "dummy" : random_password.generated_password[0].result

@@ -99,9 +99,10 @@ provider "helm" {
 }
 
 module "namespace" {
-  source           = "../../modules/kubernetes-namespace"
-  providers        = { helm = helm.rag }
-  namespace        = var.kubernetes_namespace
+  source     = "../../modules/kubernetes-namespace"
+  providers  = { kubernetes = kubernetes.rag }
+  namespace  = var.kubernetes_namespace
+  depends_on = [module.infra]
 }
 
 module "kuberay-operator" {
@@ -113,7 +114,7 @@ module "kuberay-operator" {
   google_service_account = local.ray_service_account
   create_service_account = var.create_ray_service_account
   autopilot_cluster      = local.enable_autopilot
-  depends_on = [module.namespace]
+  depends_on             = [module.namespace]
 }
 
 module "gcs" {

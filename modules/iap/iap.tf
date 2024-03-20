@@ -51,9 +51,9 @@ resource "google_compute_global_address" "ip_address" {
 
 # Helm Chart IAP
 resource "helm_release" "iap" {
-  name             = "${var.app_name}-iap"
-  chart            = "${path.module}/charts/iap/"
-  namespace        = var.namespace
+  name      = "${var.app_name}-iap"
+  chart     = "${path.module}/charts/iap/"
+  namespace = var.namespace
   # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment
   timeout = 1200
   set {
