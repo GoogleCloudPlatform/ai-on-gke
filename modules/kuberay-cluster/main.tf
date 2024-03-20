@@ -95,10 +95,10 @@ data "kubernetes_service" "head-svc" {
 }
 
 # Allow ingress to the kuberay head from outside the cluster
-resource "kubernetes_network_policy" "kuberay-job-and-dashboard-network-policy" {
+resource "kubernetes_network_policy" "ray-job-and-dashboard-namespace-network-policy" {
   count = var.disable_network_policy ? 0 : 1
   metadata {
-    name      = "terraform-kuberay-head-network-policy"
+    name      = "terraform-kuberay-head-namespace-network-policy"
     namespace = var.namespace
   }
 
@@ -125,13 +125,37 @@ resource "kubernetes_network_policy" "kuberay-job-and-dashboard-network-policy" 
           }
         }
       }
+    }
 
-      dynamic "from" {
-        for_each = var.network_policy_allow_cidrs
-        content {
-          ip_block {
-            cidr = each.key
-          }
+    policy_types = ["Ingress"]
+  }
+}
+
+# Allow ingress to the kuberay head from outside the cluster
+resource "kubernetes_network_policy" "kuberay-job-and-dashboard-cidr-network-policy" {
+  count = var.network_policy_allow_cidr != "" && !var.disable_network_policy ? 1 : 0
+  metadata {
+    name      = "terraform-kuberay-head-cidr-network-policy"
+    namespace = var.namespace
+  }
+
+  spec {
+    pod_selector {
+      match_labels = {
+        "ray.io/is-ray-node" : "yes"
+      }
+    }
+
+    ingress {
+      # Ray job submission and dashboard
+      ports {
+        port     = "8265"
+        protocol = "TCP"
+      }
+
+      from {
+        ip_block {
+          cidr = var.network_policy_allow_cidr
         }
       }
     }

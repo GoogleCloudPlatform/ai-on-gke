@@ -151,6 +151,7 @@ module "kuberay-cluster" {
   autopilot_cluster      = local.enable_autopilot
   google_service_account = local.workload_identity_service_account
   grafana_host           = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
+  network_policy_allow_cidr = var.kuberay_network_policy_allow_cidr
   disable_network_policy = var.disable_ray_cluster_network_policy
   depends_on             = [module.gcs, module.kuberay-operator]
 }

@@ -149,12 +149,12 @@ variable "network_policy_allow_namespaces" {
 # This is a list of CIDR ranges allowed to access a Ray cluster's job submission API and Dashboard.
 #
 # Example:
-# network_policy_allow_cidrs = ['10.0.0.0/8']
+# network_policy_allow_cidr = "10.0.0.0/8"
 #
-variable "network_policy_allow_cidrs" {
+variable "network_policy_allow_cidr" {
   description = "CIDR range allowed to access this kuberay cluster"
-  type        = list(string)
-  default     = []
+  type        = string
+  default     = ""
 }
 
 variable "db_secret_name" {

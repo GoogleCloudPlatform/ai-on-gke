@@ -184,7 +184,7 @@ variable "goog_cm_deployment_name" {
   default = ""
 }
 
-# These default resource quotas are set intentionally high as an example that won't be limiting for most clusters.
+# These default resource quotas are set intentionally high as an example that won't be limiting for most Ray clusters.
 # Consult https://kubernetes.io/docs/concepts/policy/resource-quotas/ for additional quotas that may be set.
 variable "resource_quotas" {
   description = "Kubernetes ResourceQuota object to attach to the Ray cluster's namespace"
@@ -203,8 +203,19 @@ variable "disable_resource_quotas" {
   default     = false
 }
 
+# This is a list of CIDR ranges allowed to access a Ray cluster's job submission API and Dashboard.
+#
+# Example:
+# kuberay_network_policy_allow_cidr = "10.0.0.0/8"
+#
+variable "kuberay_network_policy_allow_cidr" {
+  description = "List of CIDRs that are allowed to access this Ray cluster's job submission and dashboard port."
+  type = string
+  default = ""
+}
+
 variable "disable_ray_cluster_network_policy" {
   description = "Disables Kubernetes Network Policy for Ray Clusters for this demo. Defaulting to 'true' aka disabled pending fixes to the kuberay-monitoring module. This should be defaulted to false."
   type        = bool
-  default     = true
+  default     = false
 }
