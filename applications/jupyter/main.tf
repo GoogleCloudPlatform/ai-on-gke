@@ -101,7 +101,7 @@ module "gcs" {
 module "namespace" {
   source    = "../../modules/kubernetes-namespace"
   providers = { kubernetes = kubernetes.jupyter }
-  namespace = var.namespace
+  namespace = var.kubernetes_namespace
 }
 
 # IAP Section: Enabled the IAP service
@@ -119,7 +119,7 @@ module "jupyterhub" {
   source                            = "../../modules/jupyter"
   providers                         = { helm = helm.jupyter, kubernetes = kubernetes.jupyter }
   project_id                        = var.project_id
-  namespace                         = var.namespace
+  namespace                         = var.kubernetes_namespace
   workload_identity_service_account = local.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket
   autopilot_cluster                 = local.enable_autopilot

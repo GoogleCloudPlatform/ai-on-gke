@@ -99,6 +99,7 @@ module "namespace" {
   source    = "../../modules/kubernetes-namespace"
   providers = { kubernetes = kubernetes.ray }
   namespace = var.kubernetes_namespace
+  labels    = var.namespace_labels
 }
 
 module "kuberay-operator" {

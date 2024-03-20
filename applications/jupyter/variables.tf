@@ -26,7 +26,7 @@ variable "cluster_membership_id" {
   default     = ""
 }
 
-variable "namespace" {
+variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
 }

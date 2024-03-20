@@ -183,3 +183,18 @@ variable "goog_cm_deployment_name" {
   type    = string
   default = ""
 }
+
+# Defaulted to enforced baseline Pod Security Standards with restricted
+# in audit and warn mode.
+variable "namespace_labels" {
+  type        = map(any)
+  description = "Labels to apply to the Ray cluster namespace"
+  default = {
+    "pod-security.kubernetes.io/audit" : "restricted"
+    "pod-security.kubernetes.io/audit-version" : "latest"
+    "pod-security.kubernetes.io/enforce" : "baseline"
+    "pod-security.kubernetes.io/enforce-version" : "latest"
+    "pod-security.kubernetes.io/warn" : "restricted"
+    "pod-security.kubernetes.io/warn-version" : "latest"
+  }
+}
