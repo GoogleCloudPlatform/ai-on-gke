@@ -45,4 +45,4 @@ url_domain_addr   = ""
 url_domain_name   = ""
 client_id         = ""
 client_secret     = ""
-members_allowlist = ["user:<email>"]
+members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"

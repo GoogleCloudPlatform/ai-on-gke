@@ -36,10 +36,6 @@ workload_identity_service_account = "jupyter-sa"
 create_brand  = false
 support_email = "<email>" ## specify if create_brand=true
 
-# IAP Configs
-create_brand  = false
-support_email = "<email>" ## specify if create_brand=true
-
 # Jupyterhub with IAP
 add_auth                 = false
 k8s_ingress_name         = "jupyter-ingress"
