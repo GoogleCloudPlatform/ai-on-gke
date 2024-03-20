@@ -117,7 +117,7 @@ resource "kubernetes_annotations" "annotation" {
   }
   annotations = {
     # Ingress will be auto updated
-    "cloud.google.com/neg" = "{\"ingress\": true}"
+    "cloud.google.com/neg"                 = "{\"ingress\": true}"
     "beta.cloud.google.com/backend-config" = "{\"default\": \"${var.k8s_backend_config_name}\"}"
   }
 
