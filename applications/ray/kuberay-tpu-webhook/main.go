@@ -413,10 +413,13 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		numOfHosts, _ := getNumTPUHostsFromTopology(topology, acceleratorType) // ignore error here because topology may not be set yet
 		replicaIndex := getReplicaIndex(clusterName)
 		podSlice := slice{clusterName, groupName, replicaIndex, numOfHosts}
-		tpuWorkerID := getNextWorkerID(podSlice, replicaIndex)
+		tpuWorkerID := 0 // defaults to 0 for single-host
 
 		isMultiHost, _ := isTPUMultiHost(topology, acceleratorType) // ignore error here because topology may not be set yet
 		if isMultiHost {
+			// get next unique TPU_WORKER_ID for multi-host slice
+			tpuWorkerID = getNextWorkerID(podSlice, replicaIndex)
+
 			// inject hostname into pod spec for DNS records
 			hostname := fmt.Sprintf(groupName+"-%d-%d", replicaIndex, tpuWorkerID)
 			hostnamePatch := patch{"op": "add"}
