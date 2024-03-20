@@ -210,8 +210,8 @@ variable "disable_resource_quotas" {
 #
 variable "kuberay_network_policy_allow_cidr" {
   description = "List of CIDRs that are allowed to access this Ray cluster's job submission and dashboard port."
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }
 
 variable "disable_ray_cluster_network_policy" {
