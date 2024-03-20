@@ -171,11 +171,11 @@ all_node_pools_oauth_scopes = [
 
 
 cluster_labels = {
-  "gke-profile" = "ai-on-gke"
+  "created-by" = "ai-on-gke"
 }
 
 all_node_pools_labels = {
-  "gke-profile" = "ai-on-gke"
+  "created-by" = "ai-on-gke"
 }
 
 all_node_pools_metadata = {
