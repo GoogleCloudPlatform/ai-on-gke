@@ -15,8 +15,8 @@ import setuptools
 
 setuptools.setup(
     name="jupyterhub-gcp-iap-authenticator",
-    python_requires='>=3.6.0',
-    version="0.1.0",
+    python_requires='>=3.9.0',
+    version="0.2.0",
     author="Aaron Liang",
     author_email="aaronliang@google.com",
     description="JupyterHub authenticator for Cloud IAP with JWT",
@@ -26,10 +26,10 @@ setuptools.setup(
     packages=['gcpiapjwtauthenticator'],
     license='Apache 2.0',
     install_requires=[
-        "jupyterhub",
-        "tornado>=5.0",
+        "jupyterhub>=4.1.0",
+        "tornado>=6.3.3",
         'oauthenticator>=0.9.0',
-        'pyjwt>=1.7.1',
+        'pyjwt>=2.7.0',
         "google-api-python-client",
         "google-auth",
         "google-auth-oauthlib",
