@@ -37,6 +37,13 @@ variable "kubernetes_namespace" {
   default     = "rag"
 }
 
+variable "additional_labels" {
+  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
+  type        = list(string)
+  description = "Additional labels to add to Kubernetes resources."
+  default     = ["created-by=rag-on-gke"]
+}
+
 variable "jupyter_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"

@@ -31,6 +31,13 @@ variable "kubernetes_namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
+variable "additional_labels" {
+  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
+  type        = list(string)
+  description = "Additional labels to add to Kubernetes resources."
+  default     = ["created-by=jupyter-on-gke"]
+}
+
 variable "gcs_bucket" {
   type        = string
   description = "Bucket name to store the dataset"

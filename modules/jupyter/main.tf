@@ -16,6 +16,13 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+locals {
+  additional_labels = tomap({
+    for item in var.additional_labels :
+    split("=", item)[0] => split("=", item)[1]
+  })
+}
+
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
@@ -106,6 +113,7 @@ resource "helm_release" "jupyterhub" {
     project_id          = var.project_id
     project_number      = data.google_project.project.number
     namespace           = var.namespace
+    additional_labels   = local.additional_labels
     backend_config      = var.k8s_backend_config_name
     service_name        = var.k8s_backend_service_name
     authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
@@ -119,6 +127,7 @@ resource "helm_release" "jupyterhub" {
       project_id          = var.project_id
       project_number      = data.google_project.project.number
       namespace           = var.namespace
+      additional_labels   = local.additional_labels
       backend_config      = var.k8s_backend_config_name
       service_name        = var.k8s_backend_service_name
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
