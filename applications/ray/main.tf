@@ -127,6 +127,7 @@ module "kuberay-monitoring" {
   source                          = "../../modules/kuberay-monitoring"
   providers                       = { helm = helm.ray, kubernetes = kubernetes.ray }
   project_id                      = var.project_id
+  autopilot_cluster               = local.enable_autopilot
   namespace                       = var.kubernetes_namespace
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard

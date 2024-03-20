@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# google managed prometheus engine
+locals {
+  gmp_namespace = var.autopilot_cluster ? "gke-gmp-system" : "gmp-system"
+}
+
+# Temporary workaround to ensure the GMP webhook is installed before applying PodMonitorings.
+resource "null_resource" "wait_for_gmp" {
+  provisioner "local-exec" {
+    command = "while ! kubectl get cm -n ${local.gmp_namespace} collector &>/dev/null; do echo 'Waiting for gmp-operator...'; sleep 10; done"
+  }
+}
+
 resource "helm_release" "gmp-engine" {
   name             = "gmp-engine"
   chart            = "${path.module}/charts/gmp-engine/"
   namespace        = var.namespace
   create_namespace = var.create_namespace
-  # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment 
-  timeout = 1200
+  timeout          = 600
   set {
     name  = "projectID"
     value = var.project_id
@@ -29,9 +38,10 @@ resource "helm_release" "gmp-engine" {
     name  = "serviceAccount"
     value = var.k8s_service_account
   }
+
+  depends_on = [null_resource.wait_for_gmp]
 }
 
-# grafana
 resource "helm_release" "grafana" {
   count            = var.enable_grafana_on_ray_dashboard ? 1 : 0
   name             = "grafana"

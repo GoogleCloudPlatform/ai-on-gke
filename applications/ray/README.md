@@ -6,6 +6,7 @@ See the [Ray on GKE](/ray-on-gke/) directory to see additional guides and refere
 ## Installation
 
 Preinstall the following on your computer:
+* Kubectl
 * Terraform
 * Gcloud
 
