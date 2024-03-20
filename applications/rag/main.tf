@@ -209,7 +209,7 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source            = "../../tutorials/hf-tgi"
+  source            = "../../tutorials-and-examples/hf-tgi"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = var.kubernetes_namespace
   autopilot_cluster = local.enable_autopilot
