@@ -13,7 +13,7 @@
 # limitations under the License.
 
 output "jupyterhub_uri" {
-  value = var.add_auth ? module.iap_auth[0].domain : data.kubernetes_service.jupyter.spec.clusterIP
+  value = var.add_auth ? module.iap_auth[0].domain : ""
 }
 
 output "jupyterhub_user" {
