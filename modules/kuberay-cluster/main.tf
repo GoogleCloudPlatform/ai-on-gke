@@ -80,7 +80,7 @@ resource "helm_release" "ray-cluster" {
         "cloud.google.com/gke-tpu-topology" : "2x2x1"
         "cloud.google.com/gke-placement-group" : "tpu-pool"
         } : {
-        "iam.gke.io / gke-metadata-server-enabled" : "true"
+        "iam.gke.io/gke-metadata-server-enabled" : "true"
       }
     })
   ]
