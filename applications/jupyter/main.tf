@@ -58,6 +58,7 @@ locals {
 
 locals {
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
+  jupyterhub_default_uri            = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
 }
 
 provider "kubernetes" {

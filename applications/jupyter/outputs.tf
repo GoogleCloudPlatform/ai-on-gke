@@ -14,7 +14,7 @@
 
 output "jupyterhub_uri" {
   description = "JupyterHub Endpoint to access user interface. In case of private IP, consider port-forwarding."
-  value       = "http://${module.jupyterhub.jupyterhub_uri}"
+  value       = module.jupyterhub.jupyterhub_uri != "" ? "http://${module.jupyterhub.jupyterhub_uri}" : local.jupyterhub_default_uri
 }
 
 output "jupyterhub_ip_address" {
