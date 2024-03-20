@@ -28,15 +28,16 @@ cluster_membership_id = "" # required for private cluster, defaults to `cluster_
 
 ## JupyterHub variables
 namespace                         = "ml"
-gcs_bucket                        = "gcs-bucket-dsfhfh"
 create_gcs_bucket                 = true
-workload_identity_service_account = "jupyter-service-account"
+gcs_bucket                        = "gcs-bucket-<unique-suffix>" # Choose a globally unique bucket name.
+workload_identity_service_account = "jupyter-sa"
+
+# IAP Configs
+create_brand  = false
+support_email = "<email>" ## specify if create_brand=true
 
 # Jupyterhub with IAP
-add_auth = false
-# TODO make this a bool flag and fetch the project number in tf
-brand                    = "projects/<prj-number>/brands/<prj-number>" # ensure brand is Internal
-support_email            = "<email>"
+add_auth                 = false
 k8s_ingress_name         = "jupyter-ingress"
 k8s_managed_cert_name    = "jupyter-managed-cert"
 k8s_iap_secret_name      = "jupyter-iap-secret"
@@ -44,8 +45,8 @@ k8s_backend_config_name  = "jupyter-iap-config"
 k8s_backend_service_name = "proxy-public"
 k8s_backend_service_port = 80
 
-url_domain_addr   = ""
-url_domain_name   = ""
-client_id         = ""
+domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
+client_id         = "" ## Ensure brand is Internal, to autogenerate client credentials
 client_secret     = ""
-members_allowlist = ["allAuthenticatedUsers", "user:<email>"]
+members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
+

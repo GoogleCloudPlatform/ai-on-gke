@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -76,11 +77,14 @@ func main() {
 
 		GCPNodeTags          []string `envconfig:"GCP_NODE_TAGS"`
 		GCPNodeSecondaryDisk string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
+		GCPNodeSecureBoot    bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
 
 		// NodeMinLifespan is the amount of time that should pass between a Node object
 		// creation and a cleanup of that Node. This needs to be long enough to allow
 		// the node to become Ready and for a pending Pod to be scheduled on it.
 		NodeMinLifespan time.Duration `envconfig:"NODE_MIN_LIFESPAN" default:"3m"`
+
+		NodepoolDeletionDelay time.Duration `envconfig:"NODEPOOL_DELETION_DELAY" default:"30s"`
 
 		PodResourceType string `envconfig:"POD_RESOURCE_TYPE" default:"google.com/tpu"`
 
@@ -197,7 +201,9 @@ func main() {
 				NodeServiceAccount: cfg.GCPNodeServiceAccount,
 				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
 				NodeTags:           cfg.GCPNodeTags,
+				NodeSecureBoot:     cfg.GCPNodeSecureBoot,
 			},
+			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		}
 	case "mock":
 		provider = &cloud.Mock{}
@@ -209,7 +215,7 @@ func main() {
 	if err := (&controller.CreationReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("tpu-provisioner-creator"),
+		Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		Provider: provider,
 		PodCriteria: controller.PodCriteria{
 			ResourceType: cfg.PodResourceType,
@@ -222,10 +228,11 @@ func main() {
 	if err := (&controller.DeletionReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("tpu-provisioner-deleter"),
+		Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		Provider: provider,
 		NodeCriteria: controller.NodeCriteria{
-			MinLifetime: cfg.NodeMinLifespan,
+			MinLifetime:       cfg.NodeMinLifespan,
+			PoolDeletionDelay: cfg.NodepoolDeletionDelay,
 		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DeletionReconciler")
@@ -241,10 +248,27 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
+	ctx := ctrl.SetupSignalHandler()
+
+	gc := &controller.NodePoolGarbageCollector{
+		Interval: time.Minute,
+		Client:   mgr.GetClient(),
+		Provider: provider,
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		gc.Run(ctx)
+		wg.Done()
+	}()
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
+	setupLog.Info("waiting for all goroutines to finish")
+	wg.Wait()
+	setupLog.Info("exiting")
 }

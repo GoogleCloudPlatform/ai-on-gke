@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ray
+variable "namespace" {
+  type        = string
+  description = "Kubernetes namespace where resources are deployed"
+  default     = "default"
+}
 
-@ray.remote
-def hello_world():
-    return "hello world"
+variable "additional_labels" {
+  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
+  type        = list(string)
+  description = "Additional labels to add to Kubernetes resources."
+  default     = []
+}
 
-# Automatically connect to the running Ray cluster.
-ray.init()
-print(ray.get(hello_world.remote()))
+variable "autopilot_cluster" {
+  type = bool
+}

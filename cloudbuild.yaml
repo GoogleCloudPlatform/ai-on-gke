@@ -100,7 +100,7 @@ steps:
         # Wait port-forwarding to take its place
         sleep 5s
 
-        ray job submit --working-dir ./example_ray_job_scripts \
+        ray job submit \
         --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
         echo "pass" > /workspace/ray_result.txt
     allowFailure: true

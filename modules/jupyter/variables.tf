@@ -33,6 +33,13 @@ variable "gcs_bucket" {
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
+variable "additional_labels" {
+  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
+  type        = list(string)
+  description = "Additional labels to add to Kubernetes resources."
+  default     = ["created-by=jupyter-on-gke"]
+}
+
 variable "workload_identity_service_account" {
   type        = string
   description = "workload identity service account"
@@ -90,21 +97,14 @@ variable "k8s_backend_service_port" {
   default     = 80
 }
 
-variable "brand" {
-  type        = string
-  description = "name of the brand if there isn't already on the project. If there is already a brand for your project, please leave it blank and empty"
-  default     = ""
+variable "create_brand" {
+  type        = bool
+  description = "Create Brand OAuth Screen"
 }
 
-variable "url_domain_addr" {
+variable "domain" {
   type        = string
-  description = "Domain provided by the user. If it's empty, we will create one for you."
-  default     = ""
-}
-
-variable "url_domain_name" {
-  type        = string
-  description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
+  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
   default     = ""
 }
 

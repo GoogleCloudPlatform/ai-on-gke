@@ -16,6 +16,13 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+locals {
+  additional_labels = tomap({
+    for item in var.additional_labels :
+    split("=", item)[0] => split("=", item)[1]
+  })
+}
+
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
@@ -23,9 +30,9 @@ module "iap_auth" {
 
   project_id               = var.project_id
   namespace                = var.namespace
-  support_email            = var.support_email
   app_name                 = "jupyter"
-  brand                    = var.brand
+  create_brand             = var.create_brand
+  support_email            = var.support_email
   k8s_ingress_name         = var.k8s_ingress_name
   k8s_managed_cert_name    = var.k8s_managed_cert_name
   k8s_iap_secret_name      = var.k8s_iap_secret_name
@@ -34,8 +41,8 @@ module "iap_auth" {
   k8s_backend_service_port = var.k8s_backend_service_port
   client_id                = var.client_id
   client_secret            = var.client_secret
-  url_domain_addr          = var.url_domain_addr
-  url_domain_name          = var.url_domain_name
+  domain                   = var.domain
+  members_allowlist        = var.members_allowlist
   depends_on = [
     helm_release.jupyterhub
   ]
@@ -106,6 +113,7 @@ resource "helm_release" "jupyterhub" {
     project_id          = var.project_id
     project_number      = data.google_project.project.number
     namespace           = var.namespace
+    additional_labels   = local.additional_labels
     backend_config      = var.k8s_backend_config_name
     service_name        = var.k8s_backend_service_name
     authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
@@ -119,6 +127,7 @@ resource "helm_release" "jupyterhub" {
       project_id          = var.project_id
       project_number      = data.google_project.project.number
       namespace           = var.namespace
+      additional_labels   = local.additional_labels
       backend_config      = var.k8s_backend_config_name
       service_name        = var.k8s_backend_service_name
       authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
@@ -131,10 +140,11 @@ resource "helm_release" "jupyterhub" {
   depends_on = [module.jupyterhub-workload-identity]
 }
 
-data "kubernetes_service" "jupyter-ingress" {
+data "kubernetes_service" "jupyter" {
   metadata {
     name      = var.k8s_backend_service_name
     namespace = var.namespace
   }
   depends_on = [module.iap_auth, helm_release.jupyterhub]
 }
+
