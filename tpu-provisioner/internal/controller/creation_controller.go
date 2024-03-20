@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
 
@@ -29,7 +30,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // CreationReconciler watches Pods and creates Node Pools.
@@ -52,7 +53,7 @@ type PodCriteria struct {
 //+kubebuilder:rbac:groups="",resources=pods/finalizers,verbs=update
 
 func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	lg := log.FromContext(ctx)
+	lg := ctrllog.FromContext(ctx)
 
 	lg.V(3).Info("Reconciling Pod")
 
@@ -66,22 +67,26 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	// Return early if Pod should not trigger a scale up.
-	if !isPending(&pod) || !isUnschedulable(&pod) || !doesRequestResource(&pod, r.PodCriteria.ResourceType) || !hasNodeSelectors(&pod, cloud.GKETPUNodeSelector) {
+	if !isPending(&pod) || !isUnschedulable(&pod) ||
+		!doesRequestResource(&pod, r.PodCriteria.ResourceType) ||
+		!hasNodeSelectors(&pod, cloud.GKETPUNodeSelector) ||
+		pod.DeletionTimestamp != nil {
 		lg.V(3).Info("Ignoring pod")
 		return ctrl.Result{}, nil
 	}
 
 	lg.Info("Ensuring node pool for unschedulable pod")
-	r.Recorder.Eventf(&pod, corev1.EventTypeNormal, EventEnsuringNodePool, "Ensuring Node Pool, triggered by Pod %s/%s.", pod.Namespace, pod.Name)
-	if err := r.Provider.EnsureNodePoolForPod(&pod); err != nil {
+	if err := r.Provider.EnsureNodePoolForPod(&pod, "pod is currently unschedulable"); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
 			lg.Info("Ignoring duplicate request to create node pool")
+		} else if errors.Is(err, cloud.ErrNodePoolStopping) {
+			wait := 5 * time.Second
+			lg.Info("Attempted to create a node pool that is currently undergoing deletion, retrying soon",
+				"wait", wait)
+			return ctrl.Result{RequeueAfter: wait}, nil
 		} else {
-			r.Recorder.Event(&pod, corev1.EventTypeWarning, EventFailedEnsuringNodePool, "Failed to ensure existance of Node Pool: "+err.Error())
 			return ctrl.Result{}, err
 		}
-	} else {
-		r.Recorder.Event(&pod, corev1.EventTypeNormal, EventNodePoolEnsured, "Node Pool Ensured.")
 	}
 
 	return ctrl.Result{}, nil

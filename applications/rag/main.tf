@@ -63,6 +63,7 @@ locals {
   jupyter_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.jupyter_service_account}" : var.jupyter_service_account
   rag_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.rag_service_account}" : var.rag_service_account
   frontend_default_uri    = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
+  jupyterhub_default_uri  = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
   ## if cloudsql_instance_region not specified, then default to cluster_location region
   cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
 }
@@ -156,8 +157,8 @@ module "jupyterhub" {
   workload_identity_service_account = local.jupyter_service_account
 
   # IAP Auth parameters
-  brand                    = var.brand
-  support_email            = var.jupyter_support_email
+  create_brand             = var.create_brand
+  support_email            = var.support_email
   client_id                = var.jupyter_client_id
   client_secret            = var.jupyter_client_secret
   k8s_ingress_name         = var.jupyter_k8s_ingress_name
@@ -166,9 +167,8 @@ module "jupyterhub" {
   k8s_backend_config_name  = var.jupyter_k8s_backend_config_name
   k8s_backend_service_name = var.jupyter_k8s_backend_service_name
   k8s_backend_service_port = var.jupyter_k8s_backend_service_port
-  url_domain_addr          = var.jupyter_url_domain_addr
-  url_domain_name          = var.jupyter_url_domain_name
-  members_allowlist        = var.jupyter_members_allowlist
+  domain                   = var.jupyter_domain
+  members_allowlist        = split(",", var.jupyter_members_allowlist)
 
   depends_on = [module.namespace, module.gcs]
 }
@@ -210,9 +210,10 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source            = "../../tutorials/hf-tgi"
+  source            = "../../tutorials-and-examples/hf-tgi"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = var.kubernetes_namespace
+  additional_labels = var.additional_labels
   autopilot_cluster = local.enable_autopilot
   depends_on        = [module.namespace]
 }
@@ -224,6 +225,7 @@ module "frontend" {
   create_service_account        = var.create_rag_service_account
   google_service_account        = local.rag_service_account
   namespace                     = var.kubernetes_namespace
+  additional_labels             = var.additional_labels
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
   cloudsql_instance_region      = local.cloudsql_instance_region
@@ -232,8 +234,8 @@ module "frontend" {
 
   # IAP Auth parameters
   add_auth                 = var.frontend_add_auth
-  brand                    = var.brand
-  support_email            = var.frontend_support_email
+  create_brand             = var.create_brand
+  support_email            = var.support_email
   client_id                = var.frontend_client_id
   client_secret            = var.frontend_client_secret
   k8s_ingress_name         = var.frontend_k8s_ingress_name
@@ -242,9 +244,8 @@ module "frontend" {
   k8s_backend_config_name  = var.frontend_k8s_backend_config_name
   k8s_backend_service_name = var.frontend_k8s_backend_service_name
   k8s_backend_service_port = var.frontend_k8s_backend_service_port
-  url_domain_addr          = var.frontend_url_domain_addr
-  url_domain_name          = var.frontend_url_domain_name
-  members_allowlist        = var.frontend_members_allowlist
+  domain                   = var.frontend_domain
+  members_allowlist        = split(",", var.frontend_members_allowlist)
   depends_on               = [module.namespace]
 }
 

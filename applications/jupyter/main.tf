@@ -58,6 +58,7 @@ locals {
 
 locals {
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
+  jupyterhub_default_uri            = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
 }
 
 provider "kubernetes" {
@@ -121,13 +122,14 @@ module "jupyterhub" {
   providers                         = { helm = helm.jupyter, kubernetes = kubernetes.jupyter }
   project_id                        = var.project_id
   namespace                         = var.kubernetes_namespace
+  additional_labels                 = var.additional_labels
   workload_identity_service_account = local.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket
   autopilot_cluster                 = local.enable_autopilot
 
   # IAP Auth parameters
   add_auth                 = var.add_auth
-  brand                    = var.brand
+  create_brand             = var.create_brand
   support_email            = var.support_email
   client_id                = var.client_id
   client_secret            = var.client_secret
@@ -137,8 +139,7 @@ module "jupyterhub" {
   k8s_backend_config_name  = var.k8s_backend_config_name
   k8s_backend_service_name = var.k8s_backend_service_name
   k8s_backend_service_port = var.k8s_backend_service_port
-  url_domain_addr          = var.url_domain_addr
-  url_domain_name          = var.url_domain_name
-  members_allowlist        = var.members_allowlist
+  domain                   = var.domain
+  members_allowlist        = split(",", var.members_allowlist)
   depends_on               = [module.gcs, module.namespace]
 }

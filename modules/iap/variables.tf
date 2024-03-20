@@ -28,9 +28,9 @@ variable "app_name" {
 }
 
 # IAP settings
-variable "brand" {
-  type        = string
-  description = "Brand"
+variable "create_brand" {
+  type        = bool
+  description = "Create Brand OAuth Screen"
 }
 
 variable "k8s_ingress_name" {
@@ -63,15 +63,9 @@ variable "k8s_backend_service_port" {
   description = "Name of the Backend Service Port"
 }
 
-variable "url_domain_addr" {
+variable "domain" {
   type        = string
-  description = "Domain provided by the user. If it's empty, we will create one for you."
-  default     = ""
-}
-
-variable "url_domain_name" {
-  type        = string
-  description = "Name of the domain provided by the user. This var will only be used if url_domain_addr is not empty"
+  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
   default     = ""
 }
 

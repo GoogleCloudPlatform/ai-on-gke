@@ -67,7 +67,7 @@ var _ = Describe("Deletion controller", func() {
 
 			By("Checking the first deletion attempt only occurred after the node had existed for >= nodeDeletionInterval")
 			actualDuration := deletionTimestamp.Sub(createdNode.CreationTimestamp.Time)
-			requiredDuration := nodePoolDeletionCheckInterval + minNodeLifetime
+			requiredDuration := nodepoolDeletionDelay + minNodeLifetime
 			Expect(actualDuration).Should(BeNumerically(">=", requiredDuration))
 
 			By("Checking that other Nodes were ignored")

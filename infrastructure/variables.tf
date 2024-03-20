@@ -89,7 +89,7 @@ variable "cluster_labels" {
   type        = map(any)
   description = "GKE cluster labels"
   default = {
-    "gke-profile" = "ai-on-gke"
+    "created-by" = "ai-on-gke"
   }
 }
 
@@ -154,7 +154,7 @@ variable "all_node_pools_oauth_scopes" {
 variable "all_node_pools_labels" {
   type = map(string)
   default = {
-    "gke-profile" = "ai-on-gke"
+    "created-by" = "ai-on-gke"
   }
 }
 variable "all_node_pools_metadata" {

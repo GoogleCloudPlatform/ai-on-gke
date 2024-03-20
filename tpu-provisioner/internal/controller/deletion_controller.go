@@ -18,17 +18,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
-
-// nodePoolDeletionCheckInterval is the interval between the first and
-// second node pool deletion checks. Once the node pool deletion check
-// has passed twice, the node pool can be safely deleted. This second
-// check is ensure the node pool is not prematurely deleted, in the case
-// where a JobSet is restarted, but no pods have been created yet.
-var nodePoolDeletionCheckInterval = 30 * time.Second
 
 // DeletionReconciler watches Pods and Nodes and deletes Node Pools.
 type DeletionReconciler struct {
@@ -43,6 +36,13 @@ type DeletionReconciler struct {
 
 type NodeCriteria struct {
 	MinLifetime time.Duration
+
+	// PoolDeletionDelay is the interval between the first and
+	// second node pool deletion checks. Once the node pool deletion check
+	// has passed twice, the node pool can be safely deleted. This second
+	// check is ensure the node pool is not prematurely deleted, in the case
+	// where a JobSet is restarted, but no pods have been created yet.
+	PoolDeletionDelay time.Duration
 }
 
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch;create;update;patch;delete
@@ -50,7 +50,7 @@ type NodeCriteria struct {
 //+kubebuilder:rbac:groups="",resources=nodes/finalizers,verbs=update
 
 func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	lg := log.FromContext(ctx)
+	lg := ctrllog.FromContext(ctx)
 
 	lg.V(3).Info("Reconciling Node")
 
@@ -128,31 +128,28 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if !exists {
 		lg.Info(fmt.Sprintf("Node pool %q passed deletion check once", nodePoolName))
 		r.NodePoolsMarkedForDeletion.Store(nodePoolName, time.Now())
-		return ctrl.Result{RequeueAfter: nodePoolDeletionCheckInterval}, nil
+		return ctrl.Result{RequeueAfter: r.NodeCriteria.PoolDeletionDelay}, nil
 	}
 
 	// If we haven't reached the node pool deletion check interval, this reconcile was
 	// caused by something else, we can return early, and wait for the manually requeued
 	// reconcile we did after the first deletion check passed.
 	firstDeletionCheckTime := value.(time.Time)
-	if time.Now().Sub(firstDeletionCheckTime) < nodePoolDeletionCheckInterval {
+	if time.Now().Sub(firstDeletionCheckTime) < r.NodeCriteria.PoolDeletionDelay {
 		return ctrl.Result{}, nil
 	}
 
 	// If this point is reached, the node pool has passed the deletion check twice
 	// and can be deleted.
 	lg.Info(fmt.Sprintf("Node pool %q passed deletion check twice. Ensuring Node Pool is deleted", nodePoolName))
-	r.Recorder.Event(&node, corev1.EventTypeNormal, EventDeletingNodePool, DeletingNodePoolEventMessage)
-	if err := r.Provider.DeleteNodePoolForNode(&node); err != nil {
+	if err := r.Provider.DeleteNodePoolForNode(&node, "no user Pods are running on any of the Nodes in this node pool"); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
 			lg.Info("Ignoring duplicate request to delete node pool")
 			return ctrl.Result{}, nil
 		} else {
-			r.Recorder.Event(&node, corev1.EventTypeWarning, EventFailedDeletingNodePool, "Failed to delete Node Pool: "+err.Error())
-			return ctrl.Result{}, client.IgnoreNotFound(err)
+			return ctrl.Result{}, err
 		}
 	}
-	r.Recorder.Event(&node, corev1.EventTypeNormal, EventNodePoolDeleted, DeletedNodePoolEventMessage)
 
 	// Remove node pool from the map tracking node pools marked for deletion, in case the JobSet
 	// is reran in the future, as this will result in node pools with the same name being recreated,

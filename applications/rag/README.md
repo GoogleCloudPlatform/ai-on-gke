@@ -133,7 +133,7 @@ This step generates the vector embeddings for your input dataset. Currently, the
 2. Login to Jupyterhub:
    * IAP disabled: Use placeholder credentials:
         * username: admin
-        * password: use `terraform output jupyter_password` to fetch the password value
+        * password: use `terraform output jupyterhub_password` to fetch the password value
    * IAP enabled: Login with your Google credentials.
 
 3. Once logged in, choose the `CPU` preset. Go to File -> Open From URL & upload the notebook `rag-kaggle-ray-sql.ipynb` from `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb`. This path can also be found by going to the [notebook location](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb) and selecting `Raw`.

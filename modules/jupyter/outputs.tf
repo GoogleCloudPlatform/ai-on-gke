@@ -13,7 +13,7 @@
 # limitations under the License.
 
 output "jupyterhub_uri" {
-  value = var.add_auth ? module.iap_auth[0].domain : ""
+  value = var.add_auth ? module.iap_auth[0].domain : data.kubernetes_service.jupyter.spec.clusterIP
 }
 
 output "jupyterhub_user" {
@@ -23,4 +23,7 @@ output "jupyterhub_user" {
 output "jupyterhub_password" {
   value     = var.add_auth ? "" : random_password.generated_password[0].result
   sensitive = true
+}
+output "jupyterhub_ip_address" {
+  value = var.add_auth ? module.iap_auth[0].ip_address : ""
 }
