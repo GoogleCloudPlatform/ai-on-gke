@@ -46,7 +46,7 @@ accelerator_type       = "nvidia-tesla-t4"
 
 ### Manually Installing the TPU Initialization Webhook
 
-The TPU Initialization Webhook automatically injects the `TPU_WORKER_ID`, `TPU_NAME`, and `TPU_WORKER_HOSTNAMES` environment variables necessary for multi-host TPU clusters. The webhook needs to be installed once per GKE cluster and requires a Kuberay Operator running v1.1 and GKE cluster version of 1.28+. 
+The TPU Initialization Webhook automatically bootstraps the TPU environment for TPU clusters. The webhook needs to be installed once per GKE cluster and requires a Kuberay Operator running v1.1+ and GKE cluster version of 1.28+. 
 
 1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
 2. `cd applications/ray/kuberay-tpu-webhook` 
@@ -60,6 +60,10 @@ The TPU Initialization Webhook automatically injects the `TPU_WORKER_ID`, `TPU_N
    
 
 ### Creating the Kuberay Cluster
+
+You can find sample TPU cluster manifests for [single-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-singlehost.yaml) and [multi-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-multihost.yaml) here.
+
+If you are using Terraform:
 
 1. Get the GKE cluster name and location/region from `infrastructure/platform.tfvars`.
    Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`.
@@ -77,10 +81,34 @@ To deploy a multi-host Ray Cluster, modify the `worker` spec [here](https://gith
 
 ### Running Sample Workloads
 
-Install Jupyterhub according to the instructions in the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/jupyter/README.md).
+1. Save the following to a local file (e.g. `test_tpu.py`):
+```
+import ray
 
-A basic JAX program can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/example_notebooks/jax-tpu.ipynb).
+ray.init(
+    address="ray://example-cluster-kuberay-head-svc:10001",
+    runtime_env={
+        "pip": [
+            "jax[tpu]==0.4.12",
+            "-f https://storage.googleapis.com/jax-releases/libtpu_releases.html",
+        ]
+    }
+)
 
+
+@ray.remote(resources={"TPU": 4})
+def tpu_cores():
+    import jax
+    return "TPU cores:" + str(jax.device_count())
+
+num_workers = 4
+result = [tpu_cores.remote() for _ in range(num_workers)]
+print(ray.get(result))
+```
+2. `kubectl port-forward svc/example-cluster-kuberay-head-svc 8265:8265 &`
+3. `export RAY_ADDRESS=http://localhost:8265`
+4. `ray job submit --runtime-env-json='{"working_dir": "."}' -- python test_tpu.py`
+   
 For a more advanced workload running Stable Diffusion on TPUs, see [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/example_notebooks/stable-diffusion-tpu.ipynb).
 
  
