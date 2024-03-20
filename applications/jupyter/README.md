@@ -87,7 +87,7 @@ See the example `.tfvars` files under `/applications/jupyter` for different bran
 | url_domain_name          | This variable will only be used if [url_domain_addr](#url_domain_addr) is provided. It is the name associated with the domain provided by the user. Since we are using Ingress, it will require the `kubernetes.io/ingress.global-static-ip-name` annotation along with the name associated.   |           |       |
 | client_id                | Client ID of an [OAuth 2.0 Client ID](https://console.cloud.google.com/apis/credentials) created by the user for enabling IAP. You must also input the [client_secret](#client_secret). If this variable is unset, the template will create an OAuth client for you - in this case, you must ensure the associated [brand](https://console.cloud.google.com/apis/credentials/consent) is `Internal` i.e. only principals within the organization can access the application.   |           |       |
 | client_secret            | Client Secret associated with the [client_id](#client_id). This variable will only be used when the client id is filled out.     |           |       |
-| members_allowlist        | Comma seperated values for users to be allowed access through IAP. Example values: `allAuthenticatedUsers` or `allAuthenticatedUsers,user:username@domain.com`  | allAuthenticatedUsers     |       |
+| members_allowlist        | Comma seperated values for users to be allowed access through IAP. Example values: `user:username@domain.com`  |      |       |
 
 
 ### Install
