@@ -54,7 +54,6 @@ resource "helm_release" "iap" {
   name             = "${var.app_name}-iap"
   chart            = "${path.module}/charts/iap/"
   namespace        = var.namespace
-  create_namespace = true
   # timeout increased to support autopilot scaling resources, and give enough time to complete the deployment
   timeout = 1200
   set {

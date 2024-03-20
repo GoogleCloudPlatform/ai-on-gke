@@ -18,6 +18,14 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
-variable "create_namespace" {
-  type = bool
+variable "labels" {
+  description = "Kubernetes labels to add to the namespace"
+  type = map
+  default = {}
+}
+
+variable "annotations" {
+  description = "Kubernetes annotations to add to the namespace"
+  type = map
+  default = {}
 }

@@ -97,8 +97,7 @@ provider "helm" {
 
 module "namespace" {
   source           = "../../modules/kubernetes-namespace"
-  providers        = { helm = helm.ray }
-  create_namespace = true
+  providers        = { kubernetes = kubernetes.ray }
   namespace        = var.kubernetes_namespace
 }
 
@@ -106,12 +105,12 @@ module "kuberay-operator" {
   source                 = "../../modules/kuberay-operator"
   providers              = { helm = helm.ray, kubernetes = kubernetes.ray }
   name                   = "kuberay-operator"
-  create_namespace       = true
   namespace              = var.kubernetes_namespace
   project_id             = var.project_id
   autopilot_cluster      = local.enable_autopilot
   google_service_account = local.workload_identity_service_account
   create_service_account = var.create_service_account
+  depends_on = [module.namespace]
 }
 
 module "kuberay-logging" {
@@ -128,10 +127,9 @@ module "kuberay-monitoring" {
   providers                       = { helm = helm.ray, kubernetes = kubernetes.ray }
   project_id                      = var.project_id
   namespace                       = var.kubernetes_namespace
-  create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.workload_identity_service_account
-  depends_on                      = [module.kuberay-operator]
+  depends_on                      = [module.namespace, module.kuberay-operator]
 }
 
 module "gcs" {
@@ -154,6 +152,6 @@ module "kuberay-cluster" {
   autopilot_cluster      = local.enable_autopilot
   google_service_account = local.workload_identity_service_account
   grafana_host           = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
-  depends_on             = [module.gcs, module.kuberay-operator]
+  depends_on             = [module.gcs, module.kuberay-operator, module.namespace]
 }
 

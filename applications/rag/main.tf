@@ -101,7 +101,6 @@ provider "helm" {
 module "namespace" {
   source           = "../../modules/kubernetes-namespace"
   providers        = { helm = helm.rag }
-  create_namespace = true
   namespace        = var.kubernetes_namespace
 }
 
@@ -110,11 +109,11 @@ module "kuberay-operator" {
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   name                   = "kuberay-operator"
   project_id             = var.project_id
-  create_namespace       = true
   namespace              = var.kubernetes_namespace
   google_service_account = local.ray_service_account
   create_service_account = var.create_ray_service_account
   autopilot_cluster      = local.enable_autopilot
+  depends_on = [module.namespace]
 }
 
 module "gcs" {
@@ -193,7 +192,7 @@ module "kuberay-cluster" {
   google_service_account = local.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri
   disable_network_policy = var.disable_ray_cluster_network_policy
-  depends_on             = [module.kuberay-operator]
+  depends_on             = [module.namespace, module.kuberay-operator]
 }
 
 module "kuberay-monitoring" {
@@ -201,7 +200,6 @@ module "kuberay-monitoring" {
   providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
   namespace                       = var.kubernetes_namespace
-  create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.ray_service_account
   # TODO(umeshkumhar): remove kuberay-operator depends, figure out service account dependency

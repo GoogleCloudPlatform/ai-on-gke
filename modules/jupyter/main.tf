@@ -97,7 +97,6 @@ resource "helm_release" "jupyterhub" {
   repository       = "https://jupyterhub.github.io/helm-chart"
   chart            = "jupyterhub"
   namespace        = var.namespace
-  create_namespace = true
   cleanup_on_fail  = "true"
   timeout          = 600
 

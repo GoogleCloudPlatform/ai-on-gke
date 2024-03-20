@@ -102,7 +102,6 @@ module "namespace" {
   source           = "../../modules/kubernetes-namespace"
   providers        = { helm = helm.jupyter }
   namespace        = var.kubernetes_namespace
-  create_namespace = true
 }
 
 # IAP Section: Enabled the IAP service

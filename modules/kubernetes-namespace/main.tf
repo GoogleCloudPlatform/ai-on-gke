@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "kubernetes_manifest" "namespace" {
-  manifest = {
-    "apiVersion" = "v1"
-    "kind" = "Namespace"
-    "metadata" = {
-      "labels" = {
-        "pod-security.kubernetes.io/audit" = "restricted"
-        "pod-security.kubernetes.io/audit-version" = "latest"
-        "pod-security.kubernetes.io/enforce" = "baseline"
-        "pod-security.kubernetes.io/enforce-version" = "latest"
-        "pod-security.kubernetes.io/warn" = "restricted"
-        "pod-security.kubernetes.io/warn-version" = "latest"
-      }
-      "name" = var.namespace
-    }
+data "kubernetes_all_namespaces" "allns" {}
+
+# Terraform Kubernetes namespaces are not declarative or idempotent.
+# Two attempts to create the same namespace will error out. Calculate
+# whether a namespace already exists then skip creation if it does.
+locals {
+  namespace_exists = contains(data.kubernetes_all_namespaces.allns.namespaces, var.namespace) ? true : false
+}
+
+resource "kubernetes_namespace" "namespace" {
+  count = local.namespace_exists ? 0 : 1
+  metadata {
+    name = var.namespace
+    annotations = var.annotations
+    labels = var.labels
   }
 }

@@ -20,7 +20,6 @@ resource "helm_release" "kuberay-operator" {
   version          = "1.0.0"
   namespace        = var.namespace
   cleanup_on_fail  = "true"
-  create_namespace = var.create_namespace
 }
 
 module "kuberay-workload-identity" {

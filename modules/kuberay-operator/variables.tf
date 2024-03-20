@@ -27,10 +27,6 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
-variable "create_namespace" {
-  type = bool
-}
-
 variable "autopilot_cluster" {
   type = bool
 }
