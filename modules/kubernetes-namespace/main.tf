@@ -12,10 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Helm Chart 
-resource "helm_release" "app-namespace" {
-  name             = "app-namespace"
-  chart            = "${path.module}/charts/namespace/"
-  namespace        = var.namespace
-  create_namespace = var.create_namespace
+resource "kubernetes_manifest" "namespace" {
+  manifest = {
+    "apiVersion" = "v1"
+    "kind" = "Namespace"
+    "metadata" = {
+      "labels" = {
+        "pod-security.kubernetes.io/audit" = "restricted"
+        "pod-security.kubernetes.io/audit-version" = "latest"
+        "pod-security.kubernetes.io/enforce" = "baseline"
+        "pod-security.kubernetes.io/enforce-version" = "latest"
+        "pod-security.kubernetes.io/warn" = "restricted"
+        "pod-security.kubernetes.io/warn-version" = "latest"
+      }
+      "name" = var.namespace
+    }
+  }
 }
