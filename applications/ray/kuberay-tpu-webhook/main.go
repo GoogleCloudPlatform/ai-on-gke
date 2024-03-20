@@ -439,8 +439,10 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 			container := containers[i]
 			if containerRequestingTPUs(container) {
 				path := fmt.Sprintf("/spec/containers/%d/env", i)
-				// inject TPU_WORKER_HOSTNAMES set during RayCluster interception
-				injectHostnames(sliceToHostnames[podSlice], path, container, &patches)
+				if isMultiHost {
+					// inject TPU_WORKER_HOSTNAMES set during RayCluster interception
+					injectHostnames(sliceToHostnames[podSlice], path, container, &patches)
+				}
 				// inject TPU_WORKER_ID
 				if getEnvironmentVariable("TPU_WORKER_ID", container) == "" {
 					workerID := corev1.EnvVar{
