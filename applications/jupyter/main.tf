@@ -140,6 +140,6 @@ module "jupyterhub" {
   k8s_backend_service_name = var.k8s_backend_service_name
   k8s_backend_service_port = var.k8s_backend_service_port
   domain                   = var.domain
-  members_allowlist        = split(",", var.members_allowlist)
+  members_allowlist        = var.members_allowlist != "" ? split(",", var.members_allowlist) : []
   depends_on               = [module.gcs, module.namespace]
 }
