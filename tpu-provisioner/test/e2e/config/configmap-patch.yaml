@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: manager
+  namespace: tpu-provisioner-system
+data:
+  GCP_ZONE: ${ZONE}
+  GCP_NODE_SERVICE_ACCOUNT: ${NODE_SA_EMAIL}

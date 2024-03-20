@@ -266,6 +266,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 				EnableIntegrityMonitoring: true,
 				EnableSecureBoot:          g.ClusterContext.NodeSecureBoot,
 			},
+			Spot: p.Spec.NodeSelector["cloud.google.com/gke-spot"] == "true",
 			Tags: g.ClusterContext.NodeTags,
 			// NOTE: vendor/ was manually updated to include the field because
 			// it was not currently available at the time of writing:
