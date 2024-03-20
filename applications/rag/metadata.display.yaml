@@ -225,6 +225,11 @@ spec:
           name: kubernetes_namespace
           title: Kubernetes Namespace
           section: cluster_details
+        additional_labels:
+          name: additional_labels
+          title: Additional Labels
+          section: cluster_details
+          invisible: true
         private_cluster:
           name: private_cluster
           title: Private Cluster

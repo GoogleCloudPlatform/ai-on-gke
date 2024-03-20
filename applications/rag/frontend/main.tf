@@ -35,6 +35,10 @@ resource "google_project_service" "nature_language_api" {
 
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.cloudsql_instance_region, var.cloudsql_instance)
+  additional_labels = tomap({
+    for item in var.additional_labels :
+    split("=", item)[0] => split("=", item)[1]
+  })
 }
 
 # IAP Section: Creates the GKE components
@@ -103,24 +107,24 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
   metadata {
     name      = "rag-frontend"
     namespace = var.namespace
-    labels = {
+    labels = merge({
       app = "rag-frontend"
-    }
+    }, local.additional_labels)
   }
 
   spec {
     replicas = 3
     selector {
-      match_labels = {
+      match_labels = merge({
         app = "rag-frontend"
-      }
+      }, local.additional_labels)
     }
 
     template {
       metadata {
-        labels = {
+        labels = merge({
           app = "rag-frontend"
-        }
+        }, local.additional_labels)
       }
 
       spec {

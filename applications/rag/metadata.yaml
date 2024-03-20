@@ -168,6 +168,10 @@ spec:
         description: Kubernetes namespace where resources are deployed
         varType: string
         defaultValue: rag
+      - name: additional_labels
+        description: Additional labels to apply to Kubenetes resources
+        varType: list(string)
+        defaultValue: ["created-by=rag-on-gke-qss"]
       - name: private_cluster
         varType: bool
         defaultValue: false

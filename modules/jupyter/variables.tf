@@ -33,6 +33,13 @@ variable "gcs_bucket" {
   description = "GCS bucket to mount on the notebook via GCSFuse and CSI"
 }
 
+variable "additional_labels" {
+  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
+  type        = list(string)
+  description = "Additional labels to add to Kubernetes resources."
+  default     = ["created-by=jupyter-on-gke"]
+}
+
 variable "workload_identity_service_account" {
   type        = string
   description = "workload identity service account"
