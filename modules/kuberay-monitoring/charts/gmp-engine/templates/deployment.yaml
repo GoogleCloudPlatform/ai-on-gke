@@ -47,3 +47,7 @@ spec:
             httpGet:
               path: /-/healthy
               port: web
+          resources:
+            requests:
+              memory: {{ .Values.memory }}
+              cpu: {{ .Values.cpu }}

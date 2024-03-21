@@ -95,10 +95,10 @@ data "kubernetes_service" "head-svc" {
 }
 
 # Allow ingress to the kuberay head from outside the cluster
-resource "kubernetes_network_policy" "kuberay-head-network-policy" {
+resource "kubernetes_network_policy" "ray-job-and-dashboard-namespace-network-policy" {
   count = var.disable_network_policy ? 0 : 1
   metadata {
-    name      = "terraform-kuberay-head-network-policy"
+    name      = "terraform-kuberay-head-namespace-network-policy"
     namespace = var.namespace
   }
 
@@ -110,12 +110,7 @@ resource "kubernetes_network_policy" "kuberay-head-network-policy" {
     }
 
     ingress {
-      # Ray Client server
-      ports {
-        port     = "10001"
-        protocol = "TCP"
-      }
-      # Ray Dashboard
+      # Ray job submission and dashboard
       ports {
         port     = "8265"
         protocol = "TCP"
@@ -123,32 +118,10 @@ resource "kubernetes_network_policy" "kuberay-head-network-policy" {
 
       from {
         namespace_selector {
-          match_labels = {
-            "kubernetes.io/metadata.name" = var.namespace
-          }
-        }
-        dynamic "namespace_selector" {
-          for_each = var.network_policy_allow_namespaces_by_label
-          content {
-            match_labels = {
-              each.key = each.value
-            }
-          }
-        }
-
-        dynamic "pod_selector" {
-          for_each = var.network_policy_allow_pods_by_label
-          content {
-            match_labels = {
-              each.key = each.value
-            }
-          }
-        }
-
-        dynamic "ip_block" {
-          for_each = var.network_policy_allow_ips
-          content {
-            cidr = each.key
+          match_expressions {
+            key      = "kubernetes.io/metadata.name"
+            operator = "In"
+            values   = var.network_policy_allow_namespaces
           }
         }
       }
@@ -158,7 +131,40 @@ resource "kubernetes_network_policy" "kuberay-head-network-policy" {
   }
 }
 
-# Allow all intranamespace traffic to allow intracluster traffic
+# Allow ingress to the kuberay head from outside the cluster
+resource "kubernetes_network_policy" "kuberay-job-and-dashboard-cidr-network-policy" {
+  count = var.network_policy_allow_cidr != "" && !var.disable_network_policy ? 1 : 0
+  metadata {
+    name      = "terraform-kuberay-head-cidr-network-policy"
+    namespace = var.namespace
+  }
+
+  spec {
+    pod_selector {
+      match_labels = {
+        "ray.io/is-ray-node" : "yes"
+      }
+    }
+
+    ingress {
+      # Ray job submission and dashboard
+      ports {
+        port     = "8265"
+        protocol = "TCP"
+      }
+
+      from {
+        ip_block {
+          cidr = var.network_policy_allow_cidr
+        }
+      }
+    }
+
+    policy_types = ["Ingress"]
+  }
+}
+
+# Allow all same namespace and gmp traffic
 resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
   count = var.disable_network_policy ? 0 : 1
   metadata {
@@ -180,9 +186,10 @@ resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
 
       from {
         namespace_selector {
-          match_labels = {
-            "kubernetes.io/metadata.name" = var.namespace
-            "kubernetes.io/metadata.name" = "gke-gmp-system"
+          match_expressions {
+            key      = "kubernetes.io/metadata.name"
+            operator = "In"
+            values   = [var.namespace, "gke-gmp-system"]
           }
         }
       }

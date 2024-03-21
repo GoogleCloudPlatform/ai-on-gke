@@ -55,6 +55,7 @@ variable "enable_grafana_on_ray_dashboard" {
   description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
   default     = false
 }
+
 variable "create_ray_service_account" {
   type        = bool
   description = "Creates a google IAM service account & k8s service account & configures workload identity"

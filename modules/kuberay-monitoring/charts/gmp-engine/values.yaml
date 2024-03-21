@@ -13,6 +13,9 @@ image:
 
 replicaCount: 2
 
+cpu: "1m"
+memory: "5Mi"
+
 podMonitoring:
   - name: ray-monitoring
     selector:
