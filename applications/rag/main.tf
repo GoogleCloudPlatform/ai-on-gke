@@ -68,7 +68,7 @@ locals {
   jupyterhub_default_uri  = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
   ## if cloudsql_instance_region not specified, then default to cluster_location region
   cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
-  cloudsql_instance = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.cloudsql_instance}" : var.cloudsql_instance
+  cloudsql_instance        = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.cloudsql_instance}" : var.cloudsql_instance
 }
 
 
