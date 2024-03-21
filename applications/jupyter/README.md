@@ -119,9 +119,7 @@ gcloud auth application-default login
 terraform output password
 ```
 
-2. Visit [Services](https://console.cloud.google.com/kubernetes/discovery) section on the GKE console & open the external IP for the `proxy-public` service in the browser.
-
-> **_NOTE:_** If there isn't an external IP for `proxy-public`, is it most likely due to authentication being enabled.
+2. Setup port forwarding for the frontend: `kubectl port-forward service/proxy-public -n <namespace> 8081:80 &`, and open `localhost:8081` in a browser.
 
 ### If Auth with IAP is enabled
 
