@@ -171,7 +171,7 @@ spec:
       - name: additional_labels
         description: Additional labels to apply to Kubenetes resources
         varType: list(string)
-        defaultValue: ["created-by=rag-on-gke-qss"]
+        defaultValue: ["created-by=gke-ai-quick-start-solutions", "ai.gke.io=rag"]
       - name: private_cluster
         varType: bool
         defaultValue: false

@@ -109,7 +109,7 @@ spec:
       - name: additional_labels
         description: Additional labels to apply to Kubenetes resources
         varType: list(string)
-        defaultValue: ["created-by=jupyter-on-gke-qss"]
+        defaultValue: ["created-by=gke-ai-quick-start-solutions", "ai.gke.io=jupyter"]
       - name: members_allowlist
         description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
