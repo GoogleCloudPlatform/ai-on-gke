@@ -96,7 +96,7 @@ steps:
 
         # Make sure pods are running
         kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=300s
-        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID service/example-cluster-kuberay-head-svc 8265:8265 &
+        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
 
@@ -218,7 +218,7 @@ steps:
 
         # Validate Ray: Make sure pods are running
         kubectl wait --all pods -n rag-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=300s
-        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/example-cluster-kuberay-head-svc 8265:8265 &
+        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
 

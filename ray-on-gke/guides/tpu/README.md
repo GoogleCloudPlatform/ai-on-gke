@@ -86,7 +86,7 @@ To deploy a multi-host Ray Cluster, modify the `worker` spec [here](https://gith
 import ray
 
 ray.init(
-    address="ray://example-cluster-kuberay-head-svc:10001",
+    address="ray://ray-cluster-kuberay-head-svc:10001",
     runtime_env={
         "pip": [
             "jax[tpu]==0.4.12",
@@ -105,7 +105,7 @@ num_workers = 4
 result = [tpu_cores.remote() for _ in range(num_workers)]
 print(ray.get(result))
 ```
-2. `kubectl port-forward svc/example-cluster-kuberay-head-svc 8265:8265 &`
+2. `kubectl port-forward svc/ray-cluster-kuberay-head-svc 8265:8265 &`
 3. `export RAY_ADDRESS=http://localhost:8265`
 4. `ray job submit --runtime-env-json='{"working_dir": "."}' -- python test_tpu.py`
    
