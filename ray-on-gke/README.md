@@ -26,7 +26,7 @@ Validate that the RayCluster is ready:
 ```
 $ kubectl get raycluster
 NAME                  DESIRED WORKERS   AVAILABLE WORKERS   STATUS   AGE
-example-cluster-kuberay   1                 1                   ready    3m41s
+ray-cluster-kuberay   1                 1                   ready    3m41s
 ```
 
 ### Install Ray
@@ -39,7 +39,7 @@ To submit a Ray job, first establish a connection to the Ray head. For this exam
 to connect to the Ray head via localhost.
 
 ```bash
-$ kubectl port-forward --address 0.0.0.0 service/example-cluster-kuberay-head-svc 8265:8265 &
+$ kubectl -n ml port-forward service/ray-cluster-kuberay-head-svc 8265 &
 ```
 
 Submit a Ray job that prints resources available in your Ray cluster:
@@ -79,7 +79,7 @@ To use the client, first establish a connection to the Ray head. For this exampl
 to connect to the Ray head Service via localhost.
 
 ```bash
-$ kubectl port-forward --address 0.0.0.0 service/example-cluster-kuberay-head-svc 10001:10001 &
+$ kubectl -n ml port-forward service/ray-cluster-kuberay-head-svc 10001 &
 ```
 
 Next, define a Python script containing remote code you want to run on your Ray cluster. Similar to the previous example,

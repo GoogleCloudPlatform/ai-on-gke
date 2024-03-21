@@ -36,7 +36,7 @@ gcloud container clusters create-auto ${CLUSTER_NAME:?} \
   --release-channel rapid
 ```
 
-#### Deploy terraform components
+### Deploy terraform components
 
 The following steps set up the cluster, inference server, pgvector CloudSQL instance, JupyterHub, KubeRay, and frontend chat interface.
 
@@ -63,7 +63,7 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
     1. Inspect templates: https://cloud.google.com/dlp/docs/creating-templates-inspect
     2. De-identification templates: https://cloud.google.com/dlp/docs/creating-templates-deid
 
-#### Verify setup
+## Verify setup
 
 Set your namespace from `workloads.tfvars`:
 ```
@@ -75,11 +75,11 @@ Ensure your k8s client is using the correct cluster by running:
 gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER_REGION:?}
 ```
 
-1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `example-cluster-kuberay-head-` and `example-cluster-kuberay-worker-workergroup-`).
+1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `ray-cluster-kuberay-head-` and `ray-cluster-kuberay-worker-workergroup-`).
 
 2. Verify Jupyterhub service is setup:
     * Fetch the service IP/Domain:
-      * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+      * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.spec.clusterIP}'` is not empty.
       * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`:
           * From [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), check if the target user has role `IAP-secured Web App User`
           * Wait for domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
@@ -120,12 +120,12 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
       gcloud compute backend-services list --format="table(name, backends, iap.enabled)"
       ```
 
-### Vector embeddings for dataset
+## Generate vector embeddings for the dataset
 
 This step generates the vector embeddings for your input dataset. Currently, the default dataset is [Google Maps Restaurant Reviews](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews). We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
 
 1. Fetch the Jupyterhub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:
-   * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+   * IAP disabled: setup port forwarding for the frontend: `kubectl port-forward service/proxy-public -n $NAMESPACE 8081:80 &`, and go to `localhost:8081` in a browser
    * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`.
        * From [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), check if the target user has role `IAP-secured Web App User`.
        * Wait for the domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
@@ -148,14 +148,14 @@ This step generates the vector embeddings for your input dataset. Currently, the
     * When the last cell says the job has succeeded (eg: `Job 'raysubmit_APungAw6TyB55qxk' succeeded`), the vector embeddings have been generated and we can launch the frontend chat interface.
     * Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. `Status message: Job has not started yet`).
 
-### Launch the frontend chat interface
+## Launch the frontend chat interface
 
-#### With IAP disabled
+### With IAP disabled
 1. Setup port forwarding for the frontend: `kubectl port-forward service/rag-frontend -n $NAMESPACE 8080:8080 &`
 
 2. Go to `localhost:8080` in a browser & start chatting! This will fetch context related to your prompt from the vector embeddings in the `pgvector-instance`, augment the original prompt with the context & query the inference model (`mistral-7b`) with the augmented prompt.
 
-#### With IAP enabled
+### With IAP enabled
 1. Verify that IAP is enabled on [Google Cloud Platform (GCP) IAP](https://console.cloud.google.com/security/iap)(make sure you are logged in) for your application. If you encounter any errors, try re-enabling IAP.
 2. From *Google Cloud Platform IAP*, check if the target user has role `IAP-secured Web App User`. This role is necessary to access the application through IAP.
 3. Verify the domain is active using command:
@@ -163,10 +163,10 @@ This step generates the vector embeddings for your input dataset. Currently, the
 4. Read terraform output: `terraform output frontend_uri` to find the domain created by IAP for accessing your service.
 5. Open your browser and navigate to the domain you retrieved in the previous step to start chatting!
 
-#### Prompt examples
+## Prompt examples
 
 *TODO:* Add some example prompts for the dataset.
 
-### Cleanup
+## Cleanup
 
 1. Run `terraform destroy --var-file="workloads.tfvars"`

@@ -51,16 +51,13 @@ data "google_container_cluster" "default" {
 }
 
 locals {
-  endpoint              = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
-  ca_certificate        = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
-  private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
-  cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
-  enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
-  enable_tpu            = var.create_cluster ? var.enable_tpu : data.google_container_cluster.default[0].enable_tpu
-  host                  = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
-}
-
-locals {
+  endpoint                          = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
+  ca_certificate                    = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
+  private_cluster                   = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
+  cluster_membership_id             = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
+  enable_autopilot                  = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
+  enable_tpu                        = var.create_cluster ? var.enable_tpu : data.google_container_cluster.default[0].enable_tpu
+  host                              = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
   ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
 }
@@ -142,18 +139,36 @@ module "gcs" {
 }
 
 module "kuberay-cluster" {
-  count                  = var.create_ray_cluster == true ? 1 : 0
-  source                 = "../../modules/kuberay-cluster"
-  providers              = { helm = helm.ray, kubernetes = kubernetes.ray }
-  name                   = var.ray_cluster_name
-  namespace              = var.kubernetes_namespace
-  project_id             = var.project_id
-  enable_tpu             = local.enable_tpu
-  enable_gpu             = var.enable_gpu
-  gcs_bucket             = var.gcs_bucket
-  autopilot_cluster      = local.enable_autopilot
-  google_service_account = local.workload_identity_service_account
-  grafana_host           = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
-  depends_on             = [module.gcs, module.kuberay-operator]
+  count                     = var.create_ray_cluster == true ? 1 : 0
+  source                    = "../../modules/kuberay-cluster"
+  providers                 = { helm = helm.ray, kubernetes = kubernetes.ray }
+  name                      = var.ray_cluster_name
+  namespace                 = var.kubernetes_namespace
+  project_id                = var.project_id
+  enable_tpu                = local.enable_tpu
+  enable_gpu                = var.enable_gpu
+  gcs_bucket                = var.gcs_bucket
+  autopilot_cluster         = local.enable_autopilot
+  google_service_account    = local.workload_identity_service_account
+  grafana_host              = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
+  network_policy_allow_cidr = var.kuberay_network_policy_allow_cidr
+  disable_network_policy    = var.disable_ray_cluster_network_policy
+  depends_on                = [module.gcs, module.kuberay-operator]
 }
 
+
+# Assign resource quotas to Ray namespace to ensure that they don't overutilize resources
+resource "kubernetes_resource_quota" "ray_namespace_resource_quota" {
+  provider = kubernetes.ray
+  count    = var.disable_resource_quotas ? 0 : 1
+  metadata {
+    name      = "ray-resource-quota"
+    namespace = var.kubernetes_namespace
+  }
+
+  spec {
+    hard = var.resource_quotas
+  }
+
+  depends_on = [module.namespace]
+}

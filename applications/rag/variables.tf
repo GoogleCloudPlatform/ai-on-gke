@@ -41,7 +41,7 @@ variable "additional_labels" {
   // list(string) is used instead of map(string) since blueprint metadata does not support maps.
   type        = list(string)
   description = "Additional labels to add to Kubernetes resources."
-  default     = ["created-by=rag-on-gke"]
+  default     = ["created-by=ai-on-gke", "ai.gke.io=rag"]
 }
 
 variable "jupyter_service_account" {
@@ -55,6 +55,7 @@ variable "enable_grafana_on_ray_dashboard" {
   description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
   default     = false
 }
+
 variable "create_ray_service_account" {
   type        = bool
   description = "Creates a google IAM service account & k8s service account & configures workload identity"

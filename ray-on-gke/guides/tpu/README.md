@@ -2,15 +2,23 @@
 
 This page contains instructions for how to set up Ray on GKE with TPUs. 
 
-For general setup instructions please refer to the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/README.md)
-file. 
 
-For more information about TPUs on GKE, see [this page](https://cloud.google.com/kubernetes-engine/docs/concepts/tpus).
+### Prerequisites
 
+Please follow the official [Google Cloud documentation](https://cloud.google.com/tpu/docs/tpus-in-gke) for an introduction to TPUs. In partiuclar, please ensure that your GCP project has sufficient quotas to provision the cluster, see [this link](https://cloud.google.com/tpu/docs/tpus-in-gke#ensure-quotas) for details.
 
-### Installing the GKE Platform
+For addition useful information about TPUs on GKE (such as topology configurations and availability), see [this page](https://cloud.google.com/kubernetes-engine/docs/concepts/tpus).
 
-1. If needed, git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+In addition, please ensure the following are installed on your local development environment:
+* Helm (v3.9.3)
+* Terraform (v1.7.4)
+* Kubectl
+
+### Provisioning a GKE Cluster with Terraform (Optional)
+
+Skip this section if you already have a GKE cluster with TPUs (cluster version should be 1.28 or later). 
+
+1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
 
 2. `cd ai-on-gke/infrastructure`
 
@@ -36,11 +44,26 @@ accelerator_type       = "nvidia-tesla-t4"
 7. Run `terraform init && terraform apply -var-file platform.tfvars`
 
 
-### Installing the TPU Initialization Webhook
+### Manually Installing the TPU Initialization Webhook
 
-The TPU Initialization Webhook automatically injects the `TPU_WORKER_ID`, `TPU_NAME`, and `TPU_WORKER_HOSTNAMES` environment variables necessary for multi-host TPU clusters. The webhook needs to be installed once per GKE cluster and requires a Kuberay Operator running v1.1 and GKE cluster version of 1.28+. The instructions can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/kuberay-tpu-webhook).
+The TPU Initialization Webhook automatically bootstraps the TPU environment for TPU clusters. The webhook needs to be installed once per GKE cluster and requires a Kuberay Operator running v1.1+ and GKE cluster version of 1.28+. 
+
+1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
+2. `cd applications/ray/kuberay-tpu-webhook` 
+3. `make install-cert-manager` - it may take up to two minutes for the certificate to become ready
+4. `make deploy`
+    - this will create the webhook deployment, configs, and service in the "ray-system" namespace
+    - to change the namespace, edit the "namespace" value in each .yaml in deployments/ and certs/
+
+5. `make deploy-cert`
+
+   
 
 ### Creating the Kuberay Cluster
+
+You can find sample TPU cluster manifests for [single-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-singlehost.yaml) and [multi-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-multihost.yaml) here.
+
+If you are using Terraform:
 
 1. Get the GKE cluster name and location/region from `infrastructure/platform.tfvars`.
    Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`.
@@ -58,49 +81,34 @@ To deploy a multi-host Ray Cluster, modify the `worker` spec [here](https://gith
 
 ### Running Sample Workloads
 
-Install Jupyterhub according to the instructions in the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/jupyter/README.md).
+1. Save the following to a local file (e.g. `test_tpu.py`):
+```
+import ray
 
-A basic JAX program can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/example_notebooks/jax-tpu.ipynb).
+ray.init(
+    address="ray://ray-cluster-kuberay-head-svc:10001",
+    runtime_env={
+        "pip": [
+            "jax[tpu]==0.4.12",
+            "-f https://storage.googleapis.com/jax-releases/libtpu_releases.html",
+        ]
+    }
+)
 
+
+@ray.remote(resources={"TPU": 4})
+def tpu_cores():
+    import jax
+    return "TPU cores:" + str(jax.device_count())
+
+num_workers = 4
+result = [tpu_cores.remote() for _ in range(num_workers)]
+print(ray.get(result))
+```
+2. `kubectl port-forward svc/ray-cluster-kuberay-head-svc 8265:8265 &`
+3. `export RAY_ADDRESS=http://localhost:8265`
+4. `ray job submit --runtime-env-json='{"working_dir": "."}' -- python test_tpu.py`
+   
 For a more advanced workload running Stable Diffusion on TPUs, see [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/example_notebooks/stable-diffusion-tpu.ipynb).
 
-
-### (Optional) Initializing JAX Environment Manually
-
-To manually set JAX environment variables for `TPU_WORKER_ID` and `TPU_WORKER_HOSTNAMES` before initializing JAX without using the webhook, run the following sample code:
-
-```
-@ray.remote(resources={"google.com/tpu": 4})
-def get_hostname():
-    import time
-    time.sleep(1)
-    return ray.util.get_node_ip_address()
-
-
-@ray.remote(resources={"google.com/tpu": 4})
-def init_tpu_env_from_ray(id_hostname_map):
-    import os
-    import time
-    
-    time.sleep(1)
-    hostname = ray.util.get_node_ip_address()
-    worker_id = id_hostname_map[hostname]
-    
-    os.environ["TPU_WORKER_ID"] = str(worker_id)
-    os.environ["TPU_WORKER_HOSTNAMES"] = ",".join(list(id_hostname_map))
-
-    return "TPU_WORKER_ID: " + os.environ["TPU_WORKER_ID"] + " TPU_WORKER_HOSTNAMES: " + os.environ["TPU_WORKER_HOSTNAMES"]
-
-
-def init_jax_from_ray(num_workers: int):
-    results = ray.get([get_hostname.remote() for x in range(num_workers)])
-    id_hostname_map = {
-        hostname: worker_id for worker_id, hostname in enumerate(set(results))}
-
-    result = [init_tpu_env_from_ray.remote(id_hostname_map) for _ in range(num_workers)]
-    print(ray.get(result))
-
-
-init_jax_from_ray(num_workers=2)
-
-``` 
+ 
