@@ -95,7 +95,7 @@ data "kubernetes_service" "head-svc" {
 }
 
 # Allow ingress to the kuberay head from outside the cluster
-resource "kubernetes_network_policy" "ray-job-and-dashboard-namespace-network-policy" {
+resource "kubernetes_network_policy" "kuberay-head-namespace-network-policy" {
   count = var.disable_network_policy ? 0 : 1
   metadata {
     name      = "terraform-kuberay-head-namespace-network-policy"
@@ -105,7 +105,7 @@ resource "kubernetes_network_policy" "ray-job-and-dashboard-namespace-network-po
   spec {
     pod_selector {
       match_labels = {
-        "ray.io/is-ray-node" : "yes"
+        "ray.io/node-type" : "head"
       }
     }
 
@@ -113,6 +113,12 @@ resource "kubernetes_network_policy" "ray-job-and-dashboard-namespace-network-po
       # Ray job submission and dashboard
       ports {
         port     = "8265"
+        protocol = "TCP"
+      }
+
+      # Ray client
+      ports {
+        port     = "10001"
         protocol = "TCP"
       }
 
@@ -132,7 +138,7 @@ resource "kubernetes_network_policy" "ray-job-and-dashboard-namespace-network-po
 }
 
 # Allow ingress to the kuberay head from outside the cluster
-resource "kubernetes_network_policy" "kuberay-job-and-dashboard-cidr-network-policy" {
+resource "kubernetes_network_policy" "kuberay-head-cidr-network-policy" {
   count = var.network_policy_allow_cidr != "" && !var.disable_network_policy ? 1 : 0
   metadata {
     name      = "terraform-kuberay-head-cidr-network-policy"
@@ -142,7 +148,7 @@ resource "kubernetes_network_policy" "kuberay-job-and-dashboard-cidr-network-pol
   spec {
     pod_selector {
       match_labels = {
-        "ray.io/is-ray-node" : "yes"
+        "ray.io/node-type" : "head"
       }
     }
 
@@ -150,6 +156,12 @@ resource "kubernetes_network_policy" "kuberay-job-and-dashboard-cidr-network-pol
       # Ray job submission and dashboard
       ports {
         port     = "8265"
+        protocol = "TCP"
+      }
+
+      # Ray client
+      ports {
+        port     = "10001"
         protocol = "TCP"
       }
 
