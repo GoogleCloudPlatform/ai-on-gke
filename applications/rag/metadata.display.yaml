@@ -273,25 +273,25 @@ spec:
               If using custom domains for Jupyterhub or Frontend, create DNS A record sets for them (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
         - heading: "Step 2: Go to JupyterHub Application"
           description: |-
-             <li>If IAP is enabled, log in with your organization's credentials.</li>
+             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
              <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
              <li> Once logged in, choose the <b>CPU</b> preset.</li>
         - heading: "Step 3: Generate Vector Embeddings for the Dataset"
           description: |-
             Go to File -> Open From URL & upload and execute the notebook 
             <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
-            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#vector-embeddings-for-dataset">README.md</a> for detailed instructions.
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#generate-vector-embeddings-for-the-dataset">README.md</a> for detailed instructions.
         - heading: "Step 4: Prompt the Inference Server via a Chatbot"
           description: |-
-            <li> Go to the RAG Frontend Application</li>
-            <li>If IAP is enabled, the existing session's credentials will be used.</li>
+            <li> Go to the Frontend Application</li>
+            <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
             <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button. </li>
             <li>Prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.</li>
       outputs:
         frontend_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to RAG Frontend Application
+          label: Go to Frontend Application
         jupyterhub_password: {}
         jupyterhub_uri:
           openInNewTab: true

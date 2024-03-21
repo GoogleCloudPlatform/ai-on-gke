@@ -178,11 +178,11 @@ spec:
         - heading: "Step 1: Create DNS A Records for Jupyterhub"
           description: |-
             If using custom domains for Jupyterhub, create DNS A record set (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
-        - heading: "Step 2: Go to JupyterHub Application"
+        - heading: "Step 2: Go to JupyterHub Application with sample notebooks"
           description: |-
-             <li>If IAP is enabled, log in with your organization's credentials.</li>
-             <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
-             <li> Once logged in, choose the appropriate preset and execute notebooks.</li>
+             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
+             <li>If IAP is disabled, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
+             <li>Once logged in, choose the appropriate preset and execute notebooks. Sample notebooks are provided <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/examples/notebooks">here</a></li>
       outputs:
         jupyterhub_password: {}
         jupyterhub_uri:

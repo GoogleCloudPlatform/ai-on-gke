@@ -38,7 +38,7 @@ spec:
         defaultValue: false
       - name: autopilot_cluster
         varType: string
-        defaultValue: "false"
+        defaultValue: "true"
       - name: client_id
         description: Client ID used for enabling IAP
         varType: string
