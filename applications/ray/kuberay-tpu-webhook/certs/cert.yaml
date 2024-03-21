@@ -18,7 +18,3 @@ spec:
     - kuberay-tpu-webhook.ray-system.svc.cluster.local
   issuerRef:
     name: selfsigned-issuer
-  secretTemplate:
-    annotations:
-      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
-      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
