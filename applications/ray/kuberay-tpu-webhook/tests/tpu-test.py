@@ -9,7 +9,7 @@ def tpu_cores():
     
 
 ray.init(
-    address="ray://example-cluster-kuberay-head-svc:10001",
+    address="ray://ray-cluster-kuberay-head-svc:10001",
     runtime_env={
         "pip": [
             "jax[tpu]==0.4.11",

@@ -57,14 +57,14 @@ pod/kuberay-operator-64b7b88759-5ppfw                   1/1     Running   0   95
 ```
 $ kubectl get all -n example
 NAME                                                   READY   STATUS    RESTARTS   AGE
-pod/example-cluster-kuberay-head-9x2q6                 2/2     Running   0          3m12s
-pod/example-cluster-kuberay-worker-workergroup-95nm2   2/2     Running   0          3m12s
-pod/example-cluster-kuberay-worker-workergroup-tfg9n   2/2     Running   0          3m12s
+pod/ray-cluster-kuberay-head-9x2q6                 2/2     Running   0          3m12s
+pod/ray-cluster-kuberay-worker-workergroup-95nm2   2/2     Running   0          3m12s
+pod/ray-cluster-kuberay-worker-workergroup-tfg9n   2/2     Running   0          3m12s
 pod/kuberay-operator-64b7b88759-5ppfw                  1/1     Running   0          4m4s
 pod/tensorflow-0                                       2/2     Running   0          16s
 
 NAME                                       TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)                                         AGE
-service/example-cluster-kuberay-head-svc   ClusterIP      10.8.10.33    <none>        10001/TCP,8265/TCP,8080/TCP,6379/TCP,8000/TCP   3m12s
+service/ray-cluster-kuberay-head-svc   ClusterIP      10.8.10.33    <none>        10001/TCP,8265/TCP,8080/TCP,6379/TCP,8000/TCP   3m12s
 service/kuberay-operator                   ClusterIP      10.8.14.245   <none>        8080/TCP                                        4m4s
 service/tensorflow                         ClusterIP      None          <none>        8888/TCP                                        16s
 service/tensorflow-jupyter                 LoadBalancer   10.8.3.9      <pending>     80:31891/TCP                                    16s
@@ -96,7 +96,7 @@ http://tensorflow-0:8888/?token=<TOKEN> :: /home/jovyan
 12. Follow the comments and execute the cells in the notebook to run a distributed training job and then inference on the tuned model
 13. Port forward the ray service port to examine the ray dashboard for jobs progress details, The dashboard is reachable at localhost:8286 in the local browser
 ```
-kubectl port-forward -n example service/example-cluster-kuberay-head-svc 8265:8265
+kubectl port-forward -n example service/ray-cluster-kuberay-head-svc 8265:8265
 ```
 14. During an ongoing traing, the pod resource usage of CPU, Memory, GPU, GPU Memory can be visualized with the GKE Cloud Console for the workloads
 example ![Ray Head resources](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/raytrain-examples/images/ray-head-resources.png) and ![Ray Worker resources](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/ray-on-gke/raytrain-examples/images/ray-worker-resources.png)

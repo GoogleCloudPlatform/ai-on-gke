@@ -75,7 +75,7 @@ Ensure your k8s client is using the correct cluster by running:
 gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER_REGION:?}
 ```
 
-1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `example-cluster-kuberay-head-` and `example-cluster-kuberay-worker-workergroup-`).
+1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `ray-cluster-kuberay-head-` and `ray-cluster-kuberay-worker-workergroup-`).
 
 2. Verify Jupyterhub service is setup:
     * Fetch the service IP/Domain:

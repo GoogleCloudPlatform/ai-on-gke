@@ -20,7 +20,7 @@ variable "project_id" {
 variable "name" {
   type        = string
   description = "Name of the ray cluster"
-  default     = "example-cluster"
+  default     = "ray-cluster"
 }
 
 variable "db_region" {
