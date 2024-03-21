@@ -39,7 +39,7 @@ To submit a Ray job, first establish a connection to the Ray head. For this exam
 to connect to the Ray head via localhost.
 
 ```bash
-$ kubectl port-forward service/example-cluster-kuberay-head-svc 8265 &
+$ kubectl port-forward service/example-cluster-kuberay-head-svc 8265 -n ml &
 ```
 
 Submit a Ray job that prints resources available in your Ray cluster:
@@ -79,7 +79,7 @@ To use the client, first establish a connection to the Ray head. For this exampl
 to connect to the Ray head Service via localhost.
 
 ```bash
-$ kubectl port-forward service/example-cluster-kuberay-head-svc 10001 &
+$ kubectl port-forward service/example-cluster-kuberay-head-svc -n ml 10001 &
 ```
 
 Next, define a Python script containing remote code you want to run on your Ray cluster. Similar to the previous example,
