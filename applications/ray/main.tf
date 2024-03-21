@@ -20,6 +20,8 @@ provider "google" {
   project = var.project_id
 }
 
+provider "time" {}
+
 data "google_client_config" "default" {}
 
 data "google_project" "project" {
