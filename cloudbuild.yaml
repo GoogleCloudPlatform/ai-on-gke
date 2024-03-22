@@ -227,13 +227,13 @@ steps:
         --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
         echo "pass" > /workspace/rag_ray_dashboard_result.txt
 
-        # Validate Jupyterhub: Get hub url
+        # Validate JupyterHub: Get hub url
         kubectl get services -n rag-$SHORT_SHA-$_BUILD_ID
         kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
         # Wait port-forwarding to take its place
         sleep 5s
 
-        # Validate Jupyterhub: Test Hub
+        # Validate JupyterHub: Test Hub
         cd /workspace/modules/jupyter/tests
         python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/rag_jupyterhub_test_result.txt

@@ -68,6 +68,7 @@ locals {
   jupyterhub_default_uri  = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
   ## if cloudsql_instance_region not specified, then default to cluster_location region
   cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
+  cloudsql_instance        = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.cloudsql_instance}" : var.cloudsql_instance
 }
 
 
@@ -131,7 +132,7 @@ module "cloudsql" {
   source        = "../../modules/cloudsql"
   providers     = { kubernetes = kubernetes.rag }
   project_id    = var.project_id
-  instance_name = var.cloudsql_instance
+  instance_name = local.cloudsql_instance
   namespace     = var.kubernetes_namespace
   region        = local.cloudsql_instance_region
   depends_on    = [module.namespace]
@@ -191,7 +192,7 @@ module "kuberay-cluster" {
   gcs_bucket             = var.gcs_bucket
   autopilot_cluster      = local.enable_autopilot
   db_secret_name         = module.cloudsql.db_secret_name
-  cloudsql_instance_name = var.cloudsql_instance
+  cloudsql_instance_name = local.cloudsql_instance
   db_region              = local.cloudsql_instance_region
   google_service_account = local.ray_service_account
   grafana_host           = module.kuberay-monitoring.grafana_uri

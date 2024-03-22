@@ -77,7 +77,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 
 1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `ray-cluster-kuberay-head-` and `ray-cluster-kuberay-worker-workergroup-`).
 
-2. Verify Jupyterhub service is setup:
+2. Verify JupyterHub service is setup:
     * Fetch the service IP/Domain:
       * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.spec.clusterIP}'` is not empty.
       * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`:
@@ -124,13 +124,13 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 
 This step generates the vector embeddings for your input dataset. Currently, the default dataset is [Google Maps Restaurant Reviews](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews). We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
 
-1. Fetch the Jupyterhub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:
+1. Fetch the JupyterHub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:
    * IAP disabled: setup port forwarding for the frontend: `kubectl port-forward service/proxy-public -n $NAMESPACE 8081:80 &`, and go to `localhost:8081` in a browser
    * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`.
        * From [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), check if the target user has role `IAP-secured Web App User`.
        * Wait for the domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
 
-2. Login to Jupyterhub:
+2. Login to JupyterHub:
    * IAP disabled: Use placeholder credentials:
         * username: admin
         * password: use `terraform output jupyterhub_password` to fetch the password value

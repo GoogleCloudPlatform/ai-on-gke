@@ -89,8 +89,8 @@ class IAPUserLoginHandler(BaseHandler):
 class GCPIAPAuthenticator(Authenticator):
     """
     Accept the authenticated JSON Web Token from IAP Login.
-    Used by the Jupyterhub as the Authentication class
-        The get_handlers is how Jupyterhub know how to handle auth
+    Used by the JupyterHub as the Authentication class
+        The get_handlers is how JupyterHub know how to handle auth
     """
     header_name = Unicode(
         config=True,

@@ -32,5 +32,5 @@ gcs_bucket                        = "<gcs-bucket>"
 create_gcs_bucket                 = true
 workload_identity_service_account = "jupyter-service-account"
 
-# Jupyterhub without IAP
+# JupyterHub without IAP
 add_auth = false

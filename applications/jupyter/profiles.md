@@ -1,8 +1,8 @@
-# Jupyterhub Profiles
+# JupyterHub Profiles
 
 ## Default Profiles
 
-By default, there are 3 pre-set profiles for Jupyterhub:
+By default, there are 3 pre-set profiles for JupyterHub:
 
 ![Profiles Page](images/image.png)
 
@@ -85,7 +85,7 @@ Similar to overriding images, the resources can also be overwritten by using `ku
 
 ### Node/GPU
 
-Jupyterhub config allows the use of [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector). This is the way the profiles specify which node/GPU it wants
+JupyterHub config allows the use of [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector). This is the way the profiles specify which node/GPU it wants
 
 ``` yaml
 nodeSelector:
@@ -114,7 +114,7 @@ The possible GPUs are:
 
 ### TPUs
 
-Jupyterhub profiles has a TPU option. It utilizes the [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector), and the annotations `cloud.google.com/gke-tpu-accelerator` and `cloud.google.com/gke-tpu-topology` to select the TPU nodes.
+JupyterHub profiles has a TPU option. It utilizes the [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector), and the annotations `cloud.google.com/gke-tpu-accelerator` and `cloud.google.com/gke-tpu-topology` to select the TPU nodes.
 
 We add the following annotations to `kupespawner_override`
 
