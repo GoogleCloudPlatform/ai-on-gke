@@ -26,6 +26,7 @@ const (
 	GKEAcceleratorNodeSelector = "cloud.google.com/gke-tpu-accelerator"
 	GKENodePoolNameLabel       = "cloud.google.com/gke-nodepool"
 	GKENodePoolNamePrefix      = "tpu-provisioner-"
+	jobKeyLabel                = "jobset.sigs.k8s.io/job-key"
 	V4PodSliceAccelerator      = "tpu-v4-podslice"
 	V5ePodSliceAccelerator     = "tpu-v5-lite-podslice"
 	V5pPodSliceAccelerator     = "tpu-v5p-slice"
@@ -48,8 +49,9 @@ type GKE struct {
 
 	Recorder record.EventRecorder
 
-	inProgressDeletes sync.Map
-	inProgressCreates sync.Map
+	inProgressDeletes       sync.Map
+	inProgressCreates       sync.Map
+	inProgressCreatesJobKey sync.Map
 }
 
 func (g *GKE) NodePoolLabelKey() string { return GKENodePoolNameLabel }
@@ -80,10 +82,20 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 	// "do: googleapi: Error 400: Cluster is running incompatible operation ..."
 	// To avoid a bunch of failed requests, we dedeuplicate here.
 	if _, inProgress := g.inProgressCreates.Load(name); inProgress {
-		return ErrDuplicateRequest
+		return fmt.Errorf("creation ongoing for node pool name: %v: %w", name, ErrDuplicateRequest)
 	}
 	g.inProgressCreates.Store(name, struct{}{})
 	defer g.inProgressCreates.Delete(name)
+
+	// A restarting JobSet will trigger a new Node Pool creation.
+	// This creation might overlap with the previous one, so we need to deduplicate.
+	if jobKey := p.Labels[jobKeyLabel]; jobKey != "" {
+		if _, inProgress := g.inProgressCreatesJobKey.Load(jobKey); inProgress {
+			return fmt.Errorf("creation ongoing for job-key: %v: %w", jobKey, ErrDuplicateRequest)
+		}
+		g.inProgressCreatesJobKey.Store(jobKey, struct{}{})
+		defer g.inProgressCreatesJobKey.Delete(jobKey)
+	}
 
 	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationStarted, "Starting creation of Node Pool %s (size = %v) because %s", name, np.InitialNodeCount, why)
 	call := g.Service.Projects.Locations.Clusters.NodePools.Create(g.ClusterContext.ClusterName(), req)
