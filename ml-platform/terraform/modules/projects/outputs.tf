@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "project_ids" {
-  value = "${google_project.project_under_folder}" == {} ? "${google_project.project_under_org}" : "${google_project.project_under_folder}"
+output "project_id" {
+  value = local.project_id
 }

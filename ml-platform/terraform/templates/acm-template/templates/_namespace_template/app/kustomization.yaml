@@ -18,7 +18,8 @@ namespace: NAMESPACE
 
 resources:
 - fluentd_config.yaml
-- serviceaccount.yaml
+- serviceaccount_ray_head.yaml
+- serviceaccount_ray_worker.yaml
 
 helmCharts:
 - name: ray-cluster

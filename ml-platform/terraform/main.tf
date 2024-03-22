@@ -13,194 +13,140 @@
 # limitations under the License.
 
 locals {
-  gke_project_map                     = { for k, v in "${module.gke}" : v.cluster_name => v.gke_project_id }
-  parsed_gke_info                     = module.gke
-  parsed_gke_info_without_default_env = { for k, v in "${local.parsed_gke_info}" : k => v if k != var.default_env }
-  parsed_project_id                   = var.create_projects == 0 ? var.project_id : { for k, v in "${module.gcp-project.project_ids}" : k => v.project_id }
-  project_id_list                     = [for k, v in "${module.gke}" : v.gke_project_id]
+  project = data.google_project.environment
 }
 
-#TODO: Add a validation that the value if default_env must be one of the values in env list
+#
+# Project
+##########################################################################
 module "gcp-project" {
-  count = var.create_projects
-
   source = "./modules/projects"
 
   billing_account = var.billing_account
-  env             = var.env
+  env             = var.environment_name
   folder_id       = var.folder_id
   org_id          = var.org_id
+  project_id      = var.environment_project_id
   project_name    = var.project_name
 }
 
+data "google_project" "environment" {
+  project_id = module.gcp-project.project_id
+}
+
 resource "google_project_service" "containerfilesystem_googleapis_com" {
-  for_each = local.parsed_project_id
-
-  depends_on = [module.gcp-project]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "containerfilesystem.googleapis.com"
 }
 
 resource "google_project_service" "serviceusage_googleapis_com" {
-  for_each = local.parsed_project_id
-
-  depends_on = [module.gcp-project]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "serviceusage.googleapis.com"
 }
 
 resource "google_project_service" "project_services-cr" {
-  for_each = local.parsed_project_id
-
-  depends_on = [module.gcp-project]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "cloudresourcemanager.googleapis.com"
 }
 
 resource "google_project_service" "project_services-an" {
-  for_each = local.parsed_project_id
-
-  depends_on = [
-    module.gcp-project,
-    google_project_service.project_services-cr
-  ]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "anthos.googleapis.com"
 }
 
 resource "google_project_service" "project_services-anc" {
-  for_each = local.parsed_project_id
-
-  depends_on = [
-    module.gcp-project,
-    google_project_service.project_services-cr
-  ]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "anthosconfigmanagement.googleapis.com"
 }
 
 resource "google_project_service" "project_services-con" {
-  for_each = local.parsed_project_id
-
-  depends_on = [
-    module.gcp-project,
-    google_project_service.project_services-cr
-  ]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "container.googleapis.com"
 }
 
 resource "google_project_service" "project_services-com" {
-  for_each = local.parsed_project_id
-
-  depends_on = [
-    module.gcp-project,
-    google_project_service.project_services-cr
-  ]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "compute.googleapis.com"
 }
 
 resource "google_project_service" "project_services-gkecon" {
-  for_each = local.parsed_project_id
-
-  depends_on = [
-    module.gcp-project,
-    google_project_service.project_services-cr
-  ]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "gkeconnect.googleapis.com"
 }
 
 resource "google_project_service" "project_services-gkeh" {
-  for_each = local.parsed_project_id
-
-  depends_on = [
-    module.gcp-project,
-    google_project_service.project_services-cr
-  ]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "gkehub.googleapis.com"
 }
 
 resource "google_project_service" "project_services-iam" {
-  for_each = local.parsed_project_id
-
-  depends_on = [module.gcp-project, google_project_service.project_services-cr]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "iam.googleapis.com"
 }
 
 resource "google_project_service" "project_services-gate" {
-  for_each = local.parsed_project_id
-
-  depends_on = [
-    module.gcp-project,
-    google_project_service.project_services-cr
-  ]
-
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = each.value
+  project                    = local.project.project_id
   service                    = "connectgateway.googleapis.com"
 }
 
+#
+# Networking
+##########################################################################
 module "create-vpc" {
-  for_each = local.parsed_project_id
-
   source = "./modules/network"
 
   depends_on = [
-    module.gcp-project,
     google_project_service.project_services-com
   ]
 
-  network_name     = format("%s-%s", var.network_name, each.key)
-  project_id       = each.value
+  network_name     = format("%s-%s", var.network_name, var.environment_name)
+  project_id       = local.project.project_id
   routing_mode     = var.routing_mode
   subnet_01_ip     = var.subnet_01_ip
-  subnet_01_name   = format("%s-%s", var.subnet_01_name, each.key)
+  subnet_01_name   = format("%s-%s", var.subnet_01_name, var.environment_name)
   subnet_01_region = var.subnet_01_region
   subnet_02_ip     = var.subnet_02_ip
-  subnet_02_name   = format("%s-%s", var.subnet_02_name, each.key)
+  subnet_02_name   = format("%s-%s", var.subnet_02_name, var.environment_name)
   subnet_02_region = var.subnet_02_region
 }
 
+module "cloud-nat" {
+  source = "./modules/cloud-nat"
+
+  create_router = true
+  name          = format("%s-%s", "nat-for-acm", var.environment_name)
+  network       = module.create-vpc.vpc
+  project_id    = local.project.project_id
+  region        = split("/", module.create-vpc.subnet-1)[3]
+  router        = format("%s-%s", "router-for-acm", var.environment_name)
+}
+
+#
+# GKE
+##########################################################################
 resource "google_gke_hub_feature" "configmanagement_acm_feature" {
-  provider = google-beta
-
-  count = length(distinct(values(local.parsed_project_id)))
-
   depends_on = [
     google_project_service.project_services-gkeh,
     google_project_service.project_services-anc,
@@ -211,12 +157,10 @@ resource "google_gke_hub_feature" "configmanagement_acm_feature" {
 
   location = "global"
   name     = "configmanagement"
-  project  = distinct(values(local.parsed_project_id))[count.index]
+  project  = local.project.project_id
 }
 
 module "gke" {
-  for_each = local.parsed_project_id
-
   source = "./modules/cluster"
 
   depends_on = [
@@ -225,120 +169,135 @@ module "gke" {
     google_project_service.project_services-com
   ]
 
-  cluster_name                = format("%s-%s", var.cluster_name, each.key)
-  env                         = each.key
+  cluster_name                = format("%s-%s", var.cluster_name, var.environment_name)
+  env                         = var.environment_name
   master_auth_networks_ipcidr = var.subnet_01_ip
-  network                     = module.create-vpc[each.key].vpc
-  project_id                  = each.value
+  network                     = module.create-vpc.vpc
+  project_id                  = local.project.project_id
   region                      = var.subnet_01_region
-  subnet                      = module.create-vpc[each.key].subnet-1
+  subnet                      = module.create-vpc.subnet-1
   zone                        = "${var.subnet_01_region}-a"
 }
 
 module "reservation" {
-  for_each = local.parsed_project_id
-
   source = "./modules/vm-reservations"
 
-  depends_on = [module.gke]
-
-  cluster_name = module.gke[each.key].cluster_name
-  project_id   = each.value
+  cluster_name = module.gke.cluster_name
+  project_id   = local.project.project_id
   zone         = "${var.subnet_01_region}-a"
 }
 
 module "node_pool-reserved" {
-  for_each = local.parsed_project_id
-
   source = "./modules/node-pools"
 
-  depends_on = [module.reservation]
+  depends_on = [
+    module.reservation
+  ]
 
-  cluster_name     = module.gke[each.key].cluster_name
+  cluster_name     = module.gke.cluster_name
   node_pool_name   = "reservation"
-  project_id       = each.value
+  project_id       = local.project.project_id
   region           = var.subnet_01_region
-  reservation_name = module.reservation[each.key].reservation_name
+  reservation_name = module.reservation.reservation_name
   resource_type    = "reservation"
   taints           = var.reserved_taints
 }
 
 module "node_pool-ondemand" {
-  for_each = local.parsed_project_id
-
   source = "./modules/node-pools"
 
-  depends_on = [module.gke]
+  depends_on = [
+    module.gke
+  ]
 
-  cluster_name   = module.gke[each.key].cluster_name
+  cluster_name   = module.gke.cluster_name
   node_pool_name = "ondemand"
-  project_id     = each.value
+  project_id     = local.project.project_id
   region         = var.subnet_01_region
   resource_type  = "ondemand"
   taints         = var.ondemand_taints
 }
 
 module "node_pool-spot" {
-  for_each = local.parsed_project_id
-
   source = "./modules/node-pools"
 
-  depends_on = [module.gke]
+  depends_on = [
+    module.gke
+  ]
 
-  cluster_name   = module.gke[each.key].cluster_name
+  cluster_name   = module.gke.cluster_name
   node_pool_name = "spot"
-  project_id     = each.value
+  project_id     = local.project.project_id
   region         = var.subnet_01_region
   resource_type  = "spot"
   taints         = var.spot_taints
 }
 
-module "cloud-nat" {
-  for_each = local.parsed_project_id
-
-  source = "./modules/cloud-nat"
-
-  depends_on = [
-    module.create-vpc,
-    google_project_service.project_services-com
-  ]
-
-  create_router = true
-  name          = format("%s-%s", "nat-for-acm", each.key)
-  network       = module.create-vpc[each.key].vpc
-  project_id    = each.value
-  region        = split("/", module.create-vpc[each.key].subnet-1)[3]
-  router        = format("%s-%s", "router-for-acm", each.key)
-}
-
 resource "google_gke_hub_membership" "membership" {
-  provider = google-beta
-
-  for_each = local.parsed_gke_info
-
   depends_on = [
     google_gke_hub_feature.configmanagement_acm_feature,
     google_project_service.project_services-gkeh,
     google_project_service.project_services-gkecon
   ]
 
-  membership_id = each.value["cluster_name"]
-  project       = each.value["gke_project_id"]
+  membership_id = module.gke.cluster_name
+  project       = local.project.project_id
 
   endpoint {
     gke_cluster {
-      resource_link = format("%s/%s", "//container.googleapis.com", each.value["cluster_id"])
+      resource_link = "//container.googleapis.com/${module.gke.cluster_id}"
     }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      labels
-    ]
   }
 }
 
+resource "google_gke_hub_feature_membership" "feature_member" {
+  depends_on = [
+    google_project_service.project_services-gkecon,
+    google_project_service.project_services-gkeh,
+    google_project_service.project_services-an,
+    google_project_service.project_services-anc
+  ]
+
+  feature    = "configmanagement"
+  location   = "global"
+  membership = google_gke_hub_membership.membership.membership_id
+  project    = local.project.project_id
+
+  configmanagement {
+    version = var.config_management_version
+
+    config_sync {
+      source_format = "unstructured"
+
+      git {
+        policy_dir  = "manifests/clusters"
+        secret_type = "token"
+        sync_branch = github_branch.environment.branch
+        sync_repo   = github_repository.acm_repo.http_clone_url
+      }
+    }
+
+    policy_controller {
+      enabled                    = true
+      referential_rules_enabled  = true
+      template_library_installed = true
+
+    }
+  }
+}
+
+#
+# Git Repository
+##########################################################################
+# data "github_organization" "default" {
+#   name = var.github_org
+# }
+
 resource "github_repository" "acm_repo" {
+  # depends_on = [
+  #   data.github_organization.default
+  #  ]
+
   allow_merge_commit     = true
   allow_rebase_merge     = true
   allow_squash_merge     = true
@@ -353,29 +312,19 @@ resource "github_repository" "acm_repo" {
   vulnerability_alerts   = true
 }
 
-resource "github_branch" "branch" {
-  for_each = local.parsed_gke_info
-
-  depends_on = [github_repository.acm_repo]
-
-  branch     = each.key
-  repository = split("/", github_repository.acm_repo.full_name)[1]
+resource "github_branch" "environment" {
+  branch     = var.environment_name
+  repository = github_repository.acm_repo.name
 }
 
-resource "github_branch_default" "default_branch" {
-  depends_on = [github_branch.branch]
-
-  branch     = var.default_env
-  repository = split("/", github_repository.acm_repo.full_name)[1]
+resource "github_branch_default" "environment" {
+  branch     = github_branch.environment.branch
+  repository = github_repository.acm_repo.name
 }
 
-resource "github_branch_protection_v3" "branch_protection" {
-  for_each = length(keys(local.parsed_project_id)) > 1 ? local.parsed_gke_info_without_default_env : {}
-
-  depends_on = [github_branch.branch]
-
-  repository = split("/", github_repository.acm_repo.full_name)[1]
-  branch     = each.key
+resource "github_branch_protection_v3" "environment" {
+  repository = github_repository.acm_repo.name
+  branch     = github_branch.environment.branch
 
   required_pull_request_reviews {
     require_code_owner_reviews      = true
@@ -386,53 +335,16 @@ resource "github_branch_protection_v3" "branch_protection" {
   }
 }
 
-resource "google_gke_hub_feature_membership" "feature_member" {
-  provider = google-beta
-
-  for_each = local.parsed_gke_info
-
+#
+# Scripts
+##########################################################################
+resource "null_resource" "create_cluster_yamls" {
   depends_on = [
-    google_project_service.project_services-gkecon,
-    google_project_service.project_services-gkeh,
-    google_project_service.project_services-an,
-    google_project_service.project_services-anc
+    google_gke_hub_feature_membership.feature_member
   ]
 
-  feature    = "configmanagement"
-  location   = "global"
-  membership = google_gke_hub_membership.membership[each.key].membership_id
-  project    = each.value["gke_project_id"]
-
-  configmanagement {
-    version = var.config_management_version
-
-    config_sync {
-      source_format = "unstructured"
-
-      git {
-        policy_dir  = "manifests/clusters"
-        secret_type = "token"
-        sync_branch = each.value["env"]
-        sync_repo   = "https://github.com/${github_repository.acm_repo.full_name}.git"
-      }
-    }
-
-    policy_controller {
-      enabled                    = true
-      referential_rules_enabled  = true
-      template_library_installed = true
-
-    }
-  }
-}
-
-resource "null_resource" "create_cluster_yamls" {
-  for_each = local.parsed_gke_info
-
-  depends_on = [google_gke_hub_feature_membership.feature_member]
-
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_cluster_yamls.sh ${var.github_org} ${github_repository.acm_repo.full_name} ${var.github_user} ${var.github_email} ${each.value["env"]} ${each.value["cluster_name"]} ${index(keys(local.parsed_gke_info), each.key)}"
+    command = "${path.module}/scripts/create_cluster_yamls.sh ${var.github_org} ${github_repository.acm_repo.full_name} ${var.github_user} ${var.github_email} ${var.environment_name} ${module.gke.cluster_name}"
     environment = {
       GIT_TOKEN = var.github_token
     }
@@ -445,8 +357,6 @@ resource "null_resource" "create_cluster_yamls" {
 }
 
 resource "null_resource" "create_git_cred_cms" {
-  for_each = var.secret_for_rootsync == 1 ? local.gke_project_map : {}
-
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     module.gke,
@@ -457,7 +367,7 @@ resource "null_resource" "create_git_cred_cms" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_git_cred.sh ${each.key} ${each.value} ${var.github_user} config-management-system ${index(keys(local.gke_project_map), each.key)}"
+    command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${local.project.project_id} ${var.github_user} config-management-system"
     environment = {
       GIT_TOKEN = var.github_token
     }
@@ -470,8 +380,6 @@ resource "null_resource" "create_git_cred_cms" {
 }
 
 resource "null_resource" "install_kuberay_operator" {
-  count = var.install_kuberay
-
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     null_resource.create_git_cred_cms
@@ -490,30 +398,34 @@ resource "null_resource" "install_kuberay_operator" {
   }
 }
 
-resource "google_service_account" "namespace_default" {
-  account_id   = "wi-${var.namespace}-default"
-  display_name = "${var.namespace} Default Workload Identity Service Account"
-  project      = local.parsed_project_id[var.default_env]
+locals {
+  namespace_default_kubernetes_service_account = "default"
 }
 
-resource "google_service_account_iam_member" "wi_cymbal_bank_backend_workload_identity_user" {
-  depends_on = [module.gke]
+resource "google_service_account" "namespace_default" {
+  account_id   = "wi-${var.namespace}-${local.namespace_default_kubernetes_service_account}"
+  display_name = "${var.namespace}/${local.namespace_default_kubernetes_service_account} workload identity service account"
+  project      = local.project.project_id
+}
 
-  member             = "serviceAccount:${local.parsed_project_id[var.default_env]}.svc.id.goog[${var.namespace}/${var.namespace}-default]"
+resource "google_service_account_iam_member" "namespace_default_iam_workload_identity_user" {
+  depends_on = [
+    module.gke
+  ]
+
+  member             = "serviceAccount:${local.project.project_id}.svc.id.goog[${var.namespace}/${local.namespace_default_kubernetes_service_account}]"
   role               = "roles/iam.workloadIdentityUser"
   service_account_id = google_service_account.namespace_default.id
 }
 
 resource "null_resource" "create_namespace" {
-  count = var.create_namespace
-
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     null_resource.install_kuberay_operator
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_namespace.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${var.default_env}"
+    command = "${path.module}/scripts/create_namespace.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${var.environment_name}"
     environment = {
       GIT_TOKEN = var.github_token
     }
@@ -526,15 +438,13 @@ resource "null_resource" "create_namespace" {
 }
 
 resource "null_resource" "create_git_cred_ns" {
-  count = var.create_namespace
-
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     null_resource.create_namespace
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_git_cred.sh ${local.parsed_gke_info[var.default_env].cluster_name} ${local.parsed_gke_info[var.default_env].gke_project_id} ${var.github_user} ${var.namespace}"
+    command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${module.gke.gke_project_id} ${var.github_user} ${var.namespace}"
     environment = {
       GIT_TOKEN = var.github_token
     }
@@ -546,30 +456,63 @@ resource "null_resource" "create_git_cred_ns" {
   }
 }
 
-resource "null_resource" "install_ray_cluster" {
-  count = var.install_ray_in_ns
+locals {
+  ray_head_kubernetes_service_account   = "ray-head"
+  ray_worker_kubernetes_service_account = "ray-worker"
+}
 
+resource "google_service_account" "namespace_ray_head" {
+  account_id   = "wi-${var.namespace}-${local.ray_head_kubernetes_service_account}"
+  display_name = "${var.namespace}/${local.ray_head_kubernetes_service_account} workload identity service account"
+  project      = local.project.project_id
+}
+
+resource "google_service_account_iam_member" "namespace_ray_head_iam_workload_identity_user" {
+  depends_on = [
+    module.gke
+  ]
+
+  member             = "serviceAccount:${local.project.project_id}.svc.id.goog[${var.namespace}/${local.ray_head_kubernetes_service_account}]"
+  role               = "roles/iam.workloadIdentityUser"
+  service_account_id = google_service_account.namespace_ray_head.id
+}
+
+resource "google_service_account" "namespace_ray_worker" {
+  account_id   = "wi-${var.namespace}-${local.ray_worker_kubernetes_service_account}"
+  display_name = "${var.namespace}/${local.ray_worker_kubernetes_service_account} workload identity service account"
+  project      = local.project.project_id
+}
+
+resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_identity_user" {
+  depends_on = [
+    module.gke
+  ]
+
+  member             = "serviceAccount:${local.project.project_id}.svc.id.goog[${var.namespace}/${local.ray_worker_kubernetes_service_account}]"
+  role               = "roles/iam.workloadIdentityUser"
+  service_account_id = google_service_account.namespace_ray_worker.id
+}
+
+resource "null_resource" "install_ray_cluster" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     null_resource.create_git_cred_ns
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/install_ray_cluster.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${google_service_account.namespace_default.email}"
+    command = "${path.module}/scripts/install_ray_cluster.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${google_service_account.namespace_ray_head.email} ${local.ray_head_kubernetes_service_account} ${google_service_account.namespace_ray_worker.email} ${local.ray_worker_kubernetes_service_account}"
     environment = {
       GIT_TOKEN = var.github_token
     }
   }
 
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template//templates/_namespace_template/app", "**") : md5("${path.module}/templates/acm-template//templates/_namespace_template/app/${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_namespace_template/app", "**") : md5("${path.module}/templates/acm-template/templates/_namespace_template/app/${f}")]))
     md5_script = filemd5("${path.module}/scripts/install_ray_cluster.sh")
   }
 }
 
 resource "null_resource" "manage_ray_ns" {
-  count = var.install_ray_in_ns
-
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     null_resource.create_git_cred_ns,

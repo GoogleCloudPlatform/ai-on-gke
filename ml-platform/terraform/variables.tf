@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 variable "billing_account" {
   default     = null
   description = "GCP billing account"
@@ -48,9 +47,14 @@ variable "create_projects" {
   type        = number
 }
 
-variable "default_env" {
+variable "environment_name" {
   default     = "dev"
   description = "Lowest environments"
+  type        = string
+}
+
+variable "environment_project_id" {
+  description = "The GCP project where the resources will be created"
   type        = string
 }
 
@@ -130,13 +134,8 @@ variable "org_id" {
   type        = string
 }
 
-variable "project_id" {
-  description = "The GCP project where the resources will be created. It is a map with environments as keys and project_ids s values"
-  type        = map(any)
-}
-
 variable "project_name" {
-  default     = null
+  default     = "mlp"
   description = "GCP project name"
   type        = string
 }
