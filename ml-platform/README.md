@@ -114,6 +114,18 @@ This is the quick-start deployment guide. It can be used to set up an environmen
   export MLP_GITHUB_EMAIL="<GITHUB_EMAIL>"
   ```
 
+- Set the default `gcloud` project
+
+  ```
+  gcloud config set project ${MLP_PROJECT_ID}
+  ```
+
+- Authorize `gcloud`
+
+  ```
+  gcloud auth login --activate --no-launch-browser --quiet --update-adc
+  ```
+
 - Create a Cloud Storage bucket to store the Terraform state
 
   ```
@@ -249,6 +261,12 @@ Open Cloud Shell to execute the following commands:
   cd ${MLP_BASE_DIR}/terraform && \
   terraform init && \
   terraform destroy -auto-approve -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)"
+  ```
+
+- Delete the project
+
+  ```
+  gcloud projects delete ${MLP_PROJECT_ID}
   ```
 
 [gitops]: https://about.gitlab.com/topics/gitops/
