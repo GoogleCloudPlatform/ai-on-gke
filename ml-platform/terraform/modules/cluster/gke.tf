@@ -21,15 +21,16 @@ data "google_project" "project" {
 resource "google_container_cluster" "mlp" {
   provider = google-beta
 
-  deletion_protection   = false
-  enable_shielded_nodes = true
-  initial_node_count    = 2
-  location              = var.region
-  name                  = var.cluster_name
-  network               = var.network
-  node_locations        = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
-  project               = var.project_id
-  subnetwork            = var.subnet
+  deletion_protection      = false
+  enable_shielded_nodes    = true
+  initial_node_count       = 1
+  location                 = var.region
+  name                     = var.cluster_name
+  network                  = var.network
+  node_locations           = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
+  project                  = var.project_id
+  remove_default_node_pool = true
+  subnetwork               = var.subnet
 
   addons_config {
     gcp_filestore_csi_driver_config {
@@ -175,8 +176,6 @@ resource "google_container_cluster" "mlp" {
       gcfs_config {
         enabled = true
       }
-
-
     }
   }
 
