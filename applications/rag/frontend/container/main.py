@@ -140,21 +140,27 @@ def index():
 
 def fetchContext(query_text):
     with db.connect() as conn:
-        results = conn.execute(sqlalchemy.text("SELECT * FROM " + TABLE_NAME)).fetchall()
-        log.info(f"query database results:")
-        for row in results:
-            print(row)
+        try: 
+            results = conn.execute(sqlalchemy.text("SELECT * FROM " + TABLE_NAME)).fetchall()
+            log.info(f"query database results:")
+            for row in results:
+                print(row)
 
-        # chunkify query & fetch matches
-        query_emb = transformer.encode(query_text).tolist()
-        query_request = "SELECT id, text, text_embedding, 1 - ('[" + ",".join(map(str, query_emb)) + "]' <=> text_embedding) AS cosine_similarity FROM " + TABLE_NAME + " ORDER BY cosine_similarity DESC LIMIT 5;"
-        query_results = conn.execute(sqlalchemy.text(query_request)).fetchall()
-        conn.commit()
-        log.info(f"printing matches:")
-        for row in query_results:
-            print(row)
+            # chunkify query & fetch matches
+            query_emb = transformer.encode(query_text).tolist()
+            query_request = "SELECT id, text, text_embedding, 1 - ('[" + ",".join(map(str, query_emb)) + "]' <=> text_embedding) AS cosine_similarity FROM " + TABLE_NAME + " ORDER BY cosine_similarity DESC LIMIT 5;"
+            query_results = conn.execute(sqlalchemy.text(query_request)).fetchall()
+            conn.commit()
+            log.info(f"printing matches:")
+            for row in query_results:
+                print(row)
+        except sqlalchemy.exc.DatabaseError as err: 
+            log.info(f"Table {TABLE_NAME} does not exist: {err}")
+            return ""
 
-    return query_results[0][1]
+    if query_results.all()==None:
+        log.info(f"Table {TABLE_NAME} return empty result")
+        return ""
 
 @app.route('/prompt', methods=['POST'])
 def handlePrompt():
