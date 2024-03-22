@@ -24,5 +24,5 @@ output "db_secret_namespace" {
 
 output "instance" {
   description = "Cloud SQL Instance name"
-  value       = google_sql_database_instance.main.name
+  value       = module.cloudsql.instance_name
 }

@@ -17,6 +17,11 @@ variable "project_id" {
   description = "GCP project id"
 }
 
+variable "network_name" {
+  type        = string
+  description = "Name of the VPC network to create the CloudSQL instance in"
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"

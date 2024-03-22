@@ -353,3 +353,21 @@ variable "disable_ray_cluster_network_policy" {
   type        = bool
   default     = true
 }
+
+variable "create_network" {
+  description = "Create the VPC specified by network_name/subnetwork_name"
+  type        = bool
+  default     = false
+}
+
+variable "network_name" {
+  description = "Network name of VPC"
+  type        = string
+  default     = "default"
+}
+
+variable "subnetwork_name" {
+  description = "Subnetwork name of VPC"
+  type        = string
+  default     = "default"
+}
