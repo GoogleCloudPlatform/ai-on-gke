@@ -168,12 +168,12 @@ func injectHostnames(hostNames string, envPath string, container corev1.Containe
 	*patches = append(*patches, subdomainPatch, hostNamesPatch)
 }
 
-func injectMultiHostReplicaLabel(clusterName string, replicaIndex int, workerGroupName string, patches *[]patch) {
+func injectMultiHostReplicaLabel(clusterName string, namespace string, replicaIndex int, workerGroupName string, patches *[]patch) {
 	labelPatch := patch{"op": "replace"}
 	labelPath := "/metadata/labels/multiHostReplica"
 	multiHostReplicaValue := workerGroupName + "-" + strconv.Itoa(replicaIndex)
 
-	klog.V(1).InfoS("injectMultiHostReplicaLabel", "RayCluster", clusterName, "multiHostReplica", multiHostReplicaValue)
+	klog.V(1).InfoS("injectMultiHostReplicaLabel", "RayCluster", namespace+"/"+clusterName, "multiHostReplica", multiHostReplicaValue)
 
 	labelPatch["path"] = labelPath
 	labelPatch["value"] = multiHostReplicaValue
@@ -187,8 +187,9 @@ func injectPodAffinity(pod *corev1.Pod, replicaIndex int, workerGroupName string
 	value := workerGroupName + "-" + strconv.Itoa(replicaIndex)
 	topologyKey := "cloud.google.com/gke-nodepool"
 	clusterName := pod.Labels["ray.io/cluster"]
+	namespace := pod.Namespace
 
-	klog.V(1).InfoS("injectPodAffinity", "RayCluster", clusterName, "podAffinity match label", value)
+	klog.V(1).InfoS("injectPodAffinity", "RayCluster", namespace+"/"+clusterName, "podAffinity match label", value)
 
 	// construct affinity value to inject - schedule pods with the same multiHostReplica together
 	podAffinityPatch := patch{"op": "add"}
@@ -448,7 +449,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 			patches = append(patches, hostnamePatch)
 
 			// inject multi-host replica label
-			injectMultiHostReplicaLabel(clusterName, replicaIndex, groupName, &patches)
+			injectMultiHostReplicaLabel(clusterName, namespace, replicaIndex, groupName, &patches)
 
 			// inject pod affinity/anti-affinity for scheduling
 			injectPodAffinity(pod, replicaIndex, groupName, &patches)
