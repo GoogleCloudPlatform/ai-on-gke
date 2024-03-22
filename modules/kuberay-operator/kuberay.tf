@@ -17,7 +17,7 @@ resource "helm_release" "kuberay-operator" {
   repository       = "https://ray-project.github.io/kuberay-helm/"
   chart            = "kuberay-operator"
   values           = var.autopilot_cluster ? [file("${path.module}/kuberay-operator-autopilot-values.yaml")] : [file("${path.module}/kuberay-operator-values.yaml")]
-  version          = "1.1.0"
+  version          = "1.0.0"
   namespace        = var.namespace
   cleanup_on_fail  = "true"
   create_namespace = var.create_namespace
