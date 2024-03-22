@@ -19,13 +19,13 @@ variable "billing_account" {
 }
 
 variable "env" {
-  default     = ["dev"]
-  description = "List of environments"
-  type        = set(string)
+  default     = "dev"
+  description = "Name of the environments"
+  type        = string
 }
 
 variable "folder_id" {
-  default     = null
+  default     = ""
   description = "Folder id where the GCP projects will be created"
   type        = string
 }
@@ -34,6 +34,12 @@ variable "org_id" {
   default     = ""
   type        = string
   description = "The GCP orig id"
+}
+
+variable "project_id" {
+  default     = ""
+  description = "Google Cloud project ID"
+  type        = string
 }
 
 variable "project_name" {
