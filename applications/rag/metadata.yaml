@@ -17,6 +17,9 @@ spec:
   content: {}
   interfaces:
     variables:
+      - name: acknowledge
+        varType: bool
+        required: true
       - name: autopilot_cluster
         varType: string
         defaultValue: true
