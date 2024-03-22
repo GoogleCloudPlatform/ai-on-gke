@@ -42,7 +42,7 @@ module "infra" {
   network_name      = "default"
   subnetwork_name   = "default"
   cpu_pools         = var.cpu_pools
-  enable_gpu        = true
+  enable_gpu        = var.enable_gpu
   gpu_pools         = var.gpu_pools
 }
 
