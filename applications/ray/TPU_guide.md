@@ -58,7 +58,7 @@ To deploy a multi-host Ray Cluster, modify the `worker` spec [here](https://gith
 
 ### Running Sample Workloads
 
-Install Jupyterhub according to the instructions in the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/jupyter/README.md).
+Install JupyterHub according to the instructions in the [README](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/jupyter/README.md).
 
 A basic JAX program can be found [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/example_notebooks/jax-tpu.ipynb).
 
