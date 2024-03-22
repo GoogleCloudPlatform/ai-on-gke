@@ -12,10 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform.tfvars
-terraform.tfstate*
-.terraform*
-__pycache__/
+# Directories
 bin/
 deploy/
+
+# IDEs
 .idea/
+
+# Python
+__pycache__/
+
+# Terraform
+.terraform*
+terraform.tfstate*
+terraform.tfvars
+tfplan
