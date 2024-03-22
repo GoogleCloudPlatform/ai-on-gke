@@ -22,6 +22,11 @@ spec:
           enumValueLabels:
             - label: "Confirm that all prerequisites have been met."
               value: "true"
+        additional_labels:
+          name: additional_labels
+          title: Additional Labels
+          invisible: true
+          section: cluster_details
         autopilot_cluster:
           name: autopilot_cluster
           title: GKE Cluster Type
@@ -38,8 +43,8 @@ spec:
         cloudsql_instance_region:
           name: cloudsql_instance_region
           title: Cloudsql Instance Region
-          section: rag
           invisible: true
+          section: rag
         cluster_location:
           name: cluster_location
           title: Cluster Location
@@ -82,6 +87,11 @@ spec:
           title: Create Jupyter Service Account
           invisible: true
           section: rag
+        create_network:
+          name: create_network
+          title: Create Network
+          invisible: true
+          section: cluster_details
         create_rag_service_account:
           name: create_rag_service_account
           title: Create Rag Service Account
@@ -114,13 +124,13 @@ spec:
         frontend_client_id:
           name: frontend_client_id
           title: Frontend Client Id
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_client_secret:
           name: frontend_client_secret
           title: Frontend Client Secret
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_domain:
           name: frontend_domain
           title: Frontend Domain
@@ -128,33 +138,33 @@ spec:
         frontend_k8s_backend_config_name:
           name: frontend_k8s_backend_config_name
           title: Frontend K8s Backend Config Name
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_k8s_backend_service_name:
           name: frontend_k8s_backend_service_name
           title: Frontend K8s Backend Service Name
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_k8s_backend_service_port:
           name: frontend_k8s_backend_service_port
           title: Frontend K8s Backend Service Port
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_k8s_iap_secret_name:
           name: frontend_k8s_iap_secret_name
           title: Frontend K8s Iap Secret Name
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_k8s_ingress_name:
           name: frontend_k8s_ingress_name
           title: Frontend K8s Ingress Name
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_k8s_managed_cert_name:
           name: frontend_k8s_managed_cert_name
           title: Frontend K8s Managed Cert Name
-          section: rag_iap_auth
           invisible: true
+          section: rag_iap_auth
         frontend_members_allowlist:
           name: frontend_members_allowlist
           title: Frontend Members Allowlist
@@ -226,13 +236,13 @@ spec:
         jupyter_client_id:
           name: jupyter_client_id
           title: Jupyter Client Id
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_client_secret:
           name: jupyter_client_secret
           title: Jupyter Client Secret
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_domain:
           name: jupyter_domain
           title: Jupyter Domain
@@ -240,33 +250,33 @@ spec:
         jupyter_k8s_backend_config_name:
           name: jupyter_k8s_backend_config_name
           title: Jupyter K8s Backend Config Name
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_k8s_backend_service_name:
           name: jupyter_k8s_backend_service_name
           title: Jupyter K8s Backend Service Name
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_k8s_backend_service_port:
           name: jupyter_k8s_backend_service_port
           title: Jupyter K8s Backend Service Port
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_k8s_iap_secret_name:
           name: jupyter_k8s_iap_secret_name
           title: Jupyter K8s Iap Secret Name
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_k8s_ingress_name:
           name: jupyter_k8s_ingress_name
           title: Jupyter K8s Ingress Name
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_k8s_managed_cert_name:
           name: jupyter_k8s_managed_cert_name
           title: Jupyter K8s Managed Cert Name
-          section: jupyter_iap_auth
           invisible: true
+          section: jupyter_iap_auth
         jupyter_members_allowlist:
           name: jupyter_members_allowlist
           title: Jupyter Members Allowlist
@@ -279,12 +289,13 @@ spec:
         kubernetes_namespace:
           name: kubernetes_namespace
           title: Kubernetes Namespace
-          section: cluster_details
-        additional_labels:
-          name: additional_labels
-          title: Additional Labels
-          section: cluster_details
           invisible: true
+          section: cluster_details
+        network_name:
+          name: network_name
+          title: Network Name
+          invisible: true
+          section: cluster_details
         private_cluster:
           name: private_cluster
           title: Private Cluster
@@ -304,6 +315,11 @@ spec:
           title: Ray Service Account
           invisible: true
           section: rag
+        subnetwork_cidr:
+          name: subnetwork_cidr
+          title: Subnetwork Cidr
+          invisible: true
+          section: cluster_details
         support_email:
           name: support_email
           title: Support Email
@@ -324,19 +340,18 @@ spec:
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
 
         - name: jupyter_iap_auth
-          title:  Configure Authenticated Access for JupyterHub
+          title: Configure Authenticated Access for JupyterHub
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
         - heading: "Step 1: Create DNS A Records for JupyterHub and Frontend Domains"
-          description: |-
-              If using custom domains for JupyterHub or Frontend, create DNS A record sets for them (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
+          description: If using custom domains for JupyterHub or Frontend, create DNS A record sets for them (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
         - heading: "Step 2: Go to JupyterHub Application"
           description: |-
-             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
-             <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
-             <li> Once logged in, choose the <b>CPU</b> preset.</li>
+            <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
+            <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
+            <li> Once logged in, choose the <b>CPU</b> preset.</li>
         - heading: "Step 3: Generate Vector Embeddings for the Dataset"
           description: |-
             Go to File -> Open From URL & upload and execute the notebook 
@@ -349,19 +364,21 @@ spec:
             <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button. </li>
             <li>Prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.</li>
       outputs:
+        frontend_ip_address: {}
         frontend_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to RAG Frontend Application
+          label: Go to Frontend Application
         ray_dashboard_uri:
           openInNewTab: true
           showInNotification: true
           label: Go to RAY Dashboard Application
+        gcp_network: {}
+        jupyterhub_ip_address: {}
         jupyterhub_password: {}
         jupyterhub_uri:
           openInNewTab: true
           showInNotification: true
           label: Go to JupyterHub Application
         jupyterhub_user: {}
-        jupyterhub_ip_address: {}
-        frontend_ip_address: {}
+        kubernetes_namespace: {}
