@@ -31,7 +31,7 @@ namespace                         = "jupyter"
 gcs_bucket                        = "<gcs-bucket>"
 workload_identity_service_account = "jupyter-service-account"
 
-# Jupyterhub with IAP
+# JupyterHub with IAP
 add_auth                 = true
 brand                    = "projects/<prj-number>/brands/<prj-number>" # ensure brand is Internal
 support_email            = "<email>"

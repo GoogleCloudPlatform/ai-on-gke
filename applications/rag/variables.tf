@@ -41,7 +41,7 @@ variable "additional_labels" {
   // list(string) is used instead of map(string) since blueprint metadata does not support maps.
   type        = list(string)
   description = "Additional labels to add to Kubernetes resources."
-  default     = ["created-by=rag-on-gke"]
+  default     = ["created-by=ai-on-gke", "ai.gke.io=rag"]
 }
 
 variable "jupyter_service_account" {
@@ -55,6 +55,7 @@ variable "enable_grafana_on_ray_dashboard" {
   description = "Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access."
   default     = false
 }
+
 variable "create_ray_service_account" {
   type        = bool
   description = "Creates a google IAM service account & k8s service account & configures workload identity"
@@ -411,4 +412,22 @@ variable "disable_ray_cluster_network_policy" {
   description = "Disables Kubernetes Network Policy for Ray Clusters for this demo. Defaulting to 'true' aka disabled pending fixes to the kuberay-monitoring module. This should be defaulted to false."
   type        = bool
   default     = true
+}
+
+variable "create_network" {
+  description = "Create the VPC specified by network_name/subnetwork_name"
+  type        = bool
+  default     = false
+}
+
+variable "network_name" {
+  description = "Network name of VPC"
+  type        = string
+  default     = "default"
+}
+
+variable "subnetwork_name" {
+  description = "Subnetwork name of VPC"
+  type        = string
+  default     = "default"
 }

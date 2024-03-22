@@ -19,7 +19,7 @@ spec:
     variables:
       - name: autopilot_cluster
         varType: string
-        defaultValue: "false"
+        defaultValue: "true"
       - name: cluster_location
         varType: string
         required: true
@@ -47,6 +47,7 @@ spec:
         varType: bool
         defaultValue: true
       - name: enable_gpu
+        description: Enabling this allows ray workers to use L4 GPU nodes
         varType: bool
         defaultValue: true
       - name: enable_grafana_on_ray_dashboard
@@ -78,7 +79,7 @@ spec:
       - name: additional_labels
         description: Additional labels to apply to Kubenetes resources
         varType: list(string)
-        defaultValue: ["created-by=ray-on-gke-qss"]
+        defaultValue: ["created-by=gke-ai-quick-start-solutions", "ai.gke.io=ray"]
       - name: ray_version
         varType: string
         defaultValue: v2.9.3

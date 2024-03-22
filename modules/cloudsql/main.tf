@@ -21,37 +21,56 @@ resource "google_project_service" "project_service" {
   disable_on_destroy         = false
 }
 
-resource "google_sql_database_instance" "main" {
-  name             = var.instance_name
-  database_version = "POSTGRES_15"
-  region           = var.region
-  settings {
-    # Second-generation instance tiers are based on the machine
-    # type. See argument reference below.
-    tier = "db-f1-micro"
-  }
-
-  deletion_protection = false
-}
-
-resource "google_sql_database" "database" {
-  name     = "pgvector-database"
-  instance = var.instance_name
-
-  depends_on = [google_sql_database_instance.main]
-}
-
 resource "random_password" "pwd" {
   length  = 16
   special = false
 }
 
-resource "google_sql_user" "cloudsql_user" {
-  name     = var.db_user
-  instance = google_sql_database_instance.main.name
-  password = random_password.pwd.result
-  ## Fixes SQL Instance force deletion and doesnot wait for SQL user deletion, rather focus on instance deletion.
-  deletion_policy = "ABANDON"
+data "google_compute_network" "main" {
+  name    = var.network_name
+  project = var.project_id
+}
+
+module "cloudsql" {
+  source              = "terraform-google-modules/sql-db/google//modules/postgresql"
+  project_id          = var.project_id
+  version             = "20.0.0"
+  name                = var.instance_name
+  database_version    = "POSTGRES_15"
+  region              = var.region
+  deletion_protection = false
+  tier                = "db-f1-micro"
+
+  database_deletion_policy = "ABANDON"
+  user_deletion_policy     = "ABANDON"
+
+  ip_configuration = {
+    # Disable public IP
+    ipv4_enabled                                  = false
+    private_network                               = data.google_compute_network.main.id
+    enable_private_path_for_google_cloud_services = true
+  }
+
+  // By default, all users will be permitted to connect only via the
+  // Cloud SQL proxy.
+  // Create an additional user here for connection from the workload.
+  additional_users = [
+    {
+      name            = var.db_user
+      password        = random_password.pwd.result
+      host            = "localhost"
+      type            = "BUILT_IN"
+      random_password = false
+    },
+  ]
+
+  additional_databases = [
+    {
+      name      = "pgvector-database"
+      charset   = "UTF8"
+      collation = "en_US.UTF8"
+    },
+  ]
 }
 
 resource "kubernetes_secret" "secret" {

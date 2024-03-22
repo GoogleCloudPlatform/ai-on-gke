@@ -22,7 +22,7 @@ app = Flask(__name__)
 CORS(app)
 logging.basicConfig(level=logging.INFO)
 
-RAY_ENDPOINT = 'http://example-cluster-kuberay-head-svc:8000'  # Consider moving to configuration
+RAY_ENDPOINT = 'http://ray-cluster-kuberay-head-svc:8000'  # Consider moving to configuration
 
 # NOTE: this example starts a new instance of Ray.serve deployment for simplicity.
 # For production, recommendation would be to move this initialization into a different component

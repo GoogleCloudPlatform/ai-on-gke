@@ -36,6 +36,15 @@ gcloud container clusters create-auto ${CLUSTER_NAME:?} \
   --release-channel rapid
 ```
 
+### Enable [Private Service Connect](https://cloud.google.com/vpc/docs/private-service-connect) (Pre-existing network only)
+
+By default, Terraform uses the pre-existing VPC network (`default`) in your GCP project.
+CloudSQL requires [Private Service Connect](https://cloud.google.com/vpc/docs/private-service-connect) to be enabled in the VPC network.
+
+1. [Create an IP allocation](https://cloud.google.com/vpc/docs/configure-private-services-access#procedure)
+
+2. [Create a private connection](https://cloud.google.com/vpc/docs/configure-private-services-access#creating-connection).
+
 ### Deploy terraform components
 
 The following steps set up the cluster, inference server, pgvector CloudSQL instance, JupyterHub, KubeRay, and frontend chat interface.
@@ -46,6 +55,7 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
     * Set `create_cluster = false` if you are using an existing cluster.
     * (Recommended) Set `jupyter_add_auth = true`, `frontend_add_auth = true` and `ray_dashboard_add_auth = true` to create load balancers with IAP for your Jupyter notebook, TGI frontend and Ray Dashboard.
     * Choose a custom k8s namespace and service account to be used by the application.
+    * Set `create_network = true` if you want to create a new VPC network
 
 3. Run `terraform init`
 
@@ -75,11 +85,11 @@ Ensure your k8s client is using the correct cluster by running:
 gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER_REGION:?}
 ```
 
-1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `example-cluster-kuberay-head-` and `example-cluster-kuberay-worker-workergroup-`).
+1. Verify Kuberay is setup: run `kubectl get pods -n ${NAMESPACE:?}`. There should be a Ray head (and Ray worker pod on GKE Standard only) in `Running` state (prefixed by `ray-cluster-kuberay-head-` and `ray-cluster-kuberay-worker-workergroup-`).
 
-2. Verify Jupyterhub service is setup:
+2. Verify JupyterHub service is setup:
     * Fetch the service IP/Domain:
-      * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+      * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.spec.clusterIP}'` is not empty.
       * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`:
           * From [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), check if the target user has role `IAP-secured Web App User`
           * Wait for domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
@@ -124,13 +134,13 @@ gcloud container clusters get-credentials ${CLUSTER_NAME:?} --location ${CLUSTER
 
 This step generates the vector embeddings for your input dataset. Currently, the default dataset is [Google Maps Restaurant Reviews](https://www.kaggle.com/datasets/denizbilginn/google-maps-restaurant-reviews). We will use a Jupyter notebook to run a Ray job that generates the embeddings & populates them into the instance `pgvector-instance` created above.
 
-1. Fetch the Jupyterhub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:
-   * IAP disabled: `kubectl get services proxy-public -n $NAMESPACE --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+1. Fetch the JupyterHub service endpoint & navigate to it in a browser. This should display the JupyterLab login UI:
+   * IAP disabled: setup port forwarding for the frontend: `kubectl port-forward service/proxy-public -n $NAMESPACE 8081:80 &`, and go to `localhost:8081` in a browser
    * IAP enabled: Read terraform output: `terraform output jupyterhub_uri`.
        * From [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), check if the target user has role `IAP-secured Web App User`.
        * Wait for the domain status to be `Active` by using `kubectl get managedcertificates jupyter-managed-cert -n $NAMESPACE --output jsonpath='{.status.domainStatus[0].status}'`
 
-2. Login to Jupyterhub:
+2. Login to JupyterHub:
    * IAP disabled: Use placeholder credentials:
         * username: admin
         * password: use `terraform output jupyterhub_password` to fetch the password value

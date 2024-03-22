@@ -38,7 +38,7 @@ workload_identity_service_account = "ray-service-account"
 create_gcs_bucket               = true
 gcs_bucket                      = "ray-bucket-zydg"
 create_ray_cluster              = true
-ray_cluster_name                = "example-cluster"
+ray_cluster_name                = "ray-cluster"
 enable_grafana_on_ray_dashboard = false
 
 ## IAP config - if you choose to disable IAP authenticated access for your endpoints, ignore everthing below this line.

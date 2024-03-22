@@ -32,7 +32,7 @@ create_gcs_bucket                 = true
 gcs_bucket                        = "<gcs-bucket>"
 workload_identity_service_account = "jupyter-service-account"
 
-# Jupyterhub with IAP
+# JupyterHub with IAP
 add_auth                 = true
 brand                    = "" # Leave it empty to auto create
 support_email            = "<email>"

@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Configurations (consider using environment variables or a dedicated config module)
 MODEL_ID = os.environ.get('MODEL_ID', 'google/flan-t5-small')
-RAY_ADDRESS = os.environ.get('RAY_ADDRESS', 'ray://example-cluster-kuberay-head-svc:10001')
+RAY_ADDRESS = os.environ.get('RAY_ADDRESS', 'ray://ray-cluster-kuberay-head-svc:10001')
 
 def create_chains(llm):
     template1 = "Give me a fact about {topic}."

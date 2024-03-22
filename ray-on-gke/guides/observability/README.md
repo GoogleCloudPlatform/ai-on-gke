@@ -44,7 +44,7 @@ Follow these steps to view the persisted logs from the Ray job:
 3. Use the following query to search for logs from your Ray job.
 
 ```
-jsonpayload.job_id=%RAY_JOB_ID%
+jsonpayload.ray_submission_id=%RAY_JOB_ID%
 ```
 
 ### Monitoring

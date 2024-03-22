@@ -28,7 +28,7 @@ from langchain.prompts import PromptTemplate
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
 from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 from werkzeug.exceptions import HTTPException
-from google.cloud.sql.connector import Connector
+from google.cloud.sql.connector import Connector, IPTypes
 from sentence_transformers import SentenceTransformer
 
 app = Flask(__name__, static_folder='static')
@@ -97,7 +97,8 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
             "pg8000",
             user=DB_USER,
             password=DB_PASS,
-            db=DB_NAME
+            db=DB_NAME,
+            ip_type=IPTypes.PRIVATE
         )
         return conn
 
