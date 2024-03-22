@@ -19,8 +19,10 @@ github_email=${2}
 github_org=${3}
 github_user=${4}
 namespace=${5}
-google_service_account=${6}
-kubernetes_service_account="${namespace}-default"
+google_service_account_head=${6}
+kubernetes_service_account_head=${7}
+google_service_account_worker=${8}
+kubernetes_service_account_worker=${9}
 
 random=$(
   echo $RANDOM | md5sum | head -c 20
@@ -43,8 +45,10 @@ fi
 
 cp -r ../../templates/_namespace_template/app/* ${namespace}/
 sed -i "s?NAMESPACE?${namespace}?g" ${namespace}/*
-sed -i "s?GOOGLE_SERVICE_ACCOUNT?$google_service_account?g" ${namespace}/*
-sed -i "s?KUBERNETES_SERVICE_ACCOUNT?$kubernetes_service_account?g" ${namespace}/*
+sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_HEAD?$google_service_account_head?g" ${namespace}/*
+sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_HEAD?$kubernetes_service_account_head?g" ${namespace}/*
+sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_WORKER?$google_service_account_worker?g" ${namespace}/*
+sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER?$kubernetes_service_account_worker?g" ${namespace}/*
 
 git add .
 git config --global user.name ${github_user}

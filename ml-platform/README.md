@@ -67,6 +67,22 @@ This is the quick-start deployment guide. It can be used to set up an environmen
 
   Note: It is recommended to use a [machine user account][machine-user-account] for this but you can use a personal user account just to try this reference architecture.
 
+  **Fine-grained personal access token**
+  
+  - Go to https://github.com/settings/tokens and login using your credentials
+  - Click "Generate new token" >> "Generate new token (Beta)".
+  - Enter a Token name.
+  - Select the expiration.
+  - Select the Resource owner.
+  - Select All repositories
+  - Set the following Permissions:
+    - Repository permissions
+      - Administration: Read and write
+      - Content: Read and write
+  - Click "Generate token"
+
+  **Personal access tokens (classic)**
+
   - Go to https://github.com/settings/tokens and login using your credentials
   - Click "Generate new token" >> "Generate new token (classic)".
   - You will be directed to a screen to created the new token. Provide the note and expiration.
@@ -74,20 +90,21 @@ This is the quick-start deployment guide. It can be used to set up an environmen
     - [x] repo - Full control of private repositories
     - [x] delete_repo - Delete repositories
   - Click "Generate token"
-  - Store the token in a secure file.
 
-    ```
-    # Create a secure directory
-    mkdir -p ${HOME}/secrets/
-    chmod go-rwx ${HOME}/secrets
+- Store the token in a secure file.
 
-    # Create a secure file
-    touch ${HOME}/secrets/mlp-github-token
-    chmod go-rwx ${HOME}/secrets/mlp-github-token
+  ```
+  # Create a secure directory
+  mkdir -p ${HOME}/secrets/
+  chmod go-rwx ${HOME}/secrets
 
-    # Put the token in the secure file using your preferred editor
-    nano ${HOME}/secrets/mlp-github-token
-    ```
+  # Create a secure file
+  touch ${HOME}/secrets/mlp-github-token
+  chmod go-rwx ${HOME}/secrets/mlp-github-token
+
+  # Put the token in the secure file using your preferred editor
+  nano ${HOME}/secrets/mlp-github-token
+  ```
 
 - Set the project environment variables in Cloud Shell
 
@@ -165,7 +182,7 @@ This is the quick-start deployment guide. It can be used to set up an environmen
   cd ${MLP_BASE_DIR}/terraform && \
   terraform init && \
   terraform plan -input=false -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
-  terraform apply -input=false tfplan && \
+  terraform apply -input=false tfplan
   rm tfplan
   ```
 

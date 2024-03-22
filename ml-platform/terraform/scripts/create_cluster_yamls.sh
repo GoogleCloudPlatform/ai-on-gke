@@ -20,11 +20,7 @@ github_user=${3}
 github_email=${4}
 cluster_env=${5}
 cluster_name=${6}
-index=${7}
-sleep_time=20
-sleep_index=$((${index} + 1))
-sleep_total=$((${sleep_time} * ${sleep_index}))
-sleep $sleep_total
+
 random=$(
   echo $RANDOM | md5sum | head -c 20
   echo
@@ -42,6 +38,7 @@ if [ ! -d "${download_acm_repo_name}/manifests" ] && [ ! -d "${download_acm_repo
   cp -r templates/acm-template/* ${download_acm_repo_name}
   flag=1
 fi
+
 cd ${download_acm_repo_name}/manifests/clusters
 if [ "${flag}" -eq 0 ]; then
   echo "not copying files"

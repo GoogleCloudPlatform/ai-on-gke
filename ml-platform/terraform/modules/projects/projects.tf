@@ -12,101 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "random_id" "random_project_id_suffix" {
-  byte_length = 2
+locals {
+  create_project           = var.project_id == "" ? 1 : 0
+  project_id               = var.project_id == "" ? google_project.environment[0].project_id : var.project_id
+  project_id_prefix        = "${var.project_name}-${var.env}"
+  project_id_suffix_length = 29 - length(local.project_id_prefix)
 }
 
-resource "google_project" "project_under_folder" {
-  for_each = var.folder_id != null ? var.env : toset([])
+resource "random_string" "project_id_suffix" {
+  length  = local.project_id_suffix_length
+  lower   = true
+  numeric = true
+  special = false
+  upper   = false
+}
+
+resource "google_project" "environment" {
+  count = local.create_project
 
   billing_account = var.billing_account
-  folder_id       = var.folder_id
-  name            = format("%s-%s", var.project_name, each.value)
-  project_id      = format("%s-%s-%s", var.project_name, random_id.random_project_id_suffix.hex, each.value)
+  folder_id       = var.folder_id == "" ? null : var.folder_id
+  name            = local.project_id_prefix
+  org_id          = var.org_id == "" ? null : var.org_id
+  project_id      = "${local.project_id_prefix}-${random_string.project_id_suffix.result}"
 }
 
-resource "google_project" "project_under_org" {
-  for_each = var.folder_id == null ? var.env : toset([])
+data "google_project" "environment" {
+  depends_on = [google_project.environment]
 
-  billing_account = var.billing_account
-  name            = format("%s-%s", var.project_name, each.value)
-  org_id          = var.org_id
-  project_id      = format("%s-%s-%s", var.project_name, random_id.random_project_id_suffix.hex, each.value)
-}
-
-resource "google_project_service" "project_services" {
-  for_each = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
-
-  depends_on = [google_project.project_under_folder, google_project.project_under_org]
-
-  disable_dependent_services = true
-  disable_on_destroy         = true
-  project                    = each.value.id
-  service                    = "cloudresourcemanager.googleapis.com"
-}
-
-resource "google_project_service" "project_services-1" {
-  for_each = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
-
-  depends_on = [google_project.project_under_folder, google_project.project_under_org]
-
-  disable_dependent_services = true
-  disable_on_destroy         = true
-  project                    = each.value.id
-  service                    = "iam.googleapis.com"
-}
-
-resource "google_project_service" "project_services-2" {
-  for_each = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
-
-  depends_on = [google_project.project_under_folder, google_project.project_under_org]
-
-  disable_dependent_services = true
-  disable_on_destroy         = true
-  project                    = each.value.id
-  service                    = "container.googleapis.com"
-}
-
-resource "google_project_service" "project_services-3" {
-  for_each = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
-
-  depends_on = [google_project.project_under_folder, google_project.project_under_org]
-
-  disable_dependent_services = true
-  disable_on_destroy         = true
-  project                    = each.value.id
-  service                    = "compute.googleapis.com"
-}
-
-resource "google_project_service" "project_services-4" {
-  for_each = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
-
-  depends_on = [google_project.project_under_folder, google_project.project_under_org]
-
-  disable_dependent_services = true
-  disable_on_destroy         = true
-  project                    = each.value.id
-  service                    = "anthos.googleapis.com"
-}
-
-resource "google_project_service" "project_services-5" {
-  for_each = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
-
-  depends_on = [google_project.project_under_folder, google_project.project_under_org]
-
-  disable_dependent_services = true
-  disable_on_destroy         = true
-  project                    = each.value.id
-  service                    = "anthosconfigmanagement.googleapis.com"
-}
-
-resource "google_project_service" "project_services-6" {
-  for_each = var.folder_id == null ? google_project.project_under_org : google_project.project_under_folder
-
-  depends_on = [google_project.project_under_folder, google_project.project_under_org]
-
-  disable_dependent_services = true
-  disable_on_destroy         = true
-  project                    = each.value.id
-  service                    = "gkehub.googleapis.com"
+  project_id = local.project_id
 }

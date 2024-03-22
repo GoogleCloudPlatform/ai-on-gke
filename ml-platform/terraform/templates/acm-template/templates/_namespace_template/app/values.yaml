@@ -50,6 +50,7 @@ head:
   labels:
     cloud.google.com/gke-ray-node-type: head
     created-by: ray-on-gke
+  serviceAccountName: "KUBERNETES_SERVICE_ACCOUNT_RAY_HEAD"
   rayStartParams:
     dashboard-host: '0.0.0.0'
     block: 'true'
@@ -139,6 +140,7 @@ worker:
   labels:
     cloud.google.com/gke-ray-node-type: worker
     created-by: ray-on-gke
+  serviceAccountName: "KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER"
   rayStartParams:
     block: 'true'
     resources: '"{\"accelerator_type_l4\": 2}"'

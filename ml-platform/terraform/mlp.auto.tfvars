@@ -1,5 +1,5 @@
-default_env  = "dev"
-github_org   = "YOUR_GITHUB_ORG"
-github_email = "YOUR_GITHUB_EMAIL"
-github_user  = "YOUR_GITHUB_USER"
-project_id   = { "dev" : "YOUR_PROJECT_ID" }
+environment_name       = "dev"
+environment_project_id = "YOUR_PROJECT_ID"
+github_email           = "YOUR_GITHUB_EMAIL"
+github_org             = "YOUR_GITHUB_ORG"
+github_user            = "YOUR_GITHUB_USER"
