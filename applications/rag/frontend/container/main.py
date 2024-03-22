@@ -157,6 +157,9 @@ def fetchContext(query_text):
         except sqlalchemy.exc.DatabaseError as err: 
             log.info(f"Table {TABLE_NAME} does not exist: {err}")
             return ""
+        except Exception as err:
+            log.info(f"{err}")
+            return ""
 
     if query_results.all()==None:
         log.info(f"Table {TABLE_NAME} return empty result")
