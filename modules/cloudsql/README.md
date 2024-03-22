@@ -12,4 +12,6 @@ gcloud projects add-iam-policy-binding {PROJECT_ID} \
   --role="roles/cloudsql.client"
 ```
 
+Note: Ensure that the regional subnet that is used (referenced by `network_name`) has [Private Service Connect](https://cloud.google.com/vpc/docs/private-service-connect) enabled.
+
 See [sample RAG application](https://github.com/GoogleCloudPlatform/ai-on-gke/applications/rag/README.md) for example usage of the created instance.

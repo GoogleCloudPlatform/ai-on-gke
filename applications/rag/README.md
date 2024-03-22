@@ -36,6 +36,15 @@ gcloud container clusters create-auto ${CLUSTER_NAME:?} \
   --release-channel rapid
 ```
 
+### Enable [Private Service Connect](https://cloud.google.com/vpc/docs/private-service-connect) (Pre-existing network only)
+
+By default, Terraform uses the pre-existing VPC network (`default`) in your GCP project.
+CloudSQL requires [Private Service Connect](https://cloud.google.com/vpc/docs/private-service-connect) to be enabled in the VPC network.
+
+1. [Create an IP allocation](https://cloud.google.com/vpc/docs/configure-private-services-access#procedure)
+
+2. [Create a private connection](https://cloud.google.com/vpc/docs/configure-private-services-access#creating-connection).
+
 ### Deploy terraform components
 
 The following steps set up the cluster, inference server, pgvector CloudSQL instance, JupyterHub, KubeRay, and frontend chat interface.
@@ -46,6 +55,7 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
     * Set `create_cluster = false` if you are using an existing cluster.
     * (Recommended) Set `jupyter_add_auth = true` and `frontend_add_auth = true` to create load balancers with IAP for your Jupyter notebook and TGI frontend.
     * Choose a custom k8s namespace and service account to be used by the application.
+    * Set `create_network = true` if you want to create a new VPC network
 
 3. Run `terraform init`
 
