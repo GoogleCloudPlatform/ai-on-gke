@@ -24,10 +24,6 @@ uninstall:
 # Deploy the webhook in-cluster
 deploy:
 	kubectl apply -f deployments/
-
-# Deploy the webhook with verbose logging
-deploy-verbose:
-	kubectl apply -f deployments/ --v 1
   
 # Build the docker image  
 docker-build:

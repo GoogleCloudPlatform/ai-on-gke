@@ -24,6 +24,8 @@ spec:
         - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.1
           imagePullPolicy: Always
           name: kuberay-tpu-webhook
+          args:
+          - --v=0 # change this value to 1 for verbose logging 
           ports:
           - name: https
             containerPort: 443
