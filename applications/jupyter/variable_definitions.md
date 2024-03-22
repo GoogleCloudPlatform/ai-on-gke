@@ -18,19 +18,19 @@ This README contains all the variables used by Terraform for installing Juypterh
 
 ### namespace
 
-The namespace that Jupyterhub and rest of the other resources will be installed/allocated in. If using Jupyterhub with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommanded to have this namespace the same as the one with Ray.
+The namespace that JupyterHub and rest of the other resources will be installed/allocated in. If using JupyterHub with the Ray module (`ai-on-gke/ray-on-gke/`), it is recommanded to have this namespace the same as the one with Ray.
 
 ### create_service_account
 
-Create k8s and GCP service accounts for Jupyterhub workloads & configures workload identity.
+Create k8s and GCP service accounts for JupyterHub workloads & configures workload identity.
 
 ### add_auth
 
-Flag that will enable IAP on Jupyterhub. Resources that will be created along with enable IAP:
+Flag that will enable IAP on JupyterHub. Resources that will be created along with enable IAP:
     1. Global IP Address (If none is provided)
     2. Backend Config. Deployment that triggers enabling IAP.
     3. Managed Certificate. Deployment that creates a Google Managed object for SSL certificates
-    4. Ingress. Deployment that creates an Ingress object that will connect to the Jupyterhub Proxy
+    4. Ingress. Deployment that creates an Ingress object that will connect to the JupyterHub Proxy
 
 ### project_id
 

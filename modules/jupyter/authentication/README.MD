@@ -1,6 +1,6 @@
 # GCP IAP Authentication
 
-- [Creating Image with Authentication for Jupyterhub](#creating-image)
+- [Creating Image with Authentication for JupyterHub](#creating-image)
 - [Authentication class and handler](#iapuserloginhandler-and-gcpiapauthenticator-class)
 - [Configuration details for jupyter config yaml](#configuration)
 - [Terraform variables and resources](#terraform-variables-and-resources)
@@ -8,9 +8,9 @@
 
 ## Creating Image
 
-We currently already have a public image containing the authenticator class already configured for Jupyterhub so user's dont need to create their own, but if needed, these are the instructions to do so.
+We currently already have a public image containing the authenticator class already configured for JupyterHub so user's dont need to create their own, but if needed, these are the instructions to do so.
 
-We combine the Jupyterhub image and our own authenticator. By default, the JupyterHub images already have pre-installed authenticator classes such as GitHub, Auth0, and Globus. In order to specify our own class for JupyterHub, our authentication class must also live in the JupyterHub image.
+We combine the JupyterHub image and our own authenticator. By default, the JupyterHub images already have pre-installed authenticator classes such as GitHub, Auth0, and Globus. In order to specify our own class for JupyterHub, our authentication class must also live in the JupyterHub image.
 
 > **_NOTE:_** An Artifact Registry Repo for this docker image is required. Create an AR Repo following [this guide](https://cloud.google.com/artifact-registry/docs/repositories/create-repos)
 
@@ -22,7 +22,7 @@ We combine the Jupyterhub image and our own authenticator. By default, the Jupyt
 
 4. Run `gcloud builds submit --config cloudbuild.yaml .` to upload it to your repository.
 
-5. Change the hub image name and tag in the [Jupyterhub config yaml](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L13).
+5. Change the hub image name and tag in the [JupyterHub config yaml](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/jupyter_config/config-selfauth.yaml#L13).
 
 ## Configuration
 
@@ -45,7 +45,7 @@ And set the authenticator class within the same file. Ex:
 ...
 ```
 
-This will tell Jupyterhub to use the specified authenticator class.
+This will tell JupyterHub to use the specified authenticator class.
 
 Pass the required fields needed by 'gcpiapjwtauthenticator.GCPIAPAuthenticator'. Ex:
 
@@ -63,8 +63,8 @@ Fortuantely, few of these steps are already done for you if you follow the Jupyt
 ## IAPUserLoginHandler and GCPIAPAuthenticator class
 
 There are two classes within `gcpiapjwtauthenticator.py`, IAPUserLoginHandler and GCPIAPAuthenticator.
-IAPUserLoginHandler is the python class that only has the JWT handler. It is used by the GCPIAPAuthenticator and therefore by Jupyterhub.
-GCPIAPAuthenticator contains the `get_handler()` method that Jupyterhub requires for a custom authenticator. When Jupyterhub uses the GCPIAPAuthenticator by calling `get_handler()`, it will receieve the `IAPUserLoginHandler.get()` handler method.
+IAPUserLoginHandler is the python class that only has the JWT handler. It is used by the GCPIAPAuthenticator and therefore by JupyterHub.
+GCPIAPAuthenticator contains the `get_handler()` method that JupyterHub requires for a custom authenticator. When JupyterHub uses the GCPIAPAuthenticator by calling `get_handler()`, it will receieve the `IAPUserLoginHandler.get()` handler method.
 
 ## Terraform Variables and Resources
 
@@ -101,7 +101,7 @@ Google managed SSL certificate. Associates the IAP service with a doamin.
 
 #### Ingress
 
-Ingress for the Jupyterhub proxy-public application. Has the annotations:
+Ingress for the JupyterHub proxy-public application. Has the annotations:
 
 - kubernetes.io/ingress.global-static-ip-name
 - networking.gke.io/managed-certificates
@@ -127,14 +127,14 @@ The `support_email` variable will not be used if the `brand` variable is not fil
 
 ## Allowlist for IAP
 
-There are 2 ways to add users to the IAP allowlist so users can access Jupyterhub.
+There are 2 ways to add users to the IAP allowlist so users can access JupyterHub.
 
 1. Manually on the Cloud Console
 2. Add users to the allowlist file
 
 ### Manually
 
-Navigate to [IAP](https://console.cloud.google.com/security/iap) and select the Backend Service associated with Jupyterhub.
+Navigate to [IAP](https://console.cloud.google.com/security/iap) and select the Backend Service associated with JupyterHub.
 
 Click on `Add Principal`. Add the email of the user/group and select the `IAP-secured Web App User` role to give access to that user/group
 
@@ -142,7 +142,7 @@ Click on `Add Principal`. Add the email of the user/group and select the `IAP-se
 
 ### With Allowlist file
 
-We use terraform to automatically add principals to IAP. By filling out the `allowlist` file [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/allowlist), terraform will give the principals the appropriate roles to access Jupyterhub. The file must follow the format of 1 principal per line.
+We use terraform to automatically add principals to IAP. By filling out the `allowlist` file [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/jupyter-on-gke/allowlist), terraform will give the principals the appropriate roles to access JupyterHub. The file must follow the format of 1 principal per line.
 
 Example:
 

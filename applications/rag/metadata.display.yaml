@@ -268,9 +268,9 @@ spec:
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-        - heading: "Step 1: Create DNS A Records for Jupyterhub and Frontend Domains"
+        - heading: "Step 1: Create DNS A Records for JupyterHub and Frontend Domains"
           description: |-
-              If using custom domains for Jupyterhub or Frontend, create DNS A record sets for them (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
+              If using custom domains for JupyterHub or Frontend, create DNS A record sets for them (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
         - heading: "Step 2: Go to JupyterHub Application"
           description: |-
              <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
