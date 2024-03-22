@@ -161,6 +161,8 @@ def fetchContext(query_text):
     if query_results.all()==None:
         log.info(f"Table {TABLE_NAME} return empty result")
         return ""
+    
+    return query_results[0][1]
 
 @app.route('/prompt', methods=['POST'])
 def handlePrompt():
