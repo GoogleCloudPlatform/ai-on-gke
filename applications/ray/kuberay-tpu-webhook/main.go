@@ -624,7 +624,7 @@ func main() {
 		}
 
 		if admissionReview.Request.Kind.Kind == "Pod" {
-			klog.Info("Received review for Pod creation")
+			klog.V(0).Info("Received review for Pod creation")
 			response, err := mutatePod(admissionReview)
 			if err != nil {
 				klog.Errorf("Failed to mutate pod: %s", err)
@@ -664,7 +664,7 @@ func main() {
 		}
 
 		if admissionReview.Request.Kind.Kind == "RayCluster" {
-			klog.Info("Received review for RayCluster")
+			klog.V(0).Info("Received review for RayCluster")
 			response, err := validateRayCluster(admissionReview)
 			if err != nil {
 				klog.Errorf("Failed to validate ray cluster: %s", err)
@@ -696,7 +696,7 @@ func main() {
 
 	if err := srv.ListenAndServeTLS(certPath, keyPath); err != nil {
 		if err == http.ErrServerClosed {
-			klog.Info("Server closed")
+			klog.V(0).Info("Server closed")
 			return
 		}
 		klog.Error("Failed to start server")
