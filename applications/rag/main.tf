@@ -34,11 +34,13 @@ module "infra" {
   project_id        = var.project_id
   cluster_name      = var.cluster_name
   cluster_location  = var.cluster_location
+  region            = local.cluster_location_region
+  subnetwork_region = local.cluster_location_region
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
-  create_network    = false
-  network_name      = "default"
-  subnetwork_name   = "default"
+  create_network    = var.create_network
+  network_name      = var.network_name
+  subnetwork_name   = var.subnetwork_name
   cpu_pools         = var.cpu_pools
   enable_gpu        = true
   gpu_pools         = var.gpu_pools
@@ -67,7 +69,8 @@ locals {
   frontend_default_uri    = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
   jupyterhub_default_uri  = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
   ## if cloudsql_instance_region not specified, then default to cluster_location region
-  cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
+  cluster_location_region  = (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
+  cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : local.cluster_location_region
   cloudsql_instance        = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.cloudsql_instance}" : var.cloudsql_instance
 }
 
@@ -135,6 +138,7 @@ module "cloudsql" {
   instance_name = local.cloudsql_instance
   namespace     = var.kubernetes_namespace
   region        = local.cloudsql_instance_region
+  network_name  = var.network_name
   depends_on    = [module.namespace]
 }
 

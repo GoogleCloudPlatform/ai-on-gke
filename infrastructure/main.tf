@@ -36,6 +36,12 @@ locals {
   }
 }
 
+data "google_compute_network" "existing-network" {
+  count   = var.create_network ? 0 : 1
+  name    = var.network_name
+  project = var.project_id
+}
+
 module "custom-network" {
   source       = "terraform-google-modules/network/google"
   version      = "8.0.0"
@@ -52,16 +58,55 @@ module "custom-network" {
       description           = var.subnetwork_description
     }
   ]
-
-  #secondary_ranges = var.network_secondary_ranges
-  #firewall_rules = var.firewall_rules
 }
 
+// TODO: Migrate to terraform-google-modules/sql-db/google//modules/private_service_access (below)
+// once https://github.com/terraform-google-modules/terraform-google-sql-db/issues/585 is resolved.
+// We define a VPC peering subnet that will be peered with the
+// Cloud SQL instance network. The Cloud SQL instance will
+// have a private IP within the provided range.
+// https://cloud.google.com/vpc/docs/configure-private-services-access
+
+resource "google_compute_global_address" "google-managed-services-range" {
+  count         = var.create_network ? 1 : 0
+  project       = var.project_id
+  name          = "google-managed-services-${var.network_name}"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = local.network_self_link
+}
+
+# Creates the peering with the producer network.
+resource "google_service_networking_connection" "private_service_access" {
+  count                   = var.create_network ? 1 : 0
+  network                 = local.network_self_link
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.google-managed-services-range[0].name]
+  # This will enable a successful terraform destroy when destroying CloudSQL instances
+  deletion_policy = "ABANDON"
+}
+
+// TODO: Migrate to using the below module block instead of
+// the above "google_compute_global_address" and "google_service_networking_connection" resources
+// once https://github.com/terraform-google-modules/terraform-google-sql-db/issues/585 is resolved.
+// module "private-service-access" {
+//  source  = "terraform-google-modules/sql-db/google//modules/private_service_access"
+//  version = "~> 18.0"
+//  count   = var.create_network ? 1 : 0
+//
+//  project_id      = var.project_id
+//  vpc_network     = var.network_name
+//  # This will enable a successful terraform destroy when destroying CloudSQL instances
+//  deletion_policy = "ABANDON"
+// }
+
 locals {
-  network_name    = var.create_network ? module.custom-network[0].network_name : var.network_name
-  subnetwork_name = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
-  region          = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
-  regional        = local.region != "" ? true : false
+  network_name      = var.create_network ? module.custom-network[0].network_name : var.network_name
+  subnetwork_name   = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
+  network_self_link = var.create_network ? module.custom-network[0].network_self_link : data.google_compute_network.existing-network[0].self_link
+  region            = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
+  regional          = local.region != "" ? true : false
   # zone needs to be set even for regional clusters, otherwise this module picks random zones that don't have GPU availability:
   # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/blob/af354afdf13b336014cefbfe8f848e52c17d4415/main.tf#L46 
   zone = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : split(",", local.gpu_l4_t4_location[local.region])
