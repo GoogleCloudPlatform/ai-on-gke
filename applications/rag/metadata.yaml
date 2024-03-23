@@ -97,7 +97,7 @@ spec:
       - name: frontend_domain
         description: Domain used for application and SSL certificate. 
         varType: string
-        defaultValue: "example.com"
+        defaultValue: "rag.example.com"
       - name: frontend_k8s_backend_config_name
         description: Name of the Kubernetes Backend Config
         varType: string
@@ -185,7 +185,7 @@ spec:
       - name: jupyter_domain
         description: Domain used for application and SSL certificate.
         varType: string
-        defaultValue: "example.com"
+        defaultValue: "jupyter.example.com"
       - name: jupyter_k8s_backend_config_name
         description: Name of the Kubernetes Backend Config
         varType: string
