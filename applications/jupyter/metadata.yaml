@@ -131,7 +131,7 @@ spec:
         defaultValue: jupyter-service-account
     outputs:
       - name: jupyterhub_ip_address
-        description: JupyterHub gloabl IP address
+        description: JupyterHub global IP address
       - name: jupyterhub_password
         description: JupyterHub password is only required for standard authentication. Ignore, in case of IAP authentication
       - name: jupyterhub_uri

@@ -17,13 +17,16 @@ spec:
   content: {}
   interfaces:
     variables:
+      - name: acknowledge
+        varType: bool
+        required: true
       - name: autopilot_cluster
         varType: string
         defaultValue: "true"
       - name: cluster_location
         varType: string
         required: true
-        defaultValue: "us-central1"
+        defaultValue: "us-east4"
       - name: cluster_membership_id
         description: "require to use connectgateway for private clusters, default: cluster_name"
         varType: string
@@ -47,7 +50,7 @@ spec:
         varType: bool
         defaultValue: true
       - name: enable_gpu
-        description: Enabling this allows ray workers to use L4 GPU nodes
+        description: Enabling this allows ray workers to use L4 GPU nodes.  If creating a new GKE cluster, a L4 GPU node pool will be provisioned.
         varType: bool
         defaultValue: true
       - name: enable_grafana_on_ray_dashboard
