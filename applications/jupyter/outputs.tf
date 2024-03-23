@@ -18,7 +18,7 @@ output "jupyterhub_uri" {
 }
 
 output "jupyterhub_ip_address" {
-  description = "JupyterHub gloabl IP address"
+  description = "JupyterHub global IP address"
   value       = module.jupyterhub.jupyterhub_ip_address
 }
 

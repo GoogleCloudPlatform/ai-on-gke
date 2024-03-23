@@ -204,6 +204,6 @@ spec:
       - name: jupyterhub_user
         description: JupyterHub user is only required for standard authentication. Ignore, in case of IAP authentication
       - name: frontend_ip_address
-        description: Frontend gloabl IP address
+        description: Frontend global IP address
       - name: jupyterhub_ip_address
-        description: JupyterHub gloabl IP address
+        description: JupyterHub global IP address
