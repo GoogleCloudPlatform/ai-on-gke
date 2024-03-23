@@ -135,8 +135,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         node_selector:
           cloud.google.com/compute-class: "Performance"
@@ -164,8 +164,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
@@ -195,8 +195,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
@@ -228,8 +228,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         image: jupyter/tensorflow-notebook:python-3.10
         extra_resource_limits:
