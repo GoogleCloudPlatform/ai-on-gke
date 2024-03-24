@@ -14,6 +14,14 @@ spec:
   ui:
     input:
       variables:
+        acknowledge:
+          name: acknowledge
+          title: Confirm that all prerequisites have been met. 
+          section: acknowledge
+          subtext: If you choose an existing GKE standard cluster, ensure it has an L4 GPU Node pool with <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-autoscaler#enable_autoscaling">autoscaling</a> and <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/node-auto-provisioning#enable">node auto-provisioning</a> enabled.
+          enumValueLabels:
+            - label: "Confirm that all prerequisites have been met."
+              value: "true"
         autopilot_cluster:
           name: autopilot_cluster
           title: GKE Cluster Type
@@ -301,6 +309,8 @@ spec:
           title: Support Email
           invisible: true
       sections:
+        - name: acknowledge
+          title: Before you begin
         - name: cluster_details
           title: GKE Cluster Configuration
           tooltip: Select or Create GKE cluster
