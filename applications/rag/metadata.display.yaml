@@ -172,6 +172,53 @@ spec:
           name: gpu_pools
           title: Gpu Pools
           invisible: true
+        ray_dashboard_add_auth:
+          name: ray_dashboard_add_auth
+          title: Enable IAP for Ray Dashboard Application
+          section: ray_iap_auth
+        ray_dashboard_client_id:
+          name: ray_dashboard_client_id
+          title: Ray Dashboard Client Id
+          section: ray_iap_auth
+          invisible: true
+        ray_dashboard_client_secret:
+          name: ray_dashboard_client_secret
+          title: Ray Dashboard Client Secret
+          section: ray_iap_auth
+          invisible: true
+        ray_dashboard_domain:
+          name: ray_dashboard_domain
+          title: Ray Dashboard Domain
+          section: ray_iap_auth
+        ray_dashboard_k8s_backend_config_name:
+          name: ray_dashboard_k8s_backend_config_name
+          title: Ray Dashboard K8s Backend Config Name
+          section: ray_iap_auth
+          invisible: true
+        ray_dashboard_k8s_backend_service_port:
+          name: ray_dashboard_k8s_backend_service_port
+          title: Ray Dashboard K8s Backend Service Port
+          section: ray_iap_auth
+          invisible: true
+        ray_dashboard_k8s_iap_secret_name:
+          name: ray_dashboard_k8s_iap_secret_name
+          title: Ray Dashboard K8s Iap Secret Name
+          section: ray_iap_auth
+          invisible: true
+        ray_dashboard_k8s_ingress_name:
+          name: ray_dashboard_k8s_ingress_name
+          title: Ray Dashboard K8s Ingress Name
+          section: ray_iap_auth
+          invisible: true
+        ray_dashboard_k8s_managed_cert_name:
+          name: ray_dashboard_k8s_managed_cert_name
+          title: Ray Dashboard K8s Managed Cert Name
+          section: ray_iap_auth
+          invisible: true
+        ray_dashboard_members_allowlist:
+          name: ray_dashboard_members_allowlist
+          title: Ray Dashboard Members Allowlist
+          section: ray_iap_auth
         jupyter_add_auth:
           name: jupyter_add_auth
           title: Enable IAP for JupyterHub Application
@@ -271,7 +318,11 @@ spec:
           title: Other Configuration
         - name: rag_iap_auth
           title: Configure Authenticated Access for Frontend
+          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to Internal.
+        - name: ray_iap_auth
+          title: Configure Authenticated Access for Ray Dashboard
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
+
         - name: jupyter_iap_auth
           title:  Configure Authenticated Access for JupyterHub
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
@@ -301,7 +352,11 @@ spec:
         frontend_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to Frontend Application
+          label: Go to RAG Frontend Application
+        ray_dashboard_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Go to RAY Dashboard Application
         jupyterhub_password: {}
         jupyterhub_uri:
           openInNewTab: true
