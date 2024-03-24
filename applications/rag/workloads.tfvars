@@ -82,3 +82,16 @@ frontend_domain            = "" ## Provide domain for ingress resource and ssl c
 frontend_client_id         = ""
 frontend_client_secret     = ""
 frontend_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
+
+## Ray Dashboard IAP Settings
+ray_dashboard_add_auth                 = false # Set to true when using auth with IAP
+ray_dashboard_k8s_ingress_name         = "ray-dashboard-ingress"
+ray_dashboard_k8s_managed_cert_name    = "ray-dashboard-managed-cert"
+ray_dashboard_k8s_iap_secret_name      = "ray-dashboard-iap-secret"
+ray_dashboard_k8s_backend_config_name  = "ray-dashboard-iap-config"
+ray_dashboard_k8s_backend_service_port = 8265
+
+ray_dashboard_domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
+ray_dashboard_client_id         = ""
+ray_dashboard_client_secret     = ""
+ray_dashboard_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"

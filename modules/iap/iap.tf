@@ -108,6 +108,22 @@ resource "helm_release" "iap" {
   }
 }
 
+resource "kubernetes_annotations" "annotation" {
+  api_version = "v1"
+  kind        = "Service"
+  metadata {
+    name      = var.k8s_backend_service_name
+    namespace = var.namespace
+  }
+  annotations = {
+    # Ingress will be auto updated
+    "cloud.google.com/neg"                 = "{\"ingress\": true}"
+    "beta.cloud.google.com/backend-config" = "{\"default\": \"${var.k8s_backend_config_name}\"}"
+  }
+
+  depends_on = [helm_release.iap]
+}
+
 ## TODO(@umeshkumhar): grant permission to specific backend_service
 resource "google_project_iam_member" "project" {
   for_each = toset(var.members_allowlist)
