@@ -231,8 +231,8 @@ module "iap_auth" {
   client_secret            = var.client_secret
   domain                   = var.domain
   depends_on = [
+    helm_release.ray-cluster,
     data.kubernetes_service.head-svc,
-    kubernetes_network_policy.kuberay-head-network-policy
   ]
 }
 
