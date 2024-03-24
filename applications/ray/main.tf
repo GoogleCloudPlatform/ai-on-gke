@@ -169,8 +169,8 @@ module "kuberay-cluster" {
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
   members_allowlist        = var.ray_dashboard_members_allowlist
-  
-  depends_on                = [module.gcs, module.kuberay-operator]
+
+  depends_on = [module.gcs, module.kuberay-operator]
 }
 
 
