@@ -91,8 +91,8 @@ singleuser:
   extraLabels:
     ${indent(4, chomp(jsonencode(additional_labels)))}
   image:
-    name: jupyter/tensorflow-notebook
-    tag: python-3.10
+    name: ${notebook_image}
+    tag: ${notebook_image_tag}
   startTimeout: 1000
   extraAnnotations:
     gke-gcsfuse/volumes: "true"
@@ -168,7 +168,7 @@ singleuser:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
       kubespawner_override:
-        image: jupyter/tensorflow-notebook:python-3.10
+        image: ${notebook_image}:${notebook_image_tag}
         extra_resource_limits:
           nvidia.com/gpu: "2"
         extra_resource_guarantees:
@@ -199,7 +199,7 @@ singleuser:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
       kubespawner_override:
-        image: jupyter/tensorflow-notebook:python-3.10
+        image: ${notebook_image}:${notebook_image_tag}
         extra_resource_limits:
           nvidia.com/gpu: "2"
         extra_resource_guarantees:
@@ -232,7 +232,7 @@ singleuser:
                       bucketName: gcsfuse-{username}
                       mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
       kubespawner_override:
-        image: jupyter/tensorflow-notebook:python-3.10
+        image: ${notebook_image}:${notebook_image_tag}
         extra_resource_limits:
           nvidia.com/gpu: "2"
         extra_resource_guarantees:

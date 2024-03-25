@@ -121,6 +121,8 @@ resource "helm_release" "jupyterhub" {
     gcs_bucket          = var.gcs_bucket
     k8s_service_account = var.workload_identity_service_account
     ephemeral_storage   = var.ephemeral_storage
+    notebook_image      = "jupyter/tensorflow-notebook"
+    notebook_image_tag  = "python-3.10"
     })
     ] : [templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
       password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
@@ -135,6 +137,8 @@ resource "helm_release" "jupyterhub" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.workload_identity_service_account
       ephemeral_storage   = var.ephemeral_storage
+      notebook_image      = "jupyter/tensorflow-notebook"
+      notebook_image_tag  = "python-3.10"
     })
   ]
   depends_on = [module.jupyterhub-workload-identity]
