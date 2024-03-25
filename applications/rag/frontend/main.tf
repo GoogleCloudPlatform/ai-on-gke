@@ -15,24 +15,6 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-# Enabled the DLP service
-resource "google_project_service" "dlp_api" {
-  project = var.project_id
-  service = "dlp.googleapis.com"
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
-}
-
-# Enabled the Nature language api service
-resource "google_project_service" "nature_language_api" {
-  project = var.project_id
-  service = "language.googleapis.com"
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
-}
-
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.cloudsql_instance_region, var.cloudsql_instance)
   additional_labels = tomap({
