@@ -47,3 +47,13 @@ output "ray_dashboard_uri" {
   description = "RAY Dashboard Endpoint to access user interface. In case of private IP, consider port-forwarding."
   value       = module.kuberay-cluster.ray_dashboard_uri != "" ? "http://${module.kuberay-cluster.ray_dashboard_uri}" : ""
 }
+
+output "kubernetes_namespace" {
+  value       = local.kubernetes_namespace
+  description = "Kubernetes namespace"
+}
+
+output "gcp_network" {
+  value       = local.network_name
+  description = "Provisioned GCP Network Name"
+}
