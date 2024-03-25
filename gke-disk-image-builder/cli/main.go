@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -55,7 +56,6 @@ func main() {
 	serviceAccount := flag.String("service-account", "default", "Service Account email assigned to the GCE instance used for creating the disk image.")
 	diskType := flag.String("disk-type", "pd-ssd", "disk type to generate the disk image")
 	diskSizeGb := flag.Int64("disk-size-gb", 60, "disk size to unpack container images")
-	instanceDiskSizeGb := flag.Int64("instance-disk-size-gb", 100, "disk size of the GCE instance used for disk image creation")
 	gcpOAuth := flag.String("gcp-oauth", "", "path to GCP service account credential file")
 	imagePullAuth := flag.String("image-pull-auth", "None", "auth mechanism to pull the container image, valid values: [None, ServiceAccountToken].\nNone means that the images are publically available and no authentication is required to pull them.\nServiceAccountToken means the service account oauth token will be used to pull the images.\nFor more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications")
 	timeout := flag.String("timeout", "20m", "Default timout for each step, defaults to 20m")
@@ -65,6 +65,9 @@ func main() {
 	verifyOnly := flag.Bool("verify-only", false, "Only verifies the disk image provided in image-name, and does not generate any image.")
 	flag.Var(&imageLabels, "image-labels", "labels tagged to the disk image. This flag can be specified multiple times. The accepted format is `--image-labels=key=val`.")
 	flag.Var(&containerImages, "container-image", "container image to include in the disk image. This flag can be specified multiple times")
+
+	instanceDiskSizeGb := newInstanceSizeGBFlag(diskSizeGb)
+	flag.Var(instanceDiskSizeGb, "instance-disk-size-gb", "disk size of the GCE instance used for disk image creation. If not set, defaults to the value of --disk-size-gb.")
 
 	flag.Parse()
 	ctx := context.Background()
@@ -111,7 +114,7 @@ func main() {
 		ServiceAccount:        *serviceAccount,
 		DiskType:              *diskType,
 		DiskSizeGB:            *diskSizeGb,
-		InstanceDiskSizeGB:    *instanceDiskSizeGb,
+		InstanceDiskSizeGB:    instanceDiskSizeGb.Value(),
 		GCPOAuth:              *gcpOAuth,
 		Network:               fmt.Sprintf("projects/%s/global/networks/%s", *projectName, *network),
 		Subnet:                fmt.Sprintf("projects/%s/regions/%s/subnetworks/%s", *projectName, regionForZone(*zone), *subnet),
@@ -140,4 +143,31 @@ func main() {
 func regionForZone(zone string) string {
 	p := strings.Split(zone, "-")
 	return strings.Join(p[:len(p)-1], "-")
+}
+
+type intInstanceSizeGBFlag struct {
+	value *int64
+}
+
+func newInstanceSizeGBFlag(diskSizeGB *int64) *intInstanceSizeGBFlag {
+	return &intInstanceSizeGBFlag{
+		value: diskSizeGB,
+	}
+}
+
+func (i *intInstanceSizeGBFlag) String() string {
+	return "Default: value from --disk-size-gb flag"
+}
+
+func (i *intInstanceSizeGBFlag) Set(s string) error {
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return err
+	}
+	i.value = &v
+	return nil
+}
+
+func (i *intInstanceSizeGBFlag) Value() int64 {
+	return *i.value
 }
