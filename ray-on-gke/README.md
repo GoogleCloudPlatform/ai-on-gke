@@ -5,13 +5,17 @@ Most examples use the [`applications/ray`](/applications/ray) terraform module t
 
 ## Getting Started
 
-### Create a RayCluster on an existing cluster
+It is highly recommended to use the [infrastructure](/infrastructure/) terraform module to create your GKE cluster.
+
+### Create a RayCluster on a GKE cluster
 
 Edit `templates/workloads.tfvars` with your environment specific variables and configurations.
-The following variables are required:
+The following variables require configuration:
 * project_id
 * cluster_name
 * cluster_location
+
+If you need a new cluster, you can specify `create_cluster: true`.
 
 Run the following commands to install KubeRay and deploy a Ray cluster onto your existing cluster.
 ```
@@ -20,14 +24,14 @@ terraform init
 terraform apply --var-file=workloads.tfvars
 ```
 
-**NOTE**: you can also create a new GKE cluster by specifying `create_cluster: true`.
-
 Validate that the RayCluster is ready:
 ```
 $ kubectl get raycluster
 NAME                  DESIRED WORKERS   AVAILABLE WORKERS   STATUS   AGE
 ray-cluster-kuberay   1                 1                   ready    3m41s
 ```
+
+See [tfvars examples](./examples/tfvars/) to explore different configuration options for the Ray cluster using the [terraform templates](./templates).
 
 ### Install Ray
 
@@ -39,7 +43,7 @@ To submit a Ray job, first establish a connection to the Ray head. For this exam
 to connect to the Ray head via localhost.
 
 ```bash
-$ kubectl -n ml port-forward service/ray-cluster-kuberay-head-svc 8265 &
+$ kubectl -n ai-on-gke port-forward service/ray-cluster-kuberay-head-svc 8265 &
 ```
 
 Submit a Ray job that prints resources available in your Ray cluster:
@@ -79,7 +83,7 @@ To use the client, first establish a connection to the Ray head. For this exampl
 to connect to the Ray head Service via localhost.
 
 ```bash
-$ kubectl -n ml port-forward service/ray-cluster-kuberay-head-svc 10001 &
+$ kubectl -n ai-on-gke port-forward service/ray-cluster-kuberay-head-svc 10001 &
 ```
 
 Next, define a Python script containing remote code you want to run on your Ray cluster. Similar to the previous example,
@@ -113,10 +117,14 @@ See the following guides and tutorials for running Ray applications on GKE:
 * [Priority Scheduling with RayJob and Kueue](https://docs.ray.io/en/master/cluster/kubernetes/examples/rayjob-kueue-priority-scheduling.html)
 * [Gang Scheduling with RayJob and Kueue](https://docs.ray.io/en/master/cluster/kubernetes/examples/rayjob-kueue-gang-scheduling.html)
 * [RayTrain with GCSFuse CSI driver](./guides/raytrain-with-gcsfusecsi/)
+* [Configuring KubeRay to use Google Cloud Storage Buckets in GKE](https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/gke-gcs-bucket.html)
+* [Example Notebooks with Ray](./examples/notebooks/)
+* [Example templates for Ray clusterse](./examples/tfvars/)
 
 ## Blogs & Best Practices
 
 * [Getting started with Ray on Google Kubernetes Engine](https://cloud.google.com/blog/products/containers-kubernetes/use-ray-on-kubernetes-with-kuberay)
 * [Why GKE for your Ray AI workloads?](https://cloud.google.com/blog/products/containers-kubernetes/the-benefits-of-using-gke-for-running-ray-ai-workloads)
 * [Advanced scheduling for AI/ML with Ray and Kueue](https://cloud.google.com/blog/products/containers-kubernetes/using-kuberay-and-kueue-to-orchestrate-ray-applications-in-gke)
+* [How to secure Ray on Google Kubernetes Engine](https://cloud.google.com/blog/products/containers-kubernetes/securing-ray-to-run-on-google-kubernetes-engine)
 * [4 ways to reduce cold start latency on Google Kubernetes Engine](https://cloud.google.com/blog/products/containers-kubernetes/tips-and-tricks-to-reduce-cold-start-latency-on-gke)
