@@ -461,10 +461,10 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 					patches = append(patches, idPatch)
 				}
 				// inject TPU_NAME
-				if getEnvironmentVariable("TPU_WORKER_NAME", container) == "" {
+				if getEnvironmentVariable("TPU_NAME", container) == "" {
 					tpuName := corev1.EnvVar{
 						Name:  "TPU_NAME",
-						Value: fmt.Sprint(groupName),
+						Value: fmt.Sprintf("%s-%d", groupName, replicaIndex),
 					}
 					namePatch := patch{"op": "add"}
 					// create new EnvVar array if container.Env is empty, and append new EnvVars if not
