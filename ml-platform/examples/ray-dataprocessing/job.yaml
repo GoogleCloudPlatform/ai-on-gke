@@ -1,0 +1,36 @@
+
+apiVersion: batch/v1
+kind: Job 
+metadata:
+  name: job 
+  namespace: ml-team
+spec:
+  template:
+    metadata:
+      labels:
+        app: job
+    spec:
+      containers:
+      - name: job
+        image: us-west2-docker.pkg.dev/cloud-sa-ml/data-processing-repo/image:latest
+      tolerations:
+      - key: "ray.io/node-type"
+        operator: "Equal"
+        value: "worker"
+        effect: "NoSchedule"
+      - key: "reserved"
+        operator: "Exists"
+        effect: NoSchedule
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: NoSchedule
+      # - key: "spot"
+      #   operator: "Exists"
+      #   effect: NoSchedule
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-l4"
+
+      restartPolicy: Never
+
+      serviceAccountName: ml-team-default 
+######################Ray code sample#################################
