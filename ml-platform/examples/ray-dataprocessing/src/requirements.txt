@@ -1,0 +1,7 @@
+ray==2.7.1
+ray[client]==2.7.1
+spacy
+google-cloud-storage
+pandas
+gcsfs
+fsspec
