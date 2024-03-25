@@ -86,7 +86,7 @@ func getNumTPUHostsFromTopology(clusterName string, namespace string, topology s
 	for i := 0; i < len(topologyVals); i++ {
 		dim, err := strconv.Atoi(topologyVals[i])
 		if err != nil {
-			klog.V(0).InfoS("getNumTPUHostsFromTopology", "RayCluster", namespace+"/"+clusterName, "Invalid topology", err)
+			klog.ErrorS(err, "RayCluster", namespace+"/"+clusterName, "gke-tpu-topology", topology)
 			return 0, err
 		}
 		chips *= dim
@@ -98,7 +98,7 @@ func getNumTPUHostsFromTopology(clusterName string, namespace string, topology s
 		// v5e TPU VMs can have 1, 4 or 8 chips
 		chipsPerHost, err := strconv.Atoi(acceleratorTypeValues[1])
 		if err != nil {
-			klog.V(0).InfoS("getNumTPUHostsFromTopology", "RayCluster", namespace+"/"+clusterName, "Unexpected acceleratorType", err)
+			klog.ErrorS(err, "RayCluster", namespace+"/"+clusterName, "gke-tpu-accelerator", acceleratorType)
 			return 0, err
 		}
 		chipsPerHost = min(chipsPerHost, 8) // max of 8 chips per host
@@ -227,10 +227,10 @@ func checkWorkersMatchTopology(clusterName string, namespace string, workerGroup
 		acceleratorType := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-accelerator"]
 		klog.V(1).InfoS("checkWorkersMatchTopology", "RayCluster", namespace+"/"+clusterName, "topology", topology, "AcceleratorType", acceleratorType, "NumOfHosts", numHosts)
 		if topology == "" {
-			klog.Errorf("RayCluster: %s/%s | TPU topology not specified", namespace, clusterName)
+			klog.ErrorS(errors.New("TPU topology not specified"), "RayCluster", namespace+"/"+clusterName, "gke-tpu-topology", topology)
 		}
 		if acceleratorType == "" {
-			klog.Errorf("RayCluster: %s/%s | TPU accelerator type not specified", namespace, clusterName)
+			klog.ErrorS(errors.New("TPU accelerator not specified"), "RayCluster", namespace+"/"+clusterName, "gke-tpu-accelerator", acceleratorType)
 		}
 		expectedHosts, err := getNumTPUHostsFromTopology(clusterName, namespace, topology, acceleratorType)
 		if err != nil {
@@ -419,10 +419,10 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 	acceleratorType := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-accelerator"]
 	if topology == "" {
-		klog.Errorf("RayCluster: %s/%s | TPU topology not specified", namespace, clusterName)
+		klog.ErrorS(errors.New("TPU topology not specified"), "RayCluster", namespace+"/"+clusterName, "gke-tpu-topology", topology)
 	}
 	if acceleratorType == "" {
-		klog.Errorf("RayCluster: %s/%s | TPU accelerator type not specified", namespace, clusterName)
+		klog.ErrorS(errors.New("TPU accelerator not specified"), "RayCluster", namespace+"/"+clusterName, "gke-tpu-accelerator", acceleratorType)
 	}
 	containers := pod.Spec.Containers
 	if containers == nil {
