@@ -14,7 +14,7 @@
 
 # Temporary workaround to ensure the GMP webhook is installed before applying PodMonitorings.
 resource "time_sleep" "wait_for_gmp_operator" {
-  create_duration = "10s"
+  create_duration = "30s"
 }
 
 # google managed prometheus engine

@@ -20,7 +20,7 @@ steps:
       terraform validate -no-color
     dir: 'infrastructure/'
     waitFor: ['-']
-  
+
   - id: 'validate ray'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
@@ -28,7 +28,7 @@ steps:
       terraform validate -no-color
     dir: 'applications/ray/'
     waitFor: ['validate platform']
-  
+
   - id: 'validate jupyterhub'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
@@ -36,7 +36,7 @@ steps:
       terraform validate -no-color
     dir: 'applications/jupyter/'
     waitFor: ['validate platform']
-  
+
   - id: 'validate rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
@@ -80,7 +80,7 @@ steps:
         gcloud container clusters get-credentials \
         ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         --location $_REGION \
-        --project $PROJECT_ID 
+        --project $PROJECT_ID
 
         cd /workspace/applications/ray/
         terraform apply \
@@ -305,7 +305,7 @@ steps:
           echo "gke cluster creation failed"
           exit 1
         fi
-        
+
         if [[ $(cat /workspace/ray_result.txt) != "pass" ]]; then
           echo "ray API run failed"
           exit 1
@@ -335,7 +335,7 @@ steps:
           echo "rag ray dashboard test failed"
           exit 1
         fi
-        
+
         if [[ $(cat /workspace/rag_jupyterhub_test_result.txt) != "pass" ]]; then
           echo "rag jupyterhub test failed"
           exit 1
@@ -347,9 +347,9 @@ steps:
         fi
 
     waitFor: ['cleanup gke cluster']
-        
+
 substitutions:
-  _REGION: us-central1
+  _REGION: us-east4
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
