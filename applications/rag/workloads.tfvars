@@ -15,10 +15,13 @@
 project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-create_cluster    = true # Create a GKE cluster in the default network.
+create_cluster    = true # Create a GKE cluster in the specified network.
 autopilot_cluster = true
 cluster_name      = "<cluster_name>"
 cluster_location  = "us-central1"
+create_network    = true
+network_name      = "ml-network"
+subnetwork_cidr   = "10.100.0.0/16"
 
 ## GKE environment variables
 kubernetes_namespace = "rag"

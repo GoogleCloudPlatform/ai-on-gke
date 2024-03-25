@@ -19,8 +19,8 @@ project_id = "ai-on-gke-jss-sandbox"
 #######################################################
 ## network values
 create_network    = true
-network_name      = "ml-network99"
-subnetwork_name   = "ml-subnet99"
+network_name      = "ml-network"
+subnetwork_name   = "ml-network"
 subnetwork_cidr   = "10.100.0.0/16"
 subnetwork_region = "us-central1"
 
