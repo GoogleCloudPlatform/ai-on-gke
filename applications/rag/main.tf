@@ -27,6 +27,39 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+## Enable Required GCP Project Services APIs
+module "project-services" {
+  source  = "terraform-google-modules/project-factory/google//modules/project_services"
+  version = "~> 14.5"
+
+  project_id                  = var.project_id
+  disable_services_on_destroy = false
+  disable_dependent_services  = false
+  activate_apis = flatten([
+    "autoscaling.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
+    "compute.googleapis.com",
+    "config.googleapis.com",
+    "connectgateway.googleapis.com",
+    "container.googleapis.com",
+    "containerfilesystem.googleapis.com",
+    "dlp.googleapis.com",
+    "dns.googleapis.com",
+    "gkehub.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "language.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com",
+    "pubsub.googleapis.com",
+    "servicenetworking.googleapis.com",
+    "serviceusage.googleapis.com",
+    "sourcerepo.googleapis.com",
+    "sqladmin.googleapis.com",
+    (var.frontend_add_auth || var.jupyter_add_auth ? ["iap.googleapis.com"] : [])
+  ])
+}
+
 module "infra" {
   source = "../../infrastructure"
   count  = var.create_cluster ? 1 : 0
@@ -143,16 +176,6 @@ module "cloudsql" {
   region        = local.cloudsql_instance_region
   network_name  = local.network_name
   depends_on    = [module.namespace]
-}
-
-# IAP Section: Enabled the IAP service
-resource "google_project_service" "project_service" {
-  count   = var.frontend_add_auth || var.jupyter_add_auth ? 1 : 0
-  project = var.project_id
-  service = "iap.googleapis.com"
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
 }
 
 module "jupyterhub" {
