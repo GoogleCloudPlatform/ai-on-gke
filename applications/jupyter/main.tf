@@ -47,7 +47,6 @@ module "project-services" {
     "iamcredentials.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
-    "prometheus.googleapis.com",
     "pubsub.googleapis.com",
     "servicenetworking.googleapis.com",
     "serviceusage.googleapis.com",
