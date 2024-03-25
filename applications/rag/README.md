@@ -53,7 +53,8 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
 
 2. Edit `workloads.tfvars` to set your project ID, location, cluster name, and GCS bucket name. Optionally, make the following changes:
     * Set `create_cluster = false` if you are using an existing cluster.
-    * (Recommended) Set `jupyter_add_auth = true`, `frontend_add_auth = true` and `ray_dashboard_add_auth = true` to create load balancers with IAP for your Jupyter notebook, TGI frontend and Ray Dashboard.
+     * (Recommended) Set `jupyter_add_auth = true`, `frontend_add_auth = true` and `ray_dashboard_add_auth = true` to create load balancers with IAP for your Jupyter notebook, TGI frontend and Ray Dashboard.
+    * (Recommended) Set `jupyter_domain`, `frontend_domain`, `ray_dashboard_domain` to specify a domain, you need to be able to configure DNS records of that domain, you can [register a Domain on Google Cloud Domains](https://cloud.google.com/domains/docs/register-domain#registering-a-domain), or use the domain registrar of your choice.
     * Choose a custom k8s namespace and service account to be used by the application.
     * Set `create_network = true` if you want to create a new VPC network
 
@@ -61,7 +62,16 @@ The following steps set up the cluster, inference server, pgvector CloudSQL inst
 
 4. Run `terraform apply --var-file workloads.tfvars`
 
-5. Optionally, enable Cloud Data Loss Prevention (DLP)
+5. If you set `jupyter_domain`, `frontend_domain` or `ray_dashboard_domain`, set up your DNS service to point to the public IP
+    * run command `terraform output frontend_ip_address` to get the public ip address of frontend, and add an A record in your DNS configuration to point to the public IP address.
+    * run command `terraform output jupyterhub_ip_address` to get the public ip address of jupyterhub, and add an A record in your DNS configuration to point to the public IP address.
+    * run command `terraform output ray_dashboard_ip_address` to get the public ip address of ray dashboard, and add an A record in your DNS configuration to point to the public IP address.
+
+    If the DNS service of your domain is managed by [Google Cloud DNS managed zone](https://cloud.google.com/dns/docs/zones), we have two ways to add the A record:
+    1. Go to https://console.cloud.google.com/net-services/dns/zones, select the zone and click ADD STANDARD, fill in your domain name and public IP address.
+    2. Run command: `gcloud dns record-sets create <domain address>. --zone=<zone name> --type="A" --ttl=<ttl in seconds> --rrdatas="<public ip address>"`
+
+6. Optionally, enable Cloud Data Loss Prevention (DLP)
 
     We have two ways to enable the api:
 
