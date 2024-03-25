@@ -30,7 +30,9 @@ module "project-services" {
   source  = "terraform-google-modules/project-factory/google//modules/project_services"
   version = "~> 14.5"
 
-  project_id = var.project_id
+  project_id                  = var.project_id
+  disable_services_on_destroy = false
+  disable_dependent_services  = false
   activate_apis = flatten([
     "autoscaling.googleapis.com",
     "cloudbuild.googleapis.com",
