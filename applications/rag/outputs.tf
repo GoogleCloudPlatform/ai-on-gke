@@ -48,6 +48,11 @@ output "ray_dashboard_uri" {
   value       = module.kuberay-cluster.ray_dashboard_uri != "" ? "http://${module.kuberay-cluster.ray_dashboard_uri}" : ""
 }
 
+output "ray_dashboard_ip_address" {
+  description = "RAY Dashboard global IP address"
+  value       = module.kuberay-cluster.ray_dashboard_ip_address
+}
+
 output "kubernetes_namespace" {
   value       = local.kubernetes_namespace
   description = "Kubernetes namespace"
