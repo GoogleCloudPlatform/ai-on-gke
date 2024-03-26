@@ -57,8 +57,10 @@ steps:
         set -e
 
         terraform apply \
-        -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
+        -var-file=platform.tfvars \
         -var=project_id=$PROJECT_ID \
+        -var=network_name=ml-network-$_BUILD_ID \
+        -var=subnetwork_name=ml-network-$_BUILD_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
@@ -202,7 +204,7 @@ steps:
         cd /workspace/applications/rag/
         terraform apply \
         -var-file=workloads.tfvars \
-        -var=network_name=default \
+        -var=network_name=ml-network-$_BUILD_ID \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
@@ -287,10 +289,15 @@ steps:
         set -e
 
         cd /workspace/infrastructure
-        terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
+        terraform destroy \
+        -var-file=platform.tfvars \
+        -var=project_id=$PROJECT_ID \
+        -var=network_name=ml-network-$_BUILD_ID \
+        -var=subnetwork_name=ml-network-$_BUILD_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
-        -var=cluster_location=$_REGION -auto-approve -no-color
+        -var=cluster_location=$_REGION \
+        -auto-approve -no-color -lock=false
 
     allowFailure: true
     waitFor: ['cleanup rag']

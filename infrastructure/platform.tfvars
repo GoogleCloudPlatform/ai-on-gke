@@ -13,7 +13,7 @@
 # limitations under the License.
 
 ##common variables
-project_id = "ai-on-gke-jss-sandbox"
+project_id = "<project-id>"
 #######################################################
 ####    PLATFORM
 #######################################################
@@ -43,30 +43,17 @@ cpu_pools = [{
 ## make sure required gpu quotas are available in that region
 enable_gpu = true
 gpu_pools = [{
-  name               = "gpu-pool"
-  machine_type       = "n1-standard-16"
+  name               = "gpu-pool-l4"
+  machine_type       = "g2-standard-24"
   node_locations     = "us-central1-a" ## comment to autofill node_location based on cluster_location
   autoscaling        = true
   min_count          = 1
   max_count          = 3
   disk_size_gb       = 100
-  disk_type          = "pd-standard"
+  disk_type          = "pd-balanced"
+  enable_gcfs        = true
+  logging_variant    = "DEFAULT"
   accelerator_count  = 2
-  accelerator_type   = "nvidia-tesla-t4"
+  accelerator_type   = "nvidia-l4"
   gpu_driver_version = "DEFAULT"
-  },
-  {
-    name               = "gpu-pool-l4"
-    machine_type       = "g2-standard-24"
-    node_locations     = "us-central1-a" ## comment to autofill node_location based on cluster_location
-    autoscaling        = true
-    min_count          = 1
-    max_count          = 3
-    disk_size_gb       = 100
-    disk_type          = "pd-balanced"
-    enable_gcfs        = true
-    logging_variant    = "DEFAULT"
-    accelerator_count  = 2
-    accelerator_type   = "nvidia-l4"
-    gpu_driver_version = "DEFAULT"
 }]
