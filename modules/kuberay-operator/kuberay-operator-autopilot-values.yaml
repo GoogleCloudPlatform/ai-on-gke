@@ -17,8 +17,8 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: kuberay/operator
-  tag: v1.0.0
+  repository: quay.io/kuberay/operator
+  tag: v1.1.0
   pullPolicy: IfNotPresent
 
 nameOverride: "kuberay-operator"
@@ -88,7 +88,7 @@ crNamespacedRbacEnable: true
 #   (Please note that this excludes the CRDs, which can only be installed at the cluster scope.)
 # - If "watchNamespace" is not set, the KubeRay operator will, by default, only listen
 #   to resource events within its own namespace.
-singleNamespaceInstall: false
+singleNamespaceInstall: true
 
 # The KubeRay operator will watch the custom resources in the namespaces listed in the "watchNamespace" parameter.
 # watchNamespace:

@@ -33,7 +33,7 @@ resource "helm_release" "ray-cluster" {
   chart            = "ray-cluster"
   namespace        = var.namespace
   create_namespace = true
-  version          = "1.0.0"
+  version          = "1.1.0"
 
   values = [
     templatefile("${path.module}/values.yaml", {
