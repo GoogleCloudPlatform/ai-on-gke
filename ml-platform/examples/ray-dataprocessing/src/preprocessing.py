@@ -91,7 +91,7 @@ def split_dataframe(df, chunk_size=199):
 # This function invokes ray task
 def run_remote():
     df = pd.read_csv('gs://'+IMAGE_BUCKET+'/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv')
-    runtime_env = {"pip": ["google-cloud-storage"]}
+    runtime_env = {"pip": ["google-cloud-storage==2.16.0"]}
     ray.init("ray://"+RAY_CLUSTER_HOST, runtime_env=runtime_env)
     print("STARTED")
     start_time = time.time()
