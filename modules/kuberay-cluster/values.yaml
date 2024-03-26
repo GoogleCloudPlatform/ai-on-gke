@@ -21,7 +21,7 @@
 
 image:
   # Replace this with your own image if needed.
-  repository: rayproject/ray
+  repository: ${image}
   tag: ${image_tag}
   pullPolicy: IfNotPresent
 
