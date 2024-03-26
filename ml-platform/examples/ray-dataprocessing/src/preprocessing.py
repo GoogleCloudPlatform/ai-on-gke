@@ -1,3 +1,4 @@
+import os
 import ray
 import pandas as pd
 from typing import List
@@ -5,11 +6,12 @@ import urllib.request, urllib.error
 import time
 from google.cloud import storage
 
-IMAGE_BUCKET = 'ai-infra-ml-data-processing'
+IMAGE_BUCKET = os.environ['PROCESSING_BUCKET']
+RAY_CLUSTER_HOST = os.environ['RAY_CLUSTER_HOST']
 GCS_IMAGE_FOLDER = 'flipkart_images'
 
 #@ray.remote(num_cpus=0.2)
-@ray.remote
+@ray.remote(num_cpus=1)
 def get_product_image(df):
 
     def extract_url(image_list: str) -> List[str]:
@@ -88,9 +90,9 @@ def split_dataframe(df, chunk_size=199):
 
 # This function invokes ray task
 def run_remote():
-    df = pd.read_csv('gs://ai-infra-ml-data-processing/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv')
+    df = pd.read_csv('gs://'+IMAGE_BUCKET+'/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv')
     runtime_env = {"pip": ["google-cloud-storage"]}
-    ray.init("ray://ray-cluster-kuberay-head-svc:10001", runtime_env=runtime_env)
+    ray.init("ray://"+RAY_CLUSTER_HOST, runtime_env=runtime_env)
     print("STARTED")
     start_time = time.time()
     res = split_dataframe(df)
