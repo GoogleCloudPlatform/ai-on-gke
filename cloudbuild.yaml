@@ -59,9 +59,9 @@ steps:
         terraform apply \
         -var-file=platform.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=create_network=false \
-        -var=network_name=default \
-        -var=subnetwork_name=default \
+        -var=create_network=true \
+        -var=network_name=ml-network-$_BUILD_ID \
+        -var=subnetwork_name=ml-network-$_BUILD_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
@@ -205,7 +205,7 @@ steps:
         cd /workspace/applications/rag/
         terraform apply \
         -var-file=workloads.tfvars \
-        -var=network_name=default \
+        -var=network_name=ml-network-$_BUILD_ID \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
@@ -264,7 +264,7 @@ steps:
         cd /workspace/applications/rag/
         terraform destroy \
         -var-file=workloads.tfvars \
-        -var=network_name=default \
+        -var=network_name=ml-network-$_BUILD_ID \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
@@ -289,13 +289,16 @@ steps:
       - |
         set -e
 
+        gcloud compute networks peerings delete $(gcloud compute networks peerings list --network=ml-network-$_BUILD_ID --format='value(peerings.name)') --network=ml-network-$_BUILD_ID
+        gcloud compute firewall-rules delete $(gcloud compute firewall-rules list --filter="network:ml-network-$_BUILD_ID" --format='value(name)') --quiet
+
         cd /workspace/infrastructure
         terraform destroy \
         -var-file=platform.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=create_network=false \
-        -var=network_name=default \
-        -var=subnetwork_name=default \
+        -var=create_network=true \
+        -var=network_name=ml-network-$_BUILD_ID \
+        -var=subnetwork_name=ml-network-$_BUILD_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
