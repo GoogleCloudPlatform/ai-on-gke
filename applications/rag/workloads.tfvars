@@ -17,7 +17,7 @@ project_id = "yiyingzhang-gke-dev"
 ## this is required for terraform to connect to GKE master and deploy workloads
 create_cluster    = true # Create a GKE cluster in the specified network.
 autopilot_cluster = true
-cluster_name      = "test-refactor-rag"
+cluster_name      = "test-refactor-rag2"
 cluster_location  = "us-central1"
 create_network    = true
 network_name      = "ml-network"
