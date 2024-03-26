@@ -54,6 +54,7 @@ head:
   rayStartParams:
     dashboard-host: '0.0.0.0'
     block: 'true'
+    num-cpus: '0'  
   # containerEnv specifies environment variables for the Ray container,
   # Follows standard K8s container env schema.
   image:
