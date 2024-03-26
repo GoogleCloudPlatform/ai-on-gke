@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project_id = "<your project ID>"
+project_id = "yiyingzhang-gke-dev"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
 create_cluster    = true # Create a GKE cluster in the specified network.
 autopilot_cluster = true
-cluster_name      = "<cluster_name>"
+cluster_name      = "test-refactor-rag"
 cluster_location  = "us-central1"
 create_network    = true
 network_name      = "ml-network"
@@ -29,7 +29,7 @@ create_gcs_bucket    = true
 
 # The bucket name must be globally unique (across all of Google Cloud).
 # To verify, check that `gcloud storage buckets describe gs://<bucketname>` returns a 404.
-gcs_bucket = "rag-data-<username>"
+gcs_bucket = "rag-data-yyz1"
 
 cloudsql_instance        = "pgvector-instance"
 cloudsql_instance_region = "us-central1" # defaults to cluster_location, if not specified

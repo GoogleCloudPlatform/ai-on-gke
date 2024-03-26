@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "instance" {
-  description = "Cloud SQL Instance name"
-  value       = module.cloudsql.instance_name
-}
+resource "kubernetes_secret" "secret" {
+  metadata {
+    name      = "db-secret"
+    namespace = var.namespace
+  }
 
-output "db_user" {
-  description = "Cloud SQL instance user"
-  value       = module.cloudsql.additional_users[0].name
-}
+  data = {
+    username = var.db_user
+    password = var.db_password
+    database = "pgvector-database"
+  }
 
-output "db_password" {
-  description = "Cloud SQL instance user's password"
-  value       = module.cloudsql.additional_users[0].password
+  type = "kubernetes.io/basic-auth"
 }

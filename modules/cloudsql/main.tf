@@ -72,18 +72,3 @@ module "cloudsql" {
     },
   ]
 }
-
-resource "kubernetes_secret" "secret" {
-  metadata {
-    name      = "db-secret"
-    namespace = var.namespace
-  }
-
-  data = {
-    username = var.db_user
-    password = random_password.pwd.result
-    database = "pgvector-database"
-  }
-
-  type = "kubernetes.io/basic-auth"
-}
