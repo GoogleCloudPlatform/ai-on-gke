@@ -62,11 +62,14 @@ module "infra" {
   project_id        = var.project_id
   cluster_name      = var.cluster_name
   cluster_location  = var.cluster_location
+  region            = local.cluster_location_region
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
-  create_network    = false
-  network_name      = "default"
-  subnetwork_name   = "default"
+  create_network    = var.create_network
+  network_name      = local.network_name
+  subnetwork_name   = local.network_name
+  subnetwork_cidr   = var.subnetwork_cidr
+  subnetwork_region = local.cluster_location_region
   cpu_pools         = var.cpu_pools
   enable_gpu        = false
 }
@@ -78,17 +81,21 @@ data "google_container_cluster" "default" {
 }
 
 locals {
-  endpoint              = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
-  ca_certificate        = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
-  private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
-  cluster_membership_id = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
-  enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
-  host                  = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
+  endpoint                = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
+  ca_certificate          = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
+  private_cluster         = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
+  cluster_membership_id   = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
+  enable_autopilot        = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
+  host                    = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
+  cluster_location_region = (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
+  kubernetes_namespace    = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.kubernetes_namespace}" : var.kubernetes_namespace
+  network_name            = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.network_name}" : var.network_name
+
 }
 
 locals {
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
-  jupyterhub_default_uri            = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
+  jupyterhub_default_uri            = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${local.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
 }
 
 provider "kubernetes" {
@@ -132,7 +139,7 @@ module "gcs" {
 module "namespace" {
   source           = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kubernetes-namespace?ref=marketplace"
   providers        = { helm = helm.jupyter }
-  namespace        = var.kubernetes_namespace
+  namespace        = local.kubernetes_namespace
   create_namespace = true
 }
 
@@ -141,7 +148,7 @@ module "jupyterhub" {
   source                            = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter?ref=marketplace"
   providers                         = { helm = helm.jupyter, kubernetes = kubernetes.jupyter }
   project_id                        = var.project_id
-  namespace                         = var.kubernetes_namespace
+  namespace                         = local.kubernetes_namespace
   additional_labels                 = var.additional_labels
   workload_identity_service_account = local.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket

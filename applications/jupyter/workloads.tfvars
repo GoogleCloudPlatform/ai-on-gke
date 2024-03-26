@@ -17,10 +17,14 @@
 project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
-create_cluster        = false # this flag will create a new standard public gke cluster in default network
-cluster_name          = "ml-cluster"
-cluster_location      = "us-central1"
-cluster_membership_id = "" # required for private cluster, defaults to `cluster_name`
+create_cluster    = false # Create a GKE cluster in the specified network.
+autopilot_cluster = true
+private_cluster   = false
+cluster_name      = "ml-cluster2021"
+cluster_location  = "us-central1"
+create_network    = true
+network_name      = "ml-network2021"
+subnetwork_cidr   = "10.100.0.0/16"
 
 #######################################################
 ####    APPLICATIONS

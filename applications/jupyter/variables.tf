@@ -138,6 +138,23 @@ variable "create_gcs_bucket" {
 }
 
 ## GKE variables
+variable "create_network" {
+  description = "Create the VPC specified by network_name/subnetwork_name"
+  type        = bool
+  default     = false
+}
+
+variable "network_name" {
+  description = "Network name of VPC"
+  type        = string
+  default     = "default"
+}
+
+variable "subnetwork_cidr" {
+  type    = string
+  default = "10.128.0.0/20"
+}
+
 variable "create_cluster" {
   type    = bool
   default = false

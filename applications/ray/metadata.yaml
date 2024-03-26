@@ -21,8 +21,8 @@ spec:
         varType: bool
         required: true
       - name: autopilot_cluster
-        varType: string
-        defaultValue: "true"
+        varType: bool
+        defaultValue: true
       - name: cluster_location
         varType: string
         required: true
@@ -34,40 +34,64 @@ spec:
       - name: cluster_name
         varType: string
         required: true
-      - name: create_cluster
+      - name: create_brand
+        description: Create Brand OAuth Screen
         varType: bool
         defaultValue: false
+      - name: create_cluster
+        varType: bool
+        defaultValue: true
       - name: create_gcs_bucket
         description: Enable flag to create gcs_bucket
         varType: bool
         defaultValue: false
+      - name: create_network
+        description: Create the VPC specified by network_name/subnetwork_name
+        varType: bool
+        defaultValue: true
       - name: create_ray_cluster
-        description: Create Ray Cluster.
         varType: bool
         defaultValue: true
       - name: create_service_account
         description: Creates a google IAM service account & k8s service account & configures workload identity
         varType: bool
         defaultValue: true
-      - name: enable_gpu
-        description: Enabling this allows ray workers to use L4 GPU nodes.  If creating a new GKE cluster, a L4 GPU node pool will be provisioned.
+      - name: disable_ray_cluster_network_policy
+        description: Disables Kubernetes Network Policy for Ray Clusters for this demo. Defaulting to 'true' aka disabled pending fixes to the kuberay-monitoring module. This should be defaulted to false.
         varType: bool
-        defaultValue: true
+        defaultValue: false
+      - name: disable_resource_quotas
+        description: Set to true to remove resource quotas from your Ray clusters. Not recommended
+        varType: bool
+        defaultValue: false
+      - name: enable_gpu
+        varType: bool
+        defaultValue: false
       - name: enable_grafana_on_ray_dashboard
         description: Add option to enable or disable grafana for the ray dashboard. Enabling requires anonymous access.
         varType: bool
         defaultValue: false
-      - name: workload_identity_service_account
-        description: Google Cloud IAM service account for authenticating with GCP services for GCS
-        varType: string
-        required: true
-        defaultValue: "ray-service-account"
+      - name: enable_tpu
+        varType: bool
+        defaultValue: false
       - name: gcs_bucket
         varType: string
         required: true
       - name: goog_cm_deployment_name
         varType: string
         defaultValue: ""
+      - name: kuberay_network_policy_allow_cidr
+        description: List of CIDRs that are allowed to access this Ray cluster's job submission and dashboard port.
+        varType: string
+        defaultValue: ""
+      - name: kubernetes_namespace
+        description: Kubernetes namespace where resources are deployed
+        varType: string
+        defaultValue: ai-on-gke
+      - name: network_name
+        description: Network name of VPC
+        varType: string
+        defaultValue: net
       - name: private_cluster
         varType: bool
         defaultValue: false
@@ -75,17 +99,60 @@ spec:
         description: GCP project id
         varType: string
         required: true
-      - name: kubernetes_namespace
-        description: Kubernetes namespace where resources are deployed
+      - name: ray_cluster_name
         varType: string
-        defaultValue: ai-on-gke
-      - name: additional_labels
-        description: Additional labels to apply to Kubenetes resources
-        varType: list(string)
-        defaultValue: ["created-by=gke-ai-quick-start-solutions", "ai.gke.io=ray"]
+        defaultValue: ray-cluster
+      - name: ray_dashboard_add_auth
+        description: Enable iap authentication on frontend
+        varType: bool
+        defaultValue: false
+      - name: ray_dashboard_client_id
+        description: Client ID used for enabling IAP
+        varType: string
+        defaultValue: ""
+      - name: ray_dashboard_client_secret
+        description: Client secret used for enabling IAP
+        varType: string
+        defaultValue: ""
+      - name: ray_dashboard_domain
+        description: Domain used for application and SSL certificate.
+        varType: string
+        defaultValue: "ray.example.com"
+      - name: ray_dashboard_k8s_backend_config_name
+        description: Name of the Backend Config on GCP
+        varType: string
+        defaultValue: ray-dashboard-iap-config
+      - name: ray_dashboard_k8s_backend_service_port
+        description: Name of the K8s Backend Service Port
+        varType: number
+        defaultValue: 8265
+      - name: ray_dashboard_k8s_iap_secret_name
+        varType: string
+        defaultValue: ray-dashboard-secret
+      - name: ray_dashboard_k8s_ingress_name
+        varType: string
+        defaultValue: ray-dashboard-ingress
+      - name: ray_dashboard_k8s_managed_cert_name
+        description: Name for frontend managed certificate
+        varType: string
+        defaultValue: ray-dashboard-managed-cert
+      - name: ray_dashboard_members_allowlist
+        varType: string
+        defaultValue: ""
       - name: ray_version
         varType: string
         defaultValue: v2.9.3
+      - name: subnetwork_cidr
+        varType: string
+        defaultValue: 10.128.0.0/20
+      - name: support_email
+        description: Email for users to contact with questions about their consent
+        varType: string
+        defaultValue: ""
+      - name: workload_identity_service_account
+        description: Google Cloud IAM service account for authenticating with GCP services for GCS
+        varType: string
+        defaultValue: ray-service-account
     outputs:
       - name: grafana_uri
       - name: ray_cluster_uri

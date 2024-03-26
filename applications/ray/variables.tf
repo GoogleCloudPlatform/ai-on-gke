@@ -72,7 +72,7 @@ variable "workload_identity_service_account" {
 
 variable "create_ray_cluster" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "ray_cluster_name" {
@@ -88,6 +88,23 @@ variable "enable_gpu" {
 variable "enable_tpu" {
   type    = bool
   default = false
+}
+
+variable "create_network" {
+  description = "Create the VPC specified by network_name/subnetwork_name"
+  type        = bool
+  default     = false
+}
+
+variable "network_name" {
+  description = "Network name of VPC"
+  type        = string
+  default     = "default"
+}
+
+variable "subnetwork_cidr" {
+  type    = string
+  default = "10.128.0.0/20"
 }
 
 ## GKE variables
@@ -231,7 +248,7 @@ variable "ray_dashboard_domain" {
   default     = ""
 }
 
-variable "ray_dashboard_support_email" {
+variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
   default     = "<email>"
