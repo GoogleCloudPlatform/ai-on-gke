@@ -26,13 +26,21 @@ imagePullSecrets: []
 
 head:
   groupName: headgroup
+  rayVersion: 2.7.1
     # If enableInTreeAutoscaling is true, the autoscaler sidecar will be added to the Ray head pod.
     # Ray autoscaler integration is supported only for Ray versions >= 1.11.0
     # Ray autoscaler integration is Beta with KubeRay >= 0.3.0 and Ray >= 2.0.0.
-    # enableInTreeAutoscaling: true
+  enableInTreeAutoscaling: true
     # autoscalerOptions is an OPTIONAL field specifying configuration overrides for the Ray autoscaler.
     # The example configuration shown below below represents the DEFAULT values.
-    # autoscalerOptions:
+  autoscalerOptions:
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
     # upscalingMode: Default
     # idleTimeoutSeconds: 60
     # securityContext: {}
@@ -40,13 +48,6 @@ head:
     # envFrom: []
     # resources specifies optional resource request and limit overrides for the autoscaler container.
     # For large Ray clusters, we recommend monitoring container resource usage to determine if overriding the defaults is required.
-    # resources:
-    #   limits:
-    #     cpu: "500m"
-    #     memory: "512Mi"
-    #   requests:
-    #     cpu: "500m"
-  #     memory: "512Mi"
   labels:
     cloud.google.com/gke-ray-node-type: head
     created-by: ray-on-gke
@@ -136,6 +137,8 @@ worker:
   # uncomment the line below
   # disabled: true
   groupName: workergroup
+  minReplicas: 1
+  maxReplicas: 3
   replicas: 1
   type: worker
   labels:
