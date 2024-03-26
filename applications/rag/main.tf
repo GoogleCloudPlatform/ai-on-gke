@@ -174,6 +174,7 @@ module "cloudsql" {
   instance_name = local.cloudsql_instance
   region        = local.cloudsql_instance_region
   network_name  = local.network_name
+  depends_on    = [module.infra]
 }
 
 module "cloudsql-secret" {
