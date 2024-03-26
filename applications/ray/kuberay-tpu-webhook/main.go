@@ -324,7 +324,7 @@ func getReplicaIndex(clusterName string, namespace string) int {
 	if sliceToWorkers == nil {
 		return 0
 	}
-	next_lowest_id := math.MaxInt32
+	next_lowest_id := len(sliceToWorkers)
 	for slice, workerList := range sliceToWorkers {
 		if slice.clusterName == clusterName {
 			createdPods := 0
@@ -350,7 +350,7 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 	if sliceToWorkers[podSlice] == nil {
 		newWorker := worker{tpuWorkerID, replicaIndex, true}
 		sliceToWorkers[podSlice] = []worker{newWorker}
-	} else {
+	} else if podSlice.numOfHosts > 1 {
 		nextLowestID := math.MaxInt32
 		replacePod := false
 		// iterate through existing workers and check if any have been deleted
@@ -433,13 +433,10 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, namespace, topology, acceleratorType) // ignore error here because topology may not be set yet
 		replicaIndex := getReplicaIndex(clusterName, namespace)
 		podSlice := slice{clusterName, groupName, replicaIndex, numOfHosts}
-		tpuWorkerID := 0 // defaults to 0 for single-host
+		tpuWorkerID := getNextWorkerID(podSlice, namespace, replicaIndex) // defaults to 0 for single-host
 
 		isMultiHost, _ := isTPUMultiHost(clusterName, namespace, topology, acceleratorType) // ignore error here because topology may not be set yet
 		if isMultiHost {
-			// get next unique TPU_WORKER_ID for multi-host slice
-			tpuWorkerID = getNextWorkerID(podSlice, namespace, replicaIndex)
-
 			// inject hostname into pod spec for DNS records
 			hostname := fmt.Sprintf(groupName+"-%d-%d", replicaIndex, tpuWorkerID)
 			klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "hostname", hostname)
