@@ -65,6 +65,7 @@ steps:
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
+        -var=subnetwork_region=$_REGION \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'infrastructure/'
@@ -302,6 +303,7 @@ steps:
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
+        -var=subnetwork_region=$_REGION \
         -auto-approve -no-color -lock=false
 
     allowFailure: true
@@ -361,7 +363,7 @@ steps:
     waitFor: ['cleanup gke cluster']
         
 substitutions:
-  _REGION: us-central1
+  _REGION: us-east4
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
