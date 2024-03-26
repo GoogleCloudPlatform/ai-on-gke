@@ -426,8 +426,7 @@ variable "network_name" {
   default     = "default"
 }
 
-variable "subnetwork_name" {
-  description = "Subnetwork name of VPC"
-  type        = string
-  default     = "default"
+variable "subnetwork_cidr" {
+  type    = string
+  default = "10.128.0.0/20"
 }

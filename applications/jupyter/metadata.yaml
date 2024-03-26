@@ -71,7 +71,7 @@ spec:
       - name: domain
         description: Domain used for SSL certificate. If it's empty, *.nip.io DNS is used.
         varType: string
-        defaultValue: ""
+        defaultValue: "jupyter.example.com"
       - name: gcs_bucket
         description: Bucket name to store the dataset. The bucket name must be globally unique across google cloud projects
         varType: string
