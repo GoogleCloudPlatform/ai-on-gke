@@ -21,13 +21,13 @@ project_id = "ai-on-gke-jss-sandbox"
 create_network    = true
 network_name      = "ml-network"
 subnetwork_name   = "ml-network"
-subnetwork_cidr   = "10.100.0.0/16"
 subnetwork_region = "us-central1"
+subnetwork_cidr   = "10.100.0.0/16"
 
 ## gke variables
 private_cluster   = false ## true = private cluster, false = public cluster
-autopilot_cluster = false ## true = autopilot cluster, false = standard cluster
-cluster_name      = "ml-cluster99"
+autopilot_cluster = true  ## true = autopilot cluster, false = standard cluster
+cluster_name      = "ml-cluster"
 cluster_location  = "us-central1"
 
 cpu_pools = [{
