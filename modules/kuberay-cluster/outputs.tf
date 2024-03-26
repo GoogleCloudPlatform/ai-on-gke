@@ -22,3 +22,7 @@ output "ray_cluster_uri" {
 output "ray_dashboard_uri" {
   value = var.add_auth ? module.iap_auth[0].domain : ""
 }
+
+output "ray_dashboard_ip_address" {
+  value = var.add_auth ? module.iap_auth[0].ip_address : ""
+}
