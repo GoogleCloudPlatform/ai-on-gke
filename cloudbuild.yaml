@@ -59,8 +59,9 @@ steps:
         terraform apply \
         -var-file=platform.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=network_name=ml-network-$_BUILD_ID \
-        -var=subnetwork_name=ml-network-$_BUILD_ID \
+        -var=create_network=false \
+        -var=network_name=default \
+        -var=subnetwork_name=default \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
@@ -204,7 +205,7 @@ steps:
         cd /workspace/applications/rag/
         terraform apply \
         -var-file=workloads.tfvars \
-        -var=network_name=ml-network-$_BUILD_ID \
+        -var=network_name=default \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
@@ -292,8 +293,9 @@ steps:
         terraform destroy \
         -var-file=platform.tfvars \
         -var=project_id=$PROJECT_ID \
-        -var=network_name=ml-network-$_BUILD_ID \
-        -var=subnetwork_name=ml-network-$_BUILD_ID \
+        -var=create_network=false \
+        -var=network_name=default \
+        -var=subnetwork_name=default \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
