@@ -64,6 +64,20 @@ steps:
         -var=cluster_location=$_REGION \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
+
+        # Get kube config
+        gcloud container clusters get-credentials \
+        ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+        --location $_REGION \
+        --project $PROJECT_ID 
+
+        # Create balloon pods
+        kubectl apply -f tests/priority-class.yaml
+        kubectl apply -f tests/balloon-pods.yaml
+        
+        kubectl wait deployments placeholder -n default --for=condition=Available --timeout=300s
+        kubectl wait --all pods -n gke-gmp-system --for=condition=Ready --timeout=300s
+
     dir: 'infrastructure/'
     allowFailure: true
     waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
@@ -75,12 +89,6 @@ steps:
       - '-c'
       - |
         set -e
-
-        # Get kube config
-        gcloud container clusters get-credentials \
-        ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-        --location $_REGION \
-        --project $PROJECT_ID 
 
         cd /workspace/applications/ray/
         terraform apply \
