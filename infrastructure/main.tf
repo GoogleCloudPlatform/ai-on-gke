@@ -37,8 +37,8 @@ locals {
 }
 
 locals {
-  region            = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
-  regional          = local.region != "" ? true : false
+  region   = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
+  regional = local.region != "" ? true : false
   # zone needs to be set even for regional clusters, otherwise this module picks random zones that don't have GPU availability:
   # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/blob/af354afdf13b336014cefbfe8f848e52c17d4415/main.tf#L46 
   zone = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : split(",", local.gpu_l4_t4_location[local.region])
