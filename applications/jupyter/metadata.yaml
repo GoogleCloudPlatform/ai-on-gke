@@ -34,11 +34,18 @@ spec:
   interfaces:
     variables:
       - name: add_auth
+        description: Enable IAP authentication on jupyterhub
         varType: bool
         defaultValue: false
+      - name: additional_labels
+        description: Additional labels to add to Kubernetes resources.
+        varType: list(string)
+        defaultValue:
+          - created-by=ai-on-gke
+          - ai.gke.io=jupyter
       - name: autopilot_cluster
-        varType: string
-        defaultValue: "true"
+        varType: bool
+        defaultValue: true
       - name: client_id
         description: Client ID used for enabling IAP
         varType: string
@@ -68,8 +75,12 @@ spec:
         description: Enable flag to create gcs_bucket
         varType: bool
         defaultValue: false
+      - name: create_network
+        description: Create the VPC specified by network_name/subnetwork_name
+        varType: bool
+        defaultValue: true
       - name: domain
-        description: Domain used for SSL certificate. If it's empty, *.nip.io DNS is used.
+        description: Domain used for application and SSL certificate.
         varType: string
         defaultValue: "jupyter.example.com"
       - name: gcs_bucket
@@ -106,14 +117,14 @@ spec:
         varType: string
         required: true
         defaultValue: ai-on-gke
-      - name: additional_labels
-        description: Additional labels to apply to Kubenetes resources
-        varType: list(string)
-        defaultValue: ["created-by=gke-ai-quick-start-solutions", "ai.gke.io=jupyter"]
       - name: members_allowlist
         description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
         defaultValue: ""
+      - name: network_name
+        description: Network name of VPC
+        varType: string
+        defaultValue: net
       - name: private_cluster
         varType: bool
         defaultValue: false
@@ -121,6 +132,9 @@ spec:
         description: GCP project id
         varType: string
         required: true
+      - name: subnetwork_cidr
+        varType: string
+        defaultValue: 10.128.0.0/20
       - name: support_email
         description: Email for users to contact with questions about their consent
         varType: string
@@ -128,7 +142,7 @@ spec:
       - name: workload_identity_service_account
         description: workload identity service account
         varType: string
-        defaultValue: jupyter-service-account
+        defaultValue: jupyter-sa
     outputs:
       - name: jupyterhub_ip_address
         description: JupyterHub global IP address
