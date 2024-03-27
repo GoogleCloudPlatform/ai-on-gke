@@ -67,7 +67,7 @@ variable "create_service_account" {
 variable "workload_identity_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
-  default     = "ray-service-account"
+  default     = "ray-sa"
 }
 
 variable "create_ray_cluster" {
@@ -88,23 +88,6 @@ variable "enable_gpu" {
 variable "enable_tpu" {
   type    = bool
   default = false
-}
-
-variable "create_network" {
-  description = "Create the VPC specified by network_name/subnetwork_name"
-  type        = bool
-  default     = false
-}
-
-variable "network_name" {
-  description = "Network name of VPC"
-  type        = string
-  default     = "default"
-}
-
-variable "subnetwork_cidr" {
-  type    = string
-  default = "10.128.0.0/20"
 }
 
 ## GKE variables

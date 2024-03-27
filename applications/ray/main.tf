@@ -65,17 +65,11 @@ module "infra" {
   project_id        = var.project_id
   cluster_name      = var.cluster_name
   cluster_location  = var.cluster_location
-  region            = local.cluster_location_region
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
-  create_network    = var.create_network
-  network_name      = local.network_name
-  subnetwork_name   = local.network_name
-  subnetwork_cidr   = var.subnetwork_cidr
-  subnetwork_region = local.cluster_location_region
-  cpu_pools         = var.cpu_pools
-  enable_gpu        = var.enable_gpu
-  gpu_pools         = var.gpu_pools
+  create_network    = false
+  network_name      = "default"
+  subnetwork_name   = "default"
 }
 
 data "google_container_cluster" "default" {

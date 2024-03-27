@@ -152,7 +152,7 @@ spec:
       - name: workload_identity_service_account
         description: Google Cloud IAM service account for authenticating with GCP services for GCS
         varType: string
-        defaultValue: ray-service-account
+        defaultValue: ray-sa
     outputs:
       - name: grafana_uri
       - name: ray_cluster_uri

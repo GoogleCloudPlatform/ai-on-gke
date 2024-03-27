@@ -17,15 +17,9 @@
 ## Need to pull this variables from tf output from previous platform stage
 project_id = "<your project ID>"
 
-## this is required for terraform to connect to GKE master and deploy workloads
-create_cluster    = true # Create a GKE cluster in the specified network.
-autopilot_cluster = true
-private_cluster   = false
-cluster_name      = "ml-cluster"
-cluster_location  = "us-central1"
-create_network    = true
-network_name      = "ml-network"
-subnetwork_cidr   = "10.100.0.0/16"
+create_cluster   = false # this flag will create a new standard public gke cluster in default network
+cluster_name     = "<cluster name>"
+cluster_location = "us-central1"
 
 #######################################################
 ####    APPLICATIONS
