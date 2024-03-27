@@ -65,14 +65,11 @@ module "infra" {
   project_id        = var.project_id
   cluster_name      = var.cluster_name
   cluster_location  = var.cluster_location
-  region            = local.cluster_location_region
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
-  create_network    = var.create_network
-  network_name      = local.network_name
-  subnetwork_name   = local.network_name
-  subnetwork_cidr   = var.subnetwork_cidr
-  subnetwork_region = local.cluster_location_region
+  create_network    = false
+  network_name      = "default"
+  subnetwork_name   = "default"
   cpu_pools         = var.cpu_pools
   enable_gpu        = var.enable_gpu
   gpu_pools         = var.gpu_pools
@@ -92,11 +89,8 @@ locals {
   enable_autopilot                  = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
   enable_tpu                        = var.create_cluster ? var.enable_tpu : data.google_container_cluster.default[0].enable_tpu
   host                              = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
-  kubernetes_namespace              = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.kubernetes_namespace}" : var.kubernetes_namespace
-  network_name                      = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.network_name}" : var.network_name
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
-  ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${local.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
-  cluster_location_region           = (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
+  ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
 }
 
 provider "kubernetes" {
@@ -133,7 +127,7 @@ module "namespace" {
   source           = "../../modules/kubernetes-namespace"
   providers        = { helm = helm.ray }
   create_namespace = true
-  namespace        = local.kubernetes_namespace
+  namespace        = var.kubernetes_namespace
 }
 
 module "kuberay-operator" {
@@ -141,7 +135,7 @@ module "kuberay-operator" {
   providers              = { helm = helm.ray, kubernetes = kubernetes.ray }
   name                   = "kuberay-operator"
   create_namespace       = true
-  namespace              = local.kubernetes_namespace
+  namespace              = var.kubernetes_namespace
   project_id             = var.project_id
   autopilot_cluster      = local.enable_autopilot
   google_service_account = local.workload_identity_service_account
@@ -151,7 +145,7 @@ module "kuberay-operator" {
 module "kuberay-logging" {
   source    = "../../modules/kuberay-logging"
   providers = { kubernetes = kubernetes.ray }
-  namespace = local.kubernetes_namespace
+  namespace = var.kubernetes_namespace
 
   depends_on = [module.namespace]
 }
@@ -161,7 +155,7 @@ module "kuberay-monitoring" {
   source                          = "../../modules/kuberay-monitoring"
   providers                       = { helm = helm.ray, kubernetes = kubernetes.ray }
   project_id                      = var.project_id
-  namespace                       = local.kubernetes_namespace
+  namespace                       = var.kubernetes_namespace
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.workload_identity_service_account
@@ -180,7 +174,7 @@ module "kuberay-cluster" {
   source                    = "../../modules/kuberay-cluster"
   providers                 = { helm = helm.ray, kubernetes = kubernetes.ray }
   name                      = var.ray_cluster_name
-  namespace                 = local.kubernetes_namespace
+  namespace                 = var.kubernetes_namespace
   project_id                = var.project_id
   enable_tpu                = local.enable_tpu
   enable_gpu                = var.enable_gpu
@@ -194,7 +188,7 @@ module "kuberay-cluster" {
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth
   create_brand             = var.create_brand
-  support_email            = var.support_email
+  support_email            = var.ray_dashboard_support_email
   client_id                = var.ray_dashboard_client_id
   client_secret            = var.ray_dashboard_client_secret
   k8s_ingress_name         = var.ray_dashboard_k8s_ingress_name
@@ -215,7 +209,7 @@ resource "kubernetes_resource_quota" "ray_namespace_resource_quota" {
   count    = var.disable_resource_quotas ? 0 : 1
   metadata {
     name      = "ray-resource-quota"
-    namespace = local.kubernetes_namespace
+    namespace = var.kubernetes_namespace
   }
 
   spec {
