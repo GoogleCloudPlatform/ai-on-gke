@@ -229,6 +229,7 @@ spec:
         - heading: View Job Status in Ray Dashboard
           description: "Open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button. "
       outputs:
+        kubernetes_namespace: {}
         ray_cluster_uri:
           openInNewTab: true
           showInNotification: true

@@ -199,3 +199,5 @@ spec:
           showInNotification: true
           label: Go to JupyterHub Application
         jupyterhub_user: {}
+        kubernetes_namespace: {}
+
