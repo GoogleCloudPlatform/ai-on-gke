@@ -57,18 +57,46 @@ This is the quick-start deployment guide. It can be used to set up an environmen
 
 ### Requirements
 
-- New Google Cloud Project, preferably with no APIs enabled
+In this guide you can choose to bring your project (BYOP) or have Terraform create a new project for you. The requirements are difference based on the option that you choose.
+
+#### Bring your own project (BYOP)
+
+- Project ID of a new Google Cloud Project, preferably with no APIs enabled
 - `roles/owner` IAM permissions on the project
 - GitHub Personal Access Token, steps to create the token are provided below
 
-### Configuration
+#### Terraform managed project
+
+- Billing account ID
+- Organization or folder ID
+- `roles/billing.user` IAM permissions on the billing account specified
+- `roles/resourcemanager.projectCreator` IAM permissions on the organization or folder specified
+- GitHub Personal Access Token, steps to create the token are provided below
+
+### Pull the source code
+
+- Clone the repository and change directory to the guide directory
+
+  ```
+  git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+  cd ai-on-gke/ml-platform
+  ```
+
+- Set environment variables
+
+  ```
+  export MLP_BASE_DIR=$(pwd) && \
+  echo "export MLP_BASE_DIR=${MLP_BASE_DIR}" >> ${HOME}/.bashrc
+  ```
+
+### GitHub Configuration
 
 - Create a [Personal Access Token][personal-access-token] in [GitHub][github]:
 
   Note: It is recommended to use a [machine user account][machine-user-account] for this but you can use a personal user account just to try this reference architecture.
 
   **Fine-grained personal access token**
-  
+
   - Go to https://github.com/settings/tokens and login using your credentials
   - Click "Generate new token" >> "Generate new token (Beta)".
   - Enter a Token name.
@@ -106,17 +134,6 @@ This is the quick-start deployment guide. It can be used to set up an environmen
   nano ${HOME}/secrets/mlp-github-token
   ```
 
-- Set the project environment variables in Cloud Shell
-
-  Replace the following values
-
-  - `<PROJECT_ID>` is the ID of your existing Google Cloud project
-
-  ```
-  export MLP_PROJECT_ID="<PROJECT_ID>"
-  export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-tf-state"
-  ```
-
 - Set the GitHub environment variables in Cloud Shell
 
   Replace the following values:
@@ -129,6 +146,31 @@ This is the quick-start deployment guide. It can be used to set up an environmen
   export MLP_GITHUB_ORG="<GITHUB_ORGANIZATION>"
   export MLP_GITHUB_USER="<GITHUB_USER>"
   export MLP_GITHUB_EMAIL="<GITHUB_EMAIL>"
+  ```
+
+- Set the configuration variables
+
+  ```
+  sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  ```
+
+### Project Configuration
+
+You only need to complete the section for the option that you have selected.
+
+#### Bring your own project (BYOP)
+
+- Set the project environment variables in Cloud Shell
+
+  Replace the following values
+
+  - `<PROJECT_ID>` is the ID of your existing Google Cloud project
+
+  ```
+  export MLP_PROJECT_ID="<PROJECT_ID>"
+  export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-tf-state"
   ```
 
 - Set the default `gcloud` project
@@ -149,32 +191,55 @@ This is the quick-start deployment guide. It can be used to set up an environmen
   gcloud storage buckets create gs://${MLP_STATE_BUCKET} --project ${MLP_PROJECT_ID}
   ```
 
-### Run Terraform
-
-- Clone the repository and change directory to the guide directory
-
-  ```
-  git clone https://github.com/GoogleCloudPlatform/ai-on-gke
-  cd ai-on-gke/ml-platform
-  ```
-
-- Set environment variables
-
-  ```
-  export MLP_BASE_DIR=$(pwd) && \
-  echo "export MLP_BASE_DIR=${MLP_BASE_DIR}" >> ${HOME}/.bashrc
-  ```
-
 - Set the configuration variables
 
   ```
   sed -i "s/YOUR_STATE_BUCKET/${MLP_STATE_BUCKET}/g" ${MLP_BASE_DIR}/terraform/backend.tf
-
-  sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
   sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
   ```
+
+#### Terraform managed project
+
+- Set the configuration variables
+
+  ```
+  nano ${MLP_BASE_DIR}/terraform/initialize/initialize.auto.tfvars
+  ```
+
+  ```
+  project = {
+    billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
+    folder_id          = "############"
+    name               = "mlp"
+    org_id             = "############"
+  }
+  ```
+
+  > `project.billing_account_id` the billing account ID
+  >
+  > Enter either `project.folder_id` **OR** `project.org_id`  
+  > `project.folder_id` the folder ID  
+  > `project.org_id` the organization ID
+
+- Authorize `gcloud`
+
+  ```
+  gcloud auth login --activate --no-launch-browser --quiet --update-adc
+  ```
+
+- Create a new project
+
+  ```
+  cd ${MLP_BASE_DIR}/terraform/initialize
+  terraform init && \
+  terraform plan -input=false -out=tfplan && \
+  terraform apply -input=false tfplan && \
+  rm tfplan && \
+  terraform init -force-copy -migrate-state && \
+  rm -rf state
+  ```
+
+### Run Terraform
 
 - Create the resources
 
@@ -277,13 +342,35 @@ Open Cloud Shell to execute the following commands:
   ```
   cd ${MLP_BASE_DIR}/terraform && \
   terraform init && \
-  terraform destroy -auto-approve -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)"
+  terraform destroy -auto-approve -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" && \
+  rm -rf .terraform .terraform.lock.hcl
   ```
+
+#### Project
+
+You only need to complete the section for the option that you have selected.
+
+##### Bring your own project (BYOP)
 
 - Delete the project
 
   ```
   gcloud projects delete ${MLP_PROJECT_ID}
+  ```
+
+#### Terraform managed project
+
+- Destroy the project
+
+  ```
+  cd ${MLP_BASE_DIR}/terraform/initialize && \
+  TERRAFORM_BUCKET_NAME=$(grep bucket backend.tf | awk -F"=" '{print $2}' | xargs) && \
+  cp backend.tf.local backend.tf && \
+  terraform init -force-copy -lock=false -migrate-state && \
+  gsutil -m rm -rf gs://${TERRAFORM_BUCKET_NAME}/* && \
+  terraform init && \
+  terraform destroy -auto-approve  && \
+  rm -rf .terraform .terraform.lock.hcl
   ```
 
 [gitops]: https://about.gitlab.com/topics/gitops/
