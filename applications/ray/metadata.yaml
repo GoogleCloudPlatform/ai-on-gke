@@ -22,7 +22,7 @@ spec:
         required: true
       - name: autopilot_cluster
         varType: bool
-        defaultValue: true
+        defaultValue: false
       - name: cluster_location
         varType: string
         required: true
