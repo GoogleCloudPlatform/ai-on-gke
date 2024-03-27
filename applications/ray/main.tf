@@ -59,7 +59,7 @@ module "project-services" {
 }
 
 module "infra" {
-  source = "github.com/GoogleCloudPlatform/ai-on-gke//infrastructure?ref=marketplace"
+  source = "../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
   project_id        = var.project_id
@@ -124,14 +124,14 @@ provider "helm" {
 }
 
 module "namespace" {
-  source           = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kubernetes-namespace?ref=marketplace"
+  source           = "../../modules/kubernetes-namespace"
   providers        = { helm = helm.ray }
   create_namespace = true
   namespace        = var.kubernetes_namespace
 }
 
 module "kuberay-operator" {
-  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-operator?ref=marketplace"
+  source                 = "../../modules/kuberay-operator"
   providers              = { helm = helm.ray, kubernetes = kubernetes.ray }
   name                   = "kuberay-operator"
   create_namespace       = true
@@ -143,7 +143,7 @@ module "kuberay-operator" {
 }
 
 module "kuberay-logging" {
-  source    = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-logging?ref=marketplace"
+  source    = "../../modules/kuberay-logging"
   providers = { kubernetes = kubernetes.ray }
   namespace = var.kubernetes_namespace
 
@@ -152,7 +152,7 @@ module "kuberay-logging" {
 
 module "kuberay-monitoring" {
   count                           = var.create_ray_cluster ? 1 : 0
-  source                          = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-monitoring?ref=marketplace"
+  source                          = "../../modules/kuberay-monitoring"
   providers                       = { helm = helm.ray, kubernetes = kubernetes.ray }
   project_id                      = var.project_id
   namespace                       = var.kubernetes_namespace
@@ -163,7 +163,7 @@ module "kuberay-monitoring" {
 }
 
 module "gcs" {
-  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs?ref=marketplace"
+  source      = "../../modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
@@ -171,7 +171,7 @@ module "gcs" {
 
 module "kuberay-cluster" {
   count                     = var.create_ray_cluster == true ? 1 : 0
-  source                    = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster?ref=marketplace"
+  source                    = "../../modules/kuberay-cluster"
   providers                 = { helm = helm.ray, kubernetes = kubernetes.ray }
   name                      = var.ray_cluster_name
   namespace                 = var.kubernetes_namespace
