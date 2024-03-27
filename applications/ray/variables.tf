@@ -67,12 +67,12 @@ variable "create_service_account" {
 variable "workload_identity_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
-  default     = "ray-service-account"
+  default     = "ray-sa"
 }
 
 variable "create_ray_cluster" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "ray_cluster_name" {
@@ -231,7 +231,7 @@ variable "ray_dashboard_domain" {
   default     = ""
 }
 
-variable "ray_dashboard_support_email" {
+variable "support_email" {
   type        = string
   description = "Email for users to contact with questions about their consent"
   default     = "<email>"

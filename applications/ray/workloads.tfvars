@@ -32,7 +32,7 @@ kubernetes_namespace = "ml"
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `workload_identity_service_account` to use an existing IAM service account.
 create_service_account            = true
-workload_identity_service_account = "ray-service-account"
+workload_identity_service_account = "ray-sa"
 
 # Bucket name should be globally unique.
 create_gcs_bucket               = true
@@ -42,11 +42,11 @@ ray_cluster_name                = "ray-cluster"
 enable_grafana_on_ray_dashboard = false
 
 ## IAP config - if you choose to disable IAP authenticated access for your endpoints, ignore everthing below this line.
-create_brand = false
+create_brand  = false
+support_email = "<email>" ## specify if create_brand=true
 
 ## Ray Dashboard IAP Settings
 ray_dashboard_add_auth                 = false # Set to true when using auth with IAP
-ray_dashboard_support_email            = "<email>"
 ray_dashboard_k8s_ingress_name         = "ray-dashboard-ingress"
 ray_dashboard_k8s_managed_cert_name    = "ray-dashboard-managed-cert"
 ray_dashboard_k8s_iap_secret_name      = "ray-dashboard-iap-secret"
@@ -56,4 +56,4 @@ ray_dashboard_k8s_backend_service_port = 8265
 ray_dashboard_domain            = ""
 ray_dashboard_client_id         = ""
 ray_dashboard_client_secret     = ""
-ray_dashboard_members_allowlist = "user:<email>"
+ray_dashboard_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
