@@ -81,13 +81,13 @@ resource "google_compute_global_address" "google-managed-services-range" {
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16
-  network       = local.network_self_link
+  network       = module.custom-network[0].network_self_link
 }
 
 # Creates the peering with the producer network.
 resource "google_service_networking_connection" "private_service_access" {
   count                   = var.create_network ? 1 : 0
-  network                 = local.network_self_link
+  network                 = module.custom-network[0].network_self_link
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.google-managed-services-range[0].name]
   # This will enable a successful terraform destroy when destroying CloudSQL instances
@@ -95,12 +95,11 @@ resource "google_service_networking_connection" "private_service_access" {
 }
 
 locals {
-  network_name      = var.create_network ? module.custom-network[0].network_name : var.network_name
-  subnetwork_name   = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
-  subnetwork_cidr   = var.create_network ? module.custom-network[0].subnets_ips[0] : data.google_compute_subnetwork.subnetwork[0].ip_cidr_range
-  network_self_link = var.create_network ? module.custom-network[0].network_self_link : data.google_compute_network.existing-network[0].self_link
-  region            = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
-  regional          = local.region != "" ? true : false
+  network_name    = var.create_network ? module.custom-network[0].network_name : var.network_name
+  subnetwork_name = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
+  subnetwork_cidr = var.create_network ? module.custom-network[0].subnets_ips[0] : data.google_compute_subnetwork.subnetwork[0].ip_cidr_range
+  region          = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
+  regional        = local.region != "" ? true : false
   # zone needs to be set even for regional clusters, otherwise this module picks random zones that don't have GPU availability:
   # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/blob/af354afdf13b336014cefbfe8f848e52c17d4415/main.tf#L46 
   zone = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : split(",", local.gpu_l4_t4_location[local.region])
@@ -144,6 +143,7 @@ module "public-gke-standard-cluster" {
   all_node_pools_labels       = var.all_node_pools_labels
   all_node_pools_metadata     = var.all_node_pools_metadata
   all_node_pools_tags         = var.all_node_pools_tags
+  depends_on                  = [module.custom-network, google_service_networking_connection.private_service_access]
 }
 
 ## create public GKE autopilot
@@ -168,6 +168,7 @@ module "public-gke-autopilot-cluster" {
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
   deletion_protection        = var.deletion_protection
+  depends_on                 = [module.custom-network, google_service_networking_connection.private_service_access]
 
 }
 
@@ -207,6 +208,7 @@ module "private-gke-standard-cluster" {
   all_node_pools_labels       = var.all_node_pools_labels
   all_node_pools_metadata     = var.all_node_pools_metadata
   all_node_pools_tags         = var.all_node_pools_tags
+  depends_on                  = [module.custom-network, google_service_networking_connection.private_service_access]
 }
 
 ## create private GKE autopilot
@@ -232,7 +234,7 @@ module "private-gke-autopilot-cluster" {
   master_authorized_networks = length(var.master_authorized_networks) == 0 ? [{ cidr_block = "${local.subnetwork_cidr}", display_name = "${local.subnetwork_name}" }] : var.master_authorized_networks
   master_ipv4_cidr_block     = var.master_ipv4_cidr_block
   deletion_protection        = var.deletion_protection
-
+  depends_on                 = [module.custom-network, google_service_networking_connection.private_service_access]
 }
 
 
