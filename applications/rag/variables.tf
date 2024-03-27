@@ -314,7 +314,7 @@ variable "private_cluster" {
 
 variable "autopilot_cluster" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "cloudsql_instance" {
