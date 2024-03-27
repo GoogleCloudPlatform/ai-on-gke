@@ -12,20 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "project_id" {
+variable "namespace" {
   type        = string
-  description = "GCP project id"
-}
-
-variable "network_name" {
-  type        = string
-  description = "Name of the VPC network to create the CloudSQL instance in"
-}
-
-variable "region" {
-  type        = string
-  description = "CloudSQL instance region"
-  default     = "us-central1"
+  description = "Kubernetes namespace where resources are deployed"
+  default     = "ml-system"
 }
 
 variable "db_user" {
@@ -34,8 +24,7 @@ variable "db_user" {
   default     = "rag-user"
 }
 
-variable "instance_name" {
+variable "db_password" {
   type        = string
-  description = "Name of the CloudSQL instance for RAG VectorDB"
-  default     = "pgvector-instance"
+  description = "Cloud SQL instance user's password"
 }

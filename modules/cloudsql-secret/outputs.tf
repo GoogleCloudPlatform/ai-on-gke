@@ -12,17 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "instance" {
-  description = "Cloud SQL Instance name"
-  value       = module.cloudsql.instance_name
+output "db_secret_name" {
+  description = "Cloud SQL DB secret name"
+  value       = kubernetes_secret.secret.metadata[0].name
 }
 
-output "db_user" {
-  description = "Cloud SQL instance user"
-  value       = module.cloudsql.additional_users[0].name
-}
-
-output "db_password" {
-  description = "Cloud SQL instance user's password"
-  value       = module.cloudsql.additional_users[0].password
+output "db_secret_namespace" {
+  description = "Cloud SQL DB secret namespace"
+  value       = kubernetes_secret.secret.metadata[0].namespace
 }
