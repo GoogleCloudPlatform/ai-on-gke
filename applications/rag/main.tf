@@ -88,8 +88,7 @@ module "infra" {
   cpu_pools         = var.cpu_pools
   enable_gpu        = true
   gpu_pools         = var.gpu_pools
-
-  depends_on = [module.network]
+  depends_on        = [module.network]
 }
 
 data "google_container_cluster" "default" {
