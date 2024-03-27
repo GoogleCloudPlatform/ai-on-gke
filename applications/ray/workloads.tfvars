@@ -17,6 +17,7 @@
 ## Need to pull this variables from tf output from previous platform stage
 project_id = "<your project ID>"
 
+## this is required for terraform to connect to GKE master and deploy workloads
 create_cluster   = false # this flag will create a new standard public gke cluster in default network
 cluster_name     = "<cluster name>"
 cluster_location = "us-central1"

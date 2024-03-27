@@ -70,6 +70,9 @@ module "infra" {
   create_network    = false
   network_name      = "default"
   subnetwork_name   = "default"
+  cpu_pools         = var.cpu_pools
+  enable_gpu        = var.enable_gpu
+  gpu_pools         = var.gpu_pools
 }
 
 data "google_container_cluster" "default" {
