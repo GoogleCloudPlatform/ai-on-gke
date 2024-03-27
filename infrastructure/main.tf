@@ -98,7 +98,6 @@ locals {
   network_name      = var.create_network ? module.custom-network[0].network_name : var.network_name
   subnetwork_name   = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
   subnetwork_cidr   = var.create_network ? module.custom-network[0].subnets_ips[0] : data.google_compute_subnetwork.subnetwork[0].ip_cidr_range
-  network_self_link = var.create_network ? module.custom-network[0].network_self_link : data.google_compute_network.existing-network[0].self_link
   region            = length(split("-", var.cluster_location)) == 2 ? var.cluster_location : ""
   regional          = local.region != "" ? true : false
   # zone needs to be set even for regional clusters, otherwise this module picks random zones that don't have GPU availability:
