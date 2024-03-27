@@ -89,8 +89,9 @@ locals {
   enable_autopilot                  = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
   enable_tpu                        = var.create_cluster ? var.enable_tpu : data.google_container_cluster.default[0].enable_tpu
   host                              = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
+  kubernetes_namespace              = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.kubernetes_namespace}" : var.kubernetes_namespace
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
-  ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${var.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
+  ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${local.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
 }
 
 provider "kubernetes" {
@@ -127,7 +128,7 @@ module "namespace" {
   source           = "../../modules/kubernetes-namespace"
   providers        = { helm = helm.ray }
   create_namespace = true
-  namespace        = var.kubernetes_namespace
+  namespace        = local.kubernetes_namespace
 }
 
 module "kuberay-operator" {
@@ -135,7 +136,7 @@ module "kuberay-operator" {
   providers              = { helm = helm.ray, kubernetes = kubernetes.ray }
   name                   = "kuberay-operator"
   create_namespace       = true
-  namespace              = var.kubernetes_namespace
+  namespace              = local.kubernetes_namespace
   project_id             = var.project_id
   autopilot_cluster      = local.enable_autopilot
   google_service_account = local.workload_identity_service_account
@@ -145,7 +146,7 @@ module "kuberay-operator" {
 module "kuberay-logging" {
   source    = "../../modules/kuberay-logging"
   providers = { kubernetes = kubernetes.ray }
-  namespace = var.kubernetes_namespace
+  namespace = local.kubernetes_namespace
 
   depends_on = [module.namespace]
 }
@@ -155,7 +156,7 @@ module "kuberay-monitoring" {
   source                          = "../../modules/kuberay-monitoring"
   providers                       = { helm = helm.ray, kubernetes = kubernetes.ray }
   project_id                      = var.project_id
-  namespace                       = var.kubernetes_namespace
+  namespace                       = local.kubernetes_namespace
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.workload_identity_service_account
@@ -174,7 +175,7 @@ module "kuberay-cluster" {
   source                    = "../../modules/kuberay-cluster"
   providers                 = { helm = helm.ray, kubernetes = kubernetes.ray }
   name                      = var.ray_cluster_name
-  namespace                 = var.kubernetes_namespace
+  namespace                 = local.kubernetes_namespace
   project_id                = var.project_id
   enable_tpu                = local.enable_tpu
   enable_gpu                = var.enable_gpu
@@ -188,7 +189,7 @@ module "kuberay-cluster" {
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth
   create_brand             = var.create_brand
-  support_email            = var.ray_dashboard_support_email
+  support_email            = var.support_email
   client_id                = var.ray_dashboard_client_id
   client_secret            = var.ray_dashboard_client_secret
   k8s_ingress_name         = var.ray_dashboard_k8s_ingress_name
@@ -209,7 +210,7 @@ resource "kubernetes_resource_quota" "ray_namespace_resource_quota" {
   count    = var.disable_resource_quotas ? 0 : 1
   metadata {
     name      = "ray-resource-quota"
-    namespace = var.kubernetes_namespace
+    namespace = local.kubernetes_namespace
   }
 
   spec {
