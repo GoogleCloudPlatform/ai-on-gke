@@ -24,6 +24,7 @@ import (
 type slice struct {
 	clusterName  string
 	groupName    string
+	namespace    string
 	replicaIndex int
 	numOfHosts   int32
 }
@@ -266,13 +267,14 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	for i := 0; i < len(workerGroupSpecs); i++ {
 		workerGroupSpec := workerGroupSpecs[i]
 		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
+			klog.V(0).InfoS("validateRayCluster", "RayCluster", namespace+"/"+clusterName, "Worker Group", workerGroupSpec.GroupName, "Requests TPUs", true)
 			// create mapping for pod slices -> TPU_WORKER_HOSTNAMES in cluster
 			replicas := int(*workerGroupSpec.Replicas)
 			numOfHosts := workerGroupSpec.NumOfHosts
 			for replicaIndex := 0; replicaIndex < replicas; replicaIndex++ {
 				// reset past sliceToWorkers and sliceToHostnames entries for slice in ray cluster
 				groupName := workerGroupSpec.GroupName
-				podSlice := slice{clusterName, groupName, replicaIndex, numOfHosts}
+				podSlice := slice{clusterName, groupName, namespace, replicaIndex, numOfHosts}
 				sliceToWorkers[podSlice] = nil
 				sliceToHostnames[podSlice] = ""
 				// generate TPU_WORKER_HOSTNAMES
@@ -284,6 +286,9 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 					sliceToHostnames[podSlice] = joinedHostNames
 				}
 			}
+		} else {
+			// RayCluster worker group does not request TPUs
+			klog.V(0).InfoS("validateRayCluster", "RayCluster", namespace+"/"+clusterName, "Worker Group", workerGroupSpec.GroupName, "Requests TPUs", false)
 		}
 		// validate NumOfHosts for worker group matches topology nodeSelector
 		workersMatchTopology, err := checkWorkersMatchTopology(clusterName, namespace, workerGroupSpec)
@@ -322,18 +327,28 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 	return ""
 }
 
-// get next lowest-index pod slice to assign a pod to in the RayCluster
-// this will be the first pod slice with # created pods < NumOfHosts
+// gets the  next lowest-index pod slice (worker group replica) to assign a pod to in the RayCluster
+// there are three possible cases here:
+//  1. sliceToWorkers is empty, this is the first pod the webhook intercepts
+//     - assign this pod to replica 0
+//  2. The pod slice exists in sliceToWorkers, but has # created workers < NumOfHosts
+//     - assign this pod to the lowest index replica with # created workers < NumOfHosts
+//     - since we update isCreated when a worker is deleted, this allows us to assign re-created
+//     pods to the same replica
+//  3. sliceToWorkers isn't empty, but all slices have # workers == NumOfHosts
+//     - this occurs when the pod we intercept is the first pod of a different slice in the cluster
+//     - we keep track of how many replicas of the same worker group have been added to sliceToWorkers
+//     so far, and assign this pod to the next integer replicaIndex
 func getReplicaIndex(clusterName string, groupName string, namespace string) int {
 	// first pod created in cluster
 	if sliceToWorkers == nil {
 		return 0
 	}
 	nextLowestId := math.MaxInt32
-	numSlices := 0 // tracks # of slices in worker group created so far
+	numReplicas := 0 // tracks # of replicas in worker group created so far
 	for slice, workerList := range sliceToWorkers {
-		if slice.clusterName == clusterName && slice.groupName == groupName {
-			numSlices++
+		if slice.clusterName == clusterName && slice.groupName == groupName && slice.namespace == namespace {
+			numReplicas++
 			createdPods := 0
 			for _, worker := range workerList {
 				if worker.isCreated {
@@ -349,7 +364,7 @@ func getReplicaIndex(clusterName string, groupName string, namespace string) int
 	}
 	// first pod of new slice in cluster
 	if nextLowestId == math.MaxInt32 {
-		nextLowestId = numSlices
+		nextLowestId = numReplicas
 	}
 	klog.V(0).InfoS("getReplicaIndex", "RayCluster", namespace+"/"+clusterName, "Worker Group", groupName, "Replica Index", nextLowestId)
 	return nextLowestId
@@ -443,7 +458,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		// assign worker to the next unique ID in the pod slice and update map
 		numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, acceleratorType) // ignore error here because topology may not be set yet
 		replicaIndex := getReplicaIndex(clusterName, groupName, namespace)
-		podSlice := slice{clusterName, groupName, replicaIndex, numOfHosts}
+		podSlice := slice{clusterName, groupName, namespace, replicaIndex, numOfHosts}
 		tpuWorkerID := getNextWorkerID(podSlice, namespace, replicaIndex) // defaults to 0 for single-host
 
 		// inject replica index label
@@ -573,7 +588,7 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		}
 		// update sliceToWorkers map
 		for slice, _ := range sliceToWorkers {
-			if slice.clusterName == clusterName && slice.groupName == groupName && slice.replicaIndex == replicaIndex {
+			if slice.clusterName == clusterName && slice.groupName == groupName && slice.namespace == namespace && slice.replicaIndex == replicaIndex {
 				// set the pod state to indicate it is not running
 				for index, worker := range sliceToWorkers[slice] {
 					if worker.workerIndex == tpuWorkerID {
