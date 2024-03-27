@@ -18,6 +18,13 @@ data "google_compute_network" "existing-network" {
   project = var.project_id
 }
 
+data "google_compute_subnetwork" "subnetwork" {
+  count   = var.create_network ? 0 : 1
+  name    = var.subnetwork_name
+  region  = var.subnetwork_region
+  project = var.project_id
+}
+
 module "custom-network" {
   source       = "terraform-google-modules/network/google"
   version      = "8.0.0"
@@ -50,23 +57,17 @@ resource "google_compute_global_address" "google-managed-services-range" {
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16
-  network       = local.network_self_link
+  network       = module.custom-network[0].network_self_link
 }
 
 # Creates the peering with the producer network.
 resource "google_service_networking_connection" "private_service_access" {
   count                   = var.create_network ? 1 : 0
-  network                 = local.network_self_link
+  network                 = module.custom-network[0].network_self_link
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.google-managed-services-range[0].name]
   # This will enable a successful terraform destroy when destroying CloudSQL instances
   deletion_policy = "ABANDON"
-}
-
-locals {
-  network_name      = var.create_network ? module.custom-network[0].network_name : var.network_name
-  subnetwork_name   = var.create_network ? module.custom-network[0].subnets_names[0] : var.subnetwork_name
-  network_self_link = var.create_network ? module.custom-network[0].network_self_link : data.google_compute_network.existing-network[0].self_link
 }
 
 ## configure cloud NAT for private GKE
