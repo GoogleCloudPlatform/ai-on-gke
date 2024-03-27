@@ -363,7 +363,7 @@ steps:
     waitFor: ['cleanup gke cluster']
         
 substitutions:
-  _REGION: us-east4
+  _REGION: us-central1
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
