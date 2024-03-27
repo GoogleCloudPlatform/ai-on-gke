@@ -34,25 +34,26 @@ spec:
           name: add_auth
           title: Enable IAP Authentication
           section: iap_auth
+        additional_labels:
+          name: additional_labels
+          title: Additional Labels
+          invisible: true
+          section: cluster_details
         autopilot_cluster:
           name: autopilot_cluster
           title: GKE Cluster Type
           section: cluster_details
-          enumValueLabels:
-            - label: Autopilot Cluster
-              value: "true"
-            - label: Standard Cluster
-              value: "false"
+          invisible: true
         client_id:
           name: client_id
           title: Client Id
-          section: iap_auth
           invisible: true
+          section: iap_auth
         client_secret:
           name: client_secret
           title: Client Secret
-          section: iap_auth
           invisible: true
+          section: iap_auth
         cluster_location:
           name: cluster_location
           title: Cluster Location
@@ -87,6 +88,10 @@ spec:
         create_gcs_bucket:
           name: create_gcs_bucket
           title: Create Gcs Bucket
+          invisible: true
+        create_network:
+          name: create_network
+          title: Create Network
           invisible: true
         domain:
           name: domain
@@ -134,15 +139,15 @@ spec:
         kubernetes_namespace:
           name: kubernetes_namespace
           title: Kubernetes Namespace
+          invisible: true
           section: cluster_details
         members_allowlist:
           name: members_allowlist
           title: Members Allowlist
           section: iap_auth
-        additional_labels:
-          name: additional_labels
-          title: Additional Labels
-          section: cluster_details
+        network_name:
+          name: network_name
+          title: Network Name
           invisible: true
         private_cluster:
           name: private_cluster
@@ -153,11 +158,15 @@ spec:
           name: project_id
           title: Project Id
           invisible: true
+        subnetwork_cidr:
+          name: subnetwork_cidr
+          title: Subnetwork Cidr
+          invisible: true
         support_email:
           name: support_email
           title: Support Email
-          section: iap_auth
           invisible: true
+          section: iap_auth
         workload_identity_service_account:
           name: workload_identity_service_account
           title: GCP Workload Identity Service Account
@@ -166,28 +175,27 @@ spec:
       sections:
         - name: cluster_details
           title: GKE Cluster Configuration
-          tooltip: Select or Create GKE cluster
+          subtext: It is recommended to choose the <b>New Cluster</b> option
         - name: jupyterhub
           title: Other Configuration
         - name: iap_auth
-          title:  Configure Authenticated Access for JupyterHub
+          title: Configure Authenticated Access for JupyterHub
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
         - heading: "Step 1: Create DNS A Records for JupyterHub"
-          description: |-
-            If using custom domains for JupyterHub, create DNS A record set (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
+          description: If using custom domains for JupyterHub, create DNS A record set (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
         - heading: "Step 2: Go to JupyterHub Application"
           description: |-
-             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
-             <li>If IAP is disabled, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
-             <li>Once logged in, choose the appropriate preset and execute notebooks. Sample notebooks are provided <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/examples/notebooks">here</a></li>
+            <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
+            <li>If IAP is disabled, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
+            <li>Once logged in, choose the appropriate preset and execute notebooks. Sample notebooks are provided <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/examples/notebooks">here</a></li>
       outputs:
+        jupyterhub_ip_address: {}
         jupyterhub_password: {}
         jupyterhub_uri:
           openInNewTab: true
           showInNotification: true
           label: Go to JupyterHub Application
         jupyterhub_user: {}
-        jupyterhub_ip_address: {}
