@@ -228,6 +228,7 @@ module "kuberay-cluster" {
   grafana_host           = module.kuberay-monitoring.grafana_uri
   disable_network_policy = var.disable_ray_cluster_network_policy
   depends_on             = [module.kuberay-operator]
+  use_custom_image       = true
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth

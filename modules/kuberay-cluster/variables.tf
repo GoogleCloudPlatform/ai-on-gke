@@ -240,3 +240,9 @@ variable "members_allowlist" {
   default = ""
   ## keeping it string type to support single field input for marketplace UI.
 }
+
+variable "use_custom_image" {
+  type        = bool
+  description = "If running RAG, set this var to true to use custome image with pre-installed lib"
+  default     = false
+}

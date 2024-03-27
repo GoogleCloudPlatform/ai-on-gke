@@ -369,6 +369,7 @@ spec:
           openInNewTab: true
           showInNotification: true
           label: Go to Frontend Application
+        ray_dashboard_ip_address: {}
         ray_dashboard_uri:
           openInNewTab: true
           showInNotification: true
