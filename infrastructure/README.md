@@ -17,6 +17,7 @@ For the GCP project where the infra resources are being created, the following p
 Following service APIs are enabled, 
 - container.googleapis.com
 - gkehub.googleapis.com
+- servicenetworking.googleapis.com
 
 if not already enabled, use the following command:
 ```
