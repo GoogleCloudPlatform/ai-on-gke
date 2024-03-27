@@ -11,11 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-variable "billing_account" {
-  default     = null
-  description = "GCP billing account"
-  type        = string
-}
 
 variable "cluster_name" {
   default     = "gke-ml"
@@ -35,21 +30,9 @@ variable "configsync_repo_name" {
   type        = string
 }
 
-variable "create_namespace" {
-  description = "Setup a namespace to demo."
-  default     = 1
-  type        = number
-}
-
-variable "create_projects" {
-  default     = 0
-  description = "Flag to create GCP projects"
-  type        = number
-}
-
 variable "environment_name" {
   default     = "dev"
-  description = "Lowest environments"
+  description = "Name of the environment"
   type        = string
 }
 
@@ -62,12 +45,6 @@ variable "env" {
   default     = ["dev"]
   description = "List of environments"
   type        = set(string)
-}
-
-variable "folder_id" {
-  default     = null
-  description = "Folder Id where the GCP projects will be created"
-  type        = string
 }
 
 variable "github_email" {
@@ -88,18 +65,6 @@ variable "github_token" {
 variable "github_user" {
   description = "GitHub user name."
   type        = string
-}
-
-variable "install_kuberay" {
-  default     = 1
-  description = "Flag to install kuberay operator."
-  type        = number
-}
-
-variable "install_ray_in_ns" {
-  default     = 1
-  description = "Flag to install ray cluster in the namespace created with the demo."
-  type        = number
 }
 
 variable "namespace" {
@@ -128,18 +93,6 @@ variable "ondemand_taints" {
   }))
 }
 
-variable "org_id" {
-  default     = null
-  description = "The GCP orig id"
-  type        = string
-}
-
-variable "project_name" {
-  default     = "mlp"
-  description = "GCP project name"
-  type        = string
-}
-
 variable "reserved_taints" {
   default = [{
     key    = "reserved"
@@ -164,7 +117,6 @@ variable "secret_for_rootsync" {
   default     = 1
   description = "Create git-cred in config-management-system namespace."
   type        = number
-
 }
 
 variable "spot_taints" {

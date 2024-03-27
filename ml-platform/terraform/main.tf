@@ -12,102 +12,87 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-locals {
-  project = data.google_project.environment
-}
-
 #
 # Project
 ##########################################################################
-module "gcp-project" {
-  source = "./modules/projects"
-
-  billing_account = var.billing_account
-  env             = var.environment_name
-  folder_id       = var.folder_id
-  org_id          = var.org_id
-  project_id      = var.environment_project_id
-  project_name    = var.project_name
-}
-
 data "google_project" "environment" {
-  project_id = module.gcp-project.project_id
+  project_id = var.environment_project_id
 }
 
 resource "google_project_service" "containerfilesystem_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "containerfilesystem.googleapis.com"
 }
 
 resource "google_project_service" "serviceusage_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "serviceusage.googleapis.com"
 }
 
 resource "google_project_service" "project_services-cr" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "cloudresourcemanager.googleapis.com"
 }
 
 resource "google_project_service" "project_services-an" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "anthos.googleapis.com"
 }
 
 resource "google_project_service" "project_services-anc" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "anthosconfigmanagement.googleapis.com"
 }
 
 resource "google_project_service" "project_services-con" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "container.googleapis.com"
 }
 
 resource "google_project_service" "project_services-com" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "compute.googleapis.com"
 }
 
 resource "google_project_service" "project_services-gkecon" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "gkeconnect.googleapis.com"
 }
 
 resource "google_project_service" "project_services-gkeh" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "gkehub.googleapis.com"
 }
 
 resource "google_project_service" "project_services-iam" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "iam.googleapis.com"
 }
 
 resource "google_project_service" "project_services-gate" {
   disable_dependent_services = false
   disable_on_destroy         = false
-  project                    = local.project.project_id
+  project                    = data.google_project.environment.project_id
   service                    = "connectgateway.googleapis.com"
 }
 
@@ -122,7 +107,7 @@ module "create-vpc" {
   ]
 
   network_name     = format("%s-%s", var.network_name, var.environment_name)
-  project_id       = local.project.project_id
+  project_id       = data.google_project.environment.project_id
   routing_mode     = var.routing_mode
   subnet_01_ip     = var.subnet_01_ip
   subnet_01_name   = format("%s-%s", var.subnet_01_name, var.environment_name)
@@ -138,7 +123,7 @@ module "cloud-nat" {
   create_router = true
   name          = format("%s-%s", "nat-for-acm", var.environment_name)
   network       = module.create-vpc.vpc
-  project_id    = local.project.project_id
+  project_id    = data.google_project.environment.project_id
   region        = split("/", module.create-vpc.subnet-1)[3]
   router        = format("%s-%s", "router-for-acm", var.environment_name)
 }
@@ -157,7 +142,7 @@ resource "google_gke_hub_feature" "configmanagement_acm_feature" {
 
   location = "global"
   name     = "configmanagement"
-  project  = local.project.project_id
+  project  = data.google_project.environment.project_id
 }
 
 module "gke" {
@@ -173,7 +158,7 @@ module "gke" {
   env                         = var.environment_name
   master_auth_networks_ipcidr = var.subnet_01_ip
   network                     = module.create-vpc.vpc
-  project_id                  = local.project.project_id
+  project_id                  = data.google_project.environment.project_id
   region                      = var.subnet_01_region
   subnet                      = module.create-vpc.subnet-1
   zone                        = "${var.subnet_01_region}-a"
@@ -183,7 +168,7 @@ module "reservation" {
   source = "./modules/vm-reservations"
 
   cluster_name = module.gke.cluster_name
-  project_id   = local.project.project_id
+  project_id   = data.google_project.environment.project_id
   zone         = "${var.subnet_01_region}-a"
 }
 
@@ -196,7 +181,7 @@ module "node_pool-reserved" {
 
   cluster_name     = module.gke.cluster_name
   node_pool_name   = "reservation"
-  project_id       = local.project.project_id
+  project_id       = data.google_project.environment.project_id
   region           = var.subnet_01_region
   reservation_name = module.reservation.reservation_name
   resource_type    = "reservation"
@@ -212,7 +197,7 @@ module "node_pool-ondemand" {
 
   cluster_name   = module.gke.cluster_name
   node_pool_name = "ondemand"
-  project_id     = local.project.project_id
+  project_id     = data.google_project.environment.project_id
   region         = var.subnet_01_region
   resource_type  = "ondemand"
   taints         = var.ondemand_taints
@@ -227,7 +212,7 @@ module "node_pool-spot" {
 
   cluster_name   = module.gke.cluster_name
   node_pool_name = "spot"
-  project_id     = local.project.project_id
+  project_id     = data.google_project.environment.project_id
   region         = var.subnet_01_region
   resource_type  = "spot"
   taints         = var.spot_taints
@@ -241,7 +226,7 @@ resource "google_gke_hub_membership" "membership" {
   ]
 
   membership_id = module.gke.cluster_name
-  project       = local.project.project_id
+  project       = data.google_project.environment.project_id
 
   endpoint {
     gke_cluster {
@@ -261,7 +246,7 @@ resource "google_gke_hub_feature_membership" "feature_member" {
   feature    = "configmanagement"
   location   = "global"
   membership = google_gke_hub_membership.membership.membership_id
-  project    = local.project.project_id
+  project    = data.google_project.environment.project_id
 
   configmanagement {
     version = var.config_management_version
@@ -367,7 +352,7 @@ resource "null_resource" "create_git_cred_cms" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${local.project.project_id} ${var.github_user} config-management-system"
+    command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${data.google_project.environment.project_id} ${var.github_user} config-management-system"
     environment = {
       GIT_TOKEN = var.github_token
     }
@@ -405,7 +390,7 @@ locals {
 resource "google_service_account" "namespace_default" {
   account_id   = "wi-${var.namespace}-${local.namespace_default_kubernetes_service_account}"
   display_name = "${var.namespace}/${local.namespace_default_kubernetes_service_account} workload identity service account"
-  project      = local.project.project_id
+  project      = data.google_project.environment.project_id
 }
 
 resource "google_service_account_iam_member" "namespace_default_iam_workload_identity_user" {
@@ -413,7 +398,7 @@ resource "google_service_account_iam_member" "namespace_default_iam_workload_ide
     module.gke
   ]
 
-  member             = "serviceAccount:${local.project.project_id}.svc.id.goog[${var.namespace}/${local.namespace_default_kubernetes_service_account}]"
+  member             = "serviceAccount:${data.google_project.environment.project_id}.svc.id.goog[${var.namespace}/${local.namespace_default_kubernetes_service_account}]"
   role               = "roles/iam.workloadIdentityUser"
   service_account_id = google_service_account.namespace_default.id
 }
@@ -464,7 +449,7 @@ locals {
 resource "google_service_account" "namespace_ray_head" {
   account_id   = "wi-${var.namespace}-${local.ray_head_kubernetes_service_account}"
   display_name = "${var.namespace}/${local.ray_head_kubernetes_service_account} workload identity service account"
-  project      = local.project.project_id
+  project      = data.google_project.environment.project_id
 }
 
 resource "google_service_account_iam_member" "namespace_ray_head_iam_workload_identity_user" {
@@ -472,7 +457,7 @@ resource "google_service_account_iam_member" "namespace_ray_head_iam_workload_id
     module.gke
   ]
 
-  member             = "serviceAccount:${local.project.project_id}.svc.id.goog[${var.namespace}/${local.ray_head_kubernetes_service_account}]"
+  member             = "serviceAccount:${data.google_project.environment.project_id}.svc.id.goog[${var.namespace}/${local.ray_head_kubernetes_service_account}]"
   role               = "roles/iam.workloadIdentityUser"
   service_account_id = google_service_account.namespace_ray_head.id
 }
@@ -480,7 +465,7 @@ resource "google_service_account_iam_member" "namespace_ray_head_iam_workload_id
 resource "google_service_account" "namespace_ray_worker" {
   account_id   = "wi-${var.namespace}-${local.ray_worker_kubernetes_service_account}"
   display_name = "${var.namespace}/${local.ray_worker_kubernetes_service_account} workload identity service account"
-  project      = local.project.project_id
+  project      = data.google_project.environment.project_id
 }
 
 resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_identity_user" {
@@ -488,7 +473,7 @@ resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_
     module.gke
   ]
 
-  member             = "serviceAccount:${local.project.project_id}.svc.id.goog[${var.namespace}/${local.ray_worker_kubernetes_service_account}]"
+  member             = "serviceAccount:${data.google_project.environment.project_id}.svc.id.goog[${var.namespace}/${local.ray_worker_kubernetes_service_account}]"
   role               = "roles/iam.workloadIdentityUser"
   service_account_id = google_service_account.namespace_ray_worker.id
 }
