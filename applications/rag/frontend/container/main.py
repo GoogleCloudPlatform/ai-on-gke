@@ -160,7 +160,10 @@ def fetchContext(query_text):
         except Exception as err:
             log.info(f"{err}")
             return ""
-
+    
+    if not query_results:
+        log.info(f"Table {TABLE_NAME} return empty result")
+        return ""
     
     return query_results[0][1]
 
