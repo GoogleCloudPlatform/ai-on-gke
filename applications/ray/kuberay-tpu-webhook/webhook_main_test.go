@@ -456,9 +456,12 @@ func Test_GetReplicaIndex(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		sliceToWorkers map[slice][]worker
-		numOfHosts     int32
-		numReplicas    int
+		sliceToWorkers     map[slice][]worker
+		numOfHosts         int32
+		numReplicas        int
+		additionalGroupStr string
+		numOfHosts2        int32
+		numReplicas2       int
 	}{
 		"single-host, single-slice worker group": {
 			// single-slice, replicaIndex should always be 0
@@ -479,6 +482,15 @@ func Test_GetReplicaIndex(t *testing.T) {
 			// multi-slice, replicaIndex should always be 0-numReplicas for 0-numOfHosts pods
 			numOfHosts:  4,
 			numReplicas: 4,
+		},
+		"multiple worker groups": {
+			// should assign replicaIndex 0-numReplicas and TPU_WORKER_ID 0-numOfHosts
+			// for each respective worker group
+			numOfHosts:         4,
+			numReplicas:        4,
+			additionalGroupStr: "another-worker-group",
+			numOfHosts2:        2,
+			numReplicas2:       3,
 		},
 	}
 
@@ -500,7 +512,24 @@ func Test_GetReplicaIndex(t *testing.T) {
 					}
 				}
 			}
-			assert.Equal(t, tc.numReplicas, len(sliceToWorkers))
+			if tc.additionalGroupStr != "" {
+				for i := 0; i < tc.numReplicas2; i++ {
+					testPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.numOfHosts2}
+					for j := 0; j < int(tc.numOfHosts2); j++ {
+						replicaIndex := getReplicaIndex(instanceName, tc.additionalGroupStr, namespaceStr)
+						assert.Equal(t, i, replicaIndex)
+
+						// add the worker to sliceToWorkers - this would happen in getNextWorkerID
+						testWorker := worker{j, replicaIndex, true}
+						if sliceToWorkers[testPodSlice] == nil {
+							sliceToWorkers[testPodSlice] = []worker{testWorker}
+						} else {
+							sliceToWorkers[testPodSlice] = append(sliceToWorkers[testPodSlice], testWorker)
+						}
+					}
+				}
+			}
+			assert.Equal(t, tc.numReplicas+tc.numReplicas2, len(sliceToWorkers))
 		})
 	}
 }
@@ -511,31 +540,37 @@ func Test_GetNextWorkerID(t *testing.T) {
 	tests := map[string]struct {
 		numOfHosts  int32
 		numReplicas int
+		deletePodID int
 	}{
 		"single-host, single-slice worker group": {
 			// single-slice, replicaIndex should always be 0
 			numOfHosts:  1,
 			numReplicas: 1,
+			deletePodID: -1,
 		},
 		"single-host, multi-slice worker group": {
 			// multi-slice, replicaIndex should always be 0-numReplicas
 			numOfHosts:  1,
 			numReplicas: 4,
+			deletePodID: -1,
 		},
 		"multi-host, single-slice worker group": {
 			// single-slice, replicaIndex should always be 0
 			numOfHosts:  4,
 			numReplicas: 1,
+			deletePodID: -1,
 		},
 		"multi-host, multi-slice worker group": {
 			// multi-slice, replicaIndex should always be 0-numReplicas for 0-numOfHosts pods
 			numOfHosts:  4,
 			numReplicas: 4,
+			deletePodID: -1,
 		},
-		"multi-host, worker pod has been deleted": {
-			// worker should be re-assigned deleted pod TPU_WORKER_ID
+		"deleted pod from multi-host group": {
+			// pod should be reassigned the ID of the deleted pod
 			numOfHosts:  4,
-			numReplicas: 1,
+			numReplicas: 4,
+			deletePodID: 2,
 		},
 	}
 
@@ -548,6 +583,12 @@ func Test_GetNextWorkerID(t *testing.T) {
 					workerID := getNextWorkerID(testPodSlice, namespaceStr, i)
 					assert.Equal(t, j, workerID)
 				}
+			}
+			if tc.deletePodID != -1 {
+				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, 0, tc.numOfHosts}
+				sliceToWorkers[testPodSlice][tc.deletePodID].isCreated = false
+				workerID := getNextWorkerID(testPodSlice, namespaceStr, 0)
+				assert.Equal(t, tc.deletePodID, workerID)
 			}
 		})
 	}
