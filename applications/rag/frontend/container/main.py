@@ -161,9 +161,6 @@ def fetchContext(query_text):
             log.info(f"{err}")
             return ""
 
-    if query_results.all()==None:
-        log.info(f"Table {TABLE_NAME} return empty result")
-        return ""
     
     return query_results[0][1]
 
