@@ -62,14 +62,8 @@ module "infra" {
   project_id        = var.project_id
   cluster_name      = var.cluster_name
   cluster_location  = var.cluster_location
-  region            = local.cluster_location_region
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
-  create_network    = var.create_network
-  network_name      = local.network_name
-  subnetwork_name   = local.network_name
-  subnetwork_cidr   = var.subnetwork_cidr
-  subnetwork_region = local.cluster_location_region
   cpu_pools         = var.cpu_pools
   enable_gpu        = false
 }
@@ -87,10 +81,7 @@ locals {
   cluster_membership_id   = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
   enable_autopilot        = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
   host                    = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
-  cluster_location_region = (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
   kubernetes_namespace    = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.kubernetes_namespace}" : var.kubernetes_namespace
-  network_name            = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.network_name}" : var.network_name
-
 }
 
 locals {
