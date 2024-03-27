@@ -152,3 +152,5 @@ spec:
         description: JupyterHub Endpoint to access user interface. In case of private IP, consider port-forwarding.
       - name: jupyterhub_user
         description: JupyterHub user is only required for standard authentication. Ignore, in case of IAP authentication
+      - name: kubernetes_namespace
+

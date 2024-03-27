@@ -156,3 +156,4 @@ spec:
     outputs:
       - name: grafana_uri
       - name: ray_cluster_uri
+      - name: kubernetes_namespace
