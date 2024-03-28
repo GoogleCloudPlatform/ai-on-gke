@@ -17,6 +17,10 @@ variable "project_id" {
   description = "GCP project id"
 }
 
+variable "autopilot_cluster" {
+  type = bool
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"

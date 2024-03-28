@@ -31,6 +31,11 @@ variable "cluster_location" {
   type = string
 }
 
+variable "kubernetes_version" {
+  type    = string
+  default = "1.28"
+}
+
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"

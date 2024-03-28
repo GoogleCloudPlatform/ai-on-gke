@@ -64,20 +64,21 @@ module "infra" {
   source = "../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
-  project_id        = var.project_id
-  cluster_name      = var.cluster_name
-  cluster_location  = var.cluster_location
-  region            = local.cluster_location_region
-  autopilot_cluster = var.autopilot_cluster
-  private_cluster   = var.private_cluster
-  create_network    = var.create_network
-  network_name      = local.network_name
-  subnetwork_name   = local.network_name
-  subnetwork_cidr   = var.subnetwork_cidr
-  subnetwork_region = local.cluster_location_region
-  cpu_pools         = var.cpu_pools
-  enable_gpu        = true
-  gpu_pools         = var.gpu_pools
+  project_id         = var.project_id
+  cluster_name       = var.cluster_name
+  cluster_location   = var.cluster_location
+  region             = local.cluster_location_region
+  autopilot_cluster  = var.autopilot_cluster
+  private_cluster    = var.private_cluster
+  create_network     = var.create_network
+  network_name       = local.network_name
+  subnetwork_name    = local.network_name
+  subnetwork_cidr    = var.subnetwork_cidr
+  subnetwork_region  = local.cluster_location_region
+  cpu_pools          = var.cpu_pools
+  enable_gpu         = true
+  gpu_pools          = var.gpu_pools
+  kubernetes_version = var.kubernetes_version
 }
 
 data "google_container_cluster" "default" {
@@ -249,6 +250,7 @@ module "kuberay-monitoring" {
   source                          = "../../modules/kuberay-monitoring"
   providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
+  autopilot_cluster               = local.enable_autopilot
   namespace                       = local.kubernetes_namespace
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
