@@ -78,7 +78,7 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	lg.Info("Ensuring node pool for unschedulable pod")
 	if err := r.Provider.EnsureNodePoolForPod(&pod, "pod is currently unschedulable"); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
-			lg.Info("Ignoring duplicate request to create node pool")
+			lg.V(3).Info("Ignoring duplicate request to create node pool", "message", err.Error())
 		} else if errors.Is(err, cloud.ErrNodePoolStopping) {
 			wait := 5 * time.Second
 			lg.Info("Attempted to create a node pool that is currently undergoing deletion, retrying soon",
