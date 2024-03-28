@@ -176,7 +176,7 @@ module "cloudsql" {
   namespace     = local.kubernetes_namespace
   region        = local.cloudsql_instance_region
   network_name  = local.network_name
-  depends_on    = [module.namespace, module.infra]
+  depends_on    = [module.namespace]
 }
 
 module "jupyterhub" {

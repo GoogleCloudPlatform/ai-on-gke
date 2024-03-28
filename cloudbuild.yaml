@@ -202,7 +202,7 @@ steps:
         cd /workspace/applications/rag/
         terraform apply \
         -var-file=workloads.tfvars \
-        -var=network_name=ci-network \
+        -var=network_name=default \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
@@ -261,7 +261,7 @@ steps:
         cd /workspace/applications/rag/
         terraform destroy \
         -var-file=workloads.tfvars \
-        -var=network_name=ci-network \
+        -var=network_name=default \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
