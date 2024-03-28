@@ -19,8 +19,6 @@ provider "google-beta" {
   project = var.project_id
 }
 
-provider "time" {}
-
 data "google_client_config" "default" {}
 
 data "google_project" "project" {
@@ -255,8 +253,10 @@ module "kuberay-monitoring" {
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.ray_service_account
-  # TODO(umeshkumhar): remove kuberay-operator depends, figure out service account dependency
-  depends_on = [module.namespace, module.kuberay-operator]
+  # Add a dependency to module.frontend such that GMP resource is installed at the very end of the installation.
+  # Installing GMP earlier could result in issues in clusters with NAP enabled.
+  # TODO(andrewsy): remove dependency to module.frontend after resolving GMP race conditions.
+  depends_on = [module.namespace, module.frontend]
 }
 
 module "inference-server" {

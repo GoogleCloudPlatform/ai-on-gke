@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Temporary workaround to ensure the GMP webhook is installed before applying PodMonitorings.
-resource "time_sleep" "wait_for_gmp_operator" {
-  count           = var.autopilot_cluster ? 1 : 0
-  create_duration = "30s"
-}
-
 # google managed prometheus engine
 resource "helm_release" "gmp-engine" {
   name             = "gmp-engine"
@@ -35,8 +29,6 @@ resource "helm_release" "gmp-engine" {
     name  = "serviceAccount"
     value = var.k8s_service_account
   }
-
-  depends_on = [time_sleep.wait_for_gmp_operator]
 }
 
 # grafana
