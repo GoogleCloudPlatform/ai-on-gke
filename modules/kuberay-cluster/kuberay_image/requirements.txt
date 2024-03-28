@@ -1,4 +1,4 @@
-langchain==0.1.9
+langchain==0.1.10
 transformers==4.38.1
 sentence-transformers==2.5.1
 pyarrow
