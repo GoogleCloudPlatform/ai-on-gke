@@ -17,6 +17,7 @@ data "google_project" "project" {
 }
 
 locals {
+  cloudsql_instance_connection_name = format("%s:%s:%s", var.project_id, var.db_region, var.cloudsql_instance_name)
   additional_labels = tomap({
     for item in var.additional_labels :
     split("=", item)[0] => split("=", item)[1]
@@ -121,6 +122,9 @@ resource "helm_release" "jupyterhub" {
     gcs_bucket          = var.gcs_bucket
     k8s_service_account = var.workload_identity_service_account
     ephemeral_storage   = var.ephemeral_storage
+    secret_name                       = var.db_secret_name
+    cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
+
     })
     ] : [templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
       password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
@@ -135,6 +139,8 @@ resource "helm_release" "jupyterhub" {
       gcs_bucket          = var.gcs_bucket
       k8s_service_account = var.workload_identity_service_account
       ephemeral_storage   = var.ephemeral_storage
+      secret_name                       = var.db_secret_name
+      cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
     })
   ]
   depends_on = [module.jupyterhub-workload-identity]

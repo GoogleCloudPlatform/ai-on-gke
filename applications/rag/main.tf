@@ -189,6 +189,10 @@ module "jupyterhub" {
   autopilot_cluster                 = local.enable_autopilot
   workload_identity_service_account = local.jupyter_service_account
 
+  db_secret_name         = module.cloudsql.db_secret_name
+  cloudsql_instance_name = local.cloudsql_instance
+  db_region              = local.cloudsql_instance_region
+
   # IAP Auth parameters
   create_brand             = var.create_brand
   support_email            = var.support_email

@@ -135,3 +135,21 @@ variable "ephemeral_storage" {
 variable "autopilot_cluster" {
   type = bool
 }
+
+variable "db_region" {
+  type        = string
+  description = "Cloud SQL instance region"
+  default     = "us-east4"
+}
+
+variable "db_secret_name" {
+  type        = string
+  description = "CloudSQL user credentials"
+  default     = "empty-secret"
+}
+
+variable "cloudsql_instance_name" {
+  type        = string
+  description = "Cloud SQL instance name"
+  default     = "pgvector-instance"
+}
