@@ -12,11 +12,12 @@ Platform module (to be renamed to Infra), creates the GKE cluster & other relate
 For the GCP project where the infra resources are being created, the following prerequisites should  be met
 - Billing is enabled
 - GPU quotas in place
-- 
 
 Following service APIs are enabled, 
 - container.googleapis.com
 - gkehub.googleapis.com
+- servicenetworking.googleapis.com
+- cloudresourcemanager.googleapis.com
 
 if not already enabled, use the following command:
 ```
