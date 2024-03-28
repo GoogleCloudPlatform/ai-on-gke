@@ -25,7 +25,7 @@ project_id = "<project-id>"
 # subnetwork_cidr   = "10.100.0.0/16"
 # subnetwork_region = "us-central1"
 
-create_network    = false
+create_network    = true
 network_name      = "default"
 subnetwork_name   = "default"
 subnetwork_region = "us-central1"
