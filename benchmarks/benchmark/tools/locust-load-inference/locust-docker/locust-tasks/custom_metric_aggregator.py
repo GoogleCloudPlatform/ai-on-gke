@@ -1,3 +1,4 @@
+import datetime
 import logging
 import json
 
@@ -68,3 +69,4 @@ class TokenMetricCollector:
             writer.writerow(['Avg Test Time', avg_test_time])
             writer.writerow(['Avg Output Tokens Latency',
                             avg_output_token_latency])
+            writer.writerow(['Timestamp', datetime.datetime.now()])

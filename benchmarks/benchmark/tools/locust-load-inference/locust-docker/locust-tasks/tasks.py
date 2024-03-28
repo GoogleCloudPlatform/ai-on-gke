@@ -120,8 +120,6 @@ def get_token_count(prompt, resp):
         resp_dict = json.loads(resp.content.decode('utf-8'))
         number_of_output_tokens = len(
             tokenizer.encode(resp_dict['text_output']))
-        number_of_output_tokens = len(
-            tokenizer.encode(resp_dict['text_output']))
     elif backend == "sax":
         number_of_output_tokens = 0  # to be added
     else:
