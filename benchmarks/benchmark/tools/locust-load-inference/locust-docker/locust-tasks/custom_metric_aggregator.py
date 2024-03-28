@@ -37,11 +37,11 @@ class TokenMetricCollector:
             avg_test_time = sum(self.test_time) / \
                 len(self.test_time) if self.tokens_sent else 0
             avg_output_token_latency = 0
-            for i in range(0, len(self.tokens_received)):
+            for i in range(0, self.success_count):
                 avg_output_token_latency += (
                     self.tokens_received[i] / self.test_time[i])
             avg_output_token_latency = avg_output_token_latency / \
-                len(self.tokens_received)
+                self.success_count
             return avg_sent, avg_received, avg_test_time, avg_output_token_latency
         return 0, 0, 0, 0
 
