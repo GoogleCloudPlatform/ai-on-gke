@@ -1,7 +1,7 @@
 # Distributed Data Processing with Ray on GKE
 
 ## Dataset
-This is a pre-crawled public dataset, taken as a subset of a bigger dataset (more than 5.8 million products) that was created by extracting data from Flipkart, a leading Indian eCommerce store.
+[This](https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-products) is a pre-crawled public dataset, taken as a subset of a bigger dataset (more than 5.8 million products) that was created by extracting data from [Flipkart](https://www.flipkart.com/), a leading Indian eCommerce store.
 
 ## Architecture
  ![DataPreprocessing](/ml-platform/docs/images/ray-dataprocessing-workflow.png)
@@ -35,9 +35,9 @@ The preprocessing.py file does the following:
 
 
 3. Download the raw data csv file from above and store into the bucket created in the previous step.
-   The kaggle cli can be installed using the following instructions
+   The kaggle cli can be installed using the following [instructions](https://github.com/Kaggle/kaggle-api#installation)
    To use the cli you must create an API token (Kaggle > User Profile > API > Create New Token), the downloaded file should be stored in HOME/.kaggle/kaggle.json.
-   Alternatively, it can be downloaded from the kaggle website
+   Alternatively, it can be [downloaded](https://www.kaggle.com/datasets/atharvjairath/flipkart-ecommerce-dataset) from the kaggle website
 
 ```
  kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset
