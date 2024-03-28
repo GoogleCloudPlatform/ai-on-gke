@@ -85,7 +85,7 @@ module "cluster-standard" {
     master_ipv4_cidr_block   = var.cluster_create.master_ipv4_cidr_block
   }
   default_node_pool = {
-    remove_pool = false
+    remove_pool        = false
     initial_node_count = 1
   }
   private_cluster_config = {
