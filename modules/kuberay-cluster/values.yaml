@@ -90,16 +90,16 @@ head:
   # for further guidance.
   resources:
     limits:
-      cpu: "4"
+      cpu: "8"
       # To avoid out-of-memory issues, never allocate less than 2G memory for the Ray head.
       # Ray recommends at least 8G memory for production workloads.
-      memory: "8G"
+      memory: "20G"
       # Sum of ephemeral storage requests must be max 10Gi on Autopilot default class.
       # This includes, ray-head, gcsfuse-sidecar, and fluent-bit.
       ephemeral-storage: 4Gi
     requests:
-      cpu: "4"
-      memory: "8G"
+      cpu: "8"
+      memory: "20G"
       ephemeral-storage: 4Gi
   annotations:
     gke-gcsfuse/volumes: "true"
