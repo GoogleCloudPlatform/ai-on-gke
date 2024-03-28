@@ -25,9 +25,9 @@ project_id = "<project-id>"
 # subnetwork_cidr   = "10.100.0.0/16"
 # subnetwork_region = "us-central1"
 
-create_network    = false
-network_name      = "default"
-subnetwork_name   = "default"
+create_network    = true
+network_name      = "default-test"
+subnetwork_name   = "default-test"
 subnetwork_region = "us-central1"
 
 ## gke variables
@@ -50,25 +50,11 @@ cpu_pools = [{
 ## make sure required gpu quotas are available in the corresponding region
 enable_gpu = true
 gpu_pools = [{
-  name               = "gpu-pool-t4"
-  machine_type       = "n1-standard-16"
-  node_locations     = "us-central1-b,us-central1-c"
-  autoscaling        = true
-  min_count          = 1
-  max_count          = 3
-  disk_size_gb       = 100
-  enable_gcfs        = true
-  logging_variant    = "DEFAULT"
-  disk_type          = "pd-balanced"
-  accelerator_count  = 2
-  accelerator_type   = "nvidia-tesla-t4"
-  gpu_driver_version = "LATEST"
-  },
-  {
     name               = "gpu-pool-l4"
     machine_type       = "g2-standard-24"
     node_locations     = "us-central1-a"
     autoscaling        = true
+
     min_count          = 2
     max_count          = 3
     accelerator_count  = 2
