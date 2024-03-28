@@ -129,10 +129,11 @@ def get_token_count(prompt, resp):
 
 class BenchmarkUser(FastHttpUser):
     weight = 1
-    # Connection_timeout default is 60s. For inferencing workloads with a large payload
-    # this timeout can be too short. Increasing timeout to large amount.
+    # Connection_timeout and network_timeout default is 60s. For inferencing workloads with
+    # a large payload this timeout can be too short. Increasing timeouts to large amount.
     # TODO: turn timeout into a variable.
     connection_timeout = 10800
+    network_timeout = 10800
 
     @task
     def lm_generate(self):
