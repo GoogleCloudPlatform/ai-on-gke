@@ -326,7 +326,8 @@ func sumTPURequests(p *corev1.Pod) (int, error) {
 }
 
 func podToNodePoolName(p *corev1.Pod, prefix, suffix string) string {
-	// Use the UID of the Pod as the unique identifier for the node pool.
+	// Use the UID of the Pod's owner (falling back to the Pod UID if it has
+	// no owner) as the unique identifier for the node pool.
 	// It is necessary to use something that is unique to the Pod not the Job/JobSet
 	// because the scheduler is not guaranteed to place Pods on the same
 	// node pools that were created for them. This commonly happens when
