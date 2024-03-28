@@ -11,10 +11,10 @@ spec:
     spec:
       containers:
       - name: job
-        image: us-west2-docker.pkg.dev/cloud-sa-ml/data-processing-repo/image:latest
+        image: us-west2-docker.pkg.dev/cloud-sa-ml/data-processing-repo/image:latest 
         env:
         - name: "PROCESSING_BUCKET"
-          value: kenthua-dp-bucket
+          value: ai-infra-ml-data-processing 
         - name: "RAY_CLUSTER_HOST"
           value: "ray-cluster-kuberay-head-svc.ml-team:10001"
       restartPolicy: Never
