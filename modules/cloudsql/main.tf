@@ -26,11 +26,6 @@ resource "random_password" "pwd" {
   special = false
 }
 
-data "google_compute_network" "main" {
-  name    = var.network_name
-  project = var.project_id
-}
-
 module "cloudsql" {
   source              = "terraform-google-modules/sql-db/google//modules/postgresql"
   project_id          = var.project_id
@@ -47,7 +42,7 @@ module "cloudsql" {
   ip_configuration = {
     # Disable public IP
     ipv4_enabled                                  = false
-    private_network                               = data.google_compute_network.main.id
+    private_network                               = "projects/${var.project_id}/global/networks/${var.network_name}"
     enable_private_path_for_google_cloud_services = true
   }
 
