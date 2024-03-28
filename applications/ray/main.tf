@@ -73,12 +73,14 @@ module "infra" {
   cpu_pools         = var.cpu_pools
   enable_gpu        = var.enable_gpu
   gpu_pools         = var.gpu_pools
+  depends_on        = [module.project-services]
 }
 
 data "google_container_cluster" "default" {
-  count    = var.create_cluster ? 0 : 1
-  name     = var.cluster_name
-  location = var.cluster_location
+  count      = var.create_cluster ? 0 : 1
+  name       = var.cluster_name
+  location   = var.cluster_location
+  depends_on = [module.project-services]
 }
 
 locals {

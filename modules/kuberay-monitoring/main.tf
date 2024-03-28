@@ -14,7 +14,8 @@
 
 # Temporary workaround to ensure the GMP webhook is installed before applying PodMonitorings.
 resource "time_sleep" "wait_for_gmp_operator" {
-  count           = var.autopilot_cluster ? 1 : 0
+  ## Temporary workaroud, This is impacting for the standard cluster dependency graph
+  #count           = var.autopilot_cluster ? 1 : 0
   create_duration = "30s"
 }
 
