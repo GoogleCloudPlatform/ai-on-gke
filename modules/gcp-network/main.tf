@@ -100,5 +100,5 @@ resource "google_service_networking_connection" "private_service_access" {
   reserved_peering_ranges = [google_compute_global_address.google-managed-services-range[0].name]
   # This will enable a successful terraform destroy when destroying CloudSQL instances
   deletion_policy = "ABANDON"
-  depends_on = [ google_compute_network.network ]
+  depends_on      = [google_compute_network.network]
 }
