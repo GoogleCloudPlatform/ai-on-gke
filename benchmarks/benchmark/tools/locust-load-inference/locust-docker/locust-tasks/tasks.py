@@ -111,7 +111,10 @@ def get_token_count(prompt, resp):
     number_of_output_tokens = 0
 
     if backend == "vllm":
-        number_of_output_tokens = 0  # to be added
+        resp_dict = json.loads(resp.content.decode('utf-8'))
+        number_of_output_tokens = len(
+            tokenizer.encode(resp_dict["predictions"][0].
+                             split("\nOutput:\n", 1)[1]))
     elif backend == "tgi":
         resp_dict = json.loads(resp.content.decode('utf-8'))
         number_of_output_tokens = len(
