@@ -15,11 +15,11 @@
 
 ## Create network
 resource "google_compute_network" "network" {
-  project                                   = var.project_id
-  name                                      = var.network_name
-  auto_create_subnetworks                   = var.auto_create_subnetworks
-  routing_mode                              = var.routing_mode
-  description                               = var.description
+  project                 = var.project_id
+  name                    = var.network_name
+  auto_create_subnetworks = var.auto_create_subnetworks
+  routing_mode            = var.routing_mode
+  description             = var.description
 }
 
 locals {
@@ -71,7 +71,7 @@ resource "google_compute_subnetwork" "subnetwork" {
   ipv6_access_type = lookup(each.value, "ipv6_access_type", null)
 
   lifecycle {
-    ignore_changes = [ secondary_ip_range ]
+    ignore_changes = [secondary_ip_range]
   }
 }
 

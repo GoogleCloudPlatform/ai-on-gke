@@ -50,18 +50,18 @@ cpu_pools = [{
 ## make sure required gpu quotas are available in the corresponding region
 enable_gpu = true
 gpu_pools = [{
-    name               = "gpu-pool-l4"
-    machine_type       = "g2-standard-24"
-    node_locations     = "us-central1-a"
-    autoscaling        = true
+  name           = "gpu-pool-l4"
+  machine_type   = "g2-standard-24"
+  node_locations = "us-central1-a"
+  autoscaling    = true
 
-    min_count          = 2
-    max_count          = 3
-    accelerator_count  = 2
-    disk_size_gb       = 100
-    enable_gcfs        = true
-    logging_variant    = "DEFAULT"
-    disk_type          = "pd-balanced"
-    accelerator_type   = "nvidia-l4"
-    gpu_driver_version = "LATEST"
+  min_count          = 2
+  max_count          = 3
+  accelerator_count  = 2
+  disk_size_gb       = 100
+  enable_gcfs        = true
+  logging_variant    = "DEFAULT"
+  disk_type          = "pd-balanced"
+  accelerator_type   = "nvidia-l4"
+  gpu_driver_version = "LATEST"
 }]

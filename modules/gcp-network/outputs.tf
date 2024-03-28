@@ -17,9 +17,9 @@ output "network_name" {
 }
 
 output "subnets_names" {
-  value = [ for sb in google_compute_subnetwork.subnetwork : sb.name ]
+  value = [for sb in google_compute_subnetwork.subnetwork : sb.name]
 }
 
 output "subnets_ips" {
-  value = [ for sb in google_compute_subnetwork.subnetwork : sb.ip_cidr_range ] 
+  value = [for sb in google_compute_subnetwork.subnetwork : sb.ip_cidr_range]
 }
