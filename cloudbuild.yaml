@@ -253,32 +253,32 @@ steps:
     waitFor: ['cleanup jupyterhub', 'cleanup ray cluster']
 
   - id: 'cleanup rag'
-  #   name: 'gcr.io/$PROJECT_ID/terraform'
-  #   entrypoint: 'bash'
-  #   args:
-  #     - '-c'
-  #     - |
-  #       set -e
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
 
-  #       cd /workspace/applications/rag/
-  #       terraform destroy \
-  #       -var-file=workloads.tfvars \
-  #       -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
-  #       -var=create_cluster=false \
-  #       -var=jupyter_add_auth=false \
-  #       -var=frontend_add_auth=false \
-  #       -var=project_id=$PROJECT_ID \
-  #       -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-  #       -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
-  #       -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
-  #       -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
-  #       -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
-  #       -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
-  #       -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
-  #       -auto-approve -no-color
+        cd /workspace/applications/rag/
+        terraform destroy \
+        -var-file=workloads.tfvars \
+        -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+        -var=create_cluster=false \
+        -var=jupyter_add_auth=false \
+        -var=frontend_add_auth=false \
+        -var=project_id=$PROJECT_ID \
+        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+        -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
+        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
+        -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
+        -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
+        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
+        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
+        -auto-approve -no-color
 
-  #   allowFailure: true
-  #   waitFor: ['test rag']
+    allowFailure: true
+    waitFor: ['test rag']
 
   - id: 'cleanup gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
