@@ -84,6 +84,10 @@ module "cluster-standard" {
     master_authorized_ranges = var.cluster_create.master_authorized_ranges
     master_ipv4_cidr_block   = var.cluster_create.master_ipv4_cidr_block
   }
+  default_node_pool = {
+    remove_pool = false
+    initial_node_count = 1
+  }
   private_cluster_config = {
     enable_private_endpoint = var.enable_private_endpoint
     master_global_access    = true
@@ -182,7 +186,6 @@ module "cluster-nodepool" {
   cluster_name = var.cluster_name
   name         = "${var.cluster_name}-${each.key}"
   location     = var.gke_location
-
   service_account = {
     email        = module.cluster-service-account.0.email
     oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
