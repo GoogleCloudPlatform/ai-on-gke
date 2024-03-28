@@ -84,7 +84,7 @@ module "cluster-standard" {
     master_authorized_ranges = var.cluster_create.master_authorized_ranges
     master_ipv4_cidr_block   = var.cluster_create.master_ipv4_cidr_block
   }
-  default_node_pool = {
+  default_nodepool = {
     remove_pool        = false
     initial_node_count = 1
   }
