@@ -73,17 +73,72 @@ $ kubectl annotate serviceaccount default \
     iam.gke.io/gcp-service-account=jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
+### Create a Cloud Storage bucket to store the Gemma-7b model checkpoint
+
+```
+gcloud storage buckets create $BUCKET_NAME
+```
+
+### Get access to the model
+
+Access the [model consent page](https://www.kaggle.com/models/google/gemma) and request access with your Kaggle Account. Accept the Terms and Conditions. 
+
+Obtain a Kaggle API token by going to your Kaggle settings and under the `API` section, click `Create New Token`. A `kaggle.json` file will be downloaded.
+
+Create a Secret to store the Kaggle credentials
+```
+kubectl create secret generic kaggle-secret \
+    --from-file=kaggle.json
+```
+
 ## Convert the Gemma-7b checkpoint
 
-You can follow [these instructions](https://github.com/google/maxtext/blob/main/end_to_end/test_gemma.sh#L14) to convert the Gemma-7b checkpoint from orbax to a MaxText compatible checkpoint.
+To convert the Gemma-7b checkpoint, we have created a job `checkpoint-job.yaml` that does the following:
+1. Download the base orbax checkpoint from kaggle
+2. Upload the checkpoint to a Cloud Storage bucket
+3. Convert the checkpoint to a MaxText compatible checkpoint
+4. Unscan the checkpoint to be used for inference
+
+In the manifest, ensure the value of the BUCKET_NAME environment variable is the name of the Cloud Storage bucket you created above. Do not include the `gs://` prefix.
+
+Apply the manifest:
+```
+kubectl apply -f checkpoint-job.yaml
+```
+
+Observe the logs:
+```
+kubectl logs -f jobs/data-loader-7b
+```
+
+You should see the following output once the Job has completed. This will take around 10 minutes:
+```
+Successfully generated decode checkpoint at: gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
++ echo -e '\nCompleted unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items'
+
+Completed unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
+```
 
 ## Deploy Maxengine Server and HTTP Server
 
 In this example, we will deploy a Maxengine server targeting Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#optionals).
 
-Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden. 
+Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
 
 Configure the model checkpoint by adding `load_parameters_path=<GCS bucket path to your checkpoint>` under `args`, you can optionally deploy `deployment.yaml` without adding the checkpoint path. 
+
+Argument descriptions:
+```
+tokenizer_path: The file path to your model’s tokenizer
+load_parameters_path: Your checkpoint path (GSBucket)
+per_device_batch_size: Decoding batch size per device (1 TPU chip = 1 device)
+max_prefill_predict_length: Maximum length for the prefill when doing autoregression
+max_target_length: Maximum sequence length
+model_name: Model name
+ici_fsdp_parallelism: The number of shards for FSDP parallelism
+ici_autoregressive_parallelism: The number of shards for autoregressive parallelism
+weight_dtype: Weight data type (e.g. bfloat16)
+```
 
 Deploy the manifest file for the Maxengine server and HTTP server:
 ```

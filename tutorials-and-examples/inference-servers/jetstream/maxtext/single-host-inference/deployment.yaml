@@ -26,7 +26,6 @@ spec:
         - per_device_batch_size=12
         - max_prefill_predict_length=1024
         - max_target_length=2048
-        - steps=10
         - async_checkpointing=false
         - ici_fsdp_parallelism=1
         - ici_autoregressive_parallelism=-1
