@@ -4,7 +4,7 @@
 This is a pre-crawled public dataset, taken as a subset of a bigger dataset (more than 5.8 million products) that was created by extracting data from Flipkart, a leading Indian eCommerce store.
 
 ## Architecture
- ![DataPreprocessing](docs/images/DataPreprocessing.png)
+ ![DataPreprocessing](/ml-platform/docs/images/DataPreprocessing.png)
 
 ## Data processing steps
 
