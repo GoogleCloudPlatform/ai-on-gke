@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Enabled the SQLAdmin service 
-resource "google_project_service" "project_service" {
-  project = var.project_id
-  service = "sqladmin.googleapis.com"
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
-}
-
 resource "random_password" "pwd" {
   length  = 16
   special = false
