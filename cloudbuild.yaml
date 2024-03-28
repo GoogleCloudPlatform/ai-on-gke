@@ -55,7 +55,7 @@ steps:
       - '-c'
       - |
         set -e
-
+        terraform version
         terraform apply \
         -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
         -var=project_id=$PROJECT_ID \
@@ -287,7 +287,7 @@ steps:
       - '-c'
       - |
         set -e
-
+  
         cd /workspace/infrastructure
         terraform destroy -var-file=tfvars_tests/standard-gke-public.platform.tfvars -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
