@@ -190,7 +190,7 @@ spec:
           description: |-
             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
             <li>If IAP is disabled, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
-            <li>Once logged in, choose the appropriate preset and execute notebooks. Sample notebooks are provided <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/examples/notebooks">here</a></li>
+            <li>Once logged in, choose the appropriate preset and execute notebooks. Sample notebooks are provided <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/release-1.1/ray-on-gke/examples/notebooks">here</a></li>
       outputs:
         jupyterhub_ip_address: {}
         jupyterhub_password: {}
