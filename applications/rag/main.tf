@@ -77,20 +77,20 @@ module "infra" {
   source = "../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
-  project_id        = var.project_id
-  cluster_name      = var.cluster_name
-  cluster_location  = var.cluster_location
-  region            = local.cluster_location_region
-  autopilot_cluster = var.autopilot_cluster
-  private_cluster   = var.private_cluster
-  network_name      = local.network_name
-  subnetwork_name   = local.network_name
-  subnetwork_cidr   = var.subnetwork_cidr
-  cpu_pools         = var.cpu_pools
-  enable_gpu        = true
-  gpu_pools         = var.gpu_pools
+  project_id         = var.project_id
+  cluster_name       = var.cluster_name
+  cluster_location   = var.cluster_location
+  region             = local.cluster_location_region
+  autopilot_cluster  = var.autopilot_cluster
+  private_cluster    = var.private_cluster
+  network_name       = local.network_name
+  subnetwork_name    = local.network_name
+  subnetwork_cidr    = var.subnetwork_cidr
+  cpu_pools          = var.cpu_pools
+  enable_gpu         = true
+  gpu_pools          = var.gpu_pools
   kubernetes_version = var.kubernetes_version
-  depends_on        = [module.network]
+  depends_on         = [module.network]
 }
 
 data "google_container_cluster" "default" {
