@@ -8,11 +8,14 @@ from google.cloud import storage
 import spacy
 import jsonpickle
 import re
+import socket
+
 
 IMAGE_BUCKET = os.environ['PROCESSING_BUCKET']
 RAY_CLUSTER_HOST = os.environ['RAY_CLUSTER_HOST']
 GCS_IMAGE_FOLDER = 'flipkart_images'
 
+socket.setdefaulttimeout(15)
 
 @ray.remote(num_cpus=1)
 def get_clean_df(df):
@@ -46,6 +49,7 @@ def get_clean_df(df):
 
     def prep_product_desc(df):
         # Cleaning the description text
+        spacy.cli.download("en_core_web_sm")
         model = spacy.load("en_core_web_sm")
 
         def parse_nlp_description(description) -> str:
@@ -132,21 +136,21 @@ def split_dataframe(df, chunk_size=199):
 
 # This function invokes ray task
 def run_remote():
-    print('hey')
     df = pd.read_csv('gs://'+IMAGE_BUCKET+'/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv')
-    df = df[['uniq_id','product_name','description','brand','product_category_tree','image','product_specifications']]
-    runtime_env = {"pip": ["google-cloud-storage==2.16.0"]}
+    df = df[['uniq_id','product_name','description','brand','image','product_specifications']]
+    runtime_env = {"pip": ["google-cloud-storage==2.16.0", "spacy==3.7.4", "jsonpickle==3.0.3"]}
     ray.init("ray://"+RAY_CLUSTER_HOST, runtime_env=runtime_env)
     print("STARTED")
     start_time = time.time()
     res = split_dataframe(df)
-    results = ray.get(get_clean_df.remote(res[i]) for i in range(len(res)))
+    results = ray.get([get_clean_df.remote(res[i]) for i in range(len(res))])
     print("FINISHED IN ")
     duration = time.time() - start_time
     print(duration)
     ray.shutdown()
-    results.to_csv('gs://'+IMAGE_BUCKET+'/flipkart_preprocessed_dataset/flipkart.csv', index=False)
-    return results
+    result_df = pd.concat(results, axis=0, ignore_index=True)
+    result_df.to_csv('gs://'+IMAGE_BUCKET+'/flipkart_preprocessed_dataset/flipkart.csv', index=False)
+    return result_df
 
 
 def main():
