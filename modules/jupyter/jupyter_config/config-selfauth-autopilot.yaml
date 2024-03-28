@@ -105,14 +105,14 @@ singleuser:
     dynamic:
       pvcNameTemplate: claim-{username}
     extraVolumes:
-      - name: test-vol
+      - name: data-vol
         csi:
           driver: gcsfuse.csi.storage.gke.io
           volumeAttributes:
             bucketName: ${gcs_bucket}
             mountOptions: "implicit-dirs,uid=1000,gid=100"
     extraVolumeMounts:
-        - name: test-vol
+        - name: data-vol
           mountPath: /persist-data
   profileList:
     - display_name: "CPU (C3)"
