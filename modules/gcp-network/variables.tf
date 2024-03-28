@@ -77,4 +77,5 @@ variable "secondary_ranges" {
 variable "create_psa" {
   type        = bool
   description = "Enable PSA for the network"
+  default     = true
 }
