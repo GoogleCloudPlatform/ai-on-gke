@@ -8,14 +8,10 @@ from google.cloud import storage
 import spacy
 import jsonpickle
 import re
-import socket
-
 
 IMAGE_BUCKET = os.environ['PROCESSING_BUCKET']
 RAY_CLUSTER_HOST = os.environ['RAY_CLUSTER_HOST']
 GCS_IMAGE_FOLDER = 'flipkart_images'
-
-socket.setdefaulttimeout(15)
 
 @ray.remote(num_cpus=1)
 def get_clean_df(df):
