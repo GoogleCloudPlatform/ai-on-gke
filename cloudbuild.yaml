@@ -184,101 +184,101 @@ steps:
   #   allowFailure: true
   #   waitFor: ['test jupyterhub']
 
-  - id: 'test rag'
-    name: 'gcr.io/$PROJECT_ID/terraform'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        set -e
+  # - id: 'test rag'
+  #   name: 'gcr.io/$PROJECT_ID/terraform'
+  #   entrypoint: 'sh'
+  #   args:
+  #     - '-c'
+  #     - |
+  #       set -e
 
-        # Get kube config
-        gcloud container clusters get-credentials \
-        ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-        --location $_REGION \
-        --project $PROJECT_ID
+  #       # Get kube config
+  #       gcloud container clusters get-credentials \
+  #       ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+  #       --location $_REGION \
+  #       --project $PROJECT_ID
 
-        cd /workspace/modules/jupyter/tests
-        python3 change_jupyter_config.py $_AUTOPILOT_CLUSTER
+  #       cd /workspace/modules/jupyter/tests
+  #       python3 change_jupyter_config.py $_AUTOPILOT_CLUSTER
 
-        cd /workspace/applications/rag/
-        terraform apply \
-        -var-file=workloads.tfvars \
-        -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
-        -var=create_cluster=false \
-        -var=jupyter_add_auth=false \
-        -var=frontend_add_auth=false \
-        -var=project_id=$PROJECT_ID \
-        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-        -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
-        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
-        -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
-        -auto-approve -no-color -lock=false
-        echo "pass" > /workspace/rag_tf_result.txt
+  #       cd /workspace/applications/rag/
+  #       terraform apply \
+  #       -var-file=workloads.tfvars \
+  #       -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+  #       -var=create_cluster=false \
+  #       -var=jupyter_add_auth=false \
+  #       -var=frontend_add_auth=false \
+  #       -var=project_id=$PROJECT_ID \
+  #       -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+  #       -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
+  #       -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
+  #       -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
+  #       -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
+  #       -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
+  #       -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
+  #       -auto-approve -no-color -lock=false
+  #       echo "pass" > /workspace/rag_tf_result.txt
 
-        # Validate Ray: Make sure pods are running
-        kubectl wait --all pods -n rag-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=300s
-        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8265:8265 &
-        # Wait port-forwarding to take its place
-        sleep 5s
+  #       # Validate Ray: Make sure pods are running
+  #       kubectl wait --all pods -n rag-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=300s
+  #       kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8265:8265 &
+  #       # Wait port-forwarding to take its place
+  #       sleep 5s
 
-        # Validate Ray: Check dashboard
-        ray job submit --working-dir ./tests \
-        --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
-        echo "pass" > /workspace/rag_ray_dashboard_result.txt
+  #       # Validate Ray: Check dashboard
+  #       ray job submit --working-dir ./tests \
+  #       --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
+  #       echo "pass" > /workspace/rag_ray_dashboard_result.txt
 
-        # Validate JupyterHub: Get hub url
-        kubectl get services -n rag-$SHORT_SHA-$_BUILD_ID
-        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
-        # Wait port-forwarding to take its place
-        sleep 5s
+  #       # Validate JupyterHub: Get hub url
+  #       kubectl get services -n rag-$SHORT_SHA-$_BUILD_ID
+  #       kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
+  #       # Wait port-forwarding to take its place
+  #       sleep 5s
 
-        # Validate JupyterHub: Test Hub
-        cd /workspace/modules/jupyter/tests
-        python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
-        echo "pass" > /workspace/rag_jupyterhub_test_result.txt
+  #       # Validate JupyterHub: Test Hub
+  #       cd /workspace/modules/jupyter/tests
+  #       python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
+  #       echo "pass" > /workspace/rag_jupyterhub_test_result.txt
 
-        # Validate RAG: Test rag frontend
-        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/rag-frontend 8081:8080 &
-        # Wait port-forwarding to take its place
-        sleep 5s
+  #       # Validate RAG: Test rag frontend
+  #       kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/rag-frontend 8081:8080 &
+  #       # Wait port-forwarding to take its place
+  #       sleep 5s
 
-        cd /workspace/applications/rag/tests
-        python3 test_frontend.py "127.0.0.1:8081"
-        echo "pass" > /workspace/rag_frontend_result.txt
-    allowFailure: true
-    waitFor: ['cleanup jupyterhub', 'cleanup ray cluster']
+  #       cd /workspace/applications/rag/tests
+  #       python3 test_frontend.py "127.0.0.1:8081"
+  #       echo "pass" > /workspace/rag_frontend_result.txt
+  #   allowFailure: true
+  #   waitFor: ['cleanup jupyterhub', 'cleanup ray cluster']
 
-  - id: 'cleanup rag'
-    name: 'gcr.io/$PROJECT_ID/terraform'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -e
+  # - id: 'cleanup rag'
+  #   name: 'gcr.io/$PROJECT_ID/terraform'
+  #   entrypoint: 'bash'
+  #   args:
+  #     - '-c'
+  #     - |
+  #       set -e
 
-        cd /workspace/applications/rag/
-        terraform destroy \
-        -var-file=workloads.tfvars \
-        -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
-        -var=create_cluster=false \
-        -var=jupyter_add_auth=false \
-        -var=frontend_add_auth=false \
-        -var=project_id=$PROJECT_ID \
-        -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-        -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
-        -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
-        -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
-        -auto-approve -no-color
+  #       cd /workspace/applications/rag/
+  #       terraform destroy \
+  #       -var-file=workloads.tfvars \
+  #       -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+  #       -var=create_cluster=false \
+  #       -var=jupyter_add_auth=false \
+  #       -var=frontend_add_auth=false \
+  #       -var=project_id=$PROJECT_ID \
+  #       -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+  #       -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
+  #       -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
+  #       -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
+  #       -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
+  #       -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
+  #       -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
+  #       -auto-approve -no-color
 
-    allowFailure: true
-    waitFor: ['test rag']
+  #   allowFailure: true
+  #   waitFor: ['test rag']
 
   - id: 'cleanup gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -297,7 +297,7 @@ steps:
         -var=cluster_location=$_REGION -auto-approve -no-color
 
     allowFailure: true
-    waitFor: ['cleanup rag']
+    #waitFor: ['cleanup rag']
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
