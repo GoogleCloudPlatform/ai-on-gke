@@ -47,7 +47,7 @@ locals {
 }
 
 module "project" {
-  source          = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/project"
+  source          = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/project?ref=v30.0.0&depth=1"
   parent          = try(var.project_create.parent, null)
   billing_account = try(var.project_create.billing_account, null)
   name            = var.project_id
@@ -125,14 +125,14 @@ module "vpc" {
 }
 
 module "fleet-project" {
-  source         = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/project"
+  source         = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/project?ref=v30.0.0&depth=1"
   count          = var.fleet_project_id == null ? 0 : 1
   name           = var.fleet_project_id
   project_create = false
 }
 
 module "fleet" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-hub"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-hub?ref=v30.0.0&depth=1"
   project_id = local.fleet_project.project_id
   clusters = {
     (var.cluster_name) = (
@@ -144,7 +144,7 @@ module "fleet" {
 }
 
 module "registry" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/artifact-registry"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/artifact-registry?ref=v30.0.0&depth=1"
   count      = var.registry_create ? 1 : 0
   project_id = module.project.project_id
   location   = var.region
@@ -153,7 +153,7 @@ module "registry" {
 }
 
 module "nat" {
-  source         = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/net-cloudnat"
+  source         = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/net-cloudnat?ref=v30.0.0&depth=1"
   count          = local.create_nat ? 1 : 0
   project_id     = module.project.project_id
   region         = var.region
