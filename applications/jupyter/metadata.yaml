@@ -45,7 +45,7 @@ spec:
           - ai.gke.io=jupyter
       - name: autopilot_cluster
         varType: bool
-        defaultValue: true
+        defaultValue: false
       - name: client_id
         description: Client ID used for enabling IAP
         varType: string
