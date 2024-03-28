@@ -42,7 +42,7 @@ spec:
           privileged: true
         image: jupyter/tensorflow-notebook:python-3.10
         volumeMounts:
-        - name: test-vol
+        - name: data-vol
           mountPath: /persist-data
         resources:
             limits:
@@ -54,7 +54,7 @@ spec:
               ephemeral-storage: 10Gi
               memory: 10Gi
       volumes:
-      - name: test-vol
+      - name: data-vol
         csi:
           driver: gcsfuse.csi.storage.gke.io
           volumeAttributes:
