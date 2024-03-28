@@ -205,7 +205,6 @@ steps:
         terraform apply \
         -var-file=workloads.tfvars \
         -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
-        -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
@@ -265,7 +264,6 @@ steps:
         terraform destroy \
         -var-file=workloads.tfvars \
         -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
-        -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -var=create_cluster=false \
         -var=jupyter_add_auth=false \
         -var=frontend_add_auth=false \
