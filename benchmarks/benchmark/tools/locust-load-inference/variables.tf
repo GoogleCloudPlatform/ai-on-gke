@@ -185,6 +185,12 @@ variable "test_rate" {
   default     = 5
 }
 
+variable "locust_user_timeout" {
+  description = "Timeout to set for Locust User Task. Ensures master does not kill Locust User before this time. User Task also uses this timeout in the request."
+  type        = number
+  default     = 10800 # 3 hrs. Intentionally set high for long-running tasks.
+}
+
 variable "run_test_automatically" {
   description = "Run the test after deployment"
   type        = bool
@@ -194,7 +200,7 @@ variable "run_test_automatically" {
 variable "enable_custom_metrics" {
   description = "enable custom metric output in Locust"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "huggingface_secret" {
