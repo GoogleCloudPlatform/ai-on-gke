@@ -28,7 +28,7 @@ spec:
           - ai.gke.io=rag
       - name: autopilot_cluster
         varType: string
-        defaultValue: true
+        defaultValue: false
       - name: cloudsql_instance
         description: Cloud SQL pgvector instance name to store generated vector embeddings for the dataset
         varType: string

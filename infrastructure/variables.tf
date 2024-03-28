@@ -75,7 +75,7 @@ variable "kubernetes_version" {
 
 variable "release_channel" {
   type    = string
-  default = "RAPID"
+  default = "REGULAR"
 }
 
 variable "cluster_location" {

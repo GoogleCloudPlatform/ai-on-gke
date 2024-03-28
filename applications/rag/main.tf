@@ -89,6 +89,7 @@ module "infra" {
   cpu_pools         = var.cpu_pools
   enable_gpu        = true
   gpu_pools         = var.gpu_pools
+  kubernetes_version = var.kubernetes_version
   depends_on        = [module.network]
 }
 
@@ -270,6 +271,7 @@ module "kuberay-monitoring" {
   source                          = "../../modules/kuberay-monitoring"
   providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
+  autopilot_cluster               = local.enable_autopilot
   namespace                       = local.kubernetes_namespace
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard

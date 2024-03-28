@@ -84,6 +84,15 @@ p.response::before {
     font-weight: bold;
 }
 
+p.warning {
+    background-color: rgba(255, 229, 100, 0.1);
+}
+
+p.error::before {
+    content: 'Warning: ';
+    font-weight: bold;
+}
+
 p.error {
     background-color: rgba(255, 0, 0, 0.1);
 }

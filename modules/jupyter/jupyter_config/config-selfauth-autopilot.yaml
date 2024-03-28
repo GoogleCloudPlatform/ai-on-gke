@@ -105,14 +105,14 @@ singleuser:
     dynamic:
       pvcNameTemplate: claim-{username}
     extraVolumes:
-      - name: test-vol
+      - name: data-vol
         csi:
           driver: gcsfuse.csi.storage.gke.io
           volumeAttributes:
             bucketName: ${gcs_bucket}
             mountOptions: "implicit-dirs,uid=1000,gid=100"
     extraVolumeMounts:
-        - name: test-vol
+        - name: data-vol
           mountPath: /persist-data
   profileList:
     - display_name: "CPU (C3)"
@@ -136,8 +136,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         node_selector:
           cloud.google.com/compute-class: "Performance"
@@ -165,8 +165,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         image: ${notebook_image}:${notebook_image_tag}
         extra_resource_limits:
@@ -196,8 +196,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         image: ${notebook_image}:${notebook_image_tag}
         extra_resource_limits:
@@ -229,8 +229,8 @@ singleuser:
                   csi:
                     driver: gcsfuse.csi.storage.gke.io
                     volumeAttributes:
-                      bucketName: gcsfuse-{username}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777"
+                      bucketName: ${gcs_bucket}
+                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       kubespawner_override:
         image: ${notebook_image}:${notebook_image_tag}
         extra_resource_limits:
