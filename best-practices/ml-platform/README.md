@@ -10,35 +10,36 @@ This reference architecture demonstrates how to build a GKE platform that facili
 - Platform admins will create a namespace per application and provide the application team member full access to it.
 - The namespace scoped resources will be created by the Application/ML teams either via [Config Sync][config-sync] or through a deployment tool like [Cloud Deploy][cloud-deploy]
 
-## CUJ and Personae addressed in the reference architecture
+## Critical User Journeys (CUJs)
 
 ### Persona : Platform Admin
 
-**CUJ 1** : Provide templates with built-in standard practices to stamp out GKE platforms to be used by ML Engineers, Data Scientists and Application teams.
+- Offer a platform that incorporates established best practices.
+- Grant end users the essential resources, guided by the principle of least privilege, empowering them to manage and maintain their workloads.
+- Establish secure channels for end users to interact seamlessly with the platform.
+- Empower the enforcement of robust security policies across the platform.
 
-**CUJ 2** : Provide GKE clusters.
+### Persona : Machine Learning Engineer
 
-**CUJ 2** : Provide space for the teams on GKE cluster to run their workloads and the permissions following the principle of least privilege.
+- Deploy the model with ease and make the endpoints available only to the intended audience
+- Continuously monitor the model performance and resource utilization
+- Troubleshoot any performance or integration issues
+- Ability to version, store and access the models and model artifacts:
+  - To debug & troubleshoot in production and track back to the specific model version & associated training data
+  - To quick & controlled rollback to a previous, more stable version
+- Implement the feedback loop to adapt to changing data & business needs:
+  - Ability to retrain / fine-tune the model.
+  - Ability to split the traffic between models (A/B testing)
+  - Switching between the models without breaking inference system for the end-users
+- Ability to scaling up/down the infra to accommodate changing needs
+- Ability to share the insights and findings with stakeholders to take data-driven decisions
 
-**CUJ 3** : Provide secure methods to the ML Engineers, Data Scientist, Application teams and the Operators to connect to the private GKE clusters.
+### Persona : Machine Learning Operator
 
-**CUJ 4** : Enforcing security policies on the underlying platform.
-
-### Persona : ML Engineers
-
-**CUJ 1** : Use ML tools like `ray` to perform their day to day tasks like data pre-processing, ML training etc.
-
-**CUJ 2** : Use a development environment like Jupyter Notebook for faster inner loop of ML development. **[TBD]**
-
-### Persona : Operators
-
-**CUJ 1**: Act as a bridge between the Platform admins and the ML Engineers by providing and maintaining software needed by the ML engineers so they can focus on their job.
-
-**CUJ 2**: Deploying the models. **[TBD]**
-
-**CUJ 3**: Building observability on the models. **[TBD]**
-
-**CUJ 4**: Operationalizing the models. **[TBD]**
+- Provide and maintain software required by the end users of the platform.
+- Operationalize experimental workload by providing guidance and best practices for running the workload on the platform.
+- Deploy the workloads on the platform.
+- Assist with enabling observability and monitoring for the workloads to ensure smooth operations.
 
 ## Prerequisites
 
