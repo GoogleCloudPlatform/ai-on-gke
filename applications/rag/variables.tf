@@ -31,6 +31,11 @@ variable "cluster_location" {
   type = string
 }
 
+variable "kubernetes_version" {
+  type    = string
+  default = "1.28"
+}
+
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
@@ -94,7 +99,7 @@ variable "gcs_bucket" {
 variable "dataset_embeddings_table_name" {
   type        = string
   description = "Name of the table that stores vector embeddings for input dataset"
-  default     = "googlemaps_reviews_db"
+  default     = "netflix_reviews_db"
 }
 
 variable "create_brand" {
@@ -314,7 +319,7 @@ variable "private_cluster" {
 
 variable "autopilot_cluster" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "cloudsql_instance" {

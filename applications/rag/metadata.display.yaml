@@ -16,11 +16,11 @@ spec:
       variables:
         acknowledge:
           name: acknowledge
-          title: Confirm that all prerequisites have been met. 
+          title: Confirm that all prerequisites have been met.
           section: acknowledge
           subtext: If you choose an existing GKE standard cluster, ensure it has an L4 GPU Node pool with <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-autoscaler#enable_autoscaling">autoscaling</a> and <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/node-auto-provisioning#enable">node auto-provisioning</a> enabled.
           enumValueLabels:
-            - label: "Confirm that all prerequisites have been met."
+            - label: Confirm that all prerequisites have been met.
               value: "true"
         additional_labels:
           name: additional_labels
@@ -36,6 +36,7 @@ spec:
               value: "true"
             - label: Standard Cluster
               value: "false"
+          invisible: true
         cloudsql_instance:
           name: cloudsql_instance
           title: CloudSQL Instance
@@ -121,49 +122,9 @@ spec:
           name: frontend_add_auth
           title: Enable IAP for Frontend Application
           section: rag_iap_auth
-        frontend_client_id:
-          name: frontend_client_id
-          title: Frontend Client Id
-          invisible: true
-          section: rag_iap_auth
-        frontend_client_secret:
-          name: frontend_client_secret
-          title: Frontend Client Secret
-          invisible: true
-          section: rag_iap_auth
         frontend_domain:
           name: frontend_domain
           title: Frontend Domain
-          section: rag_iap_auth
-        frontend_k8s_backend_config_name:
-          name: frontend_k8s_backend_config_name
-          title: Frontend K8s Backend Config Name
-          invisible: true
-          section: rag_iap_auth
-        frontend_k8s_backend_service_name:
-          name: frontend_k8s_backend_service_name
-          title: Frontend K8s Backend Service Name
-          invisible: true
-          section: rag_iap_auth
-        frontend_k8s_backend_service_port:
-          name: frontend_k8s_backend_service_port
-          title: Frontend K8s Backend Service Port
-          invisible: true
-          section: rag_iap_auth
-        frontend_k8s_iap_secret_name:
-          name: frontend_k8s_iap_secret_name
-          title: Frontend K8s Iap Secret Name
-          invisible: true
-          section: rag_iap_auth
-        frontend_k8s_ingress_name:
-          name: frontend_k8s_ingress_name
-          title: Frontend K8s Ingress Name
-          invisible: true
-          section: rag_iap_auth
-        frontend_k8s_managed_cert_name:
-          name: frontend_k8s_managed_cert_name
-          title: Frontend K8s Managed Cert Name
-          invisible: true
           section: rag_iap_auth
         frontend_members_allowlist:
           name: frontend_members_allowlist
@@ -178,104 +139,13 @@ spec:
         goog_cm_deployment_name:
           name: goog_cm_deployment_name
           title: Goog Cm Deployment Name
-        gpu_pools:
-          name: gpu_pools
-          title: Gpu Pools
-          invisible: true
-        ray_dashboard_add_auth:
-          name: ray_dashboard_add_auth
-          title: Enable IAP for Ray Dashboard Application
-          section: ray_iap_auth
-        ray_dashboard_client_id:
-          name: ray_dashboard_client_id
-          title: Ray Dashboard Client Id
-          section: ray_iap_auth
-          invisible: true
-        ray_dashboard_client_secret:
-          name: ray_dashboard_client_secret
-          title: Ray Dashboard Client Secret
-          section: ray_iap_auth
-          invisible: true
-        ray_dashboard_domain:
-          name: ray_dashboard_domain
-          title: Ray Dashboard Domain
-          section: ray_iap_auth
-        ray_dashboard_k8s_backend_config_name:
-          name: ray_dashboard_k8s_backend_config_name
-          title: Ray Dashboard K8s Backend Config Name
-          section: ray_iap_auth
-          invisible: true
-        ray_dashboard_k8s_backend_service_port:
-          name: ray_dashboard_k8s_backend_service_port
-          title: Ray Dashboard K8s Backend Service Port
-          section: ray_iap_auth
-          invisible: true
-        ray_dashboard_k8s_iap_secret_name:
-          name: ray_dashboard_k8s_iap_secret_name
-          title: Ray Dashboard K8s Iap Secret Name
-          section: ray_iap_auth
-          invisible: true
-        ray_dashboard_k8s_ingress_name:
-          name: ray_dashboard_k8s_ingress_name
-          title: Ray Dashboard K8s Ingress Name
-          section: ray_iap_auth
-          invisible: true
-        ray_dashboard_k8s_managed_cert_name:
-          name: ray_dashboard_k8s_managed_cert_name
-          title: Ray Dashboard K8s Managed Cert Name
-          section: ray_iap_auth
-          invisible: true
-        ray_dashboard_members_allowlist:
-          name: ray_dashboard_members_allowlist
-          title: Ray Dashboard Members Allowlist
-          section: ray_iap_auth
         jupyter_add_auth:
           name: jupyter_add_auth
           title: Enable IAP for JupyterHub Application
           section: jupyter_iap_auth
-        jupyter_client_id:
-          name: jupyter_client_id
-          title: Jupyter Client Id
-          invisible: true
-          section: jupyter_iap_auth
-        jupyter_client_secret:
-          name: jupyter_client_secret
-          title: Jupyter Client Secret
-          invisible: true
-          section: jupyter_iap_auth
         jupyter_domain:
           name: jupyter_domain
           title: Jupyter Domain
-          section: jupyter_iap_auth
-        jupyter_k8s_backend_config_name:
-          name: jupyter_k8s_backend_config_name
-          title: Jupyter K8s Backend Config Name
-          invisible: true
-          section: jupyter_iap_auth
-        jupyter_k8s_backend_service_name:
-          name: jupyter_k8s_backend_service_name
-          title: Jupyter K8s Backend Service Name
-          invisible: true
-          section: jupyter_iap_auth
-        jupyter_k8s_backend_service_port:
-          name: jupyter_k8s_backend_service_port
-          title: Jupyter K8s Backend Service Port
-          invisible: true
-          section: jupyter_iap_auth
-        jupyter_k8s_iap_secret_name:
-          name: jupyter_k8s_iap_secret_name
-          title: Jupyter K8s Iap Secret Name
-          invisible: true
-          section: jupyter_iap_auth
-        jupyter_k8s_ingress_name:
-          name: jupyter_k8s_ingress_name
-          title: Jupyter K8s Ingress Name
-          invisible: true
-          section: jupyter_iap_auth
-        jupyter_k8s_managed_cert_name:
-          name: jupyter_k8s_managed_cert_name
-          title: Jupyter K8s Managed Cert Name
-          invisible: true
           section: jupyter_iap_auth
         jupyter_members_allowlist:
           name: jupyter_members_allowlist
@@ -310,35 +180,37 @@ spec:
           title: Rag Service Account
           invisible: true
           section: rag
+        ray_dashboard_add_auth:
+          name: ray_dashboard_add_auth
+          title: Enable IAP for Ray Dashboard Application
+          section: ray_iap_auth
+        ray_dashboard_domain:
+          name: ray_dashboard_domain
+          title: Ray Dashboard Domain
+          section: ray_iap_auth
+        ray_dashboard_members_allowlist:
+          name: ray_dashboard_members_allowlist
+          title: Ray Dashboard Members Allowlist
+          section: ray_iap_auth
         ray_service_account:
           name: ray_service_account
           title: Ray Service Account
           invisible: true
           section: rag
-        subnetwork_cidr:
-          name: subnetwork_cidr
-          title: Subnetwork Cidr
-          invisible: true
-          section: cluster_details
-        support_email:
-          name: support_email
-          title: Support Email
-          invisible: true
       sections:
         - name: acknowledge
           title: Before you begin
         - name: cluster_details
           title: GKE Cluster Configuration
-          tooltip: Select or Create GKE cluster
+          subtext: It is recommended to choose the <b>New Cluster</b> option
         - name: rag
           title: Other Configuration
         - name: rag_iap_auth
           title: Configure Authenticated Access for Frontend
-          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to Internal.
+          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
         - name: ray_iap_auth
           title: Configure Authenticated Access for Ray Dashboard
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
-
         - name: jupyter_iap_auth
           title: Configure Authenticated Access for JupyterHub
           subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
@@ -369,10 +241,6 @@ spec:
           openInNewTab: true
           showInNotification: true
           label: Go to Frontend Application
-        ray_dashboard_uri:
-          openInNewTab: true
-          showInNotification: true
-          label: Go to RAY Dashboard Application
         gcp_network: {}
         jupyterhub_ip_address: {}
         jupyterhub_password: {}
@@ -382,3 +250,6 @@ spec:
           label: Go to JupyterHub Application
         jupyterhub_user: {}
         kubernetes_namespace: {}
+        ray_dashboard_ip_address: {}
+        ray_dashboard_uri: {}
+

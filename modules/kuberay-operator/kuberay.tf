@@ -49,3 +49,42 @@ resource "kubernetes_secret_v1" "service_account_token" {
 
   depends_on = [module.kuberay-workload-identity]
 }
+
+# Grant access to batchv1/Jobs to kuberay-operator since the kuberay-operator role is missing some permissions.
+# See https://github.com/ray-project/kuberay/issues/1706 for more details.
+# TODO: remove this role binding once the kuberay-operator helm chart is upgraded to v1.1
+resource "kubernetes_role_binding_v1" "kuberay_batch_jobs" {
+  metadata {
+    name      = "kuberay-operator-batch-jobs"
+    namespace = var.namespace
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "kuberay-operator"
+    namespace = var.namespace
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "kuberay-operator-batch-jobs"
+  }
+
+  depends_on = [helm_release.kuberay-operator]
+}
+
+resource "kubernetes_role_v1" "kuberay_batch_jobs" {
+  metadata {
+    name      = "kuberay-operator-batch-jobs"
+    namespace = var.namespace
+  }
+
+  rule {
+    api_groups = ["batch"]
+    resources  = ["jobs"]
+    verbs      = ["*"]
+  }
+
+  depends_on = [helm_release.kuberay-operator]
+}

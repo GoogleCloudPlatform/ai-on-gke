@@ -32,3 +32,8 @@ output "jupyterhub_password" {
   value       = module.jupyterhub.jupyterhub_password
   sensitive   = true
 }
+
+output "kubernetes_namespace" {
+  value       = local.kubernetes_namespace
+  description = "Kubernetes namespace"
+}

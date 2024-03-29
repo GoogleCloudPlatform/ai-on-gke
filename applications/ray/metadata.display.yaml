@@ -16,21 +16,22 @@ spec:
       variables:
         acknowledge:
           name: acknowledge
-          title: Confirm that all prerequisites have been met. 
+          title: Confirm that all prerequisites have been met.
           section: acknowledge
           subtext: If you choose an existing GKE standard cluster, ensure it has an L4 GPU Node pool with <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-autoscaler#enable_autoscaling">autoscaling</a> and <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/node-auto-provisioning#enable">node auto-provisioning</a> enabled.
           enumValueLabels:
-            - label: "Confirm that all prerequisites have been met."
+            - label: Confirm that all prerequisites have been met.
               value: "true"
-        goog_cm_deployment_name:
-          name: goog_cm_deployment_name
-          title: Goog Cm Deployment Name
-        create_cluster:
-          name: create_cluster
-          title: Create GKE Cluster
+        additional_labels:
+          name: additional_labels
+          title: Additional Labels
+          invisible: true
           section: cluster_details
-          xGoogleProperty:
-            type: ET_CREATE_RESOURCE
+        autopilot_cluster:
+          name: autopilot_cluster
+          title: GKE Cluster Type
+          section: cluster_details
+          invisible: true
         cluster_location:
           name: cluster_location
           title: Cluster Location
@@ -47,49 +48,46 @@ spec:
           xGoogleProperty:
             type: ET_GKE_CLUSTER
             gkeCluster:
-              clusterCreationVariable: create_cluster
               locationVariable: cluster_location
-        cluster_membership_id:
-          name: cluster_membership_id
-          title: Cluster Membership Id
+              clusterCreationVariable: create_cluster
+        create_brand:
+          name: create_brand
+          title: Create Brand
           invisible: true
+          section: iap_auth
+        create_cluster:
+          name: create_cluster
+          title: Create GKE Cluster
           section: cluster_details
-        autopilot_cluster:
-          name: autopilot_cluster
-          title: GKE Cluster Type
-          section: cluster_details
-          enumValueLabels:
-            - label: Autopilot Cluster
-              value: "true"
-            - label: Standard Cluster
-              value: "false"
-        kubernetes_namespace:
-          name: kubernetes_namespace
-          title: Kubernetes Namespace
-          section: cluster_details
-        additional_labels:
-          name: additional_labels
-          title: Additional Labels
-          section: cluster_details
-          invisible: true
-        private_cluster:
-          name: private_cluster
-          title: Private Cluster
-          invisible: true
-          section: cluster_details
+          xGoogleProperty:
+            type: ET_CREATE_RESOURCE
         create_gcs_bucket:
           name: create_gcs_bucket
           title: Create Gcs Bucket
           invisible: true
+        create_network:
+          name: create_network
+          title: Create Network
+          invisible: true
         create_ray_cluster:
           name: create_ray_cluster
           title: Create Ray Cluster
-          section: ray
           invisible: true
+          section: ray
         create_service_account:
           name: create_service_account
           title: Create Service Account
           invisible: true
+        disable_ray_cluster_network_policy:
+          name: disable_ray_cluster_network_policy
+          title: Disable Ray Cluster Network Policy
+          invisible: true
+          section: ray
+        disable_resource_quotas:
+          name: disable_resource_quotas
+          title: Disable Resource Quotas
+          invisible: true
+          section: ray
         enable_gpu:
           name: enable_gpu
           title: Enable GPU
@@ -98,48 +96,140 @@ spec:
           name: enable_grafana_on_ray_dashboard
           title: Enable Grafana On Ray Dashboard
           section: ray
-        workload_identity_service_account:
-          name: workload_identity_service_account
-          title: GCP Workload Identity Service Account
-          section: ray
+        enable_tpu:
+          name: enable_tpu
+          title: Enable Tpu
           invisible: true
+          section: ray
         gcs_bucket:
           name: gcs_bucket
           title: Gcs Bucket
           section: ray
           xGoogleProperty:
             type: ET_GCS_BUCKET
+        goog_cm_deployment_name:
+          name: goog_cm_deployment_name
+          title: Goog CM Deployment Name
+        kuberay_network_policy_allow_cidr:
+          name: kuberay_network_policy_allow_cidr
+          title: Kuberay Network Policy Allow Cidr
+          invisible: true
+          section: ray
+        kubernetes_namespace:
+          name: kubernetes_namespace
+          title: Kubernetes Namespace
+          invisible: true
+          section: cluster_details
+        network_name:
+          name: network_name
+          title: Network Name
+          invisible: true
+        private_cluster:
+          name: private_cluster
+          title: Private Cluster
+          invisible: true
+          section: cluster_details
         project_id:
           name: project_id
           title: Project Id
           invisible: true
+        ray_cluster_name:
+          name: ray_cluster_name
+          title: Ray Cluster Name
+          section: ray
+          invisible: true
+        ray_dashboard_add_auth:
+          name: ray_dashboard_add_auth
+          title: Ray Dashboard Add Auth
+          section: iap_auth
+        ray_dashboard_client_id:
+          name: ray_dashboard_client_id
+          title: Ray Dashboard Client Id
+          invisible: true
+          section: iap_auth
+        ray_dashboard_client_secret:
+          name: ray_dashboard_client_secret
+          title: Ray Dashboard Client Secret
+          invisible: true
+          section: iap_auth
+        ray_dashboard_domain:
+          name: ray_dashboard_domain
+          title: Ray Dashboard Domain
+          section: iap_auth
+        ray_dashboard_k8s_backend_config_name:
+          name: ray_dashboard_k8s_backend_config_name
+          title: Ray Dashboard K8s Backend Config Name
+          invisible: true
+          section: iap_auth
+        ray_dashboard_k8s_backend_service_port:
+          name: ray_dashboard_k8s_backend_service_port
+          title: Ray Dashboard K8s Backend Service Port
+          invisible: true
+          section: iap_auth
+        ray_dashboard_k8s_iap_secret_name:
+          name: ray_dashboard_k8s_iap_secret_name
+          title: Ray Dashboard K8s Iap Secret Name
+          invisible: true
+          section: iap_auth
+        ray_dashboard_k8s_ingress_name:
+          name: ray_dashboard_k8s_ingress_name
+          title: Ray Dashboard K8s Ingress Name
+          invisible: true
+          section: iap_auth
+        ray_dashboard_k8s_managed_cert_name:
+          name: ray_dashboard_k8s_managed_cert_name
+          title: Ray Dashboard K8s Managed Cert Name
+          invisible: true
+          section: iap_auth
+        ray_dashboard_members_allowlist:
+          name: ray_dashboard_members_allowlist
+          title: Ray Dashboard Members Allowlist
+          section: iap_auth
         ray_version:
           name: ray_version
           title: Ray Version
           section: ray
           enumValueLabels:
             - label: v2.9.3
-              value: "v2.9.3"
+              value: v2.9.3
+        resource_quotas:
+          name: resource_quotas
+          title: Resource Quotas
+          invisible: true
+          section: ray
+        subnetwork_cidr:
+          name: subnetwork_cidr
+          title: Subnetwork Cidr
+          invisible: true
+        support_email:
+          name: support_email
+          title: Support Email
+          invisible: true
+        workload_identity_service_account:
+          name: workload_identity_service_account
+          title: GCP Workload Identity Service Account
+          invisible: true
+          section: ray
       sections:
         - name: acknowledge
           title: Before you begin
         - name: cluster_details
           title: Cluster Details
-          tooltip: Select or Create GKE cluster
+          subtext: It is recommended to choose the <b>New Cluster</b> option
         - name: ray
           title: Ray Application
         - name: iap_auth
           title: IAP Authentication
+          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-        - heading: "Connect to Ray Cluster"
-          description: |-
-            Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265). Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a> to install ray and submit jobs.
-        - heading: "View Job Status in Ray Dashboard"
-          description: |-
-            Open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button. 
+        - heading: Connect to Ray Cluster
+          description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265). Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a> to install ray and submit jobs.
+        - heading: View Job Status in Ray Dashboard
+          description: "Open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button. "
       outputs:
+        kubernetes_namespace: {}
         ray_cluster_uri:
           openInNewTab: true
           showInNotification: true
