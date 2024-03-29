@@ -27,7 +27,6 @@ project_id = "<project-id>"
 
 network_name      = "default"
 subnetwork_name   = "default"
-subnetwork_region = "us-central1"
 
 ## gke variables
 private_cluster     = false ## Default true. Use false for a public cluster
