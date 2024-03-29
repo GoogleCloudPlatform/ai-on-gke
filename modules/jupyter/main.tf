@@ -110,41 +110,41 @@ resource "helm_release" "jupyterhub" {
   timeout          = 600
 
   values = var.autopilot_cluster ? [templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
-    password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
-    project_id          = var.project_id
-    project_number      = data.google_project.project.number
-    namespace           = var.namespace
-    additional_labels   = local.additional_labels
-    backend_config      = var.k8s_backend_config_name
-    service_name        = var.k8s_backend_service_name
-    authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
-    service_type        = var.add_auth ? "NodePort" : "ClusterIP"
-    gcs_bucket          = var.gcs_bucket
-    k8s_service_account = var.workload_identity_service_account
-    ephemeral_storage   = var.ephemeral_storage
+    password                          = var.add_auth ? "dummy" : random_password.generated_password[0].result
+    project_id                        = var.project_id
+    project_number                    = data.google_project.project.number
+    namespace                         = var.namespace
+    additional_labels                 = local.additional_labels
+    backend_config                    = var.k8s_backend_config_name
+    service_name                      = var.k8s_backend_service_name
+    authenticator_class               = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
+    service_type                      = var.add_auth ? "NodePort" : "ClusterIP"
+    gcs_bucket                        = var.gcs_bucket
+    k8s_service_account               = var.workload_identity_service_account
+    ephemeral_storage                 = var.ephemeral_storage
     secret_name                       = var.db_secret_name
     cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
 
-    notebook_image      = "jupyter/tensorflow-notebook"
-    notebook_image_tag  = "python-3.10"
+    notebook_image     = "jupyter/tensorflow-notebook"
+    notebook_image_tag = "python-3.10"
     })
     ] : [templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
-      password            = var.add_auth ? "dummy" : random_password.generated_password[0].result
-      project_id          = var.project_id
-      project_number      = data.google_project.project.number
-      namespace           = var.namespace
-      additional_labels   = local.additional_labels
-      backend_config      = var.k8s_backend_config_name
-      service_name        = var.k8s_backend_service_name
-      authenticator_class = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
-      service_type        = var.add_auth ? "NodePort" : "ClusterIP"
-      gcs_bucket          = var.gcs_bucket
-      k8s_service_account = var.workload_identity_service_account
-      ephemeral_storage   = var.ephemeral_storage
+      password                          = var.add_auth ? "dummy" : random_password.generated_password[0].result
+      project_id                        = var.project_id
+      project_number                    = data.google_project.project.number
+      namespace                         = var.namespace
+      additional_labels                 = local.additional_labels
+      backend_config                    = var.k8s_backend_config_name
+      service_name                      = var.k8s_backend_service_name
+      authenticator_class               = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
+      service_type                      = var.add_auth ? "NodePort" : "ClusterIP"
+      gcs_bucket                        = var.gcs_bucket
+      k8s_service_account               = var.workload_identity_service_account
+      ephemeral_storage                 = var.ephemeral_storage
       secret_name                       = var.db_secret_name
       cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
-      notebook_image      = "jupyter/tensorflow-notebook"
-      notebook_image_tag  = "python-3.10"
+      notebook_image                    = "jupyter/tensorflow-notebook"
+      notebook_image_tag                = "python-3.10"
     })
   ]
   depends_on = [module.jupyterhub-workload-identity]
