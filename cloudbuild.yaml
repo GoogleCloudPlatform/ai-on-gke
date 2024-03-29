@@ -65,10 +65,9 @@ steps:
 
         cd /workspace/modules/custom-network
         terraform apply \
+        -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
         -var=project_id=$PROJECT_ID \
         -var=region=$_REGION \
-        -var=private_cluster=false \ 
-        -var=create_network=true \
         -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -auto-approve -no-color -lock=false
