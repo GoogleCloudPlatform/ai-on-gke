@@ -2,6 +2,8 @@
 
 This quick-start deployment guide can be used to set up an environment to familiarize yourself with the architecture and get an understanding of the concepts.
 
+**NOTE: This environment is not intended to be a long lived environment. It is intended for temporary demonstration and learning purposes.**
+
 ### Requirements
 
 In this guide you can choose to bring your project (BYOP) or have Terraform create a new project for you. The requirements are difference based on the option that you choose.
@@ -25,8 +27,8 @@ In this guide you can choose to bring your project (BYOP) or have Terraform crea
 - Clone the repository and change directory to the guide directory
 
   ```
-  git clone https://github.com/GoogleCloudPlatform/ai-on-gke
-  cd ai-on-gke/ml-platform
+  git clone https://github.com/GoogleCloudPlatform/ai-on-gke && \
+  cd ai-on-gke/best-practices/ml-platform
   ```
 
 - Set environment variables
@@ -34,6 +36,10 @@ In this guide you can choose to bring your project (BYOP) or have Terraform crea
   ```
   export MLP_BASE_DIR=$(pwd) && \
   echo "export MLP_BASE_DIR=${MLP_BASE_DIR}" >> ${HOME}/.bashrc
+
+  cd examples/platform/sandbox && \
+  export MLP_TYPE_BASE_DIR=$(pwd) && \
+  echo "export MLP_TYPE_BASE_DIR=${MLP_TYPE_BASE_DIR}" >> ${HOME}/.bashrc
   ```
 
 ### GitHub Configuration
@@ -98,9 +104,9 @@ In this guide you can choose to bring your project (BYOP) or have Terraform crea
 - Set the configuration variables
 
   ```
-  sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
 ### Project Configuration
@@ -141,8 +147,8 @@ You only need to complete the section for the option that you have selected.
 - Set the configuration variables
 
   ```
-  sed -i "s/YOUR_STATE_BUCKET/${MLP_STATE_BUCKET}/g" ${MLP_BASE_DIR}/terraform/backend.tf
-  sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_BASE_DIR}/terraform/mlp.auto.tfvars
+  sed -i "s/YOUR_STATE_BUCKET/${MLP_STATE_BUCKET}/g" ${MLP_TYPE_BASE_DIR}/backend.tf
+  sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
 #### Terraform managed project
@@ -150,7 +156,7 @@ You only need to complete the section for the option that you have selected.
 - Set the configuration variables
 
   ```
-  nano ${MLP_BASE_DIR}/terraform/initialize/initialize.auto.tfvars
+  nano ${MLP_BASE_DIR}/terraform/features/initialize/initialize.auto.tfvars
   ```
 
   ```
@@ -177,7 +183,7 @@ You only need to complete the section for the option that you have selected.
 - Create a new project
 
   ```
-  cd ${MLP_BASE_DIR}/terraform/initialize
+  cd ${MLP_BASE_DIR}/terraform/features/initialize
   terraform init && \
   terraform plan -input=false -out=tfplan && \
   terraform apply -input=false tfplan && \
@@ -191,7 +197,7 @@ You only need to complete the section for the option that you have selected.
 - Create the resources
 
   ```
-  cd ${MLP_BASE_DIR}/terraform && \
+  cd ${MLP_TYPE_BASE_DIR} && \
   terraform init && \
   terraform plan -input=false -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
   terraform apply -input=false tfplan
@@ -205,7 +211,7 @@ You only need to complete the section for the option that you have selected.
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Clusters. You should see one cluster.
 
 - Go to Google Cloud Console, click on the navigation menu and click on Kubernetes Engine > Config. If you haven't enabled GKE Enterprise in the project earlier, Click `LEARN AND ENABLE` button and then `ENABLE GKE ENTERPRISE`. You should see a RootSync and RepoSync object.
-  ![configsync](docs/images/configsync.png)
+  ![configsync](/best-practices/ml-platform/docs/images/configsync.png)
 
 #### Software installed via RepoSync and RootSync
 
@@ -287,7 +293,7 @@ Open Cloud Shell to execute the following commands:
 - Destroy the resources
 
   ```
-  cd ${MLP_BASE_DIR}/terraform && \
+  cd ${MLP_TYPE_BASE_DIR} && \
   terraform init && \
   terraform destroy -auto-approve -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" && \
   rm -rf .terraform .terraform.lock.hcl
@@ -310,7 +316,7 @@ You only need to complete the section for the option that you have selected.
 - Destroy the project
 
   ```
-  cd ${MLP_BASE_DIR}/terraform/initialize && \
+  cd ${MLP_BASE_DIR}/terraform/features/initialize && \
   TERRAFORM_BUCKET_NAME=$(grep bucket backend.tf | awk -F"=" '{print $2}' | xargs) && \
   cp backend.tf.local backend.tf && \
   terraform init -force-copy -lock=false -migrate-state && \

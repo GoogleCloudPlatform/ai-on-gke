@@ -1,20 +1,23 @@
 # Distributed Data Processing with Ray on GKE
 
 ## Dataset
+
 [This](https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-products) is a pre-crawled public dataset, taken as a subset of a bigger dataset (more than 5.8 million products) that was created by extracting data from [Flipkart](https://www.flipkart.com/), a leading Indian eCommerce store.
 
 ## Architecture
- ![DataPreprocessing](/ml-platform/docs/images/ray-dataprocessing-workflow.png)
+
+![DataPreprocessing](/best-practices/ml-platform/docs/images/ray-dataprocessing-workflow.png)
 
 ## Data processing steps
 
-The dataset has product information such as id, name, brand, description, image urls, product specifications. 
+The dataset has product information such as id, name, brand, description, image urls, product specifications.
 
 The preprocessing.py file does the following:
-* Read the csv from Cloud Storage
-* Clean up the product description text
-* Extract image urls, validate and download the images into cloud storage
-* Cleanup & extract attributes as key-value pairs
+
+- Read the csv from Cloud Storage
+- Clean up the product description text
+- Extract image urls, validate and download the images into cloud storage
+- Cleanup & extract attributes as key-value pairs
 
 ## How to use this repo:
 
@@ -26,13 +29,11 @@ The preprocessing.py file does the following:
   DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/dataprocessing/dp:v0.0.1
 ```
 
-
 2. Create a Cloud Storage bucket to store raw data
 
 ```
  gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID}
 ```
-
 
 3. Download the raw data csv file from above and store into the bucket created in the previous step.
    The kaggle cli can be installed using the following [instructions](https://github.com/Kaggle/kaggle-api#installation)
@@ -60,6 +61,7 @@ The preprocessing.py file does the following:
 ```
 
 5. Create Artifact Registry repository for your docker image
+
 ```
  gcloud artifacts repositories create dataprocessing \
  --repository-format=docker \
@@ -69,6 +71,7 @@ The preprocessing.py file does the following:
 ```
 
 6. Build container image using Cloud Build and push the image to Artifact Registry
+
 ```
  gcloud builds submit . \
  --tag ${DOCKER_IMAGE_URL}:v0.0.1
@@ -91,13 +94,14 @@ kubectl apply -f job.yaml -n ml-team
 ```
 
 9. Monitor the execution in Ray Dashboard
-    a. Jobs -> Running Job ID
-     i) See the Tasks/actors overview for Running jobs
-     ii) See the Task Table for a detailed view of task and assigned node(s)
-    b. Cluster -> Node List
-     i) See the Ray actors running on the worker process
+   a. Jobs -> Running Job ID
+   i) See the Tasks/actors overview for Running jobs
+   ii) See the Task Table for a detailed view of task and assigned node(s)
+   b. Cluster -> Node List
+   i) See the Ray actors running on the worker process
 
-11. Once the Job is completed, both the prepared dataset as a CSV and the images are stored in Google Cloud Storage.
+10. Once the Job is completed, both the prepared dataset as a CSV and the images are stored in Google Cloud Storage.
+
 ```
  gcloud storage ls \
  gs://${PROCESSING_BUCKET}/flipkart_preprocessed_dataset/flipkart.csv

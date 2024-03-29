@@ -100,7 +100,7 @@ resource "google_project_service" "project_services-gate" {
 # Networking
 ##########################################################################
 module "create-vpc" {
-  source = "./modules/network"
+  source = "../../../terraform/modules/network"
 
   depends_on = [
     google_project_service.project_services-com
@@ -118,7 +118,7 @@ module "create-vpc" {
 }
 
 module "cloud-nat" {
-  source = "./modules/cloud-nat"
+  source = "../../../terraform/modules/cloud-nat"
 
   create_router = true
   name          = format("%s-%s", "nat-for-acm", var.environment_name)
@@ -146,7 +146,7 @@ resource "google_gke_hub_feature" "configmanagement_acm_feature" {
 }
 
 module "gke" {
-  source = "./modules/cluster"
+  source = "../../../terraform/modules/cluster"
 
   depends_on = [
     google_gke_hub_feature.configmanagement_acm_feature,
@@ -165,7 +165,7 @@ module "gke" {
 }
 
 module "reservation" {
-  source = "./modules/vm-reservations"
+  source = "../../../terraform/modules/vm-reservations"
 
   cluster_name = module.gke.cluster_name
   project_id   = data.google_project.environment.project_id
@@ -173,7 +173,7 @@ module "reservation" {
 }
 
 module "node_pool-reserved" {
-  source = "./modules/node-pools"
+  source = "../../../terraform/modules/node-pools"
 
   depends_on = [
     module.reservation
@@ -189,7 +189,7 @@ module "node_pool-reserved" {
 }
 
 module "node_pool-ondemand" {
-  source = "./modules/node-pools"
+  source = "../../../terraform/modules/node-pools"
 
   depends_on = [
     module.gke
@@ -204,7 +204,7 @@ module "node_pool-ondemand" {
 }
 
 module "node_pool-spot" {
-  source = "./modules/node-pools"
+  source = "../../../terraform/modules/node-pools"
 
   depends_on = [
     module.gke
