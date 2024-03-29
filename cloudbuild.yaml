@@ -98,7 +98,7 @@ steps:
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
     allowFailure: true
-    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag', 'create network']
+    waitFor: ['create network']
 
   - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -336,8 +336,9 @@ steps:
       - '-c'
       - |
         set -e
-         cd /workspace/modules/custom-network
+        cd /workspace/modules/custom-network
         terraform destroy \
+        -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
         -var=project_id=$PROJECT_ID \
         -var=region=$_REGION \
         -var=private_cluster=false \ 
@@ -345,6 +346,8 @@ steps:
         -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -auto-approve -no-color -lock=false
+    allowFailure: true
+    waitFor: ['cleanup gke cluster']
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -402,7 +405,7 @@ steps:
           exit 1
         fi
 
-    waitFor: ['cleanup gke cluster']
+    waitFor: ['cleanup gke network']
         
 substitutions:
   _REGION: us-central1
