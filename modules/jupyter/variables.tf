@@ -139,15 +139,18 @@ variable "autopilot_cluster" {
 variable "db_region" {
   type        = string
   description = "Cloud SQL instance region"
+  default     = ""
 }
 
 variable "db_secret_name" {
   type        = string
   description = "CloudSQL user credentials"
+  default     = ""
 }
 
 variable "cloudsql_instance_name" {
   type        = string
   description = "Cloud SQL instance name"
+  default     = ""
 }
 
