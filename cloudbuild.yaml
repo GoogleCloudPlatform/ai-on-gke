@@ -72,7 +72,7 @@ steps:
         -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_network_result.txt
-        dir: 'infrastructure/'
+    dir: 'modules/custom-network'
     allowFailure: true
     waitFor: ['validate network', 'validate platform', 'validate ray', 'validate jupyterhub', validate rag]
 
