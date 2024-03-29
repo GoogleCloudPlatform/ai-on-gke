@@ -84,7 +84,12 @@ function onReady() {
             }
             return response.json();
         }).then(data => {
-            responseEl.textContent = data.response.text;
+            var content = data.response.text
+            if (data.response.warnings && data.response.warnings.length > 0) {
+                responseEl.classList.replace("response", "warning");
+                content += "\n\nWarning: " + data.response.warnings.join("\n") + "\n"
+            }
+            responseEl.textContent = content;
         }).catch(err => {
             responseEl.classList.replace("response", "error");
             responseEl.textContent = err.message;

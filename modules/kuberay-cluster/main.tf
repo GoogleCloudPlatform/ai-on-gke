@@ -34,6 +34,9 @@ resource "helm_release" "ray-cluster" {
   namespace        = var.namespace
   create_namespace = true
   version          = "1.0.0"
+  # Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
+  timeout = 1200
+  wait    = true
 
   values = [
     templatefile("${path.module}/values.yaml", {
@@ -44,7 +47,8 @@ resource "helm_release" "ray-cluster" {
       security_context                  = local.security_context
       secret_name                       = var.db_secret_name
       cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
-      image_tag                         = var.enable_gpu ? "2.9.3-py310-gpu" : "2.9.3-py310"
+      image                             = var.use_custom_image ? "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image" : "rayproject/ray"
+      image_tag                         = var.enable_gpu ? "2.9.3-py310-gpu" : var.use_custom_image ? "2.9.3-py310-gpu" : "2.9.3-py310"
       resource_requests = var.enable_gpu ? {
         "cpu"               = "8"
         "memory"            = "32G"

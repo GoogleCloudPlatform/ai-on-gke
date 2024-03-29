@@ -153,3 +153,4 @@ variable "cloudsql_instance_name" {
   description = "Cloud SQL instance name"
   default     = "pgvector-instance"
 }
+

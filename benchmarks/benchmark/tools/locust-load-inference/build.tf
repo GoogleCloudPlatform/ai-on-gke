@@ -14,3 +14,11 @@ resource "null_resource" "build_and_push_runner_image" {
     command     = "gcloud builds submit --tag ${var.artifact_registry}/locust-runner:latest locust-runner"
   }
 }
+
+resource "null_resource" "build_and_push_exporter_image" {
+
+  provisioner "local-exec" {
+    working_dir = path.module
+    command     = "gcloud builds submit --tag ${var.artifact_registry}/locust-custom-exporter:latest locust-custom-exporter"
+  }
+}
