@@ -63,6 +63,7 @@ steps:
       - |
         set -e
 
+        cd /workspace/modules/custom-network
         terraform apply \
         -var=project_id=$PROJECT_ID \
         -var=region=$_REGION \
@@ -72,9 +73,8 @@ steps:
         -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_network_result.txt
-    dir: 'modules/custom-network'
     allowFailure: true
-    waitFor: ['validate network', 'validate platform', 'validate ray', 'validate jupyterhub', validate rag]
+    waitFor: ['validate network', 'validate platform', 'validate ray', 'validate jupyterhub', 'validate rag']
 
   # Create cluster to test ray, jupyterhub
   - id: 'create gke cluster'
@@ -87,6 +87,7 @@ steps:
       - |
         set -e
 
+        cd /workspace/infrastructure
         terraform apply \
         -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
         -var=project_id=$PROJECT_ID \
@@ -97,9 +98,8 @@ steps:
         -var=cluster_location=$_REGION \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
-    dir: 'infrastructure/'
     allowFailure: true
-    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
+    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag', 'create network']
 
   - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
