@@ -11,13 +11,11 @@ spec:
     spec:
       containers:
       - name: job
-        image: us-west2-docker.pkg.dev/cloud-sa-ml/data-processing-repo/image:latest 
+        image: #IMAGE
         env:
         - name: "PROCESSING_BUCKET"
-          value: ai-infra-ml-data-processing 
+          value: #PROCESSING_BUCKET
         - name: "RAY_CLUSTER_HOST"
           value: "ray-cluster-kuberay-head-svc.ml-team:10001"
       restartPolicy: Never
       serviceAccountName: ray-worker
-######################Ray code sample#################################
-
