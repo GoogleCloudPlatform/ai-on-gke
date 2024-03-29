@@ -17,6 +17,18 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
+variable "notebook_image" {
+  type        = string
+  description = "Jupyter notebook image name"
+  default     = "jupyter/tensorflow-notebook"
+}
+
+variable "notebook_image_tag" {
+  type        = string
+  description = "Jupyter notebook image tag"
+  default     = "python-3.10"
+}
+
 variable "members_allowlist" {
   type    = list(string)
   default = []

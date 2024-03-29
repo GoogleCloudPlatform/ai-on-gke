@@ -125,8 +125,8 @@ resource "helm_release" "jupyterhub" {
     secret_name                       = var.db_secret_name
     cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
 
-    notebook_image     = "jupyter/tensorflow-notebook"
-    notebook_image_tag = "python-3.10"
+    notebook_image     = var.notebook_image
+    notebook_image_tag = var.notebook_image_tag
     })
     ] : [templatefile("${path.module}/jupyter_config/config-selfauth.yaml", {
       password                          = var.add_auth ? "dummy" : random_password.generated_password[0].result
@@ -143,8 +143,8 @@ resource "helm_release" "jupyterhub" {
       ephemeral_storage                 = var.ephemeral_storage
       secret_name                       = var.db_secret_name
       cloudsql_instance_connection_name = local.cloudsql_instance_connection_name
-      notebook_image                    = "jupyter/tensorflow-notebook"
-      notebook_image_tag                = "python-3.10"
+      notebook_image                    = var.notebook_image
+      notebook_image_tag                = var.notebook_image_tag
     })
   ]
   depends_on = [module.jupyterhub-workload-identity]
