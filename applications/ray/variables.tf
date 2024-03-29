@@ -55,7 +55,8 @@ variable "create_gcs_bucket" {
 }
 
 variable "gcs_bucket" {
-  type = string
+  type        = string
+  description = "The GCS bucket to store data for the Ray cluster."
 }
 
 variable "create_service_account" {
@@ -71,8 +72,9 @@ variable "workload_identity_service_account" {
 }
 
 variable "create_ray_cluster" {
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
+  description = "Create a Ray cluster"
 }
 
 variable "ray_cluster_name" {
