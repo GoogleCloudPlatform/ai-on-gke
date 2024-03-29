@@ -25,8 +25,8 @@ project_id = "<project-id>"
 # subnetwork_cidr   = "10.100.0.0/16"
 # subnetwork_region = "us-central1"
 
-network_name      = "default"
-subnetwork_name   = "default"
+network_name    = "default"
+subnetwork_name = "default"
 
 ## gke variables
 private_cluster     = false ## Default true. Use false for a public cluster
