@@ -119,7 +119,7 @@ singleuser:
 
     extraVolumeMounts:
         - name: test-vol
-          mountPath: /persist-data
+          mountPath: /data
         - name: secret-volume
           mountPath: /etc/secret-volume
           readOnly: true
