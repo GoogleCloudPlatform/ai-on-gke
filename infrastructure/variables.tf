@@ -23,6 +23,7 @@ variable "region" {
   default     = "us-central1"
 }
 
+## network variables
 variable "network_name" {
   type = string
 }

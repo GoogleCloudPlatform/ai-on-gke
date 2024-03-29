@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project_id      = "<your project ID>"
-create_network  = true         # Creates a new VPC for your cluster. Disable to use an existing network.
-network_name    = "ml-network" # Creates a network named ml-network by default. If using an existing VPC, ensure you follow the README instructions to enable Private Service Connect for your VPC.
+project_id      = "yiyingzhang-gke-dev"
+create_network  = true                  # Creates a new VPC for your cluster. Disable to use an existing network.
+network_name    = "ml-network-refactor12" # Creates a network named ml-network by default. If using an existing VPC, ensure you follow the README instructions to enable Private Service Connect for your VPC.
 subnetwork_cidr = "10.100.0.0/16"
 
 create_cluster    = true # Creates a GKE cluster in the specified network.
-cluster_name      = "<cluster-name>"
+cluster_name      = "test-refactor12"
 cluster_location  = "us-central1"
-autopilot_cluster = false
+autopilot_cluster = true
 private_cluster   = false
 
 ## GKE environment variables
@@ -29,22 +29,22 @@ kubernetes_namespace = "rag"
 # The bucket name must be globally unique (across all of Google Cloud).
 # To verify, check that `gcloud storage buckets describe gs://<bucketname>` returns a 404.
 create_gcs_bucket = true
-gcs_bucket        = "rag-data-<username>"
+gcs_bucket        = "rag-data-yyz12"
 
 # Ensure the instance name is unique to your project.
-cloudsql_instance = "pgvector-instance"
+cloudsql_instance = "pgvector-instance12"
 
 ## Service accounts
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-ray_service_account             = "ray-sa"
+ray_service_account             = "ray-sa12"
 enable_grafana_on_ray_dashboard = false
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-rag_service_account = "rag-sa"
+rag_service_account = "rag-sa12"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-jupyter_service_account = "jupyter-sa"
+jupyter_service_account = "jupyter-sa12"
 
 ## Embeddings table name - change this to the TABLE_NAME used in the notebook.
 dataset_embeddings_table_name = "netflix_reviews_db"

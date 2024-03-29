@@ -26,11 +26,11 @@ data "google_compute_subnetwork" "subnetwork" {
 }
 
 module "custom-network" {
-  source       = "terraform-google-modules/network/google"
-  version      = "8.0.0"
+  source       = "../gcp-network"
   count        = var.create_network ? 1 : 0
   project_id   = var.project_id
   network_name = var.network_name
+  create_psa   = true
 
   subnets = [
     {
@@ -41,33 +41,6 @@ module "custom-network" {
       description           = var.subnetwork_description
     }
   ]
-}
-
-// TODO: Migrate to terraform-google-modules/sql-db/google//modules/private_service_access (below)
-// once https://github.com/terraform-google-modules/terraform-google-sql-db/issues/585 is resolved.
-// We define a VPC peering subnet that will be peered with the
-// Cloud SQL instance network. The Cloud SQL instance will
-// have a private IP within the provided range.
-// https://cloud.google.com/vpc/docs/configure-private-services-access
-
-resource "google_compute_global_address" "google-managed-services-range" {
-  count         = var.create_network ? 1 : 0
-  project       = var.project_id
-  name          = "google-managed-services-${var.network_name}"
-  purpose       = "VPC_PEERING"
-  address_type  = "INTERNAL"
-  prefix_length = 16
-  network       = module.custom-network[0].network_self_link
-}
-
-# Creates the peering with the producer network.
-resource "google_service_networking_connection" "private_service_access" {
-  count                   = var.create_network ? 1 : 0
-  network                 = module.custom-network[0].network_self_link
-  service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.google-managed-services-range[0].name]
-  # This will enable a successful terraform destroy when destroying CloudSQL instances
-  deletion_policy = "ABANDON"
 }
 
 ## configure cloud NAT for private GKE

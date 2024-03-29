@@ -61,7 +61,7 @@ module "project-services" {
 }
 
 module "network" {
-  source = "../../modules/network"
+  source = "../../modules/custom-network"
   count  = var.create_cluster ? 1 : 0
 
   project_id        = var.project_id
