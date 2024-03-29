@@ -75,7 +75,7 @@ singleuser:
     guarantee: 8G
   cpu:
     limit: 8
-    guarantee: 4
+    guarantee: 8
   extraResource:
     limits:
       ephemeral-storage: ${ephemeral_storage}
