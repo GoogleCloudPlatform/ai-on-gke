@@ -15,6 +15,7 @@
 ##common variables
 project_id = "<project-id>"
 
+create_network  = true
 network_name    = "default"
 subnetwork_name = "default"
 
