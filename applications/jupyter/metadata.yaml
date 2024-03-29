@@ -41,7 +41,7 @@ spec:
         description: Additional labels to add to Kubernetes resources.
         varType: list(string)
         defaultValue:
-          - created-by=ai-on-gke
+          - created-by=gke-ai-quick-start-solutions
           - ai.gke.io=jupyter
       - name: autopilot_cluster
         varType: bool
