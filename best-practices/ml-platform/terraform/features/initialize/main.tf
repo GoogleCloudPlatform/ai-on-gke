@@ -13,10 +13,10 @@
 # limitations under the License.
 
 locals {
-  backend_file             = "../backend.tf"
+  backend_file             = "../../../examples/platform/${var.platform_type}/backend.tf"
   project_id_prefix        = "${var.project.name}-${var.environment_name}"
   project_id_suffix_length = 29 - length(local.project_id_prefix)
-  tfvars_file              = "../mlp.auto.tfvars"
+  tfvars_file              = "../../../examples/platform/${var.platform_type}/mlp.auto.tfvars"
 }
 
 resource "random_string" "project_id_suffix" {

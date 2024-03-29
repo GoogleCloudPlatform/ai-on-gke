@@ -18,6 +18,12 @@ variable "environment_name" {
   type        = string
 }
 
+variable "platform_type" {
+  default     = "sandbox"
+  description = "Name of the platform type"
+  type        = string
+}
+
 variable "project" {
   default = {
     billing_account_id = ""
