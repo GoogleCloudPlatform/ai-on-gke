@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project_id = "ricliu-gke-dev"
+project_id = "<your project ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
 create_cluster    = true # Create a GKE cluster in the specified network.
-autopilot_cluster = false
-cluster_name      = "raggedy-rag"
-cluster_location  = "us-east4"
+autopilot_cluster = true
+cluster_name      = "<cluster_name>"
+cluster_location  = "us-central1"
 create_network    = true
-network_name      = "raga-network"
+network_name      = "ml-network"
 subnetwork_cidr   = "10.100.0.0/16"
 
 ## GKE environment variables
@@ -29,10 +29,10 @@ create_gcs_bucket    = true
 
 # The bucket name must be globally unique (across all of Google Cloud).
 # To verify, check that `gcloud storage buckets describe gs://<bucketname>` returns a 404.
-gcs_bucket = "rag-data-ricliu-b"
+gcs_bucket = "rag-data-<username>"
 
 cloudsql_instance        = "pgvector-instance"
-cloudsql_instance_region = "us-east4" # defaults to cluster_location, if not specified
+cloudsql_instance_region = "us-central1" # defaults to cluster_location, if not specified
 
 ## Service accounts
 
@@ -70,7 +70,7 @@ jupyter_k8s_backend_service_port = 80
 jupyter_domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
 jupyter_client_id         = ""
 jupyter_client_secret     = ""
-jupyter_members_allowlist = "user:ricliu@google.com,group:<email>,serviceAccount:<email>,domain:google.com"
+jupyter_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
 
 ## Frontend IAP Settings
 frontend_add_auth                 = false # Set to true when using auth with IAP
