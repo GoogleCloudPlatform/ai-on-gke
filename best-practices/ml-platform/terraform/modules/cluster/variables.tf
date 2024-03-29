@@ -23,6 +23,18 @@ variable "env" {
   type        = string
 }
 
+variable "initial_node_count" {
+  default     = 1
+  description = "The number of nodes to create in this cluster's default node pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Must be set if node_pool is not set. If you're using google_container_node_pool objects with no default node pool, you'll need to set this to a value of at least 1, alongside setting remove_default_node_pool to true."
+  type        = number
+}
+
+variable "machine_type" {
+  default     = "e2-medium"
+  description = "The name of a Google Compute Engine machine type."
+  type        = string
+}
+
 variable "master_auth_networks_ipcidr" {
   description = "master authorized network"
   type        = string
@@ -43,6 +55,12 @@ variable "region" {
   default     = "us-central1"
   description = "The GCP region where the GKE cluster will be created"
   type        = string
+}
+
+variable "remove_default_node_pool" {
+  default     = true
+  description = "If true, deletes the default node pool upon cluster creation. If you're using google_container_node_pool resources with no default node pool, this should be set to true, alongside setting initial_node_count to at least 1."
+  type        = bool
 }
 
 variable "subnet" {

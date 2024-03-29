@@ -156,10 +156,13 @@ module "gke" {
 
   cluster_name                = format("%s-%s", var.cluster_name, var.environment_name)
   env                         = var.environment_name
+  initial_node_count          = 1
+  machine_type                = "n2-standard-8"
   master_auth_networks_ipcidr = var.subnet_01_ip
   network                     = module.create-vpc.vpc
   project_id                  = data.google_project.environment.project_id
   region                      = var.subnet_01_region
+  remove_default_node_pool    = false
   subnet                      = module.create-vpc.subnet-1
   zone                        = "${var.subnet_01_region}-a"
 }

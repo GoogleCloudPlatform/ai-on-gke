@@ -23,13 +23,13 @@ resource "google_container_cluster" "mlp" {
 
   deletion_protection      = false
   enable_shielded_nodes    = true
-  initial_node_count       = 1
+  initial_node_count       = var.initial_node_count
   location                 = var.region
   name                     = var.cluster_name
   network                  = var.network
   node_locations           = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
   project                  = var.project_id
-  remove_default_node_pool = true
+  remove_default_node_pool = var.remove_default_node_pool
   subnetwork               = var.subnet
 
   addons_config {
@@ -165,6 +165,8 @@ resource "google_container_cluster" "mlp" {
   }
 
   node_config {
+    machine_type = var.machine_type
+
     shielded_instance_config {
       enable_integrity_monitoring = true
       enable_secure_boot          = true
