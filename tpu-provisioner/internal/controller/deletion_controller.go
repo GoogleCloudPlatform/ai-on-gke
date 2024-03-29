@@ -69,6 +69,17 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
+	// Avoid noisy reconciliation when nodes are shutting down.
+	for _, c := range node.Status.Conditions {
+		if c.Type == corev1.NodeReady &&
+			c.Status == corev1.ConditionFalse &&
+			c.Reason == "KubeletNotReady" &&
+			c.Message == "node is shutting down" {
+			lg.V(3).Info("Node is shutting down, ignoring")
+			return ctrl.Result{}, nil
+		}
+	}
+
 	// Ensure node was not just created to make sure Pods have had time to schedule.
 	if since := time.Since(node.GetCreationTimestamp().Time); since < r.NodeCriteria.MinLifetime {
 		wait := r.NodeCriteria.MinLifetime - since + time.Second
@@ -144,7 +155,7 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	lg.Info(fmt.Sprintf("Node pool %q passed deletion check twice. Ensuring Node Pool is deleted", nodePoolName))
 	if err := r.Provider.DeleteNodePoolForNode(&node, "no user Pods are running on any of the Nodes in this node pool"); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
-			lg.Info("Ignoring duplicate request to delete node pool")
+			lg.V(3).Info("Ignoring duplicate request to delete node pool")
 			return ctrl.Result{}, nil
 		} else {
 			return ctrl.Result{}, err

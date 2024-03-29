@@ -90,13 +90,14 @@ module "infra" {
   enable_gpu         = true
   gpu_pools          = var.gpu_pools
   kubernetes_version = var.kubernetes_version
-  depends_on         = [module.network]
+  depends_on         = [module.project-services, module.network]
 }
 
 data "google_container_cluster" "default" {
-  count    = var.create_cluster ? 0 : 1
-  name     = var.cluster_name
-  location = var.cluster_location
+  count      = var.create_cluster ? 0 : 1
+  name       = var.cluster_name
+  location   = var.cluster_location
+  depends_on = [module.project-services]
 }
 
 locals {
