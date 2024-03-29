@@ -13,6 +13,14 @@
 # limitations under the License.
 
 steps:
+  - id: 'validate network'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: 'modules/custom-network'
+    waitFor: ['-']
+
   - id: 'validate platform'
     name: 'gcr.io/$PROJECT_ID/terraform'
     script: |
@@ -44,6 +52,29 @@ steps:
       terraform validate -no-color
     dir: 'applications/rag/'
     waitFor: ['validate platform']
+  
+  - id: 'create network'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    env:
+      - "KUBE_LOAD_CONFIG_FILE=false"
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        terraform apply \
+        -var=project_id=$PROJECT_ID \
+        -var=region=$_REGION \
+        -var=private_cluster=false \ 
+        -var=create_network=true \
+        -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+        -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+        -auto-approve -no-color -lock=false
+        echo "pass" > /workspace/gke_network_result.txt
+        dir: 'infrastructure/'
+    allowFailure: true
+    waitFor: ['validate network', 'validate platform', 'validate ray', 'validate jupyterhub', validate rag]
 
   # Create cluster to test ray, jupyterhub
   - id: 'create gke cluster'
@@ -298,6 +329,23 @@ steps:
 
     allowFailure: true
     waitFor: ['cleanup rag']
+  
+  - id: 'cleanup gke network'
+    name: 'gcr.io/$PROJECT_ID/terraform'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+         cd /workspace/modules/custom-network
+        terraform destroy \
+        -var=project_id=$PROJECT_ID \
+        -var=region=$_REGION \
+        -var=private_cluster=false \ 
+        -var=create_network=true \
+        -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+        -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+        -auto-approve -no-color -lock=false
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -305,6 +353,11 @@ steps:
     args:
       - '-c'
       - |
+        if [[ $(cat /workspace/gke_network_result.txt) != "pass" ]]; then
+          echo "gke network creation failed"
+          exit 1
+        fi
+
         if [[ $(cat /workspace/gke_cluster_result.txt) != "pass" ]]; then
           echo "gke cluster creation failed"
           exit 1
