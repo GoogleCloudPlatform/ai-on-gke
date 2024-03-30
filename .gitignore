@@ -28,6 +28,8 @@ deploy/
 __pycache__/
 
 # Terraform
+default.tfstate
+default.tfstate.backup
 .terraform*
 terraform.tfstate*
 terraform.tfvars
