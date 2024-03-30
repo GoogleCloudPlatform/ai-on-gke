@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job 
+metadata:
+  name: job 
+  namespace: ml-team
+spec:
+  template:
+    metadata:
+      labels:
+        app: job
+    spec:
+      containers:
+      - name: job
+        image: #IMAGE
+        env:
+        - name: "PROCESSING_BUCKET"
+          value: #PROCESSING_BUCKET
+        - name: "RAY_CLUSTER_HOST"
+          value: "ray-cluster-kuberay-head-svc.ml-team:10001"
+      restartPolicy: Never
+      serviceAccountName: ray-worker
