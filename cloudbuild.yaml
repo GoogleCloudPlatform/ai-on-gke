@@ -61,6 +61,7 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
+        -var=subnetwork_region=$_REGION \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
@@ -146,6 +147,7 @@ steps:
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+        -var=cluster_location=$_REGION \
         -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
@@ -176,6 +178,7 @@ steps:
         -var-file=workloads-without-iap.example.tfvars \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+        -var=cluster_location=$_REGION \
         -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
@@ -210,6 +213,7 @@ steps:
         -var=frontend_add_auth=false \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+        -var=cluster_location=$_REGION \
         -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
         -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
@@ -249,6 +253,14 @@ steps:
         cd /workspace/applications/rag/tests
         python3 test_frontend.py "127.0.0.1:8081"
         echo "pass" > /workspace/rag_frontend_result.txt
+
+        # Upload locally stored netflix dataset to GCS bucket mounted as /data
+        gsutil cp ./netflix_titles.csv gs://gke-aieco-rag-$SHORT_SHA-$_BUILD_ID/netflix-shows/netflix_titles.csv
+        ray job submit --working-dir . --address=http://127.0.0.1:8265 -- python ray_job.py
+
+        python3 test_rag.py "http://127.0.0.1:8081/prompt"
+        echo "pass" > /workspace/rag_prompt_result.txt
+
     allowFailure: true
     waitFor: ['cleanup jupyterhub', 'cleanup ray cluster']
 
@@ -269,6 +281,7 @@ steps:
         -var=frontend_add_auth=false \
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+        -var=cluster_location=$_REGION \
         -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
         -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
@@ -350,10 +363,15 @@ steps:
           exit 1
         fi
 
+        if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
+          echo "rag frontend test failed"
+          exit 1
+        fi
+
     waitFor: ['cleanup gke cluster']
         
 substitutions:
-  _REGION: us-central1
+  _REGION: us-east4
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
