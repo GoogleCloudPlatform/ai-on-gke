@@ -90,10 +90,6 @@ function onReady() {
 
     document.getElementById("toggle-dlp-filter-section").addEventListener("change", function() {
         fetchDLPEnabled()
-    });
-
-    document.getElementById("toggle-nlp-filter-section").addEventListener("change", function() {
-        fetchNLPEnabled()
         var inspectDropdown = document.getElementById('inspect-template-dropdown');
         var deidentifyDropdown = document.getElementById('deidentify-template-dropdown');
 
@@ -114,6 +110,10 @@ function onReady() {
             deidentifyDropdown.style.display = 'block'; // Show Dropdown
             document.getElementById('deidentify-template-msg').style.display = 'none'; // Hide Message
         }
+    });
+
+    document.getElementById("toggle-nlp-filter-section").addEventListener("change", function() {
+        fetchNLPEnabled()
     });
 }
 if (document.readyState != "loading") onReady();
