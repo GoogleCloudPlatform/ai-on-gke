@@ -63,14 +63,14 @@ data "google_container_cluster" "cluster" {
 }
 
 module "cluster-service-account" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/iam-service-account"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/iam-service-account?ref=v30.0.0&depth=1"
   count      = local.cluster_create ? 1 : 0
   project_id = module.project.project_id
   name       = var.prefix
 }
 
 module "cluster-standard" {
-  source              = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-cluster-standard"
+  source              = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-cluster-standard?ref=v30.0.0&depth=1"
   count               = local.cluster_create && !var.gke_autopilot ? 1 : 0
   project_id          = module.project.project_id
   name                = var.cluster_name
@@ -83,10 +83,6 @@ module "cluster-standard" {
     secondary_range_names    = local.cluster_vpc.secondary_range_names
     master_authorized_ranges = var.cluster_create.master_authorized_ranges
     master_ipv4_cidr_block   = var.cluster_create.master_ipv4_cidr_block
-  }
-  default_nodepool = {
-    remove_pool        = false
-    initial_node_count = 1
   }
   private_cluster_config = {
     enable_private_endpoint = var.enable_private_endpoint
@@ -128,7 +124,7 @@ module "cluster-standard" {
 }
 
 module "cluster-autopilot" {
-  source              = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-cluster-autopilot"
+  source              = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-cluster-autopilot?ref=v30.0.0&depth=1"
   count               = local.cluster_create && var.gke_autopilot ? 1 : 0
   project_id          = module.project.project_id
   name                = var.cluster_name
@@ -178,7 +174,7 @@ module "cluster-autopilot" {
 }
 
 module "cluster-nodepool" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-nodepool"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-nodepool?ref=v30.0.0&depth=1"
   depends_on = [module.cluster-standard]
   for_each   = (local.cluster_create && !var.gke_autopilot) ? var.nodepools : tomap({})
 
