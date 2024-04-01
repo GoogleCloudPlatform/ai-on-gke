@@ -27,6 +27,8 @@ spec:
     metadata:
       labels:
         app: tgi
+        ai.gke.io/inference-server: text-generation-inference
+        examples.ai.gke.io/source: ai-on-gke-benchmarks
     spec:
       serviceAccountName: ${ksa}
       volumes:
