@@ -56,17 +56,3 @@ class TokenMetricCollector:
         }
         return json.dumps(stats)
 
-    def write_to_csv(self, file_path='custom_metrics.csv'):
-        import csv
-        avg_sent, avg_received, avg_test_time, avg_output_token_latency = self.calculate_average_tokens()
-        with open(file_path, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['Metric', 'Average Value'])
-            writer.writerow(['# of Successful Req', self.success_count])
-            writer.writerow(['# of Failed Req', self.failure_count])
-            writer.writerow(['Avg Tokens Sent Per Req', avg_sent])
-            writer.writerow(['Avg Tokens Received Per Req', avg_received])
-            writer.writerow(['Avg Test Time', avg_test_time])
-            writer.writerow(['Avg Output Tokens Latency',
-                            avg_output_token_latency])
-            writer.writerow(['Timestamp', datetime.datetime.now()])
