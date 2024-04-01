@@ -52,8 +52,9 @@ steps:
       terraform validate -no-color
     dir: 'applications/rag/'
     waitFor: ['validate platform']
-  
-  - id: 'create network'
+
+  # Create cluster to test ray, jupyterhub
+  - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     env:
       - "KUBE_LOAD_CONFIG_FILE=false"
@@ -72,19 +73,6 @@ steps:
         -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_network_result.txt
-    allowFailure: true
-    waitFor: ['validate network', 'validate platform', 'validate ray', 'validate jupyterhub', 'validate rag']
-
-  # Create cluster to test ray, jupyterhub
-  - id: 'create gke cluster'
-    name: 'gcr.io/$PROJECT_ID/terraform'
-    env:
-      - "KUBE_LOAD_CONFIG_FILE=false"
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        set -e
 
         cd /workspace/infrastructure
         terraform apply \
@@ -98,7 +86,7 @@ steps:
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
     allowFailure: true
-    waitFor: ['create network']
+    waitFor: ['validate network', 'validate platform', 'validate ray', 'validate jupyterhub', 'validate rag']
 
   - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
