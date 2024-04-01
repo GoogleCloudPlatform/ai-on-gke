@@ -157,7 +157,7 @@ variable "db_region" {
 variable "db_secret_name" {
   type        = string
   description = "CloudSQL user credentials"
-  default     = ""
+  default     = "dummy_value"
 }
 
 variable "cloudsql_instance_name" {
