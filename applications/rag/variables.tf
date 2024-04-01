@@ -152,8 +152,8 @@ variable "frontend_k8s_backend_service_port" {
 
 variable "frontend_domain" {
   type        = string
-  description = "Domain used for SSL certificate. If it's empty, *.nip.io DNS is used."
-  default     = ""
+  description = "Domain used for SSL certificate."
+  default     = "frontend.example.com"
 }
 
 variable "frontend_client_id" {
@@ -211,8 +211,8 @@ variable "ray_dashboard_k8s_backend_service_port" {
 
 variable "ray_dashboard_domain" {
   type        = string
-  description = "Domain used for SSL certificate. If it's empty, *.nip.io DNS is used."
-  default     = ""
+  description = "Domain used for SSL certificate."
+  default     = "ray.example.com"
 }
 
 variable "ray_dashboard_client_id" {
@@ -278,8 +278,8 @@ variable "jupyter_k8s_backend_service_port" {
 
 variable "jupyter_domain" {
   type        = string
-  description = "Domain used for SSL certificate. If it's empty, *.nip.io DNS is used."
-  default     = ""
+  description = "Domain used for SSL certificate."
+  default     = "jupyter.example.com"
 }
 
 variable "support_email" {

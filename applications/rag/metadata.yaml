@@ -97,7 +97,7 @@ spec:
       - name: frontend_domain
         description: Domain used for application and SSL certificate. 
         varType: string
-        defaultValue: "rag.example.com"
+        defaultValue: "frontend.example.com"
       - name: frontend_k8s_backend_config_name
         description: Name of the Kubernetes Backend Config
         varType: string

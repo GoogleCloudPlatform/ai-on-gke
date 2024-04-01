@@ -53,7 +53,7 @@ ray_dashboard_k8s_iap_secret_name      = "ray-dashboard-iap-secret"
 ray_dashboard_k8s_backend_config_name  = "ray-dashboard-iap-config"
 ray_dashboard_k8s_backend_service_port = 8265
 
-ray_dashboard_domain            = ""
+ray_dashboard_domain            = "ray.example.com"
 ray_dashboard_client_id         = ""
 ray_dashboard_client_secret     = ""
 ray_dashboard_members_allowlist = "user:<email>"

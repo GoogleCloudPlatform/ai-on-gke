@@ -129,8 +129,8 @@ variable "support_email" {
 
 variable "domain" {
   type        = string
-  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
-  default     = ""
+  description = "Provide domain for ingress resource and ssl certificate."
+  default     = "frontend.example.com"
 }
 
 variable "client_id" {

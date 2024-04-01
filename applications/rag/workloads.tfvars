@@ -58,15 +58,15 @@ dataset_embeddings_table_name = "netflix_reviews_db"
 
 ## Jupyter IAP Settings
 jupyter_add_auth          = false                                                                 # Set to true to enable authenticated access via IAP.
-jupyter_domain            = ""                                                                    # Custom domain for ingress resource and ssl certificate. If empty, it will use nip.io wildcard DNS.
+jupyter_domain            = "jupyter.example.com"                                                 # Custom domain for ingress resource and ssl certificate. 
 jupyter_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com" # Allowlist principals for access.
 
 ## Frontend IAP Settings
 frontend_add_auth          = false                                                                 # Set to true to enable authenticated access via IAP.
-frontend_domain            = ""                                                                    # Custom domain for ingress resource and ssl certificate. If empty, it will use nip.io wildcard DNS.
+frontend_domain            = "frontend.example.com"                                                # Custom domain for ingress resource and ssl certificate.
 frontend_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com" # Allowlist principals for access.
 
 ## Ray Dashboard IAP Settings
 ray_dashboard_add_auth          = false                                                                 # Set to true to enable authenticated access via IAP.
-ray_dashboard_domain            = ""                                                                    # Custom domain for ingress resource and ssl certificate. If empty, it will use nip.io wildcard DNS.
+ray_dashboard_domain            = "ray.example.com"                                                     # Custom domain for ingress resource and ssl certificate. 
 ray_dashboard_members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com" # Allowlist principals for access.

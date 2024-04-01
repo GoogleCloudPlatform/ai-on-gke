@@ -83,8 +83,9 @@ resource "helm_release" "iap" {
   }
 
   set {
-    name  = "iap.managedCertificate.domain"
-    value = var.domain != "" ? var.domain : "${google_compute_global_address.ip_address.address}.nip.io"
+    name = "iap.managedCertificate.domain"
+    // add support for wildcard DNS ex; *.example.com
+    value = startswith(var.domain, "*.") ? "${google_compute_global_address.ip_address.address}.${trimprefix(var.domain, "*.")}" : var.domain
   }
 
   set {

@@ -99,7 +99,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
             * password: use `terraform output jupyterhub_password` to fetch the password value
    * If IAP is enabled (`jupyter_add_auth = true`):
         - Fetch the domain: `terraform output jupyterhub_uri`
-        - If you used a custom domain, ensure you configured your DNS as described above. This can be skipped if using `nip.io`.
+        - If you used a custom domain, ensure you configured your DNS as described above. 
         - Verify the domain status is `Active`:
             - `kubectl get managedcertificates jupyter-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
             - Note: This can take up to 20 minutes to propagate.
@@ -126,7 +126,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
             - Go to `localhost:8265` in a browser
         - If IAP is enabled (`ray_dashboard_add_auth = true`):
             - Fetch the domain: `terraform output ray-dashboard-managed-cert`
-            - If you used a custom domain, ensure you configured your DNS as described above. This can be skipped if using `nip.io`.
+            - If you used a custom domain, ensure you configured your DNS as described above.
             - Verify the domain status is `Active`:
                 - `kubectl get managedcertificates ray-dashboard-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
                 - Note: This can take up to 20 minutes to propagate.
@@ -141,7 +141,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
         - Go to `localhost:8080` in a browser
     * If IAP is enabled (`frontend_add_auth = true`):
         - Fetch the domain: `terraform output frontend_uri`
-        - If you used a custom domain, ensure you configured your DNS as described above. This can be skipped if using `nip.io`.
+        - If you used a custom domain, ensure you configured your DNS as described above.
         - Verify the domain status is `Active`:
             - `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
             - Note: This can take up to 20 minutes to propagate.
@@ -160,9 +160,9 @@ We recommend you configure authenticated access via IAP for your services.
     * `frontend_add_auth = true`
     * `ray_dashboard_add_auth = true`
 3) Allowlist principals for your services via `jupyter_members_allowlist`, `frontend_members_allowlist` and `ray_dashboard_members_allowlist`.
-4) Configure custom domains names via `jupyter_domain`, `frontend_domain` and `ray_dashboard_domain` for your services. If left blank, we'll provision test `nip.io` domains for you.
+4) Configure custom domains names via `jupyter_domain`, `frontend_domain` and `ray_dashboard_domain` for your services. 
 5) Configure DNS records for your custom domains:
-    - [Register a Domain on Google Cloud Domains](https://cloud.google.com/domains/docs/register-domain#registering-a-domain) or use a domain registrar of your choice. You can skip this if using `nip.io`.
+    - [Register a Domain on Google Cloud Domains](https://cloud.google.com/domains/docs/register-domain#registering-a-domain) or use a domain registrar of your choice.
     - Set up your DNS service to point to the public IP
         * Run `terraform output frontend_ip_address` to get the public ip address of frontend, and add an A record in your DNS configuration to point to the public IP address.
         * Run `terraform output jupyterhub_ip_address` to get the public ip address of jupyterhub, and add an A record in your DNS configuration to point to the public IP address.
@@ -178,7 +178,7 @@ We recommend you configure authenticated access via IAP for your services.
 
 # Troubleshooting
 
-Set your the namespace, cluster name and location from `workloads.tfvars`):
+Set your the namespace, cluster name and location from `workloads.tfvars`:
 
 ```
 export NAMESPACE=rag

@@ -108,8 +108,8 @@ variable "create_brand" {
 
 variable "domain" {
   type        = string
-  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
-  default     = ""
+  description = "Provide domain for ingress resource and ssl certificate."
+  default     = "jupyter.example.com"
 }
 
 variable "support_email" {
