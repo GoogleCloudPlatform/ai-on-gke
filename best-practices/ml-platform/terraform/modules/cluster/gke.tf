@@ -125,6 +125,13 @@ resource "google_container_cluster" "mlp" {
     }
   }
 
+  gateway_api_config {
+    channel = "CHANNEL_STANDARD"
+  }
+
+  ip_allocation_policy {
+  }
+
   logging_config {
     enable_components = [
       "APISERVER",
@@ -133,9 +140,6 @@ resource "google_container_cluster" "mlp" {
       "SYSTEM_COMPONENTS",
       "WORKLOADS"
     ]
-  }
-
-  ip_allocation_policy {
   }
 
   master_authorized_networks_config {
