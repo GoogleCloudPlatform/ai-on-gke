@@ -189,7 +189,15 @@ spec:
         - heading: "Step 2: Go to JupyterHub Application"
           description: |-
             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
-            <li>If IAP is disabled, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
+            <li>If IAP is disabled:
+              <ul>
+                <li>(1) Setup gcloud in your environment</li>
+                <li>(2) Get these values from the Outputs section above: the <i>GKE Cluster Name</i>, <i>GKE Cluster Location</i>, <i>Kubernetes Namespace</i> , <i>Project Id</i>, <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> </li>
+                <li>(3) Get cluster credentials: <b>gcloud container clusters get-credentials <Gke Cluster Name> --location=<Gke Cluster Location> --project=<Project Id></b> </li>
+                <li>(4) Port forward to JupyterHub: <b>kubectl -n <Kubernetes Namespace> port-forward service/proxy-public 3080:80</b> </li>
+                <li>(5) Go to <i>localhost:3080</i> in a browser and log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i></li>
+              <ul>
+            </li>
             <li>Once logged in, choose the appropriate preset and execute notebooks. Sample notebooks are provided <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/examples/notebooks">here</a></li>
       outputs:
         jupyterhub_ip_address: {}
@@ -200,4 +208,7 @@ spec:
           label: Go to JupyterHub Application
         jupyterhub_user: {}
         kubernetes_namespace: {}
+        gke_cluster_name: {}
+        gke_cluster_location: {}
+        project_id: {}
 

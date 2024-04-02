@@ -153,4 +153,11 @@ spec:
       - name: jupyterhub_user
         description: JupyterHub user is only required for standard authentication. Ignore, in case of IAP authentication
       - name: kubernetes_namespace
+        description: Kubernetes namespace
+      - name: gke_cluster_name
+        description: GKE cluster name where the chat interface, JupyterHub and Ray cluster are running
+      - name: gke_cluster_location
+        description: GKE cluster location
+      - name: project_id
+        description: GCP project
 
