@@ -13,7 +13,7 @@
 # limitations under the License.
 
 output "domain" {
-  value = var.domain == "" ? "${google_compute_global_address.ip_address.address}.nip.io" : var.domain
+  value = local.domain
 }
 
 output "ip_address" {

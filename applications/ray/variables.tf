@@ -168,15 +168,16 @@ variable "gpu_pools" {
     gpu_driver_version     = optional(string, "DEFAULT")
   }))
   default = [{
-    name               = "gpu-pool"
-    machine_type       = "n1-standard-16"
+    name               = "gpu-pool-l4"
+    machine_type       = "g2-standard-24"
     autoscaling        = true
     min_count          = 1
     max_count          = 3
     disk_size_gb       = 100
-    disk_type          = "pd-standard"
+    disk_type          = "pd-balanced"
+    enable_gcfs        = true
     accelerator_count  = 2
-    accelerator_type   = "nvidia-tesla-t4"
+    accelerator_type   = "nvidia-l4"
     gpu_driver_version = "DEFAULT"
   }]
 }
@@ -229,7 +230,7 @@ variable "ray_dashboard_k8s_backend_service_port" {
 
 variable "ray_dashboard_domain" {
   type        = string
-  description = "Domain used for SSL certificate. If it's empty, *.nip.io DNS is used."
+  description = "Domain used for SSL certificate."
   default     = ""
 }
 

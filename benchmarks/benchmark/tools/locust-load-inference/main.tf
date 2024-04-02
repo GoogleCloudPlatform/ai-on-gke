@@ -24,24 +24,29 @@ locals {
     ? "${path.module}/manifest-templates"
     : pathexpand(var.templates_path)
   )
+  hugging_face_token_secret = (
+    var.hugging_face_secret == null || var.hugging_face_secret_version == null
+    ? null
+    : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
+  )
 
   all_locust_manifests = flatten([for manifest_file in local.locust_templates :
     [for data in split("---", templatefile(manifest_file, {
-      artifact_registry          = var.artifact_registry
-      namespace                  = var.namespace
-      inference_server_service   = var.inference_server_service
-      inference_server_framework = var.inference_server_framework
-      best_of                    = var.best_of
-      gcs_path                   = var.gcs_path
-      ksa                        = var.ksa
-      max_num_prompts            = var.max_num_prompts
-      max_output_len             = var.max_output_len
-      max_prompt_len             = var.max_prompt_len
-      num_locust_workers         = var.num_locust_workers
-      sax_model                  = var.sax_model
-      tokenizer                  = var.tokenizer
-      use_beam_search            = var.use_beam_search
-      huggingface_secret         = var.huggingface_secret
+      artifact_registry              = var.artifact_registry
+      namespace                      = var.namespace
+      inference_server_service       = var.inference_server_service
+      inference_server_framework     = var.inference_server_framework
+      best_of                        = var.best_of
+      gcs_path                       = var.gcs_path
+      ksa                            = var.ksa
+      max_num_prompts                = var.max_num_prompts
+      max_output_len                 = var.max_output_len
+      max_prompt_len                 = var.max_prompt_len
+      num_locust_workers             = var.num_locust_workers
+      sax_model                      = var.sax_model
+      tokenizer                      = var.tokenizer
+      use_beam_search                = var.use_beam_search
+      hugging_face_token_secret_list = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
     })) : data]
   ])
 }

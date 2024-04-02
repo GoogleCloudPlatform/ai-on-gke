@@ -4,7 +4,7 @@ This is a sample to deploy a Retrieval Augmented Generation (RAG) application on
 
 # What is RAG?
 
-[RAG](https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/) is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets.
+[RAG](https://cloud.google.com/blog/products/ai-machine-learning/rag-with-databases-on-google-cloud) is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets.
 
 RAG uses a semantically searchable knowledge base (like vector search) to retrieve relevant snippets for a given prompt to provide additional context to the LLM. Augmenting the knowledge base with additional data is typically cheaper than fine tuning and is more scalable when incorporating current events and other rapidly changing data spaces.
 
@@ -29,17 +29,19 @@ Install the following on your computer:
 
 ### Bring your own cluster (optional)
 
-By default, this tutorial creates an Autopilot cluster on your behalf. We highly recommend following the default settings.
+By default, this tutorial creates a Standard cluster on your behalf. We highly recommend following the default settings.
 
 If you prefer to manage your own cluster, set `create_cluster = false` in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
 
-Use gcloud to create a GKE Autopilot cluster. Note that RAG requires the latest Autopilot features, available on the latest versions of 1.28 and 1.29.
+Use the provided infrastructue module to create a cluster:
 
-```
-gcloud container clusters create-auto rag-cluster \
-  --location us-central1 \
-  --cluster-version 1.28
-```
+1. `cd ai-on-gke/infrastructure`
+
+2. Edit `platform.tfvars` to set your project ID, location and cluster name. The other fields are optional. Ensure you create an L4 nodepool as this tutorial requires it.
+
+3. Run `terraform init`
+
+4. Run `terraform apply --var-file workloads.tfvars`
 
 ### Bring your own VPC (optional)
 
@@ -96,7 +98,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
             * password: use `terraform output jupyterhub_password` to fetch the password value
    * If IAP is enabled (`jupyter_add_auth = true`):
         - Fetch the domain: `terraform output jupyterhub_uri`
-        - If you used a custom domain, ensure you configured your DNS as described above. This can be skipped if using `nip.io`.
+        - If you used a custom domain, ensure you configured your DNS as described above. 
         - Verify the domain status is `Active`:
             - `kubectl get managedcertificates jupyter-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
             - Note: This can take up to 20 minutes to propagate.
@@ -123,7 +125,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
             - Go to `localhost:8265` in a browser
         - If IAP is enabled (`ray_dashboard_add_auth = true`):
             - Fetch the domain: `terraform output ray-dashboard-managed-cert`
-            - If you used a custom domain, ensure you configured your DNS as described above. This can be skipped if using `nip.io`.
+            - If you used a custom domain, ensure you configured your DNS as described above.
             - Verify the domain status is `Active`:
                 - `kubectl get managedcertificates ray-dashboard-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
                 - Note: This can take up to 20 minutes to propagate.
@@ -138,7 +140,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
         - Go to `localhost:8080` in a browser
     * If IAP is enabled (`frontend_add_auth = true`):
         - Fetch the domain: `terraform output frontend_uri`
-        - If you used a custom domain, ensure you configured your DNS as described above. This can be skipped if using `nip.io`.
+        - If you used a custom domain, ensure you configured your DNS as described above.
         - Verify the domain status is `Active`:
             - `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
             - Note: This can take up to 20 minutes to propagate.
@@ -157,9 +159,9 @@ We recommend you configure authenticated access via IAP for your services.
     * `frontend_add_auth = true`
     * `ray_dashboard_add_auth = true`
 3) Allowlist principals for your services via `jupyter_members_allowlist`, `frontend_members_allowlist` and `ray_dashboard_members_allowlist`.
-4) Configure custom domains names via `jupyter_domain`, `frontend_domain` and `ray_dashboard_domain` for your services. If left blank, we'll provision test `nip.io` domains for you.
+4) Configure custom domains names via `jupyter_domain`, `frontend_domain` and `ray_dashboard_domain` for your services. 
 5) Configure DNS records for your custom domains:
-    - [Register a Domain on Google Cloud Domains](https://cloud.google.com/domains/docs/register-domain#registering-a-domain) or use a domain registrar of your choice. You can skip this if using `nip.io`.
+    - [Register a Domain on Google Cloud Domains](https://cloud.google.com/domains/docs/register-domain#registering-a-domain) or use a domain registrar of your choice.
     - Set up your DNS service to point to the public IP
         * Run `terraform output frontend_ip_address` to get the public ip address of frontend, and add an A record in your DNS configuration to point to the public IP address.
         * Run `terraform output jupyterhub_ip_address` to get the public ip address of jupyterhub, and add an A record in your DNS configuration to point to the public IP address.
@@ -175,7 +177,7 @@ We recommend you configure authenticated access via IAP for your services.
 
 # Troubleshooting
 
-Set your the namespace, cluster name and location from `workloads.tfvars`):
+Set your the namespace, cluster name and location from `workloads.tfvars`:
 
 ```
 export NAMESPACE=rag

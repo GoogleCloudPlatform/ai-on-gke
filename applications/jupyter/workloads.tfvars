@@ -45,8 +45,8 @@ k8s_backend_config_name  = "jupyter-iap-config"
 k8s_backend_service_name = "proxy-public"
 k8s_backend_service_port = 80
 
-domain            = "" ## Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns
-client_id         = "" ## Ensure brand is Internal, to autogenerate client credentials
+domain            = "jupyter.example.com" ## Provide domain for ingress resource and ssl certificate. 
+client_id         = ""                    ## Ensure brand is Internal, to autogenerate client credentials
 client_secret     = ""
 members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
 

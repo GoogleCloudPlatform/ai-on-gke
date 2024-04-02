@@ -95,6 +95,7 @@ spec:
         enable_grafana_on_ray_dashboard:
           name: enable_grafana_on_ray_dashboard
           title: Enable Grafana On Ray Dashboard
+          invisible: true
           section: ray
         enable_tpu:
           name: enable_tpu
