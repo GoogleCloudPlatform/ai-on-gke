@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: locust-master
+        examples.ai.gke.io/source: ai-on-gke-benchmarks
     spec:
       serviceAccountName: ${ksa}
       containers:

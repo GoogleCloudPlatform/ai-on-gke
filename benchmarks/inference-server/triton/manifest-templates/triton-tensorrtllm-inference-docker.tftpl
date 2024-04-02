@@ -28,6 +28,8 @@ spec:
     metadata:
       labels:
         app: triton-infer
+        ai.gke.io/inference-server: triton
+        examples.ai.gke.io/source: ai-on-gke-benchmarks
     spec:
       serviceAccountName: ${ksa}
       volumes:
@@ -44,7 +46,6 @@ spec:
             name: grpc-triton
           - containerPort: 8002
             name: metrics-triton
-
           image: "${image_path}"
           env:
           - name: HUGGINGFACE_TOKEN
