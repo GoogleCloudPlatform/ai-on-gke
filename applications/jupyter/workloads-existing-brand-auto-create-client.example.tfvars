@@ -41,8 +41,7 @@ k8s_backend_config_name  = "jupyter-iap-config"
 k8s_backend_service_name = "proxy-public"
 k8s_backend_service_port = 80
 
-url_domain_addr   = ""
-url_domain_name   = ""
+domain            = "jupyter.example.com"
 client_id         = ""
 client_secret     = ""
 members_allowlist = "user:<email>,group:<email>,serviceAccount:<email>,domain:google.com"
