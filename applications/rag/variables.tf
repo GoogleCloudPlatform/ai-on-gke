@@ -52,7 +52,7 @@ variable "additional_labels" {
 variable "jupyter_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "jupyter-sa"
+  default     = "jupyter-rag-sa"
 }
 
 variable "enable_grafana_on_ray_dashboard" {
@@ -70,7 +70,7 @@ variable "create_ray_service_account" {
 variable "ray_service_account" {
   type        = string
   description = "Google Cloud IAM service account for authenticating with GCP services"
-  default     = "ray-sa"
+  default     = "ray-rag-sa"
 }
 
 variable "create_rag_service_account" {
