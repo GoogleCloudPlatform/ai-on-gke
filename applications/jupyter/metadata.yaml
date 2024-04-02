@@ -33,6 +33,9 @@ spec:
   content: {}
   interfaces:
     variables:
+      - name: acknowledge
+        varType: bool
+        required: true
       - name: add_auth
         description: Enable IAP authentication on jupyterhub
         varType: bool
@@ -70,7 +73,7 @@ spec:
         defaultValue: false
       - name: create_cluster
         varType: bool
-        defaultValue: false
+        defaultValue: true
       - name: create_gcs_bucket
         description: Enable flag to create gcs_bucket
         varType: bool
