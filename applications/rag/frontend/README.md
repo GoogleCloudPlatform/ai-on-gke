@@ -28,3 +28,38 @@ This filter can auto fetch the templates in your project. Please refer to the fo
 2. Enable Cloud Natural Language API
 
 Follow these instructions to [enable the Cloud Natural Language API](https://cloud.google.com/natural-language/docs/setup#api)
+
+### Example
+
+#### DLP
+
+To safeguard sensitive data, follow the guidelines for [create inspect template](https://cloud.google.com/sensitive-data-protection/docs/creating-templates-inspect#dlp_create_inspect_template-console) and [create de-identify template](https://cloud.google.com/sensitive-data-protection/docs/creating-templates-deid).
+Set up an inspect template to identify instances of PERSON_NAME and a de-identify template to substitute any found names in the content with their corresponding InfoType.
+
+Execute the given query with DLP filtering active:
+```
+Who worked with Robert De Niro and name one film they collaborated
+```
+
+The expected output is:
+```
+[PERSON_NAME] has worked with many talented actors and directors throughout his career. One film he collaborated on with [PERSON_NAME] is "GoodFellas," which was released in 1990. In this film, [PERSON_NAME] played the role of [PERSON_NAME], a former mobster who recounts his rise and fall in a New York crime family.
+```
+
+#### Cloud Natural Language Moderation
+
+Adjust the sensitivity level to 60 and attempt the following query:
+```
+Which movie will show blowing up a building
+```
+
+This should result in:
+```
+The response is deemed inappropriate for display.
+```
+
+Reducing the sensitivity threshold to 40 will reveal the initial answer:
+```
+It seems like you are asking about a movie that features a scene of blowing up a building. One such movie that comes to mind is "Die Hard" (1988), directed by John McTiernan and starring Bruce Willis, Alan Rickman, and Bonnie Bedelia. In this action film, the protagonist, New York City police detective John McClane, must save his estranged wife and other hostages taken by German terrorist Hans Gruber in the Nakatomi Plaza in Los Angeles. The film includes a memorable scene where McClane uses a makeshift explosive device to blow up the building's roof.
+
+```
