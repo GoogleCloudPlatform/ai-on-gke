@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-locals{
+locals {
   // add support for wildcard DNS ex; {IP_ADDRESS}.example.com
   domain = startswith(var.domain, "{IP_ADDRESS}.") ? "${google_compute_global_address.ip_address.address}.${trimprefix(var.domain, "{IP_ADDRESS}.")}" : var.domain
 }
@@ -87,7 +87,7 @@ resource "helm_release" "iap" {
   }
 
   set {
-    name = "iap.managedCertificate.domain"
+    name  = "iap.managedCertificate.domain"
     value = local.domain
   }
 
