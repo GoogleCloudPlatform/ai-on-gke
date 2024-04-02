@@ -11,10 +11,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
 
 	"github.com/stretchr/testify/assert"
-	// "github.com/GoogleCloudPlatform/kuberay-tpu-webhook"
 )
 
 var (
@@ -23,8 +21,8 @@ var (
 	groupNameStr                  string
 	headGroupNameStr              string
 	testPodAdmissionReviews       *admissionv1.AdmissionReview
-	testCPUPods                   []runtime.Object
-	testTPUPods                   []runtime.Object
+	testCPUWorker                 *corev1.Pod
+	testTPUWorker                 *corev1.Pod
 	testRayClusterAdmissionReview *admissionv1.AdmissionReview
 	testRayClusterNoTPUs          *rayv1.RayCluster
 	testRayClusterSingleHostTPU   *rayv1.RayCluster
@@ -32,436 +30,112 @@ var (
 	testServices                  []runtime.Object
 	workerSelector                labels.Selector
 	headNodeIP                    string
-	// sliceToWorkers				  map[slice][]worker
-	numOfHosts  int32
-	numReplicas int
 )
 
 func setupTest(t *testing.T) {
-	namespaceStr = "default"
-	instanceName = "raycluster-sample"
+	namespaceStr = "test"
+	instanceName = "raycluster-test-sample"
 	headNodeIP = "1.2.3.4"
-	groupNameStr = "workergroup"
+	groupNameStr = "test-group-name"
 	headlessServiceSuffix = "headless-worker-svc"
 
-	// 1 CPU head pod + 1 worker - doesn't request TPUs
-	testCPUPods = []runtime.Object{
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "headNode",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeTypeLabelKey:  string(rayv1.HeadNode),
-					utils.RayNodeGroupLabelKey: headGroupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name:    "ray-head",
-						Image:   "rayproject/autoscaler",
-						Command: []string{"python"},
-						Args:    []string{"/opt/code.py"},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				PodIP: headNodeIP,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-head",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod1",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-	}
-
-	// 1 CPU head pod + 4 TPU pods
-	testTPUPods = []runtime.Object{
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "headNode",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeTypeLabelKey:  string(rayv1.HeadNode),
-					utils.RayNodeGroupLabelKey: headGroupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-head",
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				PodIP: headNodeIP,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-head",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod1",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod2",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod3",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod4",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-	}
-
-	// RayCluster requesting no TPU resources - pass-through
-	testRayClusterNoTPUs = &rayv1.RayCluster{
+	// CPU pod - doesn't request TPUs
+	testCPUWorker = &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      instanceName,
+			Name:      "cpu-pod",
 			Namespace: namespaceStr,
+			Labels: map[string]string{
+				utils.RayNodeLabelKey:      "yes",
+				utils.RayClusterLabelKey:   instanceName,
+				utils.RayNodeGroupLabelKey: groupNameStr,
+			},
 		},
-		Spec: rayv1.RayClusterSpec{
-			HeadGroupSpec: rayv1.HeadGroupSpec{
-				Template: corev1.PodTemplateSpec{
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name: "ray-head",
-							},
-						},
-					},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name: "ray-worker",
 				},
 			},
-			WorkerGroupSpecs: []rayv1.WorkerGroupSpec{
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+			ContainerStatuses: []corev1.ContainerStatus{
 				{
-					Replicas:    pointer.Int32(1),
-					MinReplicas: pointer.Int32(0),
-					MaxReplicas: pointer.Int32(10000),
-					NumOfHosts:  1,
-					GroupName:   groupNameStr,
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "ray-worker",
-									Env: []corev1.EnvVar{
-										{
-											Name: "MY_POD_IP",
-											ValueFrom: &corev1.EnvVarSource{
-												FieldRef: &corev1.ObjectFieldSelector{
-													FieldPath: "status.podIP",
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
+					Name:  "ray-worker",
+					State: corev1.ContainerState{},
 				},
 			},
 		},
 	}
 
-	// RayCluster with 2x2x1 TPU topology worker group
-	testRayClusterSingleHostTPU = &rayv1.RayCluster{
+	// TPU Ray worker pod
+	testTPUWorker = &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      instanceName,
+			Name:      "tpu-pod",
 			Namespace: namespaceStr,
-		},
-		Spec: rayv1.RayClusterSpec{
-			HeadGroupSpec: rayv1.HeadGroupSpec{
-				Template: corev1.PodTemplateSpec{
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name: "ray-head",
-							},
-						},
-					},
-				},
+			Labels: map[string]string{
+				utils.RayNodeLabelKey:      "yes",
+				utils.RayClusterLabelKey:   instanceName,
+				utils.RayNodeGroupLabelKey: groupNameStr,
 			},
-			WorkerGroupSpecs: []rayv1.WorkerGroupSpec{
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
 				{
-					Replicas:    pointer.Int32(1),
-					MinReplicas: pointer.Int32(0),
-					MaxReplicas: pointer.Int32(10000),
-					NumOfHosts:  1,
-					GroupName:   groupNameStr,
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "ray-worker",
-									Env: []corev1.EnvVar{
-										{
-											Name: "MY_POD_IP",
-											ValueFrom: &corev1.EnvVarSource{
-												FieldRef: &corev1.ObjectFieldSelector{
-													FieldPath: "status.podIP",
-												},
-											},
-										},
-									},
-								},
-							},
+					Name: "ray-worker",
+					Resources: corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							"cpu":               resource.MustParse("1"),
+							"google.com/tpu":    resource.MustParse("4"),
+							"memory":            resource.MustParse("40G"),
+							"ephemeral-storage": resource.MustParse("20Gi"),
+						},
+						Requests: corev1.ResourceList{
+							"cpu":               resource.MustParse("1"),
+							"google.com/tpu":    resource.MustParse("4"),
+							"memory":            resource.MustParse("40G"),
+							"ephemeral-storage": resource.MustParse("20Gi"),
 						},
 					},
 				},
 			},
 		},
-	}
-
-	// RayCluster with 2x2x4 TPU topology worker group
-	testRayClusterMultiHostTPU = &rayv1.RayCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instanceName,
-			Namespace: namespaceStr,
-		},
-		Spec: rayv1.RayClusterSpec{
-			HeadGroupSpec: rayv1.HeadGroupSpec{
-				Template: corev1.PodTemplateSpec{
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name: "ray-head",
-							},
-						},
-					},
-				},
-			},
-			WorkerGroupSpecs: []rayv1.WorkerGroupSpec{
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+			ContainerStatuses: []corev1.ContainerStatus{
 				{
-					Replicas:    pointer.Int32(1),
-					MinReplicas: pointer.Int32(0),
-					MaxReplicas: pointer.Int32(10000),
-					NumOfHosts:  4,
-					GroupName:   groupNameStr,
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "ray-worker",
-									Env: []corev1.EnvVar{
-										{
-											Name: "MY_POD_IP",
-											ValueFrom: &corev1.EnvVarSource{
-												FieldRef: &corev1.ObjectFieldSelector{
-													FieldPath: "status.podIP",
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
+					Name:  "ray-worker",
+					State: corev1.ContainerState{},
 				},
 			},
 		},
 	}
 }
 
+// helper function used by tests which mutate sliceToWorkers
+func deepCopySliceToWorkers() map[slice][]worker {
+	deepCopy := make(map[slice][]worker)
+	for slice, workerList := range sliceToWorkers {
+		deepCopy[slice] = []worker{}
+		for _, worker := range workerList {
+			deepCopy[slice] = append(deepCopy[slice], worker)
+		}
+	}
+
+	return deepCopy
+}
+
 func Test_GetReplicaIndex(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		sliceToWorkers     map[slice][]worker
-		numOfHosts         int32
-		numReplicas        int
-		additionalGroupStr string
-		numOfHosts2        int32
-		numReplicas2       int
+		sliceToWorkers        map[slice][]worker
+		numOfHosts            int32
+		numReplicas           int
+		additionalGroupStr    string
+		additionalNumOfHosts  int32
+		additionalNumReplicas int
+		workersToDelete       []worker
 	}{
 		"single-host, single-slice worker group": {
 			// single-slice, replicaIndex should always be 0
@@ -486,17 +160,34 @@ func Test_GetReplicaIndex(t *testing.T) {
 		"multiple worker groups": {
 			// should assign replicaIndex 0-numReplicas and TPU_WORKER_ID 0-numOfHosts
 			// for each respective worker group
-			numOfHosts:         4,
-			numReplicas:        4,
-			additionalGroupStr: "another-worker-group",
-			numOfHosts2:        2,
-			numReplicas2:       3,
+			numOfHosts:            4,
+			numReplicas:           4,
+			additionalGroupStr:    "another-worker-group",
+			additionalNumOfHosts:  2,
+			additionalNumReplicas: 3,
+		},
+		"deleted pods from replica": {
+			// should re-assign pods to lowest index replicas with # isCreated pods < NumOfHosts
+			numOfHosts:      4,
+			numReplicas:     4,
+			workersToDelete: []worker{worker{0, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
+		},
+		"delete pods from different multi-host groups": {
+			// pods should be reassigned the lowest replica ID with # isCreated pods < NumOfHosts
+			// in each respective worker group
+			numOfHosts:            4,
+			numReplicas:           4,
+			additionalGroupStr:    "another-worker-group",
+			additionalNumOfHosts:  4,
+			additionalNumReplicas: 3,
+			workersToDelete:       []worker{worker{1, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
 		},
 	}
 
+	// validate getReplicaIndex() returns the expected Replica ID for TPU pods in varying pod slices
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkers = make(map[slice][]worker)
+			sliceToWorkersCopy := deepCopySliceToWorkers()
 			for i := 0; i < tc.numReplicas; i++ {
 				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
 				for j := 0; j < int(tc.numOfHosts); j++ {
@@ -512,24 +203,105 @@ func Test_GetReplicaIndex(t *testing.T) {
 					}
 				}
 			}
+
+			if len(tc.workersToDelete) > 0 {
+				// test deleting and then re-assigning one pod at a time
+				for _, workerToDelete := range tc.workersToDelete {
+					// "delete" the pod
+					replicaToDeleteFrom := workerToDelete.replicaIndex
+					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, replicaToDeleteFrom, tc.numOfHosts}
+					// set the pod isCreated value to false to simulate pod deletion
+					for index, worker := range sliceToWorkers[testPodSlice] {
+						if worker.workerIndex == workerToDelete.workerIndex {
+							sliceToWorkers[testPodSlice][index].isCreated = false
+						}
+					}
+
+					// should re-assign the pod to the same replica
+					replicaIndex := getReplicaIndex(instanceName, groupNameStr, namespaceStr)
+					// set the pod isCreated value back to true to simulate pod re-creation
+					for index, worker := range sliceToWorkers[testPodSlice] {
+						if worker.workerIndex == workerToDelete.workerIndex {
+							sliceToWorkers[testPodSlice][index].isCreated = true
+						}
+					}
+					assert.Equal(t, replicaToDeleteFrom, replicaIndex)
+				}
+
+				// test deleting pods simultaneously and then re-assigning
+				for _, workerToDelete := range tc.workersToDelete {
+					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
+
+					// set the pod isCreated value to false to simulate pod deletion
+					for index, worker := range sliceToWorkers[testPodSlice] {
+						if worker.workerIndex == workerToDelete.workerIndex {
+							sliceToWorkers[testPodSlice][index].isCreated = false
+						}
+					}
+				}
+			}
+
+			// test assigning pods to replicas for a different worker group
 			if tc.additionalGroupStr != "" {
-				for i := 0; i < tc.numReplicas2; i++ {
-					testPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.numOfHosts2}
-					for j := 0; j < int(tc.numOfHosts2); j++ {
+				for i := 0; i < tc.additionalNumReplicas; i++ {
+					testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.additionalNumOfHosts}
+					for j := 0; j < int(tc.additionalNumOfHosts); j++ {
 						replicaIndex := getReplicaIndex(instanceName, tc.additionalGroupStr, namespaceStr)
 						assert.Equal(t, i, replicaIndex)
 
 						// add the worker to sliceToWorkers - this would happen in getNextWorkerID
 						testWorker := worker{j, replicaIndex, true}
-						if sliceToWorkers[testPodSlice] == nil {
-							sliceToWorkers[testPodSlice] = []worker{testWorker}
+						if sliceToWorkers[testAdditionalPodSlice] == nil {
+							sliceToWorkers[testAdditionalPodSlice] = []worker{testWorker}
 						} else {
-							sliceToWorkers[testPodSlice] = append(sliceToWorkers[testPodSlice], testWorker)
+							sliceToWorkers[testAdditionalPodSlice] = append(sliceToWorkers[testAdditionalPodSlice], testWorker)
+						}
+					}
+				}
+
+				// test deleting pods from a different worker group
+				if len(tc.workersToDelete) > 0 {
+					for _, workerToDelete := range tc.workersToDelete {
+						replicaToDeleteFrom := workerToDelete.replicaIndex
+						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, replicaToDeleteFrom, tc.additionalNumOfHosts}
+						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
+							if worker.workerIndex == workerToDelete.workerIndex {
+								sliceToWorkers[testAdditionalPodSlice][index].isCreated = false
+							}
 						}
 					}
 				}
 			}
-			assert.Equal(t, tc.numReplicas+tc.numReplicas2, len(sliceToWorkers))
+
+			// should re-assign the pod to the same replica for each respective worker group
+			if len(tc.workersToDelete) > 0 {
+				for _, workerToDelete := range tc.workersToDelete {
+					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
+					replicaIndex := getReplicaIndex(instanceName, groupNameStr, namespaceStr)
+					// "re-create" the worker pod
+					for index, worker := range sliceToWorkers[testPodSlice] {
+						if worker.workerIndex == workerToDelete.workerIndex {
+							sliceToWorkers[testPodSlice][index].isCreated = true
+						}
+					}
+					assert.Equal(t, workerToDelete.replicaIndex, replicaIndex)
+
+					if tc.additionalGroupStr != "" {
+						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, workerToDelete.replicaIndex, tc.additionalNumOfHosts}
+						additionalReplicaIndex := getReplicaIndex(instanceName, tc.additionalGroupStr, namespaceStr)
+						// "re-create" the worker pod
+						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
+							if worker.workerIndex == workerToDelete.workerIndex {
+								sliceToWorkers[testAdditionalPodSlice][index].isCreated = true
+							}
+						}
+						assert.Equal(t, workerToDelete.replicaIndex, additionalReplicaIndex)
+					}
+				}
+			}
+
+			assert.Equal(t, tc.numReplicas+tc.additionalNumReplicas, len(sliceToWorkers))
+			sliceToWorkers = sliceToWorkersCopy // reset sliceToWorkers to previous state
 		})
 	}
 }
@@ -538,45 +310,55 @@ func Test_GetNextWorkerID(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		numOfHosts  int32
-		numReplicas int
-		deletePodID int
+		numOfHosts            int32
+		numReplicas           int
+		workersToDelete       []worker
+		additionalGroupStr    string
+		additionalNumOfHosts  int32
+		additionalNumReplicas int
 	}{
 		"single-host, single-slice worker group": {
-			// single-slice, replicaIndex should always be 0
+			// single-host, TPU_WORKER_ID should always be 0
 			numOfHosts:  1,
 			numReplicas: 1,
-			deletePodID: -1,
 		},
 		"single-host, multi-slice worker group": {
-			// multi-slice, replicaIndex should always be 0-numReplicas
+			// multi-slice, TPU_WORKER_ID should be 0 for all replicas
 			numOfHosts:  1,
 			numReplicas: 4,
-			deletePodID: -1,
 		},
 		"multi-host, single-slice worker group": {
-			// single-slice, replicaIndex should always be 0
+			// multi-host, TPU_WORKER_ID should range from 0 to NumOfHosts-1
 			numOfHosts:  4,
 			numReplicas: 1,
-			deletePodID: -1,
 		},
 		"multi-host, multi-slice worker group": {
-			// multi-slice, replicaIndex should always be 0-numReplicas for 0-numOfHosts pods
+			// multi-slice, unique TPU_WORKER_IDs should range from 0 to NumOfHosts-1 for each replica
 			numOfHosts:  4,
 			numReplicas: 4,
-			deletePodID: -1,
 		},
-		"deleted pod from multi-host group": {
-			// pod should be reassigned the ID of the deleted pod
-			numOfHosts:  4,
-			numReplicas: 4,
-			deletePodID: 2,
+		"delete pods from multi-host group": {
+			// pods should be reassigned the lowest integer ID with isCreated == false belonging to the replica
+			numOfHosts:      4,
+			numReplicas:     4,
+			workersToDelete: []worker{worker{0, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
+		},
+		"delete pods from different multi-host groups": {
+			// pods should be reassigned the lowest TPU_WORKER_ID ID with isCreated == false belonging to the replica
+			// in each respective worker group
+			numOfHosts:            4,
+			numReplicas:           4,
+			workersToDelete:       []worker{worker{0, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
+			additionalGroupStr:    "another-worker-group",
+			additionalNumOfHosts:  4,
+			additionalNumReplicas: 3,
 		},
 	}
 
+	// validate getNextWorkerID() returns the expected TPU_WORKER ID for different worker group specifications
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkers = make(map[slice][]worker)
+			sliceToWorkersCopy := deepCopySliceToWorkers()
 			for i := 0; i < tc.numReplicas; i++ {
 				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
 				for j := 0; j < int(tc.numOfHosts); j++ {
@@ -584,12 +366,79 @@ func Test_GetNextWorkerID(t *testing.T) {
 					assert.Equal(t, j, workerID)
 				}
 			}
-			if tc.deletePodID != -1 {
-				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, 0, tc.numOfHosts}
-				sliceToWorkers[testPodSlice][tc.deletePodID].isCreated = false
-				workerID := getNextWorkerID(testPodSlice, namespaceStr, 0)
-				assert.Equal(t, tc.deletePodID, workerID)
+
+			if len(tc.workersToDelete) > 0 {
+				// test deleting and then re-assigning one pod at a time
+				for _, workerToDelete := range tc.workersToDelete {
+					replicaToDeleteFrom := workerToDelete.replicaIndex
+					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, replicaToDeleteFrom, tc.numOfHosts}
+					// set the pod isCreated value to false to simulate pod deletion
+					for index, worker := range sliceToWorkers[testPodSlice] {
+						if worker.workerIndex == workerToDelete.workerIndex {
+							sliceToWorkers[testPodSlice][index].isCreated = false
+						}
+					}
+					workerID := getNextWorkerID(testPodSlice, namespaceStr, replicaToDeleteFrom)
+					assert.Equal(t, workerToDelete.workerIndex, workerID)
+				}
+
+				// test deleting pods simultaneously and then re-assigning
+				for _, workerToDelete := range tc.workersToDelete {
+					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
+					// set the pod isCreated value to false to simulate pod deletion
+					for index, worker := range sliceToWorkers[testPodSlice] {
+						if worker.workerIndex == workerToDelete.workerIndex {
+							sliceToWorkers[testPodSlice][index].isCreated = false
+						}
+					}
+				}
 			}
+
+			// test assigning TPU_WORKER_IDs to pods for a different worker group
+			if tc.additionalGroupStr != "" {
+				for i := 0; i < tc.additionalNumReplicas; i++ {
+					testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.additionalNumOfHosts}
+					for j := 0; j < int(tc.additionalNumOfHosts); j++ {
+						workerID := getNextWorkerID(testAdditionalPodSlice, namespaceStr, i)
+						assert.Equal(t, j, workerID)
+					}
+				}
+
+				// test deleting pods from a different worker group
+				if len(tc.workersToDelete) > 0 {
+					for _, workerToDelete := range tc.workersToDelete {
+						replicaToDeleteFrom := workerToDelete.replicaIndex
+						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, replicaToDeleteFrom, tc.additionalNumOfHosts}
+						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
+							if worker.workerIndex == workerToDelete.workerIndex {
+								sliceToWorkers[testAdditionalPodSlice][index].isCreated = false
+							}
+						}
+					}
+				}
+			}
+
+			// should re-assign the pod to the same replica for each respective worker group
+			if len(tc.workersToDelete) > 0 {
+				for _, workerToDelete := range tc.workersToDelete {
+					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
+					workerID := getNextWorkerID(testPodSlice, namespaceStr, workerToDelete.replicaIndex)
+					assert.Equal(t, workerToDelete.workerIndex, workerID)
+
+					if tc.additionalGroupStr != "" {
+						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, workerToDelete.replicaIndex, tc.additionalNumOfHosts}
+						additionalWorkerID := getNextWorkerID(testAdditionalPodSlice, namespaceStr, workerToDelete.replicaIndex)
+						// "re-create" the worker pod
+						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
+							if worker.workerIndex == workerToDelete.workerIndex {
+								sliceToWorkers[testAdditionalPodSlice][index].isCreated = true
+							}
+						}
+						assert.Equal(t, workerToDelete.workerIndex, additionalWorkerID)
+					}
+				}
+			}
+			sliceToWorkers = sliceToWorkersCopy // reset sliceToWorkers to previous state
 		})
 	}
 }
