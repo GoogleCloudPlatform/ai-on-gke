@@ -33,7 +33,7 @@ data "google_storage_bucket" "bucket" {
 }
 
 module "gcs-fuse-bucket" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gcs"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gcs?ref=v30.0.0&depth=1"
   count      = var.bucket_create ? 1 : 0
   project_id = var.project_id
   name       = var.bucket_name
