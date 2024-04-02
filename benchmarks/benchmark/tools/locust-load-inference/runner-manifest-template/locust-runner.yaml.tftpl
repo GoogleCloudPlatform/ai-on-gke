@@ -7,20 +7,20 @@ metadata:
     app: locust-runner
     examples.ai.gke.io/source: ai-on-gke-benchmarks
 spec:
-    serviceAccountName: ${ksa}
-    containers: 
-        - name: locust-runner
-          image: ${artifact_registry}/locust-runner:latest
-          env:
-          - name: PROJECT_ID
-            value: ${project_id}
-          - name: BUCKET
-            value: ${bucket}
-          - name: DURATION
-            value: ${duration}
-          - name: USERS
-            value: ${users}
-          - name: RATE
-            value: ${rate}
-          - name: NAMESPACE
-            value: ${namespace}
+  serviceAccountName: ${ksa}
+  containers:
+    - name: locust-runner
+      image: ${artifact_registry}/locust-runner:latest
+      env:
+      - name: PROJECT_ID
+        value: ${project_id}
+      - name: BUCKET
+        value: ${bucket}
+      - name: DURATION
+        value: ${duration}
+      - name: USERS
+        value: ${users}
+      - name: RATE
+        value: ${rate}
+      - name: NAMESPACE
+        value: ${namespace}
