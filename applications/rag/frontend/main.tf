@@ -191,4 +191,3 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
     }
   }
 }
-

@@ -16,9 +16,23 @@ spec:
       variables:
         acknowledge:
           name: acknowledge
-          title: Confirm that all prerequisites have been met.
+          title: Check to confirm you enabled Google APIs for your project with this command.
           section: acknowledge
-          subtext: This solution will incur additional costs due to resource creation and necessary Google API usage. Please confirm to proceed.
+          subtext: <p>
+                    <code>gcloud services enable &bsol;</br>
+                    serviceusage.googleapis.com &bsol;</br>
+                    cloudresourcemanager.googleapis.com</code>
+                   </p>
+          enumValueLabels:
+            - label: Confirm that all prerequisites have been met.
+              value: "true"
+        solution_deployment_view:
+          name: solution_deployment_view
+          title: Check to confirm that upon deployment completion, you need to go to the Solution deployment page, find your deployment, and follow suggested next steps on the deployment DETAILS tab.
+          section: acknowledge
+          subtext: <p>
+                    <a href="https://console.cloud.google.com/products/solutions/deployments"><i>Solution deployment page</i></a>
+                   </p>
           enumValueLabels:
             - label: Confirm that all prerequisites have been met.
               value: "true"
@@ -26,39 +40,30 @@ spec:
           name: additional_labels
           title: Additional Labels
           invisible: true
-          section: cluster_details
+          section: required_config
         autopilot_cluster:
           name: autopilot_cluster
           title: GKE Cluster Type
-          section: cluster_details
+          section: required_config
           enumValueLabels:
             - label: Autopilot Cluster
               value: "true"
             - label: Standard Cluster
               value: "false"
           invisible: true
-        cloudsql_instance:
-          name: cloudsql_instance
-          title: CloudSQL Instance
-          section: rag
-        cloudsql_instance_region:
-          name: cloudsql_instance_region
-          title: Cloudsql Instance Region
-          invisible: true
-          section: rag
+        cluster_name:
+          name: cluster_name
+          title: GKE cluster name
+          section: required_config
         cluster_location:
           name: cluster_location
-          title: Cluster Location
-          section: cluster_details
+          title: GKE Cluster Location
+          section: required_config
           xGoogleProperty:
             type: ET_GCE_REGION
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_region:
               allowlisted_regions: ["asia-east1","asia-northeast1","asia-northeast3","asia-south1","asia-southeast1","europe-west1","europe-west2","europe-west3","europe-west4","us-central1","us-east1","us-east4","us-west1","us-west4"]
-        cluster_name:
-          name: cluster_name
-          title: Cluster Name
-          section: cluster_details
         cpu_pools:
           name: cpu_pools
           title: Cpu Pools
@@ -70,101 +75,114 @@ spec:
         create_cluster:
           name: create_cluster
           title: Create GKE Cluster
-          section: cluster_details
+          section: required_config
           invisible: true
         create_gcs_bucket:
           name: create_gcs_bucket
           title: Create Gcs Bucket
           invisible: true
-          section: rag
+          section: required_config
         create_jupyter_service_account:
           name: create_jupyter_service_account
           title: Create Jupyter Service Account
           invisible: true
-          section: rag
+          section: required_config
         create_network:
           name: create_network
           title: Create Network
           invisible: true
-          section: cluster_details
+          section: required_config
         create_rag_service_account:
           name: create_rag_service_account
           title: Create Rag Service Account
           invisible: true
-          section: rag
+          section: required_config
         create_ray_service_account:
           name: create_ray_service_account
           title: Create Ray Service Account
           invisible: true
-          section: rag
+          section: required_config
         dataset_embeddings_table_name:
           name: dataset_embeddings_table_name
           title: Dataset Embeddings Table Name
           invisible: true
-          section: rag
+          section: required_config
         disable_ray_cluster_network_policy:
           name: disable_ray_cluster_network_policy
           title: Disable Ray Cluster Network Policy
           invisible: true
-          section: rag
+          section: required_config
         enable_grafana_on_ray_dashboard:
           name: enable_grafana_on_ray_dashboard
           title: Enable Grafana On Ray Dashboard
           invisible: true
-          section: rag
+          section: required_config
+        iap_consent_info:
+          name: iap_consent_info
+          title: Confirm your OAuth consent screen is configured correctly.
+          section: iap_auth_info
         frontend_add_auth:
           name: frontend_add_auth
-          title: Enable IAP for Frontend Application
-          section: rag_iap_auth
+          title: Enable IAP for the chat application
+          section: iap_auth_info
         frontend_domain:
           name: frontend_domain
-          title: Frontend Domain
-          section: rag_iap_auth
+          title: Domain to host the chat interface
+          section: iap_auth_info
         frontend_members_allowlist:
           name: frontend_members_allowlist
-          title: Frontend Members Allowlist
-          section: rag_iap_auth
+          title: Allowlist users to access the chat application
+          section: iap_auth_info
         gcs_bucket:
           name: gcs_bucket
-          title: GCS Bucket
-          section: rag
+          title: GCS bucket
+          section: required_config
           xGoogleProperty:
             type: ET_GCS_BUCKET
+        cloudsql_instance:
+          name: cloudsql_instance
+          title: CloudSQL Instance
+          section: required_config
+        cloudsql_instance_region:
+          name: cloudsql_instance_region
+          title: Cloudsql Instance Region
+          invisible: true
+          section: required_config
         goog_cm_deployment_name:
           name: goog_cm_deployment_name
           title: Goog Cm Deployment Name
         jupyter_add_auth:
           name: jupyter_add_auth
-          title: Enable IAP for JupyterHub Application
-          section: jupyter_iap_auth
+          title: Enable IAP for JupyterHub
+          section: iap_auth_info
         jupyter_domain:
           name: jupyter_domain
-          title: Jupyter Domain
-          section: jupyter_iap_auth
+          title: Domain to host JupyterHub
+          section: iap_auth_info
         jupyter_members_allowlist:
           name: jupyter_members_allowlist
-          title: Jupyter Members Allowlist
-          section: jupyter_iap_auth
+          title: Allowlist users to access JupyterHub
+          section: iap_auth_info
         jupyter_service_account:
           name: jupyter_service_account
           title: Jupyter Service Account
           invisible: true
-          section: rag
+          section: required_config
         kubernetes_namespace:
           name: kubernetes_namespace
           title: Kubernetes Namespace
           invisible: true
-          section: cluster_details
+          section: required_config
         network_name:
           name: network_name
           title: Network Name
           invisible: true
-          section: cluster_details
+          section: required_config
         private_cluster:
           name: private_cluster
           title: Private Cluster
           invisible: true
-          section: cluster_details
+          section: required_config
         project_id:
           name: project_id
           title: Project Id
@@ -173,90 +191,111 @@ spec:
           name: rag_service_account
           title: Rag Service Account
           invisible: true
-          section: rag
+          section: required_config
         ray_dashboard_add_auth:
           name: ray_dashboard_add_auth
-          title: Enable IAP for Ray Dashboard Application
-          section: ray_iap_auth
+          title: Enable IAP for Ray dashboard
+          section: iap_auth_info
         ray_dashboard_domain:
           name: ray_dashboard_domain
-          title: Ray Dashboard Domain
-          section: ray_iap_auth
+          title: Domain to host the Ray dashboard
+          section: iap_auth_info
         ray_dashboard_members_allowlist:
           name: ray_dashboard_members_allowlist
-          title: Ray Dashboard Members Allowlist
-          section: ray_iap_auth
+          title: Allowlist users to access the Ray dashboard
+          section: iap_auth_info
         ray_service_account:
           name: ray_service_account
           title: Ray Service Account
           invisible: true
-          section: rag
+          section: required_config
       sections:
         - name: acknowledge
           title: Before you begin
-        - name: cluster_details
-          title: New GKE Cluster Configuration
-        - name: rag
-          title: Other Configuration
+          subtext: 
+                This solution deploys a sample <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/release-1.1/applications/rag/README.md#what-is-rag"><i>RAG</i></a> application on GKE in your project with the following components&#58;</br>
+                &emsp;&emsp;1&#41; Inference server using LLM (<a href="https://huggingface.co/mistralai/Mistral-7B-v0.1"><i>Hugging Face Mistral-7B</i></a>)</br>
+                &emsp;&emsp;2&#41; A <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/release-1.1/applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb"><i>Jupyter notebook</i></a> provided with code that&#58;</br>
+                &emsp;&emsp;&emsp;&#45; Writes a sample TV shows/movies dataset to a GCS bucket.</br>
+                &emsp;&emsp;&emsp;&#45; Runs a <a href="https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html"><i>Ray job</i></a> to generate vector embeddings for the data.</br>
+                &emsp;&emsp;&emsp;&#45; Writes generated vector embeddings to Cloud SQL <a href="https://github.com/pgvector/pgvector"<i>pgvector</i></a> database.</br>
+                &emsp;&emsp;3&#41; Chat frontend application for prompt interactions which&#58;</br>
+                &emsp;&emsp;&emsp;&#45; Fetches context from the generated vector embeddings related to your prompt.</br>
+                &emsp;&emsp;&emsp;&#45; Augments the original prompt with the context.</br>
+                &emsp;&emsp;&emsp;&#45; Queries the LLM with the augmented prompt to return more relevant results.
+        - name: required_config
+          title: Required configuration
+        - name: iap_auth_info
+          title: Optional authentication with Identity-Aware Proxy
+          subtext: With <a href="https://cloud.google.com/iap/docs/enabling-kubernetes-howto"><i>IAP authentication</i></a>, you can control user access to the JupyterHub, Ray dashboard and/or chat applications. To use IAP, you will need to do the following:</br>
+                  <p>
+                  &emsp;&emsp;&#45; Identify domains for each application, and</br>
+                  &emsp;&emsp;&#45; Create <a href="https://cloud.google.com/dns/docs/records#add_a_record"<i>DNS A records</i></a> for the domains after the applications are deployed.
+                  </p>
+                  Without IAP, users will need to access the GKE cluster and use port-forward to connect to the chat application, JupyterHub, and/or Ray dashboard.
         - name: rag_iap_auth
-          title: Configure Authenticated Access for Frontend
-          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
+          title: Configure authenticated access for chat interface
         - name: ray_iap_auth
-          title: Configure Authenticated Access for Ray Dashboard
-          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
+          title: Configure authenticated access for Ray dashboard
         - name: jupyter_iap_auth
-          title: Configure Authenticated Access for JupyterHub
-          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
+          title: Configure authenticated access for JupyterHub
     runtime:
-      outputMessage: Deployment can take several minutes to complete.
+      outputMessage: Deployment can take 30-40 minutes to complete.
       suggestedActions:
-        - heading: "Step 1: Create DNS A Records for JupyterHub and Frontend Domains"
-          description: If using custom domains for JupyterHub or Frontend, create DNS A record sets for them (<a href="https://cloud.google.com/dns/docs/records#add_a_record">Google DNS Record Set</a>). Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
-        - heading: "Step 2: Go to JupyterHub Application"
+        - heading: "Step 1: If you enabled IAP authenticated access, create DNS A records for the JupyterHub and chat application domains."
+          description: If you enabled IAP for JupyterHub or the chat application, create <a href="https://cloud.google.com/dns/docs/records#add_a_record">DNS A record sets</a> for them. The instructions may be different based on your domain provider. Propagation takes 10-15 minutes and logging in won’t succeed until it’s done.
+        - heading: "Step 2: Launch JupyterHub"
           description: |-
-            <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
-            <li>If IAP is disabled:
-              <ul>
-                <li>(1) Setup gcloud in your environment</li>
-                <li>(2) Get these values from the Outputs section above: the <i>GKE Cluster Name</i>, <i>GKE Cluster Location</i>, <i>Kubernetes Namespace</i> , <i>Project Id</i>, <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> </li>
-                <li>(3) Get cluster credentials: <b>gcloud container clusters get-credentials <Gke Cluster Name> --location=<Gke Cluster Location> --project=<Project Id></b> </li>
-                <li>(4) Port forward to JupyterHub: <b>kubectl -n <Kubernetes Namespace> port-forward service/proxy-public 3080:80</b> </li>
-                <li>(5) Go to <i>localhost:3080</i> in a browser and log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i></li>
-              <ul>
-            </li>
-            <li> Once logged in, choose the <b>CPU</b> preset and wait for the JupyterLab page to load.</li>
+            <p>
+            1&#41; If IAP is disabled, port forward to the JupyterHub service:</br>
+            &emsp;&#45; Setup <a href="https://cloud.google.com/sdk/docs/install">gcloud</a> in your environment.</br>
+            &emsp;&#45; Get these values from the Outputs section above: <code>Gke Cluster Name</code>, <code>Gke Cluster Location</code>, <code>Kubernetes Namespace</code> , <code>Project Id</code>, <code>Jupyterhub User</code> and <code>Jupyterhub Password</code> </br>
+            &emsp;&#45; Get cluster credentials: <code>gcloud container clusters get-credentials &ltGke Cluster Name&gt --location=&ltGke Cluster Location&gt --project=&ltProject Id&gt</code></br>
+            &emsp;&#45; Port forward to JupyterHub: <code>kubectl -n &ltKubernetes Namespace&gt port-forward service/proxy-public 3080:80</code> </br>
+            &emsp;&#45; Go to <code>localhost:3080</code> in a browser and log in with <code>Jupyterhub User</code> and <code>Jupyterhub Password</code>
+            </p>
+            <p>
+            2&#41; If IAP is enabled, log in with your organization's credentials. Troubleshooting access issues:</br>
+            &emsp;&#45; SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</br>
+            &emsp;&#45; If you're unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>proxy-public</code> service and add the user with the role <b>IAP-secured Web App User</b>.
+            </p>
+            <p>3&#41; Once logged in, choose the <b>CPU with Default Storage</b> option and wait for JupyterLab to load.</p>
         - heading: "Step 3: Generate Vector Embeddings for the Dataset"
           description: |-
-            Go to File -> Open From URL & upload and execute the notebook 
-            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
-            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#generate-vector-embeddings-for-the-dataset">README.md</a> for detailed instructions.
-        - heading: "Step 4: Prompt the Inference Server via a Chatbot"
+            Go to File -> Open From URL & upload and execute the notebook <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>. Note that this requires creating a <a href="https://www.kaggle.com/account/login?phase=startRegisterTab&returnUrl=%2F">Kaggle account</a> and updating the first notebook cell with your Kaggle credentials to download the sample dataset (TV show/movie reviews). 
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#generate-vector-embeddings-for-the=-dataset">README.md</a> for detailed instructions.
+        - heading: "Step 4: Launch Frontend Chat Application"
           description: |-
-            <li> Go to the Frontend Application</li>
-            <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
-            <li>If IAP is disabled:
-              <ul>
-                <li>(1) Setup gcloud in your environment</li>
-                <li>(2) Get these values from the Outputs section above: the <i>GKE Cluster Name</i>, <i>GKE Cluster Location</i>, <i>Kubernetes Namespace</i> , <i>Project Id</i> </li>
-                <li>(3) Get cluster credentials: <b>gcloud container clusters get-credentials <Gke Cluster Name> --location=<Gke Cluster Location> --project=<Project Id></b> </li>
-                <li>(4) Port forward to the chat interface: <b>kubectl -n <Kubernetes Namespace> port-forward service/rag-frontend 8080:8080</b> </li>
-                <li>(5) Go to <i>localhost:8080</i> in a browser to launch the chat interface.
-              <ul>
-            </li>
-            <li>Prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.</li>
+            <p>
+            1&#41; If IAP is disabled, port forward to the frontend chat service:</br>
+            &emsp;&#45; Setup <a href="https://cloud.google.com/sdk/docs/install">gcloud</a> in your environment.</br>
+            &emsp;&#45; Get these values from the Outputs section above: <code>Gke Cluster Name</code>, <code>Gke Cluster Location</code>, <code>Kubernetes Namespace</code> , <code>Project Id</code> </br>
+            &emsp;&#45; Get cluster credentials: <code>gcloud container clusters get-credentials &ltGke Cluster Name&gt --location=&ltGke Cluster Location&gt --project=&ltProject Id&gt</code></br>
+            &emsp;&#45; Port forward to the chat interface: <code>kubectl -n &ltKubernetes Namespace&gt port-forward service/rag-frontend 8080:8080</code> </br>
+            &emsp;&#45; Go to <code>localhost:8080</code> in a browser to launch the chat interface.</br>
+            </p>
+            <p>
+            2&#41; If IAP is enabled, log in with your organization's credentials. Troubleshooting access issues:</br>
+            &emsp;&#45; SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</br>
+            &emsp;&#45; If you're unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>rag-frontend</code> service and add the user with the role <b>IAP-secured Web App User</b>.
+            </p>
+        - heading: "Step 5: Prompt the LLM with context from the TV shows/movies dataset"
+          description: |-
+            <li>Prompt the chat application with questions about TV shows or movies. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the LLM (Mistral-7B) with the augmented prompt to return more relevant results.</li>
+            <li>Try out the sensitive language censoring and moderation filters in the chat application.</li>
       outputs:
         frontend_ip_address: {}
         frontend_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to Frontend Application
+          label: Launch Frontend Chat Application
         gcp_network: {}
         jupyterhub_ip_address: {}
         jupyterhub_password: {}
         jupyterhub_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to JupyterHub Application
+          label: Launch JupyterHub
         jupyterhub_user: {}
         kubernetes_namespace: {}
         gke_cluster_name: {}
@@ -266,5 +305,5 @@ spec:
         ray_dashboard_uri:
           openInNewTab: true
           showInNotification: true
-          label: Go to Ray Dashboard
+          label: Launch Ray Dashboard
 

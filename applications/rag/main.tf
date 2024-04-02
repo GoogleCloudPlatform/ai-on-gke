@@ -310,4 +310,3 @@ module "frontend" {
   members_allowlist        = var.frontend_members_allowlist != "" ? split(",", var.frontend_members_allowlist) : []
   depends_on               = [module.namespace]
 }
-

@@ -25,3 +25,13 @@ output "project_id" {
   value       = var.project_id
   description = "GKE cluster location"
 }
+
+output "ray_dashboard_uri" {
+  description = "Ray Dashboard Endpoint to access user interface. In case of private IP, consider port-forwarding."
+  value       = module.kuberay-cluster[0].ray_dashboard_uri != "" ? "http://${module.kuberay-cluster[0].ray_dashboard_uri}" : ""
+}
+
+output "ray_dashboard_ip_address" {
+  description = "Ray Dashboard global IP address"
+  value       = module.kuberay-cluster[0].ray_dashboard_ip_address
+}

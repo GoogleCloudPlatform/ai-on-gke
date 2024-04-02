@@ -16,9 +16,23 @@ spec:
       variables:
         acknowledge:
           name: acknowledge
-          title: Confirm that all prerequisites have been met.
+          title: Check to confirm you enabled Google APIs for your project with this command.
           section: acknowledge
-          subtext: This solution will incur additional costs due to resource creation and necessary Google API usage. Please confirm to proceed.
+          subtext: <p>
+                    <code>gcloud services enable &bsol;</br>
+                    serviceusage.googleapis.com &bsol;</br>
+                    cloudresourcemanager.googleapis.com</code>
+                   </p>
+          enumValueLabels:
+            - label: Confirm that all prerequisites have been met.
+              value: "true"
+        solution_deployment_view:
+          name: solution_deployment_view
+          title: Check to confirm that upon deployment completion, you need to go to the Solution deployment page, find your deployment, and follow suggested next steps on the deployment DETAILS tab.
+          section: acknowledge
+          subtext: <p>
+                    <a href="https://console.cloud.google.com/products/solutions/deployments"><i>Solution deployment page</i></a>
+                   </p>
           enumValueLabels:
             - label: Confirm that all prerequisites have been met.
               value: "true"
@@ -26,34 +40,33 @@ spec:
           name: additional_labels
           title: Additional Labels
           invisible: true
-          section: cluster_details
+          section: required_config
         autopilot_cluster:
           name: autopilot_cluster
           title: GKE Cluster Type
-          section: cluster_details
+          section: required_config
           invisible: true
+        iap_consent_info:
+          name: iap_consent_info
+          title: Confirm your OAuth consent screen is configured correctly.
+          section: iap_auth
+        cluster_name:
+          name: cluster_name
+          title: Cluster Name
+          section: required_config
         cluster_location:
           name: cluster_location
           title: Cluster Location
-          section: cluster_details
+          section: required_config
           xGoogleProperty:
             type: ET_GCE_REGION
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_region:
               allowlisted_regions: ["asia-east1","asia-northeast1","asia-northeast3","asia-south1","asia-southeast1","europe-west1","europe-west2","europe-west3","europe-west4","us-central1","us-east1","us-east4","us-west1","us-west4"]
-        cluster_name:
-          name: cluster_name
-          title: Cluster Name
-          section: cluster_details
-        create_brand:
-          name: create_brand
-          title: Create Brand
-          invisible: true
-          section: iap_auth
         create_cluster:
           name: create_cluster
           title: Create GKE Cluster
-          section: cluster_details
+          section: required_config
           invisible: true
         create_gcs_bucket:
           name: create_gcs_bucket
@@ -67,7 +80,7 @@ spec:
           name: create_ray_cluster
           title: Create Ray Cluster
           invisible: true
-          section: ray
+          section: required_config
         create_service_account:
           name: create_service_account
           title: Create Service Account
@@ -76,30 +89,30 @@ spec:
           name: disable_ray_cluster_network_policy
           title: Disable Ray Cluster Network Policy
           invisible: true
-          section: ray
+          section: required_config
         disable_resource_quotas:
           name: disable_resource_quotas
           title: Disable Resource Quotas
           invisible: true
-          section: ray
+          section: required_config
         enable_gpu:
           name: enable_gpu
-          title: Enable GPU
-          section: ray
+          title: Enable GPU nodepool for Ray workloads
+          section: required_config
         enable_grafana_on_ray_dashboard:
           name: enable_grafana_on_ray_dashboard
           title: Enable Grafana On Ray Dashboard
           invisible: true
-          section: ray
+          section: required_config
         enable_tpu:
           name: enable_tpu
           title: Enable Tpu
           invisible: true
-          section: ray
+          section: required_config
         gcs_bucket:
           name: gcs_bucket
           title: Gcs Bucket
-          section: ray
+          section: required_config
           xGoogleProperty:
             type: ET_GCS_BUCKET
         goog_cm_deployment_name:
@@ -109,12 +122,12 @@ spec:
           name: kuberay_network_policy_allow_cidr
           title: Kuberay Network Policy Allow Cidr
           invisible: true
-          section: ray
+          section: required_config
         kubernetes_namespace:
           name: kubernetes_namespace
           title: Kubernetes Namespace
           invisible: true
-          section: cluster_details
+          section: required_config
         network_name:
           name: network_name
           title: Network Name
@@ -123,7 +136,7 @@ spec:
           name: private_cluster
           title: Private Cluster
           invisible: true
-          section: cluster_details
+          section: required_config
         project_id:
           name: project_id
           title: Project Id
@@ -149,7 +162,7 @@ spec:
           section: iap_auth
         ray_dashboard_domain:
           name: ray_dashboard_domain
-          title: Ray Dashboard Domain
+          title: Domain to host the Ray dashboard
           section: iap_auth
         ray_dashboard_k8s_backend_config_name:
           name: ray_dashboard_k8s_backend_config_name
@@ -178,12 +191,12 @@ spec:
           section: iap_auth
         ray_dashboard_members_allowlist:
           name: ray_dashboard_members_allowlist
-          title: Ray Dashboard Members Allowlist
+          title: Allowlist users to access the Ray dashboard
           section: iap_auth
         ray_version:
           name: ray_version
           title: Ray Version
-          section: ray
+          section: required_config
           enumValueLabels:
             - label: v2.9.3
               value: v2.9.3
@@ -191,7 +204,7 @@ spec:
           name: resource_quotas
           title: Resource Quotas
           invisible: true
-          section: ray
+          section: required_config
         subnetwork_cidr:
           name: subnetwork_cidr
           title: Subnetwork Cidr
@@ -204,24 +217,37 @@ spec:
           name: workload_identity_service_account
           title: GCP Workload Identity Service Account
           invisible: true
-          section: ray
+          section: required_config
       sections:
         - name: acknowledge
           title: Before you begin
-        - name: cluster_details
-          title: New GKE Cluster Details
-        - name: ray
-          title: Ray Application
+          subtext: 
+                This solution deploys a sample <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/release-1.1/applications/ray/README.md#ray-on-gke-templates"><i>Ray</i></a> application on GKE in your project.</br>
+        - name: required_config
+          title: Required configuration
         - name: iap_auth
-          title: IAP Authentication
-          subtext: Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> is configured for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
+          title: Optional authentication with Identity-Aware Proxy
+          subtext: With <a href="https://cloud.google.com/iap/docs/enabling-kubernetes-howto"><i>IAP authentication</i></a>, you can control user access to the <a href="https://docs.ray.io/en/latest/ray-observability/getting-started.html"><i>Ray dashboard</i></a>. To use IAP, you will need to do the following:</br>
+                  <p>
+                  &emsp;&emsp;&#45; Identify a domain for the Ray dashboard, and</br>
+                  &emsp;&emsp;&#45; Create <a href="https://cloud.google.com/dns/docs/records#add_a_record"<i>DNS A records</i></a> for the domain after the applicatio is deployed.
+                  </p>
+                  Without IAP, users will need to access the GKE cluster and use port-forward to connect to the Ray dashboard.
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
         - heading: Connect to Ray Cluster
           description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265). Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a> to install ray and submit jobs.
         - heading: View Job Status in Ray Dashboard
-          description: "Open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button. "
+          description: |-
+            <p>
+            1&#41; If IAP is disabled, open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button in the port forwarding page.</br>
+            </p>
+            <p>
+            2&#41; If IAP is enabled, click the <b>Launch Ray Dashboard</b> button and log in with your organization's credentials. Troubleshooting access issues:</br>
+            &emsp;&#45; SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</br>
+            &emsp;&#45; If you're unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>ray-cluster-kuberay-head-svc</code> service and add the user with the role <b>IAP-secured Web App User</b>.
+            </p>
       outputs:
         kubernetes_namespace: {}
         gke_cluster_name: {}
@@ -231,3 +257,8 @@ spec:
           openInNewTab: true
           showInNotification: true
           label: Connect to Ray Cluster
+        ray_dashboard_ip_address: {}
+        ray_dashboard_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Launch Ray Dashboard
