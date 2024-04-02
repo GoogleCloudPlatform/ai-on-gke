@@ -30,6 +30,14 @@ spec:
   ui:
     input:
       variables:
+        acknowledge:
+          name: acknowledge
+          title: Confirm that all prerequisites have been met.
+          section: acknowledge
+          subtext: This solution will incur additional costs due to resource creation and necessary Google API usage. Please confirm to proceed.
+          enumValueLabels:
+            - label: Confirm that all prerequisites have been met.
+              value: "true"
         add_auth:
           name: add_auth
           title: Enable IAP Authentication
@@ -69,11 +77,6 @@ spec:
           name: cluster_name
           title: Cluster Name
           section: cluster_details
-          xGoogleProperty:
-            type: ET_GKE_CLUSTER
-            gkeCluster:
-              locationVariable: cluster_location
-              clusterCreationVariable: create_cluster
         create_brand:
           name: create_brand
           title: Create Brand
@@ -83,8 +86,7 @@ spec:
           name: create_cluster
           title: Create GKE Cluster
           section: cluster_details
-          xGoogleProperty:
-            type: ET_CREATE_RESOURCE
+          invisible: true
         create_gcs_bucket:
           name: create_gcs_bucket
           title: Create Gcs Bucket
@@ -174,8 +176,7 @@ spec:
           section: jupyterhub
       sections:
         - name: cluster_details
-          title: GKE Cluster Configuration
-          subtext: It is recommended to choose the <b>New Cluster</b> option
+          title: New GKE Cluster Configuration
         - name: jupyterhub
           title: Other Configuration
         - name: iap_auth
