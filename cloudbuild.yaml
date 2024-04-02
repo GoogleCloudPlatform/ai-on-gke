@@ -329,16 +329,6 @@ steps:
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION -auto-approve -no-color
 
-    allowFailure: true
-    waitFor: ['cleanup rag']
-  
-  - id: 'cleanup gke network'
-    name: 'gcr.io/$PROJECT_ID/terraform'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -e
         cd /workspace/modules/custom-network
         terraform destroy \
         -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
@@ -349,8 +339,9 @@ steps:
         -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -var=subnetwork_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
         -auto-approve -no-color -lock=false
+
     allowFailure: true
-    waitFor: ['cleanup gke cluster']
+    waitFor: ['cleanup rag']
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -413,7 +404,7 @@ steps:
           exit 1
         fi
 
-    waitFor: ['cleanup gke network']
+    waitFor: ['cleanup gke cluster']
         
 substitutions:
   _REGION: us-east4

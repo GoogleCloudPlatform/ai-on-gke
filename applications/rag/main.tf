@@ -215,7 +215,7 @@ module "jupyterhub" {
   notebook_image     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image"
   notebook_image_tag = "v1.1-rag"
 
-  db_secret_name         = module.cloudsql.db_secret_name
+  db_secret_name         = module.cloudsql-secret.db_secret_name
   cloudsql_instance_name = local.cloudsql_instance
   db_region              = local.cloudsql_instance_region
 
