@@ -149,6 +149,8 @@ module "jupyterhub" {
   workload_identity_service_account = local.workload_identity_service_account
   gcs_bucket                        = var.gcs_bucket
   autopilot_cluster                 = local.enable_autopilot
+  notebook_image                    = "jupyter/tensorflow-notebook"
+  notebook_image_tag                = "python-3.10"
 
   # IAP Auth parameters
   add_auth                 = var.add_auth

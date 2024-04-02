@@ -75,7 +75,7 @@ singleuser:
     guarantee: 8G
   cpu:
     limit: 8
-    guarantee: 4
+    guarantee: 8
   extraResource:
     limits:
       ephemeral-storage: ${ephemeral_storage}
@@ -86,6 +86,7 @@ singleuser:
   extraEnv:
     # Used for GCSFuse to set the ephemeral storage as the home directory. If not set, it will show a permission error on the pod log when using GCSFuse.
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
+    CLOUDSQL_INSTANCE_CONNECTION_NAME: ${cloudsql_instance_connection_name}
   extraLabels:
     ${indent(4, chomp(jsonencode(additional_labels)))}
   image:
@@ -109,9 +110,16 @@ singleuser:
           volumeAttributes:
             bucketName: ${gcs_bucket}
             mountOptions: "implicit-dirs,uid=1000,gid=100"
+      - name: secret-volume
+        secret:
+          secretName: ${secret_name}
+          optional: true
     extraVolumeMounts:
         - name: data-vol
-          mountPath: /persist-data
+          mountPath: /data
+        - name: secret-volume
+          mountPath: /etc/secret-volume
+          readOnly: true
 # More info on kubespawner overrides: https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner
 #   profile example:
 #   - display_name: "Learning Data Science"
