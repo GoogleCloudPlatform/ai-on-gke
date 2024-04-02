@@ -94,6 +94,7 @@ steps:
         -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
         -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_BUILD_ID \
+        -var=enable_gpu=true \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/user_result.txt
 
@@ -126,6 +127,7 @@ steps:
         -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
         -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_BUILD_ID \
+        -var=enable_gpu=true \
         -auto-approve -no-color -lock=false
 
     allowFailure: true
