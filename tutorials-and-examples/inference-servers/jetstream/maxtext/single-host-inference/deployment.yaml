@@ -23,7 +23,7 @@ spec:
         args:
         - model_name=gemma-7b
         - tokenizer_path=assets/tokenizer.gemma
-        - per_device_batch_size=12
+        - per_device_batch_size=10
         - max_prefill_predict_length=1024
         - max_target_length=2048
         - async_checkpointing=false

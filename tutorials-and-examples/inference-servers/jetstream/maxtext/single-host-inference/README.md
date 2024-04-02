@@ -138,6 +138,7 @@ model_name: Model name
 ici_fsdp_parallelism: The number of shards for FSDP parallelism
 ici_autoregressive_parallelism: The number of shards for autoregressive parallelism
 weight_dtype: Weight data type (e.g. bfloat16)
+scan_layers: Scan layers boolean flag
 ```
 
 Deploy the manifest file for the Maxengine server and HTTP server:
@@ -152,20 +153,15 @@ Wait for the containers to finish creating:
 kubectl get deployment
 
 NAME               READY   UP-TO-DATE   AVAILABLE   AGE
-maxengine-server   1/1     1            1           2m45s
+maxengine-server   2/2     2            2           ##s
 ```
 
 Check the Maxengine pod’s logs, and verify the compilation is done. You will see similar logs of the following:
 ```
 kubectl logs deploy/maxengine-server -f -c maxengine-server
 
-2024-03-14 06:03:37,750 - jax._src.dispatch - DEBUG - Finished XLA compilation of jit(generate) in 8.170992851257324 sec
-2024-03-14 06:03:38,779 - root - INFO - Generate engine 0 step 1 - slots free : 96 / 96, took 11807.21ms
-2024-03-14 06:03:38,780 - root - INFO - Generate thread making a decision with: prefill_backlog=0 generate_free_slots=96
-2024-03-14 06:03:38,831 - root - INFO - Detokenising generate step 0 took 46.34ms
-2024-03-14 06:03:39,793 - root - INFO - Generate engine 0 step 2 - slots free : 96 / 96, took 1013.51ms
-2024-03-14 06:03:39,793 - root - INFO - Generate thread making a decision with: prefill_backlog=0 generate_free_slots=96
-2024-03-14 06:03:39,797 - root - INFO - Generate engine 0 step 3 - slots free : 96 / 96, took 3.35ms
+2024-03-29 17:09:08,047 - jax._src.dispatch - DEBUG - Finished XLA compilation of jit(initialize) in 0.26236414909362793 sec
+2024-03-29 17:09:08,150 - root - INFO - ---------Generate params 0 loaded.---------
 ```
 
 Check http server logs, this can take a couple minutes:

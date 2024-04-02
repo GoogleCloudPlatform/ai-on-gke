@@ -37,6 +37,7 @@ class GenerateRequest(pydantic.BaseModel):
 
 
 app = fastapi.FastAPI()
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=1000)
 
 @app.get("/")
 def root():
@@ -59,7 +60,8 @@ async def generate(request: GenerateRequest):
         max_tokens=request.max_tokens,
     )
 
-    response = await generate_prompt(request)
+    future = executor.submit(generate_prompt, request)
+    response = await future.result()
     response = {"response": response}
     response = fastapi.Response(
         content=json.dumps(response, indent=4), media_type="application/json"
