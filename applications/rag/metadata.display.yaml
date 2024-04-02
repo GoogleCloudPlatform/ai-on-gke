@@ -261,8 +261,8 @@ spec:
             <p>3&#41; Once logged in, choose the <b>CPU with Default Storage</b> option and wait for JupyterLab to load.</p>
         - heading: "Step 3: Generate Vector Embeddings for the Dataset"
           description: |-
-            Go to File -> Open From URL & upload and execute the notebook <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>. Note that this requires creating a <a href="https://www.kaggle.com/account/login?phase=startRegisterTab&returnUrl=%2F">Kaggle account</a> and updating the first notebook cell with your Kaggle credentials to download the sample dataset (TV show/movie reviews). 
-            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#generate-vector-embeddings-for-the=-dataset">README.md</a> for detailed instructions.
+            Go to File -> Open From URL & upload and execute the notebook <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/release-1.1/applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>. Note that this requires creating a <a href="https://www.kaggle.com/account/login?phase=startRegisterTab&returnUrl=%2F">Kaggle account</a> and updating the first notebook cell with your Kaggle credentials to download the sample dataset (TV show/movie reviews). 
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/release-1.1/applications/rag/README.md#generate-vector-embeddings-for-the=-dataset">README.md</a> for detailed instructions.
         - heading: "Step 4: Launch Frontend Chat Application"
           description: |-
             <p>
