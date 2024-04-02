@@ -149,19 +149,6 @@ singleuser:
               display_name: "DefaultStorage"
               kubespawner_override:
                 default: true
-            GCSFuse:
-              display_name: "GCSFuse"
-              kubespawner_override:
-                volume_mounts:
-                - name: gcs-fuse-csi-ephemeral
-                  mountPath: /home/jovyan
-                volumes:
-                - name: gcs-fuse-csi-ephemeral
-                  csi:
-                    driver: gcsfuse.csi.storage.gke.io
-                    volumeAttributes:
-                      bucketName: ${gcs_bucket}
-                      mountOptions: "uid=1000,gid=100,o=noexec,implicit-dirs,dir-mode=777,file-mode=777,only-dir=notebooks/{username}"
       default: true
   cmd: null
   cloudMetadata:

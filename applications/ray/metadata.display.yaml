@@ -18,7 +18,7 @@ spec:
           name: acknowledge
           title: Confirm that all prerequisites have been met.
           section: acknowledge
-          subtext: If you choose an existing GKE standard cluster, ensure it has an L4 GPU Node pool with <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-autoscaler#enable_autoscaling">autoscaling</a> and <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/node-auto-provisioning#enable">node auto-provisioning</a> enabled.
+          subtext: This solution will incur additional costs due to resource creation and necessary Google API usage. Please confirm to proceed.
           enumValueLabels:
             - label: Confirm that all prerequisites have been met.
               value: "true"
@@ -45,11 +45,6 @@ spec:
           name: cluster_name
           title: Cluster Name
           section: cluster_details
-          xGoogleProperty:
-            type: ET_GKE_CLUSTER
-            gkeCluster:
-              locationVariable: cluster_location
-              clusterCreationVariable: create_cluster
         create_brand:
           name: create_brand
           title: Create Brand
@@ -59,8 +54,7 @@ spec:
           name: create_cluster
           title: Create GKE Cluster
           section: cluster_details
-          xGoogleProperty:
-            type: ET_CREATE_RESOURCE
+          invisible: true
         create_gcs_bucket:
           name: create_gcs_bucket
           title: Create Gcs Bucket
@@ -215,8 +209,7 @@ spec:
         - name: acknowledge
           title: Before you begin
         - name: cluster_details
-          title: Cluster Details
-          subtext: It is recommended to choose the <b>New Cluster</b> option
+          title: New GKE Cluster Details
         - name: ray
           title: Ray Application
         - name: iap_auth
@@ -231,6 +224,9 @@ spec:
           description: "Open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button. "
       outputs:
         kubernetes_namespace: {}
+        gke_cluster_name: {}
+        gke_cluster_location: {}
+        project_id: {}
         ray_cluster_uri:
           openInNewTab: true
           showInNotification: true

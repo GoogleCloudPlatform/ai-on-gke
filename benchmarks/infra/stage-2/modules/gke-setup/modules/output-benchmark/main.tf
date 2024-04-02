@@ -15,7 +15,7 @@
  */
 
 module "gcs-result-bucket" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gcs"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gcs?ref=v30.0.0&depth=1"
   project_id = var.project_id
   name       = var.output_bucket_name
   location   = var.output_bucket_location

@@ -37,14 +37,14 @@ cloudsql_instance = "pgvector-instance"
 ## Service accounts
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-ray_service_account             = "ray-sa"
+ray_service_account             = "ray-rag-sa"
 enable_grafana_on_ray_dashboard = false
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 rag_service_account = "rag-sa"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-jupyter_service_account = "jupyter-sa"
+jupyter_service_account = "jupyter-rag-sa"
 
 ## Embeddings table name - change this to the TABLE_NAME used in the notebook.
 dataset_embeddings_table_name = "netflix_reviews_db"

@@ -18,7 +18,7 @@ spec:
           name: acknowledge
           title: Confirm that all prerequisites have been met.
           section: acknowledge
-          subtext: If you choose an existing GKE standard cluster, ensure it has an L4 GPU Node pool with <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-autoscaler#enable_autoscaling">autoscaling</a> and <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/node-auto-provisioning#enable">node auto-provisioning</a> enabled.
+          subtext: This solution will incur additional costs due to resource creation and necessary Google API usage. Please confirm to proceed.
           enumValueLabels:
             - label: Confirm that all prerequisites have been met.
               value: "true"
@@ -59,11 +59,6 @@ spec:
           name: cluster_name
           title: Cluster Name
           section: cluster_details
-          xGoogleProperty:
-            type: ET_GKE_CLUSTER
-            gkeCluster:
-              locationVariable: cluster_location
-              clusterCreationVariable: create_cluster
         cpu_pools:
           name: cpu_pools
           title: Cpu Pools
@@ -76,8 +71,7 @@ spec:
           name: create_cluster
           title: Create GKE Cluster
           section: cluster_details
-          xGoogleProperty:
-            type: ET_CREATE_RESOURCE
+          invisible: true
         create_gcs_bucket:
           name: create_gcs_bucket
           title: Create Gcs Bucket
@@ -201,8 +195,7 @@ spec:
         - name: acknowledge
           title: Before you begin
         - name: cluster_details
-          title: GKE Cluster Configuration
-          subtext: It is recommended to choose the <b>New Cluster</b> option
+          title: New GKE Cluster Configuration
         - name: rag
           title: Other Configuration
         - name: rag_iap_auth
@@ -222,8 +215,16 @@ spec:
         - heading: "Step 2: Go to JupyterHub Application"
           description: |-
             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
-            <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch JupyterHub app via <b>OPEN IN WEB PREVIEW</b> button. Log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> (from the Outputs section).</li>
-            <li> Once logged in, choose the <b>CPU</b> preset.</li>
+            <li>If IAP is disabled:
+              <ul>
+                <li>(1) Setup gcloud in your environment</li>
+                <li>(2) Get these values from the Outputs section above: the <i>GKE Cluster Name</i>, <i>GKE Cluster Location</i>, <i>Kubernetes Namespace</i> , <i>Project Id</i>, <i>Jupyterhub User</i> and <i>Jupyterhub Password</i> </li>
+                <li>(3) Get cluster credentials: <b>gcloud container clusters get-credentials <Gke Cluster Name> --location=<Gke Cluster Location> --project=<Project Id></b> </li>
+                <li>(4) Port forward to JupyterHub: <b>kubectl -n <Kubernetes Namespace> port-forward service/proxy-public 3080:80</b> </li>
+                <li>(5) Go to <i>localhost:3080</i> in a browser and log in with <i>Jupyterhub User</i> and <i>Jupyterhub Password</i></li>
+              <ul>
+            </li>
+            <li> Once logged in, choose the <b>CPU</b> preset and wait for the JupyterLab page to load.</li>
         - heading: "Step 3: Generate Vector Embeddings for the Dataset"
           description: |-
             Go to File -> Open From URL & upload and execute the notebook 
@@ -233,7 +234,15 @@ spec:
           description: |-
             <li> Go to the Frontend Application</li>
             <li>If IAP is enabled, log in with your organization's credentials. SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</li>
-            <li>If IAP is disabled, scroll to <i>Ports</i> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the front end application. Launch Fronted Chat app via <b>OPEN IN WEB PREVIEW</b> button. </li>
+            <li>If IAP is disabled:
+              <ul>
+                <li>(1) Setup gcloud in your environment</li>
+                <li>(2) Get these values from the Outputs section above: the <i>GKE Cluster Name</i>, <i>GKE Cluster Location</i>, <i>Kubernetes Namespace</i> , <i>Project Id</i> </li>
+                <li>(3) Get cluster credentials: <b>gcloud container clusters get-credentials <Gke Cluster Name> --location=<Gke Cluster Location> --project=<Project Id></b> </li>
+                <li>(4) Port forward to the chat interface: <b>kubectl -n <Kubernetes Namespace> port-forward service/rag-frontend 8080:8080</b> </li>
+                <li>(5) Go to <i>localhost:8080</i> in a browser to launch the chat interface.
+              <ul>
+            </li>
             <li>Prompt the LLM. This will fetch context related to your prompt from the generated vector embeddings, augment the original prompt with the context & query the inference model (mistral-7b) with the augmented prompt.</li>
       outputs:
         frontend_ip_address: {}
@@ -250,6 +259,12 @@ spec:
           label: Go to JupyterHub Application
         jupyterhub_user: {}
         kubernetes_namespace: {}
+        gke_cluster_name: {}
+        gke_cluster_location: {}
+        project_id: {}
         ray_dashboard_ip_address: {}
-        ray_dashboard_uri: {}
+        ray_dashboard_uri:
+          openInNewTab: true
+          showInNotification: true
+          label: Go to Ray Dashboard
 

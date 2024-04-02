@@ -28,6 +28,8 @@ spec:
     metadata:
       labels:
         app: triton-infer-gcs
+        ai.gke.io/inference-server: triton
+        examples.ai.gke.io/source: ai-on-gke-benchmarks
     spec:
       serviceAccountName: ${ksa}  # Replace ${ksa} with your Kubernetes Service Account name
       volumes:

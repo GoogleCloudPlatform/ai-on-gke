@@ -33,6 +33,9 @@ spec:
   content: {}
   interfaces:
     variables:
+      - name: acknowledge
+        varType: bool
+        required: true
       - name: add_auth
         description: Enable IAP authentication on jupyterhub
         varType: bool
@@ -70,7 +73,7 @@ spec:
         defaultValue: false
       - name: create_cluster
         varType: bool
-        defaultValue: false
+        defaultValue: true
       - name: create_gcs_bucket
         description: Enable flag to create gcs_bucket
         varType: bool
@@ -153,4 +156,11 @@ spec:
       - name: jupyterhub_user
         description: JupyterHub user is only required for standard authentication. Ignore, in case of IAP authentication
       - name: kubernetes_namespace
+        description: Kubernetes namespace
+      - name: gke_cluster_name
+        description: GKE cluster name where the chat interface, JupyterHub and Ray cluster are running
+      - name: gke_cluster_location
+        description: GKE cluster location
+      - name: project_id
+        description: GCP project
 

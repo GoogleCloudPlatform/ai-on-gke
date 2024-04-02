@@ -7,7 +7,8 @@ def test_frontend_up(rag_frontend_url):
     print("Rag frontend is up.")
 
     assert "Submit your query below." in r.content.decode('utf-8')
-    assert "Enable Filters" in r.content.decode('utf-8')
+    assert "Data Loss Prevention" in r.content.decode('utf-8')
+    assert "Text moderation" in r.content.decode('utf-8')
 
 hub_url = "http://" + sys.argv[1]
 
