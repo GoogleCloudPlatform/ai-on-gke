@@ -148,13 +148,16 @@ credentials_config = {
 
 A model may require a security token to access it. For example, Llama2 from HuggingFace is a gated model that requires a [user access token](https://huggingface.co/docs/hub/en/security-tokens). If the model you want to run does not require this, skip this step.
 
-If you followed steps from `.../../infra/`, Secret Manager and the user access token should already be set up. Alternatively you can create a Kubernetes Secret to store your Hugging Face CLI token. You can do this from the command line with kubectl:
-```bash
-kubectl create secret generic huggingface-secret --from-literal=token='************'
-```
+If you followed steps from `.../../infra/`, Secret Manager and the user access token should already be set up. If not, it is strongly recommended that you use Workload Identity and Secret Manager to access the user access tokens to avoid adding a plain text token into the terraform state. To do so, follow the instructions for [setting up a secret in Secret Manager here](https://cloud.google.com/kubernetes-engine/docs/tutorials/workload-identity-secrets).
 
-This command creates a new Secret named huggingface-secret, which has a key token containing your Hugging Face CLI token.
-It is important to note that for any production or shared environments, directly storing user access tokens as literals is not advisable.
+Once complete, you should add these related secret values to your `terraform.tfvars`:
+
+```bash
+# ex. "projects/sample-project/secrets/hugging_face_secret"
+hugging_face_secret = $SECRET_ID
+ # ex. 1
+hugging_face_secret_version =  $SECRET_VERSION
+```
 
 ### Step 7: login to gcloud
 
