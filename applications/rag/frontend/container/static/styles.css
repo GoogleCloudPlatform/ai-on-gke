@@ -135,13 +135,8 @@ input[type="submit"]:disabled {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds a slight shadow for depth */
 }
 
-#filter-section-toggle {
-    margin-bottom: 20px;
-}
-
 #dlp-filter-section,
 #nlp-filter-section {
-    display: none; /* Initially hidden, shown when respective toggle is checked */
     margin-top: 20px;
 }
 
