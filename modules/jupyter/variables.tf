@@ -17,6 +17,18 @@ variable "namespace" {
   description = "Kubernetes namespace where resources are deployed"
 }
 
+variable "notebook_image" {
+  type        = string
+  description = "Jupyter notebook image name"
+  default     = "jupyter/tensorflow-notebook"
+}
+
+variable "notebook_image_tag" {
+  type        = string
+  description = "Jupyter notebook image tag"
+  default     = "python-3.10"
+}
+
 variable "members_allowlist" {
   type    = list(string)
   default = []
@@ -135,3 +147,22 @@ variable "ephemeral_storage" {
 variable "autopilot_cluster" {
   type = bool
 }
+
+variable "db_region" {
+  type        = string
+  description = "Cloud SQL instance region"
+  default     = ""
+}
+
+variable "db_secret_name" {
+  type        = string
+  description = "CloudSQL user credentials"
+  default     = "dummy_value"
+}
+
+variable "cloudsql_instance_name" {
+  type        = string
+  description = "Cloud SQL instance name"
+  default     = ""
+}
+
