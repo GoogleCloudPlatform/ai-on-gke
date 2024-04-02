@@ -230,7 +230,7 @@ variable "ray_dashboard_k8s_backend_service_port" {
 variable "ray_dashboard_domain" {
   type        = string
   description = "Domain used for SSL certificate."
-  default     = "ray.example.com"
+  default     = ""
 }
 
 variable "support_email" {

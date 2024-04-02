@@ -130,7 +130,7 @@ variable "support_email" {
 variable "domain" {
   type        = string
   description = "Provide domain for ingress resource and ssl certificate."
-  default     = "frontend.example.com"
+  default     = ""
 }
 
 variable "client_id" {

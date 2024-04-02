@@ -105,7 +105,7 @@ variable "create_brand" {
 variable "domain" {
   type        = string
   description = "Provide domain for ingress resource and ssl certificate."
-  default     = "jupyter.example.com"
+  default     = ""
 }
 
 variable "support_email" {

@@ -213,7 +213,7 @@ variable "k8s_backend_service_port" {
 variable "domain" {
   type        = string
   description = "Provide domain for ingress resource and ssl certificate."
-  default     = "ray.example.com"
+  default     = ""
 }
 
 variable "support_email" {

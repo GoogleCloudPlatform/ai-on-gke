@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# IAP Section: Enabled the IAP service
+locals{
+  // add support for wildcard DNS ex; {IP_ADDRESS}.example.com
+  domain = startswith(var.domain, "{IP_ADDRESS}.") ? "${google_compute_global_address.ip_address.address}.${trimprefix(var.domain, "{IP_ADDRESS}.")}" : var.domain
+}
+
 data "google_project" "project" {
   project_id = var.project_id
 }
@@ -84,8 +88,7 @@ resource "helm_release" "iap" {
 
   set {
     name = "iap.managedCertificate.domain"
-    // add support for wildcard DNS ex; *.example.com
-    value = startswith(var.domain, "*.") ? "${google_compute_global_address.ip_address.address}.${trimprefix(var.domain, "*.")}" : var.domain
+    value = local.domain
   }
 
   set {
