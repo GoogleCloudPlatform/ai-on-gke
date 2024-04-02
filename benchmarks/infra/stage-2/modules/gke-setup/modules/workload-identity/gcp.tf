@@ -21,7 +21,7 @@ data "google_service_account" "gsa" {
 }
 
 module "workload-service-account" {
-  source      = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/iam-service-account"
+  source      = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/iam-service-account?ref=v30.0.0&depth=1"
   count       = var.google_service_account_create ? 1 : 0
   project_id  = var.project_id
   name        = var.google_service_account
