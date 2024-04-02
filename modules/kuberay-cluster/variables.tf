@@ -212,7 +212,7 @@ variable "k8s_backend_service_port" {
 
 variable "domain" {
   type        = string
-  description = "Provide domain for ingress resource and ssl certificate. If it's empty, it will use nip.io wildcard dns"
+  description = "Provide domain for ingress resource and ssl certificate."
   default     = ""
 }
 

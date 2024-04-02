@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+## ignore template if domain is empty
+{{- if  .Values.iap.managedCertificate.domain }}
 
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
@@ -19,3 +21,5 @@ metadata:
 spec:
   domains: 
   - {{ .Values.iap.managedCertificate.domain }}
+
+{{- end -}}
