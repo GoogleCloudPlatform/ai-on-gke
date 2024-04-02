@@ -192,6 +192,7 @@ steps:
   - id: 'test rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
+    secretEnv: ['KAGGLE_USERNAME', 'KAGGLE_KEY']
     args:
       - '-c'
       - |
