@@ -38,7 +38,7 @@ locals {
 }
 
 module "secret-manager" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/secret-manager"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/secret-manager?ref=v30.0.0&depth=1"
   project_id = var.project_id
   secrets = {
     "${var.secret_name}" = {
