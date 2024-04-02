@@ -143,6 +143,7 @@ spec:
         varType: string
         defaultValue: ray-dashboard-managed-cert
       - name: ray_dashboard_members_allowlist
+        description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
         defaultValue: ""
       - name: ray_version
@@ -160,6 +161,5 @@ spec:
         varType: string
         defaultValue: ray-sa
     outputs:
-      - name: grafana_uri
       - name: ray_cluster_uri
       - name: kubernetes_namespace
