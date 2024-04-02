@@ -28,13 +28,13 @@ project_id = "<project-id>"
 create_network    = true
 network_name      = "default"
 subnetwork_name   = "default"
-subnetwork_region = "us-central1"
+subnetwork_region = "us-east4"
 
 ## gke variables
 private_cluster     = false ## Default true. Use false for a public cluster
 autopilot_cluster   = false # false = standard cluster, true = autopilot cluster
 cluster_name        = "test-cluster"
-cluster_location    = "us-central1"
+cluster_location    = "us-east4"
 gcs_fuse_csi_driver = true
 
 cpu_pools = [{
@@ -52,7 +52,7 @@ enable_gpu = true
 gpu_pools = [{
   name           = "gpu-pool-l4"
   machine_type   = "g2-standard-24"
-  node_locations = "us-central1-a"
+  node_locations = "us-east4-c"
   autoscaling    = true
 
   min_count          = 2
