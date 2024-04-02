@@ -4,7 +4,7 @@ This is a sample to deploy a Retrieval Augmented Generation (RAG) application on
 
 # What is RAG?
 
-[RAG](https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/) is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets.
+[RAG](https://cloud.google.com/blog/products/ai-machine-learning/rag-with-databases-on-google-cloud) is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets.
 
 RAG uses a semantically searchable knowledge base (like vector search) to retrieve relevant snippets for a given prompt to provide additional context to the LLM. Augmenting the knowledge base with additional data is typically cheaper than fine tuning and is more scalable when incorporating current events and other rapidly changing data spaces.
 
@@ -29,17 +29,19 @@ Install the following on your computer:
 
 ### Bring your own cluster (optional)
 
-By default, this tutorial creates an Autopilot cluster on your behalf. We highly recommend following the default settings.
+By default, this tutorial creates a Standard cluster on your behalf. We highly recommend following the default settings.
 
 If you prefer to manage your own cluster, set `create_cluster = false` in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
 
-Use gcloud to create a GKE Autopilot cluster. Note that RAG requires the latest Autopilot features, available on the latest versions of 1.28 and 1.29.
+Use the provided infrastructue module to create a cluster:
 
-```
-gcloud container clusters create-auto rag-cluster \
-  --location us-central1 \
-  --cluster-version 1.28
-```
+1. `cd ai-on-gke/infrastructure`
+
+2. Edit `platform.tfvars` to set your project ID, location and cluster name. The other fields are optional. Ensure you create an L4 nodepool as this tutorial requires it.
+
+3. Run `terraform init`
+
+4. Run `terraform apply --var-file workloads.tfvars`
 
 ### Bring your own VPC (optional)
 
