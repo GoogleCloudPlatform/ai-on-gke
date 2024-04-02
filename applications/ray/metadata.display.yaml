@@ -231,6 +231,9 @@ spec:
           description: "Open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button. "
       outputs:
         kubernetes_namespace: {}
+        gke_cluster_name: {}
+        gke_cluster_location: {}
+        project_id: {}
         ray_cluster_uri:
           openInNewTab: true
           showInNotification: true
