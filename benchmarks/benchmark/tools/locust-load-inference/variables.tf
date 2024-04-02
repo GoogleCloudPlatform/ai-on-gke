@@ -191,9 +191,16 @@ variable "run_test_automatically" {
   default     = false
 }
 
-variable "huggingface_secret" {
+variable "hugging_face_secret" {
   description = "name of the kubectl huggingface secret token"
   type        = string
   nullable    = true
-  default     = "huggingface-secret"
+  default     = null
+}
+
+variable "hugging_face_secret_version" {
+  description = "Secret version in Secret Manager"
+  type        = string
+  nullable    = true
+  default     = null
 }
