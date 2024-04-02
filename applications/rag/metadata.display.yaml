@@ -227,8 +227,8 @@ spec:
         - heading: "Step 3: Generate Vector Embeddings for the Dataset"
           description: |-
             Go to File -> Open From URL & upload and execute the notebook 
-            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-latest.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
-            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/rag/README.md#generate-vector-embeddings-for-the-dataset">README.md</a> for detailed instructions.
+            <a href="https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/release-1.1/applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb"><i>rag-kaggle-ray-sql.ipynb</i></a>.
+            Follow the <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/release-1.1/applications/rag/README.md#generate-vector-embeddings-for-the-dataset">README.md</a> for detailed instructions.
         - heading: "Step 4: Prompt the Inference Server via a Chatbot"
           description: |-
             <li> Go to the Frontend Application</li>
