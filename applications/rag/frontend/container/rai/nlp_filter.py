@@ -59,4 +59,4 @@ def sum_moderation_confidences(text):
   return int(largest_confidence * 100)
 
 def is_content_inappropriate(text, nlp_filter_level):
-  return sum_moderation_confidences(text) > int(nlp_filter_level)
+  return sum_moderation_confidences(text) > (100 - int(nlp_filter_level))

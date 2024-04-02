@@ -35,36 +35,40 @@ limitations under the License.
 
   <!-- Filter Options Section -->
   <div id="filter-section">
-    <div id="filter-section-toggle">
-      <label for="toggle-filters">Enable Filters:</label>
-      <input type="checkbox" id="toggle-filters">
-    </div>
-
     <!-- Checkbox to toggle template-section -->
-    <div id="toggle-dlp-filter-section-div" style="display: none;">
-      <label for="toggle-dlp-filter-section">Show Sensitive Data Protection Templates:</label>
+    <div id="toggle-dlp-filter-section-div">
+      <label for="toggle-dlp-filter-section"><a href="https://cloud.google.com/security/products/dlp?hl=en">Data Loss Prevention (DLP)</a> </label>
       <input type="checkbox" id="toggle-dlp-filter-section">
     </div>
 
     <!-- Dropdown for inspect_templates and deidentify_templates for dlp filter -->
     <div id="dlp-filter-section" style="display: none;">
-      <select id="inspect-template-dropdown">
-        <!-- Options will be dynamically added here -->
-      </select>
-      <select id="deidentify-template-dropdown">
-        <!-- Options will be dynamically added here -->
-      </select>
+      <div id="inspect-template-dropdown-div">
+        <label for="inspect-template-dropdown">Inspect template, <a href="https://cloud.google.com/sensitive-data-protection/docs/creating-templates-inspect">how to create inspect template</a> </label>
+        <select id="inspect-template-dropdown">
+          <!-- Options will be dynamically added here -->
+        </select>
+        <p id="inspect-template-msg" style="display: none;">Please go to your project to create the inspect template.</p>
+      </div>
+
+      <div id="deidentify-template-dropdown-div">
+        <label for="deidentify-template-dropdown">De-identification template, <a href="https://cloud.google.com/sensitive-data-protection/docs/creating-templates-deid">how to create de-identification template</a></label>
+        <select id="deidentify-template-dropdown">
+          <!-- Options will be dynamically added here -->
+        </select>
+        <p id="deidentify-template-msg" style="display: none;">Please go to your project to create the de-identification template.</p>
+      </div>
     </div>
 
     <!-- Checkbox to toggle nlp-filter-section -->
-    <div id="toggle-nlp-filter-section-div" style="display: none;">
-      <label for="toggle-nlp-filter-section">Show NLP Filter Range:</label>
+    <div id="toggle-nlp-filter-section-div">
+      <label for="toggle-nlp-filter-section"><a href="https://cloud.google.com/natural-language/docs/moderating-text">Text moderation</a>  analyzes a document against a list of safety attributes, which include "harmful categories" and topics that may be considered sensitive.</label>
       <input type="checkbox" id="toggle-nlp-filter-section">
     </div>
 
     <!-- NLP Filter Slider -->
     <div id="nlp-filter-section" style="display: none;">
-      <label for="nlp-range">Cloud Natural Language text moderation Level (Lower value more restrict):</label>
+      <label for="nlp-range">Set the bar to a higher value for more moderation</label>
       <input type="range" id="nlp-range" min="0" max="100" value="50">
       <span id="nlp-value">50</span>
     </div>
