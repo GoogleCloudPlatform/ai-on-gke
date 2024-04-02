@@ -33,15 +33,12 @@ By default, this tutorial creates an Autopilot cluster on your behalf. We highly
 
 If you prefer to manage your own cluster, set `create_cluster = false` in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
 
-Use gcloud to create a GKE Autopilot cluster. Note that RAG requires the latest Autopilot features, available on the `RAPID` release channel.
+Use gcloud to create a GKE Autopilot cluster. Note that RAG requires the latest Autopilot features, available on the latest versions of 1.28 and 1.29.
 
 ```
-CLUSTER_NAME=rag-cluster
-CLUSTER_REGION=us-east4
-
-gcloud container clusters create-auto ${CLUSTER_NAME:?} \
-  --location ${CLUSTER_REGION:?} \
-  --release-channel rapid
+gcloud container clusters create-auto rag-cluster \
+  --location us-central1 \
+  --cluster-version 1.28
 ```
 
 ### Bring your own VPC (optional)
