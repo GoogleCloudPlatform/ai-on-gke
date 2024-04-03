@@ -32,10 +32,10 @@ variable "kubernetes_namespace" {
 }
 
 variable "additional_labels" {
-  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
-  type        = list(string)
+  // string is used instead of map(string) since blueprint metadata does not support maps.
+  type        = string
   description = "Additional labels to add to Kubernetes resources."
-  default     = ["created-by=ai-on-gke", "ai.gke.io=jupyter"]
+  default     = "created-by=ai-on-gke,ai.gke.io=jupyter"
 }
 
 variable "gcs_bucket" {
