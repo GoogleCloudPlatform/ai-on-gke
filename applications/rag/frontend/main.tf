@@ -145,7 +145,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           resources {
             limits = {
               cpu               = "3"
-              memory            = "3Gi"
+              memory            = "8Gi"
               ephemeral-storage = "5Gi"
             }
             requests = {
