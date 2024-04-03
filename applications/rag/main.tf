@@ -62,11 +62,10 @@ module "project-services" {
 
 module "network" {
   source = "../../modules/custom-network"
-  count  = var.create_cluster ? 1 : 0
+  count  = var.create_network && var.create_cluster ? 1 : 0
 
   project_id        = var.project_id
   private_cluster   = var.private_cluster
-  create_network    = var.create_network
   network_name      = local.network_name
   subnetwork_name   = local.network_name
   subnetwork_cidr   = var.subnetwork_cidr
@@ -83,9 +82,11 @@ module "infra" {
   region             = local.cluster_location_region
   autopilot_cluster  = var.autopilot_cluster
   private_cluster    = var.private_cluster
+  create_network     = false
   network_name       = local.network_name
   subnetwork_name    = local.network_name
   subnetwork_cidr    = var.subnetwork_cidr
+  subnetwork_region  = local.cluster_location_region
   cpu_pools          = var.cpu_pools
   enable_gpu         = true
   gpu_pools          = var.gpu_pools
@@ -191,14 +192,20 @@ module "cloudsql" {
   depends_on    = [module.network]
 }
 
-module "cloudsql-secret" {
-  source      = "../../modules/cloudsql-secret"
-  providers   = { kubernetes = kubernetes.rag }
-  namespace   = local.kubernetes_namespace
-  db_user     = module.cloudsql.db_user
-  db_password = module.cloudsql.db_password
-  depends_on  = [module.namespace, module.cloudsql]
+resource "kubernetes_secret" "secret" {
+  metadata {
+    name      = "db-secret"
+    namespace = local.kubernetes_namespace
+  }
 
+  data = {
+    username = module.cloudsql.db_user
+    password = module.cloudsql.db_password
+    database = "pgvector-database"
+  }
+
+  type       = "kubernetes.io/basic-auth"
+  depends_on = [module.namespace, module.cloudsql]
 }
 
 module "jupyterhub" {
@@ -215,7 +222,7 @@ module "jupyterhub" {
   notebook_image     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image"
   notebook_image_tag = "v1.1-rag"
 
-  db_secret_name         = module.cloudsql-secret.db_secret_name
+  db_secret_name         = kubernetes_secret.secret.metadata[0].name
   cloudsql_instance_name = local.cloudsql_instance
   db_region              = local.cloudsql_instance_region
 
@@ -251,7 +258,7 @@ module "kuberay-cluster" {
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
   autopilot_cluster      = local.enable_autopilot
-  db_secret_name         = module.cloudsql-secret.db_secret_name
+  db_secret_name         = kubernetes_secret.secret.metadata[0].name
   cloudsql_instance_name = local.cloudsql_instance
   db_region              = local.cloudsql_instance_region
   google_service_account = local.ray_service_account
@@ -308,7 +315,7 @@ module "frontend" {
   inference_service_endpoint    = module.inference-server.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
   cloudsql_instance_region      = local.cloudsql_instance_region
-  db_secret_name                = module.cloudsql-secret.db_secret_name
+  db_secret_name                = kubernetes_secret.secret.metadata[0].name
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
 
   # IAP Auth parameters

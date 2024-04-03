@@ -26,10 +26,6 @@ variable "private_cluster" {
   default = true
 }
 
-variable "create_network" {
-  type = bool
-}
-
 variable "network_name" {
   type = string
 }

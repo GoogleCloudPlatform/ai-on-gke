@@ -24,6 +24,10 @@ variable "region" {
 }
 
 ## network variables
+variable "create_network" {
+  type = bool
+}
+
 variable "network_name" {
   type = string
 }
@@ -35,6 +39,26 @@ variable "subnetwork_name" {
 variable "subnetwork_cidr" {
   type    = string
   default = "10.128.0.0/20"
+}
+
+variable "subnetwork_region" {
+  type    = string
+  default = "us-central1"
+}
+
+variable "subnetwork_private_access" {
+  type    = string
+  default = "true"
+}
+
+variable "subnetwork_description" {
+  type    = string
+  default = ""
+}
+
+variable "network_secondary_ranges" {
+  type    = map(list(object({ range_name = string, ip_cidr_range = string })))
+  default = {}
 }
 
 ## GKE variables
