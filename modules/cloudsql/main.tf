@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "random_password" "pwd" {
-  length  = 16
-  special = false
-}
-
 module "cloudsql" {
   source              = "terraform-google-modules/sql-db/google//modules/postgresql"
   project_id          = var.project_id
@@ -43,7 +38,7 @@ module "cloudsql" {
   additional_users = [
     {
       name            = var.db_user
-      password        = random_password.pwd.result
+      password        = var.db_password
       host            = "localhost"
       type            = "BUILT_IN"
       random_password = false

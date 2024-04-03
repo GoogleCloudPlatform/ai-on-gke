@@ -334,6 +334,12 @@ variable "cloudsql_instance_region" {
   default     = ""
 }
 
+variable "db_user" {
+  type        = string
+  description = "Cloud SQL instance user"
+  default     = "rag-user"
+}
+
 variable "cpu_pools" {
   type = list(object({
     name                   = string

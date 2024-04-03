@@ -182,11 +182,18 @@ module "gcs" {
   bucket_name = var.gcs_bucket
 }
 
+resource "random_password" "pwd" {
+  length  = 16
+  special = false
+}
+
 module "cloudsql" {
   source        = "../../modules/cloudsql"
   providers     = { kubernetes = kubernetes.rag }
   project_id    = var.project_id
   instance_name = local.cloudsql_instance
+  db_user       = var.db_user
+  db_password   = random_password.pwd.result
   region        = local.cloudsql_instance_region
   network_name  = local.network_name
   depends_on    = [module.network]
@@ -200,13 +207,13 @@ resource "kubernetes_secret" "secret" {
   }
 
   data = {
-    username = module.cloudsql.db_user
-    password = module.cloudsql.db_password
+    username = var.db_user
+    password = random_password.pwd.result
     database = "pgvector-database"
   }
 
   type       = "kubernetes.io/basic-auth"
-  depends_on = [module.namespace, module.cloudsql]
+  depends_on = [module.namespace]
 }
 
 module "jupyterhub" {
@@ -241,7 +248,7 @@ module "jupyterhub" {
   domain                   = var.jupyter_domain
   members_allowlist        = var.jupyter_members_allowlist != "" ? split(",", var.jupyter_members_allowlist) : []
 
-  depends_on = [module.namespace, module.gcs]
+  depends_on = [module.namespace, module.gcs, kubernetes_secret.secret]
 }
 
 module "kuberay-logging" {
@@ -333,6 +340,6 @@ module "frontend" {
   k8s_backend_service_port = var.frontend_k8s_backend_service_port
   domain                   = var.frontend_domain
   members_allowlist        = var.frontend_members_allowlist != "" ? split(",", var.frontend_members_allowlist) : []
-  depends_on               = [module.namespace]
+  depends_on               = [module.namespace, kubernetes_secret.secret]
 }
 

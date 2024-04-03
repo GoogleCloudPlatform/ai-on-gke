@@ -34,6 +34,11 @@ variable "db_user" {
   default     = "rag-user"
 }
 
+variable "db_password" {
+  type        = string
+  description = "Cloud SQL instance user's password"
+}
+
 variable "instance_name" {
   type        = string
   description = "Name of the CloudSQL instance for RAG VectorDB"
