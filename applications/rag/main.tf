@@ -193,6 +193,7 @@ module "cloudsql" {
 }
 
 resource "kubernetes_secret" "secret" {
+  provider = kubernetes.rag
   metadata {
     name      = "db-secret"
     namespace = local.kubernetes_namespace
