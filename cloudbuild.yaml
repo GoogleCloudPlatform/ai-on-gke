@@ -56,7 +56,6 @@ steps:
       - |
         set -e
 
-        cd /workspace/infrastructure
         terraform apply \
         -var-file=tfvars_tests/standard-gke-public.platform.tfvars \
         -var=project_id=$PROJECT_ID \
@@ -68,6 +67,7 @@ steps:
         -var=cluster_location=$_REGION \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/gke_cluster_result.txt
+    dir: 'infrastructure/'
     allowFailure: true
     waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag']
 
@@ -320,11 +320,6 @@ steps:
     args:
       - '-c'
       - |
-        if [[ $(cat /workspace/gke_network_result.txt) != "pass" ]]; then
-          echo "gke network creation failed"
-          exit 1
-        fi
-
         if [[ $(cat /workspace/gke_cluster_result.txt) != "pass" ]]; then
           echo "gke cluster creation failed"
           exit 1

@@ -67,7 +67,7 @@ module "infra" {
   cluster_location  = var.cluster_location
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
-  create_network    =  false
+  create_network    = false
   network_name      = "default"
   subnetwork_name   = "default"
   cpu_pools         = var.cpu_pools
