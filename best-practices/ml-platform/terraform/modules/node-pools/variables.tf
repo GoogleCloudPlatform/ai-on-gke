@@ -12,25 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "accelerator" {
-  default     = "nvidia-l4"
-  description = "The GPU accelerator to use."
-  type        = string
-}
-
-variable "accelerator_count" {
-  default     = 2
-  description = "The number of accelerators per machine."
-  type        = number
-}
-
 variable "autoscaling" {
   default = {
-    "total_min_node_count" : 0,
-    "total_max_node_count" : 24,
-    "location_policy" : "ANY"
+    location_policy      = "ANY"
+    total_max_node_count = 24
+    total_min_node_count = 0
   }
-  type = map(any)
+  description = "Configuration required by cluster autoscaler to adjust the size of the node pool to the current cluster usage"
+  type = object(
+    {
+      location_policy      = string
+      total_max_node_count = number
+      total_min_node_count = number
+    }
+  )
 }
 
 variable "cluster_name" {
@@ -39,15 +34,44 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "machine_reservation_count" {
-  default     = 4
-  description = "Number of machines reserved instances with GPUs"
+variable "guest_accelerator" {
+  default     = null
+  description = "List of the type and count of accelerator cards attached to the instance."
+  type = object(
+    {
+      count = number
+      type  = string
+    }
+  )
+}
+
+variable "initial_node_count" {
+  default     = 0
+  description = "The initial number of nodes for the pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Changing this will force recreation of the resource."
   type        = number
+}
+
+variable "location" {
+  default     = "us-central1-a"
+  description = "The location (region or zone) of the node pool."
+  type        = string
+}
+
+variable "reservation_affinity" {
+  default     = null
+  description = "The configuration of the desired reservation which instances could take capacity from."
+  type = object(
+    {
+      consume_reservation_type = string
+      key                      = string
+      values                   = list(string)
+    }
+  )
 }
 
 variable "machine_type" {
   default     = "g2-standard-24"
-  description = "The machine type to use."
+  description = "The name of a Google Compute Engine machine type."
   type        = string
 }
 
@@ -62,18 +86,6 @@ variable "project_id" {
   type        = string
 }
 
-variable "region" {
-  default     = "us-central1-a"
-  description = "The GCP zone where the reservation will be created"
-  type        = string
-}
-
-variable "reservation_name" {
-  default     = ""
-  description = "reservation name to which the nodepool will be associated"
-  type        = string
-}
-
 variable "resource_type" {
   default     = "ondemand"
   description = "ondemand/spot/reserved."
@@ -81,7 +93,8 @@ variable "resource_type" {
 }
 
 variable "taints" {
-  description = "Taints to be applied to the on-demand node pool."
+  default     = []
+  description = "A list of Kubernetes taints to apply to nodes."
   type = list(object({
     effect = string
     key    = string
