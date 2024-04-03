@@ -18,10 +18,6 @@ data "google_project" "project" {
 
 locals {
   cloudsql_instance_connection_name = var.cloudsql_instance_name != "" ? format("%s:%s:%s", var.project_id, var.db_region, var.cloudsql_instance_name) : ""
-  additional_labels = tomap({
-    for item in var.additional_labels :
-    split("=", item)[0] => split("=", item)[1]
-  })
 }
 
 # IAP Section: Creates the GKE components
@@ -114,7 +110,7 @@ resource "helm_release" "jupyterhub" {
     project_id                        = var.project_id
     project_number                    = data.google_project.project.number
     namespace                         = var.namespace
-    additional_labels                 = local.additional_labels
+    created_by                        = var.created_by
     backend_config                    = var.k8s_backend_config_name
     service_name                      = var.k8s_backend_service_name
     authenticator_class               = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"
@@ -133,7 +129,7 @@ resource "helm_release" "jupyterhub" {
       project_id                        = var.project_id
       project_number                    = data.google_project.project.number
       namespace                         = var.namespace
-      additional_labels                 = local.additional_labels
+      created_by                        = var.created_by
       backend_config                    = var.k8s_backend_config_name
       service_name                      = var.k8s_backend_service_name
       authenticator_class               = var.add_auth ? "'gcpiapjwtauthenticator.GCPIAPAuthenticator'" : "dummy"

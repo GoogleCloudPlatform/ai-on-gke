@@ -17,12 +17,6 @@ spec:
   content: {}
   interfaces:
     variables:
-      - name: additional_labels
-        description: Additional labels to add to Kubernetes resources.
-        varType: list(string)
-        defaultValue:
-          - created-by=gke-ai-quick-start-solutions
-          - ai.gke.io=ray
       - name: acknowledge
         varType: bool
         required: true
@@ -40,6 +34,10 @@ spec:
       - name: cluster_name
         varType: string
         required: true
+      - name: created_by
+        description: Created By metadata label
+        varType: string
+        defaultValue: "gke-ai-quick-start-solutions"
       - name: create_brand
         description: Create Brand OAuth Screen
         varType: bool

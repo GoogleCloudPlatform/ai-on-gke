@@ -17,10 +17,6 @@ data "google_project" "project" {
 
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.cloudsql_instance_region, var.cloudsql_instance)
-  additional_labels = tomap({
-    for item in var.additional_labels :
-    split("=", item)[0] => split("=", item)[1]
-  })
 }
 
 # IAP Section: Creates the GKE components
@@ -86,24 +82,30 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
   metadata {
     name      = "rag-frontend"
     namespace = var.namespace
-    labels = merge({
-      app = "rag-frontend"
-    }, local.additional_labels)
+    labels = {
+      app          = "rag-frontend"
+      "ai.gke.io"  = "rag"
+      "created-by" = var.created_by
+    }
   }
 
   spec {
     replicas = 3
     selector {
-      match_labels = merge({
-        app = "rag-frontend"
-      }, local.additional_labels)
+      match_labels = {
+        app          = "rag-frontend"
+        "ai.gke.io"  = "rag"
+        "created-by" = var.created_by
+      }
     }
 
     template {
       metadata {
-        labels = merge({
-          app = "rag-frontend"
-        }, local.additional_labels)
+        labels = {
+          app          = "rag-frontend"
+          "ai.gke.io"  = "rag"
+          "created-by" = var.created_by
+        }
       }
 
       spec {

@@ -56,7 +56,8 @@ head:
     #     memory: "512Mi"
   labels:
     cloud.google.com/gke-ray-node-type: head
-    ${indent(4, chomp(yamlencode(additional_labels)))}
+    ai.gke.io: ray
+    created-by: ${created_by}
   serviceAccountName: ${k8s_service_account}
   rayStartParams:
     dashboard-host: '0.0.0.0'
@@ -169,7 +170,8 @@ worker:
   type: worker
   labels:
     cloud.google.com/gke-ray-node-type: worker
-    ${indent(4, chomp(yamlencode(additional_labels)))}
+    ai.gke.io: ray
+    created-by: ${created_by}
   serviceAccountName: ${k8s_service_account}
   rayStartParams:
     block: 'true'

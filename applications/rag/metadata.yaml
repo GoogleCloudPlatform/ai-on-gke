@@ -20,12 +20,6 @@ spec:
       - name: acknowledge
         varType: bool
         required: true
-      - name: additional_labels
-        description: Additional labels to add to Kubernetes resources.
-        varType: list(string)
-        defaultValue:
-          - created-by=gke-ai-quick-start-solutions
-          - ai.gke.io=rag
       - name: autopilot_cluster
         varType: string
         defaultValue: false
@@ -47,6 +41,10 @@ spec:
       - name: cluster_name
         varType: string
         required: true
+      - name: created_by
+        description: Created By metadata label
+        varType: string
+        defaultValue: "gke-ai-quick-start-solutions"
       - name: create_brand
         description: Create Brand OAuth Screen
         varType: bool

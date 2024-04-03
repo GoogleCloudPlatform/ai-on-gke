@@ -23,11 +23,10 @@ variable "namespace" {
   default     = "rag"
 }
 
-variable "additional_labels" {
-  // list(string) is used instead of map(string) since blueprint metadata does not support maps.
-  type        = list(string)
-  description = "Additional labels to add to Kubernetes resources."
-  default     = []
+variable "created_by" {
+  type        = string
+  description = "Metadata to add created-by labels"
+  default     = "ai-on-gke"
 }
 
 variable "region" {

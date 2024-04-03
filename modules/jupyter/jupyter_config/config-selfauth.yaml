@@ -27,7 +27,8 @@ hub:
     # This is the timestamp of the image, we should avoid using 'latest'
     tag: '1710974014'
   labels:
-    ${indent(4, chomp(jsonencode(additional_labels)))}
+    ai.gke.io: jupyter
+    created-by: ${created_by}
   config:
     JupyterHub:
       authenticator_class: ${authenticator_class}
@@ -53,7 +54,8 @@ prePuller:
 
 proxy:
   labels:
-    ${indent(4, chomp(jsonencode(additional_labels)))}
+    ai.gke.io: jupyter
+    created-by: ${created_by}
   chp:
     networkPolicy:
       enabled: false
@@ -88,7 +90,8 @@ singleuser:
     JUPYTER_ALLOW_INSECURE_WRITES: "true"
     CLOUDSQL_INSTANCE_CONNECTION_NAME: ${cloudsql_instance_connection_name}
   extraLabels:
-    ${indent(4, chomp(jsonencode(additional_labels)))}
+    ai.gke.io: jupyter
+    created-by: ${created_by}
   image:
     name: ${notebook_image}
     tag: ${notebook_image_tag}

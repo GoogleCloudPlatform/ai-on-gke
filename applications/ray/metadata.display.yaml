@@ -22,11 +22,6 @@ spec:
           enumValueLabels:
             - label: Confirm that all prerequisites have been met.
               value: "true"
-        additional_labels:
-          name: additional_labels
-          title: Additional Labels
-          invisible: true
-          section: cluster_details
         autopilot_cluster:
           name: autopilot_cluster
           title: GKE Cluster Type
@@ -44,6 +39,11 @@ spec:
         cluster_name:
           name: cluster_name
           title: Cluster Name
+          section: cluster_details
+        created_by:
+          name: created_by
+          title: Created By metadatal label
+          invisible: true
           section: cluster_details
         create_brand:
           name: create_brand

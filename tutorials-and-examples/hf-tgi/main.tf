@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-locals {
-  additional_labels = tomap({
-    for item in var.additional_labels :
-    split("=", item)[0] => split("=", item)[1]
-  })
-}
-
 resource "kubernetes_service" "inference_service" {
   metadata {
     name = "mistral-7b-instruct-service"
@@ -50,25 +43,31 @@ resource "kubernetes_deployment" "inference_deployment" {
   metadata {
     name      = "mistral-7b-instruct"
     namespace = var.namespace
-    labels = merge({
-      app = "mistral-7b-instruct"
-    }, local.additional_labels)
+    labels = {
+      app          = "mistral-7b-instruct"
+      "ai.gke.io"  = "hf-tgi"
+      "created-by" = var.created_by
+    }
   }
 
   spec {
     replicas = 1
 
     selector {
-      match_labels = merge({
-        app = "mistral-7b-instruct"
-      }, local.additional_labels)
+      match_labels = {
+        app          = "mistral-7b-instruct"
+        "ai.gke.io"  = "hf-tgi"
+        "created-by" = var.created_by
+      }
     }
 
     template {
       metadata {
-        labels = merge({
-          app = "mistral-7b-instruct"
-        }, local.additional_labels)
+        labels = {
+          app          = "mistral-7b-instruct"
+          "ai.gke.io"  = "hf-tgi"
+          "created-by" = var.created_by
+        }
       }
 
       spec {
