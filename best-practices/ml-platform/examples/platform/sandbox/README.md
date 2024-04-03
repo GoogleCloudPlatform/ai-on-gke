@@ -237,6 +237,14 @@ Open Cloud Shell to execute the following commands:
   gcloud container fleet memberships get-credentials ${GKE_CLUSTER}
   ```
 
+  The output will be similar to the following:
+
+  ```
+  Starting to build Gateway kubeconfig...
+  Current project_id: mlops-platform-417609
+  A new kubeconfig entry "connectgateway_mlops-platform-417609_global_gke-ml-dev" has been generated and set as the current context.
+  ```
+
 - Fetch KubeRay operator CRDs
 
   ```
@@ -270,10 +278,17 @@ Open Cloud Shell to execute the following commands:
   kubectl get ns | grep ml-team
   ```
 
+  The output will be similar to the following:
+
+  ```
+  ml-team                        Active   21m
+  ```
+
 - Check the RepoSync object created `ml-team` namespace:
   ```
   kubectl get reposync -n ml-team
   ```
+
 - Check the `raycluster` in `ml-team` namespace
 
   ```
@@ -288,9 +303,11 @@ Open Cloud Shell to execute the following commands:
   ```
 
 - Check the head and worker pods of kuberay in `ml-team` namespace
+
   ```
   kubectl get pods -n ml-team
   ```
+
   The output will be similar to the following:
   ```
   NAME                                           READY   STATUS    RESTARTS   AGE
