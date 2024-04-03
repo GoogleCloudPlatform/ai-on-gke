@@ -61,7 +61,7 @@ module "project-services" {
 }
 
 module "infra" {
-  source = "../../infrastructure"
+  source = "github.com/GoogleCloudPlatform/ai-on-gke//infrastructure?ref=labels"
   count  = var.create_cluster ? 1 : 0
 
   project_id         = var.project_id
@@ -145,14 +145,14 @@ provider "helm" {
 }
 
 module "namespace" {
-  source           = "../../modules/kubernetes-namespace"
+  source           = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kubernetes-namespace?ref=labels"
   providers        = { helm = helm.rag }
   create_namespace = true
   namespace        = local.kubernetes_namespace
 }
 
 module "kuberay-operator" {
-  source                 = "../../modules/kuberay-operator"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-operator?ref=labels"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   name                   = "kuberay-operator"
   project_id             = var.project_id
@@ -164,14 +164,14 @@ module "kuberay-operator" {
 }
 
 module "gcs" {
-  source      = "../../modules/gcs"
+  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs?ref=labels"
   count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 module "cloudsql" {
-  source        = "../../modules/cloudsql"
+  source        = "github.com/GoogleCloudPlatform/ai-on-gke//modules/cloudsql?ref=labels"
   providers     = { kubernetes = kubernetes.rag }
   project_id    = var.project_id
   instance_name = local.cloudsql_instance
@@ -182,7 +182,7 @@ module "cloudsql" {
 }
 
 module "jupyterhub" {
-  source     = "../../modules/jupyter"
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter?ref=labels"
   providers  = { helm = helm.rag, kubernetes = kubernetes.rag }
   namespace  = local.kubernetes_namespace
   project_id = var.project_id
@@ -192,7 +192,7 @@ module "jupyterhub" {
   autopilot_cluster                 = local.enable_autopilot
   workload_identity_service_account = local.jupyter_service_account
 
-  notebook_image     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image"
+  notebook_image     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image?ref=labels"
   notebook_image_tag = "v1.1-rag"
 
   db_secret_name         = module.cloudsql.db_secret_name
@@ -217,14 +217,14 @@ module "jupyterhub" {
 }
 
 module "kuberay-logging" {
-  source     = "../../modules/kuberay-logging"
+  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-logging?ref=labels"
   providers  = { kubernetes = kubernetes.rag }
   namespace  = local.kubernetes_namespace
   depends_on = [module.namespace]
 }
 
 module "kuberay-cluster" {
-  source                 = "../../modules/kuberay-cluster"
+  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster?ref=labels"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id             = var.project_id
   namespace              = local.kubernetes_namespace
@@ -256,7 +256,7 @@ module "kuberay-cluster" {
 }
 
 module "kuberay-monitoring" {
-  source                          = "../../modules/kuberay-monitoring"
+  source                          = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-monitoring?ref=labels"
   providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
   autopilot_cluster               = local.enable_autopilot
@@ -269,7 +269,7 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source            = "../../tutorials-and-examples/hf-tgi"
+  source            = "github.com/GoogleCloudPlatform/ai-on-gke//tutorials-and-examples/hf-tgi?ref=labels"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = local.kubernetes_namespace
   additional_labels = var.additional_labels

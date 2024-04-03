@@ -19,10 +19,8 @@ spec:
     variables:
       - name: additional_labels
         description: Additional labels to add to Kubernetes resources.
-        varType: list(string)
-        defaultValue:
-          - created-by=gke-ai-quick-start-solutions
-          - ai.gke.io=ray
+        varType: string
+        defaultValue: "created-by=gke-ai-quick-start-solutions,ai.gke.io=ray"
       - name: acknowledge
         varType: bool
         required: true
