@@ -21,6 +21,23 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+## Check if domain and members_allowlist is provided
+data "null_data_source" "domain_validation" {
+  inputs = {}
+
+  lifecycle {
+    precondition {
+      condition     = var.domain != ""
+      error_message = "IAP configuration requires domain name, Please provide a valid domain name for ${var.app_name} application."
+    }
+
+    precondition {
+      condition     = length(var.members_allowlist) != 0
+      error_message = "IAP configuration requires allowlisting users. Please provide a valid allowlist for ${var.app_name} application."
+    }
+  }
+}
+
 # Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
   count             = var.create_brand ? 1 : 0
