@@ -65,7 +65,7 @@ module "infra" {
   count  = var.create_cluster ? 1 : 0
 
   project_id         = var.project_id
-  cluster_name       = var.cluster_name
+  cluster_name       = local.cluster_name
   cluster_location   = var.cluster_location
   region             = local.cluster_location_region
   autopilot_cluster  = var.autopilot_cluster
@@ -100,13 +100,14 @@ locals {
 
 ## Generated names for marketplace deployment
 locals {
+  cluster_name            = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.cluster_name}" : var.cluster_name
   kubernetes_namespace    = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.kubernetes_namespace}" : var.kubernetes_namespace
   network_name            = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.network_name}" : var.network_name
   ray_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.ray_service_account}" : var.ray_service_account
   jupyter_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.jupyter_service_account}" : var.jupyter_service_account
   rag_service_account     = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.rag_service_account}" : var.rag_service_account
-  frontend_default_uri    = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${local.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
-  jupyterhub_default_uri  = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${local.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
+  frontend_default_uri    = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${local.cluster_name}/${local.kubernetes_namespace}/rag-frontend/overview?project=${var.project_id}"
+  jupyterhub_default_uri  = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${local.cluster_name}/${local.kubernetes_namespace}/proxy-public/overview?project=${var.project_id}"
   ## if cloudsql_instance_region not specified, then default to cluster_location region
   cluster_location_region  = (length(split("-", var.cluster_location)) == 2 ? var.cluster_location : join("-", slice(split("-", var.cluster_location), 0, 2)))
   cloudsql_instance_region = var.cloudsql_instance_region != "" ? var.cloudsql_instance_region : local.cluster_location_region
