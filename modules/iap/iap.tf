@@ -28,12 +28,12 @@ data "null_data_source" "domain_validation" {
   lifecycle {
     precondition {
       condition     = var.domain != ""
-      error_message = "IAP configured requires domain name, Please provide a valid domain name for ${var.app_name} application."
+      error_message = "IAP configuration requires domain name, Please provide a valid domain name for ${var.app_name} application."
     }
 
     precondition {
       condition     = length(var.members_allowlist) != 0
-      error_message = "IAP configured requires valid members_allowlist, Please provide a valid input for ${var.app_name} application."
+      error_message = "IAP configuration requires valid members_allowlist, Please provide a valid input for ${var.app_name} application."
     }
   }
 }
