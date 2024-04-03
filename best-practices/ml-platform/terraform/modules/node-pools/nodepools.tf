@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2024 Google LLCproject_id
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,15 +13,19 @@
 # limitations under the License.
 
 resource "google_container_node_pool" "node-pool" {
-  cluster  = var.cluster_name
-  location = var.region
-  name     = format("%s-%s", var.cluster_name, var.node_pool_name)
-  project  = var.project_id
+  cluster            = var.cluster_name
+  initial_node_count = var.initial_node_count
+  location           = var.location
+  name               = var.node_pool_name
+  project            = var.project_id
 
-  autoscaling {
-    location_policy      = var.autoscaling["location_policy"]
-    total_max_node_count = var.autoscaling["total_max_node_count"]
-    total_min_node_count = var.autoscaling["total_min_node_count"]
+  dynamic "autoscaling" {
+    for_each = var.autoscaling != null ? [1] : []
+    content {
+      location_policy      = var.autoscaling.location_policy
+      total_max_node_count = var.autoscaling.total_max_node_count
+      total_min_node_count = var.autoscaling.total_min_node_count
+    }
   }
 
   network_config {
@@ -29,30 +33,32 @@ resource "google_container_node_pool" "node-pool" {
   }
 
   node_config {
+    labels = {
+      "resource-type" : var.resource_type
+    }
     machine_type = var.machine_type
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
 
-    labels = {
-      "resource-type" : var.resource_type
-    }
-
     gcfs_config {
       enabled = true
     }
 
-    guest_accelerator {
-      count = var.accelerator_count
-      type  = var.accelerator
+    dynamic "guest_accelerator" {
+      for_each = var.guest_accelerator != null ? [1] : []
+      content {
+        count = var.guest_accelerator.count
+        type  = var.guest_accelerator.type
+      }
     }
 
     dynamic "reservation_affinity" {
-      for_each = var.reservation_name != "" ? [1] : []
+      for_each = var.reservation_affinity != null ? [1] : []
       content {
-        consume_reservation_type = "SPECIFIC_RESERVATION"
-        key                      = "compute.googleapis.com/reservation-name"
-        values                   = [var.reservation_name]
+        consume_reservation_type = var.reservation_affinity.consume_reservation_type
+        key                      = var.reservation_affinity.key
+        values                   = var.reservation_affinity.values
       }
     }
 
@@ -73,6 +79,7 @@ resource "google_container_node_pool" "node-pool" {
 
   lifecycle {
     ignore_changes = [
+      initial_node_count,
       node_config[0].labels,
       node_config[0].taint,
     ]
