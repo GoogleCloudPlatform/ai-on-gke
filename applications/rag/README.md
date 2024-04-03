@@ -2,6 +2,8 @@
 
 This is a sample to deploy a Retrieval Augmented Generation (RAG) application on GKE. 
 
+The latest recommended release is branch release-1.1.
+
 # What is RAG?
 
 [RAG](https://cloud.google.com/blog/products/ai-machine-learning/rag-with-databases-on-google-cloud) is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets.
