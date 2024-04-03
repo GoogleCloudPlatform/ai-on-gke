@@ -63,7 +63,7 @@ module "infra" {
   count  = var.create_cluster ? 1 : 0
 
   project_id        = var.project_id
-  cluster_name      = var.cluster_name
+  cluster_name      = local.cluster_name
   cluster_location  = var.cluster_location
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster
@@ -87,13 +87,14 @@ locals {
   endpoint                          = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
   ca_certificate                    = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
   private_cluster                   = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
-  cluster_membership_id             = var.cluster_membership_id == "" ? var.cluster_name : var.cluster_membership_id
+  cluster_membership_id             = var.cluster_membership_id == "" ? local.cluster_name : var.cluster_membership_id
   enable_autopilot                  = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
   enable_tpu                        = var.create_cluster ? var.enable_tpu : data.google_container_cluster.default[0].enable_tpu
   host                              = local.private_cluster ? "https://connectgateway.googleapis.com/v1/projects/${data.google_project.project.number}/locations/${var.cluster_location}/gkeMemberships/${local.cluster_membership_id}" : local.endpoint
   kubernetes_namespace              = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.kubernetes_namespace}" : var.kubernetes_namespace
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
-  ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${var.cluster_name}/${local.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
+  cluster_name                      = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.cluster_name}" : var.cluster_name
+  ray_cluster_default_uri           = "https://console.cloud.google.com/kubernetes/service/${var.cluster_location}/${local.cluster_name}/${local.kubernetes_namespace}/${var.ray_cluster_name}-kuberay-head-svc/overview?project=${var.project_id}"
 }
 
 provider "kubernetes" {

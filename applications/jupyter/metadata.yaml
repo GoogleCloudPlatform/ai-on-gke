@@ -64,7 +64,7 @@ spec:
         defaultValue: ""
       - name: cluster_name
         varType: string
-        required: true
+        defaultValue: "ai-on-gke"
       - name: create_brand
         description: Create Brand OAuth Screen
         varType: bool
