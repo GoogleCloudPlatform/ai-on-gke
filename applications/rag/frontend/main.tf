@@ -18,7 +18,7 @@ data "google_project" "project" {
 locals {
   instance_connection_name = format("%s:%s:%s", var.project_id, var.cloudsql_instance_region, var.cloudsql_instance)
   additional_labels = tomap({
-    for item in var.additional_labels :
+    for item in split(",", var.additional_labels) :
     split("=", item)[0] => split("=", item)[1]
   })
 }
