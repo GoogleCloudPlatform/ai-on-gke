@@ -310,19 +310,6 @@ resource "github_branch_default" "environment" {
   repository = github_repository.acm_repo.name
 }
 
-resource "github_branch_protection_v3" "environment" {
-  repository = github_repository.acm_repo.name
-  branch     = github_branch.environment.branch
-
-  required_pull_request_reviews {
-    require_code_owner_reviews      = true
-    required_approving_review_count = 1
-  }
-
-  restrictions {
-  }
-}
-
 #
 # Scripts
 ##########################################################################
