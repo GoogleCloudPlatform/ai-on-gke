@@ -167,6 +167,46 @@ module "gke" {
   zone                        = "${var.subnet_01_region}-a"
 }
 
+module "node_pool_cpu_n2s8" {
+  source = "../../../terraform/modules/node-pools"
+
+  depends_on = [
+    module.gke
+  ]
+
+  autoscaling = {
+    location_policy      = "BALANCED"
+    total_max_node_count = 32
+    total_min_node_count = 1
+  }
+  cluster_name       = module.gke.cluster_name
+  initial_node_count = 1
+  location           = var.subnet_01_region
+  machine_type       = "n2-standard-8"
+  node_pool_name     = "cpu-n2s8"
+  project_id         = data.google_project.environment.project_id
+  resource_type      = "cpu"
+}
+
+module "node_pool_gpu_l4x2_g2s24" {
+  source = "../../../terraform/modules/node-pools"
+
+  depends_on = [
+    module.gke
+  ]
+
+  cluster_name = module.gke.cluster_name
+  guest_accelerator = {
+    count = 2
+    type  = "nvidia-l4"
+  }
+  location       = var.subnet_01_region
+  node_pool_name = "gpu-l4x2-g2s24"
+  project_id     = data.google_project.environment.project_id
+  resource_type  = "gpu-l4"
+  taints         = var.ondemand_taints
+}
+
 module "reservation" {
   source = "../../../terraform/modules/vm-reservations"
 
@@ -175,49 +215,46 @@ module "reservation" {
   zone         = "${var.subnet_01_region}-a"
 }
 
-module "node_pool-reserved" {
+module "node_pool_gpu_l4x2_g2s24_res" {
   source = "../../../terraform/modules/node-pools"
 
   depends_on = [
     module.reservation
   ]
 
-  cluster_name     = module.gke.cluster_name
-  node_pool_name   = "reservation"
-  project_id       = data.google_project.environment.project_id
-  region           = var.subnet_01_region
-  reservation_name = module.reservation.reservation_name
-  resource_type    = "reservation"
-  taints           = var.reserved_taints
+  cluster_name = module.gke.cluster_name
+  guest_accelerator = {
+    count = 2
+    type  = "nvidia-l4"
+  }
+  location       = var.subnet_01_region
+  node_pool_name = "gpu-l4x2-g2s24-res"
+  project_id     = data.google_project.environment.project_id
+  reservation_affinity = {
+    consume_reservation_type = "SPECIFIC_RESERVATION"
+    key                      = "compute.googleapis.com/reservation-name"
+    values                   = [module.reservation.reservation_name]
+  }
+  resource_type = "gpu-l4-reservation"
+  taints        = var.reserved_taints
 }
 
-module "node_pool-ondemand" {
+module "node_pool_gpu_l4x2_g2s24_spot" {
   source = "../../../terraform/modules/node-pools"
 
   depends_on = [
     module.gke
   ]
 
-  cluster_name   = module.gke.cluster_name
-  node_pool_name = "ondemand"
+  cluster_name = module.gke.cluster_name
+  guest_accelerator = {
+    count = 2
+    type  = "nvidia-l4"
+  }
+  location       = var.subnet_01_region
+  node_pool_name = "gpu-l4x2-g2s24-spot"
   project_id     = data.google_project.environment.project_id
-  region         = var.subnet_01_region
-  resource_type  = "ondemand"
-  taints         = var.ondemand_taints
-}
-
-module "node_pool-spot" {
-  source = "../../../terraform/modules/node-pools"
-
-  depends_on = [
-    module.gke
-  ]
-
-  cluster_name   = module.gke.cluster_name
-  node_pool_name = "spot"
-  project_id     = data.google_project.environment.project_id
-  region         = var.subnet_01_region
-  resource_type  = "spot"
+  resource_type  = "gpu-l4-spot"
   taints         = var.spot_taints
 }
 
@@ -334,11 +371,9 @@ resource "null_resource" "create_cluster_yamls" {
 resource "null_resource" "create_git_cred_cms" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
+    module.cloud-nat,
     module.gke,
-    module.node_pool-reserved,
-    module.node_pool-ondemand,
-    module.node_pool-spot,
-    module.cloud-nat
+    module.node_pool_cpu_n2s8
   ]
 
   provisioner "local-exec" {
