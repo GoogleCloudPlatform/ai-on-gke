@@ -21,6 +21,19 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+## Check if domain is provided
+resource "terraform_data" "domain_validation" {
+  input = timestamp()
+
+  lifecycle {
+    precondition {
+      condition = var.domain == ""
+      error_message = "IAP configured requires domain name, Please provide a valid domain name."
+    }
+  }
+}
+
+
 # Creates a "Brand", equivalent to the OAuth consent screen on Cloud console
 resource "google_iap_brand" "project_brand" {
   count             = var.create_brand ? 1 : 0
