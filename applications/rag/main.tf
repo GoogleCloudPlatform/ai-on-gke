@@ -61,7 +61,7 @@ module "project-services" {
 }
 
 module "infra" {
-  source = "github.com/GoogleCloudPlatform/ai-on-gke//infrastructure?ref=labels"
+  source = "../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
   project_id         = var.project_id
@@ -145,14 +145,14 @@ provider "helm" {
 }
 
 module "namespace" {
-  source           = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kubernetes-namespace?ref=labels"
+  source           = "../../modules/kubernetes-namespace"
   providers        = { helm = helm.rag }
   create_namespace = true
   namespace        = local.kubernetes_namespace
 }
 
 module "kuberay-operator" {
-  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-operator?ref=labels"
+  source                 = "../../modules/kuberay-operator"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   name                   = "kuberay-operator"
   project_id             = var.project_id
@@ -164,14 +164,14 @@ module "kuberay-operator" {
 }
 
 module "gcs" {
-  source      = "github.com/GoogleCloudPlatform/ai-on-gke//modules/gcs?ref=labels"
+  source      = "../../modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
   project_id  = var.project_id
   bucket_name = var.gcs_bucket
 }
 
 module "cloudsql" {
-  source        = "github.com/GoogleCloudPlatform/ai-on-gke//modules/cloudsql?ref=labels"
+  source        = "../../modules/cloudsql"
   providers     = { kubernetes = kubernetes.rag }
   project_id    = var.project_id
   instance_name = local.cloudsql_instance
@@ -182,17 +182,18 @@ module "cloudsql" {
 }
 
 module "jupyterhub" {
-  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/jupyter?ref=labels"
+  source     = "../../modules/jupyter"
   providers  = { helm = helm.rag, kubernetes = kubernetes.rag }
   namespace  = local.kubernetes_namespace
   project_id = var.project_id
   gcs_bucket = var.gcs_bucket
   add_auth   = var.jupyter_add_auth
+  additional_labels = var.additional_labels
 
   autopilot_cluster                 = local.enable_autopilot
   workload_identity_service_account = local.jupyter_service_account
 
-  notebook_image     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image?ref=labels"
+  notebook_image     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image"
   notebook_image_tag = "v1.1-rag"
 
   db_secret_name         = module.cloudsql.db_secret_name
@@ -217,14 +218,14 @@ module "jupyterhub" {
 }
 
 module "kuberay-logging" {
-  source     = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-logging?ref=labels"
+  source     = "../../modules/kuberay-logging"
   providers  = { kubernetes = kubernetes.rag }
   namespace  = local.kubernetes_namespace
   depends_on = [module.namespace]
 }
 
 module "kuberay-cluster" {
-  source                 = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-cluster?ref=labels"
+  source                 = "../../modules/kuberay-cluster"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id             = var.project_id
   namespace              = local.kubernetes_namespace
@@ -239,6 +240,7 @@ module "kuberay-cluster" {
   disable_network_policy = var.disable_ray_cluster_network_policy
   depends_on             = [module.kuberay-operator]
   use_custom_image       = true
+  additional_labels = var.additional_labels
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth
@@ -256,7 +258,7 @@ module "kuberay-cluster" {
 }
 
 module "kuberay-monitoring" {
-  source                          = "github.com/GoogleCloudPlatform/ai-on-gke//modules/kuberay-monitoring?ref=labels"
+  source                          = "../../modules/kuberay-monitoring"
   providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
   project_id                      = var.project_id
   autopilot_cluster               = local.enable_autopilot
@@ -269,7 +271,7 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source            = "github.com/GoogleCloudPlatform/ai-on-gke//tutorials-and-examples/hf-tgi?ref=labels"
+  source            = "../../tutorials-and-examples/hf-tgi"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = local.kubernetes_namespace
   additional_labels = var.additional_labels

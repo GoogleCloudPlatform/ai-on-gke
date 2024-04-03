@@ -26,7 +26,7 @@ locals {
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
-  source = "github.com/GoogleCloudPlatform/ai-on-gke//modules/iap?ref=labels"
+  source = "../../../modules/iap"
 
   project_id               = var.project_id
   namespace                = var.namespace
