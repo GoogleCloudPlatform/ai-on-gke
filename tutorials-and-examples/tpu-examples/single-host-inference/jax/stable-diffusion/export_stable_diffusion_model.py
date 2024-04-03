@@ -53,7 +53,7 @@ def export_stable_diffusion():
   params_vars = jax.tree_util.tree_unflatten(params_tree, params_vars_flat)
   tf_predict = tf.function(
       lambda prompt_ids: jax2tf.convert(
-          predict_fn, enable_xla=True, with_gradient=False
+          predict_fn, enable_xla=True, with_gradient=False, native_serialization_platforms=['tpu']
       )(params_vars, prompt_ids),
       input_signature=[
           tf.TensorSpec(
