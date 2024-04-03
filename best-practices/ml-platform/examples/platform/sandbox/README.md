@@ -198,6 +198,12 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
 
 ### Run Terraform
 
+Before running Terraform, make sure that the Service Usage API is enable.
+
+- Enable Service Usage API
+
+  `gcloud services enable serviceusage.googleapis.com`
+
 - Create the resources
 
   ```
