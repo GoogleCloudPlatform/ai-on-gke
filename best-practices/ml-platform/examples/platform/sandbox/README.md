@@ -8,13 +8,13 @@ This quick-start deployment guide can be used to set up an environment to famili
 
 In this guide you can choose to bring your project (BYOP) or have Terraform create a new project for you. The requirements are difference based on the option that you choose.
 
-#### Bring your own project (BYOP)
+#### Option 1: Bring your own project (BYOP)
 
 - Project ID of a new Google Cloud Project, preferably with no APIs enabled
 - `roles/owner` IAM permissions on the project
 - GitHub Personal Access Token, steps to create the token are provided below
 
-#### Terraform managed project
+#### Option 2: Terraform managed project
 
 - Billing account ID
 - Organization or folder ID
@@ -111,9 +111,9 @@ In this guide you can choose to bring your project (BYOP) or have Terraform crea
 
 ### Project Configuration
 
-You only need to complete the section for the option that you have selected.
+You only need to complete the section for the option that you have selected (either option 1 or 2).
 
-#### Bring your own project (BYOP)
+#### Option 1: Bring your own project (BYOP)
 
 - Set the project environment variables in Cloud Shell
 
@@ -151,7 +151,9 @@ You only need to complete the section for the option that you have selected.
   sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
-#### Terraform managed project
+You can now deploy the platform with Terraform in the [next section](#run-terraform).
+
+#### Option 2: Terraform managed project
 
 - Set the configuration variables
 
@@ -191,6 +193,8 @@ You only need to complete the section for the option that you have selected.
   terraform init -force-copy -migrate-state && \
   rm -rf state
   ```
+
+You can now deploy the platform with Terraform in the [next section](#run-terraform).
 
 ### Run Terraform
 
