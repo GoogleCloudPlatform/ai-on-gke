@@ -182,12 +182,12 @@ module "cloudsql" {
 }
 
 module "jupyterhub" {
-  source     = "../../modules/jupyter"
-  providers  = { helm = helm.rag, kubernetes = kubernetes.rag }
-  namespace  = local.kubernetes_namespace
-  project_id = var.project_id
-  gcs_bucket = var.gcs_bucket
-  add_auth   = var.jupyter_add_auth
+  source            = "../../modules/jupyter"
+  providers         = { helm = helm.rag, kubernetes = kubernetes.rag }
+  namespace         = local.kubernetes_namespace
+  project_id        = var.project_id
+  gcs_bucket        = var.gcs_bucket
+  add_auth          = var.jupyter_add_auth
   additional_labels = var.additional_labels
 
   autopilot_cluster                 = local.enable_autopilot
@@ -240,7 +240,7 @@ module "kuberay-cluster" {
   disable_network_policy = var.disable_ray_cluster_network_policy
   depends_on             = [module.kuberay-operator]
   use_custom_image       = true
-  additional_labels = var.additional_labels
+  additional_labels      = var.additional_labels
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth

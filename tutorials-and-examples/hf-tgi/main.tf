@@ -14,7 +14,7 @@
 
 locals {
   additional_labels = tomap({
-    for item in split(",",var.additional_labels) :
+    for item in split(",", var.additional_labels) :
     split("=", item)[0] => split("=", item)[1]
   })
 }
