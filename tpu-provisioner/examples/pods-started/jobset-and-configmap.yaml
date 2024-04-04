@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-started-threshold
+---
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  #annotations:
+  #  alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool
+  name: test
+  namespace: default
+spec:
+  failurePolicy:
+    maxRestarts: 1
+  network:
+    enableDNSHostnames: true
+  replicatedJobs:
+    - name: job
+      replicas: 3
+      template:
+        spec:
+          backoffLimit: 0
+          completionMode: Indexed
+          completions: 90
+          parallelism: 90
+          template:
+            metadata:
+              annotations:
+                tbd.com/started-threshold: "270"
+            spec:
+              initContainers:
+                # Check if the started threshold file is present before exiting and starting the main container.
+                - name: a
+                  image: ubuntu
+                  imagePullPolicy: IfNotPresent
+                  command:
+                    - bash
+                    - -c
+                    - while true; do if [ -f /mnt/start-threshold/started ]; then break; fi; sleep 1; done
+                  volumeMounts:
+                    - mountPath: /mnt/start-threshold
+                      name: start-threshold
+              containers:
+                - name: b
+                  image: ubuntu
+                  imagePullPolicy: IfNotPresent
+                  command:
+                    - bash
+                    - -c
+                    - sleep infinity
+                  resources:
+                    requests:
+                      cpu: 1m
+                      memory: 1Mi
+              volumes:
+                - name: start-threshold
+                  configMap:
+                    # Format: {jobset-name}-started-threshold
+                    name: test-started-threshold
+                    optional: true
+              restartPolicy: Never
+              terminationGracePeriodSeconds: 1
+  successPolicy:
+    operator: All
