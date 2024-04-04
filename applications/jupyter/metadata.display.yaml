@@ -89,6 +89,9 @@ spec:
           section: required_config
           xGoogleProperty:
             type: ET_GCE_REGION
+            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+            gce_region:
+              allowlisted_regions: ["asia-east1","asia-southeast1","europe-west1","europe-west4","us-central1","us-east1","us-east4","us-west1","us-west4"]
         cluster_membership_id:
           name: cluster_membership_id
           title: Cluster Membership Id
