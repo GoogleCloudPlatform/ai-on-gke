@@ -236,9 +236,8 @@ variable "client_secret" {
 }
 
 variable "members_allowlist" {
-  type    = string
-  default = ""
-  ## keeping it string type to support single field input for marketplace UI.
+  type    = list(string)
+  default = []
 }
 
 variable "use_custom_image" {
