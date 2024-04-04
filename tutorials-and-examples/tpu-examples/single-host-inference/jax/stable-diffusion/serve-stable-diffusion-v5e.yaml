@@ -29,8 +29,8 @@ spec:
         app: tf-stable-diffusion-server
     spec:
       nodeSelector:
-        cloud.google.com/gke-tpu-topology: 2x2x1  # target topology
-        cloud.google.com/gke-tpu-accelerator: tpu-v4-podslice
+        cloud.google.com/gke-tpu-topology: 1x1  # target topology
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       containers:
       - name: serve-stable-diffusion
         image: us-docker.pkg.dev/cloud-tpu-images/inference/tf-serving-tpu:nightly
@@ -47,9 +47,9 @@ spec:
         - containerPort: 8501
         resources:
           requests:
-            google.com/tpu: "4"  # TPU chip request
+            google.com/tpu: 1  # TPU chip request
           limits:
-            google.com/tpu: "4"  # TPU chip request
+            google.com/tpu: 1  # TPU chip request
       volumes:
       - name: stable-diffusion-external-storage
         persistentVolumeClaim:

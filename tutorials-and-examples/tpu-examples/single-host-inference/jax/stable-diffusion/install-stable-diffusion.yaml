@@ -32,7 +32,7 @@ spec:
     - |
       cd /tmp/
       git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git
-      cp -r ai-on-gke/gke-tpu-examples/single-host-inference/jax .
+      cp -r ai-on-gke/tutorials-and-examples/tpu-examples/single-host-inference/jax .
       echo got jax stable-diffusion resources
   - name: export-stable-diffusion
     image: python:3.10
@@ -47,7 +47,8 @@ spec:
     - -c
     - |
       cd /tmp/
-      pip install -r ./jax/jax-requirements.txt
+      pip install -U "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+      pip install diffusers jaxlib jax flax flatbuffers tensorflow tensorflow-serving-api transformers
       cd jax/stable-diffusion
       python3 export_stable_diffusion_model.py
       echo exported stable-diffusion model
