@@ -87,7 +87,7 @@ func getNumTPUHostsFromTopology(clusterName string, groupName string, namespace 
 	for i := 0; i < len(topologyVals); i++ {
 		dim, err := strconv.Atoi(topologyVals[i])
 		if err != nil {
-			klog.ErrorS(err, "RayCluster", namespace+"/"+clusterName, "Worker Group", groupName, "gke-tpu-topology", topology)
+			klog.ErrorS(err, "getNumTPUHostsFromTopology", "RayCluster", namespace+"/"+clusterName, "Worker Group", groupName, "gke-tpu-topology", topology)
 			return 0, err
 		}
 		chips *= dim
@@ -106,7 +106,7 @@ func getNumTPUHostsFromTopology(clusterName string, groupName string, namespace 
 		if chipsPerHost > 8 {
 			chipsPerHost = 4 // default back to 4 (machine type is ct5lp-hightpu-4t)
 		}
-	} else if acceleratorTypeValues[0] == "tpu-v5-lite-device" {
+	} else if acceleratorType == "tpu-v5-lite-device" {
 		return 1, nil // single-host only
 	}
 	hosts := int32(max(chips/chipsPerHost, 1))
@@ -235,10 +235,14 @@ func checkWorkersMatchTopology(clusterName string, namespace string, workerGroup
 		acceleratorType := workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-accelerator"]
 		klog.V(1).InfoS("checkWorkersMatchTopology", "RayCluster", namespace+"/"+clusterName, "topology", topology, "AcceleratorType", acceleratorType, "NumOfHosts", numHosts)
 		if topology == "" {
-			klog.ErrorS(errors.New("TPU topology not specified"), "checkWorkersMatchTopology", "RayCluster", namespace+"/"+clusterName, "gke-tpu-topology", topology)
+			err := errors.New("TPU topology not specified")
+			// klog.ErrorS(err, "checkWorkersMatchTopology", "RayCluster", namespace+"/"+clusterName, "gke-tpu-topology", topology)
+			return false, err
 		}
 		if acceleratorType == "" {
-			klog.ErrorS(errors.New("TPU accelerator not specified"), "checkWorkersMatchTopology", "RayCluster", namespace+"/"+clusterName, "gke-tpu-accelerator", acceleratorType)
+			err := errors.New("TPU accelerator not specified")
+			// klog.ErrorS(err, "checkWorkersMatchTopology", "RayCluster", namespace+"/"+clusterName, "gke-tpu-accelerator", acceleratorType)
+			return false, err
 		}
 		expectedHosts, err := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, acceleratorType)
 		if err != nil {

@@ -457,7 +457,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	// "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 
@@ -469,23 +468,127 @@ var (
 	instanceName                  string
 	groupNameStr                  string
 	headGroupNameStr              string
-	testPodAdmissionReviews       *admissionv1.AdmissionReview
+	testCPUWorker                 *corev1.Pod
+	testTPUWorker                 *corev1.Pod
 	testCPUPods                   []*corev1.Pod
 	testTPUPods                   []*corev1.Pod
-	testRayClusterAdmissionReview *admissionv1.AdmissionReview
+	testAdmissionReview        	  *admissionv1.AdmissionReview
 	testRayClusterNoTPUs          *rayv1.RayCluster
-	testRayClusterSingleHostTPU   *rayv1.RayCluster
 	testRayClusterMultiHostTPU    *rayv1.RayCluster
 	headNodeIP                    string
-	testWorkerGroupSpec			  rayv1.WorkerGroupSpec
+	testWorkerGroupSpec           *rayv1.WorkerGroupSpec
 )
 
 func setupTest(t *testing.T) {
 	namespaceStr = "default"
-	instanceName = "raycluster-sample"
+	instanceName = "raycluster-test-sample"
 	headNodeIP = "1.2.3.4"
 	groupNameStr = "workergroup"
-	headlessServiceSuffix = "headless-worker-svc"
+
+	// CPU pod - doesn't request TPUs
+	testCPUWorker = &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cpu-pod",
+			Namespace: namespaceStr,
+			Labels: map[string]string{
+				utils.RayNodeLabelKey:      "yes",
+				utils.RayClusterLabelKey:   instanceName,
+				utils.RayNodeGroupLabelKey: groupNameStr,
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name: "ray-worker",
+				},
+			},
+			NodeSelector: map[string]string{},
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+			ContainerStatuses: []corev1.ContainerStatus{
+				{
+					Name:  "ray-worker",
+					State: corev1.ContainerState{},
+				},
+			},
+		},
+	}
+
+	// TPU Ray worker pod
+	testTPUWorker = &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tpu-pod",
+			Namespace: namespaceStr,
+			Labels: map[string]string{
+				utils.RayNodeLabelKey:      "yes",
+				utils.RayClusterLabelKey:   instanceName,
+				utils.RayNodeGroupLabelKey: groupNameStr,
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name: "ray-worker",
+					Resources: corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							"google.com/tpu": resource.MustParse("4"),
+						},
+						Requests: corev1.ResourceList{
+							"google.com/tpu": resource.MustParse("4"),
+						},
+					},
+					Env: []corev1.EnvVar{},
+				},
+			},
+			NodeSelector: map[string]string{},
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+			ContainerStatuses: []corev1.ContainerStatus{
+				{
+					Name:  "ray-worker",
+					State: corev1.ContainerState{},
+				},
+			},
+		},
+	}
+
+	testWorkerGroupSpec = &rayv1.WorkerGroupSpec{
+		Replicas:    pointer.Int32(1),
+		MinReplicas: pointer.Int32(0),
+		MaxReplicas: pointer.Int32(10000),
+		NumOfHosts:  1,
+		GroupName:   groupNameStr,
+		Template: corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name: "ray-worker",
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"google.com/tpu": resource.MustParse("4"),
+							},
+							Requests: corev1.ResourceList{
+								"google.com/tpu": resource.MustParse("4"),
+							},
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name: "MY_POD_IP",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "status.podIP",
+									},
+								},
+							},
+						},
+					},
+				},
+				NodeSelector: map[string]string{},
+			},
+		},
+	}
 
 	// 1 CPU head pod + 1 worker - doesn't request TPUs
 	testCPUPods = []*corev1.Pod{
@@ -521,34 +624,9 @@ func setupTest(t *testing.T) {
 				},
 			},
 		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod1",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
 	}
+	// add CPU worker
+	testCPUPods = append(testCPUPods, testCPUWorker)
 
 	// 1 CPU head pod + 4 TPU pods
 	testTPUPods = []*corev1.Pod{
@@ -581,223 +659,17 @@ func setupTest(t *testing.T) {
 				},
 			},
 		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod1",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod2",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod3",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
-		&corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pod4",
-				Namespace: namespaceStr,
-				Labels: map[string]string{
-					utils.RayNodeLabelKey:      "yes",
-					utils.RayClusterLabelKey:   instanceName,
-					utils.RayNodeGroupLabelKey: groupNameStr,
-				},
-			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":               resource.MustParse("1"),
-								"google.com/tpu":    resource.MustParse("4"),
-								"memory":            resource.MustParse("40G"),
-								"ephemeral-storage": resource.MustParse("20Gi"),
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:  "ray-worker",
-						State: corev1.ContainerState{},
-					},
-				},
-			},
-		},
+	}
+
+	// add the 4 TPU worker pods using the testTPUWorker template
+	for i := 0; i < 4; i++ {
+		testTPUWorkerCopy := testTPUWorker.DeepCopy()
+		testTPUWorkerCopy.Name = fmt.Sprintf("%s-%d", "tpu-pod", i)
+		testTPUPods = append(testTPUPods, testTPUWorkerCopy)
 	}
 
 	// RayCluster requesting no TPU resources - pass-through
 	testRayClusterNoTPUs = &rayv1.RayCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instanceName,
-			Namespace: namespaceStr,
-		},
-		Spec: rayv1.RayClusterSpec{
-			HeadGroupSpec: rayv1.HeadGroupSpec{
-				Template: corev1.PodTemplateSpec{
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name: "ray-head",
-							},
-						},
-					},
-				},
-			},
-			WorkerGroupSpecs: []rayv1.WorkerGroupSpec{
-				{
-					Replicas:    pointer.Int32(1),
-					MinReplicas: pointer.Int32(0),
-					MaxReplicas: pointer.Int32(10000),
-					NumOfHosts:  1,
-					GroupName:   groupNameStr,
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "ray-worker",
-									Env: []corev1.EnvVar{
-										{
-											Name: "MY_POD_IP",
-											ValueFrom: &corev1.EnvVarSource{
-												FieldRef: &corev1.ObjectFieldSelector{
-													FieldPath: "status.podIP",
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	// RayCluster with 2x2x1 TPU topology worker group
-	testRayClusterSingleHostTPU = &rayv1.RayCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instanceName,
 			Namespace: namespaceStr,
@@ -875,6 +747,16 @@ func setupTest(t *testing.T) {
 							Containers: []corev1.Container{
 								{
 									Name: "ray-worker",
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											"cpu":            resource.MustParse("1"),
+											"google.com/tpu": resource.MustParse("4"),
+										},
+										Limits: corev1.ResourceList{
+											"cpu":            resource.MustParse("1"),
+											"google.com/tpu": resource.MustParse("4"),
+										},
+									},
 									Env: []corev1.EnvVar{
 										{
 											Name: "MY_POD_IP",
@@ -887,53 +769,32 @@ func setupTest(t *testing.T) {
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	jsonBytes, _ := json.Marshal(testTPUPods[0])
-
-	testPodAdmissionReviews = &admissionv1.AdmissionReview{
-		Request: &admissionv1.AdmissionRequest{
-			UID: "1",
-			Kind: metav1.GroupVersionKind{
-				Group:   "",
-				Version: "v1",
-				Kind:    "Pod",
-			},
-			Object: runtime.RawExtension{
-				Raw:    jsonBytes,
-				Object: testTPUPods[0],
-			},
-		},
-	}
-
-	testWorkerGroupSpec = rayv1.WorkerGroupSpec{
-		Replicas:    pointer.Int32(1),
-		MinReplicas: pointer.Int32(0),
-		MaxReplicas: pointer.Int32(10000),
-		NumOfHosts:  1,
-		GroupName:   groupNameStr,
-		Template: corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "ray-worker",
-						Env: []corev1.EnvVar{
-							{
-								Name: "MY_POD_IP",
-								ValueFrom: &corev1.EnvVarSource{
-									FieldRef: &corev1.ObjectFieldSelector{
-										FieldPath: "status.podIP",
-									},
-								},
+							NodeSelector: map[string]string{
+								"cloud.google.com/gke-tpu-topology":    "2x2x4",
+								"cloud.google.com/gke-tpu-accelerator": "tpu-v4-podslice",
 							},
 						},
 					},
 				},
+			},
+		},
+	}
+
+	testAdmissionReview = &admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
+			UID: "1",
+			Kind: metav1.GroupVersionKind{
+				Kind: "Pod",
+			},
+			Operation: "CREATE",
+			// set these values inside test
+			Object: runtime.RawExtension{
+				Raw:    nil,
+				Object: nil,
+			},
+			OldObject: runtime.RawExtension{
+				Raw:    nil,
+				Object: nil,
 			},
 		},
 	}
@@ -1304,60 +1165,53 @@ func Test_GetNumTPUHostsFromTopology(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		topology        string
-		acceleratorType string
-		expectedHosts   int32
-		expectedError   error
+		topology      string
+		chipsPerHost  int64
+		expectedHosts int32
+		expectedError error
 	}{
 		"getNumTPUHostsFromTopology with empty topology": {
 			// empty gke-tpu-topology - returns error
-			topology:        "",
-			acceleratorType: "tpu-v4-podslice",
-			expectedHosts:   int32(0),
-			expectedError:   errors.New("TPU topology not specified"),
-		},
-		"getNumTPUHostsFromTopology with empty gke-tpu-accelerator": {
-			// empty gke-tpu-accelerator - defaults to 4 chips per host
-			topology:        "2x2x1",
-			expectedHosts:   int32(1),
-			acceleratorType: "",
+			topology:      "",
+			expectedHosts: int32(0),
+			expectedError: errors.New("TPU topology not specified"),
 		},
 		"getNumTPUHostsFromTopology with v4 2x2x1 topology": {
 			// v4 - 2x2x1, 4 chips per host, should return 1 TPU VM
-			topology:        "2x2x1",
-			expectedHosts:   int32(1),
-			acceleratorType: "tpu-v4-podslice",
+			topology:      "2x2x1",
+			expectedHosts: int32(1),
+			chipsPerHost:  int64(4),
 		},
 		"getNumTPUHostsFromTopology with v4 2x2x4 topology": {
 			// v4 - 2x2x4, 4 chips per host, should return 4 TPU VMs
-			topology:        "2x2x4",
-			expectedHosts:   int32(4),
-			acceleratorType: "tpu-v4-podslice",
+			topology:      "2x2x4",
+			expectedHosts: int32(4),
+			chipsPerHost:  int64(4),
 		},
 		"getNumTPUHostsFromTopology with v5litepod-4 2x4 topology": {
 			// v5e - 2x4 and 4 chips per VM, should return 2 TPU VMs
-			topology:        "2x4",
-			expectedHosts:   int32(2),
-			acceleratorType: "v5litepod-4",
+			topology:      "2x4",
+			expectedHosts: int32(2),
+			chipsPerHost:  int64(4),
 		},
 		"getNumTPUHostsFromTopology with v5litepod-8 2x4 topology": {
 			// v5e - 2x4 and 8 chips per VM, should return 1 TPU VM
-			topology:        "2x4",
-			expectedHosts:   int32(1),
-			acceleratorType: "v5litepod-8",
+			topology:      "2x4",
+			expectedHosts: int32(1),
+			chipsPerHost:  int64(8),
 		},
 		"getNumTPUHostsFromTopology with v5litepod-16 4x4 topology": {
 			// v5e - 4x4 and 4 chips per VM, should return 4 TPU VMs
-			topology:        "4x4",
-			expectedHosts:   int32(4),
-			acceleratorType: "v5litepod-16",
+			topology:      "4x4",
+			expectedHosts: int32(4),
+			chipsPerHost:  int64(4),
 		},
 	}
 
 	// validate that getNumTPUHostsFromTopology returns the expected # TPU VM Hosts for varying TPU podslice types
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			vms, err := getNumTPUHostsFromTopology(instanceName, groupNameStr, namespaceStr, tc.topology, tc.acceleratorType)
+			vms, err := getNumTPUHostsFromTopology(instanceName, groupNameStr, namespaceStr, tc.topology, tc.chipsPerHost)
 			if err == nil {
 				assert.Equal(t, tc.expectedHosts, vms)
 			}
@@ -1368,92 +1222,166 @@ func Test_GetNumTPUHostsFromTopology(t *testing.T) {
 	}
 }
 
-func Test_IsTPUMultiHost(t *testing.T) {
+func Test_GetNumTPUChipsRequested(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		topology          string
-		acceleratorType   string
-		expectedMultiHost bool
-		expectedError     error
+		testPod            *corev1.Pod
+		expectedTPULimit   map[corev1.ResourceName]resource.Quantity
+		expectedTPURequest map[corev1.ResourceName]resource.Quantity
+		expectedNumChips   int64
 	}{
-		"isTPUMultiHost with empty topology": {
-			// empty gke-tpu-topology - returns error
-			topology:          "",
-			acceleratorType:   "tpu-v4-podslice",
-			expectedMultiHost: false,
-			expectedError:     errors.New("TPU topology not specified"),
+		"getNumTPUChipsRequested no TPUs requested": {
+			// doesn't request TPUs
+			testPod:            testCPUWorker.DeepCopy(),
+			expectedTPULimit:   map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("0")},
+			expectedTPURequest: map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("0")},
+			expectedNumChips:   int64(0),
 		},
-		"isTPUMultiHost with empty gke-tpu-accelerator": {
-			// empty gke-tpu-accelerator - defaults to 4 chips per host
-			topology:          "2x2x1",
-			acceleratorType:   "",
-			expectedMultiHost: false,
+		"getNumTPUChipsRequested only TPU limit resource set": {
+			// includes TPU limits but ommits request - defaults to limit value
+			testPod:            testTPUWorker.DeepCopy(),
+			expectedTPULimit:   map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("4")},
+			expectedTPURequest: nil,
+			expectedNumChips:   int64(4),
 		},
-		"isTPUMultiHost with v4 2x2x1 topology": {
-			// v4 - 2x2x1, 4 chips per host, single-host
-			topology:          "2x2x1",
-			acceleratorType:   "tpu-v4-podslice",
-			expectedMultiHost: false,
+		"getNumTPUChipsRequested with TPU Request > TPU Limit": {
+			// TPU Limit = maximum number of TPU chips requested
+			testPod:            testTPUWorker.DeepCopy(),
+			expectedTPULimit:   map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("4")},
+			expectedTPURequest: map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("8")},
+			expectedNumChips:   int64(4),
 		},
-		"isTPUMultiHost with v4 2x2x4 topology": {
-			// v4 - 2x2x4, 4 chips per host, multi-host
-			topology:          "2x2x4",
-			acceleratorType:   "tpu-v4-podslice",
-			expectedMultiHost: true,
+		"getNumTPUChipsRequested with v4 TPU request": {
+			// v4 - always 4 chips per VM
+			testPod:            testTPUWorker.DeepCopy(),
+			expectedTPULimit:   map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("4")},
+			expectedTPURequest: map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("4")},
+			expectedNumChips:   int64(4),
 		},
-		"isTPUMultiHost with v5litepod-4 2x4 topology": {
-			// v5e - 2x4 and 4 chips per VM, multi-host
-			topology:          "2x4",
-			acceleratorType:   "v5litepod-4",
-			expectedMultiHost: true,
+		"getNumTPUChipsRequested with v5e ct5lp-hightpu-1t TPU request": {
+			// v5e - 1x1 and 1 chip per VM
+			testPod:            testTPUWorker.DeepCopy(),
+			expectedTPULimit:   map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("1")},
+			expectedTPURequest: map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("1")},
+			expectedNumChips:   int64(1),
 		},
-		"isTPUMultiHost with v5litepod-8 2x4 topology": {
-			// v5e - 2x4 and 8 chips per VM, single-host
-			topology:          "2x4",
-			acceleratorType:   "v5litepod-8",
-			expectedMultiHost: false,
-		},
-		"isTPUMultiHost with v5litepod-16 4x4 topology": {
-			// v5e - 4x4 and 4 chips per VM, multi-host
-			topology:          "4x4",
-			acceleratorType:   "v5litepod-16",
-			expectedMultiHost: true,
+		"getNumTPUChipsRequested with v5e ct5lp-hightpu-8t TPU request": {
+			// v5e - 2x4 and 8 chips per VM
+			testPod:            testTPUWorker.DeepCopy(),
+			expectedTPULimit:   map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("8")},
+			expectedTPURequest: map[corev1.ResourceName]resource.Quantity{"google.com/tpu": resource.MustParse("8")},
+			expectedNumChips:   int64(8),
 		},
 	}
 
 	// validate that isTPUMultiHost correctly returns whether a given topology/accelerator is multi-host
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			isMultiHost, err := isTPUMultiHost(instanceName, groupNameStr, namespaceStr, tc.topology, tc.acceleratorType)
-			assert.Equal(t, tc.expectedMultiHost, isMultiHost)
-			if tc.expectedError != nil {
+			container := tc.testPod.Spec.Containers[0]
+			container.Resources.Limits = tc.expectedTPULimit
+			container.Resources.Requests = tc.expectedTPURequest
+			chipsPerHost := getNumTPUChipsRequested(container)
+			assert.Equal(t, tc.expectedNumChips, chipsPerHost)
+		})
+	}
+}
+
+func Test_ExtractPod(t *testing.T) {
+	setupTest(t)
+
+	tests := map[string]struct {
+		testPod             *corev1.Pod
+		expectedKind        string
+		expectedError       error
+	}{
+		"extractPod with wrong admissionRequest Kind": {
+			// should return an error since Kind != Pod
+			testPod:             testTPUWorker.DeepCopy(),
+			expectedKind:        "RayCluster",
+			expectedError:       errors.New("Expected Pod but got RayCluster"),
+		},
+		"extractRayCluster with admissionRequest Kind == Pod": {
+			// should successfully unmarshal the Pod object
+			testPod:             testTPUWorker.DeepCopy(),
+			expectedKind:        "Pod",
+			expectedError:       errors.New("Expected Pod but got RayCluster"),
+		},
+	}
+
+	// validate that extractRayCluster correctly unmarshals admissionReview object
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// set up admissionReview object
+			admissionReview := testAdmissionReview.DeepCopy()
+			jsonPod, _ := json.Marshal(tc.testPod)
+			admissionReview.Request.Object.Raw = jsonPod
+			admissionReview.Request.Object.Object = tc.testPod
+
+			// set Request Kind
+			admissionReview.Request.Kind.Kind = tc.expectedKind
+
+			actualPod, err := extractPod(admissionReview)
+			if err != nil {
 				assert.Equal(t, tc.expectedError, err)
+			} else {
+				// jsons don't match exactly after marshal -> unmarshal so just check fields
+				assert.Equal(t, tc.testPod.Name, actualPod.Name)
 			}
 		})
 	}
 }
 
-// func Test_ExtractRayCluster(t *testing.T) {
-// 	setupTest(t)
+func Test_ExtractRayCluster(t *testing.T) {
+	setupTest(t)
 
-// 	tests := map[string]struct {
-// 		testRayCluster *rayv1.RayCluster
-// 	}{}
+	tests := map[string]struct {
+		testRayCluster      *rayv1.RayCluster
+		expectedKind        string
+		expectedError       error
+	}{
+		"extractRayCluster with wrong admissionRequest Kind": {
+			// should return an error since Kind != RayCluster
+			testRayCluster:      testRayClusterMultiHostTPU.DeepCopy(),
+			expectedKind:        "Pod",
+			expectedError:       errors.New("Expected RayCluster but got Pod"),
+		},
+		"extractRayCluster with admissionRequest Kind == RayCluster": {
+			// should successfully unmarshal the RayCluster object
+			testRayCluster:      testRayClusterMultiHostTPU.DeepCopy(),
+			expectedKind:        "RayCluster",
+		},
+	}
 
-// 	// validate that extractRayCluster correctly unmarshals admission review object
-// 	for name, tc := range tests {
-// 		t.Run(name, func(t *testing.T) {
+	// validate that extractRayCluster correctly unmarshals admissionReview object
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// set up admissionReview object
+			admissionReview := testAdmissionReview.DeepCopy()
+			jsonRayCluster, _ := json.Marshal(tc.testRayCluster)
+			admissionReview.Request.Object.Raw = jsonRayCluster
+			admissionReview.Request.Object.Object = tc.testRayCluster
 
-// 		})
-// 	}
-// }
+			// set Request Kind
+			admissionReview.Request.Kind.Kind = tc.expectedKind
+
+			actualRayCluster, err := extractRayCluster(admissionReview)
+			if err != nil {
+				assert.Equal(t, tc.expectedError, err)
+			} else {
+				// jsons don't match exactly after marshal -> unmarshal so just check fields
+				assert.Equal(t, tc.testRayCluster.Name, actualRayCluster.Name)
+				assert.Equal(t, tc.testRayCluster.Spec.WorkerGroupSpecs, actualRayCluster.Spec.WorkerGroupSpecs)
+			}
+		})
+	}
+}
 
 func Test_GetDNSHostnames(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		workerGroupSpec   rayv1.WorkerGroupSpec
+		workerGroupSpec   *rayv1.WorkerGroupSpec
 		replicaIndex      int
 		numOfHosts        int32
 		expectedHostnames string
@@ -1494,7 +1422,7 @@ func Test_GetDNSHostnames(t *testing.T) {
 			headlessServiceNameCopy := strings.Clone(headlessServiceName)
 			headlessServiceName = instanceName + "-" + headlessServiceSuffix
 			tc.workerGroupSpec.NumOfHosts = tc.numOfHosts
-			hostnames, err := genDNSHostnames(tc.workerGroupSpec, instanceName, namespaceStr, tc.replicaIndex)
+			hostnames, err := genDNSHostnames(*tc.workerGroupSpec, instanceName, namespaceStr, tc.replicaIndex)
 			if tc.numOfHosts == 0 {
 				assert.Equal(t, tc.expectedError, err)
 			} else {
@@ -1505,50 +1433,555 @@ func Test_GetDNSHostnames(t *testing.T) {
 	}
 }
 
-func Test_InjectHostnames(t *testing.T) {
+// func Test_InjectHostnames(t *testing.T) {
+// 	setupTest(t)
+
+// 	expectedPatches := []patch{}
+
+// 	tests := map[string]struct {
+// 		hostnames   	  string
+// 		envPath		      string
+// 		testPod			  *corev1.Pod
+// 		expectedHostnames string
+// 		expectedError     error
+// 	}{
+// 		"injectHostnames with NumOfHosts == 0": {
+// 			// you can't have a workergroup with NumOfHosts set to 0 so this should error out
+// 			workerGroupSpec: testWorkerGroupSpec,
+// 			replicaIndex:    0,
+// 			numOfHosts:      int32(0),
+// 			expectedError:   errors.New("workerGroupSpec NumOfHosts not set"),
+// 		},
+// 	}
+
+// 	// validate that genDNSHostnames correctly returns a string list of DNS addressable hostnames
+// 	for name, tc := range tests {
+// 		t.Run(name, func(t *testing.T) {
+
+// 		})
+// 	}
+// }
+
+func Test_InjectReplicaLabel(t *testing.T) {
 	setupTest(t)
 
-	// injectHostnames(hostNames string, envPath string, container corev1.Container, patches *[]patch)
+	tests := map[string]struct {
+		replicaIndex         int
+		groupName            string
+		expectedReplicaLabel string
+	}{
+		"injectReplicaLabel with replicaIndex 0": {
+			// should create a patch to set the replicaIndex label with {$WORKER_GROUP_NAME-$REPLICA_INDEX}
+			replicaIndex:         0,
+			groupName:            "test-group-name",
+			expectedReplicaLabel: "test-group-name-0",
+		},
+	}
 
-}
-
-func Test_InjectMultiHostReplicaLabel(t *testing.T) {
-	setupTest(t)
-
+	// validate that injectReplicaLabel creates a patch with a valid replicaIndex label
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			expectedPatches := []patch{}
+			injectReplicaLabel(instanceName, namespaceStr, tc.replicaIndex, tc.groupName, &expectedPatches)
+			assert.Equal(t, "/metadata/labels/replicaIndex", expectedPatches[0]["path"])
+			assert.Equal(t, tc.expectedReplicaLabel, expectedPatches[0]["value"])
+		})
+	}
 }
 
 func Test_InjectPodAffinity(t *testing.T) {
 	setupTest(t)
 
+	tests := map[string]struct {
+		testPod              *corev1.Pod
+		replicaIndex         int
+		groupName            string
+		expectedReplicaLabel string
+	}{
+		"injectPodAffinity with replicaIndex label": {
+			// should create a patch to create a podAffinity for the replicaIndex label
+			testPod:              testTPUWorker.DeepCopy(),
+			replicaIndex:         0,
+			groupName:            "test-group-name",
+			expectedReplicaLabel: "test-group-name-0",
+		},
+	}
+
+	// validate that injectPodAffinity creates a patch adding a podAffinity label selector for replicaIndex
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			expectedPatches := []patch{}
+			injectPodAffinity(tc.testPod, tc.replicaIndex, tc.groupName, &expectedPatches)
+			patchValue := expectedPatches[0]["value"]
+			affinity := patchValue.(corev1.Affinity)
+			assert.Equal(t, "/spec/affinity", expectedPatches[0]["path"])
+			assert.Equal(t, affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0], tc.expectedReplicaLabel)
+		})
+	}
 }
 
 func Test_CheckWorkersMatchTopology(t *testing.T) {
 	setupTest(t)
 
+	tests := map[string]struct {
+		expectedNumOfHosts int32
+		expectedTopology   string
+		expectedTPUChips   resource.Quantity
+		missingContainers  bool
+		expectedError      error
+		workersMatch       bool
+	}{
+		"checkWorkersMatchTopology NumOfHosts == 0": {
+			// returns false and an error
+			expectedNumOfHosts: 0,
+			expectedError:      errors.New("workerGroupSpec NumOfHosts not set"),
+			workersMatch:       false,
+		},
+		"checkWorkersMatchTopology WorkerGroup containers missing": {
+			// containers == nil, returns false and an error
+			missingContainers:  true,
+			expectedNumOfHosts: 1,
+			expectedError:      errors.New("Container path not specified"),
+			workersMatch:       false,
+		},
+		"checkWorkersMatchTopology missing topology nodeSelector": {
+			// topology not set, returns false and an error
+			expectedNumOfHosts: 1,
+			expectedTopology:   "",
+			expectedTPUChips:   resource.MustParse("4"),
+			expectedError:      errors.New("TPU topology not specified"),
+			workersMatch:       false,
+		},
+		"checkWorkersMatchTopology NumOfHosts not equal to specified topology": {
+			// topology does not match NumOfHosts, returns false
+			expectedNumOfHosts: 1,
+			expectedTopology:   "2x2x2",
+			expectedTPUChips:   resource.MustParse("4"),
+			workersMatch:       false,
+		},
+		"checkWorkersMatchTopology v4 single-host NumOfHosts equal to specified topology": {
+			// topology matches NumOfHosts, returns true
+			expectedNumOfHosts: 1,
+			expectedTopology:   "2x2x1",
+			expectedTPUChips:   resource.MustParse("4"),
+			workersMatch:       true,
+		},
+		"checkWorkersMatchTopology v4 multi-host NumOfHosts equal to specified topology": {
+			// topology matches NumOfHosts, returns true
+			expectedNumOfHosts: 4,
+			expectedTopology:   "2x2x4",
+			expectedTPUChips:   resource.MustParse("4"),
+			workersMatch:       true,
+		},
+		"checkWorkersMatchTopology v5 single-host NumOfHosts equal to specified topology": {
+			// topology matches NumOfHosts, returns true
+			expectedNumOfHosts: 1,
+			expectedTopology:   "2x4",
+			expectedTPUChips:   resource.MustParse("8"),
+			workersMatch:       true,
+		},
+		"checkWorkersMatchTopology v5 multi-host NumOfHosts equal to specified topology": {
+			// topology matches NumOfHosts, returns true
+			expectedNumOfHosts: 2,
+			expectedTopology:   "2x4",
+			expectedTPUChips:   resource.MustParse("4"),
+			workersMatch:       true,
+		},
+	}
+
+	// validate checkWorkersMatchTopology returns true only when NumOfHosts == # TPU VMs specified by topology
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// set up worker group object for test
+			workerGroupSpec := testWorkerGroupSpec.DeepCopy()
+			workerGroupSpec.NumOfHosts = tc.expectedNumOfHosts
+			workerGroupSpec.Template.Spec.Containers[0].Resources.Limits["google.com/tpu"] = tc.expectedTPUChips
+			workerGroupSpec.Template.Spec.Containers[0].Resources.Requests["google.com/tpu"] = tc.expectedTPUChips
+			workerGroupSpec.Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"] = tc.expectedTopology
+			if tc.missingContainers {
+				workerGroupSpec.Template.Spec.Containers = nil
+			}
+
+			workersMatchTopology, err := checkWorkersMatchTopology(instanceName, namespaceStr, *workerGroupSpec)
+
+			if tc.expectedNumOfHosts == 0 || tc.missingContainers == true || tc.expectedTopology == "" {
+				assert.Equal(t, tc.expectedError, err)
+			}
+			assert.Equal(t, tc.workersMatch, workersMatchTopology)
+		})
+	}
 }
 
 func Test_ValidateRayCluster(t *testing.T) {
 	setupTest(t)
 
+	tests := map[string]struct {
+		rayCluster       *rayv1.RayCluster
+		numOfHosts       int32
+		expectedResponse *admissionv1.AdmissionResponse
+		expectedAllowed  bool
+		expectedResult   *metav1.Status
+	}{
+		"validateRayCluster no TPUs requested": {
+			// doesn't request TPUs, return true
+			rayCluster:      testRayClusterNoTPUs.DeepCopy(),
+			numOfHosts:      int32(1),
+			expectedAllowed: true,
+			expectedResult: &metav1.Status{
+				Status:  "Success",
+				Message: "",
+			},
+		},
+		"validateRayCluster worker group spec not compatible with gke-tpu-topology": {
+			// request TPUs, workers don't match topology, return false
+			rayCluster:      testRayClusterMultiHostTPU.DeepCopy(),
+			numOfHosts:      int32(1),
+			expectedAllowed: false,
+			expectedResult: &metav1.Status{
+				Status:  "Failure",
+				Message: "Number of workers in worker group not equal to specified topology",
+			},
+		},
+		"validateRayCluster valid RayCluster with TPU worker group": {
+			// request TPUs, workers match topology, return true
+			rayCluster:      testRayClusterMultiHostTPU.DeepCopy(),
+			numOfHosts:      int32(4),
+			expectedAllowed: true,
+			expectedResult: &metav1.Status{
+				Status:  "Success",
+				Message: "",
+			},
+		},
+	}
+
+	// validateRayCluster(admissionReview *admissionv1.AdmissionReview)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// set up admissionReview object
+			admissionReview := testAdmissionReview.DeepCopy()
+			admissionReview.Request.Kind.Kind = "RayCluster"
+			admissionReview.Request.Operation = "CREATE"
+			// set RayCluster worker group NumOfHosts
+			tc.rayCluster.Spec.WorkerGroupSpecs[0].NumOfHosts = tc.numOfHosts
+			jsonRayCluster, _ := json.Marshal(tc.rayCluster)
+			admissionReview.Request.Object.Raw = jsonRayCluster
+			admissionReview.Request.Object.Object = tc.rayCluster
+
+			// test validateRayCluster admissionResponse output
+			admissionResponse, _ := validateRayCluster(admissionReview)
+			assert.Equal(t, tc.expectedAllowed, admissionResponse.Allowed)
+			assert.Equal(t, tc.expectedResult.Status, admissionResponse.Result.Status)
+			assert.Equal(t, tc.expectedResult.Message, admissionResponse.Result.Message)
+		})
+	}
 }
 
 func Test_GetEnvironmentVariable(t *testing.T) {
 	setupTest(t)
 
-}
+	// initialize test container object
+	podContainer := testTPUWorker.Spec.Containers[0].DeepCopy()
+	workerID := corev1.EnvVar{
+		Name:  "TPU_WORKER_ID",
+		Value: "0",
+	}
+	workerName := corev1.EnvVar{
+		Name:  "TPU_NAME",
+		Value: fmt.Sprintf("%s-%d", groupNameStr, 0),
+	}
+	workerHostnames := corev1.EnvVar{
+		Name:  "TPU_WORKER_HOSTNAMES",
+		Value: fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 0, instanceName, headlessServiceSuffix),
+	}
+	podContainer.Env = []corev1.EnvVar{workerID, workerName, workerHostnames}
 
-func Test_ExtractPod(t *testing.T) {
-	setupTest(t)
+	tests := map[string]struct {
+		variableName  string
+		container     *corev1.Container
+		expectedValue string
+	}{
+		"getEnvironmentVariable TPU_WORKER_ID": {
+			// returns TPU_WORKER_ID env var value
+			variableName:  "TPU_WORKER_ID",
+			container:     podContainer,
+			expectedValue: "0",
+		},
+		"getEnvironmentVariable TPU_NAME": {
+			// returns TPU_NAME env var value
+			variableName:  "TPU_NAME",
+			container:     podContainer,
+			expectedValue: fmt.Sprintf("%s-%d", groupNameStr, 0),
+		},
+		"getEnvironmentVariable TPU_WORKER_HOSTNAMES": {
+			// returns TPU_WORKER_HOSTNAMES env var value
+			variableName:  "TPU_WORKER_HOSTNAMES",
+			container:     podContainer,
+			expectedValue: fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 0, instanceName, headlessServiceSuffix),
+		},
+	}
 
+	// validate getEnvironmentVariable returns correct env var value from Pod container
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			varValue := getEnvironmentVariable(tc.variableName, *tc.container)
+			assert.Equal(t, tc.expectedValue, varValue)
+		})
+	}
 }
 
 func Test_MutatePod(t *testing.T) {
 	setupTest(t)
 
+	tests := map[string]struct {
+		testPod              *corev1.Pod
+		numOfHosts           int32
+		missingClusterLabel  bool
+		missingContainers    bool
+		expectedTopology     string
+		expectedTPUChips     resource.Quantity
+		expectedWorkerID     string
+		expectedWorkerName   string
+		expectedHostnames    string
+		expectedReplicaLabel string
+		expectedError        error
+	}{
+		"mutatePod missing cluster label": {
+			// missing Ray cluster label - returns error
+			testPod:             testCPUWorker.DeepCopy(),
+			missingClusterLabel: true,
+			expectedError:       errors.New("Kuberay Pod missing RayCluster label"),
+		},
+		"mutatePod missing container": {
+			// missing containers - returns error
+			testPod:             testCPUWorker.DeepCopy(),
+			missingClusterLabel: false,
+			missingContainers:   true,
+			expectedError:       errors.New("Container path not specified"),
+		},
+		"mutatePod missing gke-tpu-topology nodeSelector": {
+			// requests TPUs, topology not specified - returns error
+			testPod:             testTPUWorker.DeepCopy(),
+			missingClusterLabel: false,
+			missingContainers:   false,
+			expectedTopology:    "",
+			expectedError:       errors.New("TPU topology not specified"),
+		},
+		"mutatePod in single-host TPU worker group": {
+			// requests TPUs, single-host - injects TPU_WORKER_ID, TPU_NAME and replicaIndex label
+			testPod:              testTPUWorker.DeepCopy(),
+			numOfHosts:           1,
+			expectedTopology:     "2x2x1",
+			expectedTPUChips:     resource.MustParse("4"),
+			expectedWorkerID:     "0",
+			expectedWorkerName:   fmt.Sprintf("%s-%d", groupNameStr, 0),
+			expectedReplicaLabel: fmt.Sprintf("%s-%d", groupNameStr, 0),
+		},
+		"mutatePod in multi-host TPU worker group": {
+			// requests TPUs, multi-host - injects hostname, subdomain, TPU_WORKER_ID, TPU_NAME,
+			// TPU_HOSTNAMES, a podAffinity field, and the replicaIndex label
+			testPod:            testTPUWorker.DeepCopy(),
+			numOfHosts:         4,
+			expectedTopology:   "2x2x4",
+			expectedTPUChips:   resource.MustParse("4"),
+			expectedWorkerID:   "0",
+			expectedWorkerName: fmt.Sprintf("%s-%d", groupNameStr, 0),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 0, instanceName, headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 1, instanceName, headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 2, instanceName, headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 3, instanceName, headlessServiceSuffix),
+			}, ","),
+			expectedReplicaLabel: fmt.Sprintf("%s-%d", groupNameStr, 0),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// save copy of sliceToWorkers
+			sliceToWorkersCopy := deepCopySliceToWorkers()
+			// set up Pod object
+			if tc.missingClusterLabel {
+				tc.testPod.Labels["ray.io/cluster"] = ""
+			}
+			if tc.missingContainers {
+				tc.testPod.Spec.Containers = nil
+			}
+			tc.testPod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"] = tc.expectedTopology
+
+			if tc.expectedTopology != "" {
+				tc.testPod.Spec.Containers[0].Resources.Limits["google.com/tpu"] = tc.expectedTPUChips
+				tc.testPod.Spec.Containers[0].Resources.Requests["google.com/tpu"] = tc.expectedTPUChips
+			}
+
+			// set up admissionReview object
+			admissionReview := testAdmissionReview.DeepCopy()
+			admissionReview.Request.Kind.Kind = "Pod"
+			admissionReview.Request.Operation = "CREATE"
+			jsonPod, _ := json.Marshal(tc.testPod)
+			admissionReview.Request.Object.Raw = jsonPod
+			admissionReview.Request.Object.Object = tc.testPod
+
+			admissionResponse, err := mutatePod(admissionReview)
+			if err != nil {
+				assert.Equal(t, tc.expectedError, err)
+			} else {
+				var patches []patch
+				json.Unmarshal(admissionResponse.Patch, &patches)
+
+				if tc.numOfHosts == 1 {
+					// single-host - patches should add replicaIndex label, TPU_WORKER_ID, and TPU_NAME
+					workerID := patches[1]
+					workerName := patches[2]
+					expectedIDPatch := []interface{}([]interface{}{map[string]interface{}{"name": "TPU_WORKER_ID", "value": tc.expectedWorkerID}})
+					expectedNamePatch := []interface{}([]interface{}{map[string]interface{}{"name": "TPU_NAME", "value": tc.expectedWorkerName}})
+					assert.Equal(t, tc.expectedReplicaLabel, patches[0]["value"])
+					assert.Equal(t, expectedIDPatch, workerID["value"])
+					assert.Equal(t, expectedNamePatch, workerName["value"])
+				}
+				if tc.numOfHosts > 1 {
+					// multi-host - patches should add replicaIndex, hostname, podAffinity, subdomain,
+					// TPU_WORKER_HOSTNAMES, TPU_WORKER_ID, and TPU_NAME
+					expectedIDPatch := []interface{}([]interface{}{map[string]interface{}{"name": "TPU_WORKER_ID", "value": tc.expectedWorkerID}})
+					expectedNamePatch := []interface{}([]interface{}{map[string]interface{}{"name": "TPU_NAME", "value": tc.expectedWorkerName}})
+					expectedHostnamesPatch := []interface{}([]interface{}{map[string]interface{}{"name": "TPU_WORKER_HOSTNAMES", "value": tc.expectedHostnames}})
+					assert.Equal(t, tc.expectedReplicaLabel, patches[0]["value"])
+					assert.Equal(t, fmt.Sprintf("%s-%s", tc.expectedReplicaLabel, tc.expectedWorkerID), patches[1]["value"])
+					assert.Equal(t, fmt.Sprintf("%s-%s", instanceName, headlessServiceSuffix), patches[3]["value"])
+					assert.Equal(t, expectedHostnamesPatch, patches[4]["value"])
+					assert.Equal(t, expectedIDPatch, patches[5]["value"])
+					assert.Equal(t, expectedNamePatch, patches[6]["value"])
+				}
+				sliceToWorkers = sliceToWorkersCopy
+			}
+		})
+	}
 }
 
 func Test_DeletePod(t *testing.T) {
 	setupTest(t)
 
-	// delete a pod -> isCreated should be set to false after
+	tests := map[string]struct {
+		testPod             *corev1.Pod
+		testPodSlice        slice
+		testWorker          worker
+		testReplicaLabel    string
+		missingClusterLabel bool
+		missingGroupLabel   bool
+		missingContainers   bool
+		missingTPUWorkerID  bool
+		expectedAllowed     bool
+		expectedResult      *metav1.Status
+		expectedError       error
+	}{
+		"deletePod missing cluster label": {
+			// missing Ray cluster label - returns error
+			testPod:             testTPUWorker.DeepCopy(),
+			missingClusterLabel: true,
+			expectedError:       errors.New("Kuberay Pod missing RayCluster label"),
+		},
+		"deletePod missing group label": {
+			// missing Ray worker group label - returns error
+			testPod:           testTPUWorker.DeepCopy(),
+			missingGroupLabel: true,
+			expectedError:     errors.New("Kuberay Pod missing Ray group label"),
+		},
+		"deletePod missing containers": {
+			// TPU Pod missing containers - returns error
+			testPod:           testTPUWorker.DeepCopy(),
+			testReplicaLabel:  fmt.Sprintf("%s-%d", groupNameStr, 0),
+			missingContainers: true,
+			expectedError:     errors.New("Pod spec missing containers"),
+		},
+		"deletePod missing TPU_WORKER_ID": {
+			// TPU Pod missing TPU_WORKER_ID env var - returns error (since this should be set)
+			testPod:            testTPUWorker.DeepCopy(),
+			testReplicaLabel:   fmt.Sprintf("%s-%d", groupNameStr, 0),
+			missingTPUWorkerID: true,
+			expectedError:      errors.New("Unable to extract TPU_WORKER_ID"),
+		},
+		"deletePod non-TPU pod": {
+			// missing replicaIndex label - pass-through (Pod is not from a TPU worker group)
+			testPod:          testCPUWorker.DeepCopy(),
+			testReplicaLabel: "",
+			expectedAllowed:  true,
+			expectedResult: &metav1.Status{
+				Status:  "Success",
+				Message: "",
+			},
+		},
+		"deletePod TPU single-host pod": {
+			// Pod is part of a single-host TPU worker group, set its worker struct isCreated value to false
+			testPod:          testTPUWorker.DeepCopy(),
+			testPodSlice:     slice{instanceName, groupNameStr, namespaceStr, 0, 1},
+			testWorker:       worker{0, 0, true},
+			testReplicaLabel: fmt.Sprintf("%s-%d", groupNameStr, 0),
+			expectedAllowed:  true,
+			expectedResult: &metav1.Status{
+				Status:  "Success",
+				Message: "",
+			},
+		},
+		"deletePod TPU multi-host pod": {
+			// Pod is part of a multi-host TPU worker group, set its worker struct isCreated value to false
+			testPod:          testTPUWorker.DeepCopy(),
+			testPodSlice:     slice{instanceName, groupNameStr, namespaceStr, 1, 4},
+			testWorker:       worker{1, 1, true},
+			testReplicaLabel: fmt.Sprintf("%s-%d", groupNameStr, 1),
+			expectedAllowed:  true,
+			expectedResult: &metav1.Status{
+				Status:  "Success",
+				Message: "",
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// save copy of sliceToWorkers
+			sliceToWorkersCopy := deepCopySliceToWorkers()
+			sliceToWorkers[tc.testPodSlice] = []worker{tc.testWorker}
+
+			// set up Pod object
+			tc.testPod.Labels["replicaIndex"] = tc.testReplicaLabel
+			if tc.missingClusterLabel {
+				tc.testPod.Labels["ray.io/cluster"] = ""
+			}
+			if tc.missingGroupLabel {
+				tc.testPod.Labels["ray.io/group"] = ""
+			}
+			if tc.missingContainers {
+				tc.testPod.Spec.Containers = nil
+			} else if !tc.missingTPUWorkerID {
+				// add TPU_WORKER_ID
+				tpuWorkerID := corev1.EnvVar{
+					Name:  "TPU_WORKER_ID",
+					Value: fmt.Sprint(tc.testWorker.workerIndex),
+				}
+				tc.testPod.Spec.Containers[0].Env = append(tc.testPod.Spec.Containers[0].Env, tpuWorkerID)
+			}
+
+			// set up admissionReview object
+			admissionReview := testAdmissionReview.DeepCopy()
+			admissionReview.Request.Kind.Kind = "Pod"
+			admissionReview.Request.Operation = "DELETE"
+			jsonPod, _ := json.Marshal(tc.testPod)
+			admissionReview.Request.OldObject.Raw = jsonPod
+			admissionReview.Request.OldObject.Object = tc.testPod
+
+			admissionResponse, err := deletePod(admissionReview)
+			if err != nil {
+				assert.Equal(t, tc.expectedError, err)
+			} else {
+				var patches []patch
+				json.Unmarshal(admissionResponse.Patch, &patches)
+
+				workerIsCreated := sliceToWorkers[tc.testPodSlice][0].isCreated
+				assert.False(t, workerIsCreated)
+				assert.Equal(t, tc.expectedAllowed, admissionResponse.Allowed)
+				assert.Equal(t, tc.expectedResult.Status, admissionResponse.Result.Status)
+				assert.Equal(t, tc.expectedResult.Message, admissionResponse.Result.Message)
+
+				sliceToWorkers = sliceToWorkersCopy
+			}
+		})
+	}
 }
