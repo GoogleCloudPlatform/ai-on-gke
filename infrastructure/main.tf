@@ -20,13 +20,8 @@
 locals {
   gpu_l4_t4_location = {
     asia-east1      = "asia-east1-a,asia-east1-c"
-    asia-northeast1 = "asia-northeast1-a,asia-northeast1-c"
-    asia-northeast3 = "asia-northeast3-b"
-    asia-south1     = "asia-south1-a,asia-south1-b"
     asia-southeast1 = "asia-southeast1-a,asia-southeast1-b,asia-southeast1-c"
     europe-west1    = "europe-west1-b,europe-west1-c"
-    europe-west2    = "europe-west2-a,europe-west2-b"
-    europe-west3    = "europe-west3-b"
     europe-west4    = "europe-west4-a,europe-west4-b,europe-west4-c"
     us-central1     = "us-central1-a,us-central1-b,us-central1-c"
     us-east1        = "us-east1-c,us-east1-d"
