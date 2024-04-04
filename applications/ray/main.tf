@@ -54,7 +54,7 @@ module "project-services" {
     "servicenetworking.googleapis.com",
     "serviceusage.googleapis.com",
     "sourcerepo.googleapis.com",
-    (var.ray_dashboard_add_auth ? ["iap.googleapis.com"] : [])
+    "iap.googleapis.com"
   ])
 }
 
@@ -189,6 +189,7 @@ module "kuberay-cluster" {
   grafana_host              = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
   network_policy_allow_cidr = var.kuberay_network_policy_allow_cidr
   disable_network_policy    = var.disable_ray_cluster_network_policy
+  additional_labels         = var.additional_labels
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth
@@ -202,9 +203,8 @@ module "kuberay-cluster" {
   k8s_backend_config_name  = var.ray_dashboard_k8s_backend_config_name
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
-  members_allowlist        = var.ray_dashboard_members_allowlist
-
-  depends_on = [module.gcs, module.kuberay-operator]
+  members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
+  depends_on               = [module.gcs, module.kuberay-operator]
 }
 
 

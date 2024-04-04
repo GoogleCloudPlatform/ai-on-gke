@@ -20,6 +20,9 @@ spec:
       - name: acknowledge
         varType: bool
         required: true
+      - name: solution_deployment_view
+        varType: bool
+        required: true
       - name: additional_labels
         description: Additional labels to add to Kubernetes resources.
         varType: string
@@ -27,14 +30,13 @@ spec:
       - name: autopilot_cluster
         varType: string
         defaultValue: false
-      - name: cloudsql_instance
-        description: Cloud SQL pgvector instance name to store generated vector embeddings for the dataset
+      - name: iap_consent_info
+        description: Configure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
+        varType: bool
+        defaultValue: false
+      - name: cluster_name
         varType: string
-        defaultValue: pgvector-instance
-      - name: cloudsql_instance_region
-        description: GCP region for CloudSQL instance
-        varType: string
-        defaultValue: ""
+        defaultValue: "ai-on-gke"
       - name: cluster_location
         varType: string
         required: true
@@ -42,9 +44,6 @@ spec:
         description: "require to use connectgateway for private clusters, default: cluster_name"
         varType: string
         defaultValue: ""
-      - name: cluster_name
-        varType: string
-        defaultValue: "ai-on-gke"
       - name: create_brand
         description: Create Brand OAuth Screen
         varType: bool
@@ -81,7 +80,7 @@ spec:
         varType: bool
         defaultValue: false
       - name: frontend_add_auth
-        description: Enable iap authentication on frontend
+        description: Allows you to host your chat application at a custom domain and grant IAM access to users/groups.
         varType: bool
         defaultValue: false
       - name: frontend_client_id
@@ -93,9 +92,9 @@ spec:
         varType: string
         defaultValue: ""
       - name: frontend_domain
-        description: Domain used for application and SSL certificate. 
+        description: A domain to host your chat application.
         varType: string
-        defaultValue: "frontend.example.com"
+        defaultValue: "<your chat app domain here>"
       - name: frontend_k8s_backend_config_name
         description: Name of the Kubernetes Backend Config
         varType: string
@@ -122,16 +121,24 @@ spec:
       - name: frontend_members_allowlist
         description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
-        defaultValue: ""
+        defaultValue: "user:<your-email-here>"
       - name: gcs_bucket
-        description: Bucket name to store the dataset. The bucket name must be globally unique across google cloud projects
+        description: Create or choose a bucket to store the dataset.
         varType: string
         required: true
+      - name: cloudsql_instance
+        description: Cloud SQL <a href="https://github.com/pgvector/pgvector">pgvector</a> instance name to store generated vector embeddings for the dataset.
+        varType: string
+        defaultValue: pgvector-instance
+      - name: cloudsql_instance_region
+        description: GCP region for CloudSQL instance
+        varType: string
+        defaultValue: ""
       - name: goog_cm_deployment_name
         varType: string
         defaultValue: ""
       - name: jupyter_add_auth
-        description: Enable iap authentication on jupyterhub
+        description: Allows you to host JupyterHub at a custom domain and grant IAM access to users/groups.
         varType: bool
         defaultValue: false
       - name: jupyter_client_id
@@ -143,9 +150,9 @@ spec:
         varType: string
         defaultValue: ""
       - name: jupyter_domain
-        description: Domain used for application and SSL certificate.
+        description: A domain to host your JupyterHub application.
         varType: string
-        defaultValue: "jupyter.example.com"
+        defaultValue: "<your JupyterHub domain here>"
       - name: jupyter_k8s_backend_config_name
         description: Name of the Kubernetes Backend Config
         varType: string
@@ -172,7 +179,7 @@ spec:
       - name: jupyter_members_allowlist
         description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
-        defaultValue: ""
+        defaultValue: "user:<your-email-here>"
       - name: jupyter_service_account
         description: Google Cloud IAM service account for authenticating with GCP services
         varType: string
@@ -197,7 +204,7 @@ spec:
         varType: string
         defaultValue: rag-sa
       - name: ray_dashboard_add_auth
-        description: Enable iap authentication on frontend
+        description: Allows you to host the Ray dashboard at a custom domain and grant IAM access to users/groups.
         varType: bool
         defaultValue: false
       - name: ray_dashboard_client_id
@@ -209,9 +216,9 @@ spec:
         varType: string
         defaultValue: ""
       - name: ray_dashboard_domain
-        description: Domain used for application and SSL certificate.
+        description: A domain to host your Ray dashboard.
         varType: string
-        defaultValue: "ray.example.com"
+        defaultValue: "<your Ray Dashboard domain here>"
       - name: ray_dashboard_k8s_backend_config_name
         description: Name of the Backend Config on GCP
         varType: string
@@ -233,7 +240,7 @@ spec:
       - name: ray_dashboard_members_allowlist
         description: "For example - user:example@google.com,serviceAccount:serviceAccount@google.com,group:group@google.com,domain:google.com"
         varType: string
-        defaultValue: ""
+        defaultValue: "user:<your-email-here>"
       - name: ray_service_account
         description: Google Cloud IAM service account for authenticating with GCP services
         varType: string
