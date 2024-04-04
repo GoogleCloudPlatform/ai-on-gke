@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-training-job
+spec:
+  template:
+    metadata:
+      name: mnist
+      annotations:
+        gke-gcsfuse/volumes: "true"
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 2x2  # target topology
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+      containers:
+      - name: tensorflow
+        image: tensorflow/tensorflow:2.14.0
+        securityContext:
+          privileged: true
+        command: ["/bin/bash", "-c", "--"]
+        args: ["cd /data/tensorflow-mnist-example; pip3 install -r requirements.txt; python3 tensorflow_mnist_train_distributed.py"]
+        resources:
+          requests:
+            google.com/tpu: "4"  # TPU chip request
+          limits:
+            google.com/tpu: "4"  # TPU chip request
+        volumeMounts:
+        - name: gcs-fuse-csi-vol
+          mountPath: /data
+          readOnly: false
+      serviceAccountName: $K8S_SA_NAME
+      volumes:
+      - name: gcs-fuse-csi-vol
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          readOnly: false
+          volumeAttributes:
+            bucketName: $BUCKET_NAME
+            mountOptions: "implicit-dirs"
+      restartPolicy: "Never"
