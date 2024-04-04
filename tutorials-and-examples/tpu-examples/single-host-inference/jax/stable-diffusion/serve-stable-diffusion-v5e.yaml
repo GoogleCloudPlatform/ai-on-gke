@@ -20,7 +20,7 @@ spec:
   selector:
     matchLabels:
       app: tf-stable-diffusion-server
-  replicas: 3  # number of nodes in node-pool
+  replicas: 1  # number of nodes in node-pool
   template:
     metadata:
       annotations:
@@ -33,7 +33,7 @@ spec:
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       containers:
       - name: serve-stable-diffusion
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/tf-serving-tpu:2.13.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/tf-serving-tpu:nightly
         securityContext:
           privileged: true
         env:
