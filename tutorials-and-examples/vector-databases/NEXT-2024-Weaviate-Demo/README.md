@@ -3,15 +3,15 @@
 This demo application creates a product catalog that is stored in a [Weaviate](https://github.com/weaviate/weaviate) vector database and vectorized for semantic search. It is also integrated with the [Gemini Pro Vision](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://console.cloud.google.com/vertex-ai/publishers/google/model-garden/gemini-pro-vision) API to automatically create product descriptions. The App is built with the NextJS framework. 
 
 
-![Next Demo App](https://github.com/bkauf/next-store/blob/main/next-demo.png)
+![Next Demo App](next-demo.png)
 
 **Product Description Generation and Semantic Search**
 
-![Next Demo App](https://github.com/bkauf/next-store/blob/main/product-n-search.png)
+![Next Demo App](product-n-search.png)
 
 **System Architecture**
 
-![Next Demo Achitecture](https://github.com/bkauf/next-store/blob/main/diagram.png)
+![Next Demo Achitecture](diagram.png)
 
 ## To Deploy this demo...
 
