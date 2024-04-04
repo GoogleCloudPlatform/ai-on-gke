@@ -88,6 +88,16 @@ resource "kubernetes_deployment" "inference_deployment" {
           }
 
           env {
+            name = "MAX_INPUT_LENGTH"
+            value = 3072
+          }
+
+          env {
+            name = "MAX_TOTAL_TOKENS"
+            value = 4096
+          }
+
+          env {
             name  = "NUM_SHARD"
             value = "2"
           }
