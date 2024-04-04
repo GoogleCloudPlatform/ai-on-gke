@@ -31,7 +31,7 @@ spec:
     - -c
     - |
       cd /tmp/
-      git clone -b export-fix https://github.com/xiangshen-dk/ai-on-gke.git
+      git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git
       cp -r ai-on-gke/tutorials-and-examples/tpu-examples/single-host-inference/jax .
       echo got jax stable-diffusion resources
   - name: export-stable-diffusion
