@@ -7,7 +7,7 @@ This demo application creates a product catalog that is stored in a [Weaviate](h
 
 **Product Description Generation and Semantic Search**
 
-![Next Demo App](https://github.com/bkauf/next-store/blob/main/product-and-search.png)
+![Next Demo App](https://github.com/bkauf/next-store/blob/main/product-n-search.png)
 
 **System Architecture**
 
