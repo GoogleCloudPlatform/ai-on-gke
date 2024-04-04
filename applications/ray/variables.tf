@@ -294,3 +294,10 @@ variable "disable_ray_cluster_network_policy" {
   type        = bool
   default     = false
 }
+
+variable "additional_labels" {
+  // string is used instead of map(string) since blueprint metadata does not support maps.
+  type        = string
+  description = "Additional labels to add to Kubernetes resources."
+  default     = "created-by=ai-on-gke,ai.gke.io=ray"
+}

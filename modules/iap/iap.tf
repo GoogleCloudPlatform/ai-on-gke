@@ -17,6 +17,22 @@ locals {
   domain = startswith(var.domain, "{IP_ADDRESS}.") ? "${google_compute_global_address.ip_address.address}.${trimprefix(var.domain, "{IP_ADDRESS}.")}" : var.domain
 }
 
+resource "terraform_data" "domain_validation" {
+  input = timestamp()
+
+  lifecycle {
+    precondition {
+      condition     = var.domain != ""
+      error_message = "IAP configuration requires domain name, Please provide a valid domain name for ${var.app_name} application."
+    }
+
+    precondition {
+      condition     = length(var.members_allowlist) != 0
+      error_message = "IAP configuration requires allowlisting users. Please provide a valid allowlist for ${var.app_name} application."
+    }
+  }
+}
+
 data "google_project" "project" {
   project_id = var.project_id
 }
