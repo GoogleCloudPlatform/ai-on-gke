@@ -170,13 +170,9 @@ all_node_pools_oauth_scopes = [
 ]
 
 
-cluster_labels = {
-  "created-by" = "ai-on-gke"
-}
+cluster_labels = "created-by=ai-on-gke"
 
-all_node_pools_labels = {
-  "created-by" = "ai-on-gke"
-}
+all_node_pools_labels = "created-by=ai-on-gke"
 
 all_node_pools_metadata = {
   disable-legacy-endpoints = "true"

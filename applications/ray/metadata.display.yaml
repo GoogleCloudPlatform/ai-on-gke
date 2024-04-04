@@ -32,6 +32,11 @@ spec:
           title: GKE Cluster Type
           section: cluster_details
           invisible: true
+        cluster_labels:
+          name: cluster_labels
+          title: GKE Cluster labels
+          invisible: true
+          section: cluster_details
         cluster_location:
           name: cluster_location
           title: Cluster Location

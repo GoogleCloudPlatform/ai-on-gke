@@ -64,6 +64,7 @@ module "infra" {
 
   project_id        = var.project_id
   cluster_name      = local.cluster_name
+  cluster_labels    = var.cluster_labels
   cluster_location  = var.cluster_location
   autopilot_cluster = var.autopilot_cluster
   private_cluster   = var.private_cluster

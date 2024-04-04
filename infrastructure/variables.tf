@@ -86,11 +86,9 @@ variable "cluster_name" {
 }
 
 variable "cluster_labels" {
-  type        = map(any)
+  type        = string
   description = "GKE cluster labels"
-  default = {
-    "created-by" = "ai-on-gke"
-  }
+  default     = "created-by=ai-on-gke"
 }
 
 variable "kubernetes_version" {
@@ -152,10 +150,9 @@ variable "all_node_pools_oauth_scopes" {
   ]
 }
 variable "all_node_pools_labels" {
-  type = map(string)
-  default = {
-    "created-by" = "ai-on-gke"
-  }
+  type        = string
+  description = "GKE node pool labels"
+  default     = "created-by=ai-on-gke"
 }
 variable "all_node_pools_metadata" {
   type = map(string)

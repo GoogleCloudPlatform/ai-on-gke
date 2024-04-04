@@ -12,13 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+locals {
+  cluster_labels = tomap({
+    for item in split(",", var.cluster_labels) :
+    split("=", item)[0] => split("=", item)[1]
+  })
+}
+
 module "gke" {
   source                  = "terraform-google-modules/kubernetes-engine/google//modules/beta-autopilot-private-cluster"
   version                 = "29.0.0"
   project_id              = var.project_id
   regional                = var.cluster_regional
   name                    = var.cluster_name
-  cluster_resource_labels = var.cluster_labels
+  cluster_resource_labels = local.cluster_labels
   kubernetes_version      = var.kubernetes_version
   release_channel         = var.release_channel
   region                  = var.cluster_region

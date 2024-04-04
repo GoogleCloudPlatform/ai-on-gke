@@ -42,6 +42,10 @@ spec:
         description: "require to use connectgateway for private clusters, default: cluster_name"
         varType: string
         defaultValue: ""
+      - name: cluster_labels
+        description: GKE cluster labels.
+        varType: string
+        defaultValue: "created-by=gke-ai-quick-start-solutions"
       - name: cluster_name
         varType: string
         defaultValue: "ai-on-gke"

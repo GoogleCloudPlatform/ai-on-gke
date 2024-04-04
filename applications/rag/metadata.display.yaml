@@ -46,6 +46,11 @@ spec:
           title: Cloudsql Instance Region
           invisible: true
           section: rag
+        cluster_labels:
+          name: cluster_labels
+          title: GKE Cluster labels
+          invisible: true
+          section: cluster_details
         cluster_location:
           name: cluster_location
           title: Cluster Location
