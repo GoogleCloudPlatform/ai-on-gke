@@ -51,7 +51,7 @@ module "project-services" {
     "servicenetworking.googleapis.com",
     "serviceusage.googleapis.com",
     "sourcerepo.googleapis.com",
-    (var.add_auth ? ["iap.googleapis.com"] : [])
+    "iap.googleapis.com"
   ])
 }
 
