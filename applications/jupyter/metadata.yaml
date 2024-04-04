@@ -51,6 +51,10 @@ spec:
         description: Client ID used for enabling IAP
         varType: string
         defaultValue: ""
+      - name: cluster_labels
+        description: GKE cluster labels.
+        varType: string
+        defaultValue: "created-by=gke-ai-quick-start-solutions"
       - name: client_secret
         description: Client secret used for enabling IAP
         varType: string

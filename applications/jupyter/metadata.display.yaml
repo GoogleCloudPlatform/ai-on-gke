@@ -62,6 +62,11 @@ spec:
           title: Client Secret
           invisible: true
           section: iap_auth
+        cluster_labels:
+          name: cluster_labels
+          title: GKE Cluster labels
+          invisible: true
+          section: cluster_details
         cluster_location:
           name: cluster_location
           title: Cluster Location

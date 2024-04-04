@@ -21,6 +21,12 @@ variable "cluster_name" {
   type = string
 }
 
+variable "cluster_labels" {
+  type        = string
+  description = "GKE cluster labels"
+  default     = "created-by=ai-on-gke"
+}
+
 variable "cluster_location" {
   type = string
 }

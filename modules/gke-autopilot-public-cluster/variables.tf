@@ -42,8 +42,9 @@ variable "cluster_name" {
 }
 
 variable "cluster_labels" {
-  type        = map(any)
+  type        = string
   description = "GKE cluster labels"
+  default     = "created-by=ai-on-gke"
 }
 
 variable "kubernetes_version" {

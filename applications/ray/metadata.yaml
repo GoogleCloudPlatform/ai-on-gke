@@ -38,6 +38,10 @@ spec:
       - name: cluster_name
         varType: string
         defaultValue: "ai-on-gke"
+      - name: cluster_labels
+        description: GKE cluster labels.
+        varType: string
+        defaultValue: "created-by=gke-ai-quick-start-solutions"
       - name: create_brand
         description: Create Brand OAuth Screen
         varType: bool

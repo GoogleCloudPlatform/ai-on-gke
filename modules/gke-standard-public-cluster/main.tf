@@ -14,6 +14,14 @@
 
 locals {
   node_pools = concat((var.enable_gpu ? var.gpu_pools : []), (var.enable_tpu ? var.tpu_pools : []), var.cpu_pools)
+  cluster_labels = tomap({
+    for item in split(",", var.cluster_labels) :
+    split("=", item)[0] => split("=", item)[1]
+  })
+  all_node_pools_labels = tomap({
+    for item in split(",", var.all_node_pools_labels) :
+    split("=", item)[0] => split("=", item)[1]
+  })
 }
 
 module "gke" {
@@ -22,7 +30,7 @@ module "gke" {
   project_id                           = var.project_id
   regional                             = var.cluster_regional
   name                                 = var.cluster_name
-  cluster_resource_labels              = var.cluster_labels
+  cluster_resource_labels              = local.cluster_labels
   region                               = var.cluster_region
   kubernetes_version                   = var.kubernetes_version
   release_channel                      = var.release_channel
@@ -47,7 +55,7 @@ module "gke" {
   }
 
   node_pools_labels = {
-    all = var.all_node_pools_labels
+    all = local.all_node_pools_labels
   }
 
   node_pools_metadata = {

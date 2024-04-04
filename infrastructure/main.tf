@@ -78,6 +78,14 @@ locals {
   zone = length(split("-", var.cluster_location)) > 2 ? split(",", var.cluster_location) : split(",", local.gpu_l4_t4_location[local.region])
   # Update gpu_pools with node_locations according to region and zone gpu availibility, if not provided
   gpu_pools = [for elm in var.gpu_pools : (local.regional && contains(keys(local.gpu_l4_t4_location), local.region) && elm["node_locations"] == "") ? merge(elm, { "node_locations" : local.gpu_l4_t4_location[local.region] }) : elm]
+  cluster_labels = tomap({
+    for item in split(",", var.cluster_labels) :
+    split("=", item)[0] => split("=", item)[1]
+  })
+  all_node_pools_labels = tomap({
+    for item in split(",", var.all_node_pools_labels) :
+    split("=", item)[0] => split("=", item)[1]
+  })
 }
 
 
@@ -96,7 +104,7 @@ module "public-gke-standard-cluster" {
   cluster_region                       = local.region
   cluster_zones                        = local.zone
   cluster_name                         = var.cluster_name
-  cluster_labels                       = var.cluster_labels
+  cluster_labels                       = local.cluster_labels
   kubernetes_version                   = var.kubernetes_version
   release_channel                      = var.release_channel
   ip_range_pods                        = var.ip_range_pods
@@ -113,7 +121,7 @@ module "public-gke-standard-cluster" {
   enable_tpu                  = var.enable_tpu
   tpu_pools                   = var.tpu_pools
   all_node_pools_oauth_scopes = var.all_node_pools_oauth_scopes
-  all_node_pools_labels       = var.all_node_pools_labels
+  all_node_pools_labels       = local.all_node_pools_labels
   all_node_pools_metadata     = var.all_node_pools_metadata
   all_node_pools_tags         = var.all_node_pools_tags
   depends_on                  = [module.custom-network]
@@ -134,7 +142,7 @@ module "public-gke-autopilot-cluster" {
   cluster_region             = local.region
   cluster_zones              = local.zone
   cluster_name               = var.cluster_name
-  cluster_labels             = var.cluster_labels
+  cluster_labels             = local.cluster_labels
   kubernetes_version         = var.kubernetes_version
   release_channel            = var.release_channel
   ip_range_pods              = var.ip_range_pods
@@ -160,7 +168,7 @@ module "private-gke-standard-cluster" {
   cluster_region                       = local.region
   cluster_zones                        = local.zone
   cluster_name                         = var.cluster_name
-  cluster_labels                       = var.cluster_labels
+  cluster_labels                       = local.cluster_labels
   kubernetes_version                   = var.kubernetes_version
   release_channel                      = var.release_channel
   ip_range_pods                        = var.ip_range_pods
@@ -178,7 +186,7 @@ module "private-gke-standard-cluster" {
   enable_tpu                  = var.enable_tpu
   tpu_pools                   = var.tpu_pools
   all_node_pools_oauth_scopes = var.all_node_pools_oauth_scopes
-  all_node_pools_labels       = var.all_node_pools_labels
+  all_node_pools_labels       = local.all_node_pools_labels
   all_node_pools_metadata     = var.all_node_pools_metadata
   all_node_pools_tags         = var.all_node_pools_tags
   depends_on                  = [module.custom-network]
@@ -199,7 +207,7 @@ module "private-gke-autopilot-cluster" {
   cluster_region             = local.region
   cluster_zones              = local.zone
   cluster_name               = var.cluster_name
-  cluster_labels             = var.cluster_labels
+  cluster_labels             = local.cluster_labels
   kubernetes_version         = var.kubernetes_version
   release_channel            = var.release_channel
   ip_range_pods              = var.ip_range_pods

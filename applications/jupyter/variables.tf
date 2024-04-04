@@ -38,6 +38,12 @@ variable "additional_labels" {
   default     = "created-by=ai-on-gke,ai.gke.io=jupyter"
 }
 
+variable "cluster_labels" {
+  type        = string
+  description = "GKE cluster labels"
+  default     = "created-by=ai-on-gke"
+}
+
 variable "gcs_bucket" {
   type        = string
   description = "Bucket name to store the dataset"
