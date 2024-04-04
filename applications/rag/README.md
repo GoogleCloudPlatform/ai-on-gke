@@ -193,13 +193,17 @@ Connect to the GKE cluster:
 gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_LOCATION}
 ```
 
-1. Troubleshoot Ray job failures: 
+1. Troubleshoot JupyterHub job failures:
+    - If the JupyterHub job fails to start the proxy with error code 599, it is likely an known issue with Cloud DNS, which occurs when a cluster is quickly deleted and recreated with the same name.
+    - Recreate the cluster with a different name or wait several minutes after running `terraform destroy` before running `terraform apply`.
+
+2. Troubleshoot Ray job failures: 
     - If the Ray actors fail to be scheduled, it could be due to a stockout or quota issue.
         - Run `kubectl get pods -n ${NAMESPACE} -l app.kubernetes.io/name=kuberay`. There should be a Ray head and Ray worker pod in `Running` state. If your ray pods aren't running, it's likely due to quota or stockout issues. Check that your project and selected `cluster_location` have L4 GPU capacity.
     - Often, retrying the Ray job submission (the last cell of the notebook) helps.
     - The Ray job may take 15-20 minutes to run the first time due to environment setup.
 
-2. Troubleshoot IAP login issues:
+3. Troubleshoot IAP login issues:
     - Verify the cert is Active:
         - For JupyterHub `kubectl get managedcertificates jupyter-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
         - For the frontend: `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
@@ -209,7 +213,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
     - Org error:
         - The [OAuth Consent Screen](https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent) has `User type` set to `Internal` by default, which means principals external to the org your project is in cannot log in. To add external principals, change `User type` to `External`.
 
-3. Troubleshoot `terraform apply` failures:
+4. Troubleshoot `terraform apply` failures:
     - Inference server (`mistral`) fails to deploy:
         - This usually indicates a stockout/quota issue. Verify your project and chosen `cluster_location` have L4 capacity.
     - GCS bucket already exists:
@@ -217,6 +221,6 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
     - Cloud SQL instance already exists:
         - Ensure the `cloudsql_instance` name doesn't already exist in your project.
 
-4. Troubleshoot `terraform destroy` failures:
+5. Troubleshoot `terraform destroy` failures:
     - Network deletion issue:
         - `terraform destroy` fails to delete the network due to a known issue in the GCP provider. For now, the workaround is to manually delete it.
