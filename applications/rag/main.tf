@@ -56,7 +56,7 @@ module "project-services" {
     "serviceusage.googleapis.com",
     "sourcerepo.googleapis.com",
     "sqladmin.googleapis.com",
-    (var.frontend_add_auth || var.jupyter_add_auth ? ["iap.googleapis.com"] : [])
+    "iap.googleapis.com"
   ])
 }
 
@@ -255,7 +255,7 @@ module "kuberay-cluster" {
   k8s_backend_config_name  = var.ray_dashboard_k8s_backend_config_name
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
-  members_allowlist        = var.ray_dashboard_members_allowlist
+  members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
 }
 
 module "kuberay-monitoring" {

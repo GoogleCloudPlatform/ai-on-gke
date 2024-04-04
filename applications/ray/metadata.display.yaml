@@ -18,11 +18,10 @@ spec:
           name: acknowledge
           title: Check to confirm you enabled Google APIs for your project with this command.
           section: acknowledge
-          subtext: <p>
-                    <code>gcloud services enable &bsol;</br>
-                    serviceusage.googleapis.com &bsol;</br>
-                    cloudresourcemanager.googleapis.com</code>
-                   </p>
+          subtext: |
+                  <pre>
+                    <code style="background: #f4f4f4;border: 1px solid #ddd; border-left: 3px solid #3367d6; color: #6d6868; font-size: 12px; max-width: 100%; padding: 0.5em 0.5em; display: inline; line-height: 45px;">gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com</code>
+                  </pre>
           enumValueLabels:
             - label: Confirm that all prerequisites have been met.
               value: "true"
@@ -227,10 +226,10 @@ spec:
           title: Required configuration
         - name: iap_auth
           title: Optional authentication with Identity-Aware Proxy
-          subtext: With <a href="https://cloud.google.com/iap/docs/enabling-kubernetes-howto"><i>IAP authentication</i></a>, you can control user access to the <a href="https://docs.ray.io/en/latest/ray-observability/getting-started.html"><i>Ray dashboard</i></a>. To use IAP, you will need to do the following:</br>
+          subtext: With <a href="https://cloud.google.com/iap/docs/enabling-kubernetes-howto"><i>IAP authentication</i></a>, you can control user access to the <a href="https://docs.ray.io/en/latest/ray-observability/getting-started.html"><i>Ray Dashboard</i></a>. To use IAP, you will need to do the following:</br>
                   <p>
-                  &emsp;&emsp;&#45; Identify a domain for the Ray dashboard, and</br>
-                  &emsp;&emsp;&#45; Create <a href="https://cloud.google.com/dns/docs/records#add_a_record"<i>DNS A records</i></a> for the domain after the applicatio is deployed.
+                  &emsp;&emsp;&#x2022; Identify a domain for the Ray dashboard, and</br>
+                  &emsp;&emsp;&#x2022; Create <a href="https://cloud.google.com/dns/docs/records#add_a_record"<i>DNS A records</i></a> for the domain after the application is deployed.
                   </p>
                   Without IAP, users will need to access the GKE cluster and use port-forward to connect to the Ray dashboard.
     runtime:
@@ -245,8 +244,8 @@ spec:
             </p>
             <p>
             2&#41; If IAP is enabled, click the <b>Launch Ray Dashboard</b> button and log in with your organization's credentials. Troubleshooting access issues:</br>
-            &emsp;&#45; SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</br>
-            &emsp;&#45; If you're unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>ray-cluster-kuberay-head-svc</code> service and add the user with the role <b>IAP-secured Web App User</b>.
+            &emsp;&#x2022; SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</br>
+            &emsp;&#x2022; If you're unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <b>ray-cluster-kuberay-head-svc</b> service and add the user with the role <b>IAP-secured Web App User</b>.
             </p>
       outputs:
         kubernetes_namespace: {}
