@@ -248,7 +248,7 @@ module "jupyterhub" {
   domain                   = var.jupyter_domain
   members_allowlist        = var.jupyter_members_allowlist != "" ? split(",", var.jupyter_members_allowlist) : []
 
-  depends_on = [module.namespace, module.gcs, kubernetes_secret.secret]
+  depends_on = [module.namespace, module.gcs]
 }
 
 module "kuberay-logging" {
@@ -340,6 +340,6 @@ module "frontend" {
   k8s_backend_service_port = var.frontend_k8s_backend_service_port
   domain                   = var.frontend_domain
   members_allowlist        = var.frontend_members_allowlist != "" ? split(",", var.frontend_members_allowlist) : []
-  depends_on               = [module.namespace, kubernetes_secret.secret]
+  depends_on               = [module.namespace]
 }
 
