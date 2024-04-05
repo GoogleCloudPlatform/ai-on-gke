@@ -8,13 +8,13 @@ This quick-start deployment guide can be used to set up an environment to famili
 
 In this guide you can choose to bring your project (BYOP) or have Terraform create a new project for you. The requirements are difference based on the option that you choose.
 
-#### Bring your own project (BYOP)
+#### Option 1: Bring your own project (BYOP)
 
 - Project ID of a new Google Cloud Project, preferably with no APIs enabled
 - `roles/owner` IAM permissions on the project
 - GitHub Personal Access Token, steps to create the token are provided below
 
-#### Terraform managed project
+#### Option 2: Terraform managed project
 
 - Billing account ID
 - Organization or folder ID
@@ -111,9 +111,9 @@ In this guide you can choose to bring your project (BYOP) or have Terraform crea
 
 ### Project Configuration
 
-You only need to complete the section for the option that you have selected.
+You only need to complete the section for the option that you have selected (either option 1 or 2).
 
-#### Bring your own project (BYOP)
+#### Option 1: Bring your own project (BYOP)
 
 - Set the project environment variables in Cloud Shell
 
@@ -151,7 +151,9 @@ You only need to complete the section for the option that you have selected.
   sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
-#### Terraform managed project
+You can now deploy the platform with Terraform in the [next section](#run-terraform).
+
+#### Option 2: Terraform managed project
 
 - Set the configuration variables
 
@@ -192,7 +194,15 @@ You only need to complete the section for the option that you have selected.
   rm -rf state
   ```
 
+You can now deploy the platform with Terraform in the [next section](#run-terraform).
+
 ### Run Terraform
+
+Before running Terraform, make sure that the Service Usage API is enable.
+
+- Enable Service Usage API
+
+  `gcloud services enable serviceusage.googleapis.com`
 
 - Create the resources
 
@@ -225,6 +235,14 @@ Open Cloud Shell to execute the following commands:
 
   ```
   gcloud container fleet memberships get-credentials ${GKE_CLUSTER}
+  ```
+
+  The output will be similar to the following:
+
+  ```
+  Starting to build Gateway kubeconfig...
+  Current project_id: mlops-platform-417609
+  A new kubeconfig entry "connectgateway_mlops-platform-417609_global_gke-ml-dev" has been generated and set as the current context.
   ```
 
 - Fetch KubeRay operator CRDs
@@ -260,10 +278,17 @@ Open Cloud Shell to execute the following commands:
   kubectl get ns | grep ml-team
   ```
 
+  The output will be similar to the following:
+
+  ```
+  ml-team                        Active   21m
+  ```
+
 - Check the RepoSync object created `ml-team` namespace:
   ```
   kubectl get reposync -n ml-team
   ```
+
 - Check the `raycluster` in `ml-team` namespace
 
   ```
@@ -278,9 +303,11 @@ Open Cloud Shell to execute the following commands:
   ```
 
 - Check the head and worker pods of kuberay in `ml-team` namespace
+
   ```
   kubectl get pods -n ml-team
   ```
+
   The output will be similar to the following:
   ```
   NAME                                           READY   STATUS    RESTARTS   AGE
@@ -303,7 +330,7 @@ Open Cloud Shell to execute the following commands:
 
 You only need to complete the section for the option that you have selected.
 
-##### Bring your own project (BYOP)
+##### Option 1: Bring your own project (BYOP)
 
 - Delete the project
 
@@ -311,7 +338,7 @@ You only need to complete the section for the option that you have selected.
   gcloud projects delete ${MLP_PROJECT_ID}
   ```
 
-#### Terraform managed project
+#### Option 2: Terraform managed project
 
 - Destroy the project
 
