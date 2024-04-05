@@ -182,6 +182,7 @@ variable "cpu_pools" {
     autoscaling  = true
     min_count    = 1
     max_count    = 3
+    enable_gcfs  = true
     disk_size_gb = 100
     disk_type    = "pd-standard"
   }]
@@ -200,7 +201,7 @@ variable "gpu_pools" {
     disk_size_gb           = optional(number, 100)
     disk_type              = optional(string, "pd-standard")
     image_type             = optional(string, "COS_CONTAINERD")
-    enable_gcfs            = optional(bool, false)
+    enable_gcfs            = optional(bool, true)
     enable_gvnic           = optional(bool, false)
     logging_variant        = optional(string, "DEFAULT")
     auto_repair            = optional(bool, true)

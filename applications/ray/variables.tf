@@ -137,6 +137,7 @@ variable "cpu_pools" {
     autoscaling  = true
     min_count    = 1
     max_count    = 3
+    enable_gcfs  = true
     disk_size_gb = 100
     disk_type    = "pd-standard"
   }]
