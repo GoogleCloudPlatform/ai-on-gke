@@ -178,6 +178,7 @@ This example is adapted from Ray AIR's examples [here](https://docs.ray.io/en/la
 ## Auto Brand creation and IAP enablement
 
 **IMPORTANT** If you enable automatic brand creation, only `Internal` brand will be created, allowing only the users under the same org as the project to access the application.
+Make sure [Policy for Restrict Load Balancer Creation Based on Load Balancer Types](https://cloud.google.com/load-balancing/docs/org-policy-constraints) allows EXTERNAL_HTTP_HTTPS.
 
 Ensure that the following variables within `workloads.tfvars` are set:
 
