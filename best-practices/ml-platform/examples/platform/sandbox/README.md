@@ -330,7 +330,7 @@ Open Cloud Shell to execute the following commands:
 
 You only need to complete the section for the option that you have selected.
 
-##### Bring your own project (BYOP)
+##### Option 1: Bring your own project (BYOP)
 
 - Delete the project
 
@@ -338,7 +338,7 @@ You only need to complete the section for the option that you have selected.
   gcloud projects delete ${MLP_PROJECT_ID}
   ```
 
-#### Terraform managed project
+#### Option 2: Terraform managed project
 
 - Destroy the project
 
