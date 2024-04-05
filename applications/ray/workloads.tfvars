@@ -40,6 +40,7 @@ gcs_bucket                      = "ray-bucket-zydg"
 create_ray_cluster              = true
 ray_cluster_name                = "ray-cluster"
 enable_grafana_on_ray_dashboard = false
+enable_gpu                      = false
 
 ## IAP config - if you choose to disable IAP authenticated access for your endpoints, ignore everthing below this line.
 create_brand  = false
