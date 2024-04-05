@@ -156,13 +156,14 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
 We recommend you configure authenticated access via IAP for your services.
 
 1) Make sure the [OAuth Consent Screen](https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent) is configured for your project. Ensure `User type` is set to `Internal`.
-2) Set the following variables in `workloads.tfvars`:
+2) Make sure [Policy for Restrict Load Balancer Creation Based on Load Balancer Types](https://cloud.google.com/load-balancing/docs/org-policy-constraints) allows EXTERNAL_HTTP_HTTPS.
+3) Set the following variables in `workloads.tfvars`:
     * `jupyter_add_auth = true`
     * `frontend_add_auth = true`
     * `ray_dashboard_add_auth = true`
-3) Allowlist principals for your services via `jupyter_members_allowlist`, `frontend_members_allowlist` and `ray_dashboard_members_allowlist`.
-4) Configure custom domains names via `jupyter_domain`, `frontend_domain` and `ray_dashboard_domain` for your services. 
-5) Configure DNS records for your custom domains:
+4) Allowlist principals for your services via `jupyter_members_allowlist`, `frontend_members_allowlist` and `ray_dashboard_members_allowlist`.
+5) Configure custom domains names via `jupyter_domain`, `frontend_domain` and `ray_dashboard_domain` for your services. 
+6) Configure DNS records for your custom domains:
     - [Register a Domain on Google Cloud Domains](https://cloud.google.com/domains/docs/register-domain#registering-a-domain) or use a domain registrar of your choice.
     - Set up your DNS service to point to the public IP
         * Run `terraform output frontend_ip_address` to get the public ip address of frontend, and add an A record in your DNS configuration to point to the public IP address.
