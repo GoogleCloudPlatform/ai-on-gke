@@ -1,6 +1,6 @@
 initContainers:
   ngcInit:
-    imageName: nvcr.io/ohlfw0olaadg/ea-participants/nemollm-inference-ms
+    imageName: ${REGION}-docker.pkg.dev/${PROJECT_ID}/nim-demo-repo/nemollm-inference-ms
     imageTag: 23.12.a
     secretName: ngc-api
     env:
@@ -26,7 +26,8 @@ model:
   name: llama-2-7b-chat
 
 persistence:
-  enabled: true
+  enabled: false
+  existingClaim: "model-store-pvc"
   annotations:
     helm.sh/resource-policy: keep
 
@@ -35,4 +36,4 @@ resources:
     nvidia.com/gpu: 1
 
 nodeSelector:
-  nvidia.com/gpu.family: ampere
+  cloud.google.com/gke-nodepool: a2-highgpu-1g-node-pool

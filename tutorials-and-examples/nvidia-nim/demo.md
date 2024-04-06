@@ -1,35 +1,47 @@
-# NVIDIA NIM on GKE Demo
+# NVIDIA NIM on GKE with NVIDIA L4s
 
 ## Prerequisites
 * docker
 * golang
-
+* yq
 
 ## Set up your GKE Cluster
 
-Choose your region and set your project:
+Choose your region and set your project and machine variables:
 ```bash
 export REGION=us-central1
-# export REGION=asia-southeast1
+export ZONE=${REGION?}-b
 export PROJECT_ID=$(gcloud config get project)
-# export MACH=a2-ultragpu-1g
+export MACH=g2-standard-24
+export GPU_TYPE=nvidia-l4
+export GPU_COUNT=2
+```
+
+Set model variables
+```bash
+export NGC_MODEL_NAME=llama-2-7b
+export TRT_MODEL_NAME=trt_llm_0.0.1_trtllm
+export TRITON_MODEL_NAME=trt_llm
+export NGC_MODEL_VERSION=LLAMA-2-7B-4K-FP16
+```
+
+Alternative configuration for A100s #TODO: Remove this
+```bash
+export REGION=us-central1
 export MACH=a2-highgpu-1g
-export GPU_TYPE=nvidia-a100 #TODO: get correct GPU type for A100-40gb
-# export GPU_TYPE=nvidia-a100-80gb
-# export MACH=g2-standard-48
-# export GPU_TYPE=nvidia-l4
+export GPU_TYPE=nvidia-tesla-a100
 export GPU_COUNT=1
 ```
 
 Create a GKE cluster:
 ```bash
-gcloud container clusters create nim-demo1 --location ${REGION?} \
+gcloud container clusters create nim-demo --location ${REGION?} \
   --workload-pool ${PROJECT_ID?}.svc.id.goog \
   --enable-image-streaming \
   --enable-ip-alias \
   --node-locations=$REGION-a \
   --workload-pool=${PROJECT_ID?}.svc.id.goog \
-  --addons GcsFuseCsiDriver   \
+  --addons=GcpFilestoreCsiDriver  \
   --machine-type n2d-standard-4 \
   --num-nodes 1 --min-nodes 1 --max-nodes 5 \
   --ephemeral-storage-local-ssd=count=2
@@ -43,7 +55,7 @@ Get your NGC_API_KEY from NGC - TODO: Add detailed instructions and link to NVID
 export NGC_CLI_API_KEY="<YOUR_API_KEY>"
 ```
 
-Ensure you have access to the repository by list the models
+Ensure you have access to the repository by listing the models
 ```bash
 ngc registry model list "ohlfw0olaadg/ea-participants/*"
 ```
@@ -53,11 +65,12 @@ Add the NVIDIA NIM helm repo
 helm repo add nemo-ms "https://helm.ngc.nvidia.com/ohlfw0olaadg/ea-participants" --username=\$oauthtoken --password=$NGC_CLI_API_KEY
 ```
 
-Create a Kuberntes namespace 
+Create a Kuberntes namespace and switch context to that namespace
 ```bash
 kubectl create namespace nim
-```
+kubectl config set-context --current --namespace nim
 
+```
 Create Kubernetes secrets to enable access to NGC resources from within your cluster
 ```bash
 kubectl -n nim create secret docker-registry registry-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=$NGC_CLI_API_KEY
@@ -174,57 +187,73 @@ gcloud container node-pools create ${MACH?}-node-pool --cluster nim-demo \
   # --spot #TODO: Enable spot to increase obtainability
 ```
 
-## Prepare deployment configuration using helm
 
-Get the helm chart values that can be applied to our configuration.
+## Deploy the NIM with the generated engine using a Helm chart
+
 ```bash
-helm show values nemo-ms/nemollm-inference
+gcloud filestore instances create nim-nfs --zone=${ZONE?} --tier=BASIC_HDD --file-share=name="ms03",capacity=1TB --network=name="default"
+gcloud filestore instances describe nim-nfs --zone=${ZONE?}
+export FS_IP=$(gcloud filestore instances describe nim-nfs --zone=${ZONE?} --format json | jq '.networks[] | select(.network == "default").ipAddresses[0]' - | sed 's/["'\'']//g')
 ```
 
-In this tutorial, we'll use the preconfigured set of values below
-```yaml
-initContainers:
-  ngcInit:
-    imageName: nvcr.io/ohlfw0olaadg/ea-participants/nemollm-inference-ms
-    imageTag: 23.12.a
-    secretName: ngc-api
-    env:
-      STORE_MOUNT_PATH: /model-store
-      NGC_CLI_ORG: ohlfw0olaadg
-      NGC_CLI_TEAM: ea-participants
-      NGC_MODEL_NAME: llama-2-7b-chat
-      NGC_MODEL_VERSION: LLAMA-2-7B-CHAT-4K-FP16.23.12.a
-      NGC_EXE: ngc
-      DOWNLOAD_NGC_CLI: "true"
-      NGC_CLI_VERSION: "3.34.1"
-      TARFILE: yes
-      MODEL_NAME: llama-2-7b-chat
-
-image:
-  tag: 23.12.a
-
-imagePullSecrets:
-  - name: registry-secret
-
-model:
-  numGpus: 1
-  name: llama-2-7b-chat
-
-persistence:
-  enabled: true
-  annotations:
-    helm.sh/resource-policy: keep
-
-resources:
-  limits:
-    nvidia.com/gpu: 1
-
-nodeSelector:
-  nvidia.com/gpu.family: ampere
+```bash
+envsubst < k8s/model-pv.yaml | kubectl apply -f -
 ```
 
+Deploy the helm chart.  NOTE: We're making a small patch on the chart based [this known issue](#issue-chart-incompatible-version)
+```bash
+helm pull nemo-ms/nemollm-inference --version=0.1.2 --untar
+yq -i '.kubeVersion = ">=v1.23.0-1"' ./nemollm-inference/Chart.yaml
+envsubst < values.${GPU_TYPE?}.yaml | helm --namespace nim install inference-ms ./nemollm-inference --version=0.1.2 -f -
+```
 
-## Convert the Llama 2 Chat Model to be compatible with L4 GPUs
+## Test the NIM
+Expose the service
+```bash
+kubectl port-forward services/inference-ms-nemollm-inference 8005
+```
+
+Send a test prompt
+```bash
+curl -X 'POST' \
+  'http://localhost:8005/v1/chat/completions' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "messages": [
+    {
+      "content": "You are a polite and respectful chatbot helping people plan a vacation.",
+      "role": "system"
+    },
+    {
+      "content": "What should I do for a 4 day vacation in Spain?",
+      "role": "user"
+    }
+  ],
+  "model": "llama-2-7b-chat",
+  "max_tokens": 160,
+  "top_p": 1,
+  "n": 1,
+  "stream": false,
+  "stop": "\n",
+  "frequency_penalty": 0.0
+}' | jq '.choices[0].message.content' -
+```
+
+## Appendix
+
+### Known Issues
+
+#### nemollm-inference helm chart incompatible version {#issue-chart-incompatible-version}
+```bash
+$ helm --namespace nim install my-inference-ms nemo-ms/nemollm-inference --version=0.1.2 -f values.yaml
+
+Error: INSTALLATION FAILED: chart requires kubeVersion: >=v1.23.0 which is incompatible with Kubernetes v1.27.8-gke.1067004
+```
+
+### Under Construction
+
+#### Convert the Llama 2 Chat Model to be compatible with L4 GPUs
 There are prebuilt engines available from NVIDIA.  To view currently available models, run the `ngc registry model list` command.  In this tutorial, we'll show how to build our own engine using the `Llama 2 13B Chat` model on NVIDIA L4 GPUs. 
  For more information on generating models, see [NVIDIA Model Repo Generator](https://developer.nvidia.com/docs/nemo-microservices/inference/model-repo-generator.html#llama-2-chat-models)
 
@@ -284,29 +313,4 @@ trt_llm:
 Let's create a configmap to make this config available to the `Model Repo Generator` job
 ```bash
 kubectl create configmap model-config --from-file=model_config.yaml
-```
-
-
-### TEMP: Local engine conversion
-
-```bash
-docker run --rm -it --gpus=0 --ipc=host \
--v $PWD/model_config.yaml:/model_config.yaml:ro \
--v $PWD/Llama-2-13b-chat-hf:/model-downloads/Llama-2-13b-chat-hf:ro \
--v $PWD/model-store:/model-store \
-nvcr.io/ohlfw0olaadg/ea-participants/nemollm-inference-ms:23.12.a \
-bash -c "model_repo_generator llm --verbose --yaml_config_file=/model_config.yaml"
-```
-
-## Deploy the NIM with the generated engine using a Helm chart
-<TODO: Add step by step instructions>
-
-## Test the NIM
-<TODO: Add step by step instructions>>
-
-## Appendix
-
-```
-helm fetch https://helm.ngc.nvidia.com/ohlfw0olaadg/ea-participants/charts/nemollm-inference-0.1.3-rc6.tgz --username='$oauthtoken' --password=${NGC_API_KEY?}
-tar -xvf nemollm-inference-0.1.3-rc6.tgz
 ```

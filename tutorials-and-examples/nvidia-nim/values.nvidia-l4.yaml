@@ -1,0 +1,46 @@
+initContainers:
+  ngcInit:
+    imageName: ${REGION}-docker.pkg.dev/${PROJECT_ID}/nim-demo-repo/nemollm-inference-ms
+    imageTag: 23.12.a
+    secretName: ngc-api
+    env:
+      STORE_MOUNT_PATH: /model-store
+      NGC_CLI_ORG: ohlfw0olaadg
+      NGC_CLI_TEAM: ea-participants
+      NGC_MODEL_NAME: ${NGC_MODEL_NAME}
+      NGC_MODEL_VERSION: ${NGC_MODEL_VERSION}
+      NGC_EXE: ngc
+      DOWNLOAD_NGC_CLI: "true"
+      NGC_CLI_VERSION: "3.34.1"
+      TARFILE: yes
+      MODEL_NAME: ensemble
+
+image:
+  repository: ${REGION}-docker.pkg.dev/${PROJECT_ID}/nim-demo-repo/nemollm-inference-ms
+  pullPolicy: IfNotPresent
+  tag: 23.12.a
+
+# imagePullSecrets:
+#   - name: registry-secret
+
+model:
+  subPath: ${NGC_MODEL_NAME}_v${NGC_MODEL_VERSION}
+  numGpus: ${GPUCOUNT}
+  name: ${TRITON_MODEL_NAME}
+  logLevel: "debug"
+  grpc_port: 8081
+  openai_port: 9999
+  nemo_port:  9998
+
+persistence:
+  enabled: false
+  existingClaim: "model-store-pvc"
+  annotations:
+    helm.sh/resource-policy: keep
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+
+nodeSelector:
+  cloud.google.com/gke-accelerator: nvidia-l4

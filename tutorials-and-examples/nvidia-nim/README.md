@@ -1,215 +1,317 @@
-# Deploy NIM in GKE on NFS based Triton model-store
-# dfisk@nvidia.com 4/3/2024; created
-# refs:
-# https://developer.nvidia.com/docs/nemo-microservices/inference/overview.html
-# https://github.com/NVIDIA/TensorRT-LLM
-# https://github.com/NVIDIA/TensorRT-LLM/tree/main/examples/mixtral
-# https://github.com/NVIDIA/TensorRT-LLM/tree/main/examples/mixtral
-# https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo
-# https://registry.ngc.nvidia.com/orgs/ohlfw0olaadg/teams/ea-participants/containers/nim_llm
+# NVIDIA NIM on GKE with NVIDIA L4s
 
+## Prerequisites
+* docker
+* golang
+* yq
 
-$ cat <<EOF > env
-export CNAME=dfisk-nim-gke-test
-export PROJECTID=k80-exploration
-export PROJECTUSER=dfisk
-## export MACH=a2-ultragpu-1g
-## export GPUTYPE=nvidia-a100-80gb
-## export GPUCOUNT=1
-export MACH=g2-standard-48
-export GPUTYPE=nvidia-l4
-export GPUCOUNT=4
-export FWTAGS=nim-nfs-ingress,nim-nfs-egress
-export ZONE=us-central1-a
+## Set up your GKE Cluster
+
+Choose your region and set your project and machine variables:
+```bash
 export REGION=us-central1
-export NFSDATA_FILESTORE_IPV4=${NFSDATA_FILESTORE_IPV4?}
-#
-alias k=kubectl
-EOF
-# --------------------
+export ZONE=${REGION?}-b
+export PROJECT_ID=$(gcloud config get project)
+export MACH=g2-standard-24
+export GPU_TYPE=nvidia-l4
+export GPU_COUNT=2
+```
 
-$ source ./env
+Set model variables
+```bash
+export NGC_MODEL_NAME=llama-2-7b
+export TRT_MODEL_NAME=trt_llm_0.0.1_trtllm
+export TRITON_MODEL_NAME=trt_llm
+export NGC_MODEL_VERSION=LLAMA-2-7B-4K-FP16
+```
 
-$ gcloud filestore instances create nim-nfs --zone=${ZONE} --tier=BASIC_HDD --file-share=name="ms03",capacity=1TB --network=name="default"
+Alternative configuration for A100s - *SKIP IF USING L4s*
+```bash
+export MACH=a2-highgpu-1g
+export GPU_TYPE=nvidia-tesla-a100
+export GPU_COUNT=1
+```
 
-$ gcloud filestore instances describe  nim-nfs --zone=${ZONE}
+Create a GKE cluster:
+```bash
+gcloud container clusters create nim-demo --location ${REGION?} \
+  --workload-pool ${PROJECT_ID?}.svc.id.goog \
+  --enable-image-streaming \
+  --enable-ip-alias \
+  --node-locations=$REGION-a \
+  --workload-pool=${PROJECT_ID?}.svc.id.goog \
+  --addons=GcpFilestoreCsiDriver  \
+  --machine-type n2d-standard-4 \
+  --num-nodes 1 --min-nodes 1 --max-nodes 5 \
+  --ephemeral-storage-local-ssd=count=2
+```
 
-# update env file with created Filestore IPv4 address
-$ export NFSDATA_FILESTORE_IPV4=10.237.234.194
+Create a nodepool
+```bash
+gcloud container node-pools create ${MACH?}-node-pool --cluster nim-demo \
+   --accelerator type=${GPU_TYPE?},count=${GPU_COUNT?},gpu-driver-version=latest \
+  --machine-type ${MACH?} \
+  --ephemeral-storage-local-ssd=count=${GPU_COUNT?} \
+  --enable-autoscaling --enable-image-streaming \
+  --num-nodes=1 --min-nodes=1 --max-nodes=3 \
+  --node-locations ${REGION?}-b \
+  --region ${REGION?}
+  # --spot #TODO: Enable spot to increase obtainability
+```
 
-$ gcloud compute --project=${PROJECTID?}  firewall-rules create nim-nfs-ingress \
-  --direction=INGRESS \
-  --priority=1000 \
-  --network=default \
-  --action=ALLOW \
-  --rules=all \
-  --source-ranges=${NFSDATA_FILESTORE_IPV4?}/32 \
-  --target-tags=nim-nfs-ingress
+## Set Up Access to NVIDIA NIM
+Access to NVIDIA NIM is available through the NVIDIA Early Access (EA) Program.  <INSERT Text From NVIDIA>
 
-$ gcloud compute --project=${PROJECTID?}  firewall-rules create nim-nfs-egress \
-  --direction=EGRESS \
-  --priority=1000 \
-  --network=default \
-  --action=ALLOW \
-  --rules=all \
-  --source-ranges=${NFSDATA_FILESTORE_IPV4?}/32 \
-  --target-tags=nim-nfs-egress
+Get your NGC_API_KEY from NGC - TODO: Add detailed instructions and link to NVIDIA docs
+```bash
+export NGC_CLI_API_KEY="<YOUR_API_KEY>"
+```
 
-$ bash install_gke_gpu-operator.sh
+Ensure you have access to the repository by listing the models
+```bash
+ngc registry model list "ohlfw0olaadg/ea-participants/*"
+```
 
-$ helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --set nfs.server=10.237.234.194 \
-    --set nfs.path=/ms03
+Add the NVIDIA NIM helm repo
+```bash
+helm repo add nemo-ms "https://helm.ngc.nvidia.com/ohlfw0olaadg/ea-participants" --username=\$oauthtoken --password=$NGC_CLI_API_KEY
+```
 
-$ k create namespace inference-ms
+Create a Kuberntes namespace and switch context to that namespace
+```bash
+kubectl create namespace nim
+kubectl config set-context --current --namespace nim
 
-$ k apply -n inference-ms -f - <<EOF
- apiVersion: v1
- kind: PersistentVolumeClaim
- metadata:
-   name: nim-nfs
- spec:
-   accessModes:
-     - ReadWriteMany
-   resources:
-     requests:
-       storage: 1000Gi
-   storageClassName: nfs-client
-EOF
-# -------------- end apply
+```
+Create Kubernetes secrets to enable access to NGC resources from within your cluster
+```bash
+kubectl -n nim create secret docker-registry registry-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=$NGC_CLI_API_KEY
+kubectl -n nim create secret generic ngc-api --from-literal=NGC_CLI_API_KEY=$NGC_CLI_API_KEY
+```
 
-$ k get pvc -A
+## Preload container image so it can pulled using image streaming
+For more information on mounting a secondary boot disk on GKE to improve performance, see [Use secondary boot disks to preload data or container images](https://cloud.google.com/kubernetes-engine/docs/how-to/data-container-image-preloading)
 
-$ k --namespace inference-ms create secret docker-registry registry-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=${NGC_CLI_API_KEY?}
+Authorize docker to pull images from NGC repo
+```bash
+docker login -u $oauthtoken -p ${NGC_CLI_API_KEY?}
+```
 
-$ k --namespace inference-ms create secret generic ngc-api --from-literal=NGC_CLI_API_KEY=${NGC_CLI_API_KEY?}
+Pull image locally
+```bash
+docker pull nvcr.io/ohlfw0olaadg/ea-participants/nemollm-inference-ms:23.12.a
+```
 
+Enable Artifact Registry and create a private repo to store the image
+```bash
+gcloud artifacts repositories create nim-demo-repo \
+    --repository-format=docker \
+    --location=${REGION?}
 
-# We need to patch the helm chart due to various elements in the custom-values.yaml currently being ignored
-#### $ helm repo add  nemo-ms https://helm.ngc.nvidia.com/nvstaging/nim/charts --username='$oauthtoken' --password=${NGC_CLI_API_KEY?}
-#### $ helm repo update
+gcloud auth configure-docker ${REGION?}-docker.pkg.dev
+```
 
-$ helm fetch https://helm.ngc.nvidia.com/nvstaging/nim/charts/nemollm-inference-0.1.3-rc6.tgz --username='$oauthtoken' --password=${NGC_CLI_API_KEY?}
-$ tar -xvf nemollm-inference-0.1.3-rc6.tgz
+Create a service account with permissions to pull container images from this repo
+```bash
+export SERVICE_ACCOUNT="nim-demo@${PROJECT_ID?}.iam.gserviceaccount.com"
 
-# ----------- patch helm chart
-$ diff -au statefulset.yaml.orig  nemollm-inference/templates/statefulset.yaml
---- statefulset.yaml.orig       2024-04-02 12:26:56.402184471 -0700
-+++ nemollm-inference/templates/statefulset.yaml        2024-04-03 11:05:56.018277618 -0700
-@@ -72,7 +72,7 @@
-             - name: MODEL_NAME
-               value: {{ .env.MODEL_NAME | quote }}
-             - name: TARFILE
--              value: {{ .env.TARFILE | default "yes" | quote }}
-+              value: {{ .env.TARFILE | default "" | quote }}
-             - name: NGC_EXE
-               value: {{ .env.NGC_EXE | default "ngc" | quote }}
-             - name: DOWNLOAD_NGC_CLI
-#
+gcloud iam service-accounts create nim-demo \
+    --description="Service account for nim-demo"
 
-$ diff -au values.yaml.orig nemollm-inference/values.yaml
---- values.yaml.orig    2024-04-02 12:29:15.457076352 -0700
-+++ nemollm-inference/values.yaml       2024-04-02 12:31:33.895823249 -0700
-@@ -181,19 +181,19 @@
+gcloud artifacts repositories add-iam-policy-binding nim-demo-repo \
+    --member=serviceAccount:nim-demo@${PROJECT_ID?}.iam.gserviceaccount.com \
+    --role=roles/artifactregistry.reader \
+    --location ${REGION?}
+```
 
- # persistence settings affect the /model-store volume where the model is served from
- persistence:
--  enabled: false
--  existingClaim: ""  # if using existingClaim, run only one replica or use a ReadWriteMany storage setup
-+  enabled: true
-+  existingClaim: "nim-nfs"  # if using existingClaim, run only one replica or use a ReadWriteMany storage setup
-   # Persistent Volume Storage Class
-   # If defined, storageClassName: <storageClass>
-   # If set to "-", storageClassName: "", which disables dynamic provisioning.
-   # If undefined (the default) or set to null, no storageClassName spec is
-   #   set, choosing the default provisioner.
--  storageClass: ""
--  accessMode: ReadWriteOnce  # If using an NFS or similar setup, you can use ReadWriteMany
-+  storageClass: "nfs-client"
-+  accessMode: ReadWriteMany  # If using an NFS or similar setup, you can use ReadWriteMany
-   stsPersistentVolumeClaimRetentionPolicy:
-     whenDeleted: Retain
-     whenScaled: Retain
--  size: 50Gi  # size of claim in bytes (e.g. 8Gi)
-+  size: 1000Gi  # size of claim in bytes (e.g. 8Gi)
-   annotations: {}
+Retag image and push to your private repo
+```bash
+docker tag nvcr.io/ohlfw0olaadg/ea-participants/nemollm-inference-ms:23.12.a ${REGION?}-docker.pkg.dev/${PROJECT_ID?}/nim-demo-repo/nemollm-inference-ms:23.12.a
+docker push ${REGION?}-docker.pkg.dev/${PROJECT_ID?}/nim-demo-repo/nemollm-inference-ms:23.12.a
+```
 
- # hostPath configures /model-store to use a local filesystem path from the nodes -- for special cases
-# ------------- end patch
+## [OPTIONAL] Mount a secondary boot disk with your container image to improve pod scale up
 
-$ ngc registry model list --org nvstaging --team nim "nvstaging/nim/*" --column org --column team --column name --column version --format_type csv | grep Mixtral-8x7B-Instruct-v0.1
+Create a cloud storage bucket to store the disk image and logs
+```bash
+export BUCKET_NAME=nim-images
 
-nvstaging,nim,Mixtral-8x7B-Instruct-v0.1,h100x4_fp16_24.03.1669
+gcloud storage buckets create gs://${BUCKET_NAME?} --location=${REGION?}
+```
 
+Assign the required GCS permissions to the Google Service Account:
+```bash
+gcloud storage buckets add-iam-policy-binding gs://${BUCKET_NAME?} \
+  --member="serviceAccount:${SERVICE_ACCOUNT?}" --role=roles/storage.admin
+```
 
-$ cet <<EOF > custom-values.yaml
+Assign the required compute image permissions to the Google Service Account:
+```bash
+gcloud storage buckets add-iam-policy-binding gs://${BUCKET_NAME?} \
+  --member="serviceAccount:${SERVICE_ACCOUNT?}" --role=roles/storage.admin
+```
 
-initContainers:
-  ngcInit:
-    imageName: nvcr.io/nvstaging/nim/llm_nim
-    imageTag: 24.02.rc4
-    secretName: ngc-api
-    env:
-      STORE_MOUNT_PATH: /model-store
-      NGC_CLI_ORG: nvstaging
-      NGC_CLI_TEAM: nim
-      NGC_MODEL_NAME: mixtral-8x7b-instruct-v0-1
-      NGC_MODEL_VERSION: h100x4_fp16_24.03.1669
-      NGC_EXE: ngc
-      DOWNLOAD_NGC_CLI: "true"
-      NGC_CLI_VERSION: "3.34.1"
-      TARFILE: ""
-      MODEL_NAME: trt_llm
-      OMPI_ALLOW_RUN_AS_ROOT: 1
-      OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+Allow the Kubernetes Service Account `nim-demo` in the `nim` namespace to use the Google Service Account:
+```bash
+gcloud iam service-accounts add-iam-policy-binding ${SERVICE_ACCOUNT?} \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:${PROJECT_ID}.svc.id.goog[nim/nim-demo]"
+```
 
+Create a new Kubernetes Service Account:
+```bash
+kubectl create serviceaccount -n nim nim-demo
+kubectl annotate serviceaccount -n nim nim-demo iam.gke.io/gcp-service-account=nim-demo@${PROJECT_ID}.iam.gserviceaccount.com
+```
 
-persistence:
-  enabled: true
-  existingClaim: "nim-nfs"
-  storageClass: "nfs-client"
-  accessMode: ReadWriteMany  # If using an NFS or similar setup, you can use ReadWriteMany
-  size: 1000Gi  # size of claim in bytes (e.g. 8Gi)
-  annotations:
-    helm.sh/resource-policy: keep
+Create a disk image from the container image.  Note that the disk image builder 
+```bash
+export DISK_IMAGE_NAME=nemollm-inference-ms
+export CONTAINER_IMAGE=${REGION?}-docker.pkg.dev/${PROJECT_ID?}/nim-demo-repo/nemollm-inference-ms:23.12.a
 
-podSecurityContext:
-  runAsUser: 0
-  fsGroup: 0
+WORKING_DIR=${PWD?}
+cd ../../tools/gke-disk-image-builder
+go run ./cli \
+    --project-name=${PROJECT_ID?} \
+    --image-name=${DISK_IMAGE_NAME?} \
+    --zone=${REGION?}-a \
+    --gcs-path=gs://${BUCKET_NAME} \
+    --disk-size-gb=50 \
+    --container-image=${CONTAINER_IMAGE?} \
+    --service-account=${SERVICE_ACCOUNT?} \
+    --image-pull-auth=ServiceAccountToken
+cd ${WORKING_DIR}
+```
 
-image:
-  tag: 24.02.rc4
-
-imagePullSecrets:
-  - name: registry-secret
-
-model:
-  subPath: "mixtral-8x7b-instruct-v0-1_vh100x4_fp16_24.03.1669"
-  numGpus: 4
-  name: trt_llm
-  logLevel: "debug"
-  openai_port: 9999
-  nemo_port:  9998
-
-resources:
-  limits:
-    nvidia.com/gpu: 4
-
-nodeSelector:
-  nvidia.com/gpu.family: ampere
-
-service:
-  type: ClusterIP
-  http_port: 8000  # exposes http interface used in healthchecks to the service
-  grpc_port: 8001  # exposes the triton grpc interface
-  openai_port: 9999
-  nemo_port:  9998
-EOF
-#----------------------- end file
+```bash
+gcloud compute images add-iam-policy-binding nemollm-inference-ms \
+  --member="serviceAccount:${SERVICE_ACCOUNT?}" --role=roles/compute.imageUser
+```
 
 
-$ helm --namespace inference-ms install nim-gke-test nemollm-inference --version 0.1.3-rc6 -f custom-values.yaml
+## Deploy the NIM with the generated engine using a Helm chart
 
-# delete
-$ helm --namespace inference-ms delete nim-gke-test
+```bash
+gcloud filestore instances create nim-nfs --zone=${ZONE?} --tier=BASIC_HDD --file-share=name="ms03",capacity=1TB --network=name="default"
+gcloud filestore instances describe nim-nfs --zone=${ZONE?}
+export FS_IP=$(gcloud filestore instances describe nim-nfs --zone=${ZONE?} --format json | jq '.networks[] | select(.network == "default").ipAddresses[0]' - | sed 's/["'\'']//g')
+```
 
+```bash
+envsubst < k8s/model-pv.yaml | kubectl apply -f -
+```
+
+Deploy the helm chart.  NOTE: We're making a small patch on the chart based [this known issue](#issue-chart-incompatible-version)
+```bash
+helm pull nemo-ms/nemollm-inference --version=0.1.2 --untar
+yq -i '.kubeVersion = ">=v1.23.0-1"' ./nemollm-inference/Chart.yaml
+envsubst < values.${GPU_TYPE?}.yaml | helm --namespace nim install inference-ms-${GPU_TYPE?} ./nemollm-inference --version=0.1.2 -f -
+```
+
+## Test the NIM
+Expose the service
+```bash
+kubectl port-forward services/inference-ms-nemollm-inference 8005
+```
+
+Send a test prompt
+```bash
+curl -X 'POST' \
+  'http://localhost:8005/v1/chat/completions' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "messages": [
+    {
+      "content": "You are a polite and respectful chatbot helping people plan a vacation.",
+      "role": "system"
+    },
+    {
+      "content": "What should I do for a 4 day vacation in Spain?",
+      "role": "user"
+    }
+  ],
+  "model": "llama-2-7b-chat",
+  "max_tokens": 160,
+  "top_p": 1,
+  "n": 1,
+  "stream": false,
+  "stop": "\n",
+  "frequency_penalty": 0.0
+}' | jq '.choices[0].message.content' -
+```
+
+## Appendix
+
+### Known Issues
+
+#### nemollm-inference helm chart incompatible version {#issue-chart-incompatible-version}
+```bash
+$ helm --namespace nim install my-inference-ms nemo-ms/nemollm-inference --version=0.1.2 -f values.yaml
+
+Error: INSTALLATION FAILED: chart requires kubeVersion: >=v1.23.0 which is incompatible with Kubernetes v1.27.8-gke.1067004
+```
+
+### Under Construction
+
+#### Convert the Llama 2 Chat Model to be compatible with L4 GPUs
+There are prebuilt engines available from NVIDIA.  To view currently available models, run the `ngc registry model list` command.  In this tutorial, we'll show how to build our own engine using the `Llama 2 13B Chat` model on NVIDIA L4 GPUs. 
+ For more information on generating models, see [NVIDIA Model Repo Generator](https://developer.nvidia.com/docs/nemo-microservices/inference/model-repo-generator.html#llama-2-chat-models)
+
+Download the Llama2-13b-chat model
+```bash
+ngc registry model download-version "ohlfw0olaadg/ea-participants/LLAMA-2-13B-CHAT-4K-FP16.23.12.rc3"
+```
+TODO: Fix the following output error
+```json
+{
+    "error": "Error: Target 'ohlfw0olaadg/ea-participants/LLAMA-2-13B-CHAT-4K-FP16.23.12.rc3' could not be found."
+}  
+```
+
+We're going to use the following config, available in this tutorial as `model_config.yaml` to build our engine.
+```yaml
+model_repo_path: "/model-store/"
+model_type: "LLAMA"
+backend: "trt_llm"
+customization_cache_capacity: 10000
+logging_level: "INFO"
+enable_chat: true
+preprocessor:
+  chat_cfg:
+    roles:
+      system:
+        prefix: "[INST] <<SYS>>\n"
+        suffix: "\n<</SYS>>\n\n"
+      user:
+        prefix: ""
+        suffix: " [/INST] "
+      assistant:
+        prefix: ""
+        suffix: " </s><s>[INST] "
+    stop_words: ["</s>"]
+    rstrip_turn: true
+    turn_suffix: "\n"
+pipeline:
+  model_name: "ensemble"
+  num_instances: 128
+trt_llm:
+  use: true
+  model_name: "trt_llm"
+  model_type: "llama"
+  ckpt_type: "hf"
+  model_path: "/model-downloads/Llama-2-13b-chat-hf"
+  data_type: "float16"
+  num_gpus: 1
+  tensor_para_size: 1
+  pipeline_para_size: 1
+  max_batch_size: 128
+  max_input_len: 4096
+  max_output_len: 4096
+  max_num_tokens: 50000
+```
+
+Let's create a configmap to make this config available to the `Model Repo Generator` job
+```bash
+kubectl create configmap model-config --from-file=model_config.yaml
+```
