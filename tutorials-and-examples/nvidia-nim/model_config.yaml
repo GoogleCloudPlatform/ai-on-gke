@@ -1,0 +1,38 @@
+model_repo_path: "/model-store/"
+model_type: "LLAMA"
+backend: "trt_llm"
+customization_cache_capacity: 10000
+logging_level: "INFO"
+enable_chat: true
+preprocessor:
+  chat_cfg:
+    roles:
+      system:
+        prefix: "[INST] <<SYS>>\n"
+        suffix: "\n<</SYS>>\n\n"
+      user:
+        prefix: ""
+        suffix: " [/INST] "
+      assistant:
+        prefix: ""
+        suffix: " </s><s>[INST] "
+    stop_words: ["</s>"]
+    rstrip_turn: true
+    turn_suffix: "\n"
+pipeline:
+  model_name: "ensemble"
+  num_instances: 128
+trt_llm:
+  use: true
+  model_name: "trt_llm"
+  model_type: "llama"
+  ckpt_type: "hf"
+  model_path: "/model-downloads/Llama-2-13b-chat-hf"
+  data_type: "float16"
+  num_gpus: 1
+  tensor_para_size: 1
+  pipeline_para_size: 1
+  max_batch_size: 128
+  max_input_len: 4096
+  max_output_len: 4096
+  max_num_tokens: 50000

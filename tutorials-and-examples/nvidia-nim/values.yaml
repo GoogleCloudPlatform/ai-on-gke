@@ -1,0 +1,38 @@
+initContainers:
+  ngcInit:
+    imageName: nvcr.io/ohlfw0olaadg/ea-participants/nemollm-inference-ms
+    imageTag: 23.12.a
+    secretName: ngc-api
+    env:
+      STORE_MOUNT_PATH: /model-store
+      NGC_CLI_ORG: ohlfw0olaadg
+      NGC_CLI_TEAM: ea-participants
+      NGC_MODEL_NAME: llama-2-7b-chat
+      NGC_MODEL_VERSION: LLAMA-2-7B-CHAT-4K-FP16.23.12.a
+      NGC_EXE: ngc
+      DOWNLOAD_NGC_CLI: "true"
+      NGC_CLI_VERSION: "3.34.1"
+      TARFILE: yes
+      MODEL_NAME: llama-2-7b-chat
+
+image:
+  tag: 23.12.a
+
+imagePullSecrets:
+  - name: registry-secret
+
+model:
+  numGpus: 1
+  name: llama-2-7b-chat
+
+persistence:
+  enabled: true
+  annotations:
+    helm.sh/resource-policy: keep
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+
+nodeSelector:
+  nvidia.com/gpu.family: ampere
