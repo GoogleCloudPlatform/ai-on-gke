@@ -37,3 +37,16 @@ resources:
 
 nodeSelector:
   cloud.google.com/gke-nodepool: a2-highgpu-1g-node-pool
+
+service:
+  type: ClusterIP
+  http_port: 8000  # exposes http interface used in healthchecks to the service
+  grpc_port: 8001  # exposes the triton grpc interface
+  metrics_port: 8002 # exposes the triton metric interface
+  openai_port: 8005
+  nemo_port: 8006
+
+serviceAccount:
+  create: false  # Specifies whether a service account should be created
+  annotations: {} # Annotations to add to the service account
+  name: "nim-demo" # The name of the service account to use.

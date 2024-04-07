@@ -9,9 +9,10 @@
 
 Choose your region and set your project and machine variables:
 ```bash
+export PROJECT_ID=$(gcloud config get project)
+export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID?} --format="value(projectNumber)")
 export REGION=us-central1
 export ZONE=${REGION?}-b
-export PROJECT_ID=$(gcloud config get project)
 export MACH=g2-standard-24
 export GPU_TYPE=nvidia-l4
 export GPU_COUNT=2
@@ -192,9 +193,20 @@ gcloud compute images add-iam-policy-binding nemollm-inference-ms \
 ## Deploy the NIM with the generated engine using a Helm chart
 
 ```bash
+# create a service account if it hasn't already been created
+kubectl create serviceaccount nim-demo
+```
+
+```bash
 gcloud filestore instances create nim-nfs --zone=${ZONE?} --tier=BASIC_HDD --file-share=name="ms03",capacity=1TB --network=name="default"
 gcloud filestore instances describe nim-nfs --zone=${ZONE?}
 export FS_IP=$(gcloud filestore instances describe nim-nfs --zone=${ZONE?} --format json | jq '.networks[] | select(.network == "default").ipAddresses[0]' - | sed 's/["'\'']//g')
+```
+
+```bash
+gcloud projects add-iam-policy-binding ${PROJECT_ID?} \
+    --role=roles/file.editor \
+    --member=principal://iam.googleapis.com/projects/${PROJECT_NUMBER?}/locations/global/workloadIdentityPools/${PROJECT_ID?}.svc.id.goog/subject/ns/nim/sa/nim-demo
 ```
 
 ```bash
@@ -205,6 +217,17 @@ Deploy the helm chart.  NOTE: We're making a small patch on the chart based [thi
 ```bash
 helm pull nemo-ms/nemollm-inference --version=0.1.2 --untar
 yq -i '.kubeVersion = ">=v1.23.0-1"' ./nemollm-inference/Chart.yaml
+```
+
+Manually add the following to the `nemollm-inference/templates/statefulset.yaml` file
+```yaml
+    {{- if .Values.model.trtModelName}}
+   - --trt_model_name
+   - {{ .Values.model.trtModelName | quote }}
+   {{- end }}
+```
+
+```bash
 envsubst < values.${GPU_TYPE?}.yaml | helm --namespace nim install inference-ms-${GPU_TYPE?} ./nemollm-inference --version=0.1.2 -f -
 ```
 
@@ -214,7 +237,7 @@ Expose the service
 kubectl port-forward services/inference-ms-nemollm-inference 8005
 ```
 
-Send a test prompt
+Send a test prompt - A100
 ```bash
 curl -X 'POST' \
   'http://localhost:8005/v1/chat/completions' \
@@ -232,6 +255,33 @@ curl -X 'POST' \
     }
   ],
   "model": "llama-2-7b-chat",
+  "max_tokens": 160,
+  "top_p": 1,
+  "n": 1,
+  "stream": false,
+  "stop": "\n",
+  "frequency_penalty": 0.0
+}' | jq '.choices[0].message.content' -
+```
+
+Send a test prompt - L4 GPUs
+```bash
+curl -X 'POST' \
+  'http://localhost:8005/v1/chat/completions' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "messages": [
+    {
+      "content": "You are a polite and respectful chatbot helping people plan a vacation.",
+      "role": "system"
+    },
+    {
+      "content": "What should I do for a 4 day vacation in Spain?",
+      "role": "user"
+    }
+  ],
+  "model": "trt_llm",
   "max_tokens": 160,
   "top_p": 1,
   "n": 1,
