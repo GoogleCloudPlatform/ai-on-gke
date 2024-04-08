@@ -43,7 +43,7 @@ locals {
   )
   secret_templates_path = (
     var.secret_templates_path == null
-    ? "${path.module}/secret-templates"
+    ? "${path.module}/../templates/secret-templates"
     : pathexpand(var.secret_templates_path)
   )
   hugging_face_token_secret = (

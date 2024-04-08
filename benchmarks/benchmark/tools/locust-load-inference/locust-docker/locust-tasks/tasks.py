@@ -58,7 +58,7 @@ def generate_request(prompt):
             "temperature": 0.0 if use_beam_search else 1.0,
             "top_p": 1.0,
             "max_tokens": output_len,
-            "ignore_eos": True,
+            "ignore_eos": False,
             "stream": False,
         }
     elif backend == "tgi":
@@ -109,7 +109,10 @@ def get_token_count(prompt, resp):
     number_of_output_tokens = 0
 
     if backend == "vllm":
-        number_of_output_tokens = 0  # to be added
+        resp_dict = json.loads(resp.content.decode('utf-8'))
+        total_tokens = len(
+            tokenizer.encode(resp_dict["text"][0]))
+        number_of_output_tokens = total_tokens - number_of_input_tokens
     elif backend == "tgi":
         resp_dict = json.loads(resp.content.decode('utf-8'))
         number_of_output_tokens = len(
