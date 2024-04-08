@@ -96,7 +96,7 @@ def grab_metrics(start_time: float, end_time: float, filter: str, type: MetricTy
         return results
     except:
         print("No metrics found")
-        []
+        results = []
 
     return results
 
