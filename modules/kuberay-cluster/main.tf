@@ -34,9 +34,6 @@ resource "helm_release" "ray-cluster" {
   namespace        = var.namespace
   create_namespace = true
   version          = "1.0.0"
-  # Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
-  timeout = 1200
-  wait    = true
 
   values = [
     templatefile("${path.module}/values.yaml", {
