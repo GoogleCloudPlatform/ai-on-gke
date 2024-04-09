@@ -76,3 +76,11 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - jobset.x-k8s.io
+  resources:
+  - jobsets
+  verbs:
+  - get
+  - list
+  - watch

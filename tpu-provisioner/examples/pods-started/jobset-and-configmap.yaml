@@ -1,13 +1,8 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: test-started-threshold
----
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
-  #annotations:
-  #  alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool
+  annotations:
+    alpha.jobset.sigs.k8s.io/synced-start-configmap: test-synced-start
   name: test
   namespace: default
 spec:
@@ -17,17 +12,14 @@ spec:
     enableDNSHostnames: true
   replicatedJobs:
     - name: job
-      replicas: 3
+      replicas: 10
       template:
         spec:
           backoffLimit: 0
           completionMode: Indexed
-          completions: 90
-          parallelism: 90
+          completions: 100
+          parallelism: 100
           template:
-            metadata:
-              annotations:
-                tbd.com/started-threshold: "270"
             spec:
               initContainers:
                 # Check if the started threshold file is present before exiting and starting the main container.
@@ -37,10 +29,10 @@ spec:
                   command:
                     - bash
                     - -c
-                    - while true; do if [ -f /mnt/start-threshold/started ]; then break; fi; sleep 1; done
+                    - while true; do if [ -f /mnt/synced-start/all-started ]; then break; fi; sleep 1; done
                   volumeMounts:
-                    - mountPath: /mnt/start-threshold
-                      name: start-threshold
+                    - mountPath: /mnt/synced-start
+                      name: synced-start
               containers:
                 - name: b
                   image: ubuntu
@@ -54,12 +46,18 @@ spec:
                       cpu: 1m
                       memory: 1Mi
               volumes:
-                - name: start-threshold
+                - name: synced-start
                   configMap:
-                    # Format: {jobset-name}-started-threshold
-                    name: test-started-threshold
+                    # Format: {jobset-name}-synced-start
+                    name: test-synced-start
                     optional: true
               restartPolicy: Never
               terminationGracePeriodSeconds: 1
   successPolicy:
     operator: All
+# ConfigMap is optional.
+#---
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  name: test-synced-start

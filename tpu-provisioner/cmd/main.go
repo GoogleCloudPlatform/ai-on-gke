@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
 	"github.com/kelseyhightower/envconfig"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -48,9 +48,9 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/config/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -61,6 +61,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(jobset.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -109,22 +110,15 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: metricsAddr,
+		},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "ecaf1259.google.com",
-		Controller: v1alpha1.ControllerConfigurationSpec{
-			GroupKindConcurrency: map[string]int{
-				// Concurrent node pool creations:
-				schema.GroupKind{Kind: "Pod"}.String(): cfg.Concurrency,
-				// Concurrent node pool deletions:
-				schema.GroupKind{Kind: "Node"}.String(): cfg.Concurrency,
-			},
-		},
-		NewCache: cache.BuilderWithOptions(cache.Options{
-			SelectorsByObject: cache.SelectorsByObject{
+		Cache: cache.Options{
+			ByObject: map[client.Object]cache.ByObject{
 				&corev1.Node{}: {
 					// Only listen for Nodes with label selectors indicating that they
 					// are managed by this controller.
@@ -132,7 +126,6 @@ func main() {
 				},
 			},
 		},
-		),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -220,6 +213,7 @@ func main() {
 		PodCriteria: controller.PodCriteria{
 			ResourceType: cfg.PodResourceType,
 		},
+		Concurrency: cfg.Concurrency,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CreationReconciler")
 		os.Exit(1)
@@ -234,16 +228,16 @@ func main() {
 			MinLifetime:       cfg.NodeMinLifespan,
 			PoolDeletionDelay: cfg.NodepoolDeletionDelay,
 		},
+		Concurrency: cfg.Concurrency,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DeletionReconciler")
 		os.Exit(1)
 	}
 
-	if err := (&controller.PodsStartedReconciler{
+	if err := (&controller.SyncedStartReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
-		Provider: provider,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PodsStartedReconciler")
 		os.Exit(1)

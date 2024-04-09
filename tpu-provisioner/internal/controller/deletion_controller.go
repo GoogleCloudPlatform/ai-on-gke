@@ -17,10 +17,10 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // DeletionReconciler watches Pods and Nodes and deletes Node Pools.
@@ -32,6 +32,8 @@ type DeletionReconciler struct {
 
 	NodeCriteria               NodeCriteria
 	NodePoolsMarkedForDeletion sync.Map
+
+	Concurrency int
 }
 
 type NodeCriteria struct {
@@ -188,11 +190,14 @@ func (r *DeletionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	//       Because the of Watch on Pods below.
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Node{}).
-		Watches(&source.Kind{Type: &corev1.Pod{}}, handler.EnqueueRequestsFromMapFunc(handler.MapFunc(nodeForPod))).
+		Watches(&corev1.Pod{}, handler.EnqueueRequestsFromMapFunc(handler.MapFunc(nodeForPod))).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: r.Concurrency,
+		}).
 		Complete(r)
 }
 
-func nodeForPod(obj client.Object) []reconcile.Request {
+func nodeForPod(_ context.Context, obj client.Object) []reconcile.Request {
 	pod := obj.(*corev1.Pod)
 	if nodeName := pod.Spec.NodeName; nodeName != "" {
 		return []reconcile.Request{
