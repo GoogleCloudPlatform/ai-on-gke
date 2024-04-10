@@ -566,7 +566,7 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 	if replicaIndexLabel != "" {
 		replicaIndexLabelValues := strings.Split(replicaIndexLabel, "-")
-		replicaIndex, _ := strconv.Atoi(replicaIndexLabelValues[1]) // ignore error here since must be set
+		replicaIndex, _ := strconv.Atoi(replicaIndexLabelValues[len(replicaIndexLabelValues)-1]) // ignore error here since must be set
 
 		containers := pod.Spec.Containers
 		if containers == nil {
