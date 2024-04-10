@@ -47,8 +47,8 @@ spec:
     - -c
     - |
       cd /tmp/
-      pip install -U "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
-      pip install jaxlib jax flax flatbuffers tensorflow tensorflow-serving-api transformers
+      pip install -U "jax[tpu]==0.4.6" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+      pip install jaxlib==0.4.6 jax==0.4.6 flax==0.6.2 flatbuffers==23.3.3 tensorflow==2.11.1 tensorflow-serving-api==2.11.0 transformers==4.36.0
       cd jax/bert
       python3 export_bert_model.py
       echo exported bert model
