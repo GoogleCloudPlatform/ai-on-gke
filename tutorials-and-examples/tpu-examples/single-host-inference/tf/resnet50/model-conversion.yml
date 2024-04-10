@@ -19,7 +19,7 @@ spec:
     - |
       cd /tmp/
       git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git
-      cp -r ai-on-gke/gke-tpu-examples/single-host-inference/tf/resnet50 .
+      cp -r ai-on-gke/tutorials-and-examples/tpu-examples/single-host-inference/tf/resnet50 .
       echo got files for the demo!
   - name: export-resnet
     image: python:3.10
@@ -31,7 +31,7 @@ spec:
     - -c
     - |
       cd /tmp/
-      pip install -r ./resnet50/export-model-requirements.txt
+      pip install tensorflow tensorflow-serving-api pillow testresources
       cd resnet50
       python3 export_resnet_model.py
       echo exported resnet model

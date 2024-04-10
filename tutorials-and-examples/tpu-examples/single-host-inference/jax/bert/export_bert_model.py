@@ -14,7 +14,6 @@
 # ==============================================================================
 import logging
 import os
-import subprocess
 
 from jax.experimental import jax2tf
 import tensorflow as tf
