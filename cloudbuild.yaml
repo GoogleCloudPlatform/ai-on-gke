@@ -264,11 +264,11 @@ steps:
         kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID $(kubectl get pod -l app=jupyterhub,component=hub -n rag-$SHORT_SHA-$_BUILD_ID -o jsonpath="{.items[0].metadata.name}") -- jupyterhub token admin --log-level=CRITICAL | xargs python3 ./applications/rag/notebook_starter.py
         # Wait for jupyterhub to trigger notebook pod startup
         sleep 5s
-        kubectl wait --for=condition=Ready pod/jupyter-admin -n rag-$SHORT_SHA-$_BUILD_ID --timeout=60s
+        kubectl wait --for=condition=Ready pod/jupyter-admin -n rag-$SHORT_SHA-$_BUILD_ID --timeout=300s
         kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- jupyter nbconvert --to script /data/rag-kaggle-ray-sql-interactive.ipynb
         kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- ipython /data/rag-kaggle-ray-sql-interactive.py
 
-        python3 test_rag.py "http://127.0.0.1:8081/prompt"
+        python3 ./applications/rag/tests/test_rag.py "http://127.0.0.1:8081/prompt"
         echo "pass" > /workspace/rag_prompt_result.txt
 
     allowFailure: true
@@ -373,11 +373,11 @@ steps:
           exit 1
         fi
 
-        # TODO: re-add this check once generating embeddings in CI is stable
-        # if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
-        #   echo "rag frontend test failed"
-        #   exit 1
-        # fi
+        TODO: re-add this check once generating embeddings in CI is stable
+        if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
+          echo "rag frontend test failed"
+          exit 1
+        fi
 
     waitFor: ['cleanup gke cluster']
         
@@ -393,7 +393,7 @@ timeout: 5400s
 
 availableSecrets:
   secretManager:
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-username/versions/1
+  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-username/versions/latest
     env: 'KAGGLE_USERNAME'
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-key/versions/1
+  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-key/versions/latest
     env: 'KAGGLE_KEY'
