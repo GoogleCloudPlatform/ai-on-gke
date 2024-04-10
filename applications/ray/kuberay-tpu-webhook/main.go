@@ -46,7 +46,6 @@ var (
 
 	// headless svc will be of the form: {kuberay-cluster-name}-headless-worker-svc
 	headlessServiceSuffix = "headless-worker-svc"
-	headlessServiceName   string
 
 	// map of pod slices to workers in the slice
 	sliceToWorkers map[slice][]worker
@@ -144,14 +143,14 @@ func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec, clusterName string, na
 	hostNames := make([]string, numHosts)
 	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.headless-worker-svc
 	for j := 0; j < int(numHosts); j++ {
-		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s", workerGroupName, replicaIndex, j, headlessServiceName)
+		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", workerGroupName, replicaIndex, j, clusterName, headlessServiceSuffix)
 	}
 	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numHosts, "Replica Index", replicaIndex)
 	return strings.Join(hostNames, ","), nil
 }
 
 // inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
-func injectHostnames(hostNames string, envPath string, container corev1.Container, patches *[]patch) {
+func injectHostnames(clusterName string, hostNames string, envPath string, container corev1.Container, patches *[]patch) {
 	subdomainPatch, hostNamesPatch := patch{"op": "add"}, patch{"op": "add"}
 	subdomainPath := "/spec/subdomain"
 	tpuWorkerHostNames := corev1.EnvVar{
@@ -159,7 +158,7 @@ func injectHostnames(hostNames string, envPath string, container corev1.Containe
 		Value: hostNames,
 	}
 	subdomainPatch["path"] = subdomainPath
-	subdomainPatch["value"] = headlessServiceName
+	subdomainPatch["value"] = fmt.Sprintf("%s-%s", clusterName, headlessServiceSuffix)
 	// create new EnvVar array if container.Env is empty, and append hostnames if not
 	if len(container.Env) == 0 {
 		hostNamesPatch["path"] = envPath
@@ -264,7 +263,6 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	clusterName := raycluster.Name
 	namespace := raycluster.Namespace
 	klog.V(1).InfoS("validateRayCluster", "RayCluster", namespace+"/"+clusterName)
-	headlessServiceName = fmt.Sprintf("%s-%s", clusterName, headlessServiceSuffix)
 	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
 	if workerGroupSpecs == nil {
 		return nil, errors.New("WorkerGroupSpecs not specified")
@@ -487,7 +485,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 				if numOfHosts > 1 {
 					// inject TPU_WORKER_HOSTNAMES set during RayCluster interception
 					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", sliceToHostnames[podSlice])
-					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", headlessServiceName)
+					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", clusterName+"-"+headlessServiceSuffix)
 					injectHostnames(sliceToHostnames[podSlice], path, container, &patches)
 				}
 				// inject TPU_WORKER_ID
