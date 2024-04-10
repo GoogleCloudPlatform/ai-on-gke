@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,9 +31,7 @@ import (
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
 
@@ -110,6 +109,10 @@ func (r *SyncedStartReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				},
 			}); err != nil {
 				if apierrors.IsAlreadyExists(err) {
+					// Reconcile again and hopefully the cache will be updated
+					// by then, allowing the .Get() to succeed. Then the reconcile
+					// should progress to the subsequent steps. This check avoids noisy
+					// and unactionable errors being logged.
 					return ctrl.Result{Requeue: true}, nil
 				}
 				return ctrl.Result{}, fmt.Errorf("creating ConfigMap: %w", err)
@@ -156,15 +159,13 @@ func (r *SyncedStartReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	if !thresholdMet {
-		return ctrl.Result{}, nil
+		// Check again soon. We use polling to avoid needing
+		// to reconcile based on Pods which would be more noisy.
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	// Update the ConfigMap to indicate that all Pods have started.
 	cm.Data[allStartedConfigMapKey] = "true"
-
-	if err := ctrl.SetControllerReference(js, cm, r.Scheme); err != nil {
-		return ctrl.Result{}, fmt.Errorf("setting owner reference: %w", err)
-	}
 	if err := r.Update(ctx, cm); err != nil {
 		return ctrl.Result{}, fmt.Errorf("updating ConfigMap: %w", err)
 	}
@@ -176,30 +177,7 @@ func (r *SyncedStartReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *SyncedStartReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&jobset.JobSet{}).
-		Watches(&corev1.Pod{}, handler.EnqueueRequestsFromMapFunc(handler.MapFunc(jobsetForPod))).
 		Complete(r)
-	// TODO: Configure specific rate-limit settings if the default settings are not appropriate.
-}
-
-func jobsetForPod(_ context.Context, obj client.Object) []reconcile.Request {
-	labels := obj.GetLabels()
-	if labels == nil {
-		return nil
-	}
-
-	jobsetName, ok := labels[jobsetNameLabel]
-	if !ok {
-		return nil
-	}
-
-	return []reconcile.Request{
-		{
-			NamespacedName: types.NamespacedName{
-				Name:      jobsetName,
-				Namespace: obj.GetNamespace(),
-			},
-		},
-	}
 }
 
 func startedThreshold(js *jobset.JobSet) (int32, bool) {

@@ -17,8 +17,8 @@ spec:
         spec:
           backoffLimit: 0
           completionMode: Indexed
-          completions: 100
-          parallelism: 100
+          completions: 10
+          parallelism: 10
           template:
             spec:
               initContainers:
