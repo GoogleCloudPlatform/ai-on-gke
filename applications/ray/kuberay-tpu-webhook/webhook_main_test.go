@@ -985,8 +985,6 @@ func Test_GenDNSHostnames(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// save a copy of headlessServiceName so we can reset it after the test
-			headlessServiceNameCopy := strings.Clone(headlessServiceName)
-			headlessServiceName = instanceName + "-" + headlessServiceSuffix
 			tc.workerGroupSpec.NumOfHosts = tc.numOfHosts
 			hostnames, err := genDNSHostnames(*tc.workerGroupSpec, instanceName, namespaceStr, tc.replicaIndex)
 			if tc.numOfHosts == 0 {
@@ -994,7 +992,6 @@ func Test_GenDNSHostnames(t *testing.T) {
 			} else {
 				assert.Equal(t, tc.expectedHostnames, hostnames)
 			}
-			headlessServiceName = headlessServiceNameCopy
 		})
 	}
 }
@@ -1003,33 +1000,44 @@ func Test_InjectHostnames(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		numReplicas       int
+		numOfHosts        int
 		groupName         string
 		expectedSubdomain string
 		expectedHostnames string
 	}{
-		"injectHostnames for single-slice worker group": {
+		"injectHostnames for single-host worker group": {
 			// should create a patch to set the replicaIndex label with {$WORKER_GROUP_NAME-$REPLICA_INDEX}
-			numReplicas:       1,
+			numOfHosts:        1,
 			groupName:         "test-group-name",
 			expectedSubdomain: fmt.Sprintf("%s-%s", instanceName, headlessServiceSuffix),
 			expectedHostnames: fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 0, instanceName, headlessServiceSuffix),
 		},
-		"injectHostnames for multi-slice worker group": {
+		"injectHostnames for multi-host worker group": {
 			// should create a patch to set the replicaIndex label with {$WORKER_GROUP_NAME-$REPLICA_INDEX}
-			replicaIndex:         0,
-			groupName:            "test-group-name",
-			expectedReplicaLabel: "test-group-name-0",
+			numOfHosts:        1,
+			groupName:         "test-group-name",
+			expectedSubdomain: fmt.Sprintf("%s-%s", instanceName, headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 0, instanceName, headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 1, instanceName, headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 2, instanceName, headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 3, instanceName, headlessServiceSuffix),
+			}, ","),
 		},
 	}
 
 	// validate that a valid subdomain and TPU_WORKER_HOSTNAMES are injected into the Pod
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			testPod := testTPUWorker.DeepCopy()
+			expectedEnv := []corev1.EnvVar{corev1.EnvVar{Name: "TPU_WORKER_HOSTNAMES", Value: tc.expectedHostnames}}
 			expectedPatches := []patch{}
-			injectReplicaLabel(instanceName, namespaceStr, tc.replicaIndex, tc.groupName, &expectedPatches)
-			assert.Equal(t, "/metadata/labels/replicaIndex", expectedPatches[0]["path"])
-			assert.Equal(t, tc.expectedReplicaLabel, expectedPatches[0]["value"])
+			injectHostnames(instanceName, tc.expectedHostnames, "/spec/containers/0/env", testPod.Spec.Containers[0], &expectedPatches)
+			// check subdomain patch
+			assert.Equal(t, "/spec/subdomain", expectedPatches[0]["path"])
+			assert.Equal(t, tc.expectedSubdomain, expectedPatches[0]["value"])
+			// check hostnames patch
+			assert.Equal(t, "/spec/containers/0/env", expectedPatches[1]["path"])
+			assert.Equal(t, expectedEnv, expectedPatches[1]["value"])
 		})
 	}
 }

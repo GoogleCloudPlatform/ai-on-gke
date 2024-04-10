@@ -486,7 +486,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 					// inject TPU_WORKER_HOSTNAMES set during RayCluster interception
 					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", sliceToHostnames[podSlice])
 					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", clusterName+"-"+headlessServiceSuffix)
-					injectHostnames(sliceToHostnames[podSlice], path, container, &patches)
+					injectHostnames(clusterName, sliceToHostnames[podSlice], path, container, &patches)
 				}
 				// inject TPU_WORKER_ID
 				if getEnvironmentVariable("TPU_WORKER_ID", container) == "" {
