@@ -14,7 +14,6 @@
 """Export Resnet50 TensorFlow model."""
 import logging
 import os
-import subprocess
 
 import tensorflow as tf
 from tensorflow.keras.applications.resnet50 import ResNet50
