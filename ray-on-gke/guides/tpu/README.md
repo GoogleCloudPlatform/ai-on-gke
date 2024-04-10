@@ -57,7 +57,7 @@ The TPU Initialization Webhook automatically bootstraps the TPU environment for 
 
 5. `make deploy-cert`
 
-   
+For common errors encountered when deploying the webhook, see the [Troubleshooting guide](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/applications/ray/kuberay-tpu-webhook/Troubleshooting.md).
 
 ### Creating the Kuberay Cluster
 
