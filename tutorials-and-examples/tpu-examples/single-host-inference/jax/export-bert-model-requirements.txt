@@ -1,4 +1,0 @@
-jax
-tensorflow
-tensorflow-serving-api
-transformers
