@@ -31,7 +31,7 @@ spec:
     - -c
     - |
       cd /tmp/
-      pip install -r ./resnet50/export-model-requirements.txt
+      pip install tensorflow tensorflow-serving-api pillow testresources
       cd resnet50
       python3 export_resnet_model.py
       echo exported resnet model
