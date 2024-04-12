@@ -31,16 +31,7 @@ docker-build:
   
 # Push the docker image  
 docker-push:  
-	docker push ${IMG}  
-
-# Install once per cluster
-install-cert-manager:  
-	helm repo add jetstack https://charts.jetstack.io
-	helm repo update
-	helm install --create-namespace --namespace cert-manager --set installCRDs=true --set global.leaderElection.namespace=cert-manager cert-manager jetstack/cert-manager
-
-uninstall-cert-manager:
-	helm uninstall cert-manager -n cert-manager
+	docker push ${IMG}
 
 deploy-cert:
 	kubectl apply -f certs/
