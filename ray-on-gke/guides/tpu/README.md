@@ -46,16 +46,21 @@ accelerator_type       = "nvidia-tesla-t4"
 
 ### Manually Installing the TPU Initialization Webhook
 
-The TPU Initialization Webhook automatically bootstraps the TPU environment for TPU clusters. The webhook needs to be installed once per GKE cluster and requires a Kuberay Operator running v1.1+ and GKE cluster version of 1.28+. 
+The TPU Initialization Webhook automatically bootstraps the TPU environment for TPU clusters. The webhook needs to be installed once per GKE cluster and requires a Kuberay Operator running v1.1+ and GKE cluster version of 1.28+. The webhook requires [cert-manager](https://github.com/cert-manager/cert-manager) to be installed in-cluster to handle TLS certificate injection. cert-manager can be installed in both GKE standard and autopilot clusters using the following helm commands:
+```
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm install --create-namespace --namespace cert-manager --set installCRDs=true --set global.leaderElection.namespace=cert-manager cert-manager jetstack/cert-manager
+```
+After installing cert-manager, it may take up to two minutes for the certificate to become ready.
 
+Installing the webhook:
 1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
 2. `cd applications/ray/kuberay-tpu-webhook` 
-3. `make install-cert-manager` - it may take up to two minutes for the certificate to become ready
-4. `make deploy`
+3. `make deploy`
     - this will create the webhook deployment, configs, and service in the "ray-system" namespace
     - to change the namespace, edit the "namespace" value in each .yaml in deployments/ and certs/
-
-5. `make deploy-cert`
+4. `make deploy-cert`
 
    
 
