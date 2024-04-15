@@ -26,11 +26,12 @@ app = FastAPI()
 
 
 @app.get("/run")
-async def root(background_tasks: BackgroundTasks, duration=os.environ["DURATION"], users=os.environ["USERS"], rate=os.environ["RATE"]):
+async def root(background_tasks: BackgroundTasks, duration=os.environ["DURATION"], users=os.environ["USERS"], rate=os.environ["RATE"], namespace=os.environ["NAMESPACE"]):
 
     run: LocustRun = LocustRun(duration=duration,
                                users=users,
-                               rate=rate)
+                               rate=rate,
+                               namespace=namespace)
 
     background_tasks.add_task(call_locust, run)
 
@@ -38,7 +39,8 @@ async def root(background_tasks: BackgroundTasks, duration=os.environ["DURATION"
 
 
 def call_locust(run: LocustRun):
-    locust_service = "locust-master.benchmark.svc.cluster.local"
+    
+    locust_service = f"locust-master.{run.namespace}.svc.cluster.local"
 
     run.start_time = time.time()
 

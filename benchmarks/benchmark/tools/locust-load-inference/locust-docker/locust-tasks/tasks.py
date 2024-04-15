@@ -95,6 +95,11 @@ def generate_request(prompt):
             "max_tokens": output_len,
             "stream": False,
         }
+    elif backend == "jetstream":
+        pload = {
+            "prompt": prompt,
+            "max_tokens": output_len,
+        }
     else:
         raise ValueError(f"Unknown backend: {backend}")
     return pload
@@ -123,6 +128,8 @@ def get_token_count(prompt, resp):
             tokenizer.encode(resp_dict['text_output']))
     elif backend == "sax":
         number_of_output_tokens = 0  # to be added
+    elif backend == "jetstream":
+        number_of_output_tokens = 0
     else:
         raise ValueError(f"Unknown backend: {backend}")
     return number_of_input_tokens, number_of_output_tokens
