@@ -19,10 +19,11 @@ from enum import Enum
 class LocustRun:
     """Represents single run of Locust load tests."""
 
-    def __init__(self, duration, users, rate):
+    def __init__(self, duration, users, rate, namespace):
         self.duration = duration
         self.users = users
         self.rate = rate
+        self.namespace = namespace
 
     duration: int = 120
     users: int = 10
