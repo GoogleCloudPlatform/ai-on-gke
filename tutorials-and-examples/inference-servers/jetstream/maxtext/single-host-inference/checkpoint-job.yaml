@@ -1,72 +1,21 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: fetch-model-scripts
-data:
-  fetch_model.sh: |-
-    #!/usr/bin/bash -x
-    pip install kaggle --break-system-packages && \
-
-    MODEL_NAME=$(echo ${MODEL_PATH} | awk -F'/' '{print $2}') && \
-    VARIATION_NAME=$(echo ${MODEL_PATH} | awk -F'/' '{print $4}') && \
-
-    mkdir -p /data/${MODEL_NAME}_${VARIATION_NAME} &&\
-    kaggle models instances versions download ${MODEL_PATH} --untar -p /data/${MODEL_NAME}_${VARIATION_NAME} && \
-    echo -e "\nCompleted extraction to /data/${MODEL_NAME}_${VARIATION_NAME}" && \
-
-    gcloud storage rsync --recursive --no-clobber /data/${MODEL_NAME}_${VARIATION_NAME} gs://${BUCKET_NAME}/base/${MODEL_NAME}_${VARIATION_NAME} && \
-    echo -e "\nCompleted copy of data to gs://${BUCKET_NAME}/base/${MODEL_NAME}_${VARIATION_NAME}" && \
-
-    apt update && \
-    apt install python3-pip && \
-    apt-get install -y pkg-config && \
-    apt-get install -y cmake && \
-
-    git clone https://github.com/google/maxtext.git && \
-    cd maxtext && \
-    python3 -m pip install -r requirements.txt --break-system-packages && \
-    echo -e "\Cloned MaxText repository and completed installing requirements" && \
-
-    python3 MaxText/convert_gemma_chkpt.py --base_model_path gs://${BUCKET_NAME}/base/${MODEL_NAME}_${VARIATION_NAME}/${VARIATION_NAME} --maxtext_model_path gs://${BUCKET_NAME}/final/scanned/${MODEL_NAME}_${VARIATION_NAME} --model_size 7b && \
-    echo -e "\nCompleted conversion of checkpoint to gs://${BUCKET_NAME}/final/scanned/${MODEL_NAME}_${VARIATION_NAME}" && \
-
-    RUN_NAME=0 && \
-    
-    python3 MaxText/generate_param_only_checkpoint.py MaxText/configs/base.yml force_unroll=true model_name='gemma-7b' async_checkpointing=false run_name=${RUN_NAME} load_parameters_path=gs://${BUCKET_NAME}/final/scanned/${MODEL_NAME}_${VARIATION_NAME}/0/items base_output_directory=gs://${BUCKET_NAME}/final/unscanned/${MODEL_NAME}_${VARIATION_NAME} && \
-    echo -e "\nCompleted unscanning checkpoint to gs://${BUCKET_NAME}/final/unscanned/${MODEL_NAME}_${VARIATION_NAME}/${RUN_NAME}/checkpoints/0/items"
----
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: data-loader-7b
-  labels:
-    app: data-loader-7b
 spec:
   ttlSecondsAfterFinished: 30
   template:
-    metadata:
-      labels:
-        app: data-loader-7b
     spec:
       restartPolicy: Never
       containers:
-      - name: gcloud
-        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
-        command:
-        - /scripts/fetch_model.sh
-        env:
-        - name: BUCKET_NAME
-          value: <bucket name here>
-        - name: KAGGLE_CONFIG_DIR
-          value: /kaggle
-        - name: MODEL_PATH
-          value: "google/gemma/maxtext/7b-it/2"
+      - name: inference-checkpoint
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.0
+        args:
+        - -b=BUCKET_NAME
+        - -m=google/gemma/maxtext/7b-it/2
         volumeMounts:
         - mountPath: "/kaggle/"
           name: kaggle-credentials
-          readOnly: true
-        - mountPath: "/scripts/"
-          name: scripts-volume
           readOnly: true
         resources:
           requests:
@@ -81,7 +30,3 @@ spec:
         secret:
           defaultMode: 0400
           secretName: kaggle-secret
-      - name: scripts-volume
-        configMap:
-          defaultMode: 0700
-          name: fetch-model-scripts

@@ -125,7 +125,7 @@ In this example, we will deploy a Maxengine server targeting Gemma-7b model. You
 
 Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
 
-Configure the model checkpoint by adding `load_parameters_path=<GCS bucket path to your checkpoint>` under `args`, you can optionally deploy `deployment.yaml` without adding the checkpoint path. 
+In the manifest, ensure the value of the BUCKET_NAME is the name of the Cloud Storage bucket that was used when converting your checkpoint.
 
 Argument descriptions:
 ```
@@ -137,6 +137,7 @@ max_target_length: Maximum sequence length
 model_name: Model name
 ici_fsdp_parallelism: The number of shards for FSDP parallelism
 ici_autoregressive_parallelism: The number of shards for autoregressive parallelism
+ici_tensor_parallelism: The number of shards for tensor parallelism
 weight_dtype: Weight data type (e.g. bfloat16)
 scan_layers: Scan layers boolean flag
 ```
@@ -216,3 +217,15 @@ docker build -t jetstream-http .
 docker tag jetstream-http gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 ```
+
+### Interact with the Maxengine server directly using gRPC
+
+The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. If you would like to interact directly with the Maxengine server directly for use cases such as [benchmarking](https://github.com/google/JetStream/tree/main/benchmarks), you can do so by following the Jetstream benchmarking setup and applying the `deployment-grpc.yaml` manifest file.
+
+```
+kubectl apply -f deployment-grpc.yaml
+
+kubectl port-forward svc/maxengine-svc 9000:9000
+```
+
+To run benchmarking, pass in the flag `--server localhost` when running the benchmarking script.

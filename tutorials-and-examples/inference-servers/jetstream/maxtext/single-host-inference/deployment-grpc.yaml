@@ -32,7 +32,6 @@ spec:
         - ici_tensor_parallelism=1
         - scan_layers=false
         - weight_dtype=bfloat16
-        - load_parameters_path=gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
         ports:
         - containerPort: 9000
         resources:
@@ -40,19 +39,15 @@ spec:
             google.com/tpu: 8
           limits:
             google.com/tpu: 8
-      - name: jetstream-http
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.0
-        ports:
-        - containerPort: 8000
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: jetstream-http-svc
+  name: maxengine-svc
 spec:
   selector:
     app: maxengine-server
   ports:
   - protocol: TCP
-    port: 8000
-    targetPort: 8000
+    port: 9000
+    targetPort: 9000
