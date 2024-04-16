@@ -15,7 +15,7 @@
 # limitations under the License.
 
 LOCUST="/usr/local/bin/locust"
-LOCUS_OPTS="-f /locust-tasks/tasks.py --host=$TARGET_HOST"
+LOCUST_OPTS="-f /locust-tasks/tasks.py --host=$TARGET_HOST"
 LOCUST_MODE=${LOCUST_MODE:-standalone}
 
 if [[ "$LOCUST_MODE" = "master" ]]; then
@@ -24,7 +24,10 @@ if [[ "$LOCUST_MODE" = "master" ]]; then
     # For inferencing workloads with large payload having no wait time is unreasonable.
     # This timeout is set to large amount to avoid user tasks being killed too early.
     # TODO: turn timeout into a variable.
-    LOCUS_OPTS="$LOCUS_OPTS --master --stop-timeout 10800"
+    LOCUST_OPTS="$LOCUST_OPTS --master "
+    if [[ "$STOP_TIMEOUT" != 0 ]]; then
+        LOCUST_OPTS="$LOCUST_OPTS --stop-timeout $STOP_TIMEOUT"
+    fi
 elif [[ "$LOCUST_MODE" = "worker" ]]; then
     huggingface-cli login --token $HUGGINGFACE_TOKEN
     FILTER_PROMPTS="python /locust-tasks/load_data.py"
@@ -32,9 +35,9 @@ elif [[ "$LOCUST_MODE" = "worker" ]]; then
     echo "$FILTER_PROMPTS $FILTER_PROMPTS_OPTS"
     $FILTER_PROMPTS $FILTER_PROMPTS_OPTS
 
-    LOCUS_OPTS="$LOCUS_OPTS --worker --master-host=$LOCUST_MASTER"
+    LOCUST_OPTS="$LOCUST_OPTS --worker --master-host=$LOCUST_MASTER"
 fi
 
-echo "$LOCUST $LOCUS_OPTS"
+echo "$LOCUST $LOCUST_OPTS"
 
-$LOCUST $LOCUS_OPTS
+$LOCUST $LOCUST_OPTS

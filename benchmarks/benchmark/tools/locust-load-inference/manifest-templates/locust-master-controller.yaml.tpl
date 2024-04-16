@@ -27,6 +27,8 @@ spec:
               value: http://${inference_server_service}
             - name: BACKEND
               value: ${inference_server_framework}
+            - name: STOP_TIMEOUT
+              value: ${stop_timeout}
           ports:
             - name: loc-master-web
               containerPort: 8089

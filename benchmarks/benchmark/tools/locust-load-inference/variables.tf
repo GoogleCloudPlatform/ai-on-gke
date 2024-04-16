@@ -71,6 +71,12 @@ variable "num_locust_workers" {
   default     = 1
 }
 
+variable "stop_timeout" {
+  description = "Length of time before a locust job is stopped."
+  type        = number
+  default     = 0
+}
+
 variable "inference_server_service" {
   description = "Inference server service"
   type        = string
@@ -83,8 +89,8 @@ variable "inference_server_framework" {
   nullable    = false
   default     = "tgi"
   validation {
-    condition     = var.inference_server_framework == "vllm" || var.inference_server_framework == "tgi" || var.inference_server_framework == "tensorrt_llm_triton" || var.inference_server_framework == "sax"
-    error_message = "The inference_server_framework must be one of: vllm, tgi, tensorrt_llm_triton, sax."
+    condition     = var.inference_server_framework == "vllm" || var.inference_server_framework == "tgi" || var.inference_server_framework == "tensorrt_llm_triton" || var.inference_server_framework == "sax" || var.inference_server_framework == "jetstream"
+    error_message = "The inference_server_framework must be one of: vllm, tgi, tensorrt_llm_triton, sax, or jetstream."
   }
 }
 
