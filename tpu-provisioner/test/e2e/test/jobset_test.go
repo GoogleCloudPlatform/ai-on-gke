@@ -283,8 +283,15 @@ func newJobset(name string, c tpuConfig, uniqueNodeSelector bool) *jobset.JobSet
 	if c.reservation != "" {
 		nodeSelectors["cloud.google.com/reservation-name"] = c.reservation
 	}
+	var tolerations []v1.Toleration
 	if c.spot {
 		nodeSelectors["cloud.google.com/gke-spot"] = "true"
+		tolerations = append(tolerations, v1.Toleration{
+			Key:      "cloud.google.com/gke-spot",
+			Operator: v1.TolerationOpEqual,
+			Value:    "true",
+			Effect:   v1.TaintEffectNoSchedule,
+		})
 	}
 
 	return &jobset.JobSet{
@@ -320,6 +327,7 @@ func newJobset(name string, c tpuConfig, uniqueNodeSelector bool) *jobset.JobSet
 								},
 								Spec: v1.PodSpec{
 									NodeSelector: nodeSelectors,
+									Tolerations:  tolerations,
 									Containers: []v1.Container{
 										{
 											Name:  "main",
