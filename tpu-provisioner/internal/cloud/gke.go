@@ -262,6 +262,19 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		}
 	}
 
+	var taints []*containerv1beta1.NodeTaint
+
+	spot := p.Spec.NodeSelector["cloud.google.com/gke-spot"] == "true"
+	if spot {
+		// Add the taint that NAP would add.
+		// https://cloud.google.com/kubernetes-engine/docs/concepts/spot-vms#spotvms-nap
+		taints = append(taints, &containerv1beta1.NodeTaint{
+			Key:    "cloud.google.com/gke-spot",
+			Value:  "true",
+			Effect: "NO_SCHEDULE",
+		})
+	}
+
 	var secondaryDisks []containerv1beta1.SecondaryBootDisk
 	if g.ClusterContext.NodeSecondaryDisk != "" {
 		secondaryDisks = []containerv1beta1.SecondaryBootDisk{
@@ -288,6 +301,8 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 			MachineType:         machineType,
 			ReservationAffinity: reservation,
 			Labels:              labels,
+			Spot:                spot,
+			Taints:              taints,
 		},
 		InitialNodeCount: int64(nodeCount),
 		Locations:        []string{g.ClusterContext.NodeZone},
