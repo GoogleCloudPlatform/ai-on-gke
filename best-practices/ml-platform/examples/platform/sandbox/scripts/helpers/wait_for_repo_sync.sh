@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,35 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -u
 
-terraform {
-  required_version = "~> 1.7.5"
+LAST_COMMIT=${LAST_COMMIT:-${1}}
 
-  required_providers {
-    github = {
-      source  = "integrations/github"
-      version = "6.0.1"
-    }
-    google = {
-      source  = "hashicorp/google"
-      version = "5.19.0"
-    }
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = "5.19.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.29.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = "3.2.2"
-    }
-  }
-}
+last_synced_commit=$(kubectl get reposync ${REPO_SYNC_NAME} -n ${REPO_SYNC_NAMESPACE} --output go-template='{{.status.lastSyncedCommit}}')
+while [[ ${last_synced_commit} != ${LAST_COMMIT} ]]; do
+    echo "Waiting for reposync '${REPO_SYNC_NAME}' in namespace '${REPO_SYNC_NAMESPACE}' to synchronize..."
+    sleep 10
+    last_synced_commit=$(kubectl get reposync ${REPO_SYNC_NAME} -n ${REPO_SYNC_NAMESPACE} --output go-template='{{.status.lastSyncedCommit}}')
+done
 
-provider "github" {
-  owner = var.github_org
-  token = var.github_token
-}
+echo "reposync '${REPO_SYNC_NAME}' has synchronize"

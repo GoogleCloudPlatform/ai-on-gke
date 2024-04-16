@@ -12,11 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+locals {
+  # https://github.com/hashicorp/terraform-provider-google/issues/13325
+  connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${module.gke.cluster_name}"
+  kubeconfig_dir           = abspath("${path.module}/kubeconfig")
+}
+
 #
 # Project
 ##########################################################################
 data "google_project" "environment" {
   project_id = var.environment_project_id
+}
+
+resource "google_project_service" "compute_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "compute.googleapis.com"
 }
 
 resource "google_project_service" "containerfilesystem_googleapis_com" {
@@ -61,13 +74,6 @@ resource "google_project_service" "project_services-con" {
   service                    = "container.googleapis.com"
 }
 
-resource "google_project_service" "project_services-com" {
-  disable_dependent_services = false
-  disable_on_destroy         = false
-  project                    = data.google_project.environment.project_id
-  service                    = "compute.googleapis.com"
-}
-
 resource "google_project_service" "project_services-gkecon" {
   disable_dependent_services = false
   disable_on_destroy         = false
@@ -103,7 +109,7 @@ module "create-vpc" {
   source = "../../../terraform/modules/network"
 
   depends_on = [
-    google_project_service.project_services-com
+    google_project_service.compute_googleapis_com
   ]
 
   network_name     = format("%s-%s", var.network_name, var.environment_name)
@@ -133,10 +139,11 @@ module "cloud-nat" {
 ##########################################################################
 resource "google_gke_hub_feature" "configmanagement_acm_feature" {
   depends_on = [
+    github_branch.environment,
+    google_project_service.compute_googleapis_com,
     google_project_service.project_services-gkeh,
     google_project_service.project_services-anc,
     google_project_service.project_services-an,
-    google_project_service.project_services-com,
     google_project_service.project_services-gkecon
   ]
 
@@ -150,14 +157,15 @@ module "gke" {
 
   depends_on = [
     google_gke_hub_feature.configmanagement_acm_feature,
+    google_project_service.compute_googleapis_com,
     google_project_service.project_services-con,
-    google_project_service.project_services-com
+    module.cloud-nat
   ]
 
   cluster_name                = format("%s-%s", var.cluster_name, var.environment_name)
   env                         = var.environment_name
   initial_node_count          = 1
-  machine_type                = "n2-standard-8"
+  machine_type                = "e2-standard-4"
   master_auth_networks_ipcidr = var.subnet_01_ip
   network                     = module.create-vpc.vpc
   project_id                  = data.google_project.environment.project_id
@@ -277,10 +285,12 @@ resource "google_gke_hub_membership" "membership" {
 
 resource "google_gke_hub_feature_membership" "feature_member" {
   depends_on = [
+    github_branch.environment,
     google_project_service.project_services-gkecon,
     google_project_service.project_services-gkeh,
     google_project_service.project_services-an,
-    google_project_service.project_services-anc
+    google_project_service.project_services-anc,
+    module.cloud-nat
   ]
 
   feature    = "configmanagement"
@@ -350,9 +360,51 @@ resource "github_branch_default" "environment" {
 #
 # Scripts
 ##########################################################################
+provider "kubernetes" {
+  host  = local.connect_gateway_host_url
+  token = data.google_client_config.default.access_token
+}
+
+resource "null_resource" "connect_gateway_kubeconfig" {
+  provisioner "local-exec" {
+    command     = <<EOT
+KUBECONFIG="${self.triggers.project_id}_${self.triggers.membership_id}" \
+gcloud container fleet memberships get-credentials ${self.triggers.membership_id} \
+--project ${self.triggers.project_id}
+    EOT
+    interpreter = ["bash", "-c"]
+    working_dir = self.triggers.kubeconfig_dir
+  }
+
+  provisioner "local-exec" {
+    command     = "rm -f ${self.triggers.project_id}_${self.triggers.membership_id}"
+    when        = destroy
+    interpreter = ["bash", "-c"]
+    working_dir = self.triggers.kubeconfig_dir
+  }
+
+  triggers = {
+    kubeconfig_dir = local.kubeconfig_dir
+    membership_id  = google_gke_hub_membership.membership.membership_id
+    project_id     = data.google_project.environment.project_id
+  }
+}
+
+data "kubernetes_namespace_v1" "team" {
+  depends_on = [
+    null_resource.create_git_cred_ns,
+    null_resource.create_namespace
+  ]
+
+  metadata {
+    name = var.namespace
+  }
+}
+
 resource "null_resource" "create_cluster_yamls" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member
+    google_gke_hub_feature_membership.feature_member,
+    module.gke,
   ]
 
   provisioner "local-exec" {
@@ -371,15 +423,14 @@ resource "null_resource" "create_cluster_yamls" {
 resource "null_resource" "create_git_cred_cms" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
-    module.cloud-nat,
-    module.gke,
-    module.node_pool_cpu_n2s8
+    null_resource.connect_gateway_kubeconfig
   ]
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${data.google_project.environment.project_id} ${var.github_user} config-management-system"
     environment = {
-      GIT_TOKEN = var.github_token
+      GIT_TOKEN  = var.github_token
+      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.membership.membership_id}"
     }
   }
 
@@ -392,6 +443,7 @@ resource "null_resource" "create_git_cred_cms" {
 resource "null_resource" "install_kuberay_operator" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
+    module.gke,
     null_resource.create_git_cred_cms
   ]
 
@@ -431,6 +483,7 @@ resource "google_service_account_iam_member" "namespace_default_iam_workload_ide
 resource "null_resource" "create_namespace" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
+    module.gke,
     null_resource.install_kuberay_operator
   ]
 
@@ -441,22 +494,48 @@ resource "null_resource" "create_namespace" {
     }
   }
 
+  provisioner "local-exec" {
+    command = "scripts/namespace_cleanup.sh"
+    environment = {
+      GIT_EMAIL           = self.triggers.github_email
+      GIT_REPOSITORY      = self.triggers.git_repository
+      GIT_TOKEN           = self.triggers.github_token
+      GIT_USERNAME        = self.triggers.github_user
+      KUBECONFIG          = self.triggers.kubeconfig
+      K8S_NAMESPACE       = self.triggers.namespace
+      REPO_SYNC_NAME      = self.triggers.repo_sync_name
+      REPO_SYNC_NAMESPACE = self.triggers.repo_sync_namespace
+      ROOT_SYNC_NAME      = self.triggers.root_sync_name
+    }
+    when        = destroy
+    working_dir = path.module
+  }
+
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/team", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/team/${f}")]))
-    md5_script = filemd5("${path.module}/scripts/create_namespace.sh")
+    git_repository      = github_repository.acm_repo.full_name
+    github_email        = var.github_email
+    github_token        = var.github_token
+    github_user         = var.github_user
+    kubeconfig          = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.membership.membership_id}"
+    md5_files           = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/team", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/team/${f}")]))
+    md5_script          = filemd5("${path.module}/scripts/create_namespace.sh")
+    namespace           = var.namespace
+    repo_sync_name      = "${var.environment_name}-${var.namespace}"
+    repo_sync_namespace = var.namespace
+    root_sync_name      = "root-sync"
   }
 }
 
 resource "null_resource" "create_git_cred_ns" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member,
-    null_resource.create_namespace
+    null_resource.connect_gateway_kubeconfig
   ]
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${module.gke.gke_project_id} ${var.github_user} ${var.namespace}"
     environment = {
-      GIT_TOKEN = var.github_token
+      GIT_TOKEN  = var.github_token
+      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.membership.membership_id}"
     }
   }
 
@@ -506,6 +585,7 @@ resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_
 resource "null_resource" "install_ray_cluster" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
+    module.gke,
     null_resource.create_git_cred_ns
   ]
 
@@ -525,6 +605,7 @@ resource "null_resource" "install_ray_cluster" {
 resource "null_resource" "manage_ray_ns" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
+    module.gke,
     null_resource.create_git_cred_ns,
     null_resource.install_ray_cluster
   ]
@@ -539,4 +620,11 @@ resource "null_resource" "manage_ray_ns" {
   triggers = {
     md5_script = filemd5("${path.module}/scripts/manage_ray_ns.sh")
   }
+}
+
+###############################################################################
+# OUTPUT
+###############################################################################
+output "configsync_repository" {
+  value = github_repository.acm_repo.html_url
 }
