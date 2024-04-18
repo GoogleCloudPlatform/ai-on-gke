@@ -1144,14 +1144,27 @@ func Test_ValidateRayCluster(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		rayCluster       *rayv1.RayCluster
-		topology         string
-		numOfHosts       int32
-		replicas         *int32
-		expectedResponse *admissionv1.AdmissionResponse
-		expectedAllowed  bool
-		expectedResult   *metav1.Status
+		rayCluster       	*rayv1.RayCluster
+		topology         	string
+		numOfHosts       	int32
+		replicas         	*int32
+		missingWorkerGroups	bool
+		expectedResponse 	*admissionv1.AdmissionResponse
+		expectedAllowed  	bool
+		expectedResult   	*metav1.Status
 	}{
+		"validateRayCluster no workerGroupSpecs": {
+			// doesn't create any workergroups, pass-through
+			rayCluster:      	 testRayCluster.DeepCopy(),
+			topology:        	 "",
+			numOfHosts:      	 int32(1),
+			missingWorkerGroups: false,
+			expectedAllowed: 	 true,
+			expectedResult: 	 &metav1.Status{
+									Status:  "Success",
+									Message: "",
+								},
+		},
 		"validateRayCluster no TPUs requested": {
 			// doesn't request TPUs, pass-through
 			rayCluster:      testRayCluster.DeepCopy(),
@@ -1236,13 +1249,17 @@ func Test_ValidateRayCluster(t *testing.T) {
 			admissionReview.Request.Kind.Kind = "RayCluster"
 			admissionReview.Request.Operation = "CREATE"
 			// set RayCluster worker group values
-			if tc.topology == "" {
-				tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.Containers[0].Resources.Limits["google.com/tpu"] = resource.MustParse("0")
-				tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.Containers[0].Resources.Requests["google.com/tpu"] = resource.MustParse("0")
+			if tc.missingWorkerGroups {
+				tc.rayCluster.Spec.WorkerGroupSpecs = nil
+			} else {
+				if tc.topology == "" {
+					tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.Containers[0].Resources.Limits["google.com/tpu"] = resource.MustParse("0")
+					tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.Containers[0].Resources.Requests["google.com/tpu"] = resource.MustParse("0")
+				}
+				tc.rayCluster.Spec.WorkerGroupSpecs[0].Replicas = tc.replicas
+				tc.rayCluster.Spec.WorkerGroupSpecs[0].NumOfHosts = tc.numOfHosts
+				tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"] = tc.topology
 			}
-			tc.rayCluster.Spec.WorkerGroupSpecs[0].Replicas = tc.replicas
-			tc.rayCluster.Spec.WorkerGroupSpecs[0].NumOfHosts = tc.numOfHosts
-			tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"] = tc.topology
 			jsonRayCluster, _ := json.Marshal(tc.rayCluster)
 			admissionReview.Request.Object.Raw = jsonRayCluster
 			admissionReview.Request.Object.Object = tc.rayCluster

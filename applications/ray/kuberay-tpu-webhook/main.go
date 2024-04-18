@@ -264,9 +264,6 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	namespace := raycluster.Namespace
 	klog.V(1).InfoS("validateRayCluster", "RayCluster", namespace+"/"+clusterName)
 	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
-	if workerGroupSpecs == nil {
-		return nil, errors.New("WorkerGroupSpecs not specified")
-	}
 	for i := 0; i < len(workerGroupSpecs); i++ {
 		workerGroupSpec := workerGroupSpecs[i]
 		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
