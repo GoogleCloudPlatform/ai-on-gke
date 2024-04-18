@@ -81,7 +81,7 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if c.Type == corev1.NodeReady &&
 			c.Status == corev1.ConditionUnknown &&
 			time.Since(c.LastTransitionTime.Time) > 10*time.Minute {
-			lg.Info("Node has been in an Unknown state for too long, will delete Node Pool", "timeSinceLastTransition", time.Since(c.LastTransitionTime.Time))
+			lg.Info("Node has been in an Unknown state for too long, deleting Node Pool", "timeSinceLastTransition", time.Since(c.LastTransitionTime.Time), "nodePoolName", nodePoolName)
 			return r.deleteNodePool(&node, nodePoolName)
 		}
 		if c.Type == corev1.NodeReady &&
@@ -156,7 +156,7 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	lg.Info(fmt.Sprintf("Node pool %q passed deletion check twice. Ensuring Node Pool is deleted", nodePoolName))
+	lg.Info("Node pool passed deletion check twice. Ensuring Node Pool is deleted", "nodePoolName", nodePoolName)
 	return r.deleteNodePool(&node, nodePoolName)
 }
 
