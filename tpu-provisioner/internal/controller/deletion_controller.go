@@ -69,8 +69,21 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
+	nodePoolLabelKey := r.Provider.NodePoolLabelKey()
+	nodePoolName, ok := node.GetLabels()[nodePoolLabelKey]
+	if !ok {
+		lg.V(3).Info("No node pool label found on node, ignoring", "labelKey", nodePoolLabelKey)
+		return ctrl.Result{}, nil
+	}
+
 	// Avoid noisy reconciliation when nodes are shutting down.
 	for _, c := range node.Status.Conditions {
+		if c.Type == corev1.NodeReady &&
+			c.Status == corev1.ConditionUnknown &&
+			time.Since(c.LastTransitionTime.Time) > 10*time.Minute {
+			lg.Info("Node has been in an Unknown state for too long, will delete Node Pool", "timeSinceLastTransition", time.Since(c.LastTransitionTime.Time))
+			return r.deleteNodePool(&node, nodePoolName)
+		}
 		if c.Type == corev1.NodeReady &&
 			c.Status == corev1.ConditionFalse &&
 			c.Reason == "KubeletNotReady" &&
@@ -85,13 +98,6 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		wait := r.NodeCriteria.MinLifetime - since + time.Second
 		lg.V(3).Info("Node was just created, ignoring", "waiting", wait)
 		return ctrl.Result{RequeueAfter: wait}, nil
-	}
-
-	nodePoolLabelKey := r.Provider.NodePoolLabelKey()
-	nodePoolName, ok := node.GetLabels()[nodePoolLabelKey]
-	if !ok {
-		lg.V(3).Info("No node pool label found on node, ignoring", "labelKey", nodePoolLabelKey)
-		return ctrl.Result{}, nil
 	}
 
 	// Get all node in the same node pool.
@@ -150,12 +156,15 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
+	lg.Info(fmt.Sprintf("Node pool %q passed deletion check twice. Ensuring Node Pool is deleted", nodePoolName))
+	return r.deleteNodePool(&node, nodePoolName)
+}
+
+func (r *DeletionReconciler) deleteNodePool(node *corev1.Node, nodePoolName string) (ctrl.Result, error) {
 	// If this point is reached, the node pool has passed the deletion check twice
 	// and can be deleted.
-	lg.Info(fmt.Sprintf("Node pool %q passed deletion check twice. Ensuring Node Pool is deleted", nodePoolName))
-	if err := r.Provider.DeleteNodePoolForNode(&node, "no user Pods are running on any of the Nodes in this node pool"); err != nil {
+	if err := r.Provider.DeleteNodePoolForNode(node, "no user Pods are running on any of the Nodes in this node pool"); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
-			lg.V(3).Info("Ignoring duplicate request to delete node pool")
 			return ctrl.Result{}, nil
 		} else {
 			return ctrl.Result{}, err
