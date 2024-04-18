@@ -76,13 +76,24 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
+	lg = lg.WithValues("nodePoolName", nodePoolName)
+
 	// Avoid noisy reconciliation when nodes are shutting down.
 	for _, c := range node.Status.Conditions {
 		if c.Type == corev1.NodeReady &&
-			c.Status == corev1.ConditionUnknown &&
-			time.Since(c.LastTransitionTime.Time) > 20*time.Minute {
-			lg.Info("Node has been in an Unknown state for too long, deleting Node Pool", "timeSinceLastTransition", time.Since(c.LastTransitionTime.Time), "nodePoolName", nodePoolName)
-			return r.deleteNodePool(&node, nodePoolName)
+			c.Status == corev1.ConditionUnknown {
+			const unknownThreshold = 20 * time.Minute
+			if unknownDuration := time.Since(c.LastTransitionTime.Time); unknownDuration >= unknownThreshold {
+				lg.Info("Node has been in an Unknown state for too long, deleting Node Pool", "timeSinceLastTransition", time.Since(c.LastTransitionTime.Time))
+				return r.deleteNodePool(&node, nodePoolName)
+			} else {
+				waitTime := unknownThreshold - unknownDuration + time.Minute
+				lg.Info("Node is in an Unknown state, waiting",
+					"timeSinceLastTransition", time.Since(c.LastTransitionTime.Time),
+					"waiting", waitTime,
+				)
+				return ctrl.Result{RequeueAfter: waitTime}, nil
+			}
 		}
 		if c.Type == corev1.NodeReady &&
 			c.Status == corev1.ConditionFalse &&
@@ -156,7 +167,7 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	lg.Info("Node pool passed deletion check twice. Ensuring Node Pool is deleted", "nodePoolName", nodePoolName)
+	lg.Info("Node pool passed deletion check twice. Ensuring Node Pool is deleted")
 	return r.deleteNodePool(&node, nodePoolName)
 }
 
