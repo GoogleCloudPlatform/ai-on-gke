@@ -82,7 +82,7 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	for _, c := range node.Status.Conditions {
 		if c.Type == corev1.NodeReady &&
 			c.Status == corev1.ConditionUnknown {
-			const unknownThreshold = 20 * time.Minute
+			const unknownThreshold = 10 * time.Minute
 			if unknownDuration := time.Since(c.LastTransitionTime.Time); unknownDuration >= unknownThreshold {
 				lg.Info("Node has been in an Unknown state for too long, deleting Node Pool", "timeSinceLastTransition", time.Since(c.LastTransitionTime.Time))
 				return r.deleteNodePool(&node, nodePoolName)
