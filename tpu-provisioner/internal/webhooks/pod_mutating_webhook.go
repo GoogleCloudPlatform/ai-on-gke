@@ -46,8 +46,7 @@ func (p *podWebhook) InjectDecoder(d *admission.Decoder) error {
 	return nil
 }
 
-// Default will mutate pods being created by injecting the following nodeSelector:
-// 1. pod
+// Default applies mutations to pods which are part of a JobSet.
 func (p *podWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	pod, ok := obj.(*corev1.Pod)
 	if !ok || !partOfJobSet(pod) {
