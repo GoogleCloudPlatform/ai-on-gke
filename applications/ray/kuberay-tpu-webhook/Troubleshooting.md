@@ -5,7 +5,17 @@ Solutions will be added as new issues are encountered.
 ## `TPU_WORKER_HOSTNAMES` aren't injected into the Pod environment
 
 ### Symptoms
-This may be the issue if multi-host Jax initialization fails with error `RuntimeError: Unable to initialize backend 'tpu': UNKNOWN: TPU initialization failed`. Verify that `TPU_WORKER_HOSTNAMES` are missing from the Pod environment with `kubectl describe`.
+This may be the issue if multi-host Jax initialization fails with error `RuntimeError: Unable to initialize backend 'tpu': UNKNOWN: TPU initialization failed`. Verify that `TPU_WORKER_HOSTNAMES` are missing from the Pod environment with `kubectl describe`. The Pod environment output by `kubectl describe {$POD_NAME}` should look similar to:
+```
+Containers:
+  ray-worker:
+  ...
+    Environment:
+      ...
+      TPU_WORKER_HOSTNAMES: list of NumOfHosts DNS hostnames
+      TPU_WORKER_ID:        unique Integer between 0 and NumOfHosts representing ID of worker within the Pod slice
+      TPU_NAME:             worker group name followed by the replica index (e.g. workergroup-0)
+```
 
 ### Solution #1
 `TPU_WORKER_HOSTNAMES` are only injected for multi-host worker groups. If you're expecting `TPU_WORKER_HOSTNAMES` to be injected, check that the `NumOfHosts` field in your Ray worker group spec is set to a value greater than 1.
