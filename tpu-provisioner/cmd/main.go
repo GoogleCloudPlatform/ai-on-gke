@@ -38,7 +38,7 @@ import (
 	"cloud.google.com/go/compute/metadata"
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/controller"
-
+	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/webhooks"
 	containerv1beta1 "google.golang.org/api/container/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -135,6 +135,13 @@ func main() {
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	// Set up pod mutating webhook.
+	podWebHook := webhooks.NewPodWebhook(mgr.GetClient())
+	if err := podWebHook.SetupPodWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to set up webhook", "webhook", "pod")
 		os.Exit(1)
 	}
 

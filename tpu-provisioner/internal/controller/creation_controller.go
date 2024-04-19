@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
 
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -111,4 +112,15 @@ func (r *CreationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				!podDeleted(pod)
 		})).
 		Complete(r)
+}
+
+// IsLeaderPod returns true if the given pod is a leader pod (job completion index of 0),
+// otherwise it returns false.
+func isLeaderPod(pod *corev1.Pod) bool {
+	return pod.Annotations[batchv1.JobCompletionIndexAnnotation] == "0"
+}
+
+// podDeleted returns true if hte pod has been marked for deletion, otherwise it returns false.
+func podDeleted(pod *corev1.Pod) bool {
+	return pod.DeletionTimestamp != nil
 }
