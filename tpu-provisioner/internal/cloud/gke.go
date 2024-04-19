@@ -331,7 +331,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		},
 		Management: &containerv1beta1.NodeManagement{
 			AutoRepair:  true,
-			AutoUpgrade: true,
+			AutoUpgrade: false,
 		},
 		UpgradeSettings: &containerv1beta1.UpgradeSettings{
 			MaxSurge: 1,
