@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -59,14 +60,20 @@ func (p *podWebhook) Default(ctx context.Context, obj runtime.Object) error {
 // on the pod, to ensure a Job has exclusive usage of the node pool provisioned for it,
 // and there's no swapping of Jobs between node pools during JobSet restarts.
 func (p *podWebhook) setNodeSelector(ctx context.Context, pod *corev1.Pod) error {
+	lg := ctrllog.FromContext(ctx)
 	if pod.Spec.NodeSelector == nil {
 		pod.Spec.NodeSelector = make(map[string]string)
 	}
 	owner := metav1.GetControllerOf(pod)
-	if owner != nil {
+	if owner == nil {
 		return fmt.Errorf("owner ref not found")
 	}
+	if owner.Kind != "Job" {
+		lg.V(5).Info("owner kind %s is not Job, not setting node selector", owner.Kind)
+		return nil
+	}
 	pod.Spec.NodeSelector[jobNameKey] = owner.Name
+	lg.V(5).Info("pod %s set node selector %s=%s", pod.Name, jobNameKey, owner.Name)
 	return nil
 }
 
