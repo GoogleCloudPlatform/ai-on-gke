@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -42,6 +43,8 @@ type CreationReconciler struct {
 	PodCriteria PodCriteria
 
 	Provider cloud.Provider
+
+	Concurrency int
 }
 
 type PodCriteria struct {
@@ -96,5 +99,8 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 func (r *CreationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: r.Concurrency,
+		}).
 		Complete(r)
 }
