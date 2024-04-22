@@ -1,6 +1,7 @@
 package controller
 
 import (
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -39,4 +40,22 @@ func hasNodeSelectors(p *corev1.Pod, selectors ...string) bool {
 		}
 	}
 	return true
+}
+
+// podDeleted returns true if hte pod has been marked for deletion, otherwise it returns false.
+func podDeleted(pod *corev1.Pod) bool {
+	return pod.DeletionTimestamp != nil
+}
+
+// podPartOfJobSet returns true if the pod is part of a JobSet, otherwise it returns false.
+func podPartOfJobSet(pod *corev1.Pod) bool {
+	// Annotation is from here:
+	// https://github.com/kubernetes-sigs/jobset/blob/6343f09b8a1851090586d0efca16c6ab68982318/api/jobset/v1alpha2/jobset_types.go#L23
+	return pod.Annotations["jobset.sigs.k8s.io/jobset-name"] != ""
+}
+
+// isLeaderPod returns true if the given pod is a leader pod (job completion index of 0),
+// otherwise it returns false.
+func isLeaderPod(pod *corev1.Pod) bool {
+	return pod.Annotations[batchv1.JobCompletionIndexAnnotation] == "0"
 }

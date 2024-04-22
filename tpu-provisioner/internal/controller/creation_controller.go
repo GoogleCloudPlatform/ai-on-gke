@@ -24,7 +24,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
 
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -68,15 +67,6 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, fmt.Errorf("getting pod: %w", err)
 	}
 
-	// Return early if Pod should not trigger a scale up.
-	if !isPending(&pod) || !isUnschedulable(&pod) ||
-		!doesRequestResource(&pod, r.PodCriteria.ResourceType) ||
-		!hasNodeSelectors(&pod, cloud.GKETPUNodeSelector) ||
-		pod.DeletionTimestamp != nil {
-		lg.V(3).Info("Ignoring pod")
-		return ctrl.Result{}, nil
-	}
-
 	lg.Info("Ensuring node pool for unschedulable pod")
 	if err := r.Provider.EnsureNodePoolForPod(&pod, "pod is currently unschedulable"); err != nil {
 		if errors.Is(err, cloud.ErrDuplicateRequest) {
@@ -99,33 +89,16 @@ func (r *CreationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
 		WithEventFilter(predicate.NewPredicateFuncs(func(object client.Object) bool {
-			// Only reconcile JobSet leader pods which have not been scheduled and
-			// have not been marked for deletion.
+			// Only reconcile pods which meet the conditions defined below.
 			pod, ok := object.(*corev1.Pod)
-			return ok && podPartOfJobSet(pod) && isLeaderPod(pod) && !podScheduled(pod) && !podDeleted(pod)
+			return ok &&
+				podPartOfJobSet(pod) &&
+				isLeaderPod(pod) &&
+				isPending(pod) &&
+				isUnschedulable(pod) &&
+				doesRequestResource(pod, r.PodCriteria.ResourceType) &&
+				hasNodeSelectors(pod, cloud.GKETPUNodeSelector) &&
+				!podDeleted(pod)
 		})).
 		Complete(r)
-}
-
-// podScheduled returns true if the pod has been scheduled, otherwise it returns false.
-func podScheduled(pod *corev1.Pod) bool {
-	return pod.Spec.NodeName != ""
-}
-
-// podDeleted returns true if hte pod has been marked for deletion, otherwise it returns false.
-func podDeleted(pod *corev1.Pod) bool {
-	return pod.DeletionTimestamp != nil
-}
-
-// podPartOfJobSet returns true if the pod is part of a JobSet, otherwise it returns false.
-func podPartOfJobSet(pod *corev1.Pod) bool {
-	// Annotation is from here:
-	// https://github.com/kubernetes-sigs/jobset/blob/6343f09b8a1851090586d0efca16c6ab68982318/api/jobset/v1alpha2/jobset_types.go#L23
-	return pod.Annotations["jobset.sigs.k8s.io/jobset-name"] != ""
-}
-
-// isLeaderPod returns true if the given pod is a leader pod (job completion index of 0),
-// otherwise it returns false.
-func isLeaderPod(pod *corev1.Pod) bool {
-	return pod.Annotations[batchv1.JobCompletionIndexAnnotation] == "0"
 }
