@@ -44,7 +44,9 @@ The default quota given to a project should be sufficient for this guide.
   ```
   export MLP_BASE_DIR=$(pwd) && \
   echo "export MLP_BASE_DIR=${MLP_BASE_DIR}" >> ${HOME}/.bashrc
+  ```
 
+  ```
   cd examples/platform/sandbox && \
   export MLP_TYPE_BASE_DIR=$(pwd) && \
   echo "export MLP_TYPE_BASE_DIR=${MLP_TYPE_BASE_DIR}" >> ${HOME}/.bashrc
@@ -143,6 +145,7 @@ You only need to complete the section for the option that you have selected (eit
 - Authorize `gcloud`
 
   ```
+  export GOOGLE_APPLICATION_CREDENTIALS=${CLOUDSDK_CONFIG:-${HOME}/.config/gcloud}/application_default_credentials.json
   gcloud auth login --activate --no-launch-browser --quiet --update-adc
   ```
 
@@ -191,6 +194,7 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
 - Authorize `gcloud`
 
   ```
+  export GOOGLE_APPLICATION_CREDENTIALS=${CLOUDSDK_CONFIG:-${HOME}/.config/gcloud}/application_default_credentials.json
   gcloud auth login --activate --no-launch-browser --quiet --update-adc
   ```
 
@@ -212,11 +216,23 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
   MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
   ```
 
-## Configure OAuth consent screen for IAP
+## Configure Identity-Aware Proxy (IAP)
+
+Identity-Aware Proxy (IAP) lets you establish a central authorization layer for applications accessed by HTTPS, so you can use an application-level access control model instead of relying on network-level firewalls.
+
+IAP policies scale across your organization. You can define access policies centrally and apply them to all of your applications and resources. When you assign a dedicated team to create and enforce policies, you protect your project from incorrect policy definition or implementation in any application.
+
+For more information on IAP, see the [Identity-Aware Proxy documentation](https://cloud.google.com/iap/docs/concepts-overview#gke)
+
+### Configure OAuth consent screen for IAP
+
+For this guide we will configure a generic OAuth consent screen setup for internal use. Internal use means that only users within your organization can be granted IAM permissions to access the IAP secured applications and resource.
+
+See the [Configuring the OAuth consent screen documenation](https://developers.google.com/workspace/guides/configure-oauth-consent) for additional information
 
 **NOTE: These steps only need to be completed once for a project.**
 
-- Go to [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) configuration page.
+- Go to [APIs & Services](https://console.cloud.google.com/apis/dashboard?) > [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) configuration page.
 - Select **Internal** for the **User Type**
 - Click **CREATE**
 - Enter **IAP Secured Application** for the the **App name**
@@ -228,6 +244,29 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
 - On the **Summary** page, click **BACK TO DASHBOARD**
 - The **OAuth consent screen** should now look like this:
   ![oauth consent screen](/best-practices/ml-platform/docs/images/platform/oauth-consent-screen.png)
+
+### Default IAP access
+
+For simplicity, in this guide access to the IAP secured applications will be configure to allow all users in the organization. Access can be configured per IAP application or resources.
+
+- Set the IAP allow domain
+
+  ```
+  IAP_DOMAIN=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | awk -F@ '{print $2}')
+  echo "IAP_DOMAIN=${IAP_DOMAIN}"
+  ```
+
+  **If the domain of the active `gcloud` user is different from the organization that the `MLP_PROJECT_ID` project is in, you will need to manually set `IAP_DOMAIN` environment variable**
+
+  ```
+  IAP_DOMAIN=<MLP_PROJECT_ID organization domain>
+  ```
+
+- Set the IAP domain in the configuration file
+
+  ```
+  sed -i '/^iap_domain[[:blank:]]*=/{h;s/=.*/= "'"${IAP_DOMAIN}"'"/};${x;/^$/{s//iap_domain             = "'"${IAP_DOMAIN}"'"/;H};x}' ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  ```
 
 ## Create the resources
 
@@ -241,7 +280,7 @@ Before running Terraform, make sure that the Service Usage API is enable.
 
   ```
   MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-  gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet
+  gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
   ```
 
 - Create the resources
