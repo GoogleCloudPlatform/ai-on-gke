@@ -17,6 +17,7 @@ Our application architecture consists of:
 - [Weaviate](https://github.com/weaviate/weaviate) Vector Database for product and embedding storage and search
 - [GKE](https://cloud.google.com/kubernetes-engine?hl=en) to run our database
 
+**Product Catalog**
 
 ![Next Demo App](next-demo.png)
 
