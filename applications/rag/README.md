@@ -228,7 +228,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
 
 6. Troubleshoot error: `Repo model mistralai/Mistral-7B-Instruct-v0.1 is gated. You must be authenticated to access it.` for the pod of deployment `mistral-7b-instruct`.
 
-   The error is because the RAG deployments uses `Mistral-7B-instruct which` is now a gated model on Hugging Face. Deployments fail as they require a Hugging Face authentication token, which is not part of the current workflow.
+   The error is because the RAG deployments uses `Mistral-7B-instruct` which is now a gated model on Hugging Face. Deployments fail as they require a Hugging Face authentication token, which is not part of the current workflow.
    While we are actively working on long-term fix. This is how to workaround the error:
     - Use [the guide](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-tgi#generate-token) as a reference to create an access token.
     - Go to the [model card](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1) in Hugging Face and click "Agree and access repository"
