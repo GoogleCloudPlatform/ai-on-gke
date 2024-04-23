@@ -180,7 +180,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 Run the following command to set up port forwarding to the http server:
 
 ```
-kubectl port-forward svc/jetstream-http-svc 8000:8000
+kubectl port-forward svc/jetstream-svc 8000:8000
 ```
 
 In a new terminal, send a request to the server:
@@ -220,12 +220,12 @@ docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 
 ### Interact with the Maxengine server directly using gRPC
 
-The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. If you would like to interact directly with the Maxengine server directly for use cases such as [benchmarking](https://github.com/google/JetStream/tree/main/benchmarks), you can do so by following the Jetstream benchmarking setup and applying the `deployment-grpc.yaml` manifest file.
+The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. If you would like to interact directly with the Maxengine server directly for use cases such as [benchmarking](https://github.com/google/JetStream/tree/main/benchmarks), you can do so by following the Jetstream benchmarking setup and applying the `deployment.yaml` manifest file and interacting with the Jetstream gRPC server at port 9000.
 
 ```
-kubectl apply -f deployment-grpc.yaml
+kubectl apply -f deployment.yaml
 
-kubectl port-forward svc/maxengine-svc 9000:9000
+kubectl port-forward svc/jetstream-svc 9000:9000
 ```
 
-To run benchmarking, pass in the flag `--server localhost` when running the benchmarking script.
+To run benchmarking, pass in the flag `--server 127.0.0.1` when running the benchmarking script.
