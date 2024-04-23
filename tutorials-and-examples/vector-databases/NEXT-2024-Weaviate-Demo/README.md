@@ -9,6 +9,15 @@ This demo application creates a product catalog that is stored in a [Weaviate](h
 There is also a notebook, [**notebook.ipynb**](notebook.ipynb), asset that allows you to work directly with the Weaviate database and Gemini API to create advanced product descriptions based on user personas as well as demonstrate the concept of "Generative Feedback Loops" as done in the [original session](https://www.youtube.com/watch?v=WORgeRAAN-4). 
 
 
+Our application architecture consists of:
+- [Cloud Build](https://cloud.google.com/build?hl=en) to build our NEXTJS website into a container image and deploy it to Cloud Run
+- [Cloud Run](https://cloud.google.com/run/?hl=en) and host our containerized website
+- [Google Cloud Storage](https://cloud.google.com/storage?hl=en) to store and host our product images
+- Google [Gemini/Vertex AI](https://cloud.google.com/vertex-ai?hl=en) to generate our embeddings and product descriptions
+- [Weaviate](https://github.com/weaviate/weaviate) Vector Database for product and embedding storage and search
+- [GKE](https://cloud.google.com/kubernetes-engine?hl=en) to run our database
+
+
 ![Next Demo App](next-demo.png)
 
 **Product Description Generation and Semantic Search**
