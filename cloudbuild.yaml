@@ -192,6 +192,7 @@ steps:
   - id: 'test rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
     entrypoint: 'sh'
+    secretEnv: ['KAGGLE_USERNAME', 'KAGGLE_KEY']
     args:
       - '-c'
       - |
@@ -256,11 +257,18 @@ steps:
         python3 test_frontend.py "127.0.0.1:8081"
         echo "pass" > /workspace/rag_frontend_result.txt
 
-        # Upload locally stored netflix dataset to GCS bucket mounted as /data
-        gsutil cp ./netflix_titles.csv gs://gke-aieco-rag-$SHORT_SHA-$_BUILD_ID/netflix-shows/netflix_titles.csv
-        ray job submit --working-dir . --address=http://127.0.0.1:8265 -- python ray_job.py
+        cd /workspace/
+        sed -i "s/<username>/$$KAGGLE_USERNAME/g" ./applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb
+        sed -i "s/<token>/$$KAGGLE_KEY/g" ./applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb
+        gsutil cp ./applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb gs://gke-aieco-rag-$SHORT_SHA-$_BUILD_ID/
+        kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID $(kubectl get pod -l app=jupyterhub,component=hub -n rag-$SHORT_SHA-$_BUILD_ID -o jsonpath="{.items[0].metadata.name}") -- jupyterhub token admin --log-level=CRITICAL | xargs python3 ./applications/rag/notebook_starter.py
+        # Wait for jupyterhub to trigger notebook pod startup
+        sleep 5s
+        kubectl wait --for=condition=Ready pod/jupyter-admin -n rag-$SHORT_SHA-$_BUILD_ID --timeout=300s
+        kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- jupyter nbconvert --to script /data/rag-kaggle-ray-sql-interactive.ipynb
+        kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- ipython /data/rag-kaggle-ray-sql-interactive.py
 
-        python3 test_rag.py "http://127.0.0.1:8081/prompt"
+        python3 ./applications/rag/tests/test_rag.py "http://127.0.0.1:8081/prompt"
         echo "pass" > /workspace/rag_prompt_result.txt
 
     allowFailure: true
@@ -365,11 +373,10 @@ steps:
           exit 1
         fi
 
-        # TODO: re-add this check once generating embeddings in CI is stable
-        # if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
-        #   echo "rag frontend test failed"
-        #   exit 1
-        # fi
+        if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
+          echo "rag frontend test failed"
+          exit 1
+        fi
 
     waitFor: ['cleanup gke cluster']
         
@@ -382,3 +389,10 @@ options:
   substitutionOption: 'ALLOW_LOOSE'
   machineType: 'E2_HIGHCPU_8'
 timeout: 5400s
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-username/versions/latest
+    env: 'KAGGLE_USERNAME'
+  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-key/versions/latest
+    env: 'KAGGLE_KEY'
