@@ -91,6 +91,10 @@ var _ = Describe("Creation controller", func() {
 			pod:    makeFollowerPod(),
 			status: makeRunningStatus(),
 		}),
+		Entry("pending leader pod with auto provisioned disabled annotation should not trigger node pool creation", &testCase{
+			pod:    makeLeaderPodAutoProvisioningDisabled(),
+			status: makePendingStatus(),
+		}),
 	)
 })
 
@@ -100,6 +104,12 @@ func makeLeaderPod() *corev1.Pod {
 
 func makeFollowerPod() *corev1.Pod {
 	return makePod(&makePodArgs{name: "follower-pod", completionIndex: "1"})
+}
+
+func makeLeaderPodAutoProvisioningDisabled() *corev1.Pod {
+	leaderPod := makeLeaderPod()
+	leaderPod.Annotations[DisableAutoProvisioningLabel] = "true"
+	return leaderPod
 }
 
 // makePendingStatus returns a pod status indicating it became unschedulable at the given time.

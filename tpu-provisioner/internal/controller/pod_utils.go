@@ -59,3 +59,10 @@ func podPartOfJobSet(pod *corev1.Pod) bool {
 func isLeaderPod(pod *corev1.Pod) bool {
 	return pod.Annotations[batchv1.JobCompletionIndexAnnotation] == "0"
 }
+
+// autoProvisioningDisabled returns true if the pod has
+// "tpu-provisioner.cloud.google.com/disable-autoprovisioning=true"
+// set as a label or annotation. Otherwise, it returns false.
+func autoProvisioningDisabled(pod *corev1.Pod) bool {
+	return pod.Labels[DisableAutoProvisioningLabel] == "true" || pod.Annotations[DisableAutoProvisioningLabel] == "true"
+}

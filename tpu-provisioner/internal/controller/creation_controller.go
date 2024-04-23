@@ -52,6 +52,7 @@ type PodCriteria struct {
 //+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=pods/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	lg := ctrllog.FromContext(ctx)
@@ -98,6 +99,7 @@ func (r *CreationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				isUnschedulable(pod) &&
 				doesRequestResource(pod, r.PodCriteria.ResourceType) &&
 				hasNodeSelectors(pod, cloud.GKETPUNodeSelector) &&
+				!autoProvisioningDisabled(pod) &&
 				!podDeleted(pod)
 		})).
 		Complete(r)
