@@ -47,8 +47,8 @@ func podDeleted(pod *corev1.Pod) bool {
 	return pod.DeletionTimestamp != nil
 }
 
-// podPartOfJobSet returns true if the pod is part of a JobSet, otherwise it returns false.
-func podPartOfJobSet(pod *corev1.Pod) bool {
+// partOfJobSet returns true if the pod is part of a JobSet, otherwise it returns false.
+func partOfJobSet(pod *corev1.Pod) bool {
 	// Annotation is from here:
 	// https://github.com/kubernetes-sigs/jobset/blob/6343f09b8a1851090586d0efca16c6ab68982318/api/jobset/v1alpha2/jobset_types.go#L23
 	return pod.Annotations["jobset.sigs.k8s.io/jobset-name"] != ""

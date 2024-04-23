@@ -34,6 +34,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
+// When this pod label is set to "true", the TPU provisioner will not reconcile the pod.
+const DisableAutoProvisioningLabel = "tpu-provisioner.cloud.google.com/disable-autoprovisioning"
+
 // CreationReconciler watches Pods and creates Node Pools.
 type CreationReconciler struct {
 	client.Client
@@ -93,7 +96,7 @@ func (r *CreationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			// Only reconcile pods which meet the conditions defined below.
 			pod, ok := object.(*corev1.Pod)
 			return ok &&
-				podPartOfJobSet(pod) &&
+				partOfJobSet(pod) &&
 				isLeaderPod(pod) &&
 				isPending(pod) &&
 				isUnschedulable(pod) &&
