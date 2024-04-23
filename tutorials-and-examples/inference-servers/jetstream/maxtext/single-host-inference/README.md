@@ -111,7 +111,7 @@ Observe the logs:
 kubectl logs -f jobs/data-loader-7b
 ```
 
-You should see the following output once the Job has completed. This will take around 10 minutes:
+You should see the following output once the job has completed. This will take around 10 minutes:
 ```
 Successfully generated decode checkpoint at: gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
 + echo -e '\nCompleted unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items'

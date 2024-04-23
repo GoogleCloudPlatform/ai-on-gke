@@ -24,6 +24,6 @@ RUN pip install kaggle
 
 RUN git clone https://github.com/pylint-dev/pylint.git
 
-COPY checkpoint_entrypoint.sh /usr/bin/
-RUN chmod +x /usr/bin/checkpoint_entrypoint.sh
-ENTRYPOINT ["/usr/bin/checkpoint_entrypoint.sh"]
+COPY checkpoint_converter.sh /usr/bin/
+RUN chmod +x /usr/bin/checkpoint_converter.sh
+ENTRYPOINT ["/usr/bin/checkpoint_converter.sh"]

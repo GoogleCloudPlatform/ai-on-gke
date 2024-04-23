@@ -6,7 +6,7 @@ BUCKET_NAME=""
 MODEL_PATH=""
 
 print_usage() {
-    printf "Usage: $0 [ -b BUCKET_NAME ] [ -i INFERENCE_SERVER ] [ -m MODEL_PATH ]"
+    printf "Usage: $0 [ -b BUCKET_NAME ] [ -i INFERENCE_SERVER ] [ -m MODEL_PATH ] [ -v VERSION ]"
 }
 
 print_inference_server_unknown() {
@@ -29,11 +29,15 @@ download_kaggle_checkpoint() {
 }
 
 convert_maxtext_checkpoint() {
-    MAXTEXT_VERSION=jetstream-v0.2.0
     BUCKET_NAME=$1
     MODEL_NAME=$2
     VARIATION_NAME=$3
     MODEL_SIZE=$4
+    MAXTEXT_VERSION=$5
+
+    if [ -z $MAXTEXT_VERSION ]; then
+        MAXTEXT_VERSION=jetstream-v0.2.0
+    fi
 
     git clone https://github.com/google/maxtext.git
 
@@ -58,6 +62,7 @@ while getopts 'b:i:m:' flag; do
         b) BUCKET_NAME="$(echo ${OPTARG} | awk -F'=' '{print $2}')" ;;
         i) INFERENCE_SERVER="$(echo ${OPTARG} | awk -F'=' '{print $2}')" ;;
         m) MODEL_PATH="$(echo ${OPTARG} | awk -F'=' '{print $2}')" ;;
+        v) VERSION="$(echo ${OPTARG} | awk -F'=' '{print $2}')" ;;
         *) print_usage
     exit 1 ;;
     esac
@@ -80,7 +85,7 @@ case ${INFERENCE_SERVER} in
 
     jetstream-maxtext)
         download_kaggle_checkpoint "$BUCKET_NAME" "$MODEL_NAME" "$VARIATION_NAME" "$MODEL_PATH"
-        convert_maxtext_checkpoint "$BUCKET_NAME" "$MODEL_NAME" "$VARIATION_NAME" "$MODEL_SIZE"
+        convert_maxtext_checkpoint "$BUCKET_NAME" "$MODEL_NAME" "$VARIATION_NAME" "$MODEL_SIZE" "$VERSION"
         ;;
     *) print_inference_server_unknown
 exit 1 ;;
