@@ -1,7 +1,7 @@
 # From RAG to autonomous apps with Weaviate and Gemini on Google Kubernetes Engine
 
-# [Video of this tutorial](https://www.youtube.com/watch?v=WORgeRAAN-4)
-(next2024image.png)(https://www.youtube.com/watch?v=WORgeRAAN-4)
+## [Video of this tutorial](https://www.youtube.com/watch?v=WORgeRAAN-4)
+[next2024image.png](https://www.youtube.com/watch?v=WORgeRAAN-4)
 
 
 
