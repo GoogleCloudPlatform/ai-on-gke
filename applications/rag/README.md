@@ -225,3 +225,21 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
 5. Troubleshoot `terraform destroy` failures:
     - Network deletion issue:
         - `terraform destroy` fails to delete the network due to a known issue in the GCP provider. For now, the workaround is to manually delete it.
+
+6. Troubleshoot error: `Repo model mistralai/Mistral-7B-Instruct-v0.1 is gated. You must be authenticated to access it.` for the pod of deployment `mistral-7b-instruct`.
+
+   The error is because the RAG deployments uses `Mistral-7B-instruct which` is now a gated model on Hugging Face. Deployments fail as they require a Hugging Face authentication token, which is not part of the current workflow.
+   While we are actively working on long-term fix. This is how to workaround the error:
+    - Use [the guide](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-tgi#generate-token) as a reference to create an access token.
+    - Go to the [model card](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1) in Hugging Face and click "Agree and access repository"
+    - Create [a secret](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#create_a_kubernetes_secret_for_hugging_face_credentials) as noted in with the Hugging Face credential called `hf-secret` in the name space where your `mistral-7b-instruct` deployment is running.
+    - Add the following entry to `env` within the deployment `mistral-7b-instruct` via `kubectl edit`.
+
+```
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+```
+
