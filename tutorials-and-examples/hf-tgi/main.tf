@@ -69,6 +69,9 @@ resource "kubernetes_deployment" "inference_deployment" {
         labels = merge({
           app = "mistral-7b-instruct"
         }, local.additional_labels)
+        annotations = {
+          "gke-gcsfuse/volumes" = "true"
+        }
       }
 
       spec {
@@ -82,9 +85,11 @@ resource "kubernetes_deployment" "inference_deployment" {
             protocol       = "TCP"
           }
 
+          args = ["--model-id", "$(MODEL_ID)"]
+
           env {
             name  = "MODEL_ID"
-            value = "mistralai/Mistral-7B-Instruct-v0.1"
+            value = "/model"
           }
 
           env {
@@ -118,6 +123,12 @@ resource "kubernetes_deployment" "inference_deployment" {
             name       = "data"
           }
 
+          volume_mount {
+            mount_path = "/model"
+            name       = "gcs-fuse-csi-ephemeral"
+            read_only  = "true"
+          }
+
           #liveness_probe {
           #http_get {
           #path = "/"
@@ -144,6 +155,18 @@ resource "kubernetes_deployment" "inference_deployment" {
         volume {
           name = "data"
           empty_dir {}
+        }
+
+        volume {
+          name = "gcs-fuse-csi-ephemeral"
+          csi {
+            driver = "gcsfuse.csi.storage.gke.io"
+            read_only = "true"
+            volume_attributes = {
+              bucketName = "vertex-model-garden-public-us"
+              mountOptions = "implicit-dirs,only-dir=mistralai/Mistral-7B-Instruct-v0.1/"
+            }
+          }
         }
 
         node_selector = merge({
