@@ -1,5 +1,10 @@
 # From RAG to autonomous apps with Weaviate and Gemini on Google Kubernetes Engine
 
+# [Video of this tutorial](https://www.youtube.com/watch?v=WORgeRAAN-4)
+(next2024image.png)(https://www.youtube.com/watch?v=WORgeRAAN-4)
+
+
+
 This demo application creates a product catalog that is stored in a [Weaviate](https://github.com/weaviate/weaviate) vector database and vectorized for semantic search. It is also integrated with the [Gemini Pro Vision](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://console.cloud.google.com/vertex-ai/publishers/google/model-garden/gemini-pro-vision) API to automatically create product descriptions. The App is built with the NextJS framework. 
 
 
