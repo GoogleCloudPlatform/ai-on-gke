@@ -23,6 +23,8 @@ Our application architecture consists of:
 
 **Product Description Generation and Semantic Search**
 
+You can create/edit a product and use Gemini to create the product description based on the image and title
+
 ![Next Demo App](product-n-search.png)
 
 **System Architecture**
