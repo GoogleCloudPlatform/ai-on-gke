@@ -31,7 +31,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
+
+// When this pod label is set to "true", the TPU provisioner will not reconcile the pod.
+const DisableAutoProvisioningLabel = "tpu-provisioner.cloud.google.com/disable-autoprovisioning"
 
 // CreationReconciler watches Pods and creates Node Pools.
 type CreationReconciler struct {
@@ -51,6 +55,7 @@ type PodCriteria struct {
 //+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=pods/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	lg := ctrllog.FromContext(ctx)
@@ -64,15 +69,6 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, fmt.Errorf("getting pod: %w", err)
-	}
-
-	// Return early if Pod should not trigger a scale up.
-	if !isPending(&pod) || !isUnschedulable(&pod) ||
-		!doesRequestResource(&pod, r.PodCriteria.ResourceType) ||
-		!hasNodeSelectors(&pod, cloud.GKETPUNodeSelector) ||
-		pod.DeletionTimestamp != nil {
-		lg.V(3).Info("Ignoring pod")
-		return ctrl.Result{}, nil
 	}
 
 	lg.Info("Ensuring node pool for unschedulable pod")
@@ -96,5 +92,18 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 func (r *CreationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
+		WithEventFilter(predicate.NewPredicateFuncs(func(object client.Object) bool {
+			// Only reconcile pods which meet the conditions defined below.
+			pod, ok := object.(*corev1.Pod)
+			return ok &&
+				partOfJobSet(pod) &&
+				isLeaderPod(pod) &&
+				isPending(pod) &&
+				isUnschedulable(pod) &&
+				doesRequestResource(pod, r.PodCriteria.ResourceType) &&
+				hasNodeSelectors(pod, cloud.GKETPUNodeSelector) &&
+				!autoProvisioningDisabled(pod) &&
+				!podDeleted(pod)
+		})).
 		Complete(r)
 }
