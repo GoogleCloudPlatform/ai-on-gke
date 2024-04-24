@@ -71,6 +71,12 @@ resource "kubernetes_deployment" "inference_deployment" {
         }, local.additional_labels)
         annotations = {
           "gke-gcsfuse/volumes" = "true"
+          "gke-gcsfuse/cpu-limit" = "10"
+          "gke-gcsfuse/memory-limit" = "10Gi"
+          "gke-gcsfuse/ephemeral-storage-limit" = "1Ti"
+          "gke-gcsfuse/cpu-request" = "500m"
+          "gke-gcsfuse/memory-request" = "1Gi"
+          "gke-gcsfuse/ephemeral-storage-request" = "50Gi"
         }
       }
 
