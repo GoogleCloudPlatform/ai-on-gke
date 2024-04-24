@@ -374,7 +374,7 @@ steps:
         fi
 
         if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
-          echo "rag frontend test failed"
+          echo "rag prompt test failed"
           exit 1
         fi
 
