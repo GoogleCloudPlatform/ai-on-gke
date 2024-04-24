@@ -1,4 +1,4 @@
-# Release version to be used for build tag (follows schema: tpu-webhook/v(MAJOR).(MINOR).(PATCH))
+# Release version to be used for build tag (follows schema: v(MAJOR).(MINOR).(PATCH))
 VER ?= $(shell cat VERSION)
 
 # Image URL to use for all building/pushing image targets
