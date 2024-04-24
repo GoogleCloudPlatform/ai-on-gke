@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
           # change the image tag value to match the one specified in VERSION
-        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:tpu-webhook/v1.1.0
+        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.1.0
           imagePullPolicy: Always
           name: kuberay-tpu-webhook
           args:
