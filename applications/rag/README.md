@@ -29,22 +29,6 @@ Install the following on your computer:
 * [Helm](https://helm.sh/docs/intro/install/)
 * [Gcloud](https://cloud.google.com/sdk/docs/install)
 
-### Bring your own cluster (optional)
-
-By default, this tutorial creates a Standard cluster on your behalf. We highly recommend following the default settings.
-
-If you prefer to manage your own cluster, set `create_cluster = false` in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
-
-Use the provided infrastructue module to create a cluster:
-
-1. `cd ai-on-gke/infrastructure`
-
-2. Edit `platform.tfvars` to set your project ID, location and cluster name. The other fields are optional. Ensure you create an L4 nodepool as this tutorial requires it.
-
-3. Run `terraform init`
-
-4. Run `terraform apply --var-file workloads.tfvars`
-
 ### Bring your own VPC (optional)
 
 By default, this tutorial creates a new network on your behalf with [Private Service Connect](https://cloud.google.com/vpc/docs/private-service-connect) already enabled. We highly recommend following the default settings.
