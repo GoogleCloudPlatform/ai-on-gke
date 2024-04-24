@@ -1,5 +1,5 @@
 # Release version to be used for build tag (follows schema: v(MAJOR).(MINOR).(PATCH))
-VER ?= $(shell cat VERSION)
+VER ?= $(shell grep -v "^#" VERSION)
 
 # Image URL to use for all building/pushing image targets
 # Replace us-docker.pkg.dev with europe-docker.pkg.dev if desired

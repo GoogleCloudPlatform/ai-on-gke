@@ -1,1 +1,4 @@
+# Release version of the Ray TPU webhook
+# Increment this value as part of any change to the webhook.
+# This value is separate from the ai-on-gke release version.
 v1.1.0
