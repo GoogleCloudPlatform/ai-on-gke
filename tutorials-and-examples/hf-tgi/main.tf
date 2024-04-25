@@ -20,6 +20,10 @@ locals {
 }
 
 resource "kubernetes_service" "inference_service" {
+  timeouts {
+    create = "30m"
+  }
+
   metadata {
     name = "mistral-7b-instruct-service"
     labels = {
