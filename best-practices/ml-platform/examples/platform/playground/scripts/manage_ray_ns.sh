@@ -40,7 +40,7 @@ sed -i "s/watchNamespace:/watchNamespace:\n  - ${namespace}/g" values.yaml
 git add .
 git config --global user.name ${github_user}
 git config --global user.email ${github_email}
-git commit -m "Installing ray cluster in ${namespace} namespace."
+git commit -m "Configured KubeRay operator to watch '${namespace}' namespace."
 git push origin
 
 rm -rf ${download_acm_repo_name}
