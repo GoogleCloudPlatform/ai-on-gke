@@ -1,0 +1,14 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: ${http_route_name}
+spec:
+  parentRefs:
+  - kind: Gateway
+    name: ${gateway_name}
+  hostnames:
+  - ${hostname}
+  rules:
+  - backendRefs:
+    - name: ${service_name}
+      port: ${service_port}

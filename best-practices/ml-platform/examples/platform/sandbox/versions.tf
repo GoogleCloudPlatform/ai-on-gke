@@ -13,6 +13,8 @@
 # limitations under the License.
 
 terraform {
+  required_version = ">= 1.5.7"
+
   required_providers {
     github = {
       source  = "integrations/github"
@@ -25,6 +27,10 @@ terraform {
     google-beta = {
       source  = "hashicorp/google-beta"
       version = "5.19.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.29.0"
     }
     null = {
       source  = "hashicorp/null"
