@@ -14,12 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+SCRIPT_PATH="$(
+  cd "$(dirname "$0")" >/dev/null 2>&1
+  pwd -P
+)"
+
 gke_cluster=${1}
 project_id=${2}
 git_user=${3}
 namespace=${4}
-
-gcloud container fleet memberships get-credentials ${gke_cluster} --project ${project_id}
 
 echo "Waiting for namespace '${namespace}' to be created..."
 while ! kubectl get ns ${namespace} >/dev/null 2>&1; do

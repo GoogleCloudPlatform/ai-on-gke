@@ -39,6 +39,11 @@ variable "environment_name" {
 variable "environment_project_id" {
   description = "The GCP project where the resources will be created"
   type        = string
+
+  validation {
+    condition     = var.environment_project_id != "YOUR_PROJECT_ID"
+    error_message = "'environment_project_id' was not set, please set the value in the mlp.auto.tfvars file"
+  }
 }
 
 variable "env" {
@@ -50,11 +55,21 @@ variable "env" {
 variable "github_email" {
   description = "GitHub user email."
   type        = string
+
+  validation {
+    condition     = var.github_email != "YOUR_GITHUB_EMAIL"
+    error_message = "'github_email' was not set, please set the value in the mlp.auto.tfvars file"
+  }
 }
 
 variable "github_org" {
   description = "GitHub org."
   type        = string
+
+  validation {
+    condition     = var.github_org != "YOUR_GITHUB_ORG"
+    error_message = "'github_org' was not set, please set the value in the mlp.auto.tfvars file"
+  }
 }
 
 variable "github_token" {
@@ -64,6 +79,17 @@ variable "github_token" {
 
 variable "github_user" {
   description = "GitHub user name."
+  type        = string
+
+  validation {
+    condition     = var.github_user != "YOUR_GITHUB_USER"
+    error_message = "'github_user' was not set, please set the value in the mlp.auto.tfvars file"
+  }
+}
+
+variable "iap_domain" {
+  default     = null
+  description = "IAP domain"
   type        = string
 }
 
