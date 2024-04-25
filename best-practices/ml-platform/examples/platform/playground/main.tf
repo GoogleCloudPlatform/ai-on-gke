@@ -118,9 +118,6 @@ module "create-vpc" {
   subnet_01_ip     = var.subnet_01_ip
   subnet_01_name   = format("%s-%s", var.subnet_01_name, var.environment_name)
   subnet_01_region = var.subnet_01_region
-  subnet_02_ip     = var.subnet_02_ip
-  subnet_02_name   = format("%s-%s", var.subnet_02_name, var.environment_name)
-  subnet_02_region = var.subnet_02_region
 }
 
 module "cloud-nat" {
