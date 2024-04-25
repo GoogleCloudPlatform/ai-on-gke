@@ -444,7 +444,8 @@ resource "null_resource" "install_kuberay_operator" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     module.gke,
-    null_resource.create_git_cred_cms
+    null_resource.create_cluster_yamls,
+    null_resource.create_git_cred_cms,
   ]
 
   provisioner "local-exec" {
@@ -528,7 +529,8 @@ resource "null_resource" "create_namespace" {
 
 resource "null_resource" "create_git_cred_ns" {
   depends_on = [
-    null_resource.connect_gateway_kubeconfig
+    null_resource.connect_gateway_kubeconfig,
+    null_resource.create_namespace
   ]
 
   provisioner "local-exec" {
@@ -586,7 +588,8 @@ resource "null_resource" "install_ray_cluster" {
   depends_on = [
     google_gke_hub_feature_membership.feature_member,
     module.gke,
-    null_resource.create_git_cred_ns
+    null_resource.create_git_cred_ns,
+    null_resource.create_namespace
   ]
 
   provisioner "local-exec" {
