@@ -15,9 +15,8 @@ RUN git clone https://github.com/huggingface/transformers.git
 
 WORKDIR transformers
 
-
-RUN pip3 install -e .
 RUN git checkout -q ebdb185befaa821304d461ed6aa20a17e4dc3aa2
+RUN pip3 install -e .
 RUN pip3 install datasets
 RUN pip3 install evaluate
 RUN pip3 install scikit-learn
