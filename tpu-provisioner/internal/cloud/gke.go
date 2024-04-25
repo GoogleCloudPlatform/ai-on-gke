@@ -28,7 +28,6 @@ const (
 	GKETPUNodeSelector         = "cloud.google.com/gke-tpu-topology"
 	GKEAcceleratorNodeSelector = "cloud.google.com/gke-tpu-accelerator"
 	GKENodePoolNameLabel       = "cloud.google.com/gke-nodepool"
-	GKENodePoolNamePrefix      = "tpu-provisioner-"
 
 	// Supported accelerator types
 	V4PodSliceAccelerator  = "tpu-v4-podslice"
@@ -64,7 +63,7 @@ type GKE struct {
 func (g *GKE) NodePoolLabelKey() string { return GKENodePoolNameLabel }
 
 func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
-	name, err := podToNodePoolName(p, GKENodePoolNamePrefix, "")
+	name, err := podToNodePoolName(p)
 
 	exists, err := g.nodePoolExists(name)
 	if err != nil {

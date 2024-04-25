@@ -28,8 +28,10 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
@@ -44,8 +46,8 @@ type CreationReconciler struct {
 	Recorder record.EventRecorder
 
 	PodCriteria PodCriteria
-
-	Provider cloud.Provider
+	Provider    cloud.Provider
+	Concurrency int
 }
 
 type PodCriteria struct {
@@ -92,6 +94,9 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 func (r *CreationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: r.Concurrency,
+		}).
 		WithEventFilter(predicate.NewPredicateFuncs(func(object client.Object) bool {
 			// Only reconcile pods which meet the conditions defined below.
 			pod, ok := object.(*corev1.Pod)

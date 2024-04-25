@@ -25,8 +25,6 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
 	"github.com/kelseyhightower/envconfig"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -40,12 +38,17 @@ import (
 	"cloud.google.com/go/compute/metadata"
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/controller"
+
 	containerv1beta1 "google.golang.org/api/container/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/config"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -114,17 +117,19 @@ func main() {
 		WebhookServer: webhook.NewServer(
 			webhook.Options{
 				Port: 9443,
-			}),
+			},
+		),
 		Scheme:                 scheme,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "ecaf1259.google.com",
-		Controller: config.Controller{
-			GroupKindConcurrency: map[string]int{
-				// Concurrent node pool creations:
-				schema.GroupKind{Kind: "Pod"}.String(): cfg.Concurrency,
-				// Concurrent node pool deletions:
-				schema.GroupKind{Kind: "Node"}.String(): cfg.Concurrency,
+		Cache: cache.Options{
+			ByObject: map[client.Object]cache.ByObject{
+				&corev1.Node{}: {
+					// Only listen for Nodes with label selectors indicating that they
+					// are managed by this controller.
+					Label: labels.SelectorFromSet(labels.Set{cloud.LabelNodepoolManager: cloud.LabelNodepoolManagerTPUPodinator}),
+				},
 			},
 		},
 	})
@@ -214,6 +219,7 @@ func main() {
 		PodCriteria: controller.PodCriteria{
 			ResourceType: cfg.PodResourceType,
 		},
+		Concurrency: cfg.Concurrency,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CreationReconciler")
 		os.Exit(1)
@@ -228,6 +234,7 @@ func main() {
 			MinLifetime:       cfg.NodeMinLifespan,
 			PoolDeletionDelay: cfg.NodepoolDeletionDelay,
 		},
+		Concurrency: cfg.Concurrency,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DeletionReconciler")
 		os.Exit(1)

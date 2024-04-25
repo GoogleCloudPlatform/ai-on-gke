@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -31,6 +32,7 @@ type DeletionReconciler struct {
 
 	NodeCriteria               NodeCriteria
 	NodePoolsMarkedForDeletion sync.Map
+	Concurrency                int
 }
 
 type NodeCriteria struct {
@@ -184,6 +186,9 @@ func (r *DeletionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Node{}).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: r.Concurrency,
+		}).
 		WithEventFilter(predicate.NewPredicateFuncs(func(object client.Object) bool {
 			node, ok := object.(*corev1.Node)
 			return ok && nodeManagedByProvisioner(node)
