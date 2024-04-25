@@ -498,6 +498,25 @@ The OAuth Consent screen was not configured, see the [Configure OAuth consent sc
 
 ---
 
+```
+│ Error: googleapi: Error 400: Service ray-dashboard.ml-team.mlp.endpoints.<project_id>.cloud.goog has been deleted and
+will be purged after 30 days. To reuse this service, please undelete the service following https://cloud.google.com/service-infrastructure/docs/create-services#undeleting., failedPrecondition
+│
+│   with google_endpoints_service.ray_dashboard_https,
+│   on gateway.tf line ##, in resource "google_endpoints_service" "ray_dashboard_https":
+│   ##: resource "google_endpoints_service" "ray_dashboard_https" {
+│
+```
+
+The endpoint is in a deleted state and needs to be undeleted, run the following command and then rerun the Terraform apply.
+
+```
+MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
+gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet
+```
+
+---
+
 ### Cleanup resources errors
 
 ---
