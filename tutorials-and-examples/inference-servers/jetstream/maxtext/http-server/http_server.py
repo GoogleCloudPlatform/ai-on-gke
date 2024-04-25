@@ -39,11 +39,6 @@ class GenerateRequest(pydantic.BaseModel):
 app = fastapi.FastAPI()
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1000)
 
-channel = grpc.insecure_channel("127.0.0.1:9000")
-grpc.channel_ready_future(channel).result()
-stub = jetstream_pb2_grpc.OrchestratorStub(channel)
-
-
 @app.get("/")
 def root():
   """Root path for MaxText + Jetstream HTTP Server."""
@@ -64,10 +59,9 @@ async def generate(request: GenerateRequest):
         priority=request.priority,
         max_tokens=request.max_tokens,
     )
-    loop = asyncio.get_running_loop()
-    response = await loop.run_in_executor(
-        executor, generate_prompt, stub, request
-    )
+
+    future = executor.submit(generate_prompt, request)
+    response = await future.result()
     response = {"response": response}
     response = fastapi.Response(
         content=json.dumps(response, indent=4), media_type="application/json"
@@ -78,13 +72,16 @@ async def generate(request: GenerateRequest):
     raise fastapi.HTTPException(status_code=500, detail=str(e))
 
 
-def generate_prompt(
-    orchestrator_stub: jetstream_pb2_grpc.OrchestratorStub,
+async def generate_prompt(
     request: jetstream_pb2.DecodeRequest,
 ):
   """Generate a prompt."""
-  response = orchestrator_stub.Decode(request)
-  output = ""
-  for token_list in response:
-    output += str(token_list.response[0])
-  return output
+
+  options = [("grpc.keepalive_timeout_ms", 10000)]
+  async with grpc.aio.insecure_channel("127.0.0.1:9000", options=options) as channel:
+    stub = jetstream_pb2_grpc.OrchestratorStub(channel)
+    response = stub.Decode(request)
+    output = ""
+    async for token_list in response:
+      output += str(token_list.response[0])
+    return output

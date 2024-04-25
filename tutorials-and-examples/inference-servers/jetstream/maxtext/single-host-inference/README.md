@@ -73,17 +73,74 @@ $ kubectl annotate serviceaccount default \
     iam.gke.io/gcp-service-account=jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
+### Create a Cloud Storage bucket to store the Gemma-7b model checkpoint
+
+```
+gcloud storage buckets create $BUCKET_NAME
+```
+
+### Get access to the model
+
+Access the [model consent page](https://www.kaggle.com/models/google/gemma) and request access with your Kaggle Account. Accept the Terms and Conditions. 
+
+Obtain a Kaggle API token by going to your Kaggle settings and under the `API` section, click `Create New Token`. A `kaggle.json` file will be downloaded.
+
+Create a Secret to store the Kaggle credentials
+```
+kubectl create secret generic kaggle-secret \
+    --from-file=kaggle.json
+```
+
 ## Convert the Gemma-7b checkpoint
 
-You can follow [these instructions](https://github.com/google/maxtext/blob/main/end_to_end/test_gemma.sh#L14) to convert the Gemma-7b checkpoint from orbax to a MaxText compatible checkpoint.
+To convert the Gemma-7b checkpoint, we have created a job `checkpoint-job.yaml` that does the following:
+1. Download the base orbax checkpoint from kaggle
+2. Upload the checkpoint to a Cloud Storage bucket
+3. Convert the checkpoint to a MaxText compatible checkpoint
+4. Unscan the checkpoint to be used for inference
+
+In the manifest, ensure the value of the BUCKET_NAME environment variable is the name of the Cloud Storage bucket you created above. Do not include the `gs://` prefix.
+
+Apply the manifest:
+```
+kubectl apply -f checkpoint-job.yaml
+```
+
+Observe the logs:
+```
+kubectl logs -f jobs/data-loader-7b
+```
+
+You should see the following output once the job has completed. This will take around 10 minutes:
+```
+Successfully generated decode checkpoint at: gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
++ echo -e '\nCompleted unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items'
+
+Completed unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
+```
 
 ## Deploy Maxengine Server and HTTP Server
 
 In this example, we will deploy a Maxengine server targeting Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#optionals).
 
-Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden. 
+Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
 
-Configure the model checkpoint by adding `load_parameters_path=<GCS bucket path to your checkpoint>` under `args`, you can optionally deploy `deployment.yaml` without adding the checkpoint path. 
+In the manifest, ensure the value of the BUCKET_NAME is the name of the Cloud Storage bucket that was used when converting your checkpoint.
+
+Argument descriptions:
+```
+tokenizer_path: The file path to your model’s tokenizer
+load_parameters_path: Your checkpoint path (GSBucket)
+per_device_batch_size: Decoding batch size per device (1 TPU chip = 1 device)
+max_prefill_predict_length: Maximum length for the prefill when doing autoregression
+max_target_length: Maximum sequence length
+model_name: Model name
+ici_fsdp_parallelism: The number of shards for FSDP parallelism
+ici_autoregressive_parallelism: The number of shards for autoregressive parallelism
+ici_tensor_parallelism: The number of shards for tensor parallelism
+weight_dtype: Weight data type (e.g. bfloat16)
+scan_layers: Scan layers boolean flag
+```
 
 Deploy the manifest file for the Maxengine server and HTTP server:
 ```
@@ -97,20 +154,15 @@ Wait for the containers to finish creating:
 kubectl get deployment
 
 NAME               READY   UP-TO-DATE   AVAILABLE   AGE
-maxengine-server   1/1     1            1           2m45s
+maxengine-server   2/2     2            2           ##s
 ```
 
 Check the Maxengine pod’s logs, and verify the compilation is done. You will see similar logs of the following:
 ```
 kubectl logs deploy/maxengine-server -f -c maxengine-server
 
-2024-03-14 06:03:37,750 - jax._src.dispatch - DEBUG - Finished XLA compilation of jit(generate) in 8.170992851257324 sec
-2024-03-14 06:03:38,779 - root - INFO - Generate engine 0 step 1 - slots free : 96 / 96, took 11807.21ms
-2024-03-14 06:03:38,780 - root - INFO - Generate thread making a decision with: prefill_backlog=0 generate_free_slots=96
-2024-03-14 06:03:38,831 - root - INFO - Detokenising generate step 0 took 46.34ms
-2024-03-14 06:03:39,793 - root - INFO - Generate engine 0 step 2 - slots free : 96 / 96, took 1013.51ms
-2024-03-14 06:03:39,793 - root - INFO - Generate thread making a decision with: prefill_backlog=0 generate_free_slots=96
-2024-03-14 06:03:39,797 - root - INFO - Generate engine 0 step 3 - slots free : 96 / 96, took 3.35ms
+2024-03-29 17:09:08,047 - jax._src.dispatch - DEBUG - Finished XLA compilation of jit(initialize) in 0.26236414909362793 sec
+2024-03-29 17:09:08,150 - root - INFO - ---------Generate params 0 loaded.---------
 ```
 
 Check http server logs, this can take a couple minutes:
@@ -128,7 +180,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 Run the following command to set up port forwarding to the http server:
 
 ```
-kubectl port-forward svc/jetstream-http-svc 8000:8000
+kubectl port-forward svc/jetstream-svc 8000:8000
 ```
 
 In a new terminal, send a request to the server:
@@ -165,3 +217,15 @@ docker build -t jetstream-http .
 docker tag jetstream-http gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 ```
+
+### Interact with the Maxengine server directly using gRPC
+
+The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. If you would like to interact directly with the Maxengine server directly for use cases such as [benchmarking](https://github.com/google/JetStream/tree/main/benchmarks), you can do so by following the Jetstream benchmarking setup and applying the `deployment.yaml` manifest file and interacting with the Jetstream gRPC server at port 9000.
+
+```
+kubectl apply -f deployment.yaml
+
+kubectl port-forward svc/jetstream-svc 9000:9000
+```
+
+To run benchmarking, pass in the flag `--server 127.0.0.1` when running the benchmarking script.
