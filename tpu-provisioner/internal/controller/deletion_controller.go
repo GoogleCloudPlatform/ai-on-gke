@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
@@ -15,12 +14,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
 
 // DeletionReconciler watches Pods and Nodes and deletes Node Pools.
@@ -30,9 +31,8 @@ type DeletionReconciler struct {
 	Recorder record.EventRecorder
 	Provider cloud.Provider
 
-	NodeCriteria               NodeCriteria
-	NodePoolsMarkedForDeletion sync.Map
-	Concurrency                int
+	NodeCriteria NodeCriteria
+	Concurrency  int
 }
 
 type NodeCriteria struct {
@@ -101,73 +101,43 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, fmt.Errorf("listing nodes in node pool: %w", err)
 	}
 
-	// Ensure no user-Pods are running or pending on the node pool.
-	for _, n := range nodes.Items {
-		var pods corev1.PodList
-		// TODO: Can this be done with a "contains" field match to avoid the outer node loop?
-		if err := r.List(ctx, &pods, client.MatchingFields{".spec.nodeName": n.GetName()}); err != nil {
-			return ctrl.Result{}, fmt.Errorf("listing pods for node: %w", err)
-		}
-
-		for _, p := range pods.Items {
-			// Ignore Pods that have finished.
-			if isDone(&p) {
-				continue
-			}
-
-			// Don't let system Pods prevent downsizing.
-			if p.GetNamespace() == "kube-system" {
-				continue
-			}
-
-			if owner := metav1.GetControllerOf(&p); owner != nil {
-				if owner.Kind == "DaemonSet" || owner.Kind == "Node" {
-					continue
-				}
-			}
-
-			// Must be a user-Pod.
-			lg.V(3).Info("Node in node pool has user pod running, ignoring",
-				"podNode", n.GetName(), "podName", p.GetName(), "podNamespace", p.GetNamespace())
-			return ctrl.Result{}, nil
-		}
-	}
-
-	// If node pool passes deletion check once, reconcile again in a few seconds to give
-	// time for a restarting JobSet to recreate the Jobs and pods that may be assigned to
-	// this node pool.
-	value, exists := r.NodePoolsMarkedForDeletion.Load(nodePoolName)
-	if !exists {
-		lg.Info(fmt.Sprintf("Node pool %q passed deletion check once", nodePoolName))
-		r.NodePoolsMarkedForDeletion.Store(nodePoolName, time.Now())
-		return ctrl.Result{RequeueAfter: r.NodeCriteria.PoolDeletionDelay}, nil
-	}
-
-	// If we haven't reached the node pool deletion check interval, this reconcile was
-	// caused by something else, we can return early, and wait for the manually requeued
-	// reconcile we did after the first deletion check passed.
-	firstDeletionCheckTime := value.(time.Time)
-	if time.Now().Sub(firstDeletionCheckTime) < r.NodeCriteria.PoolDeletionDelay {
+	// If no Node objects are associated with this node pool, it will be cleaned up by the garbage collector.
+	if len(nodes.Items) == 0 {
+		lg.V(3).Info("Node pool has no Node objects", "nodePoolName", nodePoolName)
 		return ctrl.Result{}, nil
 	}
 
-	// If this point is reached, the node pool has passed the deletion check twice
-	// and can be deleted.
-	lg.Info(fmt.Sprintf("Node pool %q passed deletion check twice. Ensuring Node Pool is deleted", nodePoolName))
-	if err := r.Provider.DeleteNodePoolForNode(&node, "no user Pods are running on any of the Nodes in this node pool"); err != nil {
-		if errors.Is(err, cloud.ErrDuplicateRequest) {
-			lg.V(3).Info("Ignoring duplicate request to delete node pool")
-			return ctrl.Result{}, nil
-		} else {
+	// Ensure the JobSet whose pods created this node pool is either gone, completed, or failed before
+	// deleting the node pool.
+	for _, node := range nodes.Items {
+		jobSetName, exists := node.Labels[cloud.LabelJobSetName]
+		if !exists {
+			lg.V(3).Info("Node missing jobset name label", "node", node.Name)
+		}
+		jobSetNamespace, exists := node.Labels[cloud.LabelJobSetNamespace]
+		if !exists {
+			lg.V(3).Info("Node missing jobset namespace label", "node", node.Name)
+		}
+		var js jobset.JobSet
+		if err := r.Get(ctx, types.NamespacedName{Name: jobSetName, Namespace: jobSetNamespace}, &js); err != nil {
+			// Case 1: If JobSet no longer exists, delete the node pool.
+			if apierrors.IsNotFound(err) {
+				return r.deleteNodePool(ctx, &node, fmt.Sprintf("JobSet %s no longer exists", jobSetName))
+			}
 			return ctrl.Result{}, err
 		}
+		// Case 2: if JobSet is in completed or failed state, delete node pool.
+		if jobSetCompleted(&js) || jobSetFailed(&js) {
+			return r.deleteNodePool(ctx, &node, fmt.Sprintf("JobSet %s execution has ended (completed or failed)", jobSetName))
+		}
+
+		// No need to check all the other nodes, which will have the same jobset name label, we can end
+		// the loop early.
+		// Log the fact we are not deleting at a high verbosity level to avoid polluting logs but
+		// allow for improved debugability.
+		lg.V(5).Info("Node pool %s for JobSet %s is still in use, not deleting", nodePoolName, jobSetName)
+		break
 	}
-
-	// Remove node pool from the map tracking node pools marked for deletion, in case the JobSet
-	// is reran in the future, as this will result in node pools with the same name being recreated,
-	// and we want those to start with 0 deletion checks.
-	r.NodePoolsMarkedForDeletion.Delete(nodePoolName)
-
 	return ctrl.Result{}, nil
 }
 
@@ -196,14 +166,41 @@ func (r *DeletionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func nodeForPod(obj client.Object) []reconcile.Request {
-	pod := obj.(*corev1.Pod)
-	if nodeName := pod.Spec.NodeName; nodeName != "" {
-		return []reconcile.Request{
-			{NamespacedName: types.NamespacedName{Name: nodeName}},
+func (r *DeletionReconciler) deleteNodePool(ctx context.Context, node *corev1.Node, reason string) (ctrl.Result, error) {
+	lg := ctrllog.FromContext(ctx)
+	if err := r.Provider.DeleteNodePoolForNode(node, reason); err != nil {
+		if errors.Is(err, cloud.ErrDuplicateRequest) {
+			lg.V(3).Info("Ignoring duplicate request to delete node pool")
+			return ctrl.Result{}, nil
 		}
 	}
-	return []reconcile.Request{}
+	return ctrl.Result{}, nil
+}
+
+// nodeManagedByProvisioner returns true if the given node is managed by the
+// TPU provisioner, otherwise it returns false.
+func nodeManagedByProvisioner(node *corev1.Node) bool {
+	return node.Labels[cloud.LabelNodepoolManager] == cloud.LabelNodepoolManagerTPUPodinator
+}
+
+// jobSetCompleted returns true if the JobSet has completed, otherwise it returns false.
+func jobSetCompleted(js *jobset.JobSet) bool {
+	for _, condition := range js.Status.Conditions {
+		if condition.Type == string(jobset.JobSetCompleted) && condition.Status == metav1.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+
+// jobSetFailed returns true if the JobSet has failed, otherwise it returns false.
+func jobSetFailed(js *jobset.JobSet) bool {
+	for _, condition := range js.Status.Conditions {
+		if condition.Type == string(jobset.JobSetFailed) && condition.Status == metav1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
 
 func nodeManagedByProvisioner(node *corev1.Node) bool {
