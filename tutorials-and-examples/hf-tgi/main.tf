@@ -73,8 +73,8 @@ resource "kubernetes_deployment" "inference_deployment" {
 
       spec {
         init_container {
-          name = "download-model"
-          image = "google/cloud-sdk:latest"
+          name    = "download-model"
+          image   = "google/cloud-sdk:latest"
           command = ["gsutil", "cp", "-r", "gs://vertex-model-garden-public-us/mistralai/Mistral-7B-Instruct-v0.1/", "/model-data/"]
           volume_mount {
             mount_path = "/model-data"
