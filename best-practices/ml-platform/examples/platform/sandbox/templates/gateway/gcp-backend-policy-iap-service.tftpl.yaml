@@ -1,0 +1,15 @@
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: ${policy_name}
+spec:
+  default:
+    iap:
+      clientID: ${oauth_client_id}
+      enabled: true
+      oauth2ClientSecret:
+        name: ${oauth_client_secret_name}
+  targetRef:
+    group: ""
+    kind: Service
+    name: ${service_name}
