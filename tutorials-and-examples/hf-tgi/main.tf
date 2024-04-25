@@ -69,18 +69,18 @@ resource "kubernetes_deployment" "inference_deployment" {
         labels = merge({
           app = "mistral-7b-instruct"
         }, local.additional_labels)
-        annotations = {
-          "gke-gcsfuse/volumes" = "true"
-          "gke-gcsfuse/cpu-limit" = "10"
-          "gke-gcsfuse/memory-limit" = "10Gi"
-          "gke-gcsfuse/ephemeral-storage-limit" = "1Ti"
-          "gke-gcsfuse/cpu-request" = "500m"
-          "gke-gcsfuse/memory-request" = "1Gi"
-          "gke-gcsfuse/ephemeral-storage-request" = "50Gi"
-        }
       }
 
       spec {
+        init_container {
+          name = "download-model"
+          image = "google/cloud-sdk:latest"
+          command = ["gsutil", "cp", "-r", "gs://vertex-model-garden-public-us/mistralai/Mistral-7B-Instruct-v0.1/", "/model-data/"]
+          volume_mount {
+            mount_path = "/model-data"
+            name       = "model-storage"
+          }
+        }
         container {
           image = "ghcr.io/huggingface/text-generation-inference:1.1.0"
           name  = "mistral-7b-instruct"
@@ -95,7 +95,7 @@ resource "kubernetes_deployment" "inference_deployment" {
 
           env {
             name  = "MODEL_ID"
-            value = "/model"
+            value = "/model/Mistral-7B-Instruct-v0.1"
           }
 
           env {
@@ -131,7 +131,7 @@ resource "kubernetes_deployment" "inference_deployment" {
 
           volume_mount {
             mount_path = "/model"
-            name       = "gcs-fuse-csi-ephemeral"
+            name       = "model-storage"
             read_only  = "true"
           }
 
@@ -164,15 +164,8 @@ resource "kubernetes_deployment" "inference_deployment" {
         }
 
         volume {
-          name = "gcs-fuse-csi-ephemeral"
-          csi {
-            driver = "gcsfuse.csi.storage.gke.io"
-            read_only = "true"
-            volume_attributes = {
-              bucketName = "vertex-model-garden-public-us"
-              mountOptions = "implicit-dirs,only-dir=mistralai/Mistral-7B-Instruct-v0.1/"
-            }
-          }
+          name = "model-storage"
+          empty_dir {}
         }
 
         node_selector = merge({
