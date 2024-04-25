@@ -363,7 +363,7 @@ func sumTPURequests(p *corev1.Pod) (int, error) {
 func podToNodePoolName(p *corev1.Pod) (string, error) {
 	jobSetName, exists := p.Labels[jobset.JobSetNameKey]
 	if !exists {
-		return "", fmt.Errorf("%s label not found on pod %s", jobset.JobKey, p.Name)
+		return "", fmt.Errorf("%s label not found on pod %s", jobset.JobSetNameKey, p.Name)
 	}
 	jobKey, exists := p.Labels[jobset.JobKey]
 	if !exists {
