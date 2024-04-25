@@ -82,7 +82,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```bash
    cd $HOME && \
    git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git && \
-   cd ai-on-gke/gke-batch-refarch && \
+   cd ai-on-gke/best-practices/gke-batch-refarch && \
    ./create-platform.sh
    ```
 
@@ -127,7 +127,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 5. Deploying Low Priority workloads: Switch to the `03_low_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/gke-batch-refarch/03_low_priority && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/03_low_priority && \
    ./create_workloads.sh
    ```
 
@@ -269,7 +269,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 5. **Deploying High Priority workloads:** Switch to the `04_high_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/gke-batch-refarch/04_high_priority && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/04_high_priority && \
    ./create_workloads.sh
    ```
 
@@ -378,7 +378,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 6. **Deploying compact placement workloads:** Switch to the `05_compact_placement` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/gke-batch-refarch/05_compact_placement && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/05_compact_placement && \
    ./create_workloads.sh
    ```
 
@@ -453,7 +453,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 7. **Deploying JobSet workloads:** Switch to the `06_jobset` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
 
    ```bash
-   cd $HOME/ai-on-gke/gke-batch-refarch/06_jobset && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/06_jobset && \
    ./create_workloads.sh
    ```
 
@@ -628,6 +628,6 @@ This reference architecture illustrates an example of a batch platform on GKE th
 2. If the project needs to be left intact, another option is to destroy the infrastructure created for this tutorial using Cloud Build. Note, this does not destroy the Cloud Storage bucket containing the Terraform state, the artifact registry used to host container images or the IAM bindings and service enablement created via the `create-platform.sh` script.
 
    ```bash
-    cd $HOME/ai-on-gke/gke-batch-refarch && \
+    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch && \
     ./destroy-platform.sh
    ```
