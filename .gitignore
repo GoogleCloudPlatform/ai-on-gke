@@ -23,6 +23,7 @@ deploy/
 
 # IDEs
 .idea/
+.vscode/
 
 # Python
 __pycache__/

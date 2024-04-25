@@ -36,7 +36,6 @@ yamlfiles=$(find . -type f -name "*.yaml")
 cp ../../templates/_cluster_template/kustomization.yaml .
 for yamlfile in $(echo ${yamlfiles}); do
   cat <<EOF >>kustomization.yaml
-
 - ${yamlfile}
 EOF
 done

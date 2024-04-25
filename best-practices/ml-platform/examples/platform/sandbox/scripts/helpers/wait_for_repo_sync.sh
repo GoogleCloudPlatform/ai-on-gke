@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -u
 
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- "https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded-latest.yaml"
-- ./kuberay
+LAST_COMMIT=${LAST_COMMIT:-${1}}
+
+last_synced_commit=$(kubectl get reposync ${REPO_SYNC_NAME} -n ${REPO_SYNC_NAMESPACE} --output go-template='{{.status.lastSyncedCommit}}')
+while [[ ${last_synced_commit} != ${LAST_COMMIT} ]]; do
+    echo "Waiting for reposync '${REPO_SYNC_NAME}' in namespace '${REPO_SYNC_NAMESPACE}' to synchronize..."
+    sleep 10
+    last_synced_commit=$(kubectl get reposync ${REPO_SYNC_NAME} -n ${REPO_SYNC_NAMESPACE} --output go-template='{{.status.lastSyncedCommit}}')
+done
+
+echo "reposync '${REPO_SYNC_NAME}' has synchronize"
