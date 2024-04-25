@@ -60,6 +60,7 @@ resource "kubernetes_deployment" "inference_deployment" {
   }
 
   spec {
+    progress_deadline_seconds = 1800
     replicas = 1
 
     selector {
