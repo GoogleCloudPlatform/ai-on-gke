@@ -354,25 +354,23 @@ func sumTPURequests(p *corev1.Pod) (int, error) {
 }
 
 // podToNodePoolName deterministically generates a node pool name for a given pod,
-// by using the JobSet job key label (SHA1 hash of namespaced job key).
-// This label is stable through Job recreations, so the node pool name
+// by using the JobSet name and job-key (SHA1 hash of namespaced job key), as
+// given in the pod labels.
+// These labels are stable through JobSet restarts, so the node pool name
 // generated here will be the same if the JobSet is restarted.
-func podToNodePoolName(p *corev1.Pod, prefix, suffix string) (string, error) {
-	var ownerID string
-	if jobKey, exists := p.Labels[jobset.JobKey]; exists {
-		ownerID = jobKey
-	} else {
-		// Otherwise, fall back to the Job UID. The Job UID is not stable through
-		// recreations, so if a Job is recreated, the node pool name generated here
-		// will be different.
-		ref := metav1.GetControllerOf(p)
-		if ref == nil {
-			return "", errors.New("no owner reference")
-		}
-		ownerID = string(ref.UID)
-		log.Info("%s label not found on pod %s, falling back to owner UID", jobset.JobKey, p.Name)
+// Node pool name format is: {first 34 chars of jobset name}-{first 5 chars of job-key}
+// This ensures node pool names are within the 40 char limit on node pool name size.
+func podToNodePoolName(p *corev1.Pod) (string, error) {
+	jobSetName, exists := p.Labels[jobset.JobSetNameKey]
+	if !exists {
+		return "", fmt.Errorf("%s label not found on pod %s", jobset.JobKey, p.Name)
 	}
-	return prefix + ownerID[0:12] + suffix, nil
+	jobKey, exists := p.Labels[jobset.JobKey]
+	if !exists {
+		return "", fmt.Errorf("%s label not found on pod %s", jobset.JobKey, p.Name)
+	}
+	nodePoolName := fmt.Sprintf("%s-%s", jobSetName[:34], jobKey[:5])
+	return nodePoolName, nil
 }
 
 func tpuTopologyToNodeCount(accelerator, topo string) (int, error) {
