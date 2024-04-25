@@ -25,11 +25,46 @@ data "google_project" "environment" {
   project_id = var.environment_project_id
 }
 
+resource "google_project_service" "anthos_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "anthos.googleapis.com"
+}
+
+resource "google_project_service" "anthosconfigmanagement_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "anthosconfigmanagement.googleapis.com"
+}
+
+resource "google_project_service" "cloudresourcemanager_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "cloudresourcemanager.googleapis.com"
+}
+
 resource "google_project_service" "compute_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
   project                    = data.google_project.environment.project_id
   service                    = "compute.googleapis.com"
+}
+
+resource "google_project_service" "connectgateway_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "connectgateway.googleapis.com"
+}
+
+resource "google_project_service" "container_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "container.googleapis.com"
 }
 
 resource "google_project_service" "containerfilesystem_googleapis_com" {
@@ -39,67 +74,32 @@ resource "google_project_service" "containerfilesystem_googleapis_com" {
   service                    = "containerfilesystem.googleapis.com"
 }
 
-resource "google_project_service" "serviceusage_googleapis_com" {
-  disable_dependent_services = false
-  disable_on_destroy         = false
-  project                    = data.google_project.environment.project_id
-  service                    = "serviceusage.googleapis.com"
-}
-
-resource "google_project_service" "project_services-cr" {
-  disable_dependent_services = false
-  disable_on_destroy         = false
-  project                    = data.google_project.environment.project_id
-  service                    = "cloudresourcemanager.googleapis.com"
-}
-
-resource "google_project_service" "project_services-an" {
-  disable_dependent_services = false
-  disable_on_destroy         = false
-  project                    = data.google_project.environment.project_id
-  service                    = "anthos.googleapis.com"
-}
-
-resource "google_project_service" "project_services-anc" {
-  disable_dependent_services = false
-  disable_on_destroy         = false
-  project                    = data.google_project.environment.project_id
-  service                    = "anthosconfigmanagement.googleapis.com"
-}
-
-resource "google_project_service" "project_services-con" {
-  disable_dependent_services = false
-  disable_on_destroy         = false
-  project                    = data.google_project.environment.project_id
-  service                    = "container.googleapis.com"
-}
-
-resource "google_project_service" "project_services-gkecon" {
+resource "google_project_service" "gkeconnect_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
   project                    = data.google_project.environment.project_id
   service                    = "gkeconnect.googleapis.com"
 }
 
-resource "google_project_service" "project_services-gkeh" {
+resource "google_project_service" "gkehub_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
   project                    = data.google_project.environment.project_id
   service                    = "gkehub.googleapis.com"
 }
 
-resource "google_project_service" "project_services-iam" {
+resource "google_project_service" "iam_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
   project                    = data.google_project.environment.project_id
   service                    = "iam.googleapis.com"
 }
 
-resource "google_project_service" "project_services-gate" {
+resource "google_project_service" "serviceusage_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
   project                    = data.google_project.environment.project_id
-  service                    = "connectgateway.googleapis.com"
+  service                    = "serviceusage.googleapis.com"
 }
 
 #
@@ -140,11 +140,11 @@ module "cloud-nat" {
 resource "google_gke_hub_feature" "configmanagement_acm_feature" {
   depends_on = [
     github_branch.environment,
+    google_project_service.anthos_googleapis_com,
+    google_project_service.anthosconfigmanagement_googleapis_com,
     google_project_service.compute_googleapis_com,
-    google_project_service.project_services-gkeh,
-    google_project_service.project_services-anc,
-    google_project_service.project_services-an,
-    google_project_service.project_services-gkecon
+    google_project_service.gkeconnect_googleapis_com,
+    google_project_service.gkehub_googleapis_com
   ]
 
   location = "global"
@@ -158,7 +158,7 @@ module "gke" {
   depends_on = [
     google_gke_hub_feature.configmanagement_acm_feature,
     google_project_service.compute_googleapis_com,
-    google_project_service.project_services-con,
+    google_project_service.container_googleapis_com,
     module.cloud-nat
   ]
 
@@ -269,8 +269,8 @@ module "node_pool_gpu_l4x2_g2s24_spot" {
 resource "google_gke_hub_membership" "membership" {
   depends_on = [
     google_gke_hub_feature.configmanagement_acm_feature,
-    google_project_service.project_services-gkeh,
-    google_project_service.project_services-gkecon
+    google_project_service.gkeconnect_googleapis_com,
+    google_project_service.gkehub_googleapis_com
   ]
 
   membership_id = module.gke.cluster_name
@@ -286,10 +286,10 @@ resource "google_gke_hub_membership" "membership" {
 resource "google_gke_hub_feature_membership" "feature_member" {
   depends_on = [
     github_branch.environment,
-    google_project_service.project_services-gkecon,
-    google_project_service.project_services-gkeh,
-    google_project_service.project_services-an,
-    google_project_service.project_services-anc,
+    google_project_service.anthos_googleapis_com,
+    google_project_service.anthosconfigmanagement_googleapis_com,
+    google_project_service.gkeconnect_googleapis_com,
+    google_project_service.gkehub_googleapis_com,
     module.cloud-nat
   ]
 
