@@ -54,7 +54,7 @@ This reference architecture demonstrates how to build a GKE platform that facili
 
 ## Deploy the platform
 
-[Sandbox Reference Architecture Guide](examples/platform/sandbox/README.md): Set up an environment to familiarize yourself with the architecture and get an understanding of the concepts.
+[Playground Reference Architecture](examples/platform/playground/README.md): Set up an environment to familiarize yourself with the architecture and get an understanding of the concepts.
 
 ## Use cases
 

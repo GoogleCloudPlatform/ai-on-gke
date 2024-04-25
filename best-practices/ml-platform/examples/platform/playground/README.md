@@ -1,4 +1,4 @@
-# Machine learning platform (MLP) on GKE reference architecture: Sandbox
+# Playground Machine learning platform (MLP) on GKE reference architecture
 
 This quick-start deployment guide can be used to set up an environment to familiarize yourself with the architecture and get an understanding of the concepts.
 
@@ -47,7 +47,7 @@ The default quota given to a project should be sufficient for this guide.
   ```
 
   ```
-  cd examples/platform/sandbox && \
+  cd examples/platform/playground && \
   export MLP_TYPE_BASE_DIR=$(pwd) && \
   echo "export MLP_TYPE_BASE_DIR=${MLP_TYPE_BASE_DIR}" >> ${HOME}/.bashrc
   ```
@@ -459,8 +459,8 @@ You only need to complete the section for the option that you have selected.
   ```
   cd ${MLP_BASE_DIR} && \
   git restore \
-  examples/platform/sandbox/backend.tf \
-  examples/platform/sandbox/mlp.auto.tfvars \
+  examples/platform/playground/backend.tf \
+  examples/platform/playground/mlp.auto.tfvars \
   terraform/features/initialize/backend.tf \
   terraform/features/initialize/backend.tf.bucket \
   terraform/features/initialize/initialize.auto.tfvars
@@ -471,8 +471,8 @@ You only need to complete the section for the option that you have selected.
   ```
   cd ${MLP_BASE_DIR} && \
   rm -rf \
-  examples/platform/sandbox/.terraform \
-  examples/platform/sandbox/.terraform.lock.hcl \
+  examples/platform/playground/.terraform \
+  examples/platform/playground/.terraform.lock.hcl \
   terraform/features/initialize/.terraform \
   terraform/features/initialize/.terraform.lock.hcl \
   terraform/features/initialize/backend.tf.local \
