@@ -50,7 +50,7 @@ resource "kubernetes_deployment" "inference_deployment" {
   timeouts {
     create = "30m"
   }
-  
+
   metadata {
     name      = "mistral-7b-instruct"
     namespace = var.namespace
