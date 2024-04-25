@@ -145,7 +145,6 @@ You only need to complete the section for the option that you have selected (eit
 - Authorize `gcloud`
 
   ```
-  export GOOGLE_APPLICATION_CREDENTIALS=${CLOUDSDK_CONFIG:-${HOME}/.config/gcloud}/application_default_credentials.json
   gcloud auth login --activate --no-launch-browser --quiet --update-adc
   ```
 
@@ -194,7 +193,6 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
 - Authorize `gcloud`
 
   ```
-  export GOOGLE_APPLICATION_CREDENTIALS=${CLOUDSDK_CONFIG:-${HOME}/.config/gcloud}/application_default_credentials.json
   gcloud auth login --activate --no-launch-browser --quiet --update-adc
   ```
 
