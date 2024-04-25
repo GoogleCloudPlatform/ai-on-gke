@@ -25,24 +25,24 @@ random=$(
   echo $RANDOM | md5sum | head -c 20
   echo
 )
-log="$(pwd)/log"
-flag=0
 
 download_acm_repo_name="/tmp/$(echo ${acm_repo_name} | awk -F "/" '{print $2}')-${random}"
 git config --global user.name ${github_user}
 git config --global user.email ${github_emai}
-git clone https://${github_user}:${GIT_TOKEN}@github.com/${acm_repo_name} ${download_acm_repo_name} || exit 1
+git clone https://${github_user}:${GIT_TOKEN}@github.com/${acm_repo_name} ${download_acm_repo_name} || {
+  echo "Failed to clone git repository '${acm_repo_name}'"
+  exit 1
+}
 
 if [ ! -d "${download_acm_repo_name}/manifests" ] && [ ! -d "${download_acm_repo_name}/templates" ]; then
-  echo "copying files"
+  echo "Copying template files..."
   cp -r templates/acm-template/* ${download_acm_repo_name}
-  flag=1
 fi
 
-cd ${download_acm_repo_name}/manifests/clusters
-if [ "${flag}" -eq 0 ]; then
-  echo "not copying files"
-fi
+cd ${download_acm_repo_name}/manifests/clusters || {
+  echo "Failed to copy template files"
+  exit 1
+}
 
 cp ../../templates/_cluster_template/cluster.yaml ./${cluster_name}-cluster.yaml
 cp ../../templates/_cluster_template/selector.yaml ./${cluster_env}-selector.yaml
