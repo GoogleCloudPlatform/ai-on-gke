@@ -1,6 +1,6 @@
 # Setup Infra
 
-Platform module (to be renamed to Infra), creates the GKE cluster & other related resources for the AI applications / workloads to be deployed on them. 
+The infrastructure module creates the GKE cluster and other related resources for the AI applications / workloads to be deployed on them. 
 
 1) Update the ```platform.tfvars``` file with the required configuration. Kindly refer to ```tfvars_examples``` for sample configuration.
 
@@ -21,12 +21,13 @@ Following service APIs are enabled,
 
 if not already enabled, use the following command:
 ```
-gcloud services enable container.googleapis.com gkehub.googleapis.com
+gcloud services enable container.googleapis.com gkehub.googleapis.com \
+  servicenetworking.googleapis.com cloudresourcemanager.googleapis.com
 ```
 ## Network Connectivity
 
 ### Private GKE Cluster with internal endpoint
-Default config in ```platform.tfvars``` creates a private GKE cluster with internal endpoints & cluster is added to project-scoped Anthos fleet.
+The default configuration in ```platform.tfvars``` creates a private GKE cluster with internal endpoints and adds the cluster to a project-scoped Anthos fleet.
 For admin access to cluster, Anthos Connect Gateway is used. 
 
 ### Private GKE Cluster with external endpoint

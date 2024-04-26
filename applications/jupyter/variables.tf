@@ -150,7 +150,7 @@ variable "private_cluster" {
 
 variable "autopilot_cluster" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "cpu_pools" {
