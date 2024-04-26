@@ -39,7 +39,7 @@ variable "ray_version" {
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "myray"
+  default     = "ml"
 }
 
 variable "enable_grafana_on_ray_dashboard" {
@@ -105,7 +105,7 @@ variable "private_cluster" {
 
 variable "autopilot_cluster" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "cpu_pools" {
