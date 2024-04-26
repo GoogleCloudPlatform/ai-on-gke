@@ -45,6 +45,10 @@ const (
 	// 1 pod per TPU node + kube-system pods
 	// TODO: move this to a environment variable
 	maxPodsPerNode = 15
+
+	// Constants for node pool naming conventions.
+	maxJobSetPrefixLength = 34
+	jobKeySuffixLength    = 5
 )
 
 var _ Provider = &GKE{}
@@ -64,6 +68,9 @@ func (g *GKE) NodePoolLabelKey() string { return GKENodePoolNameLabel }
 
 func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 	name, err := podToNodePoolName(p)
+	if err != nil {
+		return err
+	}
 
 	exists, err := g.nodePoolExists(name)
 	if err != nil {
@@ -368,7 +375,11 @@ func podToNodePoolName(p *corev1.Pod) (string, error) {
 	if !exists {
 		return "", fmt.Errorf("%s label not found on pod %s", jobset.JobKey, p.Name)
 	}
-	nodePoolName := fmt.Sprintf("%s-%s", jobSetName[:34], jobKey[:5])
+
+	prefixLength := min(maxJobSetPrefixLength, len(jobSetName))
+	prefix := jobSetName[:prefixLength]
+	suffix := jobKey[:jobKeySuffixLength]
+	nodePoolName := fmt.Sprintf("%s-%s", prefix, suffix)
 	return nodePoolName, nil
 }
 
@@ -434,4 +445,11 @@ func waitForGkeOp(svc *containerv1beta1.Service, c GKEContext, operation *contai
 	}
 
 	return fmt.Errorf("timeout while waiting for operation %s on %s to complete", operation.Name, operation.TargetLink)
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
