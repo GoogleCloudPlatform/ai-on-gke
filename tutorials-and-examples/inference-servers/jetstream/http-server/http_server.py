@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""HTTP Server to interact with MaxText + JetStream Server."""
+"""HTTP Server to interact with JetStream Server."""
 
 import asyncio
 import concurrent.futures
