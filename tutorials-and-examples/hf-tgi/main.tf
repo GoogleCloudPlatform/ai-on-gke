@@ -60,6 +60,9 @@ resource "kubernetes_deployment" "inference_deployment" {
   }
 
   spec {
+    # It takes more than 10m for the deployment to be ready on Autopilot cluster
+    # Set the progress deadline to 30m to avoid the deployment controller
+    # considering the deployment to be failed
     progress_deadline_seconds = 1800
     replicas                  = 1
 
