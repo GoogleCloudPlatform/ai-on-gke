@@ -378,7 +378,7 @@ variable "gpu_pools" {
     max_count              = optional(number, 3)
     local_ssd_count        = optional(number, 0)
     spot                   = optional(bool, false)
-    disk_size_gb           = optional(number, 100)
+    disk_size_gb           = optional(number, 200)
     disk_type              = optional(string, "pd-standard")
     image_type             = optional(string, "COS_CONTAINERD")
     enable_gcfs            = optional(bool, false)
@@ -399,7 +399,7 @@ variable "gpu_pools" {
     autoscaling        = true
     min_count          = 1
     max_count          = 3
-    disk_size_gb       = 100
+    disk_size_gb       = 200
     disk_type          = "pd-balanced"
     enable_gcfs        = true
     accelerator_count  = 2

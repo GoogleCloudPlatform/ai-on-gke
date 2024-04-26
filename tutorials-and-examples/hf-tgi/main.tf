@@ -47,6 +47,9 @@ resource "kubernetes_service" "inference_service" {
 }
 
 resource "kubernetes_deployment" "inference_deployment" {
+  timeouts {
+    create = "30m"
+  }
   metadata {
     name      = "mistral-7b-instruct"
     namespace = var.namespace
@@ -56,7 +59,11 @@ resource "kubernetes_deployment" "inference_deployment" {
   }
 
   spec {
-    replicas = 1
+    # It takes more than 10m for the deployment to be ready on Autopilot cluster
+    # Set the progress deadline to 30m to avoid the deployment controller
+    # considering the deployment to be failed
+    progress_deadline_seconds = 1800
+    replicas                  = 1
 
     selector {
       match_labels = merge({
@@ -72,6 +79,15 @@ resource "kubernetes_deployment" "inference_deployment" {
       }
 
       spec {
+        init_container {
+          name    = "download-model"
+          image   = "google/cloud-sdk:473.0.0-alpine"
+          command = ["gsutil", "cp", "-r", "gs://vertex-model-garden-public-us/mistralai/Mistral-7B-Instruct-v0.1/", "/model-data/"]
+          volume_mount {
+            mount_path = "/model-data"
+            name       = "model-storage"
+          }
+        }
         container {
           image = "ghcr.io/huggingface/text-generation-inference:1.1.0"
           name  = "mistral-7b-instruct"
@@ -82,9 +98,11 @@ resource "kubernetes_deployment" "inference_deployment" {
             protocol       = "TCP"
           }
 
+          args = ["--model-id", "$(MODEL_ID)"]
+
           env {
             name  = "MODEL_ID"
-            value = "mistralai/Mistral-7B-Instruct-v0.1"
+            value = "/model/Mistral-7B-Instruct-v0.1"
           }
 
           env {
@@ -128,6 +146,12 @@ resource "kubernetes_deployment" "inference_deployment" {
             name       = "data"
           }
 
+          volume_mount {
+            mount_path = "/model"
+            name       = "model-storage"
+            read_only  = "true"
+          }
+
           #liveness_probe {
           #http_get {
           #path = "/"
@@ -153,6 +177,11 @@ resource "kubernetes_deployment" "inference_deployment" {
 
         volume {
           name = "data"
+          empty_dir {}
+        }
+
+        volume {
+          name = "model-storage"
           empty_dir {}
         }
 
