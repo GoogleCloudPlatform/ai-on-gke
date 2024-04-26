@@ -17,10 +17,10 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // DeletionReconciler watches Pods and Nodes and deletes Node Pools.
@@ -32,6 +32,7 @@ type DeletionReconciler struct {
 
 	NodeCriteria               NodeCriteria
 	NodePoolsMarkedForDeletion sync.Map
+	Concurrency                int
 }
 
 type NodeCriteria struct {
@@ -183,12 +184,15 @@ func (r *DeletionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return fmt.Errorf("NodeCriteria.MinLifetime must be set")
 	}
 
-	// NOTE: Direct Node watches are filtered based on labels in main.go.
-	//       However, Reconcile() can still be called for non-filtered Nodes
-	//       Because the of Watch on Pods below.
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Node{}).
-		Watches(&source.Kind{Type: &corev1.Pod{}}, handler.EnqueueRequestsFromMapFunc(handler.MapFunc(nodeForPod))).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: r.Concurrency,
+		}).
+		WithEventFilter(predicate.NewPredicateFuncs(func(object client.Object) bool {
+			node, ok := object.(*corev1.Node)
+			return ok && nodeManagedByProvisioner(node)
+		})).
 		Complete(r)
 }
 
@@ -200,4 +204,8 @@ func nodeForPod(obj client.Object) []reconcile.Request {
 		}
 	}
 	return []reconcile.Request{}
+}
+
+func nodeManagedByProvisioner(node *corev1.Node) bool {
+	return node.Labels[cloud.LabelNodepoolManager] == cloud.LabelNodepoolManagerTPUPodinator
 }
