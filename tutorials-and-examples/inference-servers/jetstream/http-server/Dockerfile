@@ -25,7 +25,7 @@ RUN pip3 install fastapi
 RUN pip3 install pydantic
 ENV PYTHONDONTWRITEBYTECODE=1
 
-COPY http_server.py /maxengine/httpserver/
-WORKDIR /maxengine/httpserver
+COPY http_server.py /httpserver/
+WORKDIR /httpserver
 
 CMD ["uvicorn", "http_server:app", "--host=0.0.0.0", "--port=8000"]

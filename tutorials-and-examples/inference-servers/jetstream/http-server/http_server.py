@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""HTTP Server to interact with MaxText + JetStream Server."""
+"""HTTP Server to interact with JetStream Server."""
 
 import asyncio
 import concurrent.futures
@@ -41,8 +41,8 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=1000)
 
 @app.get("/")
 def root():
-  """Root path for MaxText + Jetstream HTTP Server."""
-  response = {"message": "HTTP Server for MaxText + JetStream"}
+  """Root path for Jetstream HTTP Server."""
+  response = {"message": "HTTP Server for JetStream"}
   response = fastapi.Response(
       content=json.dumps(response, indent=4), media_type="application/json"
   )

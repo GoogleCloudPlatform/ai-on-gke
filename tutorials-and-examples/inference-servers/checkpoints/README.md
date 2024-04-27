@@ -15,4 +15,8 @@ Now you can use it in a [Kubernetes job](../jetstream/maxtext/single-host-infere
 - -i=INFERENCE_SERVER
 - -b=BUCKET_NAME
 - -m=MODEL_PATH
+- -q=QUANTIZE
+- -v=VERSION
+- -1=EXTRA_PARAM_1
+- -2=EXTRA_PARAM_2
 ```
