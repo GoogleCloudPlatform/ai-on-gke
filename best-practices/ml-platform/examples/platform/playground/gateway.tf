@@ -218,7 +218,7 @@ resource "null_resource" "gateway_manifests" {
     github_email   = var.github_email
     github_token   = var.github_token
     github_user    = var.github_user
-    kubeconfig     = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.membership.membership_id}"
+    kubeconfig     = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
     md5_script     = filemd5("${path.module}/scripts/gateway_manifests.sh")
     md5_files = md5(join("", [
       local_file.gateway_external_https_yaml.content_md5,
