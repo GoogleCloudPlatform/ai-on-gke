@@ -134,7 +134,7 @@ module "cloud-nat" {
 #
 # GKE
 ##########################################################################
-resource "google_gke_hub_feature" "configmanagement_acm_feature" {
+resource "google_gke_hub_feature" "configmanagement" {
   depends_on = [
     github_branch.environment,
     google_project_service.anthos_googleapis_com,
@@ -153,7 +153,7 @@ module "gke" {
   source = "../../../terraform/modules/cluster"
 
   depends_on = [
-    google_gke_hub_feature.configmanagement_acm_feature,
+    google_gke_hub_feature.configmanagement,
     google_project_service.compute_googleapis_com,
     google_project_service.container_googleapis_com,
     module.cloud-nat
@@ -263,9 +263,9 @@ module "node_pool_gpu_l4x2_g2s24_spot" {
   taints         = var.spot_taints
 }
 
-resource "google_gke_hub_membership" "membership" {
+resource "google_gke_hub_membership" "cluster" {
   depends_on = [
-    google_gke_hub_feature.configmanagement_acm_feature,
+    google_gke_hub_feature.configmanagement,
     google_project_service.gkeconnect_googleapis_com,
     google_project_service.gkehub_googleapis_com
   ]
@@ -280,7 +280,7 @@ resource "google_gke_hub_membership" "membership" {
   }
 }
 
-resource "google_gke_hub_feature_membership" "feature_member" {
+resource "google_gke_hub_feature_membership" "cluster_configmanagement" {
   depends_on = [
     github_branch.environment,
     google_project_service.anthos_googleapis_com,
@@ -292,7 +292,7 @@ resource "google_gke_hub_feature_membership" "feature_member" {
 
   feature    = "configmanagement"
   location   = "global"
-  membership = google_gke_hub_membership.membership.membership_id
+  membership = google_gke_hub_membership.cluster.membership_id
   project    = data.google_project.environment.project_id
 
   configmanagement {
@@ -382,7 +382,7 @@ gcloud container fleet memberships get-credentials ${self.triggers.membership_id
 
   triggers = {
     kubeconfig_dir = local.kubeconfig_dir
-    membership_id  = google_gke_hub_membership.membership.membership_id
+    membership_id  = google_gke_hub_membership.cluster.membership_id
     project_id     = data.google_project.environment.project_id
   }
 }
@@ -400,7 +400,7 @@ data "kubernetes_namespace_v1" "team" {
 
 resource "null_resource" "create_cluster_yamls" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member,
+    google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
   ]
 
@@ -419,7 +419,7 @@ resource "null_resource" "create_cluster_yamls" {
 
 resource "null_resource" "create_git_cred_cms" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member,
+    google_gke_hub_feature_membership.cluster_configmanagement,
     null_resource.connect_gateway_kubeconfig
   ]
 
@@ -427,7 +427,7 @@ resource "null_resource" "create_git_cred_cms" {
     command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${data.google_project.environment.project_id} ${var.github_user} config-management-system"
     environment = {
       GIT_TOKEN  = var.github_token
-      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.membership.membership_id}"
+      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
     }
   }
 
@@ -439,7 +439,7 @@ resource "null_resource" "create_git_cred_cms" {
 
 resource "null_resource" "install_kuberay_operator" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member,
+    google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
     null_resource.create_cluster_yamls,
     null_resource.create_git_cred_cms,
@@ -480,7 +480,7 @@ resource "google_service_account_iam_member" "namespace_default_iam_workload_ide
 
 resource "null_resource" "create_namespace" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member,
+    google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
     null_resource.install_kuberay_operator
   ]
@@ -514,7 +514,7 @@ resource "null_resource" "create_namespace" {
     github_email        = var.github_email
     github_token        = var.github_token
     github_user         = var.github_user
-    kubeconfig          = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.membership.membership_id}"
+    kubeconfig          = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
     md5_files           = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/team", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/team/${f}")]))
     md5_script          = filemd5("${path.module}/scripts/create_namespace.sh")
     namespace           = var.namespace
@@ -534,7 +534,7 @@ resource "null_resource" "create_git_cred_ns" {
     command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${module.gke.gke_project_id} ${var.github_user} ${var.namespace}"
     environment = {
       GIT_TOKEN  = var.github_token
-      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.membership.membership_id}"
+      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
     }
   }
 
@@ -583,7 +583,7 @@ resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_
 
 resource "null_resource" "install_ray_cluster" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member,
+    google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
     null_resource.create_git_cred_ns,
     null_resource.create_namespace
@@ -604,7 +604,7 @@ resource "null_resource" "install_ray_cluster" {
 
 resource "null_resource" "manage_ray_ns" {
   depends_on = [
-    google_gke_hub_feature_membership.feature_member,
+    google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
     null_resource.create_git_cred_ns,
     null_resource.install_ray_cluster
