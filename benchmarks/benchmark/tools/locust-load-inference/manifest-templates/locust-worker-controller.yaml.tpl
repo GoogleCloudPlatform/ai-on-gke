@@ -23,10 +23,12 @@ spec:
           env:
             - name: LOCUST_MODE
               value: worker
+            - name: REQUEST_TYPE
+              value: grpc
             - name: LOCUST_MASTER
               value: locust-master
             - name: TARGET_HOST
-              value: http://${inference_server_service}
+              value: ${inference_server_service}
             - name: BACKEND
               value: ${inference_server_framework}
             - name: BEST_OF
@@ -45,10 +47,8 @@ spec:
               value: ${tokenizer}
             - name: USE_BEAM_SEARCH
               value: ${use_beam_search}
-%{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HUGGINGFACE_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: hf-token
-                  key: HF_TOKEN
-%{ endfor ~}
+                  name: huggingface-secret
+                  key: token
