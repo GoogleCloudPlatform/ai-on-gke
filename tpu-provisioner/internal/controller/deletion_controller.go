@@ -95,49 +95,34 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	// Get all node in the same node pool.
-	var nodes corev1.NodeList
-	if err := r.List(ctx, &nodes, client.MatchingLabels{nodePoolLabelKey: nodePoolName}); err != nil {
-		return ctrl.Result{}, fmt.Errorf("listing nodes in node pool: %w", err)
-	}
-
-	// If no Node objects are associated with this node pool, it will be cleaned up by the garbage collector.
-	if len(nodes.Items) == 0 {
-		lg.V(3).Info("Node pool has no Node objects", "nodePoolName", nodePoolName)
-		return ctrl.Result{}, nil
-	}
-
 	// Ensure the JobSet whose pods created this node pool is either gone, completed, or failed before
 	// deleting the node pool.
-	for _, node := range nodes.Items {
-		jobSetName, exists := node.Labels[cloud.LabelJobSetName]
-		if !exists {
-			lg.V(3).Info("Node missing jobset name label", "node", node.Name)
-		}
-		jobSetNamespace, exists := node.Labels[cloud.LabelJobSetNamespace]
-		if !exists {
-			lg.V(3).Info("Node missing jobset namespace label", "node", node.Name)
-		}
-		var js jobset.JobSet
-		if err := r.Get(ctx, types.NamespacedName{Name: jobSetName, Namespace: jobSetNamespace}, &js); err != nil {
-			// Case 1: If JobSet no longer exists, delete the node pool.
-			if apierrors.IsNotFound(err) {
-				return r.deleteNodePool(ctx, &node, fmt.Sprintf("JobSet %s no longer exists", jobSetName))
-			}
-			return ctrl.Result{}, err
-		}
-		// Case 2: if JobSet is in completed or failed state, delete node pool.
-		if jobSetCompleted(&js) || jobSetFailed(&js) {
-			return r.deleteNodePool(ctx, &node, fmt.Sprintf("JobSet %s execution has ended (completed or failed)", jobSetName))
-		}
-
-		// No need to check all the other nodes, which will have the same jobset name label, we can end
-		// the loop early.
-		// Log the fact we are not deleting at a high verbosity level to avoid polluting logs but
-		// allow for improved debugability.
-		lg.V(5).Info("Node pool %s for JobSet %s is still in use, not deleting", nodePoolName, jobSetName)
-		break
+	jobSetName, exists := node.Labels[cloud.LabelJobSetName]
+	if !exists {
+		lg.V(3).Info("Node missing jobset name label", "node", node.Name)
 	}
+	jobSetNamespace, exists := node.Labels[cloud.LabelJobSetNamespace]
+	if !exists {
+		lg.V(3).Info("Node missing jobset namespace label", "node", node.Name)
+	}
+	var js jobset.JobSet
+	if err := r.Get(ctx, types.NamespacedName{Name: jobSetName, Namespace: jobSetNamespace}, &js); err != nil {
+		// Case 1: If JobSet no longer exists, delete the node pool.
+		if apierrors.IsNotFound(err) {
+			return r.deleteNodePool(ctx, &node, fmt.Sprintf("JobSet %s no longer exists", jobSetName))
+		}
+		return ctrl.Result{}, err
+	}
+	// Case 2: if JobSet is in completed or failed state, delete node pool.
+	if jobSetCompleted(&js) || jobSetFailed(&js) {
+		return r.deleteNodePool(ctx, &node, fmt.Sprintf("JobSet %s execution has ended (completed or failed)", jobSetName))
+	}
+
+	// No need to check all the other nodes, which will have the same jobset name label, we can end
+	// the loop early.
+	// Log the fact we are not deleting at a high verbosity level to avoid polluting logs but
+	// allow for improved debugability.
+	lg.V(5).Info("Node pool %s for JobSet %s is still in use, not deleting", nodePoolName, jobSetName)
 	return ctrl.Result{}, nil
 }
 
@@ -201,8 +186,4 @@ func jobSetFailed(js *jobset.JobSet) bool {
 		}
 	}
 	return false
-}
-
-func nodeManagedByProvisioner(node *corev1.Node) bool {
-	return node.Labels[cloud.LabelNodepoolManager] == cloud.LabelNodepoolManagerTPUPodinator
 }
