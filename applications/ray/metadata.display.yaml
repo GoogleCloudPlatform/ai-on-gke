@@ -236,7 +236,7 @@ spec:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
         - heading: Connect to Ray Cluster
-          description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265). Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a> to install ray and submit jobs.
+          description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265). Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/release-1.1/ray-on-gke#install-ray">instructions</a> to install ray and submit jobs.
         - heading: View Job Status in Ray Dashboard
           description: |-
             <p>
