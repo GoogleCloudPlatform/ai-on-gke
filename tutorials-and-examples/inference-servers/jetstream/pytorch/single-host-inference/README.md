@@ -1,4 +1,4 @@
-# Serve a LLM using a single-host TPU on GKE with JetStream and PyTorch
+# Serve a LLM using a single-host TPU on GKE with JetStream and PyTorch/XLA
 
 ## Background
 This tutorial shows you how to serve a large language model (LLM) using Tensor Processing Units (TPUs) on Google Kubernetes Engine (GKE) with [JetStream](https://github.com/google/JetStream) and [Jetstream-Pytorch](https://github.com/google/jetstream-pytorch).
@@ -176,13 +176,12 @@ The initial request can take several seconds to complete due to model warmup. Th
 
 ### Interact with the Jetstream Pytorch server directly using gRPC
 
-The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. If you would like to interact directly with the Jetstream Pytorch server directly for use cases such as [benchmarking](https://github.com/google/JetStream/tree/main/benchmarks), you can do so by following using Jetstream benchmarking setup and interacting with the Jetstream gRPC server at port 9000.
+The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. In production use case, it's recommended to interact with the JetStream-Pytorch server directly for better throughput/latency and use the streaming decode feature on the JetStream grpc server.
 
 ```
 kubectl port-forward svc/jetstream-svc 9000:9000
 ```
-
-To run benchmarking, pass in the flag --server 127.0.0.1 when running the benchmarking script.
+Now you can interact with the JetStream grpc server directly via port 9000.
 
 ### Use a Persistent Disk to host your checkpoint
 
