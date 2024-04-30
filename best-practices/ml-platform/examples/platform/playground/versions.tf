@@ -37,6 +37,10 @@ terraform {
       version = "3.2.2"
     }
   }
+
+  provider_meta "google" {
+    module_name = "cloud-solutions/ml-platform-playground-deploy-v1"
+  }
 }
 
 provider "github" {
