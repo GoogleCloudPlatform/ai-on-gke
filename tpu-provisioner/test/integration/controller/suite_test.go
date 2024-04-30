@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllertest
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -32,6 +33,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
+
+	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -42,7 +47,7 @@ var (
 	cfg       *rest.Config
 	k8sClient client.Client
 	testEnv   *envtest.Environment
-	provider  = &testProvider{
+	provider  = &mockProvider{
 		created: make(map[types.NamespacedName]bool),
 		deleted: make(map[string]time.Time),
 	}
@@ -54,6 +59,9 @@ const (
 	resourceName          = "test.com/tpu"
 	minNodeLifetime       = time.Second
 	nodepoolDeletionDelay = 5 * time.Second
+	timeout               = time.Second * 10
+	duration              = time.Second * 10
+	interval              = time.Millisecond * 250
 )
 
 func TestAPIs(t *testing.T) {
@@ -68,13 +76,20 @@ var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
-	testEnv = &envtest.Environment{}
+	testEnv = &envtest.Environment{
+		// Install JobSet CRD which is required for the integration tests.
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "crds")},
+		ErrorIfCRDPathMissing: true,
+	}
 
 	var err error
 	// cfg is defined in this file globally.
 	cfg, err = testEnv.Start()
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
+
+	err = jobset.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
 
@@ -87,23 +102,23 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&CreationReconciler{
+	err = (&controller.CreationReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("tpu-provisioner-creator"),
 		Provider: provider,
-		PodCriteria: PodCriteria{
+		PodCriteria: controller.PodCriteria{
 			ResourceType: resourceName,
 		},
 	}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&DeletionReconciler{
+	err = (&controller.DeletionReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("tpu-provisioner-deleter"),
 		Provider: provider,
-		NodeCriteria: NodeCriteria{
+		NodeCriteria: controller.NodeCriteria{
 			MinLifetime:       minNodeLifetime,
 			PoolDeletionDelay: nodepoolDeletionDelay,
 		},
