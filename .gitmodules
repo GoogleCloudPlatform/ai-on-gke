@@ -1,0 +1,3 @@
+[submodule "tutorials-and-examples/inference-servers/sdxl-tpu"]
+	path = tutorials-and-examples/inference-servers/sdxl-tpu
+	url = https://github.com/llm-on-gke/sdxl-tpu
