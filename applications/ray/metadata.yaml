@@ -33,7 +33,7 @@ spec:
         defaultValue: false
       - name: autopilot_cluster
         varType: bool
-        defaultValue: false
+        defaultValue: true
       - name: cluster_name
         varType: string
         defaultValue: "ai-on-gke"
