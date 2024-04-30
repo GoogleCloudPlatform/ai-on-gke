@@ -33,7 +33,7 @@ Install the following on your computer:
 
 By default, this tutorial creates a cluster on your behalf. We highly recommend following the default settings.
 
-If you prefer to manage your own cluster, set `create_cluster = false` in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
+If you prefer to manage your own cluster, set `create_cluster = false` and make sure the `network_name` is set to your cluster's network in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
 
 Use gcloud to create a GKE Autopilot cluster. Note that RAG requires the latest Autopilot features, available on the latest versions of 1.28 and 1.29.
 
