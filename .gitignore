@@ -17,8 +17,6 @@
 **/*.tar.gz
 **/*.zip
 
-.DS_Store
-.gitmodules
 
 # Directories
 bin/
