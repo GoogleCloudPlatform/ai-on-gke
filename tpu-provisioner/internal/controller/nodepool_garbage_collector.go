@@ -47,8 +47,8 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 		for _, np := range nodepools {
 			log := log.WithValues(
 				"nodepool", np.Name,
-				"CreatedForJobSetName", np.CreatedForJobSet.Name,
-				"CreatedForJobSetNamespace", np.CreatedForJobSet.Namespace,
+				"createdForJobSetName", np.CreatedForJobSet.Name,
+				"createdForJobSetNamespace", np.CreatedForJobSet.Namespace,
 			)
 
 			if !np.Error {

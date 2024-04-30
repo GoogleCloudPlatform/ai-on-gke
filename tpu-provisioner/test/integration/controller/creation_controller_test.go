@@ -1,9 +1,8 @@
-package controller
+package controllertest
 
 import (
 	"context"
 	"fmt"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,13 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
 
-// Define utility constants for object names and testing timeouts/durations and intervals.
-const (
-	timeout  = time.Second * 10
-	duration = time.Second * 10
-	interval = time.Millisecond * 250
+	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/controller"
 )
 
 // +kubebuilder:docs-gen:collapse=Imports
@@ -108,7 +102,7 @@ func makeFollowerPod() *corev1.Pod {
 
 func makeLeaderPodAutoProvisioningDisabled() *corev1.Pod {
 	leaderPod := makeLeaderPod()
-	leaderPod.Annotations[DisableAutoProvisioningLabel] = "true"
+	leaderPod.Annotations[controller.DisableAutoProvisioningLabel] = "true"
 	return leaderPod
 }
 
@@ -178,7 +172,7 @@ func assertNodePoolCreationNotTriggered(pod *corev1.Pod) {
 	}, timeout, interval).Should(BeFalse())
 }
 
-// deleteNamespace deletes the namespace and all the objects in it.
+// // deleteNamespace deletes the namespace and all the objects in it.
 func deleteNamespace(ctx context.Context, c client.Client, ns *corev1.Namespace) error {
 	if ns == nil {
 		return nil

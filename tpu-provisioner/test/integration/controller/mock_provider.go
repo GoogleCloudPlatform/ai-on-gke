@@ -1,4 +1,4 @@
-package controller
+package controllertest
 
 import (
 	"sync"
@@ -9,9 +9,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ cloud.Provider = &testProvider{}
+var _ cloud.Provider = &mockProvider{}
 
-type testProvider struct {
+type mockProvider struct {
 	sync.Mutex
 	created map[types.NamespacedName]bool
 	deleted map[string]time.Time
@@ -19,22 +19,22 @@ type testProvider struct {
 	cloud.Provider
 }
 
-func (p *testProvider) NodePoolLabelKey() string { return "cloud.test.com/test-nodepool" }
+func (p *mockProvider) NodePoolLabelKey() string { return cloud.GKENodePoolNameLabel }
 
-func (p *testProvider) EnsureNodePoolForPod(pod *corev1.Pod, _ string) error {
+func (p *mockProvider) EnsureNodePoolForPod(pod *corev1.Pod, _ string) error {
 	p.Lock()
 	defer p.Unlock()
 	p.created[types.NamespacedName{Namespace: pod.Namespace, Name: pod.Name}] = true
 	return nil
 }
 
-func (p *testProvider) getCreated(nn types.NamespacedName) bool {
+func (p *mockProvider) getCreated(nn types.NamespacedName) bool {
 	p.Lock()
 	defer p.Unlock()
 	return p.created[nn]
 }
 
-func (p *testProvider) DeleteNodePoolForNode(node *corev1.Node, _ string) error {
+func (p *mockProvider) DeleteNodePoolForNode(node *corev1.Node, _ string) error {
 	p.Lock()
 	defer p.Unlock()
 	if _, exists := p.deleted[node.Name]; !exists {
@@ -43,7 +43,7 @@ func (p *testProvider) DeleteNodePoolForNode(node *corev1.Node, _ string) error 
 	return nil
 }
 
-func (p *testProvider) getDeleted(name string) (time.Time, bool) {
+func (p *mockProvider) getDeleted(name string) (time.Time, bool) {
 	p.Lock()
 	defer p.Unlock()
 	timestamp, exists := p.deleted[name]
