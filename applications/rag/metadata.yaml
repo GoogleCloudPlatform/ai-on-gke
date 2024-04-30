@@ -28,8 +28,8 @@ spec:
         varType: string
         defaultValue: "created-by=gke-ai-quick-start-solutions,ai.gke.io=rag"
       - name: autopilot_cluster
-        varType: string
-        defaultValue: false
+        varType: bool
+        defaultValue: true
       - name: iap_consent_info
         description: Configure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent"><i>OAuth Consent Screen</i></a> for your project. Ensure <b>User type</b> is set to <i>Internal</i>. Note that by default, only users within your organization can be allowlisted. To add external users, change the <b>User type</b> to <i>External</i> after the application is deployed.
         varType: bool
