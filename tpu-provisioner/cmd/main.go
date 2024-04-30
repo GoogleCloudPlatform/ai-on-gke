@@ -138,9 +138,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Set up pod mutating webhook.
-	podWebHook := webhooks.NewPodWebhook(mgr.GetClient())
-	if err := podWebHook.SetupPodWebhookWithManager(mgr); err != nil {
+	// Set up job mutating webhook.
+	jobWebhook := webhooks.NewJobWebhook(mgr.GetClient())
+	if err := jobWebhook.SetupJobWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to set up webhook", "webhook", "pod")
 		os.Exit(1)
 	}

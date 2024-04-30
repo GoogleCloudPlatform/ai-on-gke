@@ -7,20 +7,20 @@
       service:
         name: webhook-service
         namespace: system
-        path: /mutate--v1-pod
+        path: /mutate--v1-job
     failurePolicy: Fail
-    name: mpod.kb.io
+    name: mjob.kb.io
     objectSelector:
       matchExpressions:
       - key: jobset.sigs.k8s.io/jobset-name
         operator: Exists
     rules:
     - apiGroups:
-      - ""
+      - "batch"
       apiVersions:
       - v1
       operations:
       - CREATE
       resources:
-      - pods
+      - jobs
     sideEffects: None
