@@ -16,7 +16,7 @@ webhooks:
   name: mjob.kb.io
   rules:
   - apiGroups:
-    - "batch"
+    - batch
     apiVersions:
     - v1
     operations:

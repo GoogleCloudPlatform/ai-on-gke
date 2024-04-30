@@ -14,7 +14,7 @@ import (
 	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
 
-// +kubebuilder:webhook:path=/mutate--v1-pod,mutating=true,failurePolicy=fail,groups="",resources=pods,verbs=create,versions=v1,name=mpod.kb.io,sideEffects=None,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/mutate--v1-job,mutating=true,failurePolicy=fail,groups="batch",resources=jobs,verbs=create,versions=v1,name=mjob.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 // jobWebhook for mutating webhook.
 type jobWebhook struct {
