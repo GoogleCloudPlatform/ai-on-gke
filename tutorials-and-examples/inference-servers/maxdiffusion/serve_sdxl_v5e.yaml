@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stable-diffusion-deployment
+spec:
+  selector:
+    matchLabels:
+      app: max-diffusion-server
+  replicas: 1  # number of nodes in node-pool
+  template:
+    metadata:
+      labels:
+        app: max-diffusion-server
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 1x1 #  target topology
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+      volumes:
+       - name: dshm
+         emptyDir:
+              medium: Memory
+      containers:
+      - name: serve-stable-diffusion
+        image: us-east1-docker.pkg.dev/rick-vertex-ai/gke-llm/max-diffusion:latest
+        securityContext:
+          privileged: true
+        env:
+        - name: MODEL_NAME
+          value: 'stable_diffusion'
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            google.com/tpu: 1  # TPU chip request
+          limits:
+            google.com/tpu: 1  # TPU chip request
+        volumeMounts:
+            - mountPath: /dev/shm
+              name: dshm
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: max-diffusion-server
+  labels:
+    app: max-diffusion-server
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: http
+      name: http-max-diffusion-server
+  selector:
+    app: max-diffusion-server
+
+
+             
