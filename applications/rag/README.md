@@ -122,13 +122,13 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
     * Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. `Status message: PENDING`).
     * Connect to the Ray dashboard to check the job status or logs:
         - If IAP is disabled (`ray_dashboard_add_auth = false`):
-            - `kubectl port-forward -n rag service/ray-cluster-kuberay-head-svc 8265:8265`
+            - `kubectl port-forward -n ${NAMESPACE} service/ray-cluster-kuberay-head-svc 8265:8265`
             - Go to `localhost:8265` in a browser
         - If IAP is enabled (`ray_dashboard_add_auth = true`):
             - Fetch the domain: `terraform output ray-dashboard-managed-cert`
             - If you used a custom domain, ensure you configured your DNS as described above.
             - Verify the domain status is `Active`:
-                - `kubectl get managedcertificates ray-dashboard-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+                - `kubectl get managedcertificates ray-dashboard-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
                 - Note: This can take up to 20 minutes to propagate.
             - Once the domain status is Active, go to the domain in a browser and login with your Google credentials.
             - To add additional users to your frontend application, go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/ray-cluster-kuberay-head-svc` service and add principals with the role `IAP-secured Web App User`.
@@ -143,7 +143,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
         - Fetch the domain: `terraform output frontend_uri`
         - If you used a custom domain, ensure you configured your DNS as described above.
         - Verify the domain status is `Active`:
-            - `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+            - `kubectl get managedcertificates frontend-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
             - Note: This can take up to 20 minutes to propagate.
         - Once the domain status is Active, go to the domain in a browser and login with your Google credentials.
         - To add additional users to your frontend application, go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/rag-frontend` service and add principals with the role `IAP-secured Web App User`.
@@ -202,7 +202,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
 2. Troubleshoot IAP login issues:
     - Verify the cert is Active:
         - For JupyterHub `kubectl get managedcertificates jupyter-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
-        - For the frontend: `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+        - For the frontend: `kubectl get managedcertificates frontend-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
     - Verify users are allowlisted for JupyterHub or frontend services:
         - JupyterHub: Go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/proxy-public` service and check if the user has role `IAP-secured Web App User`.
         - Frontend: Go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/rag-frontend` service and check if the user has role `IAP-secured Web App User`.
