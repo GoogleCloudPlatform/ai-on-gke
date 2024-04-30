@@ -24,7 +24,7 @@ autopilot_cluster = false
 private_cluster   = false
 
 ## GKE environment variables
-kubernetes_namespace = "rag"
+kubernetes_namespace = "ai-on-gke"
 
 # The bucket name must be globally unique (across all of Google Cloud).
 # To verify, check that `gcloud storage buckets describe gs://<bucketname>` returns a 404.

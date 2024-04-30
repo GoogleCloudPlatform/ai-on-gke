@@ -32,7 +32,7 @@ cluster_membership_id = "" # required for private cluster, defaults to `cluster_
 #######################################################
 
 ## JupyterHub variables
-kubernetes_namespace              = "ml"
+kubernetes_namespace              = "ai-on-gke"
 create_gcs_bucket                 = true
 gcs_bucket                        = "gcs-bucket-<unique-suffix>" # Choose a globally unique bucket name.
 workload_identity_service_account = "jupyter-sa"

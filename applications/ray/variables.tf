@@ -39,7 +39,7 @@ variable "ray_version" {
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "ml"
+  default     = "ai-on-gke"
 }
 
 variable "enable_grafana_on_ray_dashboard" {
