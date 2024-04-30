@@ -39,7 +39,7 @@ variable "kubernetes_version" {
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "rag"
+  default     = "ai-on-gke"
 }
 
 variable "additional_labels" {

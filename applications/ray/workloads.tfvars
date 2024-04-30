@@ -32,7 +32,7 @@ autopilot_cluster = true
 #######################################################
 
 ## GKE environment variables
-kubernetes_namespace = "ml"
+kubernetes_namespace = "ai-on-gke"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `workload_identity_service_account` to use an existing IAM service account.
