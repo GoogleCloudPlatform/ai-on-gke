@@ -17,7 +17,6 @@
 **/*.tar.gz
 **/*.zip
 
-
 # Directories
 bin/
 deploy/
