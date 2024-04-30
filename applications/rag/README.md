@@ -43,7 +43,7 @@ Use the provided infrastructue module to create a cluster:
 
 3. Run `terraform init`
 
-4. Run `terraform apply --var-file workloads.tfvars`
+4. Run `terraform apply`
 
 ### Bring your own VPC (optional)
 
