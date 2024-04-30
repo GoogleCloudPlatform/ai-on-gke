@@ -20,7 +20,7 @@ subnetwork_cidr = "10.100.0.0/16"
 create_cluster    = true # Creates a GKE cluster in the specified network.
 cluster_name      = "<cluster-name>"
 cluster_location  = "us-central1"
-autopilot_cluster = false
+autopilot_cluster = true
 private_cluster   = false
 
 ## GKE environment variables
