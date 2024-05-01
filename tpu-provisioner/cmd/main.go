@@ -53,6 +53,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/jobset/pkg/util/cert"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -135,6 +136,13 @@ func main() {
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	// Set up internal cert rotator.
+	certsReady := make(chan struct{})
+	if err = cert.CertsManager(mgr, certsReady); err != nil {
+		setupLog.Error(err, "unable to setup cert rotation")
 		os.Exit(1)
 	}
 
@@ -269,6 +277,12 @@ func main() {
 		gc.Run(ctx)
 		wg.Done()
 	}()
+
+	// The controllers won't work until the webhooks are operating,
+	// and the webhook won't work until the certs are all in places.
+	setupLog.Info("waiting for the cert generation to complete")
+	<-certsReady
+	setupLog.Info("certs ready")
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctx); err != nil {
