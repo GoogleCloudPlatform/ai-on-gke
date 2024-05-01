@@ -23,10 +23,12 @@ spec:
           env:
             - name: LOCUST_MODE
               value: worker
+            - name: REQUEST_TYPE
+              value: grpc
             - name: LOCUST_MASTER
               value: locust-master
             - name: TARGET_HOST
-              value: http://${inference_server_service}
+              value: ${inference_server_service}
             - name: BACKEND
               value: ${inference_server_framework}
             - name: BEST_OF

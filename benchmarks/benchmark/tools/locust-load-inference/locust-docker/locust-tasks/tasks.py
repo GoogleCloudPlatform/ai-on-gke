@@ -22,16 +22,24 @@ import threading
 import time
 from locust import web  # Import the web module from Locust
 from typing import Callable, List
-from locust import FastHttpUser, task, events
+from locust import FastHttpUser, task, events, User
 from locust.runners import MasterRunner
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
+
+from locust.exception import LocustError
+from jetstream.core.proto import jetstream_pb2
+from jetstream.core.proto import jetstream_pb2_grpc
+from typing import Any, Callable
+import grpc
+import grpc.experimental.gevent as grpc_gevent
+from grpc_interceptor import ClientInterceptor
 
 
 from custom_metric_aggregator import TokenMetricCollector
 local_metric_collector = TokenMetricCollector()
 
 logging.basicConfig(level=logging.INFO)
-
+grpc_gevent.init_gevent()
 
 def load_test_prompts():
     """Loads test prompts from a local file location."""
@@ -128,8 +136,6 @@ def get_token_count(prompt, resp):
             tokenizer.encode(resp_dict['text_output']))
     elif backend == "sax":
         number_of_output_tokens = 0  # to be added
-    elif backend == "jetstream":
-        number_of_output_tokens = 0
     else:
         raise ValueError(f"Unknown backend: {backend}")
     return number_of_input_tokens, number_of_output_tokens
@@ -170,42 +176,42 @@ class BenchmarkUser(FastHttpUser):
                         f"Failed request with invalid response code: {resp.status_code}. Due to requests.RequestException thrown by Session, caused by connection errors, timeouts or similar. Try increasing connection_timeout")
                 self.handle_failed_response(request, resp)
 
-    def handle_successful_response(self, prompt, reponse, start_time):
-        global model_params
-        test_time = time.time() - start_time
-        request_successful_bool = 1
-        tokens_sent, tokens_received = get_token_count(prompt, reponse)
+def handle_successful_response(prompt, reponse, start_time):
+    global model_params
+    test_time = time.time() - start_time
+    request_successful_bool = 1
+    tokens_sent, tokens_received = get_token_count(prompt, reponse)
 
-        local_metric_collector.add_metric(
-            tokens_sent, tokens_received, test_time, request_successful_bool)
-        logging.info(
-            f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
+    send_metrics(tokens_sent, tokens_received, test_time, request_successful_bool)
 
-    def handle_failed_response(self, request, response):
-        global model_params
-        response.failure("Got unexpected response")
-        logging.error(f"request {request} failed with: {response.status_code}")
-        tokens_sent = -1
-        tokens_received = -1
-        test_time = -1
-        request_successful_bool = 0
+def handle_failed_response(request, response):
+    global model_params
+    response.failure("Got unexpected response")
+    logging.error(f"request {request} failed with: {response.status_code}")
+    tokens_sent = -1
+    tokens_received = -1
+    test_time = -1
+    request_successful_bool = 0
 
-        local_metric_collector.add_metric(
-            tokens_sent, tokens_received, test_time, request_successful_bool)
-        logging.info(
-            f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
+    send_metrics(tokens_sent, tokens_received, test_time, request_successful_bool)
 
+def send_metrics( tokens_sent, tokens_received, test_time, request_successful_bool):
+    local_metric_collector.add_metric(
+        tokens_sent, tokens_received, test_time, request_successful_bool)
+    logging.info(
+        f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
     """on test stop the locust master resets metric collector"""
     if isinstance(environment.runner, MasterRunner):
+        logging.info(f'dumping metrics before clear: {local_metric_collector.json_dump_report()}')
         logging.info(f'init metric_collector')
         local_metric_collector.__init__()
 
 
 """
-Methods for collecting custom metrics to share to master webui
+Methods for collecting custom metrics to share to master web ui
 """
 
 @events.report_to_master.add_listener
@@ -300,3 +306,80 @@ def locust_init(environment, **kwargs):
             Add a route to the Locust web app, where we can see the total content-length
             """
             return local_metric_collector.json_dump_report()
+
+class GrpcUser(User):
+    abstract = True
+    stub_class = None
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        for attr_value, attr_name in ((self.host, "host"), (self.stub_class, "stub_class")):
+            if attr_value is None:
+                raise LocustError(f"You must specify the {attr_name}.")
+
+        self._channel = grpc.insecure_channel(self.host)
+        interceptor = LocustInterceptor(environment=environment)
+        self._channel = grpc.intercept_channel(self._channel, interceptor)
+
+        self.stub = self.stub_class(self._channel)
+
+class GrpcBenchmarkUser(GrpcUser):
+    stub_class = jetstream_pb2_grpc.OrchestratorStub
+
+    @task
+    def grpc_infer(self):
+        prompt = test_data[random.randrange(0, len(test_data))]
+        request = jetstream_pb2.DecodeRequest(
+            additional_text=prompt,
+            priority=0,
+            max_tokens=model_params["max_output_len"],
+        )
+        logging.info(f"Prompt: {prompt}")
+        #return values format is from the interceptor, which makes the actual call
+        output, ttft, response_time = self.stub.Decode(request)
+        logging.info(f"Response: {output}")
+
+        number_of_input_tokens = len(tokenizer.encode(prompt))
+        number_of_output_tokens = len(tokenizer.encode(output))
+        send_metrics(number_of_input_tokens, number_of_output_tokens, response_time,1)
+
+
+class LocustInterceptor(ClientInterceptor):
+    def __init__(self, environment, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.env = environment
+
+    def intercept(
+        self,
+        method: Callable,
+        request_or_iterator: Any,
+        call_details: grpc.ClientCallDetails,
+    ):
+        response = None
+        exception = None
+        start_perf_counter = time.perf_counter()
+        response_length = 0
+        responses = method(request_or_iterator, call_details)
+        output = ""
+        response_length = 0
+        ttft = 0
+        # Response is streamed and iterated over as it is received. The first
+        # chunk sent back is used to calculate time to first token(TTFT).
+        for response in responses:
+            if ttft == 0:
+                ttft = time.perf_counter() - start_perf_counter
+            output += response.response[0]
+            response_length += response.ByteSize()  
+        response_time_ms = (time.perf_counter() - start_perf_counter) * 1000
+        logging.info(f"response_time {response_time_ms}; ttft:{ttft * 1000}")
+        self.env.events.request.fire(
+            request_type="grpc",
+            name=call_details.method,
+            response_time=response_time_ms,
+            response_length=response_length,
+            response=response,
+            context=None,
+            exception=exception,
+        )
+        return output, ttft, response_time_ms
