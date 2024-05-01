@@ -210,3 +210,14 @@ variable "hugging_face_secret_version" {
   nullable    = true
   default     = null
 }
+
+variable "request_type" {
+  description = "The method of request used when calling the model server (http or grpc)"
+  type        = string
+  nullable    = true
+  default     = "http"
+  validation {
+    condition     = var.request_type == "http" || var.request_type == "grpc"
+    error_message = "The request_type must be 'http' or 'grpc'."
+  }
+}

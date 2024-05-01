@@ -24,11 +24,13 @@ spec:
             - name: LOCUST_MODE
               value: master
             - name: TARGET_HOST
-              value: http://${inference_server_service}
+              value: ${inference_server_service}
             - name: BACKEND
               value: ${inference_server_framework}
             - name: STOP_TIMEOUT
               value: ${stop_timeout}
+            - name: REQUEST_TYPE
+              value: grpc
           ports:
             - name: loc-master-web
               containerPort: 8089

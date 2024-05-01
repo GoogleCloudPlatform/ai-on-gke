@@ -13,11 +13,13 @@
 # limitations under the License.
 
 
-# Start with a base image Python 3.9.12 Debian 11 (bullseye) slim 
-FROM python:3.9.12-slim-bullseye
+# Start with a base image Python 3.10.14 Debian 11 (bullseye) slim 
+FROM python:3.10.14-slim-bullseye
 
 # Add the external tasks directory into /tasks
 ADD locust-tasks /locust-tasks
+
+RUN pip install --upgrade pip
 
 # Install the required dependencies via pip
 RUN pip install -r /locust-tasks/requirements.txt
