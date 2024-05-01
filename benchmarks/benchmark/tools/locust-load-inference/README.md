@@ -110,7 +110,7 @@ Fill out your `terraform.tfvars` with the desired model and server configuration
 - `credentials_config` - credentials for cluster to deploy Locust benchmark tool on
 - `project_id` - project id for enabling dependent services for building locust artifacts
 - `artifact_registry` - artifact registry to upload locust artifacts to
-- `inference_server_service` - an accessible service name for inference workload to be benchmarked **(Note: a non-80 port should be specified here. Example: `my-service-name:9000`)
+- `inference_server_service` - an accessible service name for inference workload to be benchmarked **(Note: If you are using a non-80 port for your model server service, it should be specified here. Example: `my-service-name:9000`)**
 - `tokenizer` - must match the model running on the inference workload to be benchmarked
 - `inference_server_framework` - the inference workload framework
 - `request_type` - **required if using gRPC**
