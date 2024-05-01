@@ -323,11 +323,11 @@ class GrpcUser(User):
 
         self.stub = self.stub_class(self._channel)
 
-class JetStreamUser(GrpcUser):
+class GrpcBenchmarkUser(GrpcUser):
     stub_class = jetstream_pb2_grpc.OrchestratorStub
 
     @task
-    def jetstream_grpc_infer(self):
+    def grpc_infer(self):
         prompt = test_data[random.randrange(0, len(test_data))]
         request = jetstream_pb2.DecodeRequest(
             additional_text=prompt,
