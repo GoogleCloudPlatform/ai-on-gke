@@ -13,7 +13,7 @@ IMAGE_BUCKET = os.environ['PROCESSING_BUCKET']
 RAY_CLUSTER_HOST = os.environ['RAY_CLUSTER_HOST']
 GCS_IMAGE_FOLDER = 'flipkart_images'
 
-@ray.remote(num_cpus=1)
+@ray.remote(resources={"n2_cpu": 1})
 def get_clean_df(df):
 
     def extract_url(image_list: str) -> List[str]:
