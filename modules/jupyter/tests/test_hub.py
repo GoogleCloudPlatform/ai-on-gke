@@ -28,7 +28,8 @@ def test_api_root(hub_url):
     r = requests.get(hub_url + "/hub/api")
     r.raise_for_status()
     info = r.json()
-    assert V("4") <= V(info["version"]) <= V("5")
+    version = info["version"]
+    assert V("4") <= V(version) <= V("5"), f"version {version} must be between 4 and 5"
     print("JupyterHub Rest API is working.")
 
 
@@ -59,7 +60,7 @@ def test_hub_login(hub_url):
         allow_redirects=True,
     )
     response.raise_for_status()
-    assert response.url == (hub_url + "/hub/spawn")
+    assert response.url == (hub_url + "/hub/spawn"), f"unexpected response url: got {response.url}, expected {hub_url}/hub/spawn"
     print("JupyterHub login success.")
 
 
