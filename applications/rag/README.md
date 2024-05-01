@@ -31,19 +31,17 @@ Install the following on your computer:
 
 ### Bring your own cluster (optional)
 
-By default, this tutorial creates a Standard cluster on your behalf. We highly recommend following the default settings.
+By default, this tutorial creates a cluster on your behalf. We highly recommend following the default settings.
 
-If you prefer to manage your own cluster, set `create_cluster = false` in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
+If you prefer to manage your own cluster, set `create_cluster = false` and make sure the `network_name` is set to your cluster's network in the [Installation section](#installation). Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.
 
-Use the provided infrastructue module to create a cluster:
+Use gcloud to create a GKE Autopilot cluster. Note that RAG requires the latest Autopilot features, available on the latest versions of 1.28 and 1.29.
 
-1. `cd ai-on-gke/infrastructure`
-
-2. Edit `platform.tfvars` to set your project ID, location and cluster name. The other fields are optional. Ensure you create an L4 nodepool as this tutorial requires it.
-
-3. Run `terraform init`
-
-4. Run `terraform apply --var-file workloads.tfvars`
+```
+gcloud container clusters create-auto rag-cluster \
+  --location us-central1 \
+  --cluster-version 1.28
+```
 
 ### Bring your own VPC (optional)
 
@@ -64,10 +62,11 @@ This section sets up the RAG infrastructure in your GCP project using Terraform.
 1. `cd ai-on-gke/applications/rag`
 
 2. Edit `workloads.tfvars` to set your project ID, location, cluster name, and GCS bucket name. Ensure the `gcs_bucket` name is globally unique (add a random suffix). Optionally, make the following changes:
-    * (Optional) Set a custom `kubernetes_namespace` where all k8s resources will be created.
     * (Recommended) [Enable authenticated access](#configure-authenticated-access-via-iap) for JupyterHub, frontend chat and Ray dashboard services.
-    * (Not recommended) Set `create_cluster = false` if you bring your own cluster. If using a GKE Standard cluster, ensure it has an L4 nodepool with autoscaling and node autoprovisioning enabled.
-    * (Not recommended) Set `create_network = false` if you bring your own VPC. Ensure your VPC has Private Service Connect enabled as described above.
+    * (Optional) Set a custom `kubernetes_namespace` where all k8s resources will be created.
+    * (Optional) Set `autopilot_cluster = false` to deploy using GKE Standard.
+    * (Optional) Set `create_cluster = false` if you are bringing your own cluster. If using a GKE Standard cluster, ensure it has an L4 nodepool with autoscaling and node autoprovisioning enabled. You can simplify setup by following the Terraform instructions in [`infrastructure/README.md`](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md).
+    * (Optional) Set `create_network = false` if you are bringing your own VPC. Ensure your VPC has Private Service Connect enabled as described above.
 
 3. Run `terraform init`
 
@@ -123,13 +122,13 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
     * Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. `Status message: PENDING`).
     * Connect to the Ray dashboard to check the job status or logs:
         - If IAP is disabled (`ray_dashboard_add_auth = false`):
-            - `kubectl port-forward -n rag service/ray-cluster-kuberay-head-svc 8265:8265`
+            - `kubectl port-forward -n ${NAMESPACE} service/ray-cluster-kuberay-head-svc 8265:8265`
             - Go to `localhost:8265` in a browser
         - If IAP is enabled (`ray_dashboard_add_auth = true`):
             - Fetch the domain: `terraform output ray-dashboard-managed-cert`
             - If you used a custom domain, ensure you configured your DNS as described above.
             - Verify the domain status is `Active`:
-                - `kubectl get managedcertificates ray-dashboard-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+                - `kubectl get managedcertificates ray-dashboard-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
                 - Note: This can take up to 20 minutes to propagate.
             - Once the domain status is Active, go to the domain in a browser and login with your Google credentials.
             - To add additional users to your frontend application, go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/ray-cluster-kuberay-head-svc` service and add principals with the role `IAP-secured Web App User`.
@@ -144,7 +143,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
         - Fetch the domain: `terraform output frontend_uri`
         - If you used a custom domain, ensure you configured your DNS as described above.
         - Verify the domain status is `Active`:
-            - `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+            - `kubectl get managedcertificates frontend-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
             - Note: This can take up to 20 minutes to propagate.
         - Once the domain status is Active, go to the domain in a browser and login with your Google credentials.
         - To add additional users to your frontend application, go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/rag-frontend` service and add principals with the role `IAP-secured Web App User`.
@@ -194,27 +193,23 @@ Connect to the GKE cluster:
 gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_LOCATION}
 ```
 
-1. Troubleshoot JupyterHub job failures:
-    - If the JupyterHub job fails to start the proxy with error code 599, it is likely an known issue with Cloud DNS, which occurs when a cluster is quickly deleted and recreated with the same name.
-    - Recreate the cluster with a different name or wait several minutes after running `terraform destroy` before running `terraform apply`.
-
-2. Troubleshoot Ray job failures: 
+1. Troubleshoot Ray job failures:
     - If the Ray actors fail to be scheduled, it could be due to a stockout or quota issue.
         - Run `kubectl get pods -n ${NAMESPACE} -l app.kubernetes.io/name=kuberay`. There should be a Ray head and Ray worker pod in `Running` state. If your ray pods aren't running, it's likely due to quota or stockout issues. Check that your project and selected `cluster_location` have L4 GPU capacity.
     - Often, retrying the Ray job submission (the last cell of the notebook) helps.
     - The Ray job may take 15-20 minutes to run the first time due to environment setup.
 
-3. Troubleshoot IAP login issues:
+2. Troubleshoot IAP login issues:
     - Verify the cert is Active:
         - For JupyterHub `kubectl get managedcertificates jupyter-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
-        - For the frontend: `kubectl get managedcertificates frontend-managed-cert -n rag --output jsonpath='{.status.domainStatus[0].status}'`
+        - For the frontend: `kubectl get managedcertificates frontend-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'`
     - Verify users are allowlisted for JupyterHub or frontend services:
         - JupyterHub: Go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/proxy-public` service and check if the user has role `IAP-secured Web App User`.
         - Frontend: Go to [Google Cloud Platform IAP](https://console.cloud.google.com/security/iap), select the `rag/rag-frontend` service and check if the user has role `IAP-secured Web App User`.
     - Org error:
         - The [OAuth Consent Screen](https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent) has `User type` set to `Internal` by default, which means principals external to the org your project is in cannot log in. To add external principals, change `User type` to `External`.
 
-4. Troubleshoot `terraform apply` failures:
+3. Troubleshoot `terraform apply` failures:
     - Inference server (`mistral`) fails to deploy:
         - This usually indicates a stockout/quota issue. Verify your project and chosen `cluster_location` have L4 capacity.
     - GCS bucket already exists:
@@ -222,7 +217,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
     - Cloud SQL instance already exists:
         - Ensure the `cloudsql_instance` name doesn't already exist in your project.
 
-5. Troubleshoot `terraform destroy` failures:
+4. Troubleshoot `terraform destroy` failures:
     - Network deletion issue:
         - `terraform destroy` fails to delete the network due to a known issue in the GCP provider. For now, the workaround is to manually delete it.
 
