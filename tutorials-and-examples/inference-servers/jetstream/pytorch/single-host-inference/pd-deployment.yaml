@@ -17,7 +17,7 @@ spec:
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       containers:
       - name: jetstream-pytorch-server
-        image: <docker container for jetstream-pytorch-server>
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-pytorch-server:v0.2.0
         args:
         - --param_size=7b
         - --batch_size=80
