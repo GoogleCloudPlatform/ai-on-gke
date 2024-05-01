@@ -7,6 +7,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/google/go-cmp/cmp"
+	container "google.golang.org/api/container/v1beta1"
+	containerv1beta1 "google.golang.org/api/container/v1beta1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
 
@@ -207,6 +212,211 @@ func TestPodToNodePoolName(t *testing.T) {
 			}
 			if result != tc.expectedName {
 				t.Errorf("Expected node pool name %s, got %s", tc.expectedName, result)
+			}
+		})
+	}
+}
+
+func TestNodePoolForPod(t *testing.T) {
+	trueVar := true
+	tests := []struct {
+		desc       string
+		gkeContext GKEContext
+		selector   map[string]string
+		want       *containerv1beta1.NodePool
+	}{
+		{
+			desc: "simple case",
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+					},
+					MachineType:            "ct5p-hightpu-4t",
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: true},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
+		{
+			desc:     "pod with reservation selector",
+			selector: map[string]string{"cloud.google.com/reservation-name": "tpu-rsv"},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+					},
+					MachineType: "ct5p-hightpu-4t",
+					ReservationAffinity: &container.ReservationAffinity{
+						ConsumeReservationType: "SPECIFIC_RESERVATION",
+						Key:                    "compute.googleapis.com/reservation-name",
+						Values:                 []string{"tpu-rsv"},
+					},
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: true},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
+		{
+			desc:     "pod with disabling ICI resiliency selector",
+			selector: map[string]string{"cloud.google.com/gke-tpu-ici-resiliency": "false"},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+						"cloud.google.com/gke-tpu-ici-resiliency":     "false",
+					},
+					MachineType:            "ct5p-hightpu-4t",
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: true},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
+		{
+			desc:       "pod with secondary boot disk",
+			gkeContext: GKEContext{NodeSecondaryDisk: "projects/my-gcp-project/global/images/my-disk-image"},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+					},
+					MachineType:            "ct5p-hightpu-4t",
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+					SecondaryBootDisks: []*containerv1beta1.SecondaryBootDisk{
+						{
+							DiskImage: "projects/my-gcp-project/global/images/my-disk-image",
+							Mode:      "CONTAINER_IMAGE_CACHE",
+						},
+					},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: true},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			gke := &GKE{
+				ClusterContext: tc.gkeContext,
+			}
+			pod := &v1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Pod",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
+						"batch.kubernetes.io/job-completion-index":    "0",
+						"jobset.sigs.k8s.io/job-index":                "0",
+						"jobset.sigs.k8s.io/job-key":                  "random-key",
+						"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
+						"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
+						"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
+						"jobset.sigs.k8s.io/restart-attempt":          "0",
+					},
+					Finalizers: []string{"batch.kubernetes.io/job-tracking"},
+					Labels: map[string]string{
+						"batch.kubernetes.io/controller-uid":        "8484279a-de52-4ca1-b01e-130fbded30fb",
+						"batch.kubernetes.io/job-name":              "jobset-test-job-1-0",
+						"controller-uid":                            "8484279a-de52-4ca1-b01e-130fbded30fb",
+						"job-name":                                  "jobset-test-job-1-0",
+						"jobset.sigs.k8s.io/job-index":              "0",
+						"jobset.sigs.k8s.io/job-key":                "random-key",
+						"jobset.sigs.k8s.io/jobset-name":            "jobset-test",
+						"jobset.sigs.k8s.io/replicatedjob-name":     "job-1",
+						"jobset.sigs.k8s.io/replicatedjob-replicas": "1",
+						"jobset.sigs.k8s.io/restart-attempt":        "0",
+					},
+					Name:      "job-test-6gfwq",
+					Namespace: "default",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion:         "batch/v1",
+							Kind:               "Job",
+							UID:                "8484279a-de52-4ca1-b01e-130fbded30fb",
+							Name:               "jobset-test-job-1-0",
+							Controller:         &trueVar,
+							BlockOwnerDeletion: &trueVar,
+						},
+					},
+					GenerateName:    "jobset-test-job-1-0-0-",
+					ResourceVersion: "70731715",
+					UID:             "f6a99195-268e-4b68-91de-22e75f9100bc",
+				},
+				Spec: v1.PodSpec{
+					NodeSelector: map[string]string{
+						"cloud.google.com/gke-tpu-accelerator": "tpu-v5p-slice",
+						"cloud.google.com/gke-tpu-topology":    "8x16x16",
+					},
+					Containers: []v1.Container{
+						{
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									"google.com/tpu": resource.MustParse("4"),
+								},
+								Limits: v1.ResourceList{
+									"google.com/tpu": resource.MustParse("4"),
+								},
+							},
+						},
+					},
+				},
+			}
+			if tc.selector != nil {
+				for k, v := range tc.selector {
+					pod.Spec.NodeSelector[k] = v
+				}
+			}
+			got, err := gke.nodePoolForPod("test-pool", pod)
+			if err != nil {
+				t.Errorf("Got error: %v", err)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("TestNodePoolForPod() return unexpected node pool, diff (-want +got): \n%s", diff)
 			}
 		})
 	}
