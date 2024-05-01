@@ -364,6 +364,8 @@ class LocustInterceptor(ClientInterceptor):
         output = ""
         response_length = 0
         ttft = 0
+        # Response is streamed and iterated over as it is received. The first
+        # chunk sent back is used to calculate time to first token(TTFT).
         for response in responses:
             if ttft == 0:
                 ttft = time.perf_counter() - start_perf_counter
