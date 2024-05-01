@@ -212,37 +212,41 @@ module "node_pool_gpu_l4x2_g2s24" {
   taints         = var.ondemand_taints
 }
 
-module "reservation" {
-  source = "../../../terraform/modules/vm-reservations"
+#
+# Removed reservation for cost savings
+#
 
-  cluster_name = module.gke.cluster_name
-  project_id   = data.google_project.environment.project_id
-  zone         = "${var.subnet_01_region}-a"
-}
+# module "reservation" {
+#   source = "../../../terraform/modules/vm-reservations"
 
-module "node_pool_gpu_l4x2_g2s24_res" {
-  source = "../../../terraform/modules/node-pools"
+#   cluster_name = module.gke.cluster_name
+#   project_id   = data.google_project.environment.project_id
+#   zone         = "${var.subnet_01_region}-a"
+# }
 
-  depends_on = [
-    module.reservation
-  ]
+# module "node_pool_gpu_l4x2_g2s24_res" {
+#   source = "../../../terraform/modules/node-pools"
 
-  cluster_name = module.gke.cluster_name
-  guest_accelerator = {
-    count = 2
-    type  = "nvidia-l4"
-  }
-  location       = var.subnet_01_region
-  node_pool_name = "gpu-l4x2-g2s24-res"
-  project_id     = data.google_project.environment.project_id
-  reservation_affinity = {
-    consume_reservation_type = "SPECIFIC_RESERVATION"
-    key                      = "compute.googleapis.com/reservation-name"
-    values                   = [module.reservation.reservation_name]
-  }
-  resource_type = "gpu-l4-reservation"
-  taints        = var.reserved_taints
-}
+#   depends_on = [
+#     module.reservation
+#   ]
+
+#   cluster_name = module.gke.cluster_name
+#   guest_accelerator = {
+#     count = 2
+#     type  = "nvidia-l4"
+#   }
+#   location       = var.subnet_01_region
+#   node_pool_name = "gpu-l4x2-g2s24-res"
+#   project_id     = data.google_project.environment.project_id
+#   reservation_affinity = {
+#     consume_reservation_type = "SPECIFIC_RESERVATION"
+#     key                      = "compute.googleapis.com/reservation-name"
+#     values                   = [module.reservation.reservation_name]
+#   }
+#   resource_type = "gpu-l4-reservation"
+#   taints        = var.reserved_taints
+# }
 
 module "node_pool_gpu_l4x2_g2s24_spot" {
   source = "../../../terraform/modules/node-pools"
