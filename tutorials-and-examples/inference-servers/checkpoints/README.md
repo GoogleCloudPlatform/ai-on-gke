@@ -16,10 +16,7 @@ Jetstream + MaxText
 - -i=INFERENCE_SERVER
 - -b=BUCKET_NAME
 - -m=MODEL_PATH
-- -q=QUANTIZE
 - -v=VERSION (Optional)
-- -1=EXTRA_PARAM_1
-- -2=EXTRA_PARAM_2
 ```
 
 Jetstream + Pytorch/XLA
