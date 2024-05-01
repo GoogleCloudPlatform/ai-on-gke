@@ -15,8 +15,14 @@
 # limitations under the License.
 
 LOCUST="/usr/local/bin/locust"
-LOCUST_OPTS="-f /locust-tasks/tasks.py --host=$TARGET_HOST"
+LOCUST_OPTS="-f /locust-tasks/tasks.py "
 LOCUST_MODE=${LOCUST_MODE:-standalone}
+
+if [[ "$REQUEST_TYPE" = "grpc" ]]; then 
+    LOCUST_OPTS="$LOCUST_OPTS GrpcBenchmarkUser --host=$TARGET_HOST"
+else
+    LOCUST_OPTS="$LOCUST_OPTS BenchmarkUser --host='http://$TARGET_HOST"
+fi
 
 if [[ "$LOCUST_MODE" = "master" ]]; then
     # Locust stop-timeout default is 0s. Only used in distributed mode.
