@@ -15,14 +15,14 @@ print_inference_server_unknown() {
 }
 
 check_gsbucket() {
-    $BUCKET_NAME=$1
+    BUCKET_NAME=$1
     if [ -z $BUCKET_NAME ]; then
         echo "BUCKET_NAME is empty, please provide a GSBucket"
     fi
 }
 
 check_model_path() {
-    $MODEL_PATH=$1
+    MODEL_PATH=$1
     if [ -z $MODEL_PATH ]; then
         echo "MODEL_PATH is empty, please provide the model path"
     fi
