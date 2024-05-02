@@ -77,6 +77,7 @@ convert_pytorch_checkpoint() {
     OUTPUT_CKPT_DIR=$3
     QUANTIZE=$4
     PYTORCH_VERSION=$5
+    JETSTREAM_VERSION=v0.2.0
 
     if [ -z $PYTORCH_VERSION ]; then
         PYTORCH_VERSION=jetstream-v0.2.0
@@ -93,12 +94,17 @@ convert_pytorch_checkpoint() {
         QUANTIZE="False"
     fi
 
+    git clone https://github.com/google/JetStream.git
     git clone https://github.com/google/jetstream-pytorch.git
+    cd JetStream
+    git checkout ${JETSTREAM_VERSION}
+    pip install -e
 
     # checkout stable Pytorch commit
-    cd jetstream-pytorch
+    cd ../jetstream-pytorch
     git checkout ${PYTORCH_VERSION}
-    source install_everything.sh
+    bash install_everything.sh
+    export PYTHONPATH=$PYTHONPATH:$(pwd)/deps/xla/experimental/torch_xla2:$(pwd)/JetStream:$(pwd)
 
     echo -e "\nRunning conversion script to convert model weights. This can take a couple minutes..."
     python3 -m convert_checkpoints --input_checkpoint_dir=${INPUT_CKPT_DIR_LOCAL} --output_checkpoint_dir=${OUTPUT_CKPT_DIR_LOCAL} --quantize=${QUANTIZE}

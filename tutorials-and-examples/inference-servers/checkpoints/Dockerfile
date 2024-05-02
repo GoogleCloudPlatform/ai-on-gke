@@ -22,8 +22,6 @@ RUN apt -y update && apt install -y google-cloud-cli
 
 RUN pip install kaggle
 
-RUN git clone https://github.com/pylint-dev/pylint.git
-
 COPY checkpoint_converter.sh /usr/bin/
 RUN chmod +x /usr/bin/checkpoint_converter.sh
 ENTRYPOINT ["/usr/bin/checkpoint_converter.sh"]
