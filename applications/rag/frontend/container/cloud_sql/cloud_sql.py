@@ -97,14 +97,11 @@ class CustomVectorStore(VectorStore):
     #TODO implement similarity search with cosine similarity threshold
 
     def similarity_search(self, query: dict, k: int = 4, **kwargs: Any) -> List[Document]:
-        print("ENTERING similarity_search")
         with self.engine.connect() as conn:
             try:
                 q = query["question"]
-                print(f"ENTERING query embedding for '{q}'")
                 # embed query & fetch matches
                 query_emb = self.embedding.embed_query(q)
-                print(f"GOT embedding of length: {len(query_emb)}")
                 emb_str = ",".join(map(str, query_emb))
                 query_request = f"""SELECT id, text, 1 - ('[{emb_str}]' <=> text_embedding) AS cosine_similarity 
                     FROM {VECTOR_EMBEDDINGS_TABLE_NAME} 
@@ -116,9 +113,6 @@ class CustomVectorStore(VectorStore):
                 if not query_results:
                     message = f"Table {VECTOR_EMBEDDINGS_TABLE_NAME} returned empty result"
                     raise ValueError(message)
-                print("****QUERY RESULTS****")
-                for row in query_results:
-                    print(row)
             except sqlalchemy.exc.DBAPIError or pg8000.exceptions.DatabaseError as err:
                 message = f"Table {VECTOR_EMBEDDINGS_TABLE_NAME} does not exist: {err}"
                 raise sqlalchemy.exc.DataError(message)

@@ -71,7 +71,6 @@ def check_new_session():
 
 @app.before_request
 def check_inactivity():
-    print(session)
     # Inactivity cleanup
     if 'last_activity' in session:
         time_elapsed = datetime.now(timezone.utc) - session['last_activity'] 

@@ -21,7 +21,6 @@ locals {
     for item in split(",", var.additional_labels) :
     split("=", item)[0] => split("=", item)[1]
   })
-  image = var.enable_local_rag_frontend_image ? var.local_image : var.base_image
 }
 
 # IAP Section: Creates the GKE components
@@ -110,8 +109,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          # image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
-          image = local.image
+          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
           name  = "rag-frontend"
 
           port {
@@ -125,19 +123,19 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           }
 
           env {
-            name  = "PROJECT_ID"
+            name = "PROJECT_ID"
             #value = "projects/${var.project_id}"
-            value = "${var.project_id}"
+            value = var.project_id
           }
 
           env {
             name  = "REGION"
-            value = "${var.region}"
+            value = var.region
           }
-          
+
           env {
             name  = "INSTANCE"
-            value = "${var.cloudsql_instance}"
+            value = var.cloudsql_instance
           }
 
           env {

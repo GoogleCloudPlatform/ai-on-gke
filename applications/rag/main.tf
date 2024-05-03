@@ -294,7 +294,6 @@ module "frontend" {
   cloudsql_instance_region      = local.cloudsql_instance_region
   db_secret_name                = module.cloudsql.db_secret_name
   dataset_embeddings_table_name = var.dataset_embeddings_table_name
-  enable_local_rag_frontend_image= true
 
   # IAP Auth parameters
   add_auth                 = var.frontend_add_auth

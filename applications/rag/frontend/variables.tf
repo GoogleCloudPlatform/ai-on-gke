@@ -53,24 +53,6 @@ variable "db_secret_name" {
   description = "CloudSQL user credentials"
 }
 
-variable "base_image" {
-  type        = string
-  description = "Base image for the application"
-  default     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
-}
-
-variable "local_image" {
-  type        = string
-  description = "Built off of the base image from local cloudbuild.yaml"
-  default     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/amundson-frontend@sha256:ae19e033e5fd69315d9121bed0ae2cc5ae0e0f52615bf394325660fbe762c006"
-}
-
-variable "enable_local_rag_frontend_image" {
-  type        = bool
-  description = "if true, use a locally built RAG frontend image that is based off the base image, instead of using the base image."
-  default     = false
-}
-
 variable "dataset_embeddings_table_name" {
   type        = string
   description = "Name of the table that stores vector embeddings for input dataset"
