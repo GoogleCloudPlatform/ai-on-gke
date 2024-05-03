@@ -16,60 +16,33 @@ import os
 import logging as log
 import google.cloud.logging as logging
 import traceback
+import uuid
 
-from flask import Flask, render_template, request, jsonify
-from langchain.chains import LLMChain
-from langchain.llms import HuggingFaceTextGenInference
-from langchain.prompts import PromptTemplate
+from flask import Flask, render_template, request, jsonify, session
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
 from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 from cloud_sql import cloud_sql
-import sqlalchemy
+from rag_langchain.rag_chain import clear_chat_history, create_chain, take_chat_turn, engine
+from datetime import datetime, timedelta, timezone
 
 # Setup logging
 logging_client = logging.Client()
 logging_client.setup_logging()
 
+# TODO: refactor the app startup code into a flask app factory
+# TODO: include the chat history cache in the app lifecycle and ensure that it's threadsafe.
 app = Flask(__name__, static_folder='static')
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
+app.config['ENGINE'] = engine # force the connection pool to warm up eagerly
 
-# initialize parameters
-INFERENCE_ENDPOINT=os.environ.get('INFERENCE_ENDPOINT', '127.0.0.1:8081')
-
-llm = HuggingFaceTextGenInference(
-    inference_server_url=f'http://{INFERENCE_ENDPOINT}/',
-    max_new_tokens=512,
-    top_k=10,
-    top_p=0.95,
-    typical_p=0.95,
-    temperature=0.01,
-    repetition_penalty=1.03,
-)
-
-prompt_template = """
-### [INST]
-Instruction: Always assist with care, respect, and truth. Respond with utmost utility yet securely.
-Avoid harmful, unethical, prejudiced, or negative content.
-Ensure replies promote fairness and positivity.
-Here is context to help:
-
-{context}
-
-### QUESTION:
-{user_prompt}
-
-[/INST]
- """
-
-# Create prompt from prompt template
-prompt = PromptTemplate(
-    input_variables=["context", "user_prompt"],
-    template=prompt_template,
-)
+SESSION_TIMEOUT_MINUTES = 30
+#TODO replace with real secret
+SECRET_KEY = "TODO replace this with an actual secret that is stored and managed by kubernetes and added to the terraform configuration."
+app.config['SECRET_KEY'] = SECRET_KEY
 
 # Create llm chain
-llm_chain = LLMChain(llm=llm, prompt=prompt)
+llm_chain = create_chain()
 
 @app.route('/get_nlp_status', methods=['GET'])
 def get_nlp_status():
@@ -80,6 +53,7 @@ def get_nlp_status():
 def get_dlp_status():
     dlp_enabled = dlp_filter.is_dlp_api_enabled()
     return jsonify({"dlpEnabled": dlp_enabled})
+
 @app.route('/get_inspect_templates')
 def get_inspect_templates():
     return jsonify(dlp_filter.list_inspect_templates_from_parent())
@@ -89,8 +63,27 @@ def get_deidentify_templates():
     return jsonify(dlp_filter.list_deidentify_templates_from_parent())
 
 @app.before_request
-def init_db():
-    cloud_sql.init_db()
+def check_new_session():
+    if 'session_id' not in session:
+        # instantiate a new session using a generated UUID
+        session_id = str(uuid.uuid4())
+        session['session_id'] = session_id
+
+@app.before_request
+def check_inactivity():
+    # Inactivity cleanup
+    if 'last_activity' in session:
+        time_elapsed = datetime.now(timezone.utc) - session['last_activity'] 
+
+        if time_elapsed > timedelta(minutes=SESSION_TIMEOUT_MINUTES):
+            print("Session inactive: Cleaning up resources...")
+            session_id = session['session_id']
+            # TODO: implement garbage collection process for idle sessions that have timed out
+            clear_chat_history(session_id)
+            session.clear()
+
+    # Always update the 'last_activity' data
+    session['last_activity'] = datetime.now(timezone.utc) 
 
 @app.route('/')
 def index():
@@ -98,6 +91,8 @@ def index():
 
 @app.route('/prompt', methods=['POST'])
 def handlePrompt():
+    # TODO on page refresh, load chat history into browser.
+    session['last_activity'] = datetime.now(timezone.utc) 
     data = request.get_json()
     warnings = []
 
@@ -107,19 +102,12 @@ def handlePrompt():
     user_prompt = data['prompt']
     log.info(f"handle user prompt: {user_prompt}")
 
-    context = ""
     try:
-        context = cloud_sql.fetchContext(user_prompt)
-    except Exception as err:
-        error_traceback = traceback.format_exc()
-        log.warn(f"Error: {err}\nTraceback:\n{error_traceback}")
-        warnings.append(f"Error: {err}\nTraceback:\n{error_traceback}")
+        response = {}
+        result = take_chat_turn(llm_chain, session['session_id'], user_prompt)
+        response['text'] = result
 
-    try:
-        response = llm_chain.invoke({
-            "context": context,
-            "user_prompt": user_prompt
-        })
+        # TODO: enable filtering in chain
         if 'nlpFilterLevel' in data:
             if nlp_filter.is_content_inappropriate(response['text'], data['nlpFilterLevel']):
                 response['text'] = 'The response is deemed inappropriate for display.'
@@ -149,4 +137,6 @@ def handlePrompt():
 
 
 if __name__ == '__main__':
+    # TODO using gunicorn to start the server results in the first request being really slow.
+    # Sometimes, the worker thread has to restart due to an unknown error.
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))

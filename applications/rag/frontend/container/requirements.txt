@@ -32,3 +32,5 @@ google-cloud-logging==3.9.0
 google-api-python-client==2.114.0
 pymysql==1.1.0
 cloud-sql-python-connector[pg8000]==1.7.0
+langchain-google-cloud-sql-pg==0.4.0
+langchain-community==0.0.31
