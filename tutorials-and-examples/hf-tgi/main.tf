@@ -108,14 +108,14 @@ resource "kubernetes_deployment" "inference_deployment" {
           env {
             # Extends the max size of the prompt we can send to the service, 
             # so that we can augment prompts and add chat history without causing errors.
-            name = "MAX_INPUT_LENGTH"
+            name  = "MAX_INPUT_LENGTH"
             value = 3072
           }
 
           env {
             # Extends the overall context window (including length of prompt & response combined)
             # Both this limit and MAX_INPUT_LENGTH need to be increased to enable RAG and chat history.
-            name = "MAX_TOTAL_TOKENS"
+            name  = "MAX_TOTAL_TOKENS"
             value = 4096
           }
 
