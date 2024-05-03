@@ -94,6 +94,7 @@ def create_chain() -> RunnableWithMessageHistory:
     #                 repetition_penalty=1.03,
     #                 huggingfacehub_api_token="my-api-key"
     #             )
+    # TODO: Give guidance on what these parameters should be and describe why these values were chosen.
     model = HuggingFaceTextGenInference(
         inference_server_url=f'http://{INFERENCE_ENDPOINT}/',
         max_new_tokens=512,
