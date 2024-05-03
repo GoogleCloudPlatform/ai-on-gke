@@ -4,6 +4,7 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTORCH_JETSTREAM_VERSION=jetstream-v0.2.0
 ENV JETSTREAM_VERSION=v0.2.0
 
 RUN apt -y update && apt install -y --no-install-recommends \
@@ -15,17 +16,20 @@ RUN apt -y update && apt install -y --no-install-recommends \
 RUN update-alternatives --install \
     /usr/bin/python3 python3 /usr/bin/python3.10 1
 
+RUN git clone https://github.com/google/jetstream-pytorch.git && \
+cd /jetstream-pytorch && \
+git checkout ${PYTORCH_JETSTREAM_VERSION} && \
+bash install_everything.sh
+
 RUN git clone https://github.com/google/JetStream.git && \
 cd /JetStream && \
 git checkout ${JETSTREAM_VERSION} && \
 pip install -e .
 
-RUN pip3 install uvicorn
-RUN pip3 install fastapi
-RUN pip3 install pydantic
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=$PYTHONPATH:$(pwd)/deps/xla/experimental/torch_xla2:$(pwd)/JetStream:$(pwd)
 
-COPY http_server.py /maxengine/httpserver/
-WORKDIR /maxengine/httpserver
+COPY jetstream_pytorch_server_entrypoint.sh /usr/bin/
 
-CMD ["uvicorn", "http_server:app", "--host=0.0.0.0", "--port=8000"]
+RUN chmod +x /usr/bin/jetstream_pytorch_server_entrypoint.sh
+
+ENTRYPOINT ["/usr/bin/jetstream_pytorch_server_entrypoint.sh"]
