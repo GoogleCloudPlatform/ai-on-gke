@@ -49,6 +49,7 @@ type NodeCriteria struct {
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=nodes/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=nodes/finalizers,verbs=update
+//+kubebuilder:rbac:groups="jobset.x-k8s.io",resources=jobsets,verbs=get;list;watch
 
 func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	lg := ctrllog.FromContext(ctx)
