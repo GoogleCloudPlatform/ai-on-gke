@@ -33,7 +33,8 @@ type Exporter struct {
 	locustAvgTokensSent,
 	locustAvgTokensReceived,
 	locustAvgTestTime,
-	locustAvgOutputTokenLatency prometheus.Gauge
+	locustAvgOutputTokenLatency,
+	locustTimeToFirstToken prometheus.Gauge
 }
 
 // NewExporter function
@@ -82,6 +83,13 @@ func NewExporter(uri string, timeout time.Duration) (*Exporter, error) {
 				Name:      "avg_output_token_latency",
 			},
 		),
+		locustTimeToFirstToken: prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Subsystem: "custom_metrics",
+				Name:      "avg_time_to_first_token",
+			},
+		),
 	}, nil
 }
 
@@ -94,6 +102,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.locustAvgTokensReceived.Desc()
 	ch <- e.locustAvgTestTime.Desc()
 	ch <- e.locustAvgOutputTokenLatency.Desc()
+	ch <- e.locustTimeToFirstToken.Desc()
 }
 
 // Collect function of Exporter
@@ -121,6 +130,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(e.locustAvgTokensReceived.Desc(), prometheus.GaugeValue, float64(locustStats.AvgTokensReceived))
 	ch <- prometheus.MustNewConstMetric(e.locustAvgTestTime.Desc(), prometheus.GaugeValue, float64(locustStats.AvgTestTime))
 	ch <- prometheus.MustNewConstMetric(e.locustAvgOutputTokenLatency.Desc(), prometheus.GaugeValue, float64(locustStats.AvgOutputTokenLatency))
+	ch <- prometheus.MustNewConstMetric(e.locustTimeToFirstToken.Desc(), prometheus.GaugeValue, float64(locustStats.AvgTimeToFirstToken))
 }
 
 type locustStats struct {
@@ -128,6 +138,7 @@ type locustStats struct {
 	AvgTokensReceived     float64 `json:"average-tokens-received"`
 	AvgTestTime           float64 `json:"average-test-time"`
 	AvgOutputTokenLatency float64 `json:"average-output-token-latency"`
+	AvgTimeToFirstToken   float64 `json:"average-time-to-first-token"`
 }
 
 func fetchHTTP(uri string, timeout time.Duration) func(endpoint string) (io.ReadCloser, error) {

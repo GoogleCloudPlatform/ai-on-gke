@@ -29,6 +29,11 @@
             'filter': 'metric.type = "prometheus/locust_custom_metrics_avg_tokens_sent/gauge"',
             'type': 'GAUGE',
             'aggregation': ''
+        },
+        'AVG_TIME_TO_FIRST_TOKEN': {
+            'filter': 'metric.type = "prometheus/locust_custom_metrics_time_to_first_token/gauge"',
+            'type': 'GAUGE',
+            'aggregation': ''
         }
     }
 }
