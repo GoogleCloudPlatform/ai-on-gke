@@ -25,10 +25,14 @@ random=$(
   echo
 )
 download_acm_repo_name="/tmp/$(echo ${configsync_repo_name} | awk -F "/" '{print $2}')-${random}"
-git config --global user.name ${github_user}
-git config --global user.email ${github_emai}
 git clone https://${github_user}:${GIT_TOKEN}@github.com/${configsync_repo_name} ${download_acm_repo_name} || exit 1
+cd ${download_acm_repo_name}
+
+git config user.name ${github_user}
+git config user.email ${github_email}
+
 cd ${download_acm_repo_name}/manifests/clusters/kuberay
+
 ns_exists=$(grep ${namespace} values.yaml | wc -l)
 if [ "${ns_exists}" -ne 0 ]; then
   echo "namespace already present in values.yaml"
@@ -38,8 +42,6 @@ fi
 sed -i "s/watchNamespace:/watchNamespace:\n  - ${namespace}/g" values.yaml
 
 git add .
-git config --global user.name ${github_user}
-git config --global user.email ${github_email}
 git commit -m "Configured KubeRay operator to watch '${namespace}' namespace."
 git push origin
 

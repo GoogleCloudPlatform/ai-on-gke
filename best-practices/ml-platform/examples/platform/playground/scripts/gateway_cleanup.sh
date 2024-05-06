@@ -29,12 +29,14 @@ trap cleanup EXIT
 random_suffix=$(echo $RANDOM | md5sum | head -c 20)
 repository_path="/tmp/$(echo ${GIT_REPOSITORY} | awk -F "/" '{print $2}')-${random_suffix}"
 
-git config --global user.name "${GIT_USERNAME}"
-git config --global user.email "${GIT_EMAIL}"
 git clone https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/${GIT_REPOSITORY} ${repository_path} || {
   echo "Failed to clone git repository '${GIT_REPOSITORY}'"
   exit 1
 }
+cd ${repository_path}
+
+git config user.name "${GIT_USERNAME}"
+git config user.email "${GIT_EMAIL}"
 
 team_namespace_directory="manifests/apps/${K8S_NAMESPACE}"
 team_namespace_path="${repository_path}/${team_namespace_directory}"
@@ -47,8 +49,6 @@ cd "${team_namespace_path}" || {
 git rm -rf gateway
 sed -i '/- .\/gateway/d' kustomization.yaml
 
-git config --global user.name ${GIT_USERNAME}
-git config --global user.email ${GIT_EMAIL}
 git add .
 git commit -m "Removed manifests for ${K8S_NAMESPACE} gateway"
 git push origin
