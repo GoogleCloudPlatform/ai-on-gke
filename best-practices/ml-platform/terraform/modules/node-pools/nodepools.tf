@@ -37,6 +37,7 @@ resource "google_container_node_pool" "node-pool" {
       "resource-type" : var.resource_type
     }
     machine_type = var.machine_type
+    service_account = google_service_account.nodepool_sa.email
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
@@ -89,4 +90,32 @@ resource "google_container_node_pool" "node-pool" {
     create = "30m"
     update = "20m"
   }
+}
+
+# Create dedicated service account for node pool
+resource "google_service_account" "nodepool_sa" {
+  project = var.project_id
+  account_id = "${var.node_pool_name}-sa"
+  display_name = "${var.cluster_name} ${var.node_pool_name} Service Account"
+  description = "Terraform-managed service account for node pool ${var.node_pool_name} in cluster ${var.cluster_name}"
+}
+
+# Apply minimal roles to nodepool SA 
+# https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
+locals {
+  nodepool_sa_minimum_roles = [
+    "roles/monitoring.viewer",
+    "roles/monitoring.metricWriter",
+    "roles/logging.logWriter",
+    "roles/stackdriver.resourceMetadata.writer",
+    "roles/autoscaling.metricsWriter"
+  ]
+}
+
+# Bind minimum role list + additional roles to nodepool SA on project
+resource "google_project_iam_member" "nodepool_sa" {
+  for_each = setunion(local.nodepool_sa_minimum_roles, var.additional_nodepool_sa_roles)
+  project = var.project_id
+  member  = "serviceAccount:${google_service_account.nodepool_sa.email}"
+  role    = each.value
 }

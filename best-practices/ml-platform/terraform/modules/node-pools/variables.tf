@@ -101,3 +101,9 @@ variable "taints" {
     value  = any
   }))
 }
+
+variable "additional_nodepool_sa_roles" {
+  description = "List of additional roles to provide to the node pool service account"
+  type = list(string)
+  default = []
+}
