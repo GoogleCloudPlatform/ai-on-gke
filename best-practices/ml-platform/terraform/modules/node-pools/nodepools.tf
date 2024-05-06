@@ -95,7 +95,7 @@ resource "google_container_node_pool" "node-pool" {
 # Create dedicated service account for node pool
 resource "google_service_account" "nodepool_sa" {
   project = var.project_id
-  account_id = "${var.cluster_name}-${var.node_pool_name}-sa"
+  account_id = "${var.node_pool_name}-sa"
   display_name = "${var.cluster_name} ${var.node_pool_name} Service Account"
   description = "Terraform-managed service account for node pool ${var.node_pool_name} in cluster ${var.cluster_name}"
 }
@@ -116,6 +116,6 @@ locals {
 resource "google_project_iam_member" "nodepool_sa" {
   for_each = setunion(local.nodepool_sa_minimum_roles, var.additional_nodepool_sa_roles)
   project = var.project_id
-  member  = google_service_account.nodepool_sa.email
+  member  = "serviceAccount:${google_service_account.nodepool_sa.email}"
   role    = each.value
 }
