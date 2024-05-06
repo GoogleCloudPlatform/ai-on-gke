@@ -110,7 +110,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
         service_account_name = var.google_service_account
         container {
           image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:335b60a0775abecd7bfcdde4bd051196d692949952aa3afb76fc934fc8d38842"
-          name = "rag-frontend"
+          name  = "rag-frontend"
 
           port {
             container_port = 8080
@@ -123,7 +123,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           }
 
           env {
-            name = "PROJECT_ID"
+            name  = "PROJECT_ID"
             value = "projects/${var.project_id}"
           }
 
