@@ -109,9 +109,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
-          # Built from local code. Revert before submitting.
-          # image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:108bb16ee2278255c80524fce125ef349c494cb5bc4ca77dbde5048b8f9448c1"
+          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:335b60a0775abecd7bfcdde4bd051196d692949952aa3afb76fc934fc8d38842"
           name = "rag-frontend"
 
           port {
@@ -126,8 +124,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
 
           env {
             name = "PROJECT_ID"
-            #value = "projects/${var.project_id}"
-            value = var.project_id
+            value = "projects/${var.project_id}"
           }
 
           env {
