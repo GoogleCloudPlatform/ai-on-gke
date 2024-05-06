@@ -83,6 +83,10 @@ func main() {
 		GCPNodeSecondaryDisk string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
 		GCPNodeSecureBoot    bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
 
+		// GCPForceOnDemand forces the controller to create nodes on demand, even if
+		// the Pod requests a reservation or spot.
+		GCPForceOnDemand bool `envconfig:"GCP_FORCE_ON_DEMAND" default:"false"`
+
 		// NodeMinLifespan is the amount of time that should pass between a Node object
 		// creation and a cleanup of that Node. This needs to be long enough to allow
 		// the node to become Ready and for a pending Pod to be scheduled on it.
@@ -203,6 +207,7 @@ func main() {
 				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
 				NodeTags:           cfg.GCPNodeTags,
 				NodeSecureBoot:     cfg.GCPNodeSecureBoot,
+				ForceOnDemand:      cfg.GCPForceOnDemand,
 			},
 			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		}
