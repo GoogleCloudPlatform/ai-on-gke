@@ -29,9 +29,12 @@ random=$(
   echo
 )
 download_acm_repo_name="/tmp/$(echo ${configsync_repo_name} | awk -F "/" '{print $2}')-${random}"
-git config --global user.name ${github_user}
-git config --global user.email ${github_emai}
 git clone https://${github_user}:${GIT_TOKEN}@github.com/${configsync_repo_name} ${download_acm_repo_name} || exit 1
+
+cd ${download_acm_repo_name}
+git config user.name ${github_user}
+git config user.email ${github_email}
+
 cd ${download_acm_repo_name}/manifests/apps
 if [ ! -d "${namespace}" ]; then
   echo "${namespace} folder doesnt exist in the configsync repo"
@@ -51,8 +54,6 @@ sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_WORKER?$google_service_account_worker?g" ${
 sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER?$kubernetes_service_account_worker?g" ${namespace}/*
 
 git add .
-git config --global user.name ${github_user}
-git config --global user.email ${github_email}
 git commit -m "Installing ray cluster in ${namespace} namespace."
 git push origin
 

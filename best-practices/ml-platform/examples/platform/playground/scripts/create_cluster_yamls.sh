@@ -27,8 +27,6 @@ random=$(
 )
 
 download_acm_repo_name="/tmp/$(echo ${acm_repo_name} | awk -F "/" '{print $2}')-${random}"
-git config --global user.name ${github_user}
-git config --global user.email ${github_emai}
 git clone https://${github_user}:${GIT_TOKEN}@github.com/${acm_repo_name} ${download_acm_repo_name} || {
   echo "Failed to clone git repository '${acm_repo_name}'"
   exit 1
@@ -36,13 +34,16 @@ git clone https://${github_user}:${GIT_TOKEN}@github.com/${acm_repo_name} ${down
 
 if [ ! -d "${download_acm_repo_name}/manifests" ] && [ ! -d "${download_acm_repo_name}/templates" ]; then
   echo "Copying template files..."
-  cp -r templates/acm-template/* ${download_acm_repo_name}
+  cp -r templates/acm-template/* ${download_acm_repo_name}/
 fi
 
 cd ${download_acm_repo_name}/manifests/clusters || {
   echo "Failed to copy template files"
   exit 1
 }
+
+git config user.name ${github_user}
+git config user.email ${github_email}
 
 cp ../../templates/_cluster_template/cluster.yaml ./${cluster_name}-cluster.yaml
 cp ../../templates/_cluster_template/selector.yaml ./${cluster_env}-selector.yaml
@@ -52,8 +53,6 @@ find . -type f -name ${cluster_name}-cluster.yaml -exec sed -i "s/ENV/${cluster_
 find . -type f -name ${cluster_env}-selector.yaml -exec sed -i "s/ENV/${cluster_env}/g" {} +
 
 git add ../../.
-git config --global user.name ${github_user}
-git config --global user.email ${github_email}
 git commit -m "Adding ${cluster_name} cluster to the ${cluster_env} environment."
 git push origin
 
