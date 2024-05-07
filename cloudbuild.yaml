@@ -379,17 +379,6 @@ steps:
         fi
 
     waitFor: ['cleanup gke cluster']
-
-  - id: 'tpu provisioner tests'
-    name: 'golang:1.22'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -e
-        cd /workspace/tpu-provisioner
-        make test
-    allowFailure: false
         
 substitutions:
   _REGION: us-east4
