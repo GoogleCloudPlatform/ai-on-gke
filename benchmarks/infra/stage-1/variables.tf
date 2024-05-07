@@ -36,10 +36,24 @@ variable "gke_location" {
   default     = "us-central1-a"
 }
 
-variable "enable_private_endpoint" {
-  description = "When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled."
-  type        = bool
-  default     = true
+variable "private_cluster_config" {
+  description = "Private cluster configuration. Default of {} configures a private_cluster with the values in below object. Set to null to make cluster public, which can be used for simple kubectl access when debugging or learning but should not be used in production."
+  type = object({
+    # When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled.
+    enable_private_endpoint = optional(bool, true)
+    master_global_access    = optional(bool, true)
+  })
+  default = {}
+}
+
+variable "private_cluster_config" {
+  description = "Private cluster configuration. Default of {} configures a private_cluster with the values in below object. Set to null to make cluster public, which can be used for simple kubectl access when debugging or learning but should not be used in production."
+  type = object({
+    # Is overriden by above variable enable_private_endpoint
+    enable_private_endpoint = optional(bool, true)
+    master_global_access    = optional(bool, true)
+  })
+  default = {}
 }
 
 variable "vpc_create" {
