@@ -15,12 +15,12 @@
 steps:
   - id: 'tpu provisioner tests'
     name: 'golang:1.22'
+    dir: /workspace/tpu-provisioner
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         set -e
-        cd /workspace/tpu-provisioner
         make test
     allowFailure: false
         
