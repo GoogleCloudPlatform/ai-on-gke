@@ -13,8 +13,8 @@
 # limitations under the License.
 
 terraform {
-   backend "gcs" {
-     bucket = "BUCKET_NAME"
-     prefix = "terraform/jupyter"
-   }
- }
+  backend "gcs" {
+    bucket = "BUCKET_NAME"
+    prefix = "terraform/jupyter"
+  }
+}

@@ -1,9 +1,9 @@
 data "google_client_config" "provider" {}
 
 data "google_container_cluster" "ai_cluster" {
-  name       = "ml-cluster"
-  location   = "us-central1"
-  project = var.project_id
+  name     = "ml-cluster"
+  location = "us-central1"
+  project  = var.project_id
 }
 
 provider "google" {
