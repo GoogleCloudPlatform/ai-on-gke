@@ -95,7 +95,7 @@ module "public-gke-standard-cluster" {
 
 ## create public GKE autopilot
 module "public-gke-autopilot-cluster" {
-  count      = var.create_cluster && !var.private_cluster && var.autopilot_cluster ? 1 : 0
+  count = var.create_cluster && !var.private_cluster && var.autopilot_cluster ? 1 : 0
   depends_on = [
     google_project_service.project_services
   ]
@@ -120,7 +120,7 @@ module "public-gke-autopilot-cluster" {
 
 ## create private GKE standard
 module "private-gke-standard-cluster" {
-  count      = var.create_cluster && var.private_cluster && !var.autopilot_cluster ? 1 : 0
+  count = var.create_cluster && var.private_cluster && !var.autopilot_cluster ? 1 : 0
   depends_on = [
     google_project_service.project_services
   ]
@@ -157,7 +157,7 @@ module "private-gke-standard-cluster" {
 
 ## create private GKE autopilot
 module "private-gke-autopilot-cluster" {
-  count      = var.create_cluster && var.private_cluster && var.autopilot_cluster ? 1 : 0
+  count = var.create_cluster && var.private_cluster && var.autopilot_cluster ? 1 : 0
   depends_on = [
     google_project_service.project_services
   ]

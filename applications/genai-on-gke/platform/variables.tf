@@ -104,9 +104,9 @@ variable "cluster_name" {
 }
 
 variable "cluster_labels" {
-  type        = map
+  type        = map(any)
   description = "GKE cluster labels"
-  default     =  {
+  default = {
     "cloud.google.com/gke-profile" = "ai-on-gke"
   }
 }
