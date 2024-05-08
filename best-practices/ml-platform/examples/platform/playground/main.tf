@@ -174,6 +174,7 @@ module "gke" {
   network                     = module.create-vpc.vpc
   project_id                  = data.google_project.environment.project_id
   region                      = var.subnet_01_region
+  release_channel             = "RAPID"
   remove_default_node_pool    = false
   subnet                      = module.create-vpc.subnet-1
   zone                        = "${var.subnet_01_region}-a"
