@@ -4,6 +4,10 @@ This quick-start deployment guide can be used to set up an environment to famili
 
 **NOTE: This environment is not intended to be a long lived environment. It is intended for temporary demonstration and learning purposes.**
 
+## Architecture
+
+For more information about the architecture, see the [Playground Machine learning platform (MLP) on GKE: Architecture](/best-practices/ml-platform/docs/platform/playground/architecture.md) document.
+
 ## Requirements
 
 ### Project
