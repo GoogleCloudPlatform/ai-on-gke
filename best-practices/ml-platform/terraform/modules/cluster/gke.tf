@@ -197,7 +197,7 @@ resource "google_container_cluster" "mlp" {
   }
 
   release_channel {
-    channel = "STABLE"
+    channel = var.release_channel
   }
 
   workload_identity_config {
