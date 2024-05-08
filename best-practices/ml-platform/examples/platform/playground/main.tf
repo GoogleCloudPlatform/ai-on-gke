@@ -74,6 +74,13 @@ resource "google_project_service" "containerfilesystem_googleapis_com" {
   service                    = "containerfilesystem.googleapis.com"
 }
 
+resource "google_project_service" "containersecurity_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "containersecurity.googleapis.com"
+}
+
 resource "google_project_service" "gkeconnect_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
