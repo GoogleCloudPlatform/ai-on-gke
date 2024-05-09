@@ -21,12 +21,14 @@ spec:
   podSelector:
     # Apply policy to all pods in this namespace.
     matchLabels: {}
+  policyTypes:
+  - Ingress
   ingress:
-    - from:
-        # Allow traffic between all pods in this namespace.
-        - podSelector: {}
-    # Example that allows traffic from another app's namespace.
-    #- from:
-    #    - namespaceSelector:
-    #        matchLabels:
-    #          app: another-app-namespace
+  - from:
+    # Allow GCLBs
+    - ipBlock:
+        cidr: 35.191.0.0/16
+    - ipBlock:
+        cidr: 130.211.0.0/22
+    # Allow traffic between all pods in this namespace.
+    - podSelector: {}
