@@ -56,7 +56,7 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 			}
 
 			if np.CreatedForJobSet.Name == "" || np.CreatedForJobSet.Namespace == "" {
-				log.Info("skipping garbage collection of node pool, no pod reference")
+				log.Info("skipping garbage collection of node pool, no JobSet reference")
 				continue
 			}
 

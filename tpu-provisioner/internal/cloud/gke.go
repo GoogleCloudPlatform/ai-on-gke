@@ -142,13 +142,22 @@ func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
 	}
 
 	for _, np := range resp.NodePools {
+		jsName, exists := np.Config.Labels[LabelJobSetName]
+		if !exists {
+			jsName = np.Config.Labels[LabelProvisionerNodepoolID]
+		}
+		jsNamespace, exists := np.Config.Labels[LabelJobSetNamespace]
+		if !exists {
+			jsNamespace = "default"
+		}
+
 		refs = append(refs, NodePoolRef{
 			Name:    np.Name,
 			Error:   np.Status == "ERROR",
 			Message: np.StatusMessage,
 			CreatedForJobSet: types.NamespacedName{
-				Name:      np.Config.Labels[LabelJobSetName],
-				Namespace: np.Config.Labels[LabelJobSetNamespace],
+				Name:      jsName,
+				Namespace: jsNamespace,
 			},
 		})
 	}
