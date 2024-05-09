@@ -120,7 +120,8 @@ resource "google_iap_client" "ray_head_client" {
 # BACKEND_SERVICE=$(gcloud compute backend-services list --filter="name~'<backend-service>'" --format="value(name)")
 resource "google_iap_web_iam_member" "domain_iap_https_resource_accessor" {
   depends_on = [
-    google_project_service.iap_googleapis_com
+    google_project_service.iap_googleapis_com,
+    null_resource.gateway_manifests
   ]
 
   project = data.google_project.environment.project_id
