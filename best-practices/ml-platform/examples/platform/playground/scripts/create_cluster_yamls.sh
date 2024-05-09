@@ -46,6 +46,7 @@ git config user.name ${github_user}
 git config user.email ${github_email}
 
 cp ../../templates/_cluster_template/cluster.yaml ./${cluster_name}-cluster.yaml
+cp ../../templates/_cluster_template/network-logging.yaml ./network-logging.yaml
 cp ../../templates/_cluster_template/selector.yaml ./${cluster_env}-selector.yaml
 
 find . -type f -name ${cluster_name}-cluster.yaml -exec sed -i "s/CLUSTER_NAME/${cluster_name}/g" {} +
