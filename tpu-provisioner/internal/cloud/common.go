@@ -22,6 +22,8 @@ const (
 	LabelJobSetName      = keyPrefix + "tpu-provisioner-jobset-name"
 	LabelJobSetNamespace = keyPrefix + "tpu-provisioner-jobset-namespace"
 
+	LabelProvisionerNodepoolID = "provisioner-nodepool-id"
+
 	EventNodePoolCreationStarted   = "NodePoolCreationStarted"
 	EventNodePoolCreationSucceeded = "NodePoolCreationSucceeded"
 	EventNodePoolCreationFailed    = "NodePoolCreationFailed"
