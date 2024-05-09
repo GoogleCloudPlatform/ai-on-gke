@@ -50,6 +50,12 @@ resource "google_container_node_pool" "node-pool" {
       content {
         count = var.guest_accelerator.count
         type  = var.guest_accelerator.type
+        dynamic "gpu_driver_installation_config" {
+          for_each = var.guest_accelerator.gpu_driver_installation_config != null ? [1] : []
+          content {
+            gpu_driver_version = var.guest_accelerator.gpu_driver_installation_config.gpu_driver_version
+          }
+        }
       }
     }
 

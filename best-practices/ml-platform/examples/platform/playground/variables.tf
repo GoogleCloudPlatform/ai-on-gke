@@ -87,6 +87,25 @@ variable "github_user" {
   }
 }
 
+variable "gpu_driver_version" {
+  default     = "LATEST"
+  description = "Mode for how the GPU driver is installed."
+  type        = string
+
+  validation {
+    condition = contains(
+      [
+        "DEFAULT",
+        "GPU_DRIVER_VERSION_UNSPECIFIED",
+        "INSTALLATION_DISABLED",
+        "LATEST"
+      ],
+      var.gpu_driver_version
+    )
+    error_message = "'gpu_driver_version' value is invalid"
+  }
+}
+
 variable "iap_domain" {
   default     = null
   description = "IAP domain"

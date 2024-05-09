@@ -212,6 +212,9 @@ module "node_pool_gpu_l4x2_g2s24" {
   guest_accelerator = {
     count = 2
     type  = "nvidia-l4"
+    gpu_driver_installation_config = {
+      gpu_driver_version = var.gpu_driver_version
+    }
   }
   location       = var.subnet_01_region
   node_pool_name = "gpu-l4x2-g2s24"
@@ -267,6 +270,9 @@ module "node_pool_gpu_l4x2_g2s24_spot" {
   guest_accelerator = {
     count = 2
     type  = "nvidia-l4"
+    gpu_driver_installation_config = {
+      gpu_driver_version = var.gpu_driver_version
+    }
   }
   location       = var.subnet_01_region
   node_pool_name = "gpu-l4x2-g2s24-spot"
