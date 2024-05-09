@@ -28,7 +28,15 @@ const (
 	GKETPUNodeSelector         = "cloud.google.com/gke-tpu-topology"
 	GKEAcceleratorNodeSelector = "cloud.google.com/gke-tpu-accelerator"
 	GKENodePoolNameLabel       = "cloud.google.com/gke-nodepool"
-	ICIResiliencyLabel         = "cloud.google.com/gke-tpu-ici-resiliency"
+
+	// ICIResiliencyLabel is used for disabling ICI resiliency, by default if not specified TPU slice
+	// is created in the ICI resilient mode. To disable the ICI resilient, workload needs
+	// to use node selector or affinity cloud.google.com/gke-tpu-ici-resiliency=false.
+	ICIResiliencyLabel = "cloud.google.com/gke-tpu-ici-resiliency"
+
+	// LocationHintLabel is used for passing in a desired borg cell the node pool MIG should be
+	// provisioned in.
+	LocationHintLabel = "cloud.google.com/gke-location-hint"
 
 	// Supported accelerator types
 	V4PodSliceAccelerator  = "tpu-v4-podslice"
@@ -250,14 +258,17 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		LabelJobSetNamespace: p.Namespace,
 	}
 
-	for k, v := range p.Spec.NodeSelector {
-		// Don't copy GCP/Google labels onto the node.
-		if (!strings.HasPrefix(k, gcpLabelPrefix) && !strings.HasPrefix(k, googleLabelPrefix)) ||
-			// Special label used for disabling ICI resiliency, by default if not specified TPU slice
-			// is created in the ICI resilient mode. To disable the ICI resilient, workload needs
-			// to use node selector or affinity cloud.google.com/gke-tpu-ici-resiliency=false.
-			(k == ICIResiliencyLabel) {
-			labels[k] = v
+	for labelKey, labelValue := range p.Spec.NodeSelector {
+		switch labelKey {
+		case ICIResiliencyLabel:
+			labels[labelKey] = labelValue
+		case LocationHintLabel:
+			labels[labelKey] = labelValue
+		default:
+			// Don't copy GCP/Google labels onto the node.
+			if !strings.HasPrefix(labelKey, gcpLabelPrefix) && !strings.HasPrefix(labelKey, googleLabelPrefix) {
+				labels[labelKey] = labelValue
+			}
 		}
 	}
 
