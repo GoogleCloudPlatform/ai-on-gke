@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -61,12 +60,7 @@ const (
 	jobKeySuffixLength    = 5
 )
 
-var (
-	// LocationHintLabel should only be used in zones included in this allowlist.
-	locationHintZoneAllowlist = []string{"us-east5-c"}
-
-	_ Provider = &GKE{}
-)
+var _ Provider = &GKE{}
 
 type GKE struct {
 	Service        *containerv1beta1.Service
@@ -269,10 +263,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		case ICIResiliencyLabel:
 			labels[labelKey] = labelValue
 		case LocationHintLabel:
-			// Only add location hint label in certain zones.
-			if slices.Contains(locationHintZoneAllowlist, g.ClusterContext.NodeZone) {
-				labels[labelKey] = labelValue
-			}
+			labels[labelKey] = labelValue
 		default:
 			// Don't copy GCP/Google labels onto the node.
 			if !strings.HasPrefix(labelKey, gcpLabelPrefix) && !strings.HasPrefix(labelKey, googleLabelPrefix) {
