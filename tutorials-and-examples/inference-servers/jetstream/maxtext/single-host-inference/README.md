@@ -229,3 +229,8 @@ kubectl port-forward svc/jetstream-svc 9000:9000
 ```
 
 To run benchmarking, pass in the flag `--server 127.0.0.1` when running the benchmarking script.
+
+
+### View Prometheus Metrics
+
+This example also includes a Prometheus server accessible on port 9090, this Prometheus server is configured to scrape metrics from pods with the label `maxengine-server`, within these pods the metrics are emitted by a prometheus client on port 9091. The Prometheus server can be accessed on port 9090 either by its [HTTP API](https://prometheus.io/docs/prometheus/latest/querying/api/) or its web UI. If needed, the metrics emitted by the client (being scraped by the server), can also be accessed via port 9091 on the `maxengine-server` pods.

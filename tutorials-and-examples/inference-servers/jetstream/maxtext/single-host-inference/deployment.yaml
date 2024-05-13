@@ -18,6 +18,9 @@ spec:
       containers:
       - name: maxengine-server
         image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.0
+        env:
+          - name: PROMETHEUS_ENABLED_ON_PORT
+            value: "9091"
         securityContext:
           privileged: true
         args:
@@ -35,6 +38,9 @@ spec:
         - load_parameters_path=gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
         ports:
         - containerPort: 9000
+          name: jetstream-grpc
+        - containerPort: 9091
+          name: prometheus-http
         resources:
           requests:
             google.com/tpu: 8
@@ -61,4 +67,92 @@ spec:
     name: jetstream-grpc
     port: 9000
     targetPort: 9000
-
+  - protocol: TCP
+    name: prometheus-http
+    port: 9091
+    targetPort: 9091
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-svc
+spec:
+  selector:
+    app: prometheus-server
+  ports:
+  - protocol: TCP
+    name: prometheus-client-http
+    port: 9090
+    targetPort: 9090
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-server-conf
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 500ms
+      evaluation_interval: 500ms
+    scrape_configs:
+      - job_name: 'prometheus'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+              - "slabe"
+          selectors:
+            - role: pod
+              label: "app=maxengine-server"
+        relabel_configs:
+          - source_labels: [__address__]
+            action: replace
+            regex: ([^:]+):.*
+            replacement: $1:9091
+            target_label: __address__
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-server
+  template:
+    metadata:
+      labels:
+        app: prometheus-server
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-server-conf
+            defaultMode: 420
+      serviceAccountName: prometheus
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: prometheus
