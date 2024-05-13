@@ -34,6 +34,10 @@ head:
       requests:
         cpu: "500m"
         memory: "512Mi"
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
   labels:
     cloud.google.com/gke-ray-node-type: head
     created-by: ray-on-gke
@@ -68,19 +72,28 @@ head:
     operator: "Exists"
     effect: "NoSchedule"
   affinity: {}
-  securityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
   volumes:
-  - name: ray-logs
-    emptyDir: {}
-  - name: fluentbit-config
+  - name: fluent-bit-config
     configMap:
       name: fluentbit-config
+  - name: fluent-bit-tmp
+    emptyDir: {}
+  - name: ray-logs
+    emptyDir: {}
+  - name: ray-tmp
+    emptyDir: {}
   # Ray writes logs to /tmp/ray/session_latests/logs
   volumeMounts:
+  - mountPath: /tmp
+    name: ray-tmp
   - mountPath: /tmp/ray
     name: ray-logs
   sidecarContainers:
-  - name: fluentbit
+  - name: fluent-bit
     image: fluent/fluent-bit:1.9.6
     resources:
       requests:
@@ -91,11 +104,18 @@ head:
         cpu: 100m
         memory: 128Mi
         ephemeral-storage: 4Gi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      # fluent/fluent-bit does not support runAsNonRoot
+      # runAsNonRoot: true
     volumeMounts:
+    - mountPath: /fluent-bit/etc/
+      name: fluent-bit-config
+    - mountPath: /tmp
+      name: fluent-bit-tmp
     - mountPath: /tmp/ray
       name: ray-logs
-    - mountPath: /fluent-bit/etc/
-      name: fluentbit-config
 
 worker:
   groupName: cpu-n2x2
@@ -129,19 +149,28 @@ worker:
     cloud.google.com/machine-family: n2
   tolerations: []
   affinity: {}
-  securityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
   volumes:
-  - name: ray-logs
-    emptyDir: {}
-  - name: fluentbit-config
+  - name: fluent-bit-config
     configMap:
       name: fluentbit-config
+  - name: fluent-bit-tmp
+    emptyDir: {}
+  - name: ray-logs
+    emptyDir: {}
+  - name: ray-tmp
+    emptyDir: {}
   # Ray writes logs to /tmp/ray/session_latests/logs
   volumeMounts:
+  - mountPath: /tmp
+    name: ray-tmp
   - mountPath: /tmp/ray
     name: ray-logs
   sidecarContainers:
-  - name: fluentbit
+  - name: fluent-bit
     image: fluent/fluent-bit:1.9.6
     resources:
       requests:
@@ -152,11 +181,18 @@ worker:
         cpu: 100m
         memory: 128Mi
         ephemeral-storage: 4Gi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      # fluent/fluent-bit does not support runAsNonRoot
+      # runAsNonRoot: true
     volumeMounts:
+    - mountPath: /fluent-bit/etc/
+      name: fluent-bit-config
+    - mountPath: /tmp
+      name: fluent-bit-tmp
     - mountPath: /tmp/ray
       name: ray-logs
-    - mountPath: /fluent-bit/etc/
-      name: fluentbit-config
 
 additionalWorkerGroups:
   gpul4x2:
@@ -198,19 +234,28 @@ additionalWorkerGroups:
       operator: "Exists"
       effect: "NoSchedule"
     affinity: {}
-    securityContext: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
     volumes:
-    - name: ray-logs
-      emptyDir: {}
-    - name: fluentbit-config
+    - name: fluent-bit-config
       configMap:
         name: fluentbit-config
+    - name: fluent-bit-tmp
+      emptyDir: {}
+    - name: ray-logs
+      emptyDir: {}
+    - name: ray-tmp
+      emptyDir: {}
     # Ray writes logs to /tmp/ray/session_latests/logs
     volumeMounts:
+    - mountPath: /tmp
+      name: ray-tmp
     - mountPath: /tmp/ray
       name: ray-logs
     sidecarContainers:
-    - name: fluentbit
+    - name: fluent-bit
       image: fluent/fluent-bit:1.9.6
       resources:
         requests:
@@ -221,11 +266,18 @@ additionalWorkerGroups:
           cpu: 100m
           memory: 128Mi
           ephemeral-storage: 4Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        # fluent/fluent-bit does not support runAsNonRoot
+        # runAsNonRoot: true
       volumeMounts:
+      - mountPath: /fluent-bit/etc/
+        name: fluent-bit-config
+      - mountPath: /tmp
+        name: fluent-bit-tmp
       - mountPath: /tmp/ray
         name: ray-logs
-      - mountPath: /fluent-bit/etc/
-        name: fluentbit-config
 
 service:
   type: ClusterIP
