@@ -200,6 +200,11 @@ resource "google_container_cluster" "mlp" {
     channel = var.release_channel
   }
 
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_ENTERPRISE"
+  }
+
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
