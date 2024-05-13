@@ -98,9 +98,6 @@ data:
       - job_name: 'prometheus'
         kubernetes_sd_configs:
         - role: pod
-          namespaces:
-            names:
-              - "slabe"
           selectors:
             - role: pod
               label: "app=maxengine-server"
