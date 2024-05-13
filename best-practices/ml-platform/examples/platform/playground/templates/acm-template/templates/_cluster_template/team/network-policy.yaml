@@ -15,7 +15,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: deny-from-other-namespaces
+  name: NAMESPACE
   namespace: NAMESPACE
 spec:
   podSelector:
@@ -30,5 +30,12 @@ spec:
         cidr: 35.191.0.0/16
     - ipBlock:
         cidr: 130.211.0.0/22
+    # Allow managed Prometheus collector
+    - namespaceSelector:
+        matchLabels:
+           kubernetes.io/metadata.name: gmp-system
+      podSelector:
+        matchLabels:
+          app: managed-prometheus-collector 
     # Allow traffic between all pods in this namespace.
     - podSelector: {}

@@ -1,0 +1,11 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: ray
+spec:
+  selector:
+    matchLabels:
+      ray.io/is-ray-node: "yes"
+  endpoints:
+  - port: metrics
+    interval: 30s
