@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Ray Logging reference:
+# https://docs.ray.io/en/latest/ray-observability/user-guides/configure-logging.html
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: fluentbit-config
 data:
+  # Based on https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/kuberay-logging/config/fluent-bit.conf
   fluent-bit.conf: |
     [SERVICE]
         Parsers_File parsers.conf
@@ -36,7 +40,7 @@ data:
         Name stdout
         Format json_lines
         Match *
-
+  # Based on https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/kuberay-logging/config/parsers.conf
   parsers.conf: |
     [PARSER]
         Name rayjob
