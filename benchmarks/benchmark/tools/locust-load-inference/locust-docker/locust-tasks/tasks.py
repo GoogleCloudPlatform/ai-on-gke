@@ -195,11 +195,11 @@ def handle_failed_response(request, response):
 
     send_metrics(tokens_sent, tokens_received, test_time, request_successful_bool)
 
-def send_metrics( tokens_sent, tokens_received, test_time, request_successful_bool):
+def send_metrics( tokens_sent, tokens_received, test_time, request_successful_bool, ttft=0):
     local_metric_collector.add_metric(
-        tokens_sent, tokens_received, test_time, request_successful_bool)
+        tokens_sent, tokens_received, test_time, request_successful_bool, ttft)
     logging.info(
-        f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
+        f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool, ttft]}')
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
@@ -222,12 +222,13 @@ def on_report_to_master(client_id, data):
     to the dict that is being sent, and then we clear the local stats in the worker, so
     as to avoid sending duplicate data to the master on the next run.
     """
-    tokens_sent, tokens_recieved, test_time, success_count, failure_count = local_metric_collector.share_stats()
+    tokens_sent, tokens_recieved, test_time, success_count, failure_count, ttft = local_metric_collector.share_stats()
     data["tokens-sent"] = tokens_sent
     data["tokens-received"] = tokens_recieved
     data["test-time"] = test_time
     data["success-count"] = success_count
     data["failure-count"] = failure_count
+    data["time_to_first_token"] = ttft
     local_metric_collector.__init__
 
 
@@ -239,7 +240,7 @@ def on_worker_report(client_id, data):
     stats dict.
     """
     local_metric_collector.add_metrics(
-        data["tokens-sent"], data["tokens-received"], data["test-time"], data["success-count"], data["failure-count"])
+        data["tokens-sent"], data["tokens-received"], data["test-time"], data["success-count"], data["failure-count"], data["time_to_first_token"])
 
 
 @events.init_command_line_parser.add_listener
@@ -341,7 +342,7 @@ class GrpcBenchmarkUser(GrpcUser):
 
         number_of_input_tokens = len(tokenizer.encode(prompt))
         number_of_output_tokens = len(tokenizer.encode(output))
-        send_metrics(number_of_input_tokens, number_of_output_tokens, response_time,1)
+        send_metrics(number_of_input_tokens, number_of_output_tokens, response_time,1, ttft)
 
 
 class LocustInterceptor(ClientInterceptor):
