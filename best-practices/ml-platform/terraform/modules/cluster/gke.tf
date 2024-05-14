@@ -52,6 +52,7 @@ resource "google_container_cluster" "mlp" {
     enabled             = true
 
     auto_provisioning_defaults {
+      service_account = var.service_account
       oauth_scopes = [
         "https://www.googleapis.com/auth/cloud-platform"
       ]
@@ -174,7 +175,8 @@ resource "google_container_cluster" "mlp" {
   }
 
   node_config {
-    machine_type = var.machine_type
+    machine_type    = var.machine_type
+    service_account = var.service_account
 
     shielded_instance_config {
       enable_integrity_monitoring = true

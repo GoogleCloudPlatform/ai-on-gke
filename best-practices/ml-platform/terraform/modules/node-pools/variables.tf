@@ -106,3 +106,8 @@ variable "taints" {
     value  = any
   }))
 }
+
+variable "service_account" {
+  description = "Service Account email to be used by node pool"
+  type        = string
+}

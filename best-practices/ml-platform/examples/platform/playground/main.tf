@@ -156,6 +156,36 @@ resource "google_gke_hub_feature" "configmanagement" {
   project  = data.google_project.environment.project_id
 }
 
+# Create dedicated service account for node pools
+resource "google_service_account" "cluster" {
+  project = data.google_project.environment.project_id
+  account_id = "vm-${var.cluster_name}-${var.environment_name}"
+  display_name = "${var.cluster_name}-${var.environment_name} Service Account"
+  description = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
+}
+
+# Apply minimal roles to nodepool SA 
+# https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
+locals {
+  cluster_sa_roles = [
+    "roles/monitoring.viewer",
+    "roles/monitoring.metricWriter",
+    "roles/logging.logWriter",
+    "roles/stackdriver.resourceMetadata.writer",
+    "roles/autoscaling.metricsWriter",
+    "roles/artifactregistry.reader",
+    "roles/serviceusage.serviceUsageConsumer"
+  ]
+}
+
+# Bind minimum role list + additional roles to nodepool SA on project
+resource "google_project_iam_member" "cluster_sa" {
+  for_each = toset(local.cluster_sa_roles)
+  project = data.google_project.environment.project_id
+  member  = google_service_account.cluster.member
+  role    = each.value
+}
+
 module "gke" {
   source = "../../../terraform/modules/cluster"
 
@@ -176,6 +206,7 @@ module "gke" {
   region                      = var.subnet_01_region
   release_channel             = "RAPID"
   remove_default_node_pool    = false
+  service_account             = google_service_account.cluster.email
   subnet                      = module.create-vpc.subnet-1
   zone                        = "${var.subnet_01_region}-a"
 }
@@ -199,6 +230,7 @@ module "node_pool_cpu_n2s8" {
   node_pool_name     = "cpu-n2s8"
   project_id         = data.google_project.environment.project_id
   resource_type      = "cpu"
+  service_account    = google_service_account.cluster.email
 }
 
 module "node_pool_gpu_l4x2_g2s24" {
@@ -216,11 +248,12 @@ module "node_pool_gpu_l4x2_g2s24" {
       gpu_driver_version = var.gpu_driver_version
     }
   }
-  location       = var.subnet_01_region
-  node_pool_name = "gpu-l4x2-g2s24"
-  project_id     = data.google_project.environment.project_id
-  resource_type  = "gpu-l4"
-  taints         = var.ondemand_taints
+  location        = var.subnet_01_region
+  node_pool_name  = "gpu-l4x2-g2s24"
+  project_id      = data.google_project.environment.project_id
+  resource_type   = "gpu-l4"
+  service_account = google_service_account.cluster.email
+  taints          = var.ondemand_taints
 }
 
 #
@@ -255,8 +288,9 @@ module "node_pool_gpu_l4x2_g2s24" {
 #     key                      = "compute.googleapis.com/reservation-name"
 #     values                   = [module.reservation.reservation_name]
 #   }
-#   resource_type = "gpu-l4-reservation"
-#   taints        = var.reserved_taints
+#   resource_type   = "gpu-l4-reservation"
+#   service_account = google_service_account.cluster.email
+#   taints          = var.reserved_taints
 # }
 
 module "node_pool_gpu_l4x2_g2s24_spot" {
@@ -274,11 +308,12 @@ module "node_pool_gpu_l4x2_g2s24_spot" {
       gpu_driver_version = var.gpu_driver_version
     }
   }
-  location       = var.subnet_01_region
-  node_pool_name = "gpu-l4x2-g2s24-spot"
-  project_id     = data.google_project.environment.project_id
-  resource_type  = "gpu-l4-spot"
-  taints         = var.spot_taints
+  location        = var.subnet_01_region
+  node_pool_name  = "gpu-l4x2-g2s24-spot"
+  project_id      = data.google_project.environment.project_id
+  resource_type   = "gpu-l4-spot"
+  service_account = google_service_account.cluster.email
+  taints          = var.spot_taints
 }
 
 resource "google_gke_hub_membership" "cluster" {
