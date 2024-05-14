@@ -74,6 +74,14 @@ resource "google_project_service" "containerfilesystem_googleapis_com" {
   service                    = "containerfilesystem.googleapis.com"
 }
 
+
+resource "google_project_service" "containersecurity_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "containersecurity.googleapis.com"
+}
+
 resource "google_project_service" "gkeconnect_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false
@@ -167,6 +175,7 @@ module "gke" {
   network                     = module.create-vpc.vpc
   project_id                  = data.google_project.environment.project_id
   region                      = var.subnet_01_region
+  release_channel             = "RAPID"
   remove_default_node_pool    = false
   subnet                      = module.create-vpc.subnet-1
   zone                        = "${var.subnet_01_region}-a"
@@ -204,6 +213,9 @@ module "node_pool_gpu_l4x2_g2s24" {
   guest_accelerator = {
     count = 2
     type  = "nvidia-l4"
+    gpu_driver_installation_config = {
+      gpu_driver_version = var.gpu_driver_version
+    }
   }
   location       = var.subnet_01_region
   node_pool_name = "gpu-l4x2-g2s24"
@@ -259,6 +271,9 @@ module "node_pool_gpu_l4x2_g2s24_spot" {
   guest_accelerator = {
     count = 2
     type  = "nvidia-l4"
+    gpu_driver_installation_config = {
+      gpu_driver_version = var.gpu_driver_version
+    }
   }
   location       = var.subnet_01_region
   node_pool_name = "gpu-l4x2-g2s24-spot"

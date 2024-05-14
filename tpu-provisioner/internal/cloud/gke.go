@@ -142,13 +142,22 @@ func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
 	}
 
 	for _, np := range resp.NodePools {
+		jsName, exists := np.Config.Labels[LabelJobSetName]
+		if !exists {
+			jsName = np.Config.Labels[LabelProvisionerNodepoolID]
+		}
+		jsNamespace, exists := np.Config.Labels[LabelJobSetNamespace]
+		if !exists {
+			jsNamespace = "default"
+		}
+
 		refs = append(refs, NodePoolRef{
 			Name:    np.Name,
 			Error:   np.Status == "ERROR",
 			Message: np.StatusMessage,
 			CreatedForJobSet: types.NamespacedName{
-				Name:      np.Config.Labels[LabelJobSetName],
-				Namespace: np.Config.Labels[LabelJobSetNamespace],
+				Name:      jsName,
+				Namespace: jsNamespace,
 			},
 		})
 	}
@@ -276,27 +285,30 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 	}
 
 	var reservation *containerv1beta1.ReservationAffinity
-	if resName, ok := p.Spec.NodeSelector["cloud.google.com/reservation-name"]; ok {
-		reservation = &containerv1beta1.ReservationAffinity{
-			ConsumeReservationType: "SPECIFIC_RESERVATION",
-			Key:                    "compute.googleapis.com/reservation-name",
-			Values: []string{
-				resName,
-			},
-		}
-	}
-
 	var taints []*containerv1beta1.NodeTaint
+	var spot bool
 
-	spot := p.Spec.NodeSelector["cloud.google.com/gke-spot"] == "true"
-	if spot {
-		// Add the taint that NAP would add.
-		// https://cloud.google.com/kubernetes-engine/docs/concepts/spot-vms#spotvms-nap
-		taints = append(taints, &containerv1beta1.NodeTaint{
-			Key:    "cloud.google.com/gke-spot",
-			Value:  "true",
-			Effect: "NO_SCHEDULE",
-		})
+	if !g.ClusterContext.ForceOnDemand {
+		if resName, ok := p.Spec.NodeSelector["cloud.google.com/reservation-name"]; ok {
+			reservation = &containerv1beta1.ReservationAffinity{
+				ConsumeReservationType: "SPECIFIC_RESERVATION",
+				Key:                    "compute.googleapis.com/reservation-name",
+				Values: []string{
+					resName,
+				},
+			}
+		}
+
+		spot = p.Spec.NodeSelector["cloud.google.com/gke-spot"] == "true"
+		if spot {
+			// Add the taint that NAP would add.
+			// https://cloud.google.com/kubernetes-engine/docs/concepts/spot-vms#spotvms-nap
+			taints = append(taints, &containerv1beta1.NodeTaint{
+				Key:    "cloud.google.com/gke-spot",
+				Value:  "true",
+				Effect: "NO_SCHEDULE",
+			})
+		}
 	}
 
 	var secondaryDisks []*containerv1beta1.SecondaryBootDisk
@@ -336,7 +348,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		},
 		Management: &containerv1beta1.NodeManagement{
 			AutoRepair:  true,
-			AutoUpgrade: true,
+			AutoUpgrade: false,
 		},
 		UpgradeSettings: &containerv1beta1.UpgradeSettings{
 			MaxSurge: 1,

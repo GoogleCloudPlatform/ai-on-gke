@@ -41,6 +41,11 @@ variable "guest_accelerator" {
     {
       count = number
       type  = string
+      gpu_driver_installation_config = object(
+        {
+          gpu_driver_version = string
+        }
+      )
     }
   )
 }

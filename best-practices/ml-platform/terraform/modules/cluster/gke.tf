@@ -21,6 +21,7 @@ data "google_project" "project" {
 resource "google_container_cluster" "mlp" {
   provider = google-beta
 
+  datapath_provider        = "ADVANCED_DATAPATH"
   deletion_protection      = false
   enable_shielded_nodes    = true
   initial_node_count       = var.initial_node_count
@@ -150,6 +151,10 @@ resource "google_container_cluster" "mlp" {
   }
 
   monitoring_config {
+    advanced_datapath_observability_config {
+      enable_metrics = true
+    }
+
     enable_components = [
       "APISERVER",
       "CONTROLLER_MANAGER",
@@ -192,7 +197,12 @@ resource "google_container_cluster" "mlp" {
   }
 
   release_channel {
-    channel = "STABLE"
+    channel = var.release_channel
+  }
+
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_ENTERPRISE"
   }
 
   workload_identity_config {

@@ -25,5 +25,6 @@ helmCharts:
 
 resources:
 - fluentd_config.yaml
+- podmonitoring_ray.yaml
 - serviceaccount_ray_head.yaml
 - serviceaccount_ray_worker.yaml

@@ -53,6 +53,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -63,6 +64,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(jobset.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -80,6 +82,10 @@ func main() {
 		GCPNodeTags          []string `envconfig:"GCP_NODE_TAGS"`
 		GCPNodeSecondaryDisk string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
 		GCPNodeSecureBoot    bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
+
+		// GCPForceOnDemand forces the controller to create nodes on demand, even if
+		// the Pod requests a reservation or spot.
+		GCPForceOnDemand bool `envconfig:"GCP_FORCE_ON_DEMAND" default:"false"`
 
 		// NodeMinLifespan is the amount of time that should pass between a Node object
 		// creation and a cleanup of that Node. This needs to be long enough to allow
@@ -201,6 +207,7 @@ func main() {
 				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
 				NodeTags:           cfg.GCPNodeTags,
 				NodeSecureBoot:     cfg.GCPNodeSecureBoot,
+				ForceOnDemand:      cfg.GCPForceOnDemand,
 			},
 			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		}

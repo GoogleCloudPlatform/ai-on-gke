@@ -49,6 +49,7 @@ type NodeCriteria struct {
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=nodes/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=nodes/finalizers,verbs=update
+//+kubebuilder:rbac:groups="jobset.x-k8s.io",resources=jobsets,verbs=get;list;watch
 
 func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	lg := ctrllog.FromContext(ctx)
@@ -99,14 +100,16 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// deleting the node pool.
 	jobSetName, exists := node.Labels[cloud.LabelJobSetName]
 	if !exists {
-		lg.V(3).Info("Node missing jobset name label", "node", node.Name)
-		return ctrl.Result{}, nil
-
+		jobSetName, exists = node.Labels[cloud.LabelProvisionerNodepoolID]
+		if !exists {
+			lg.V(3).Info("Node missing jobset name label", "node", node.Name)
+			return ctrl.Result{}, nil
+		}
 	}
 	jobSetNamespace, exists := node.Labels[cloud.LabelJobSetNamespace]
 	if !exists {
-		lg.V(3).Info("Node missing jobset namespace label", "node", node.Name)
-		return ctrl.Result{}, nil
+		lg.V(3).Info("Node missing jobset namespace label, using default", "node", node.Name)
+		jobSetNamespace = "default"
 	}
 	var js jobset.JobSet
 	if err := r.Get(ctx, types.NamespacedName{Name: jobSetName, Namespace: jobSetNamespace}, &js); err != nil {

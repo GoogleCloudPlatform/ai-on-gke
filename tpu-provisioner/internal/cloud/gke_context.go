@@ -11,6 +11,7 @@ type GKEContext struct {
 	NodeSecondaryDisk  string
 	NodeTags           []string
 	NodeSecureBoot     bool
+	ForceOnDemand      bool
 }
 
 func (c GKEContext) ClusterName() string {
