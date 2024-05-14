@@ -48,6 +48,7 @@ locals {
       use_beam_search                = var.use_beam_search
       hugging_face_token_secret_list = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
       stop_timeout                   = var.stop_timeout
+      request_type                   = var.request_type
     })) : data]
   ])
 }
