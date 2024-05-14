@@ -12,6 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "nodepool_sa_email" {
-  value = google_service_account.nodepool_sa.email
-}
