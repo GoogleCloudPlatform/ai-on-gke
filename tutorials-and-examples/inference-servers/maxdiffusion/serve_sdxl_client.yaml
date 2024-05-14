@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: max-diffusion-client
+spec:
+  selector:
+    matchLabels:
+      app: max-diffusion-client
+  template:
+    metadata:
+      labels:
+        app: max-diffusion-client
+    spec:
+      containers:
+      - name: webclient
+        image: us-east1-docker.pkg.dev/rick-vertex-ai/gke-llm/max-diffusion-web:latest
+        env:
+          - name: SERVER_URL
+            value: "http://CLusterIP:8000"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: max-diffusion-client-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: max-diffusion-client
+  ports:
+  - port: 8080
+    targetPort: 5000

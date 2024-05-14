@@ -19,8 +19,10 @@ const (
 	LabelParentName      = keyPrefix + "tpu-provisioner-parent-name"
 	LabelParentNamespace = keyPrefix + "tpu-provisioner-parent-namespace"
 
-	LabelPodName      = keyPrefix + "tpu-provisioner-pod-name"
-	LabelPodNamespace = keyPrefix + "tpu-provisioner-pod-namespace"
+	LabelJobSetName      = keyPrefix + "tpu-provisioner-jobset-name"
+	LabelJobSetNamespace = keyPrefix + "tpu-provisioner-jobset-namespace"
+
+	LabelProvisionerNodepoolID = "provisioner-nodepool-id"
 
 	EventNodePoolCreationStarted   = "NodePoolCreationStarted"
 	EventNodePoolCreationSucceeded = "NodePoolCreationSucceeded"
@@ -48,7 +50,7 @@ type NodePoolRef struct {
 
 	CreationTime time.Time
 
-	CreatedForPod types.NamespacedName
+	CreatedForJobSet types.NamespacedName
 
 	Error   bool
 	Message string

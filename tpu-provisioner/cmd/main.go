@@ -25,10 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
 	"github.com/kelseyhightower/envconfig"
-	corev1 "k8s.io/api/core/v1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -41,16 +38,22 @@ import (
 	"cloud.google.com/go/compute/metadata"
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/cloud"
 	"github.com/GoogleCloudPlatform/ai-on-gke/tpu-provisioner/internal/controller"
+
 	containerv1beta1 "google.golang.org/api/container/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/config/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -61,6 +64,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(jobset.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -78,6 +82,10 @@ func main() {
 		GCPNodeTags          []string `envconfig:"GCP_NODE_TAGS"`
 		GCPNodeSecondaryDisk string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
 		GCPNodeSecureBoot    bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
+
+		// GCPForceOnDemand forces the controller to create nodes on demand, even if
+		// the Pod requests a reservation or spot.
+		GCPForceOnDemand bool `envconfig:"GCP_FORCE_ON_DEMAND" default:"false"`
 
 		// NodeMinLifespan is the amount of time that should pass between a Node object
 		// creation and a cleanup of that Node. This needs to be long enough to allow
@@ -109,22 +117,20 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Metrics: server.Options{
+			BindAddress: metricsAddr,
+		},
+		WebhookServer: webhook.NewServer(
+			webhook.Options{
+				Port: 9443,
+			},
+		),
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "ecaf1259.google.com",
-		Controller: v1alpha1.ControllerConfigurationSpec{
-			GroupKindConcurrency: map[string]int{
-				// Concurrent node pool creations:
-				schema.GroupKind{Kind: "Pod"}.String(): cfg.Concurrency,
-				// Concurrent node pool deletions:
-				schema.GroupKind{Kind: "Node"}.String(): cfg.Concurrency,
-			},
-		},
-		NewCache: cache.BuilderWithOptions(cache.Options{
-			SelectorsByObject: cache.SelectorsByObject{
+		Cache: cache.Options{
+			ByObject: map[client.Object]cache.ByObject{
 				&corev1.Node{}: {
 					// Only listen for Nodes with label selectors indicating that they
 					// are managed by this controller.
@@ -132,7 +138,6 @@ func main() {
 				},
 			},
 		},
-		),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -202,6 +207,7 @@ func main() {
 				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
 				NodeTags:           cfg.GCPNodeTags,
 				NodeSecureBoot:     cfg.GCPNodeSecureBoot,
+				ForceOnDemand:      cfg.GCPForceOnDemand,
 			},
 			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
 		}
@@ -220,6 +226,7 @@ func main() {
 		PodCriteria: controller.PodCriteria{
 			ResourceType: cfg.PodResourceType,
 		},
+		Concurrency: cfg.Concurrency,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CreationReconciler")
 		os.Exit(1)
@@ -234,6 +241,7 @@ func main() {
 			MinLifetime:       cfg.NodeMinLifespan,
 			PoolDeletionDelay: cfg.NodepoolDeletionDelay,
 		},
+		Concurrency: cfg.Concurrency,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DeletionReconciler")
 		os.Exit(1)

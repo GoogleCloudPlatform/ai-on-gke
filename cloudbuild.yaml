@@ -45,7 +45,7 @@ steps:
     dir: 'applications/rag/'
     waitFor: ['validate platform']
 
-  # Create cluster to test ray, jupyterhub
+  # Create cluster to test ray, jupyterhub, rag
   - id: 'create gke cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
     env:
@@ -65,7 +65,9 @@ steps:
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=autopilot_cluster=$_AUTOPILOT_CLUSTER \
         -var=cluster_location=$_REGION \
-        -auto-approve -no-color -lock=false
+        -var='cpu_pools=[{initial_node_count=2,name="cpu-pool",machine_type="n1-standard-16",autoscaling=true,min_count=1,max_count=3,disk_size_gb=100,disk_type="pd-standard",}]' \
+        -var='gpu_pools=[{initial_node_count=2,name="gpu-pool",machine_type="g2-standard-24",autoscaling=true,min_count=1,max_count=3,disk_size_gb=100,disk_type="pd-balanced",accelerator_count=2,accelerator_type="nvidia-l4",gpu_driver_version="DEFAULT",}]' \
+        -auto-approve -no-color 
         echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'infrastructure/'
     allowFailure: true
@@ -91,16 +93,16 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=cluster_location=$_REGION \
-        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-ray \
         -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_BUILD_ID \
         -var=enable_gpu=true \
-        -auto-approve -no-color -lock=false
+        -auto-approve -no-color 
         echo "pass" > /workspace/user_result.txt
 
         # Make sure pods are running
-        kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=1200s
-        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8265:8265 &
+        kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID-ray --for=condition=Ready --timeout=1200s
+        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-ray service/ray-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
 
@@ -124,12 +126,11 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=cluster_location=$_REGION \
-        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-ray \
         -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_BUILD_ID \
         -var=enable_gpu=true \
-        -auto-approve -no-color -lock=false
-
+        -auto-approve -no-color
     allowFailure: true
     waitFor: ['test ray cluster']
 
@@ -150,22 +151,23 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=cluster_location=$_REGION \
-        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-jupyter \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
-        -auto-approve -no-color -lock=false
+        -auto-approve -no-color 
         echo "pass" > /workspace/jupyterhub_tf_result.txt
 
-        kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=1200s
-        kubectl get services -n ml-$SHORT_SHA-$_BUILD_ID
-        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
+        kubectl wait --for=condition=Ready pods -n ml-$SHORT_SHA-$_BUILD_ID-jupyter -l 'component!=continuous-image-puller' --timeout=1800s
+        kubectl get services -n ml-$SHORT_SHA-$_BUILD_ID-jupyter
+        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-jupyter service/proxy-public 9442:80 &
         # Wait port-forwarding to take its place
         sleep 5s
 
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
+        python3 test_hub.py "127.0.0.1:9442" $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
+    waitFor: ['create gke cluster']
 
   - id: 'cleanup jupyterhub'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -181,11 +183,10 @@ steps:
         -var=project_id=$PROJECT_ID \
         -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
         -var=cluster_location=$_REGION \
-        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID \
+        -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-jupyter \
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
-        -auto-approve -no-color -lock=false
-
+        -auto-approve -no-color
     allowFailure: true
     waitFor: ['test jupyterhub']
 
@@ -219,22 +220,22 @@ steps:
         -var=cluster_location=$_REGION \
         -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
-        -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
-        -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
+        -var=ray_service_account=ray-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
+        -var=rag_service_account=rag-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
+        -var=jupyter_service_account=jupyter-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
         -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
-        -auto-approve -no-color -lock=false
+        -auto-approve -no-color 
         echo "pass" > /workspace/rag_tf_result.txt
 
         # Validate Ray: Make sure pods are running
-        kubectl wait --all pods -n rag-$SHORT_SHA-$_BUILD_ID --for=condition=Ready --timeout=1200s
-        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8265:8265 &
+        kubectl wait --for=condition=Ready pods -n rag-$SHORT_SHA-$_BUILD_ID -l 'component!=continuous-image-puller' --timeout=1200s
+        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8262:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
 
         # Validate Ray: Check dashboard
         ray job submit --working-dir ./tests \
-        --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
+        --address=http://127.0.0.1:8262 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
         echo "pass" > /workspace/rag_ray_dashboard_result.txt
 
         # Validate JupyterHub: Get hub url
@@ -264,7 +265,7 @@ steps:
         kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID $(kubectl get pod -l app=jupyterhub,component=hub -n rag-$SHORT_SHA-$_BUILD_ID -o jsonpath="{.items[0].metadata.name}") -- jupyterhub token admin --log-level=CRITICAL | xargs python3 ./applications/rag/notebook_starter.py
         # Wait for jupyterhub to trigger notebook pod startup
         sleep 5s
-        kubectl wait --for=condition=Ready pod/jupyter-admin -n rag-$SHORT_SHA-$_BUILD_ID --timeout=300s
+        kubectl wait --for=condition=Ready pod/jupyter-admin -n rag-$SHORT_SHA-$_BUILD_ID --timeout=500s
         kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- jupyter nbconvert --to script /data/rag-kaggle-ray-sql-interactive.ipynb
         kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- ipython /data/rag-kaggle-ray-sql-interactive.py
 
@@ -272,7 +273,7 @@ steps:
         echo "pass" > /workspace/rag_prompt_result.txt
 
     allowFailure: true
-    waitFor: ['cleanup jupyterhub', 'cleanup ray cluster']
+    waitFor: ['create gke cluster']
 
   - id: 'cleanup rag'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -299,7 +300,6 @@ steps:
         -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
         -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
         -auto-approve -no-color
-
     allowFailure: true
     waitFor: ['test rag']
 
@@ -320,7 +320,7 @@ steps:
         -var=cluster_location=$_REGION -auto-approve -no-color
 
     allowFailure: true
-    waitFor: ['cleanup rag']
+    waitFor: ['cleanup rag', 'cleanup jupyterhub', 'cleanup ray cluster']
 
   - id: 'check result'
     name: 'gcr.io/$PROJECT_ID/terraform'
@@ -374,10 +374,9 @@ steps:
         fi
 
         if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
-          echo "rag frontend test failed"
+          echo "rag prompt test failed"
           exit 1
         fi
-
     waitFor: ['cleanup gke cluster']
         
 substitutions:

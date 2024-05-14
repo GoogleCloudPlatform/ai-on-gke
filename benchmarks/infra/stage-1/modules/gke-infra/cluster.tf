@@ -138,9 +138,11 @@ module "cluster-autopilot" {
     master_authorized_ranges = var.cluster_create.master_authorized_ranges
     master_ipv4_cidr_block   = var.cluster_create.master_ipv4_cidr_block
   }
-  private_cluster_config = var.private_cluster_config
-  labels                 = var.cluster_create.labels
-  release_channel        = var.cluster_create.options.release_channel
+  private_cluster_config = var.private_cluster_config == null ? null : merge(var.private_cluster_config, {
+    enable_private_endpoint = var.enable_private_endpoint
+  })
+  labels          = var.cluster_create.labels
+  release_channel = var.cluster_create.options.release_channel
   backup_configs = {
     enable_backup_agent = var.cluster_create.options.enable_backup_agent
   }

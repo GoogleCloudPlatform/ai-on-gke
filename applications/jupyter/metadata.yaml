@@ -53,7 +53,7 @@ spec:
         defaultValue: "created-by=gke-ai-quick-start-solutions,ai.gke.io=jupyter"
       - name: autopilot_cluster
         varType: bool
-        defaultValue: false
+        defaultValue: true
       - name: client_id
         description: Client ID used for enabling IAP
         varType: string

@@ -10,6 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
 
 // NodePoolGarbageCollector deletes node pools that have no Nodes,
@@ -46,25 +47,25 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 		for _, np := range nodepools {
 			log := log.WithValues(
 				"nodepool", np.Name,
-				"createdForPodName", np.CreatedForPod.Name,
-				"createdForPodNamespace", np.CreatedForPod.Namespace,
+				"createdForJobSetName", np.CreatedForJobSet.Name,
+				"createdForJobSetNamespace", np.CreatedForJobSet.Namespace,
 			)
 
 			if !np.Error {
 				continue
 			}
 
-			if np.CreatedForPod.Name == "" || np.CreatedForPod.Namespace == "" {
-				log.Info("skipping garbage collection of node pool, no pod reference")
+			if np.CreatedForJobSet.Name == "" || np.CreatedForJobSet.Namespace == "" {
+				log.Info("skipping garbage collection of node pool, no JobSet reference")
 				continue
 			}
 
 			// Check if the Pod that triggered the Node Pool creation still exists.
-			err := g.Get(ctx, np.CreatedForPod, &v1.Pod{})
+			err := g.Get(ctx, np.CreatedForJobSet, &jobset.JobSet{})
 			if err == nil {
-				log.Info("skipping garbage collection of node pool, pod still exists",
-					"podName", np.CreatedForPod.Name,
-					"podNamespace", np.CreatedForPod.Namespace,
+				log.Info("skipping garbage collection of node pool, JobSet still exists",
+					"jobSetName", np.CreatedForJobSet.Name,
+					"jobSetNamespace", np.CreatedForJobSet.Namespace,
 				)
 				continue
 			}
@@ -88,7 +89,7 @@ func (g *NodePoolGarbageCollector) Run(ctx context.Context) {
 			log.Info("garbage collecting node pool in error state")
 			// TODO: Lookup namespace from env with downward API.
 			whyDelete := fmt.Sprintf("the node pool has no corresponding Nodes, the Pod (%s/%s) that triggered its creation no longer exists, and node pool is in an error state: %s",
-				np.CreatedForPod.Namespace, np.CreatedForPod.Name, np.Message)
+				np.CreatedForJobSet.Namespace, np.CreatedForJobSet.Name, np.Message)
 			if err := g.Provider.DeleteNodePool(np.Name, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "tpu-provisioner-system"}}, whyDelete); err != nil {
 				log.Error(err, "failed to garbage collect node pool")
 				continue

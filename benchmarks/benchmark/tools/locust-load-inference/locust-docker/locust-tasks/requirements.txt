@@ -32,3 +32,6 @@ zipp==3.8.0
 zope.event==4.5.0
 zope.interface==5.4.0
 TensorFlow >= 2.0
+google-jetstream==0.2.0
+grpcio==1.62.2
+grpc-interceptor==0.15.4
