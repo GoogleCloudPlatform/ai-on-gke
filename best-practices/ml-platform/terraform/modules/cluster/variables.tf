@@ -92,3 +92,8 @@ variable "zone" {
   description = "The GCP zone where the reservation will be created"
   type        = string
 }
+
+variable "service_account" {
+  description = "Service Account email to be used by cluster"
+  type        = string
+}
