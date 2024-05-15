@@ -13,48 +13,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -u
 
-configsync_repo_name=${1}
-github_email=${2}
-github_org=${3}
-github_user=${4}
-namespace=${5}
-google_service_account_head=${6}
-kubernetes_service_account_head=${7}
-google_service_account_worker=${8}
-kubernetes_service_account_worker=${9}
+SCRIPT_PATH="$(
+  cd "$(dirname "$0")" >/dev/null 2>&1
+  pwd -P
+)"
 
-random=$(
-  echo $RANDOM | md5sum | head -c 20
-  echo
-)
-download_acm_repo_name="/tmp/$(echo ${configsync_repo_name} | awk -F "/" '{print $2}')-${random}"
-git clone https://${github_user}:${GIT_TOKEN}@github.com/${configsync_repo_name} ${download_acm_repo_name} || exit 1
+source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
-cd ${download_acm_repo_name}
-git config user.name ${github_user}
-git config user.email ${github_email}
-
-cd ${download_acm_repo_name}/manifests/apps
-if [ ! -d "${namespace}" ]; then
-  echo "${namespace} folder doesnt exist in the configsync repo"
+cd ${GIT_REPOSITORY_PATH}/manifests/apps
+if [ ! -d "${K8S_NAMESPACE}" ]; then
+  echo "${K8S_NAMESPACE} folder doesnt exist in the configsync repo"
   exit 1
 fi
 
-if [ -f "${namespace}/kustomization.yaml" ]; then
-  echo "${namespace} is already set up"
+if [ -f "${K8S_NAMESPACE}/kustomization.yaml" ]; then
+  echo "${K8S_NAMESPACE} is already set up"
   exit 0
 fi
 
-cp -r ../../templates/_namespace_template/app/* ${namespace}/
-sed -i "s?NAMESPACE?${namespace}?g" ${namespace}/*
-sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_HEAD?$google_service_account_head?g" ${namespace}/*
-sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_HEAD?$kubernetes_service_account_head?g" ${namespace}/*
-sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_WORKER?$google_service_account_worker?g" ${namespace}/*
-sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER?$kubernetes_service_account_worker?g" ${namespace}/*
+cp -r ../../templates/_namespace_template/app/* ${K8S_NAMESPACE}/
+sed -i "s?NAMESPACE?${K8S_NAMESPACE}?g" ${K8S_NAMESPACE}/*
+sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_HEAD?${GOOGLE_SERVICE_ACCOUNT_HEAD}?g" ${K8S_NAMESPACE}/*
+sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_HEAD?${K8S_SERVICE_ACCOUNT_HEAD}?g" ${K8S_NAMESPACE}/*
+sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_WORKER?${GOOGLE_SERVICE_ACCOUNT_WORKER}?g" ${K8S_NAMESPACE}/*
+sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER?${K8S_SERVICE_ACCOUNT_WORKER}?g" ${K8S_NAMESPACE}/*
 
 git add .
-git commit -m "Installing ray cluster in ${namespace} namespace."
+git commit -m "Added a RayCluster in '${K8S_NAMESPACE}' namespace."
 git push origin
-
-rm -rf ${download_acm_repo_name}

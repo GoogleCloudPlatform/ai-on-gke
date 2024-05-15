@@ -20,26 +20,10 @@ SCRIPT_PATH="$(
   pwd -P
 )"
 
-function cleanup() {
-  echo "Removing ${repository_path}"
-  rm -rf ${repository_path}
-}
-trap cleanup EXIT
-
-random_suffix=$(echo $RANDOM | md5sum | head -c 20)
-repository_path="/tmp/$(echo ${GIT_REPOSITORY} | awk -F "/" '{print $2}')-${random_suffix}"
-
-git clone https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/${GIT_REPOSITORY} ${repository_path} || {
-  echo "Failed to clone git repository '${GIT_REPOSITORY}'"
-  exit 1
-}
-cd ${repository_path}
-
-git config user.name "${GIT_USERNAME}"
-git config user.email "${GIT_EMAIL}"
+source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
 team_namespace_directory="manifests/apps/${K8S_NAMESPACE}"
-team_namespace_path="${repository_path}/${team_namespace_directory}"
+team_namespace_path="${GIT_REPOSITORY_PATH}/${team_namespace_directory}"
 
 cd "${team_namespace_path}" || {
   echo "Team namespace directory '${team_namespace_directory}' does not exist"
@@ -50,7 +34,7 @@ git rm -rf gateway
 sed -i '/- .\/gateway/d' kustomization.yaml
 
 git add .
-git commit -m "Removed manifests for ${K8S_NAMESPACE} gateway"
+git commit -m "Removed manifests for '${K8S_NAMESPACE}' gateway"
 git push origin
 
 ${SCRIPT_PATH}/helpers/wait_for_repo_sync.sh $(git rev-parse HEAD)
@@ -58,5 +42,3 @@ ${SCRIPT_PATH}/helpers/wait_for_repo_sync.sh $(git rev-parse HEAD)
 kubectl delete --namespace ${K8S_NAMESPACE} --all gcpbackendpolicy
 kubectl delete --namespace ${K8S_NAMESPACE} --all httproute
 kubectl delete --namespace ${K8S_NAMESPACE} --all gateway
-
-rm -rf ${repository_path}

@@ -15,6 +15,7 @@
 locals {
   # https://github.com/hashicorp/terraform-provider-google/issues/13325
   connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${module.gke.cluster_name}"
+  git_repository           = "github.com/${github_repository.acm_repo.full_name}"
   kubeconfig_dir           = abspath("${path.module}/kubeconfig")
 }
 
@@ -158,10 +159,10 @@ resource "google_gke_hub_feature" "configmanagement" {
 
 # Create dedicated service account for node pools
 resource "google_service_account" "cluster" {
-  project = data.google_project.environment.project_id
-  account_id = "vm-${var.cluster_name}-${var.environment_name}"
+  project      = data.google_project.environment.project_id
+  account_id   = "vm-${var.cluster_name}-${var.environment_name}"
   display_name = "${var.cluster_name}-${var.environment_name} Service Account"
-  description = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
+  description  = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
 }
 
 # Apply minimal roles to nodepool SA 
@@ -181,9 +182,9 @@ locals {
 # Bind minimum role list + additional roles to nodepool SA on project
 resource "google_project_iam_member" "cluster_sa" {
   for_each = toset(local.cluster_sa_roles)
-  project = data.google_project.environment.project_id
-  member  = google_service_account.cluster.member
-  role    = each.value
+  project  = data.google_project.environment.project_id
+  member   = google_service_account.cluster.member
+  role     = each.value
 }
 
 module "gke" {
@@ -458,9 +459,14 @@ resource "null_resource" "create_cluster_yamls" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_cluster_yamls.sh ${var.github_org} ${github_repository.acm_repo.full_name} ${var.github_user} ${var.github_email} ${var.environment_name} ${module.gke.cluster_name}"
+    command = "${path.module}/scripts/create_cluster_yamls.sh"
     environment = {
-      GIT_TOKEN = var.github_token
+      CLUSTER_ENV    = var.environment_name
+      CLUSTER_NAME   = module.gke.cluster_name
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
     }
   }
 
@@ -477,10 +483,14 @@ resource "null_resource" "create_git_cred_cms" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${data.google_project.environment.project_id} ${var.github_user} config-management-system"
+    command = "${path.module}/scripts/create_git_cred.sh"
     environment = {
-      GIT_TOKEN  = var.github_token
-      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
+      K8S_NAMESPACE  = "config-management-system"
+      KUBECONFIG     = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
     }
   }
 
@@ -499,9 +509,13 @@ resource "null_resource" "install_kuberay_operator" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/install_kuberay_operator.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user}"
+    command = "${path.module}/scripts/install_kuberay_operator.sh"
     environment = {
-      GIT_TOKEN = var.github_token
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
+      K8S_NAMESPACE  = var.namespace
     }
   }
 
@@ -539,9 +553,15 @@ resource "null_resource" "create_namespace" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_namespace.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${var.environment_name}"
+    command = "${path.module}/scripts/create_namespace.sh"
     environment = {
-      GIT_TOKEN = var.github_token
+      CLUSTER_ENV    = var.environment_name
+      CLUSTER_NAME   = module.gke.cluster_name
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
+      K8S_NAMESPACE  = self.triggers.namespace
     }
   }
 
@@ -563,7 +583,7 @@ resource "null_resource" "create_namespace" {
   }
 
   triggers = {
-    git_repository      = github_repository.acm_repo.full_name
+    git_repository      = local.git_repository
     github_email        = var.github_email
     github_token        = var.github_token
     github_user         = var.github_user
@@ -584,10 +604,12 @@ resource "null_resource" "create_git_cred_ns" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_git_cred.sh ${module.gke.cluster_name} ${module.gke.gke_project_id} ${var.github_user} ${var.namespace}"
+    command = "${path.module}/scripts/create_git_cred.sh"
     environment = {
-      GIT_TOKEN  = var.github_token
-      KUBECONFIG = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
+      GIT_TOKEN     = var.github_token
+      GIT_USERNAME  = var.github_user
+      K8S_NAMESPACE = var.namespace
+      KUBECONFIG    = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
     }
   }
 
@@ -643,9 +665,17 @@ resource "null_resource" "install_ray_cluster" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/install_ray_cluster.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace} ${google_service_account.namespace_ray_head.email} ${local.ray_head_kubernetes_service_account} ${google_service_account.namespace_ray_worker.email} ${local.ray_worker_kubernetes_service_account}"
+    command = "${path.module}/scripts/install_ray_cluster.sh"
     environment = {
-      GIT_TOKEN = var.github_token
+      GIT_EMAIL                     = var.github_email
+      GIT_REPOSITORY                = local.git_repository
+      GIT_TOKEN                     = var.github_token
+      GIT_USERNAME                  = var.github_user
+      GOOGLE_SERVICE_ACCOUNT_HEAD   = google_service_account.namespace_ray_head.email
+      GOOGLE_SERVICE_ACCOUNT_WORKER = google_service_account.namespace_ray_worker.email
+      K8S_NAMESPACE                 = var.namespace
+      K8S_SERVICE_ACCOUNT_HEAD      = local.ray_head_kubernetes_service_account
+      K8S_SERVICE_ACCOUNT_WORKER    = local.ray_worker_kubernetes_service_account
     }
   }
 
@@ -664,9 +694,13 @@ resource "null_resource" "manage_ray_ns" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/manage_ray_ns.sh ${github_repository.acm_repo.full_name} ${var.github_email} ${var.github_org} ${var.github_user} ${var.namespace}"
+    command = "${path.module}/scripts/manage_ray_ns.sh"
     environment = {
-      GIT_TOKEN = var.github_token
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
+      K8S_NAMESPACE  = var.namespace
     }
   }
 

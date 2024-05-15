@@ -15,23 +15,22 @@
 # limitations under the License.
 set -u
 
-SCRIPT_PATH="$(
-  cd "$(dirname "$0")" >/dev/null 2>&1
-  pwd -P
-)"
+function cleanup() {
+    echo "Removing ${GIT_REPOSITORY_PATH}"
+    rm -rf ${GIT_REPOSITORY_PATH}
+}
+trap cleanup EXIT
 
-source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
+random_suffix=$(echo $RANDOM | md5sum | head -c 20)
+export GIT_REPOSITORY_PATH="/tmp/$(basename ${GIT_REPOSITORY})-${random_suffix}"
 
-cd ${GIT_REPOSITORY_PATH}/manifests/clusters/kuberay
+git clone https://${GIT_USERNAME}:${GIT_TOKEN}@${GIT_REPOSITORY} ${GIT_REPOSITORY_PATH} || {
+    echo "Failed to clone git repository '${GIT_REPOSITORY}'"
+    exit 1
+}
+cd ${GIT_REPOSITORY_PATH}
 
-ns_exists=$(grep ${K8S_NAMESPACE} values.yaml | wc -l)
-if [ "${ns_exists}" -ne 0 ]; then
-  echo "namespace '${K8S_NAMESPACE}' already present in values.yaml"
-  exit 0
-fi
+git config user.name "${GIT_USERNAME}"
+git config user.email "${GIT_EMAIL}"
 
-sed -i "s/watchNamespace:/watchNamespace:\n  - ${K8S_NAMESPACE}/g" values.yaml
-
-git add .
-git commit -m "Configured KubeRay operator to watch '${K8S_NAMESPACE}' namespace"
-git push origin
+cd -

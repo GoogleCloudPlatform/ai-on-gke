@@ -13,24 +13,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -u
 
-configsync_repo_name=${1}
-github_email=${2}
-github_org=${3}
-github_user=${4}
+SCRIPT_PATH="$(
+  cd "$(dirname "$0")" >/dev/null 2>&1
+  pwd -P
+)"
 
-random=$(
-  echo $RANDOM | md5sum | head -c 20
-  echo
-)
-download_acm_repo_name="/tmp/$(echo ${configsync_repo_name} | awk -F "/" '{print $2}')-${random}"
-git clone https://${github_user}:${GIT_TOKEN}@github.com/${configsync_repo_name} ${download_acm_repo_name} || exit 1
-cd ${download_acm_repo_name}
+source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
-git config user.name ${github_user}
-git config user.email ${github_email}
-
-cd ${download_acm_repo_name}/manifests/clusters
+cd ${GIT_REPOSITORY_PATH}/manifests/clusters
 if [ -f "kustomization.yaml" ]; then
   exit 0
 fi
@@ -45,7 +37,5 @@ done
 
 cp -r ../../templates/_cluster_template/kuberay .
 git add .
-git commit -m "Adding manifests to install kuberay operator."
+git commit -m "Added manifests to install kuberay operator."
 git push origin
-
-rm -rf ${download_acm_repo_name}

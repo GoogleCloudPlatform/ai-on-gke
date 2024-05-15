@@ -215,7 +215,7 @@ resource "null_resource" "gateway_manifests" {
 
   triggers = {
     gateway_name   = local.gateway_name
-    git_repository = github_repository.acm_repo.full_name
+    git_repository = local.git_repository
     github_email   = var.github_email
     github_token   = var.github_token
     github_user    = var.github_user

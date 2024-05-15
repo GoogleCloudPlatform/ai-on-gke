@@ -13,53 +13,41 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -u
 
-configsync_repo_name=${1}
-github_email=${2}
-github_org=${3}
-github_user=${4}
-namespace=${5}
-cluster_env=${6}
+SCRIPT_PATH="$(
+  cd "$(dirname "$0")" >/dev/null 2>&1
+  pwd -P
+)"
 
-logfile=$(pwd)/log
-random=$(
-  echo $RANDOM | md5sum | head -c 20
-  echo
-)
-download_acm_repo_name="/tmp/$(echo ${configsync_repo_name} | awk -F "/" '{print $2}')-${random}"
-git clone https://${github_user}:${GIT_TOKEN}@github.com/${configsync_repo_name} ${download_acm_repo_name} || exit 1
-cd ${download_acm_repo_name}
+source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
-git config user.name ${github_user}
-git config user.email ${github_email}
+cd ${GIT_REPOSITORY_PATH}/manifests/clusters
 
-cd ${download_acm_repo_name}/manifests/clusters
-
-if [ -d "${namespace}" ]; then
+if [ -d "${K8S_NAMESPACE}" ]; then
   exit 0
 fi
 
 #TODO: This most likely needs to be fixed for multiple environments
-chars_in_namespace=$(echo -n ${namespace} | wc -c)
-chars_in_cluster_env=$(echo -n ${cluster_env} | wc -c)
-chars_in_reposync_name=$(expr $chars_in_namespace + ${chars_in_cluster_env} + 1)
-mkdir ${namespace} || exit 1
-cp -r ../../templates/_cluster_template/team/* ${namespace}
-sed -i "s?NAMESPACE?$namespace?g" ${namespace}/*
-sed -ni '/#END OF SINGLE ENV DECLARATION/q;p' ${namespace}/reposync.yaml
-sed -i "s?ENV?$cluster_env?g" ${namespace}/reposync.yaml
-sed -i "s?GIT_REPO?https://github.com/$configsync_repo_name?g" ${namespace}/reposync.yaml
-sed -i "s?<NUMBER_OF_CHARACTERS_IN_REPOSYNC_NAME>?$chars_in_reposync_name?g" ${namespace}/reposync.yaml
+chars_in_namespace=$(echo -n ${K8S_NAMESPACE} | wc -c)
+chars_in_cluster_env=$(echo -n ${CLUSTER_ENV} | wc -c)
+chars_in_reposync_name=$(expr ${chars_in_namespace} + ${chars_in_cluster_env} + 1)
+mkdir ${K8S_NAMESPACE} || exit 1
+cp -r ../../templates/_cluster_template/team/* ${K8S_NAMESPACE}
+sed -i "s?NAMESPACE?${K8S_NAMESPACE}?g" ${K8S_NAMESPACE}/*
+sed -ni '/#END OF SINGLE ENV DECLARATION/q;p' ${K8S_NAMESPACE}/reposync.yaml
+sed -i "s?ENV?${CLUSTER_ENV}?g" ${K8S_NAMESPACE}/reposync.yaml
+sed -i "s?GIT_REPO?https://${GIT_REPOSITORY}?g" ${K8S_NAMESPACE}/reposync.yaml
+sed -i "s?<NUMBER_OF_CHARACTERS_IN_REPOSYNC_NAME>?${chars_in_reposync_name}?g" ${K8S_NAMESPACE}/reposync.yaml
 
-mkdir ../apps/${namespace}
-touch ../apps/${namespace}/.gitkeep
+mkdir ../apps/${K8S_NAMESPACE}
+touch ../apps/${K8S_NAMESPACE}/.gitkeep
 
 cat <<EOF >>kustomization.yaml
-- ./${namespace}
+- ./${K8S_NAMESPACE}
 EOF
+
 cd ..
 git add .
-git commit -m "Adding manifests to create a new namespace."
+git commit -m "Added manifests to create '${K8S_NAMESPACE}' namespace"
 git push origin
-
-rm -rf ${download_acm_repo_name}

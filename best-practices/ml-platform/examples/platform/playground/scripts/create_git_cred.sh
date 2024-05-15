@@ -13,24 +13,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -u
 
 SCRIPT_PATH="$(
   cd "$(dirname "$0")" >/dev/null 2>&1
   pwd -P
 )"
 
-gke_cluster=${1}
-project_id=${2}
-git_user=${3}
-namespace=${4}
-
-echo "Waiting for namespace '${namespace}' to be created..."
-while ! kubectl get ns ${namespace} >/dev/null 2>&1; do
+echo "Waiting for namespace '${K8S_NAMESPACE}' to be created..."
+while ! kubectl get ns ${K8S_NAMESPACE} >/dev/null 2>&1; do
   sleep 2
 done
 
-if kubectl get secret git-creds -n ${namespace} >/dev/null 2>&1; then
-  kubectl create secret generic git-creds --namespace="${namespace}" --save-config --dry-run=client --from-literal=username="${git_user}" --from-literal=token="${GIT_TOKEN}" -o yaml | kubectl apply -f -
+if kubectl get secret git-creds -n ${K8S_NAMESPACE} >/dev/null 2>&1; then
+  kubectl create secret generic git-creds --namespace="${K8S_NAMESPACE}" --save-config --dry-run=client --from-literal=username="${GIT_USERNAME}" --from-literal=token="${GIT_TOKEN}" -o yaml | kubectl apply -f -
 else
-  kubectl create secret generic git-creds --namespace="${namespace}" --save-config --from-literal=username="${git_user}" --from-literal=token="${GIT_TOKEN}"
+  kubectl create secret generic git-creds --namespace="${K8S_NAMESPACE}" --save-config --from-literal=username="${GIT_USERNAME}" --from-literal=token="${GIT_TOKEN}"
 fi

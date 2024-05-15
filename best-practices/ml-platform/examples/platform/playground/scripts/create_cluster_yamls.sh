@@ -13,48 +13,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -u
 
-github_org=${1}
-acm_repo_name=${2}
-github_user=${3}
-github_email=${4}
-cluster_env=${5}
-cluster_name=${6}
+SCRIPT_PATH="$(
+  cd "$(dirname "$0")" >/dev/null 2>&1
+  pwd -P
+)"
 
-random=$(
-  echo $RANDOM | md5sum | head -c 20
-  echo
-)
+source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
-download_acm_repo_name="/tmp/$(echo ${acm_repo_name} | awk -F "/" '{print $2}')-${random}"
-git clone https://${github_user}:${GIT_TOKEN}@github.com/${acm_repo_name} ${download_acm_repo_name} || {
-  echo "Failed to clone git repository '${acm_repo_name}'"
-  exit 1
-}
-
-if [ ! -d "${download_acm_repo_name}/manifests" ] && [ ! -d "${download_acm_repo_name}/templates" ]; then
+if [ ! -d "${GIT_REPOSITORY_PATH}/manifests" ] && [ ! -d "${GIT_REPOSITORY_PATH}/templates" ]; then
   echo "Copying template files..."
-  cp -r templates/acm-template/* ${download_acm_repo_name}/
+  cp -r templates/acm-template/* ${GIT_REPOSITORY_PATH}/
 fi
 
-cd ${download_acm_repo_name}/manifests/clusters || {
+cd ${GIT_REPOSITORY_PATH}/manifests/clusters || {
   echo "Failed to copy template files"
   exit 1
 }
 
-git config user.name ${github_user}
-git config user.email ${github_email}
-
-cp ../../templates/_cluster_template/cluster.yaml ./${cluster_name}-cluster.yaml
+cp ../../templates/_cluster_template/cluster.yaml ./${CLUSTER_NAME}-cluster.yaml
 cp ../../templates/_cluster_template/network-logging.yaml ./network-logging.yaml
-cp ../../templates/_cluster_template/selector.yaml ./${cluster_env}-selector.yaml
+cp ../../templates/_cluster_template/selector.yaml ./${CLUSTER_ENV}-selector.yaml
 
-find . -type f -name ${cluster_name}-cluster.yaml -exec sed -i "s/CLUSTER_NAME/${cluster_name}/g" {} +
-find . -type f -name ${cluster_name}-cluster.yaml -exec sed -i "s/ENV/${cluster_env}/g" {} +
-find . -type f -name ${cluster_env}-selector.yaml -exec sed -i "s/ENV/${cluster_env}/g" {} +
+find . -type f -name ${CLUSTER_NAME}-cluster.yaml -exec sed -i "s/CLUSTER_NAME/${CLUSTER_NAME}/g" {} +
+find . -type f -name ${CLUSTER_NAME}-cluster.yaml -exec sed -i "s/ENV/${CLUSTER_ENV}/g" {} +
+find . -type f -name ${CLUSTER_ENV}-selector.yaml -exec sed -i "s/ENV/${CLUSTER_ENV}/g" {} +
 
 git add ../../.
-git commit -m "Adding ${cluster_name} cluster to the ${cluster_env} environment."
+git commit -m "Added '${CLUSTER_NAME} 'cluster to the ${CLUSTER_ENV} environment."
 git push origin
-
-rm -rf ${download_acm_repo_name}
