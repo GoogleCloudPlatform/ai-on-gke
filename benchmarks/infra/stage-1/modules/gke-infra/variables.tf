@@ -80,9 +80,17 @@ variable "vpc_create" {
 }
 
 variable "enable_private_endpoint" {
-  description = "When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled."
+  description = "When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled. Ignored if private_cluster_config set to null. May need to destroy & recreate to apply public cluster."
   type        = bool
   default     = true
+}
+
+variable "private_cluster_config" {
+  description = "Private cluster configuration. Default of {} configures a private_cluster with the values in below object. Set to null to make cluster public, which can be used for simple kubectl access when debugging or learning but should not be used in production."
+  type = object({
+    master_global_access = optional(bool, true)
+  })
+  default = {}
 }
 
 variable "cluster_name" {
