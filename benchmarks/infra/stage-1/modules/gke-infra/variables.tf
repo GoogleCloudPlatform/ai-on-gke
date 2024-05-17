@@ -80,7 +80,7 @@ variable "vpc_create" {
 }
 
 variable "enable_private_endpoint" {
-  description = "When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled. Ignored if private_cluster_config set to null."
+  description = "When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled. Ignored if private_cluster_config set to null. May need to destroy & recreate to apply public cluster."
   type        = bool
   default     = true
 }

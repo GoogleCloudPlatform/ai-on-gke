@@ -74,53 +74,7 @@ module "benchmark-0-infra" {
 }
 ```
 <!-- BEGIN_TF_DOCS -->
-Copyright 2024 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-## Requirements
-
-No requirements.
-
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | n/a |
-
-## Modules
-
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_cluster-autopilot"></a> [cluster-autopilot](#module\_cluster-autopilot) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-cluster-autopilot | v30.0.0&depth=1 |
-| <a name="module_cluster-nodepool"></a> [cluster-nodepool](#module\_cluster-nodepool) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-nodepool | v30.0.0&depth=1 |
-| <a name="module_cluster-service-account"></a> [cluster-service-account](#module\_cluster-service-account) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/iam-service-account | v30.0.0&depth=1 |
-| <a name="module_cluster-standard"></a> [cluster-standard](#module\_cluster-standard) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-cluster-standard | v30.0.0&depth=1 |
-| <a name="module_fleet"></a> [fleet](#module\_fleet) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/gke-hub | v30.0.0&depth=1 |
-| <a name="module_fleet-project"></a> [fleet-project](#module\_fleet-project) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/project | v30.0.0&depth=1 |
-| <a name="module_nat"></a> [nat](#module\_nat) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/net-cloudnat | v30.0.0&depth=1 |
-| <a name="module_project"></a> [project](#module\_project) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/project | v30.0.0&depth=1 |
-| <a name="module_registry"></a> [registry](#module\_registry) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/artifact-registry | v30.0.0&depth=1 |
-| <a name="module_vpc"></a> [vpc](#module\_vpc) | git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/net-vpc | n/a |
-
-## Resources
-
-| Name | Type |
-|------|------|
-| [google_filestore_instance.instance](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/filestore_instance) | resource |
-| [google_container_cluster.cluster](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/container_cluster) | data source |
-
-## Inputs
+## Variables
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
@@ -134,7 +88,7 @@ No requirements.
 | <a name="input_node_locations"></a> [node\_locations](#input\_node\_locations) | Zones in which the GKE Autopilot cluster's nodes are located. | `list(string)` | `[]` | no |
 | <a name="input_nodepools"></a> [nodepools](#input\_nodepools) | Nodepools for the GKE Standard cluster | <pre>map(object({<br>    machine_type   = optional(string, "n2-standard-2"),<br>    gke_version    = optional(string),<br>    max_node_count = optional(number, 10),<br>    min_node_count = optional(number, 1),<br><br>    guest_accelerator = optional(object({<br>      type  = optional(string),<br>      count = optional(number),<br>      gpu_driver = optional(object({<br>        version                    = string<br>        partition_size             = optional(string)<br>        max_shared_clients_per_gpu = optional(number)<br>      }))<br>    }))<br><br>    ephemeral_ssd_block_config = optional(object({<br>      ephemeral_ssd_count = optional(number)<br>    }))<br><br>    local_nvme_ssd_block_config = optional(object({<br>      local_ssd_count = optional(number)<br>    }))<br>  }))</pre> | `{}` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Prefix used for resource names. | `string` | `"ai-gke-0"` | no |
-| <a name="input_private_cluster_config"></a> [private\_cluster\_config](#input\_private\_cluster\_config) | Private cluster configuration. Default of {} configures a private\_cluster with the values in below object. Set to null to make cluster public, which can be used for simple kubectl access when debugging or learning but should not be used in production. | <pre>object({<br>    master_global_access    = optional(bool, true)<br>  })</pre> | `{}` | no |
+| <a name="input_private_cluster_config"></a> [private\_cluster\_config](#input\_private\_cluster\_config) | Private cluster configuration. Default of {} configures a private\_cluster with the values in below object. Set to null to make cluster public, which can be used for simple kubectl access when debugging or learning but should not be used in production.  May need to destroy & recreate to apply public cluster. | <pre>object({<br>    master_global_access    = optional(bool, true)<br>  })</pre> | `{}` | no |
 | <a name="input_project_create"></a> [project\_create](#input\_project\_create) | Project configuration for newly created project. Leave null to use existing project. Project creation forces VPC and cluster creation. | <pre>object({<br>    billing_account = string<br>    parent          = optional(string)<br>    shared_vpc_host = optional(string)<br>  })</pre> | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project id of existing or created project. | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | Region used for network resources. | `string` | `"us-central1"` | no |
