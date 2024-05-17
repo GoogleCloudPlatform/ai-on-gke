@@ -233,4 +233,13 @@ To run benchmarking, pass in the flag `--server 127.0.0.1` when running the benc
 
 ### View Prometheus Metrics
 
-This example also includes a Prometheus server accessible on port 9090, this Prometheus server is configured to scrape metrics from pods with the label `maxengine-server`, within these pods the metrics are emitted by a prometheus client on port 9091. The Prometheus server can be accessed on port 9090 either by its [HTTP API](https://prometheus.io/docs/prometheus/latest/querying/api/) or its web UI. If needed, the metrics emitted by the client (being scraped by the server), can also be accessed via port 9091 on the `maxengine-server` pods.
+This example deployment also sets the `--prometheus_port` flag to 9090 for the maxengine server container. Setting this starts a prometheus client endpoint and emits metrics in this example on port 9090. Make HTTP requests to that endpoint and it will respond with the current value of whatever metrics are registered: 
+
+```
+# HELP jetstream_prefill_backlog_size Size of prefill queue
+# TYPE jetstream_prefill_backlog_size gauge
+jetstream_prefill_backlog_size{id="maxengine-server-58f8786f4c-4587n"} 57.0
+# HELP jetstream_slots_available_percentage The percentage of available slots in decode batch
+# TYPE jetstream_slots_available_percentage gauge
+jetstream_slots_available_percentage{id="maxengine-server-58f8786f4c-4587n",idx="0"} 0.78125
+```

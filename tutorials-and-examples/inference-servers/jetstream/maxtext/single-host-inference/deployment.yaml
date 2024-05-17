@@ -18,9 +18,6 @@ spec:
       containers:
       - name: maxengine-server
         image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.0
-        env:
-          - name: PROMETHEUS_ENABLED_ON_PORT
-            value: "9091"
         securityContext:
           privileged: true
         args:
@@ -36,6 +33,7 @@ spec:
         - scan_layers=false
         - weight_dtype=bfloat16
         - load_parameters_path=gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
+        - prometheus_port=9090
         ports:
         - containerPort: 9000
           name: jetstream-grpc
