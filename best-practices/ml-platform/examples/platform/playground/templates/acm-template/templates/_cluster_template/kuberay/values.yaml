@@ -13,8 +13,8 @@
 # limitations under the License.
 
 image:
-  repository: kuberay/operator
-  tag: v1.0.0
+  repository: quay.io/kuberay/operator
+  tag: v1.1.1
   pullPolicy: IfNotPresent
 
 nameOverride: "kuberay-operator"
@@ -45,6 +45,16 @@ resources:
     #   cpu: 100m
     #   memory: 512Mi
 
+logging:
+  # Log encoder to use for stdout (one of 'json' or 'console', default is 'json')
+  stdoutEncoder: ""
+  # Log encoder to use for file logging (one of 'json' or 'console', default is 'json')
+  fileEncoder: ""
+  # Directory for kuberay-operator log file
+  baseDir: ""
+  # File name for kuberay-operator log file
+  fileName: ""
+
 livenessProbe:
   initialDelaySeconds: 10
   periodSeconds: 5
@@ -58,12 +68,17 @@ readinessProbe:
 batchScheduler:
   enabled: false
 
-  # Set up `securityContext` to improve Pod security.
-  # See https://github.com/ray-project/kuberay/blob/master/docs/guidance/pod-security.md for further guidance.
+# Set up `securityContext` to improve Pod security.
+# See https://github.com/ray-project/kuberay/blob/master/docs/guidance/pod-security.md for further guidance.
 securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
   runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
 
 
   # If rbacEnable is set to false, no RBAC resources will be created, including the Role for leader election, the Role for Pods and Services, and so on.
@@ -88,7 +103,6 @@ singleNamespaceInstall: true
 
 # The KubeRay operator will watch the custom resources in the namespaces listed in the "watchNamespace" parameter.
 watchNamespace:
-
 
 # Environment variables
 env:
