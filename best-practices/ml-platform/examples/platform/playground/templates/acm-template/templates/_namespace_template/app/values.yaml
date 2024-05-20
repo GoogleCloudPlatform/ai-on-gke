@@ -133,7 +133,9 @@ worker:
     resources: '"{\"n2_cpu\": 2}"'
   initContainerImage: 'busybox:1.28'
   initContainerSecurityContext: {}
-  containerEnv: []
+  containerEnv:
+  - name: RAYCLUSTER_HELM_CHART_WORKAROUND
+    value: "true"
   envFrom: []
   ports: []
   resources:
@@ -210,7 +212,9 @@ additionalWorkerGroups:
       resources: '"{\"l4_gpu\": 2}"'
     initContainerImage: 'busybox:1.28'
     initContainerSecurityContext: {}
-    containerEnv: []
+    containerEnv:
+    - name: RAYCLUSTER_HELM_CHART_WORKAROUND
+      value: "true"
     envFrom: []
     ports: []
     resources:

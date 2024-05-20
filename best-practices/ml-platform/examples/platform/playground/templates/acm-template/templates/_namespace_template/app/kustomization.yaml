@@ -19,7 +19,7 @@ namespace: NAMESPACE
 helmCharts:
 - name: ray-cluster
   repo: https://ray-project.github.io/kuberay-helm/
-  version: 1.0.0
+  version: 1.1.1
   releaseName: ray-cluster
   valuesFile: values.yaml
 
