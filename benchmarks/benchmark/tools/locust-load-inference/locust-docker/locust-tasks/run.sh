@@ -23,7 +23,7 @@ LOCUST_MODE=${LOCUST_MODE:-standalone}
 if [[ "$REQUEST_TYPE" = "grpc" ]]; then 
     LOCUST_OPTS="$LOCUST_OPTS GrpcBenchmarkUser --host=$TARGET_HOST"
 else
-    LOCUST_OPTS="$LOCUST_OPTS BenchmarkUser --host='http://$TARGET_HOST"
+    LOCUST_OPTS="$LOCUST_OPTS BenchmarkUser --host=http://$TARGET_HOST"
 fi
 
 if [[ "$LOCUST_MODE" = "master" ]]; then
