@@ -169,12 +169,12 @@ class BenchmarkUser(FastHttpUser):
         test_start_time = time.time()
         with self.client.post("/generate", headers=headers, json=request, catch_response=True) as resp:
             if resp.status_code == 200:
-                self.handle_successful_response(prompt, resp, test_start_time)
+                handle_successful_response(prompt, resp, test_start_time)
             else:
                 if resp.status_code == 0:
                     logging.error(
                         f"Failed request with invalid response code: {resp.status_code}. Due to requests.RequestException thrown by Session, caused by connection errors, timeouts or similar. Try increasing connection_timeout")
-                self.handle_failed_response(request, resp)
+                handle_failed_response(request, resp)
 
 def handle_successful_response(prompt, reponse, start_time):
     global model_params
