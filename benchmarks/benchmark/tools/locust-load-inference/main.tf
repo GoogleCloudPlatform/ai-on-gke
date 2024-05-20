@@ -47,6 +47,7 @@ locals {
       tokenizer                      = var.tokenizer
       use_beam_search                = var.use_beam_search
       hugging_face_token_secret_list = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
+      k8s_hf_secret_list             = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
       stop_timeout                   = var.stop_timeout
     })) : data]
   ])

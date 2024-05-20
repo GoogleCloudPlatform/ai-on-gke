@@ -32,4 +32,6 @@ module "gke-setup" {
   secret_create                               = var.secret_name == null ? false : true
   secret_name                                 = var.secret_name
   secret_location                             = var.secret_location
+  nvidia_dcgm_create                          = var.nvidia_dcgm_create
+  gcs_fuse_create                             = var.gcs_fuse_create
 }

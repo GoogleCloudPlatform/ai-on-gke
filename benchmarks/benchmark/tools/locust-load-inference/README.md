@@ -37,6 +37,7 @@ The Locust benchmarking tool currently supports these frameworks:
 - tensorrt_llm_triton
 - text generation inference (tgi)
 - vllm
+- jetstream
 
 ## Instructions
 

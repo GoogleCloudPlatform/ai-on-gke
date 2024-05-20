@@ -132,3 +132,15 @@ variable "secret_location" {
   default     = null
   nullable    = true
 }
+
+variable "nvidia_dcgm_create" {
+  description = "Should create nvidia dcgm resources or not"
+  type = bool
+  default = true
+}
+
+variable "gcs_fuse_create" {
+  description = "Give the SA object admin privledges"
+  type = bool
+  default = false
+}

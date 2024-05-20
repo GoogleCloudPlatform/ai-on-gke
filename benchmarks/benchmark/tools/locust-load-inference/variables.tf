@@ -211,6 +211,13 @@ variable "hugging_face_secret_version" {
   default     = null
 }
 
+variable "k8s_hf_secret" {
+  description = "Name of secret in k8s for huggingface token"
+  type        = string
+  nullable    = true
+  default     = null
+}
+
 variable "request_type" {
   description = "The method of request used when calling the model server (http or grpc)"
   type        = string

@@ -42,6 +42,6 @@ module "gcs-fuse-bucket" {
 
 resource "google_storage_bucket_iam_member" "bucket-iam" {
   bucket = local.bucket_name
-  role   = "roles/storage.objectAdmin"
-  member = data.google_service_account.gsa.member
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${var.google_service_account}"
 }

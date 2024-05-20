@@ -51,6 +51,13 @@ spec:
             - name: HUGGINGFACE_TOKEN
               valueFrom:
                 secretKeyRef:
+                  name: hf-key
+                  key: HF_TOKEN
+%{ endfor ~}
+%{ for hf_token in k8s_hf_secret_list ~}
+            - name: HUGGINGFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
                   name: hf-token
                   key: HF_TOKEN
 %{ endfor ~}
