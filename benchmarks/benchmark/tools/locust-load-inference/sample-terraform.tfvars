@@ -23,3 +23,5 @@ test_duration = 60
 # Increase test_users to allow more parallelism (especially when testing HPA)
 test_users = 1
 test_rate  = 5
+
+stop_timeout = 10800

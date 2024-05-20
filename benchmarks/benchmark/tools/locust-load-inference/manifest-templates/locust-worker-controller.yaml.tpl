@@ -24,7 +24,7 @@ spec:
             - name: LOCUST_MODE
               value: worker
             - name: REQUEST_TYPE
-              value: grpc
+              value: ${request_type}
             - name: LOCUST_MASTER
               value: locust-master
             - name: TARGET_HOST
