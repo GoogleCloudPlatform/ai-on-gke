@@ -11,7 +11,7 @@ project_id = "PROJECT_ID"
 bucket_name = "${PROJECT_ID}-tpu-model-repo-bucket-01"
 bucket_location = "US"
 
-output_bucket_name     = "${PROJECT_ID}-jetstream-benchmark-output-bucket-01"
+output_bucket_name     = "${PROJECT_ID}-tpu-benchmark-output-bucket-01"
 output_bucket_location = "US"
 
 google_service_account     = "benchmark-sa-01"

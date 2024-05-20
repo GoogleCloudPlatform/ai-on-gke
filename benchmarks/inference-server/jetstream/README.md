@@ -1,11 +1,10 @@
 # AI on GKE Benchmarking for JetStream
 
-Deploying and benchmarking JetStream on TPU has many similarities with the standard GPU path. But distinct enough differences to warrant a separate readme. If you are familiar with deploying on GPU, much of this should be familiar. For a more detailed understanding of each step. Refer to our primary benchmarking (README)[https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/benchmarks]
+Deploying and benchmarking JetStream on TPU has many similarities with the standard GPU path. But distinct enough differences to warrant a separate readme. If you are familiar with deploying on GPU, much of this should be familiar. For a more detailed understanding of each step. Refer to our primary benchmarking [README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/benchmarks)
 
 ## Pre-requisites
-- kaggle user/token
-- huggingface user/token
-- gcs bucket with test-prompts
+- [kaggle user/token](https://www.kaggle.com/docs/api)
+- [huggingface user/token](https://huggingface.co/docs/hub/en/security-tokens)
 
 ### Creating K8s infra
 
@@ -15,7 +14,7 @@ To create our TPU cluster, run:
 # Stage 1 creates the cluster.
 cs infra/stage-1
 
-# Copy the sample variables and update the project ID, cluster name and other
+# Copy the sample variables and update the project ID, cluster name and other 
 parameters as needed in the `terraform.tfvars` file.
 cp sample-tfvars/jetstream-sample.tfvars terraform.tfvars
 
@@ -74,7 +73,12 @@ kubectl create secret generic kaggle-secret \
 ```
 
 Replace `model-conversion/kaggle_converter.yaml: GEMMA_BUCKET_NAME` with the correct bucket name where you would like the model to be stored.
-***NOTE: If you are using a different bucket that the ones you created give the service account Storage Admin permissions on that bucket.
+***NOTE: If you are using a different bucket that the ones you created give the service account Storage Admin permissions on that bucket. This can be done on the UI or by running:
+```
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member "serviceAccount:SA_NAME@PROJECT_ID.iam.gserviceaccount.com" \
+    --role roles/storage.admin
+```
 
 Run:
 ```

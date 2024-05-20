@@ -47,7 +47,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: jetstream-http-svc
+  name: jetstream-svc
 spec:
   selector:
     app: maxengine-server

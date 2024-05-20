@@ -13,9 +13,9 @@ k8s_hf_secret = "hf-token"
 
 # Locust service configuration 
 artifact_registry                        = "REGISTRY_LOCATION"
-inference_server_service                 = "jetstream-http-svc:9000" # 104.196.118.117:9000
+inference_server_service                 = "jetstream-svc:9000"
 locust_runner_kubernetes_service_account = "sample-runner-sa"
-output_bucket                            = "${PROJECT_ID}-jetstream-benchmark-output-bucket-01"
+output_bucket                            = "${PROJECT_ID}-tpu-benchmark-output-bucket-01"
 gcs_path                                 = "PATH_TO_PROMPT_BUCKET"
 
 # Benchmark configuration for Locust Docker accessing inference server

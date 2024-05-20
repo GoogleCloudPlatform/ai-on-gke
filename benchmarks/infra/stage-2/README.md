@@ -104,6 +104,8 @@ kubectl get nodes
 | [secret_location](variables.tf#L105) | Location of secret | <code>string</code> |  | <code>null</code> |
 | [secret_name](variables.tf#L98) | Secret name | <code>string</code> |  | <code>null</code> |
 | [workload_identity_create](variables.tf#L54) | Setup Workload Identity configuration for newly created GKE cluster. Set to false to skip. | <code>bool</code> |  | <code>true</code> |
+| [nvidia_dcgm_create](variables.tf#L136) | Determines if DCGM resources should be added to the cluster. Used in capturing GPU metrics. | <code>bool</code> |  | <code>true</code> |
+| [gcs_fuse_create](variables.tf#L136) | Gives the model server service account Storage Admin access to the model store bucket | <code>bool</code> |  | <code>true</code> |
 
 ## Outputs
 
