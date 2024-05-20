@@ -1,11 +1,10 @@
 # GKE Disk Image Builder
-**[github.com/GoogleCloudPlatform/ai-on-gke/gke-disk-image-builder](https://github.com/GoogleCloudPlatform/ai-on-gke/gke-disk-image-builder)**
-is a Go module that pulls a given list of container images and creates a disk
-image from the unpacked snapshots of the images. The generated disk image be
-consumed by GKE at the time of node pool creation via secondary-boot-disk
-feature. The goal of this module is preloading a disk image with the container
-images to improve the startup latency of k8s pods on GKE nodes using the GKE
-secondary-boot-disk feature.
+**gke-disk-image-builder** is a Go module that pulls a given list of container 
+images and creates a disk image from the unpacked snapshots of the images. The 
+generated disk image be consumed by GKE at the time of node pool creation via 
+secondary-boot-disk feature. The goal of this module is preloading a disk image 
+with the container images to improve the startup latency of k8s pods on GKE nodes 
+using the GKE secondary-boot-disk feature.
 
 ## Usage
 This is a Go module that can be used as a library as well as a CLI . Find the
