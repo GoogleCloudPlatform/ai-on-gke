@@ -4,8 +4,8 @@ credentials_config = {
 
 project_id = "PROJECT_ID"
 
-namespace = "default"
-ksa       = "benchmark-sa"
+namespace    = "default"
+ksa          = "benchmark-sa"
 request_type = "grpc"
 
 k8s_hf_secret = "hf-token"

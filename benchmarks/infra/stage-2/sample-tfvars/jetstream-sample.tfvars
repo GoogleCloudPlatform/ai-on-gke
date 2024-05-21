@@ -8,7 +8,7 @@ credentials_config = {
 # terraform output -json  | jq '."project_id".value'
 project_id = "PROJECT_ID"
 
-bucket_name = "${PROJECT_ID}-model-repo-bucket-01"
+bucket_name     = "${PROJECT_ID}-model-repo-bucket-01"
 bucket_location = "US"
 
 output_bucket_name     = "${PROJECT_ID}-benchmark-output-bucket-01"
@@ -21,7 +21,7 @@ benchmark_runner_google_service_account     = "sample-runner-sa-01"
 benchmark_runner_kubernetes_service_account = "sample-runner-sa"
 
 nvidia_dcgm_create = "false"
-namespace = "default"
-namespace_create = false
-gcs_fuse_create = true
+namespace          = "default"
+namespace_create   = false
+gcs_fuse_create    = true
 

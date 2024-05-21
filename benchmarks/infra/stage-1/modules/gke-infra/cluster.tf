@@ -187,7 +187,7 @@ module "cluster-nodepool" {
 
   node_config = {
     machine_type = each.value.machine_type
-    spot = each.value.spot
+    spot         = each.value.spot
     shielded_instance_config = {
       enable_integrity_monitoring = true
       enable_secure_boot          = true

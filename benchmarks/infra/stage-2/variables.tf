@@ -135,12 +135,12 @@ variable "secret_location" {
 
 variable "nvidia_dcgm_create" {
   description = "Should create nvidia dcgm resources or not; for use on GPU VMs"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "gcs_fuse_create" {
   description = "Give the SA object admin privileges"
-  type = bool
-  default = false
+  type        = bool
+  default     = false
 }

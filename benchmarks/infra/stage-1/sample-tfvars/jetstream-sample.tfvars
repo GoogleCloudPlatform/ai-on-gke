@@ -19,7 +19,7 @@ cluster_options = {
 nodepools = {
   nodepool-tpu = {
     machine_type = "ct5lp-hightpu-4t",
-    spot = true,
+    spot         = true,
   },
   nodepool-cpu = {
     machine_type = "n2-standard-2",
