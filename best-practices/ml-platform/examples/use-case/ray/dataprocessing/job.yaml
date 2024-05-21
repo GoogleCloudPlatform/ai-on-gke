@@ -12,6 +12,7 @@ spec:
       containers:
       - name: job
         image: #IMAGE
+        imagePullPolicy: Always
         env:
         - name: "PROCESSING_BUCKET"
           value: #PROCESSING_BUCKET
