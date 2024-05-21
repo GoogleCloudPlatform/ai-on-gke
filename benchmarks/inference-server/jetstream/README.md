@@ -62,7 +62,9 @@ terraform apply
 
 ### Convert Gemma model weights to maxtext weights
 
-Jetstream currently requires that models be converted to MaxText weights. This example will deploy a Gemma-7b model. Much of this information is similar to this guide (here)[https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-tpu-jetstream#convert-checkpoints].
+JetStream has [two engine implementations](https://github.com/google/JetStream?tab=readme-ov-file#jetstream-engine-implementation). A Jax variant (via MaxText) and a Pytorch variant. This guide will use the Jax backend.
+
+Jetstream currently requires that models be converted to MaxText weights. This example will deploy a Gemma-7b model. Much of this information is similar to this guide [here](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-tpu-jetstream#convert-checkpoints).
 
 *SKIP IF ALREADY COMPLETED*
 

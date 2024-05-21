@@ -1,5 +1,5 @@
 credentials_config = {
-  fleet_host = "https://connectgateway.googleapis.com/v1/projects/PROJECT_NUMBER/locations/global/gkeMemberships/ai-tpu-benchmark"
+  fleet_host = "https://connectgateway.googleapis.com/v1/projects/PROJECT_NUMBER/locations/global/gkeMemberships/ai-benchmark"
 }
 
 project_id = "PROJECT_ID"
@@ -15,7 +15,7 @@ k8s_hf_secret = "hf-token"
 artifact_registry                        = "REGISTRY_LOCATION"
 inference_server_service                 = "jetstream-svc:9000"
 locust_runner_kubernetes_service_account = "sample-runner-sa"
-output_bucket                            = "${PROJECT_ID}-tpu-benchmark-output-bucket-01"
+output_bucket                            = "${PROJECT_ID}-benchmark-output-bucket-01"
 gcs_path                                 = "PATH_TO_PROMPT_BUCKET"
 
 # Benchmark configuration for Locust Docker accessing inference server

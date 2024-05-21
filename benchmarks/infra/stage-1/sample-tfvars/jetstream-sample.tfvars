@@ -1,8 +1,8 @@
 project_id   = "PROJECT_ID"
-cluster_name = "ai-tpu-benchmark"
+cluster_name = "ai-benchmark"
 region       = "us-east1"
 gke_location = "us-east1-c"
-prefix       = "ai-tpu-benchmark"
+prefix       = "ai-benchmark"
 spot_vms     = true
 
 vpc_create = {
