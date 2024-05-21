@@ -31,6 +31,7 @@ module "gke-infra" {
 
   registry_create = true
 
+  private_cluster_config  = var.private_cluster_config
   enable_private_endpoint = var.enable_private_endpoint
 
   vpc_create = var.vpc_create

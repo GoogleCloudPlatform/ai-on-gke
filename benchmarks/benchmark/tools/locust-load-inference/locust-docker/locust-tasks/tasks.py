@@ -16,15 +16,13 @@
 
 import json
 import logging
-import os
 import random
-import threading
 import time
 from locust import web  # Import the web module from Locust
 from typing import Callable, List
 from locust import FastHttpUser, task, events, User
 from locust.runners import MasterRunner
-from transformers import AutoTokenizer, PreTrainedTokenizerBase
+from transformers import AutoTokenizer
 
 from locust.exception import LocustError
 from jetstream.core.proto import jetstream_pb2
@@ -141,6 +139,18 @@ def get_token_count(prompt, resp):
     return number_of_input_tokens, number_of_output_tokens
 
 
+def get_random_prompt(user):
+    """Get random prompt from test_data or throw if no test_data."""
+    global test_data
+    if not test_data:
+        user.environment.runner.stop()
+        error_message = "No test data configured. Stopping the runner. Check worker logs for more info on loading."
+        logging.error(error_message)
+        raise ValueError(error_message)
+
+    return test_data[random.randrange(0, len(test_data))]
+
+
 class BenchmarkUser(FastHttpUser):
     weight = 1
     # Connection_timeout and network_timeout default is 60s. For inferencing workloads with
@@ -151,18 +161,10 @@ class BenchmarkUser(FastHttpUser):
 
     @task
     def lm_generate(self):
-        global test_data
         global model_params
         global tokenizer
 
-        if not test_data:
-            logging.error("No test data configured.")
-            logging.error("Stopping the runner")
-            self.environment.runner.stop()
-            return
-
-        prompt = test_data[random.randrange(0, len(test_data))]
-
+        prompt = get_random_prompt(self)
         request = generate_request(prompt)
         headers = {"User-Agent": "Benchmark Client", "Connection": "close"}
         logging.info(f"Sending request: {request}")
@@ -329,7 +331,7 @@ class GrpcBenchmarkUser(GrpcUser):
 
     @task
     def grpc_infer(self):
-        prompt = test_data[random.randrange(0, len(test_data))]
+        prompt = get_random_prompt(self)
         request = jetstream_pb2.DecodeRequest(
             additional_text=prompt,
             priority=0,
