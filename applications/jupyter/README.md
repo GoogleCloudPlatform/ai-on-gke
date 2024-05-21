@@ -190,7 +190,7 @@ Ensure that the following variables within `workloads.tfvars` are set:
 * if you do bring your own OAuth client, you must add to the `Authorized redirect URIs` Field:  `https://iap.googleapis.com/v1/oauth/clientIds/<client ID>:handleRedirect`
 
 **Note:**
-This module uses `<ip>.nip.io` as the domain name with a global static ipv4 address that is configured automatically. Optionaly you can also use a custom doamin & existing ingress ip address in the `workloads.tfvars` file.
+You can use a custom domain & existing ingress ip address in the `workloads.tfvars` file.
 
 ## Additional Information
 
