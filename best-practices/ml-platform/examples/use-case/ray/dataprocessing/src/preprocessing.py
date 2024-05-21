@@ -25,22 +25,37 @@ def get_clean_df(df):
 
     def download_image(image_url, image_file_name, destination_blob_name):
         storage_client = storage.Client()
+
+        download_dir = '/tmp/images'
+        try:
+            if not os.path.exists(download_dir):
+                os.makedirs(download_dir)
+        except FileExistsError as err:
+            print(f"Directory '{download_dir}' already exists")
+
         image_found_flag = False
         try:
-            urllib.request.urlretrieve(image_url, image_file_name)
+            download_file = f"{download_dir}/{image_file_name}"
+
+            urllib.request.urlretrieve(image_url, download_file)
             bucket = storage_client.bucket(IMAGE_BUCKET)
             blob = bucket.blob(destination_blob_name)
-            blob.upload_from_filename(image_file_name)
+            blob.upload_from_filename(download_file)
             print(
                 f"File {image_file_name} uploaded to {destination_blob_name}."
             )
+
+            os.remove(download_file)
+
             image_found_flag = True
         except urllib.error.HTTPError:
             print("HTTPError exception")
         except urllib.error.URLError:
             print("URLError exception")
         except:
-            print("Unknown exception")
+            print("Unhandled exception")
+            raise
+
         return image_found_flag
 
     def prep_product_desc(df):
