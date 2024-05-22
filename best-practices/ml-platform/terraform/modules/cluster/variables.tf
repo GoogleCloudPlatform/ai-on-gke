@@ -57,6 +57,25 @@ variable "region" {
   type        = string
 }
 
+variable "release_channel" {
+  default     = "REGULAR"
+  description = "If true, deletes the default node pool upon cluster creation. If you're using google_container_node_pool resources with no default node pool, this should be set to true, alongside setting initial_node_count to at least 1."
+  type        = string
+
+  validation {
+    condition = contains(
+      [
+        "RAPID",
+        "REGULAR",
+        "STABLE",
+        "UNSPECIFIED"
+      ],
+      var.release_channel
+    )
+    error_message = "'release_channel' value is invalid"
+  }
+}
+
 variable "remove_default_node_pool" {
   default     = true
   description = "If true, deletes the default node pool upon cluster creation. If you're using google_container_node_pool resources with no default node pool, this should be set to true, alongside setting initial_node_count to at least 1."
@@ -71,5 +90,10 @@ variable "subnet" {
 variable "zone" {
   default     = "us-central1-a"
   description = "The GCP zone where the reservation will be created"
+  type        = string
+}
+
+variable "service_account" {
+  description = "Service Account email to be used by cluster"
   type        = string
 }

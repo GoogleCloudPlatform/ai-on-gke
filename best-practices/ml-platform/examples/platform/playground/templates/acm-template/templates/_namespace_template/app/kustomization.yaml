@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "subnet-1" {
-  description = "subnet1."
-  value       = google_compute_subnetwork.subnet-1.id
-}
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: NAMESPACE
 
-output "vpc" {
-  description = "VPC."
-  value       = google_compute_network.vpc-network.id
-}
+helmCharts:
+- name: ray-cluster
+  repo: https://ray-project.github.io/kuberay-helm/
+  version: 1.1.1
+  releaseName: ray-cluster
+  valuesFile: values.yaml
+
+resources:
+- fluentd_config.yaml
+- podmonitoring_ray.yaml
+- serviceaccount_ray_head.yaml
+- serviceaccount_ray_worker.yaml

@@ -12,12 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "subnet-1" {
-  description = "subnet1."
-  value       = google_compute_subnetwork.subnet-1.id
-}
+terraform {
+  required_version = ">= 1.5.7"
 
-output "vpc" {
-  description = "VPC."
-  value       = google_compute_network.vpc-network.id
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "5.19.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "5.19.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.29.0"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "3.2.2"
+    }
+  }
+
+  provider_meta "google" {
+    module_name = "cloud-solutions/ml-platform-playground-deploy-v1"
+  }
 }

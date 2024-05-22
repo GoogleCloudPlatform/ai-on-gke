@@ -12,12 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "subnet-1" {
-  description = "subnet1."
-  value       = google_compute_subnetwork.subnet-1.id
-}
-
-output "vpc" {
-  description = "VPC."
-  value       = google_compute_network.vpc-network.id
-}

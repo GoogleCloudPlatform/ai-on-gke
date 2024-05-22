@@ -12,12 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "subnet-1" {
-  description = "subnet1."
-  value       = google_compute_subnetwork.subnet-1.id
+output "branch_names" {
+  value = var.branches.names
 }
 
-output "vpc" {
-  description = "VPC."
-  value       = google_compute_network.vpc-network.id
+output "branches" {
+  value = var.branches.names
+}
+
+output "default_branch" {
+  value = var.branches.default
+}
+
+output "full_name" {
+  value = github_repository.repo.full_name
+}
+
+output "html_url" {
+  value = github_repository.repo.html_url
+}
+
+output "http_clone_url" {
+  value = github_repository.repo.http_clone_url
+}
+
+output "repo" {
+  value = github_repository.repo
 }

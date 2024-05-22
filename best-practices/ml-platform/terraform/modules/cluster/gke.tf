@@ -21,6 +21,7 @@ data "google_project" "project" {
 resource "google_container_cluster" "mlp" {
   provider = google-beta
 
+  datapath_provider        = "ADVANCED_DATAPATH"
   deletion_protection      = false
   enable_shielded_nodes    = true
   initial_node_count       = var.initial_node_count
@@ -51,6 +52,7 @@ resource "google_container_cluster" "mlp" {
     enabled             = true
 
     auto_provisioning_defaults {
+      service_account = var.service_account
       oauth_scopes = [
         "https://www.googleapis.com/auth/cloud-platform"
       ]
@@ -125,6 +127,13 @@ resource "google_container_cluster" "mlp" {
     }
   }
 
+  gateway_api_config {
+    channel = "CHANNEL_STANDARD"
+  }
+
+  ip_allocation_policy {
+  }
+
   logging_config {
     enable_components = [
       "APISERVER",
@@ -135,9 +144,6 @@ resource "google_container_cluster" "mlp" {
     ]
   }
 
-  ip_allocation_policy {
-  }
-
   master_authorized_networks_config {
     cidr_blocks {
       cidr_block   = var.master_auth_networks_ipcidr
@@ -146,6 +152,10 @@ resource "google_container_cluster" "mlp" {
   }
 
   monitoring_config {
+    advanced_datapath_observability_config {
+      enable_metrics = true
+    }
+
     enable_components = [
       "APISERVER",
       "CONTROLLER_MANAGER",
@@ -165,7 +175,8 @@ resource "google_container_cluster" "mlp" {
   }
 
   node_config {
-    machine_type = var.machine_type
+    machine_type    = var.machine_type
+    service_account = var.service_account
 
     shielded_instance_config {
       enable_integrity_monitoring = true
@@ -188,7 +199,12 @@ resource "google_container_cluster" "mlp" {
   }
 
   release_channel {
-    channel = "STABLE"
+    channel = var.release_channel
+  }
+
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_ENTERPRISE"
   }
 
   workload_identity_config {

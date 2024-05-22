@@ -51,7 +51,8 @@ The preprocessing.py file does the following:
    ```
    kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset && \
    gcloud storage cp flipkart_com-ecommerce_sample.csv \
-   gs://${PROCESSING_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv
+   gs://${PROCESSING_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
+   rm flipkart_com-ecommerce_sample.csv
    ```
 
 1. Provide respective GCS bucket access rights to GKE Kubernetes Service Accounts.
