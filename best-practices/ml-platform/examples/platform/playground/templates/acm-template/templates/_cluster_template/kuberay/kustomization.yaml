@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "subnet-1" {
-  description = "subnet1."
-  value       = google_compute_subnetwork.subnet-1.id
-}
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- rbac.yaml
+patches:
+- path: rayclusters.yaml
+- path: rayservices.yaml
+- path: rayjobs.yaml
 
-output "vpc" {
-  description = "VPC."
-  value       = google_compute_network.vpc-network.id
-}
+helmCharts:
+- name: kuberay-operator
+  repo: https://ray-project.github.io/kuberay-helm/
+  version: 1.1.1
+  releaseName: kuberay-operator
+  includeCRDs: true
+  valuesFile: values.yaml

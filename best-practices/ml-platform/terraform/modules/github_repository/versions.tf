@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "subnet-1" {
-  description = "subnet1."
-  value       = google_compute_subnetwork.subnet-1.id
+terraform {
+  required_version = ">= 1.5.7"
+
+  required_providers {
+    github = {
+      source  = "integrations/github"
+      version = "6.2.1"
+    }
+  }
 }
 
-output "vpc" {
-  description = "VPC."
-  value       = google_compute_network.vpc-network.id
+provider "github" {
+  owner = var.owner
+  token = var.token
 }
