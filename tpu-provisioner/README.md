@@ -12,7 +12,7 @@ Node Pools are cleaned up when the JobSet whose pods triggered the node pool cre
 
 ## Setup
 
-### Create a GKE Cluster with workload identity enabled and a static cluster version
+### Create a GKE Cluster with workload identity enabled and no release channel
 
 The TPU Provisioner requires [Workload Identity Federation for GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity) to be enabled, and cannot be on a release channel (auto upgrades
 are disabled on node pools created by the TPU provisioner, to minimize disruptions to training workloads)
@@ -20,8 +20,10 @@ are disabled on node pools created by the TPU provisioner, to minimize disruptio
 Refer to the [public docs](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity) and follow
 the steps to create a cluster with workload identity enabled.
 
-When creating the cluster, you should assign a static cluster version or disable auto upgrades (i.e., for gcloud, 
-use the `--cluster-version` to assign a static cluster version, or `--no-enable-auto-upgrade` flag).
+You should also ensure your cluster is not enrolled in a release channel. The easiest way to do this is in the Google
+Cloud Console UI. Search "Kubernetes Engine" in the search bar and select `Kubernetes Engine` from the dropdown,
+then click on your cluster to pull up settings that can be configured. Find the `Release Channel` setting, click the
+edit button and select `No channel`.
 
 Also note, if you plan to [preload container images via secondary boot disks](https://cloud.google.com/kubernetes-engine/docs/how-to/data-container-image-preloading#create-cluster-secondary-disk) to reduce pod startup latency, you'll
 need to enable image streaming, as described in the linked docs.
