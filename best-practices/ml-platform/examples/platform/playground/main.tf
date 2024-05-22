@@ -13,9 +13,10 @@
 # limitations under the License.
 
 locals {
+  configsync_repository    = module.configsync_repository
   # https://github.com/hashicorp/terraform-provider-google/issues/13325
   connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${module.gke.cluster_name}"
-  git_repository           = "github.com/${github_repository.acm_repo.full_name}"
+  git_repository           = replace(local.configsync_repository.html_url, "/https*:\\/\\//", "")
   kubeconfig_dir           = abspath("${path.module}/kubeconfig")
 }
 
@@ -144,12 +145,12 @@ module "cloud-nat" {
 ##########################################################################
 resource "google_gke_hub_feature" "configmanagement" {
   depends_on = [
-    github_branch.environment,
     google_project_service.anthos_googleapis_com,
     google_project_service.anthosconfigmanagement_googleapis_com,
     google_project_service.compute_googleapis_com,
     google_project_service.gkeconnect_googleapis_com,
-    google_project_service.gkehub_googleapis_com
+    google_project_service.gkehub_googleapis_com,
+    local.configsync_repository
   ]
 
   location = "global"
@@ -336,11 +337,11 @@ resource "google_gke_hub_membership" "cluster" {
 
 resource "google_gke_hub_feature_membership" "cluster_configmanagement" {
   depends_on = [
-    github_branch.environment,
     google_project_service.anthos_googleapis_com,
     google_project_service.anthosconfigmanagement_googleapis_com,
     google_project_service.gkeconnect_googleapis_com,
     google_project_service.gkehub_googleapis_com,
+    local.configsync_repository,
     module.cloud-nat
   ]
 
@@ -358,8 +359,8 @@ resource "google_gke_hub_feature_membership" "cluster_configmanagement" {
       git {
         policy_dir  = "manifests/clusters"
         secret_type = "token"
-        sync_branch = github_branch.environment.branch
-        sync_repo   = github_repository.acm_repo.http_clone_url
+        sync_branch = local.configsync_repository.default_branch
+        sync_repo   = local.configsync_repository.http_clone_url
       }
     }
 
@@ -375,37 +376,17 @@ resource "google_gke_hub_feature_membership" "cluster_configmanagement" {
 #
 # Git Repository
 ##########################################################################
-# data "github_organization" "default" {
-#   name = var.github_org
-# }
+module "configsync_repository" {
+  source = "../../../terraform/modules/github_repository"
 
-resource "github_repository" "acm_repo" {
-  # depends_on = [
-  #   data.github_organization.default
-  #  ]
-
-  allow_merge_commit     = true
-  allow_rebase_merge     = true
-  allow_squash_merge     = true
-  auto_init              = true
-  delete_branch_on_merge = false
-  description            = "Repo for Config Sync"
-  has_issues             = false
-  has_projects           = false
-  has_wiki               = false
-  name                   = var.configsync_repo_name
-  visibility             = "private"
-  vulnerability_alerts   = true
-}
-
-resource "github_branch" "environment" {
-  branch     = var.environment_name
-  repository = github_repository.acm_repo.name
-}
-
-resource "github_branch_default" "environment" {
-  branch     = github_branch.environment.branch
-  repository = github_repository.acm_repo.name
+  branches = {
+    default = var.environment_name
+    names   = ["main", var.environment_name]
+  }
+  description = "Google Cloud Config Sync repository"
+  name        = var.configsync_repo_name
+  owner       = var.github_org
+  token       = var.github_token
 }
 
 #
@@ -713,5 +694,9 @@ resource "null_resource" "manage_ray_ns" {
 # OUTPUT
 ###############################################################################
 output "configsync_repository" {
-  value = github_repository.acm_repo.html_url
+  value = local.configsync_repository.html_url
+}
+
+output "git_repository" {
+  value = local.git_repository
 }

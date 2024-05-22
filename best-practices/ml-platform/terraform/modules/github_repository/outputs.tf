@@ -12,29 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_version = ">= 1.5.7"
+output "branch_names" {
+  value = var.branches.names
+}
 
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "5.19.0"
-    }
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = "5.19.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.29.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = "3.2.2"
-    }
-  }
+output "branches" {
+  value = var.branches.names
+}
 
-  provider_meta "google" {
-    module_name = "cloud-solutions/ml-platform-playground-deploy-v1"
-  }
+output "default_branch" {
+  value = var.branches.default
+}
+
+output "full_name" {
+  value = github_repository.repo.full_name
+}
+
+output "html_url" {
+  value = github_repository.repo.html_url
+}
+
+output "http_clone_url" {
+  value = github_repository.repo.http_clone_url
+}
+
+output "repo" {
+  value = github_repository.repo
 }

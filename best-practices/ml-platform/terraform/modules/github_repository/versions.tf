@@ -16,25 +16,14 @@ terraform {
   required_version = ">= 1.5.7"
 
   required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "5.19.0"
-    }
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = "5.19.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.29.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = "3.2.2"
+    github = {
+      source  = "integrations/github"
+      version = "6.2.1"
     }
   }
+}
 
-  provider_meta "google" {
-    module_name = "cloud-solutions/ml-platform-playground-deploy-v1"
-  }
+provider "github" {
+  owner = var.owner
+  token = var.token
 }
