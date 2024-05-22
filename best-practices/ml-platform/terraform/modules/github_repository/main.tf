@@ -28,15 +28,15 @@ resource "github_repository" "repo" {
 }
 
 resource "github_branch" "branch" {
-  for_each   = toset(var.branches.names)
+  for_each = toset(var.branches.names)
 
   branch     = each.value
   repository = github_repository.repo.name
 }
 
 resource "github_branch_default" "branch" {
-  depends_on = [ 
-    github_branch.branch 
+  depends_on = [
+    github_branch.branch
   ]
 
   branch     = var.branches.default

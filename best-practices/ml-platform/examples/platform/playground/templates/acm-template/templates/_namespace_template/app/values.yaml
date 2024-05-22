@@ -47,10 +47,10 @@ head:
     block: 'true'
     num-cpus: '0' # Prevent tasks from begins scheduled on the head
   image:
-    repository: rayproject/ray  
+    repository: rayproject/ray
     tag: 2.7.1-py310
-    pullPolicy: IfNotPresent  
-  containerEnv: 
+    pullPolicy: IfNotPresent
+  containerEnv:
   - name: RAY_memory_monitor_refresh_ms
     value: "0"
   envFrom: []

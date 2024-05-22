@@ -1,7 +1,7 @@
 apiVersion: batch/v1
-kind: Job 
+kind: Job
 metadata:
-  name: job 
+  name: job
   namespace: ml-team
 spec:
   template:

@@ -36,6 +36,6 @@ spec:
            kubernetes.io/metadata.name: gmp-system
       podSelector:
         matchLabels:
-          app: managed-prometheus-collector 
+          app: managed-prometheus-collector
     # Allow traffic between all pods in this namespace.
     - podSelector: {}

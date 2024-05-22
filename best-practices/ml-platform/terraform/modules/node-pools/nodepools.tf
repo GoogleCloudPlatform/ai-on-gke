@@ -36,7 +36,7 @@ resource "google_container_node_pool" "node-pool" {
     labels = {
       "resource-type" : var.resource_type
     }
-    machine_type = var.machine_type
+    machine_type    = var.machine_type
     service_account = var.service_account
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"

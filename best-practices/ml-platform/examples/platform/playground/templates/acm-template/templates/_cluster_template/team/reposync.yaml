@@ -165,8 +165,8 @@ roleRef:
   name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
 ---
-#What should be the name of the reconciler's service account? 
-#If the RepoSync name is repo-sync, SERVICE_ACCOUNT_NAME is ns-reconciler-NAMESPACE. 
-# Otherwise, it is ns-reconciler-NAMESPACE-REPO_SYNC_NAME-REPO_SYNC_NAME_LENGTH. 
+#What should be the name of the reconciler's service account?
+#If the RepoSync name is repo-sync, SERVICE_ACCOUNT_NAME is ns-reconciler-NAMESPACE.
+# Otherwise, it is ns-reconciler-NAMESPACE-REPO_SYNC_NAME-REPO_SYNC_NAME_LENGTH.
 #For example, if your RepoSync name is prod, then the SERVICE_ACCOUNT_NAME would be ns-reconciler-NAMESPACE-prod-4. The integer 4 is used as prod contains 4 characters.
 # https://cloud.google.com/anthos-config-management/docs/how-to/multiple-repositories

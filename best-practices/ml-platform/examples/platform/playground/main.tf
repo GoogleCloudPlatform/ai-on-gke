@@ -13,7 +13,7 @@
 # limitations under the License.
 
 locals {
-  configsync_repository    = module.configsync_repository
+  configsync_repository = module.configsync_repository
   # https://github.com/hashicorp/terraform-provider-google/issues/13325
   connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${module.gke.cluster_name}"
   git_repository           = replace(local.configsync_repository.html_url, "/https*:\\/\\//", "")
@@ -166,7 +166,7 @@ resource "google_service_account" "cluster" {
   description  = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
 }
 
-# Apply minimal roles to nodepool SA 
+# Apply minimal roles to nodepool SA
 # https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
 locals {
   cluster_sa_roles = [
