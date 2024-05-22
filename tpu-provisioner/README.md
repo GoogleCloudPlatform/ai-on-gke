@@ -14,7 +14,7 @@ Node Pools are cleaned up when the JobSet whose pods triggered the node pool cre
 
 ### Create a GKE Cluster with workload identity enabled and a static cluster version
 
-The TPU Provisioner requires workload identity to be enabled, and cannot be on a release channel (auto upgrades
+The TPU Provisioner requires [Workload Identity Federation for GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity) to be enabled, and cannot be on a release channel (auto upgrades
 are disabled on node pools created by the TPU provisioner, to minimize disruptions to training workloads)
 
 Refer to the [public docs](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity) and follow
