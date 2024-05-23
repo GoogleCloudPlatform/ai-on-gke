@@ -8,20 +8,24 @@ The provisioning process starts with an unschedulable "leader" pod (pod with Job
 JobSet. Once the TPU slice is created, the remaining pods for each Job will be created and follow their leader pod
 onto the same slice it is running on.
 
-<img src="./docs/provisioning.excalidraw.png" width="50%"></img>
-
-Node Pools are cleaned up when the JobSet whose pods triggered the node pool creation is either completed, failed, or deleted.
+Node Pools are cleaned up when the JobSet whose pods triggered the node pool creation is either **completed, failed, or deleted**.
 
 ## Setup
 
-### Create a GKE Cluster with workload identity enabled
+### Create a GKE Cluster with workload identity enabled and no release channel
 
-The TPU Provisioner requires workload identity to be enabled. 
+The TPU Provisioner requires [Workload Identity for GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity) to be enabled, and cannot be on a release channel (auto upgrades
+are disabled on node pools created by the TPU provisioner, to minimize disruptions to training workloads).
 
 Refer to the [public docs](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity) and follow
 the steps to create a cluster with workload identity enabled.
 
-Note if you plan to [preload container images via secondary boot disks](https://cloud.google.com/kubernetes-engine/docs/how-to/data-container-image-preloading#create-cluster-secondary-disk) to reduce pod startup latency, you'll
+You should also ensure your cluster is not enrolled in a release channel. The easiest way to do this is in the Google
+Cloud Console UI. Search "Kubernetes Engine" in the search bar and select `Kubernetes Engine` from the dropdown,
+then click on your cluster to pull up settings that can be configured. Find the `Release Channel` setting, click the
+edit button and select `No channel`.
+
+Also note, if you plan to [preload container images via secondary boot disks](https://cloud.google.com/kubernetes-engine/docs/how-to/data-container-image-preloading#create-cluster-secondary-disk) to reduce pod startup latency, you'll
 need to enable image streaming, as described in the linked docs.
 
 ### Install JobSet
