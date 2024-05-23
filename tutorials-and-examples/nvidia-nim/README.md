@@ -83,7 +83,11 @@ Create Kubernetes secrets to enable access to NGC resources from within your clu
 kubectl -n nim create secret docker-registry registry-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=$NGC_CLI_API_KEY
 kubectl -n nim create secret generic ngc-api --from-literal=NGC_CLI_API_KEY=$NGC_CLI_API_KEY
 ```
+## Deploy a PVC to persist the model
 
+```bash
+kubectl apply -f apply -f pvc.yaml
+```
 
 ## Deploy the NIM with the generated engine using a Helm chart
 
