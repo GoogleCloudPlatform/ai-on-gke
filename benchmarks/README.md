@@ -34,7 +34,7 @@ cd infra/stage-1
 
 # Copy the sample variables and update the project ID, cluster name and other
 parameters as needed in the `terraform.tfvars` file.
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 
 # Initialize the Terraform modules.
 terraform init
@@ -67,7 +67,7 @@ cd infra/stage-2
 # and the project name and bucket name parameters as needed in the
 # `terraform.tfvars` file. You can specify a new bucket name in which case it
 # will be created.
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 
 # Initialize the Terraform modules.
 terraform init
@@ -88,7 +88,7 @@ cd inference-server/text-generation-inference
 # Copy the sample variables and update the project number and cluster name in
 # the fleet_host variable "https://connectgateway.googleapis.com/v1/projects/<project-number>/locations/global/gkeMemberships/<cluster-name>"
 # in the `terraform.tfvars` file.
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 
 # Initialize the Terraform modules.
 terraform init
@@ -120,7 +120,7 @@ cd benchmark/tools/locust-load-inference
 # Copy the sample variables and update the project number and cluster name in
 # the fleet_host variable "https://connectgateway.googleapis.com/v1/projects/<project-number>/locations/global/gkeMemberships/<cluster-name>"
 # in the `terraform.tfvars` file.
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/tgi-sample.tfvars terraform.tfvars
 
 # Initialize the Terraform modules.
 terraform init
