@@ -122,7 +122,11 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 		defer g.inProgressCreatesJobKey.Delete(jobKey)
 	}
 
-	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationStarted, "Starting creation of Node Pool %s (size = %v) because %s", name, np.InitialNodeCount, why)
+	// Get JobSet this pod is part of from the pod labels and log it.
+	jobSetName := p.Labels[jobset.JobSetNameKey]
+	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationStarted, "Starting creation of Node Pool %s (size = %v) for JobSet %s because %s", name, np.InitialNodeCount, jobSetName, why)
+	log.Info(fmt.Sprintf("creating node pool %s for jobset %s", np.Name, jobSetName))
+
 	call := g.Service.Projects.Locations.Clusters.NodePools.Create(g.ClusterContext.ClusterName(), req)
 	op, err := call.Do()
 	if err != nil {
