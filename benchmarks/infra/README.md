@@ -14,7 +14,7 @@ At a high level you will run the following:
 ```
 cd infra/stage-1
 
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 
 terraform init
 
@@ -31,7 +31,7 @@ You can find more details in the stage-2/README.md. At a high level you will run
 ```
 cd infra/stage-2
 
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 
 terraform init
 

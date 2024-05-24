@@ -29,10 +29,10 @@ In particular, stage-2 provisions:
 
 ### Step 1: create and configure terraform.tfvars
 
-Create a `terraform.tfvars` file. `sample-terraform.tfvars` is provided as an example file. You can copy the file as a starting point. Note that you will have to change the existing `project_id`.
+Create a `terraform.tfvars` file. `./sample-tfvars/gpu-sample.tfvars` is provided as an example file. You can copy the file as a starting point. Note that you will have to change the existing `project_id`.
 
 ```bash
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 ```
 
 Fill out your `terraform.tfvars` with the desired project and cluster configuration, referring to the list of required and optional variables [here](#variables). Variables `credentials_config` and `project_id` are required.

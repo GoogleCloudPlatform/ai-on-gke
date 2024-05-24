@@ -50,7 +50,7 @@ This is my first prompt.\n
 This is my second prompt.\n
 ```
 
-Example prompt datasets are available in the "../../dataset" folder with python scripts and instructions on how to make the dataset available for consumption by this benchmark. The dataset used in the `sample-terraform.tfvars` is the "ShareGPT_v3_unflitered_cleaned_split".
+Example prompt datasets are available in the "../../dataset" folder with python scripts and instructions on how to make the dataset available for consumption by this benchmark. The dataset used in the `./sample-tfvars/tgi-sample.tfvars` is the "ShareGPT_v3_unflitered_cleaned_split".
 
 You will set the `gcs_path` in your `terraform.tfvars` to this gcs path containing your prompts.
 
@@ -101,10 +101,10 @@ gcloud artifacts repositories create ai-benchmark --location=us-central1 --repos
 
 ### Step 6: create and configure terraform.tfvars
 
-Create a `terraform.tfvars` file. `sample-terraform.tfvars` is provided as an example file. You can copy the file as a starting point. Note that at a minimum you will have to change the existing `credentials_config`, `project_id`, and `artifact_registry`.
+Create a `terraform.tfvars` file. `./sample-tfvars/tgi-sample.tfvars` is provided as an example file. You can copy the file as a starting point. Note that at a minimum you will have to change the existing `credentials_config`, `project_id`, and `artifact_registry`.
 
 ```bash
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/tgi-sample.tfvars terraform.tfvars
 ```
 
 Fill out your `terraform.tfvars` with the desired model and server configuration, referring to the list of required and optional variables [here](#variables). The following variables are required:
