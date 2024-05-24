@@ -143,6 +143,7 @@ variable "nodepools" {
     gke_version    = optional(string),
     max_node_count = optional(number, 10),
     min_node_count = optional(number, 1),
+    spot           = optional(bool, false)
 
     guest_accelerator = optional(object({
       type  = optional(string),
