@@ -89,7 +89,10 @@ The preprocessing.py file does the following:
 
    ```
    cd src && \
-   gcloud builds submit --tag ${DOCKER_IMAGE_URL} . && \
+   gcloud builds submit \
+   --project ${PROJECT_ID}
+   --tag ${DOCKER_IMAGE_URL} \
+   . && \
    cd ..
    ```
 
@@ -107,7 +110,7 @@ The preprocessing.py file does the following:
 1. Get credentials for the GKE cluster
 
    ```
-   gcloud container fleet memberships get-credentials ${CLUSTER_NAME}
+   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
    ```
 
 1. Create the Job in the “ml-team” namespace using kubectl command
