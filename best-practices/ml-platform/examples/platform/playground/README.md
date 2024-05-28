@@ -176,7 +176,8 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
   ```
 
   ```
-  environment_name = "dev"
+  environment_name  = "dev"
+  iap_support_email = ""
   project = {
     billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
     folder_id          = "############"
@@ -186,6 +187,7 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
   ```
 
   - `environment_name`: the name of the environment
+  - `iap_support_email`: the email to use as the support contact for the IAP brand
   - `project.billing_account_id`: the billing account ID
   - `project.name`: the prefix for the display name of the project, the full name will be `<project.name>-<environment_name>`
 
@@ -230,9 +232,9 @@ For more information on IAP, see the [Identity-Aware Proxy documentation](https:
 
 For this guide we will configure a generic OAuth consent screen setup for internal use. Internal use means that only users within your organization can be granted IAM permissions to access the IAP secured applications and resource.
 
-See the [Configuring the OAuth consent screen documenation](https://developers.google.com/workspace/guides/configure-oauth-consent) for additional information
+See the [Configuring the OAuth consent screen documentation](https://developers.google.com/workspace/guides/configure-oauth-consent) for additional information
 
-**NOTE: These steps only need to be completed once for a project.**
+**NOTE: These steps only need to be completed once for a project. If you are using the Terraform managed project option, this has already been completed for you.**
 
 - Go to [APIs & Services](https://console.cloud.google.com/apis/dashboard?) > [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) configuration page.
 - Select **Internal** for the **User Type**
@@ -254,20 +256,20 @@ For simplicity, in this guide access to the IAP secured applications will be con
 - Set the IAP allow domain
 
   ```
-  IAP_DOMAIN=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | awk -F@ '{print $2}')
-  echo "IAP_DOMAIN=${IAP_DOMAIN}"
+  MLP_IAP_DOMAIN=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | awk -F@ '{print $2}')
+  echo "MLP_IAP_DOMAIN=${MLP_IAP_DOMAIN}"
   ```
 
-  **If the domain of the active `gcloud` user is different from the organization that the `MLP_PROJECT_ID` project is in, you will need to manually set `IAP_DOMAIN` environment variable**
+  **If the domain of the active `gcloud` user is different from the organization that the `MLP_PROJECT_ID` project is in, you will need to manually set `MLP_IAP_DOMAIN` environment variable**
 
   ```
-  IAP_DOMAIN=<MLP_PROJECT_ID organization domain>
+  MLP_IAP_DOMAIN=<MLP_PROJECT_ID organization domain>
   ```
 
 - Set the IAP domain in the configuration file
 
   ```
-  sed -i '/^iap_domain[[:blank:]]*=/{h;s/=.*/= "'"${IAP_DOMAIN}"'"/};${x;/^$/{s//iap_domain             = "'"${IAP_DOMAIN}"'"/;H};x}' ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i '/^iap_domain[[:blank:]]*=/{h;s/=.*/= "'"${MLP_IAP_DOMAIN}"'"/};${x;/^$/{s//iap_domain             = "'"${MLP_IAP_DOMAIN}"'"/;H};x}' ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
 ## Create the resources
