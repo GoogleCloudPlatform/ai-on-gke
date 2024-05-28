@@ -102,7 +102,7 @@ resource "local_file" "route_ray_dashboard_https_yaml" {
 ###############################################################################
 resource "google_project_service" "iap_googleapis_com" {
   disable_dependent_services = false
-  disable_on_destroy         = true
+  disable_on_destroy         = false
   project                    = data.google_project.environment.project_id
   service                    = "iap.googleapis.com"
 }
