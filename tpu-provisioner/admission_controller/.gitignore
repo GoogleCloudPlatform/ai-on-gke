@@ -1,0 +1,6 @@
+# don't add certificates
+certificates/*.crt
+certificates/*.key
+
+__pycache__/
+.pytest_cache/
