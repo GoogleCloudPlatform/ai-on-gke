@@ -4,7 +4,7 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV JETSTREAM_VERSION=v0.2.0
+ENV JETSTREAM_VERSION=latest
 
 RUN apt -y update && apt install -y --no-install-recommends \
     ca-certificates \
@@ -17,7 +17,6 @@ RUN update-alternatives --install \
 
 RUN git clone https://github.com/google/JetStream.git && \
 cd /JetStream && \
-git checkout ${JETSTREAM_VERSION} && \
 pip install -e .
 
 RUN pip3 install uvicorn

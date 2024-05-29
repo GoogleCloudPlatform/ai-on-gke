@@ -51,10 +51,10 @@ convert_maxtext_checkpoint() {
     MAXTEXT_VERSION=$5
 
     if [ -z $MAXTEXT_VERSION ]; then
-        MAXTEXT_VERSION=jetstream-v0.2.0
+        MAXTEXT_VERSION=prometheus-decode-batch-percent
     fi
 
-    git clone https://github.com/google/maxtext.git
+    git clone https://github.com/bslabe123/maxtext.git
 
     # checkout stable MaxText commit
     cd maxtext
@@ -77,7 +77,7 @@ convert_pytorch_checkpoint() {
     OUTPUT_CKPT_DIR=$3
     QUANTIZE=$4
     PYTORCH_VERSION=$5
-    JETSTREAM_VERSION=v0.2.0
+    JETSTREAM_VERSION=prometheus-decode-batch-percent
 
     if [ -z $PYTORCH_VERSION ]; then
         PYTORCH_VERSION=jetstream-v0.2.0
@@ -94,7 +94,7 @@ convert_pytorch_checkpoint() {
         QUANTIZE="False"
     fi
 
-    git clone https://github.com/google/JetStream.git
+    git clone https://github.com/bslabe123/JetStream.git
     git clone https://github.com/google/jetstream-pytorch.git
     cd JetStream
     git checkout ${JETSTREAM_VERSION}
