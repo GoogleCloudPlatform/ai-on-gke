@@ -42,18 +42,3 @@ variable "subnet_01_region" {
   type        = string
   description = "Region of first subnet."
 }
-
-variable "subnet_02_ip" {
-  type        = string
-  description = "IP range of second subnet."
-}
-
-variable "subnet_02_name" {
-  type        = string
-  description = "Name of the second subnet."
-}
-
-variable "subnet_02_region" {
-  type        = string
-  description = "Region of second subnet."
-}

@@ -1,0 +1,9 @@
+swagger: "2.0"
+host: "${endpoint}"
+info:
+  title: "Cloud Endpoints DNS"
+  version: "1.0.0"
+paths: {}
+x-google-endpoints:
+- name: "${endpoint}"
+  target: "${ip_address}"

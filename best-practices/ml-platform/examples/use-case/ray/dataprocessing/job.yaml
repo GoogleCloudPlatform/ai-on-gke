@@ -1,7 +1,7 @@
 apiVersion: batch/v1
-kind: Job 
+kind: Job
 metadata:
-  name: job 
+  name: job
   namespace: ml-team
 spec:
   template:
@@ -12,6 +12,7 @@ spec:
       containers:
       - name: job
         image: #IMAGE
+        imagePullPolicy: Always
         env:
         - name: "PROCESSING_BUCKET"
           value: #PROCESSING_BUCKET
