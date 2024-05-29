@@ -7,9 +7,7 @@ from ..admission_controller import *
 test_job_name = "test-job" 
 test_job_ns = "default" 
 
-# RFC 6901: escaped forward slash '/' in JSON pointer is encoded as '~1': https://datatracker.ietf.org/doc/html/rfc6901#section-3
-# This is cleaned up before sending the AdmissionReview back to the apiserver, but these unit tests
-# validate the JsonPatch objects themselves, before cleanup.
+# RFC 6901: escaped forward slash '/' in JSONPatch is encoded as '~1': https://datatracker.ietf.org/doc/html/rfc6901#section-3
 escaped_reservation_label = reservation_name_label.replace('/', '~1')
 escaped_gke_spot_label = gke_spot_label.replace('/', '~1')
 escaped_gke_location_hint_label = gke_location_hint_label.replace('/', '~1')
