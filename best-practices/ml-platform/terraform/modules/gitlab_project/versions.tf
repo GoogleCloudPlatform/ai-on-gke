@@ -13,10 +13,16 @@
 # limitations under the License.
 
 terraform {
+  required_version = ">= 1.5.7"
+
   required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "5.31.0"
+    github = {
+      source  = "gitlabhq/gitlab"
+      version = "17.0.0"
     }
   }
+}
+
+provider "gitlab" {
+  token = var.token
 }
