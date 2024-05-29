@@ -1,11 +1,12 @@
+#!/usr/bin/env python3 
 import os
-import logging
-import base64
 import json
+import base64
+import logging
 import hashlib
 from fastapi import FastAPI, Body
-from pydantic import BaseModel
-from datetime import datetime
+from jsonpatch import JsonPatch
+from copy import deepcopy
 
 app = FastAPI()
 
@@ -24,33 +25,22 @@ reservation_name_label = "cloud.google.com/reservation-name"
 gke_spot_label = "cloud.google.com/gke-spot"
 gke_location_hint_label = "cloud.google.com/gke-location-hint"
 
-# define data models
-class NodeSelectorPatch(BaseModel):
-    '''NodSelectorPatch represents an add or patch operation to the nodeSelector field of a Job's pod template.'''
-    op: str
-    path: str = "/spec/template/spec/nodeSelector"
-    value: dict[str, str]
-
-class NodeSelectorRemoval(BaseModel):
-    '''NodSelectorRemoval represents a patch to remove the target node selector from a Job's pod template.'''
-    op: str = "remove"
-    path: str
-
-
 # API endpoint
 @app.post("/mutate")
 def mutate_request(request: dict = Body(...)):
     '''API endpoint for the admission controller mutating webhook.'''
-    uid = request["request"]["uid"]
-    object_in = request["request"]["object"]
+    uid: str = request["request"]["uid"]
 
+    object_in: dict = request["request"]["object"]
     webhook_logger.info(f'Patching {object_in["kind"]} {object_in["metadata"]["namespace"]}/{object_in["metadata"]["name"]}')
 
-    return admission_review(uid, object_in)
+    response: dict = admission_review(uid, object_in)
+    webhook_logger.info(f'Response: {json.dumps(response)}')
+    return response
 
 
 def admission_review(uid: str, object_in: dict) -> dict:
-    '''Returns an AdmissionReview JSONPatch as requried by the k8s apiserver.'''
+    '''Returns an AdmissionReview JSONPatch for the given AdmissionRequest.'''
     return {
         "apiVersion": "admission.k8s.io/v1",
         "kind": "AdmissionReview",
@@ -58,7 +48,7 @@ def admission_review(uid: str, object_in: dict) -> dict:
             "uid": uid,
             "allowed": True,
             "patchType": "JSONPatch",
-            "status": {"message": f"Successfully patched {object_in['kind']}: {object_in['metadata']['namespace']}/{object_in['metadata']['name']}"},
+            "status": {"message": f"Patched {object_in['kind']}: {object_in['metadata']['namespace']}/{object_in['metadata']['name']}"},
             "patch": patch(object_in),
         },
     }
@@ -67,43 +57,44 @@ def admission_review(uid: str, object_in: dict) -> dict:
 def patch(object_in: dict) -> str:
     '''Returns a base64 encoded patch for the given k8s object.'''
     patches: list[dict] = make_patches(object_in)
-    return base64.b64encode(json.dumps(patches).encode()).decode()
+    return base64.b64encode(str(patches).encode()).decode()
 
 
-def make_patches(object_in: dict) -> str:
-    '''Returns a list of NodeSelectorPatch objects for the given k8s object.'''
+def make_patches(object_in: dict) -> JsonPatch:
+    '''Generates a JsonPatch for Job mutations that are based on environment variables.'''
     job_name: str = object_in["metadata"]["name"]
+    job_namespace: str = object_in["metadata"]["namespace"]
+    modified_object: dict = deepcopy(object_in)
 
-    # add job-key selector
-    patch_operations: list[dict] = [
-        NodeSelectorPatch(op="add", value={f"{job_key_label}": f"{job_key_value(object_in)}"}).dict()
-    ]
-    webhook_logger.info(f'Job: {job_name} Added nodeSelector: {job_key_label}: {job_key_value(object_in)}')
+    if "nodeSelector" not in modified_object["spec"]["template"]["spec"]:
+        modified_object["spec"]["template"]["spec"]["nodeSelector"] = {}
 
-    # handle FORCE_ON_DEMAND
+    # Add job-key node selector unconditionally.
+    modified_object["spec"]["template"]["spec"]["nodeSelector"][job_key_label] = job_key_value(job_name, job_namespace)
+    webhook_logger.info(f'Job: {job_name} Added nodeSelector: {job_key_label}: {job_key_value(job_name, job_namespace)}')
+
     if os.environ.get(FORCE_ON_DEMAND) == "true":
-        patch_operations.extend([
-           NodeSelectorRemoval(path=f"/spec/template/spec/nodeSelector/{reservation_name_label}").dict(),
-           NodeSelectorRemoval(path=f"/spec/template/spec/nodeSelector/{gke_spot_label}").dict(),
-        ])
-        webhook_logger.info(f'Job: {job_name} Removed nodeSelector for node label: {reservation_name_label}')
-        webhook_logger.info(f'Job: {job_name} Removed nodeSelector for node label: {gke_spot_label}')
+        # Remove reservation label if FORCE_ON_DEMAND is set.
+        if reservation_name_label in modified_object["spec"]["template"]["spec"]["nodeSelector"]:
+            del modified_object["spec"]["template"]["spec"]["nodeSelector"][reservation_name_label]
+            webhook_logger.info(f'Job: {job_name} Removed nodeSelector for node label: {reservation_name_label}')
+        # Remove spot label if FORCE_ON_DEMAND is set.
+        if gke_spot_label in modified_object["spec"]["template"]["spec"]["nodeSelector"]:
+            del modified_object["spec"]["template"]["spec"]["nodeSelector"][gke_spot_label]
+            webhook_logger.info(f'Job: {job_name} Removed nodeSelector for node label: {gke_spot_label}')
 
-    # handle RESERVATION_LOCATION_HINT and ALWAYS_HINT_TIME
+    # Set location hint nodeSelector if RESERVATION_LOCATION_HINT is set.
     location_hint_value: str = os.environ.get(LOCATION_HINT, "")
     if location_hint_value != "":
-        patch_operations.append(
-            NodeSelectorPatch(op="add", value={f"{gke_location_hint_label}": f"{location_hint_value}"}).dict()
-        )
+        modified_object["spec"]["template"]["spec"]["nodeSelector"][gke_location_hint_label] = location_hint_value
         webhook_logger.info(f'Job: {job_name} Added nodeSelector: {gke_location_hint_label}: {location_hint_value}')
 
-    return patch_operations
+    patch: JsonPatch = JsonPatch.from_diff(object_in, modified_object)
+    return patch
 
 
-def job_key_value(object_in: dict) -> str:
+def job_key_value(job_name: str, job_namespace: str) -> str:
     '''Returns the SHA1 hash of the namespaced Job name.'''
-    job_namespace: str = object_in["metadata"]["namespace"]
-    job_name: str = object_in["metadata"]["name"]
     return sha1(f'{job_namespace}/{job_name}')
 
 

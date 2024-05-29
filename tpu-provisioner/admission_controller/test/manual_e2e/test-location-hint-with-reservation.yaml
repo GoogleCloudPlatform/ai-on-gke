@@ -6,7 +6,6 @@ metadata:
   name: test-jobset-location-hint
   annotations:
     alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool # 1:1 job replica to node pool assignment
-    cloud.google.com/reservation-name: "my-reservation"
 spec:
   failurePolicy:
     maxRestarts: 3
@@ -22,6 +21,8 @@ spec:
         parallelism: 2
         template:
           spec:
+            nodeSelector:
+              cloud.google.com/reservation-name: "my-reservation"
             restartPolicy: Never
             containers:
             - name: tpu-job
