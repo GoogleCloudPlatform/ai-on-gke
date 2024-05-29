@@ -1,4 +1,4 @@
-namespace = "slabe-terraform"
+namespace = "slabe-jetstream"
 
 # How to (horizontally) scale the workload. Allowed values are:
 # - null (no scaling),

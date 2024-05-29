@@ -27,7 +27,7 @@ variable "credentials_config" {
   nullable = true
   default = {
     kubeconfig = {
-      path: "/usr/local/google/home/slabe/.kube/config"
+      path: "~/.kube/config"
     }
   }
   validation {

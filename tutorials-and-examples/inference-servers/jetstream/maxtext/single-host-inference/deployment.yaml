@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: maxengine-server
-  namespace: slabe-terraform
+  namespace: slabe-jetstream
 spec:
   replicas: 1
   selector:
@@ -16,7 +16,7 @@ spec:
       nodeSelector:
         cloud.google.com/gke-tpu-topology: 2x2
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
-      serviceAccountName: jetstream-sa
+      serviceAccountName: custom-metrics-stackdriver-adapter
       containers:
       - name: maxengine-server
         image: us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/maxengine-server:latest
@@ -52,7 +52,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jetstream-svc
-  namespace: slabe-terraform
+  namespace: slabe-jetstream
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/path: ""
@@ -71,11 +71,3 @@ spec:
   - protocol: TCP
     name: prometheus-client-http
     port: 9100
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: jetstream-sa
-  namespace: slabe-terraform
-  annotations:
-    iam.gke.io/gcp-service-account: cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com

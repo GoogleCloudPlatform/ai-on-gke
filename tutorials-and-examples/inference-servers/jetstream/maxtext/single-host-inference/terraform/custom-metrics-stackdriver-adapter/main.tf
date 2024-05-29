@@ -1,6 +1,6 @@
-resource "kubernetes_namespace_v1" "slabe-terraform" {
+resource "kubernetes_namespace_v1" "slabe-jetstream" {
   metadata {
-    name = "slabe-terraform"
+    name = "slabe-jetstream"
   }
 }
 
@@ -8,7 +8,7 @@ resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter-no-
   count = var.workload_identity.enabled ? 0 : 1
   metadata {
     name      = "custom-metrics-stackdriver-adapter"
-    namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+    namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
   }
 }
 
@@ -16,7 +16,7 @@ resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter-wi"
   count = var.workload_identity.enabled ? 1 : 0
   metadata {
     name      = "custom-metrics-stackdriver-adapter"
-    namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+    namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
     annotations = {
       "iam.gke.io/gcp-service-account" = google_service_account.cmsa-sa[0].email
     }
@@ -25,7 +25,7 @@ resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter-wi"
 
 resource "kubernetes_cluster_role_binding_v1" "custom-metrics-system-auth-delegator" {
   metadata {
-    name = "slabe-terraform:system:auth-delegator"
+    name = "slabe-jetstream:system:auth-delegator"
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
@@ -38,7 +38,7 @@ resource "kubernetes_cluster_role_binding_v1" "custom-metrics-system-auth-delega
       ? kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-wi[0].metadata[0].name
       : kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-no-wi[0].metadata[0].name
     )
-    namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+    namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
   }
 }
 
@@ -58,7 +58,7 @@ resource "kubernetes_role_binding_v1" "custom-metrics-auth-reader" {
       ? kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-wi[0].metadata[0].name
       : kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-no-wi[0].metadata[0].name
     )
-    namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+    namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
   }
 }
 
@@ -88,14 +88,14 @@ resource "kubernetes_cluster_role_binding_v1" "custom-metrics-resource-reader" {
       ? kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-wi[0].metadata[0].name
       : kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-no-wi[0].metadata[0].name
     )
-    namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+    namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
   }
 }
 
 resource "kubernetes_deployment_v1" "custom-metrics-stackdriver-adapter" {
   metadata {
     name      = "custom-metrics-stackdriver-adapter"
-    namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+    namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
     labels = {
       run     = "custom-metrics-stackdriver-adapter"
       k8s-app = "custom-metrics-stackdriver-adapter"
@@ -150,7 +150,7 @@ resource "kubernetes_deployment_v1" "custom-metrics-stackdriver-adapter" {
 resource "kubernetes_service_v1" "custom-metrics-stackdriver-adapter" {
   metadata {
     name      = "custom-metrics-stackdriver-adapter"
-    namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+    namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
     labels = {
       run                             = "custom-metrics-stackdriver-adapter"
       k8s-app                         = "custom-metrics-stackdriver-adapter"
@@ -183,7 +183,7 @@ resource "kubernetes_api_service_v1" "v1beta1-custom-metrics-k8s-io" {
     version_priority         = 100
     service {
       name      = kubernetes_service_v1.custom-metrics-stackdriver-adapter.metadata[0].name
-      namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+      namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
     }
     version = "v1beta1"
   }
@@ -200,7 +200,7 @@ resource "kubernetes_api_service_v1" "v1beta2-custom-metrics-k8s-io" {
     version_priority         = 200
     service {
       name      = kubernetes_service_v1.custom-metrics-stackdriver-adapter.metadata[0].name
-      namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+      namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
     }
     version = "v1beta2"
   }
@@ -217,7 +217,7 @@ resource "kubernetes_api_service_v1" "v1beta1-external-metrics-k8s-io" {
     version_priority         = 100
     service {
       name      = kubernetes_service_v1.custom-metrics-stackdriver-adapter.metadata[0].name
-      namespace = kubernetes_namespace_v1.slabe-terraform.metadata[0].name
+      namespace = kubernetes_namespace_v1.slabe-jetstream.metadata[0].name
     }
     version = "v1beta1"
   }
@@ -252,11 +252,15 @@ resource "google_service_account" "cmsa-sa" {
   project    = var.workload_identity.project_id
 }
 
+# Need to do this in terraform
+# gcloud projects add-iam-policy-binding tpu-vm-gke-testing --member=serviceAccount:cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com --role=roles/monitoring.viewer --role=roles/monitoring.metricWriter --role=roles/iam.serviceAccountTokenCreator --role=roles/storage.admin --role=roles/storage.objectAdmin --role=roles/storage.objectCreator
+# gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:tpu-vm-gke-testing.svc.id.goog[slabe-jetstream/custom-metrics-stackdriver-adapter]" cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com
+
 # Equivalent to:
 #   gcloud projects add-iam-policy-binding PROJECT_ID \
 #       --member=serviceAccount:cmsa-sa@PROJECT_ID.iam.gserviceaccount.com \
 #       --role=roles/monitoring.viewer
-resource "google_project_iam_binding" "cmsa-project-binding" {
+resource "google_project_iam_binding" "cmsa-project-binding-monitoring-viewer" {
   count   = var.workload_identity.enabled ? 1 : 0
   project = var.workload_identity.project_id
   role    = "roles/monitoring.viewer"
@@ -266,9 +270,22 @@ resource "google_project_iam_binding" "cmsa-project-binding" {
 }
 
 # Equivalent to:
+#   gcloud projects add-iam-policy-binding PROJECT_ID \
+#       --member=serviceAccount:cmsa-sa@PROJECT_ID.iam.gserviceaccount.com \
+#       --role=roles/iam.serviceAccountTokenCreator
+resource "google_project_iam_binding" "cmsa-project-binding-sa-token-creator" {
+  count   = var.workload_identity.enabled ? 1 : 0
+  project = var.workload_identity.project_id
+  role    = "roles/iam.serviceAccountTokenCreator"
+  members = [
+    "serviceAccount:${google_service_account.cmsa-sa[0].account_id}@${var.workload_identity.project_id}.iam.gserviceaccount.com"
+  ]
+}
+
+# Equivalent to:
 #   gcloud iam service-accounts add-iam-policy-binding \
 #       --role roles/iam.workloadIdentityUser \
-#       --member "serviceAccount:PROJECT_ID.svc.id.goog[slabe-terraform/custom-metrics-stackdriver-adapter]" \
+#       --member "serviceAccount:PROJECT_ID.svc.id.goog[slabe-jetstream/custom-metrics-stackdriver-adapter]" \
 #       cmsa-sa@PROJECT_ID.iam.gserviceaccount.com
 resource "google_service_account_iam_member" "cmsa-bind-to-gsa" {
   count              = var.workload_identity.enabled ? 1 : 0
