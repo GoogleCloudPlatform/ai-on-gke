@@ -23,34 +23,30 @@ SCRIPT_PATH="$(
 source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
 # Set directory and path variables
-clusters_directory="manifests/clusters"
-clusters_path="${GIT_REPOSITORY_PATH}/${clusters_directory}"
 namespace_directory="manifests/apps/${K8S_NAMESPACE}"
 namespace_path="${GIT_REPOSITORY_PATH}/${namespace_directory}"
+namespace_template_directory="templates/_namespace_template"
+namespace_template_path="${GIT_REPOSITORY_PATH}/${namespace_template_directory}"
 
-cd "${namespace_path}/.." || {
-  echo "Team namespace directory '${namespace_directory}' does not exist"
-}
+if [ ! -d "${namespace_path}" ]; then
+  echo "${K8S_NAMESPACE} folder doesnt exist in the configsync repo"
+  exit 100
+fi
 
-git rm -rf ${namespace_path}
+if [ -f "${namespace_path}/kustomization.yaml" ]; then
+  echo "${K8S_NAMESPACE} is already set up"
+  exit 0
+fi
 
-cd "${clusters_path}" || {
-  echo "Clusters directory '${clusters_directory}' does not exist"
-}
-
-git rm -rf ${clusters_path}/${K8S_NAMESPACE}/*
-sed -i "/- .\/${K8S_NAMESPACE}/d" ${clusters_path}/kustomization.yaml
-sed -i "/  - ${K8S_NAMESPACE}/d" ${clusters_path}/kuberay/values.yaml
+cp -r ${namespace_template_path}/app/* ${namespace_path}/
+sed -i "s?NAMESPACE?${K8S_NAMESPACE}?g" ${namespace_path}/*
+sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_HEAD?${GOOGLE_SERVICE_ACCOUNT_HEAD}?g" ${namespace_path}/*
+sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_HEAD?${K8S_SERVICE_ACCOUNT_HEAD}?g" ${namespace_path}/*
+sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_WORKER?${GOOGLE_SERVICE_ACCOUNT_WORKER}?g" ${namespace_path}/*
+sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER?${K8S_SERVICE_ACCOUNT_WORKER}?g" ${namespace_path}/*
 
 # Add, commit, and push changes to the repository
 cd ${GIT_REPOSITORY_PATH}
 git add .
-git commit -m "Removed manifests for '${K8S_NAMESPACE}' namespace"
+git commit -m "Manifests for RayCluster in '${K8S_NAMESPACE}' namespace"
 git push origin
-
-${SCRIPT_PATH}/helpers/wait_for_root_sync.sh $(git rev-parse HEAD)
-
-echo "Deleteing the namespace '${K8S_NAMESPACE}'..."
-kubectl --namespace ${K8S_NAMESPACE} delete all --all
-kubectl delete namespace ${K8S_NAMESPACE}
-echo "Namespace '${K8S_NAMESPACE}', deleted"
