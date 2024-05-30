@@ -25,7 +25,7 @@ source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 # Set directory and path variables
 clusters_directory="manifests/clusters"
 clusters_path="${GIT_REPOSITORY_PATH}/${clusters_directory}"
-templates_directory="templates/acm-template"
+templates_directory="templates/configsync"
 
 echo "Copying template files..."
 cp -r ${templates_directory}/* ${GIT_REPOSITORY_PATH}/

@@ -450,7 +450,7 @@ resource "null_resource" "template_manifests" {
   }
 
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template", "**") : md5("${path.module}/templates/acm-template/${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/configsync", "**") : md5("${path.module}/templates/configsync/${f}")]))
     md5_script = filemd5("${path.module}/scripts/template_manifests.sh")
   }
 }
@@ -475,7 +475,7 @@ resource "null_resource" "cluster_manifests" {
   }
 
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_cluster_template", "**") : md5("${path.module}/templates/configsync/templates/_cluster_template${f}")]))
     md5_script = filemd5("${path.module}/scripts/cluster_manifests.sh")
   }
 }
@@ -522,7 +522,7 @@ resource "null_resource" "kueue" {
   }
 
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_cluster_template", "**") : md5("${path.module}/templates/configsync/templates/_cluster_template/${f}")]))
     md5_script = filemd5("${path.module}/scripts/kueue_manifests.sh")
   }
 }
@@ -546,7 +546,7 @@ resource "null_resource" "kuberay_manifests" {
   }
 
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/kuberay", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/kuberay/${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_cluster_template/kuberay", "**") : md5("${path.module}/templates/configsync/templates/_cluster_template/kuberay/${f}")]))
     md5_script = filemd5("${path.module}/scripts/kuberay_manifests.sh")
   }
 }
@@ -615,7 +615,7 @@ resource "null_resource" "namespace_manifests" {
     github_token        = var.github_token
     github_user         = var.github_user
     kubeconfig          = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
-    md5_files           = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/team", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/team/${f}")]))
+    md5_files           = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_cluster_template/team", "**") : md5("${path.module}/templates/configsync/templates/_cluster_template/team/${f}")]))
     md5_script          = filemd5("${path.module}/scripts/namespace_manifests.sh")
     namespace           = var.namespace
     repo_sync_name      = "${var.environment_name}-${var.namespace}"
@@ -707,7 +707,7 @@ resource "null_resource" "ray_cluster_namespace_manifests" {
   }
 
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_namespace_template/app", "**") : md5("${path.module}/templates/acm-template/templates/_namespace_template/app/${f}")]))
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_namespace_template/app", "**") : md5("${path.module}/templates/configsync/templates/_namespace_template/app/${f}")]))
     md5_script = filemd5("${path.module}/scripts/ray_cluster_namespace_manifests.sh")
   }
 }
