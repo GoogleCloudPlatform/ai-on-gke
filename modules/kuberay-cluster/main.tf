@@ -202,7 +202,7 @@ resource "kubernetes_network_policy" "kuberay-cluster-allow-network-policy" {
           match_expressions {
             key      = "kubernetes.io/metadata.name"
             operator = "In"
-            values   = [var.namespace, "gke-gmp-system"]
+            values   = [var.namespace, "gke-gmp-system", "gmp-system"]
           }
         }
       }
