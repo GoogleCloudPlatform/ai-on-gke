@@ -22,20 +22,21 @@ SCRIPT_PATH="$(
 
 source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
-cd ${GIT_REPOSITORY_PATH}/manifests/clusters
-if [ -f "kustomization.yaml" ]; then
-  exit 0
-fi
+# Set directory and path variables
+clusters_directory="manifests/clusters"
+clusters_path="${GIT_REPOSITORY_PATH}/${clusters_directory}"
+templates_directory="templates/acm-template"
 
-yamlfiles=$(find . -type f -name "*.yaml")
-cp ../../templates/_cluster_template/kustomization.yaml .
-for yamlfile in $(echo ${yamlfiles}); do
-  cat <<EOF >>kustomization.yaml
-- ${yamlfile}
-EOF
-done
+echo "Copying template files..."
+cp -r ${templates_directory}/* ${GIT_REPOSITORY_PATH}/
 
-cp -r ../../templates/_cluster_template/kuberay .
+cd ${clusters_path} || {
+  echo "Failed to copy template files"
+  exit 100
+}
+
+# Add, commit, and push changes to the repository
+cd ${GIT_REPOSITORY_PATH}
 git add .
-git commit -m "Added manifests to install kuberay operator."
+git commit -m "Added templates and scaffolding"
 git push origin
