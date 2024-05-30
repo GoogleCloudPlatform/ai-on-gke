@@ -14,5 +14,18 @@
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: kueue-system
 resources:
+- kueue.yaml
 
+# There is no publicly available Kueue Helm chart repository and kustomize does not support private or OCI-based (Artifact Registry) Helm repository
+# https://github.com/kubernetes-sigs/kueue/issues/2311
+# https://cloud.google.com/kubernetes-engine/enterprise/config-sync/docs/concepts/kustomize
+# helmCharts:
+# - includeCRDs: true
+#   name: kueue
+#   namespace: kueue-system
+#   releaseName: kueue
+#   repo: <repo>
+#   valuesFile: kueue_values.yaml
+#   version: 0.1.0

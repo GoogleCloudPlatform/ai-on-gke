@@ -25,32 +25,18 @@ source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 # Set directory and path variables
 clusters_directory="manifests/clusters"
 clusters_path="${GIT_REPOSITORY_PATH}/${clusters_directory}"
-namespace_directory="manifests/apps/${K8S_NAMESPACE}"
-namespace_path="${GIT_REPOSITORY_PATH}/${namespace_directory}"
 
-cd "${namespace_path}/.." || {
-  echo "Team namespace directory '${namespace_directory}' does not exist"
-}
+ns_exists=$(grep ${K8S_NAMESPACE} ${clusters_path}/kuberay/values.yaml | wc -l)
+if [ "${ns_exists}" -ne 0 ]; then
+  echo "namespace '${K8S_NAMESPACE}' already present in values.yaml"
+  exit 0
+fi
 
-git rm -rf ${namespace_path}
-
-cd "${clusters_path}" || {
-  echo "Clusters directory '${clusters_directory}' does not exist"
-}
-
-git rm -rf ${clusters_path}/${K8S_NAMESPACE}/*
-sed -i "/- .\/${K8S_NAMESPACE}/d" ${clusters_path}/kustomization.yaml
-sed -i "/  - ${K8S_NAMESPACE}/d" ${clusters_path}/kuberay/values.yaml
+# TODO: this will need to be fixed for multiple namespaces
+sed -i "s/watchNamespace:/watchNamespace:\n  - ${K8S_NAMESPACE}/g" ${clusters_path}/kuberay/values.yaml
 
 # Add, commit, and push changes to the repository
 cd ${GIT_REPOSITORY_PATH}
 git add .
-git commit -m "Removed manifests for '${K8S_NAMESPACE}' namespace"
+git commit -m "Configured KubeRay operator to watch '${K8S_NAMESPACE}' namespace"
 git push origin
-
-${SCRIPT_PATH}/helpers/wait_for_root_sync.sh $(git rev-parse HEAD)
-
-echo "Deleteing the namespace '${K8S_NAMESPACE}'..."
-kubectl --namespace ${K8S_NAMESPACE} delete all --all
-kubectl delete namespace ${K8S_NAMESPACE}
-echo "Namespace '${K8S_NAMESPACE}', deleted"

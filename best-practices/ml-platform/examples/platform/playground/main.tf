@@ -424,8 +424,8 @@ gcloud container fleet memberships get-credentials ${self.triggers.membership_id
 
 data "kubernetes_namespace_v1" "team" {
   depends_on = [
-    null_resource.create_git_cred_ns,
-    null_resource.create_namespace
+    null_resource.git_cred_secret_ns,
+    null_resource.namespace_manifests
   ]
 
   metadata {
@@ -433,14 +433,37 @@ data "kubernetes_namespace_v1" "team" {
   }
 }
 
-resource "null_resource" "create_cluster_yamls" {
+resource "null_resource" "template_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_cluster_yamls.sh"
+    command = "${path.module}/scripts/template_manifests.sh"
+    environment = {
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
+    }
+  }
+
+  triggers = {
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template", "**") : md5("${path.module}/templates/acm-template/${f}")]))
+    md5_script = filemd5("${path.module}/scripts/template_manifests.sh")
+  }
+}
+
+resource "null_resource" "cluster_manifests" {
+  depends_on = [
+    google_gke_hub_feature_membership.cluster_configmanagement,
+    module.gke,
+    null_resource.template_manifests
+  ]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/cluster_manifests.sh"
     environment = {
       CLUSTER_ENV    = var.environment_name
       CLUSTER_NAME   = module.gke.cluster_name
@@ -452,19 +475,19 @@ resource "null_resource" "create_cluster_yamls" {
   }
 
   triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template", "**") : md5("${path.module}/templates/acm-template/${f}")]))
-    md5_script = filemd5("${path.module}/scripts/create_cluster_yamls.sh")
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template${f}")]))
+    md5_script = filemd5("${path.module}/scripts/cluster_manifests.sh")
   }
 }
 
-resource "null_resource" "create_git_cred_cms" {
+resource "null_resource" "git_cred_secret_cms" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
     null_resource.connect_gateway_kubeconfig
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_git_cred.sh"
+    command = "${path.module}/scripts/git_cred_secret.sh"
     environment = {
       GIT_EMAIL      = var.github_email
       GIT_REPOSITORY = local.git_repository
@@ -477,20 +500,42 @@ resource "null_resource" "create_git_cred_cms" {
 
   triggers = {
     md5_credentials = md5(join("", [var.github_user, var.github_token]))
-    md5_script      = filemd5("${path.module}/scripts/create_git_cred.sh")
+    md5_script      = filemd5("${path.module}/scripts/git_cred_secret.sh")
   }
 }
 
-resource "null_resource" "install_kuberay_operator" {
+resource "null_resource" "kueue" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
-    null_resource.create_cluster_yamls,
-    null_resource.create_git_cred_cms,
+    null_resource.cluster_manifests
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/install_kuberay_operator.sh"
+    command = "${path.module}/scripts/kueue_manifests.sh"
+    environment = {
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
+    }
+  }
+
+  triggers = {
+    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/${f}")]))
+    md5_script = filemd5("${path.module}/scripts/kueue_manifests.sh")
+  }
+}
+
+resource "null_resource" "kuberay_manifests" {
+  depends_on = [
+    google_gke_hub_feature_membership.cluster_configmanagement,
+    module.gke,
+    null_resource.kueue,
+  ]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/kuberay_manifests.sh"
     environment = {
       GIT_EMAIL      = var.github_email
       GIT_REPOSITORY = local.git_repository
@@ -502,7 +547,7 @@ resource "null_resource" "install_kuberay_operator" {
 
   triggers = {
     md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/kuberay", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/kuberay/${f}")]))
-    md5_script = filemd5("${path.module}/scripts/install_kuberay_operator.sh")
+    md5_script = filemd5("${path.module}/scripts/kuberay_manifests.sh")
   }
 }
 
@@ -526,15 +571,16 @@ resource "google_service_account_iam_member" "namespace_default_iam_workload_ide
   service_account_id = google_service_account.namespace_default.id
 }
 
-resource "null_resource" "create_namespace" {
+resource "null_resource" "namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
-    null_resource.install_kuberay_operator
+    null_resource.connect_gateway_kubeconfig,
+    null_resource.kuberay_manifests
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_namespace.sh"
+    command = "${path.module}/scripts/namespace_manifests.sh"
     environment = {
       CLUSTER_ENV    = var.environment_name
       CLUSTER_NAME   = module.gke.cluster_name
@@ -570,7 +616,7 @@ resource "null_resource" "create_namespace" {
     github_user         = var.github_user
     kubeconfig          = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
     md5_files           = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_cluster_template/team", "**") : md5("${path.module}/templates/acm-template/templates/_cluster_template/team/${f}")]))
-    md5_script          = filemd5("${path.module}/scripts/create_namespace.sh")
+    md5_script          = filemd5("${path.module}/scripts/namespace_manifests.sh")
     namespace           = var.namespace
     repo_sync_name      = "${var.environment_name}-${var.namespace}"
     repo_sync_namespace = var.namespace
@@ -578,14 +624,14 @@ resource "null_resource" "create_namespace" {
   }
 }
 
-resource "null_resource" "create_git_cred_ns" {
+resource "null_resource" "git_cred_secret_ns" {
   depends_on = [
     null_resource.connect_gateway_kubeconfig,
-    null_resource.create_namespace
+    null_resource.namespace_manifests
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/create_git_cred.sh"
+    command = "${path.module}/scripts/git_cred_secret.sh"
     environment = {
       GIT_TOKEN     = var.github_token
       GIT_USERNAME  = var.github_user
@@ -596,7 +642,7 @@ resource "null_resource" "create_git_cred_ns" {
 
   triggers = {
     md5_credentials = md5(join("", [var.github_user, var.github_token]))
-    md5_script      = filemd5("${path.module}/scripts/create_git_cred.sh")
+    md5_script      = filemd5("${path.module}/scripts/git_cred_secret.sh")
   }
 }
 
@@ -637,16 +683,16 @@ resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_
   service_account_id = google_service_account.namespace_ray_worker.id
 }
 
-resource "null_resource" "install_ray_cluster" {
+resource "null_resource" "ray_cluster_namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
-    null_resource.create_git_cred_ns,
-    null_resource.create_namespace
+    null_resource.git_cred_secret_ns,
+    null_resource.namespace_manifests
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/install_ray_cluster.sh"
+    command = "${path.module}/scripts/ray_cluster_namespace_manifests.sh"
     environment = {
       GIT_EMAIL                     = var.github_email
       GIT_REPOSITORY                = local.git_repository
@@ -662,20 +708,20 @@ resource "null_resource" "install_ray_cluster" {
 
   triggers = {
     md5_files  = md5(join("", [for f in fileset("${path.module}/templates/acm-template/templates/_namespace_template/app", "**") : md5("${path.module}/templates/acm-template/templates/_namespace_template/app/${f}")]))
-    md5_script = filemd5("${path.module}/scripts/install_ray_cluster.sh")
+    md5_script = filemd5("${path.module}/scripts/ray_cluster_namespace_manifests.sh")
   }
 }
 
-resource "null_resource" "manage_ray_ns" {
+resource "null_resource" "kuberay_watch_namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
     module.gke,
-    null_resource.create_git_cred_ns,
-    null_resource.install_ray_cluster
+    null_resource.git_cred_secret_ns,
+    null_resource.ray_cluster_namespace_manifests
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/manage_ray_ns.sh"
+    command = "${path.module}/scripts/kuberay_watch_namespace_manifests.sh"
     environment = {
       GIT_EMAIL      = var.github_email
       GIT_REPOSITORY = local.git_repository
@@ -686,7 +732,7 @@ resource "null_resource" "manage_ray_ns" {
   }
 
   triggers = {
-    md5_script = filemd5("${path.module}/scripts/manage_ray_ns.sh")
+    md5_script = filemd5("${path.module}/scripts/kuberay_watch_namespace_manifests.sh")
   }
 }
 

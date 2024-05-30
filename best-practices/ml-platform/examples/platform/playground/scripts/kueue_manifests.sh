@@ -25,32 +25,26 @@ source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 # Set directory and path variables
 clusters_directory="manifests/clusters"
 clusters_path="${GIT_REPOSITORY_PATH}/${clusters_directory}"
-namespace_directory="manifests/apps/${K8S_NAMESPACE}"
-namespace_path="${GIT_REPOSITORY_PATH}/${namespace_directory}"
-
-cd "${namespace_path}/.." || {
-  echo "Team namespace directory '${namespace_directory}' does not exist"
-}
-
-git rm -rf ${namespace_path}
+cluster_template_directory="templates/_cluster_template"
+cluster_template_path="${GIT_REPOSITORY_PATH}/${cluster_template_directory}"
 
 cd "${clusters_path}" || {
   echo "Clusters directory '${clusters_directory}' does not exist"
+  exit 100
 }
 
-git rm -rf ${clusters_path}/${K8S_NAMESPACE}/*
-sed -i "/- .\/${K8S_NAMESPACE}/d" ${clusters_path}/kustomization.yaml
-sed -i "/  - ${K8S_NAMESPACE}/d" ${clusters_path}/kuberay/values.yaml
+cp -pr ${cluster_template_path}/kueue-system ${clusters_path}/
+cp -pr ${cluster_template_path}/namespace-kueue-system.yaml ${clusters_path}/
+
+# Added entries to the kustomization file
+resources=$(find ${clusters_path} -maxdepth 1 -mindepth 1 -type d | sort)
+resources+=" "
+export resources+=$(find ${clusters_path} -maxdepth 1 -type f -name "*.yaml" ! -name "kustomization.yaml" ! -name "*values.yaml" | sort)
+export kustomization_file="${clusters_path}/kustomization.yaml"
+source ${SCRIPT_PATH}/helpers/add_to_kustomization.sh
 
 # Add, commit, and push changes to the repository
 cd ${GIT_REPOSITORY_PATH}
 git add .
-git commit -m "Removed manifests for '${K8S_NAMESPACE}' namespace"
+git commit -m "Manifests for Kueue"
 git push origin
-
-${SCRIPT_PATH}/helpers/wait_for_root_sync.sh $(git rev-parse HEAD)
-
-echo "Deleteing the namespace '${K8S_NAMESPACE}'..."
-kubectl --namespace ${K8S_NAMESPACE} delete all --all
-kubectl delete namespace ${K8S_NAMESPACE}
-echo "Namespace '${K8S_NAMESPACE}', deleted"
