@@ -12,11 +12,136 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
-  depends_on = [
-    module.gke
-  ]
+# SYSTEM
+###############################################################################
+resource "google_container_node_pool" "system" {
+  # Variables
+  cluster            = module.gke.cluster_name
+  initial_node_count = 1
+  location           = var.subnet_01_region
+  name               = "system"
+  project            = data.google_project.environment.project_id
 
+  # Blocks
+  autoscaling {
+    location_policy      = "BALANCED"
+    total_max_node_count = 32
+    total_min_node_count = 1
+  }
+
+  network_config {
+    enable_private_nodes = true
+  }
+
+  node_config {
+    # Variables
+    machine_type    = "e2-standard-4"
+    service_account = google_service_account.cluster.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    # Blocks
+    gcfs_config {
+      enabled = true
+    }
+
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      initial_node_count,
+      node_config[0].labels,
+      node_config[0].taint,
+    ]
+  }
+
+  timeouts {
+    create = "30m"
+    update = "20m"
+  }
+}
+
+
+
+# CPU
+###############################################################################
+resource "google_container_node_pool" "cpu_n2s8" {
+  depends_on = [google_container_node_pool.system]
+
+  # Variables
+  cluster            = module.gke.cluster_name
+  initial_node_count = 1
+  location           = var.subnet_01_region
+  name               = "cpu-n2s8"
+  project            = data.google_project.environment.project_id
+
+  # Blocks
+  autoscaling {
+    location_policy      = "BALANCED"
+    total_max_node_count = 32
+    total_min_node_count = 1
+  }
+
+  network_config {
+    enable_private_nodes = true
+  }
+
+  node_config {
+    # Variables
+    labels = {
+      "resource-model" : "n2"
+      "resource-type" : "cpu"
+    }
+    machine_type    = "n2-standard-8"
+    service_account = google_service_account.cluster.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    # Blocks
+    gcfs_config {
+      enabled = true
+    }
+
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+    }
+
+    taint {
+      effect = "NO_SCHEDULE"
+      key    = "on-demand"
+      value  = true
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      initial_node_count,
+      node_config[0].labels,
+      node_config[0].taint,
+    ]
+  }
+
+  timeouts {
+    create = "30m"
+    update = "20m"
+  }
+}
+
+
+
+# GPU
+###############################################################################
+resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
+  depends_on = [google_container_node_pool.system]
+
+  # Variables
   cluster  = module.gke.cluster_name
   location = var.subnet_01_region
   name     = "gpu-h100x8-a3h8-dws"
@@ -26,10 +151,11 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
   ]
   project = data.google_project.environment.project_id
 
+  # Blocks
   autoscaling {
-    total_min_node_count = 0
-    total_max_node_count = 1000
     location_policy      = "ANY"
+    total_max_node_count = 1000
+    total_min_node_count = 0
   }
 
   lifecycle {
@@ -44,8 +170,10 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
   }
 
   node_config {
+    # Variables
     labels = {
-      "resource-type" : "dws-ondemand"
+      "resource-model" : "h100"
+      "resource-type" : "gpu"
     }
     machine_type    = "a3-highgpu-8g"
     service_account = google_service_account.cluster.email
@@ -53,6 +181,7 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
       "https://www.googleapis.com/auth/cloud-platform"
     ]
 
+    # Blocks
     ephemeral_storage_local_ssd_config {
       local_ssd_count = 16
     }
@@ -62,8 +191,12 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
     }
 
     guest_accelerator {
-      type  = "nvidia-h100-80gb"
       count = 8
+      type  = "nvidia-h100-80gb"
+
+      gpu_driver_installation_config {
+        gpu_driver_version = var.gpu_driver_version
+      }
     }
 
     reservation_affinity {
@@ -75,13 +208,10 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
       enable_secure_boot          = true
     }
 
-    dynamic "taint" {
-      for_each = var.ondemand_taints
-      content {
-        effect = taint.value.effect
-        key    = taint.value.key
-        value  = taint.value.value
-      }
+    taint {
+      effect = "NO_SCHEDULE"
+      key    = "on-demand"
+      value  = true
     }
   }
 
@@ -94,3 +224,242 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
     update = "20m"
   }
 }
+
+###############################################################################
+
+resource "google_container_node_pool" "gpu_l4x2_g2s24" {
+  depends_on = [google_container_node_pool.system]
+
+  # Variables
+  cluster  = module.gke.cluster_name
+  location = var.subnet_01_region
+  name     = "gpu-l4x2-g2s24"
+  project  = data.google_project.environment.project_id
+
+  autoscaling {
+    location_policy      = "ANY"
+    total_max_node_count = 1000
+    total_min_node_count = 0
+  }
+
+  lifecycle {
+    ignore_changes = [
+      node_config[0].labels,
+      node_config[0].taint,
+    ]
+  }
+
+  network_config {
+    enable_private_nodes = true
+  }
+
+  node_config {
+    # Variables
+    labels = {
+      "resource-model" : "l4"
+      "resource-type" : "gpu"
+    }
+    machine_type    = "g2-standard-24"
+    service_account = google_service_account.cluster.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    # Blocks
+    gcfs_config {
+      enabled = true
+    }
+
+    guest_accelerator {
+      count = 2
+      type  = "nvidia-l4"
+
+      gpu_driver_installation_config {
+        gpu_driver_version = var.gpu_driver_version
+      }
+    }
+
+    reservation_affinity {
+      consume_reservation_type = "NO_RESERVATION"
+    }
+
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+    }
+
+    taint {
+      effect = "NO_SCHEDULE"
+      key    = "on-demand"
+      value  = true
+    }
+  }
+
+  timeouts {
+    create = "30m"
+    update = "20m"
+  }
+}
+
+###############################################################################
+
+resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
+  depends_on = [google_container_node_pool.system]
+
+  # Variables
+  cluster  = module.gke.cluster_name
+  location = var.subnet_01_region
+  name     = "gpu-l4x2-g2s24-dws"
+  project  = data.google_project.environment.project_id
+
+  autoscaling {
+    location_policy      = "ANY"
+    total_max_node_count = 1000
+    total_min_node_count = 0
+  }
+
+  lifecycle {
+    ignore_changes = [
+      node_config[0].labels,
+      node_config[0].taint,
+    ]
+  }
+
+  network_config {
+    enable_private_nodes = true
+  }
+
+  node_config {
+    # Variables
+    labels = {
+      "resource-model" : "l4"
+      "resource-type" : "gpu"
+    }
+    machine_type    = "g2-standard-24"
+    service_account = google_service_account.cluster.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    # Blocks
+    gcfs_config {
+      enabled = true
+    }
+
+    guest_accelerator {
+      count = 2
+      type  = "nvidia-l4"
+
+      gpu_driver_installation_config {
+        gpu_driver_version = var.gpu_driver_version
+      }
+    }
+
+    reservation_affinity {
+      consume_reservation_type = "NO_RESERVATION"
+    }
+
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+    }
+
+    taint {
+      effect = "NO_SCHEDULE"
+      key    = "on-demand"
+      value  = true
+    }
+  }
+
+  queued_provisioning {
+    enabled = true
+  }
+
+  timeouts {
+    create = "30m"
+    update = "20m"
+  }
+}
+
+###############################################################################
+
+resource "google_container_node_pool" "gpu_l4x2_g2s24_spot" {
+  depends_on = [google_container_node_pool.system]
+
+  # Variables
+  cluster  = module.gke.cluster_name
+  location = var.subnet_01_region
+  name     = "gpu-l4x2-g2s24-spot"
+  project  = data.google_project.environment.project_id
+
+  # Blocks
+  autoscaling {
+    location_policy      = "ANY"
+    total_max_node_count = 1000
+    total_min_node_count = 0
+  }
+
+  lifecycle {
+    ignore_changes = [
+      node_config[0].labels,
+      node_config[0].taint,
+    ]
+  }
+
+  network_config {
+    enable_private_nodes = true
+  }
+
+  node_config {
+    # Variables
+    labels = {
+      "resource-model" : "l4"
+      "resource-type" : "gpu"
+    }
+    machine_type    = "g2-standard-24"
+    service_account = google_service_account.cluster.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+    spot = true
+
+    # Blocks
+    gcfs_config {
+      enabled = true
+    }
+
+    guest_accelerator {
+      count = 2
+      type  = "nvidia-l4"
+
+      gpu_driver_installation_config {
+        gpu_driver_version = var.gpu_driver_version
+      }
+    }
+
+    reservation_affinity {
+      consume_reservation_type = "NO_RESERVATION"
+    }
+
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+    }
+
+    taint {
+      effect = "NO_SCHEDULE"
+      key    = "spot"
+      value  = true
+    }
+  }
+
+  timeouts {
+    create = "30m"
+    update = "20m"
+  }
+}
+
+
+
+# TPU
+###############################################################################
