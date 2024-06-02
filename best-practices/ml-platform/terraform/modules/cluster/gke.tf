@@ -134,6 +134,12 @@ resource "google_container_cluster" "mlp" {
   ip_allocation_policy {
   }
 
+  lifecycle {
+    ignore_changes = [
+      node_config[0]
+    ]
+  }
+
   logging_config {
     enable_components = [
       "APISERVER",

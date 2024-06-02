@@ -207,115 +207,10 @@ module "gke" {
   project_id                  = data.google_project.environment.project_id
   region                      = var.subnet_01_region
   release_channel             = "RAPID"
-  remove_default_node_pool    = false
+  remove_default_node_pool    = true
   service_account             = google_service_account.cluster.email
   subnet                      = module.create-vpc.subnet-1
   zone                        = "${var.subnet_01_region}-a"
-}
-
-module "node_pool_cpu_n2s8" {
-  source = "../../../terraform/modules/node-pools"
-
-  depends_on = [
-    module.gke
-  ]
-
-  autoscaling = {
-    location_policy      = "BALANCED"
-    total_max_node_count = 32
-    total_min_node_count = 1
-  }
-  cluster_name       = module.gke.cluster_name
-  initial_node_count = 1
-  location           = var.subnet_01_region
-  machine_type       = "n2-standard-8"
-  node_pool_name     = "cpu-n2s8"
-  project_id         = data.google_project.environment.project_id
-  resource_type      = "cpu"
-  service_account    = google_service_account.cluster.email
-}
-
-module "node_pool_gpu_l4x2_g2s24" {
-  source = "../../../terraform/modules/node-pools"
-
-  depends_on = [
-    module.gke
-  ]
-
-  cluster_name = module.gke.cluster_name
-  guest_accelerator = {
-    count = 2
-    type  = "nvidia-l4"
-    gpu_driver_installation_config = {
-      gpu_driver_version = var.gpu_driver_version
-    }
-  }
-  location        = var.subnet_01_region
-  node_pool_name  = "gpu-l4x2-g2s24"
-  project_id      = data.google_project.environment.project_id
-  resource_type   = "gpu-l4"
-  service_account = google_service_account.cluster.email
-  taints          = var.ondemand_taints
-}
-
-#
-# Removed reservation for cost savings
-#
-
-# module "reservation" {
-#   source = "../../../terraform/modules/vm-reservations"
-
-#   cluster_name = module.gke.cluster_name
-#   project_id   = data.google_project.environment.project_id
-#   zone         = "${var.subnet_01_region}-a"
-# }
-
-# module "node_pool_gpu_l4x2_g2s24_res" {
-#   source = "../../../terraform/modules/node-pools"
-
-#   depends_on = [
-#     module.reservation
-#   ]
-
-#   cluster_name = module.gke.cluster_name
-#   guest_accelerator = {
-#     count = 2
-#     type  = "nvidia-l4"
-#   }
-#   location       = var.subnet_01_region
-#   node_pool_name = "gpu-l4x2-g2s24-res"
-#   project_id     = data.google_project.environment.project_id
-#   reservation_affinity = {
-#     consume_reservation_type = "SPECIFIC_RESERVATION"
-#     key                      = "compute.googleapis.com/reservation-name"
-#     values                   = [module.reservation.reservation_name]
-#   }
-#   resource_type   = "gpu-l4-reservation"
-#   service_account = google_service_account.cluster.email
-#   taints          = var.reserved_taints
-# }
-
-module "node_pool_gpu_l4x2_g2s24_spot" {
-  source = "../../../terraform/modules/node-pools"
-
-  depends_on = [
-    module.gke
-  ]
-
-  cluster_name = module.gke.cluster_name
-  guest_accelerator = {
-    count = 2
-    type  = "nvidia-l4"
-    gpu_driver_installation_config = {
-      gpu_driver_version = var.gpu_driver_version
-    }
-  }
-  location        = var.subnet_01_region
-  node_pool_name  = "gpu-l4x2-g2s24-spot"
-  project_id      = data.google_project.environment.project_id
-  resource_type   = "gpu-l4-spot"
-  service_account = google_service_account.cluster.email
-  taints          = var.spot_taints
 }
 
 resource "google_gke_hub_membership" "cluster" {
@@ -337,6 +232,7 @@ resource "google_gke_hub_membership" "cluster" {
 
 resource "google_gke_hub_feature_membership" "cluster_configmanagement" {
   depends_on = [
+    google_container_node_pool.system,
     google_project_service.anthos_googleapis_com,
     google_project_service.anthosconfigmanagement_googleapis_com,
     google_project_service.gkeconnect_googleapis_com,
@@ -435,8 +331,7 @@ data "kubernetes_namespace_v1" "team" {
 
 resource "null_resource" "template_manifests" {
   depends_on = [
-    google_gke_hub_feature_membership.cluster_configmanagement,
-    module.gke,
+    google_gke_hub_feature_membership.cluster_configmanagement
   ]
 
   provisioner "local-exec" {
@@ -458,7 +353,6 @@ resource "null_resource" "template_manifests" {
 resource "null_resource" "cluster_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    module.gke,
     null_resource.template_manifests
   ]
 
@@ -507,7 +401,6 @@ resource "null_resource" "git_cred_secret_cms" {
 resource "null_resource" "kueue" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    module.gke,
     null_resource.cluster_manifests
   ]
 
@@ -530,7 +423,6 @@ resource "null_resource" "kueue" {
 resource "null_resource" "kuberay_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    module.gke,
     null_resource.kueue,
   ]
 
@@ -574,7 +466,6 @@ resource "google_service_account_iam_member" "namespace_default_iam_workload_ide
 resource "null_resource" "namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    module.gke,
     null_resource.connect_gateway_kubeconfig,
     null_resource.kuberay_manifests
   ]
@@ -646,6 +537,28 @@ resource "null_resource" "git_cred_secret_ns" {
   }
 }
 
+resource "null_resource" "kuberay_watch_namespace_manifests" {
+  depends_on = [
+    google_gke_hub_feature_membership.cluster_configmanagement,
+    null_resource.namespace_manifests
+  ]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/kuberay_watch_namespace_manifests.sh"
+    environment = {
+      GIT_EMAIL      = var.github_email
+      GIT_REPOSITORY = local.git_repository
+      GIT_TOKEN      = var.github_token
+      GIT_USERNAME   = var.github_user
+      K8S_NAMESPACE  = var.namespace
+    }
+  }
+
+  triggers = {
+    md5_script = filemd5("${path.module}/scripts/kuberay_watch_namespace_manifests.sh")
+  }
+}
+
 locals {
   ray_head_kubernetes_service_account   = "ray-head"
   ray_worker_kubernetes_service_account = "ray-worker"
@@ -686,9 +599,7 @@ resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_
 resource "null_resource" "ray_cluster_namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    module.gke,
-    null_resource.git_cred_secret_ns,
-    null_resource.namespace_manifests
+    null_resource.kuberay_watch_namespace_manifests
   ]
 
   provisioner "local-exec" {
@@ -712,27 +623,27 @@ resource "null_resource" "ray_cluster_namespace_manifests" {
   }
 }
 
-resource "null_resource" "kuberay_watch_namespace_manifests" {
+resource "null_resource" "wait_for_configsync" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    module.gke,
-    null_resource.git_cred_secret_ns,
-    null_resource.ray_cluster_namespace_manifests
+    null_resource.gateway_manifests
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/kuberay_watch_namespace_manifests.sh"
+    command = "${path.module}/scripts/wait_for_configsync.sh"
     environment = {
-      GIT_EMAIL      = var.github_email
-      GIT_REPOSITORY = local.git_repository
-      GIT_TOKEN      = var.github_token
-      GIT_USERNAME   = var.github_user
-      K8S_NAMESPACE  = var.namespace
+      GIT_EMAIL           = var.github_email
+      GIT_REPOSITORY      = local.git_repository
+      GIT_TOKEN           = var.github_token
+      GIT_USERNAME        = var.github_user
+      REPO_SYNC_NAME      = "${var.environment_name}-${data.kubernetes_namespace_v1.team.metadata[0].name}"
+      REPO_SYNC_NAMESPACE = data.kubernetes_namespace_v1.team.metadata[0].name
+      ROOT_SYNC_NAME      = "root-sync"
     }
   }
 
   triggers = {
-    md5_script = filemd5("${path.module}/scripts/kuberay_watch_namespace_manifests.sh")
+    md5_script = filemd5("${path.module}/scripts/wait_for_configsync.sh")
   }
 }
 

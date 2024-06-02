@@ -175,9 +175,8 @@ resource "null_resource" "gateway_manifests" {
   depends_on = [
     google_compute_managed_ssl_certificate.external_gateway,
     google_endpoints_service.ray_dashboard_https,
-    kubernetes_secret_v1.ray_head_client,
-    local.configsync_repository,
-    module.gke
+    google_gke_hub_feature_membership.cluster_configmanagement,
+    kubernetes_secret_v1.ray_head_client
   ]
 
   provisioner "local-exec" {

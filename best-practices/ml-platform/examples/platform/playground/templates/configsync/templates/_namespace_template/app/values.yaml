@@ -66,9 +66,10 @@ head:
       ephemeral-storage: 10Gi
   annotations: {}
   nodeSelector:
+    resource-type: "cpu"
     iam.gke.io/gke-metadata-server-enabled: "true"
   tolerations:
-  - key: "reserved"
+  - key: "on-demand"
     operator: "Exists"
     effect: "NoSchedule"
   affinity: {}
@@ -145,11 +146,16 @@ worker:
     requests:
       cpu: 2
       memory: "4G"
-  annotations:
-    key: value
+  annotations: {}
   nodeSelector:
-    cloud.google.com/machine-family: n2
-  tolerations: []
+    resource-type: cpu
+  tolerations:
+  - key: "on-demand"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "spot"
+    operator: "Exists"
+    effect: "NoSchedule"
   affinity: {}
   securityContext:
     allowPrivilegeEscalation: false
@@ -228,13 +234,18 @@ additionalWorkerGroups:
         nvidia.com/gpu: "2"
         memory: "90G"
         ephemeral-storage: 10Gi
-    annotations:
-      key: value
+    annotations: {}
     nodeSelector:
       iam.gke.io/gke-metadata-server-enabled: "true"
       cloud.google.com/gke-accelerator: "nvidia-l4"
     tolerations:
     - key: "nvidia.com/gpu"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "on-demand"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "spot"
       operator: "Exists"
       effect: "NoSchedule"
     affinity: {}
