@@ -29,7 +29,7 @@ touch ${MLP_LOG_FILE}
 
 exec 3>&1 4>&2
 trap 'exec 2>&4 1>&3' 0 1 2 3
-exec 1> >(tee -i ${MLP_LOG_FILE})
+exec 1> >(tee -i ${MLP_LOG_FILE}) 2>&1
 
 echo_bold "A log file is available at '${MLP_LOG_FILE}'"
 
