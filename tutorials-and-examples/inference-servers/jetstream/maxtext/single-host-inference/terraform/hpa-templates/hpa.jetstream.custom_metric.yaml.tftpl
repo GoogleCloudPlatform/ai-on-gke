@@ -8,8 +8,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: maxengine-server
-  minReplicas: 1
-  maxReplicas: 5
+  minReplicas: ${hpa_min_replicas}
+  maxReplicas: ${hpa_max_replicas}
   metrics:
   - type: Pods
     pods:

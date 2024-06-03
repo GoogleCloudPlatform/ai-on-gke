@@ -20,6 +20,6 @@ custom_metrics_enabled = true
 
 # Adjust these if you want different min/max values
 hpa_min_replicas = 1
-hpa_max_replicas = 5
+hpa_max_replicas = 2
 
 project_id = "tpu-vm-gke-testing"

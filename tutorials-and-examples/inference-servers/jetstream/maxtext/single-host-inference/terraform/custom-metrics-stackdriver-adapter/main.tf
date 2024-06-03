@@ -253,7 +253,7 @@ resource "google_service_account" "cmsa-sa" {
 }
 
 # Need to do this in terraform
-# gcloud projects add-iam-policy-binding tpu-vm-gke-testing --member=serviceAccount:cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com --role=roles/monitoring.viewer --role=roles/monitoring.metricWriter --role=roles/iam.serviceAccountTokenCreator --role=roles/storage.admin --role=roles/storage.objectAdmin --role=roles/storage.objectCreator
+# gcloud projects add-iam-policy-binding tpu-vm-gke-testing --member=serviceAccount:cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com --role=roles/monitoring.viewer --role=roles/monitoring.metricWriter --role=roles/iam.serviceAccountTokenCreator --role=roles/storage.admin --role=roles/storage.objectAdmin
 # gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:tpu-vm-gke-testing.svc.id.goog[slabe-jetstream/custom-metrics-stackdriver-adapter]" cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com
 
 # Equivalent to:
