@@ -90,7 +90,7 @@ The preprocessing.py file does the following:
    ```
    cd src && \
    gcloud builds submit \
-   --project ${PROJECT_ID}
+   --project ${PROJECT_ID} \
    --tag ${DOCKER_IMAGE_URL} \
    . && \
    cd ..
@@ -133,5 +133,7 @@ The preprocessing.py file does the following:
    gcloud storage ls gs://${PROCESSING_BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
    gcloud storage ls gs://${PROCESSING_BUCKET}/flipkart_images
    ```
+
+> For additional information about developing using this codebase see the [Developer Guide](DEVELOPER.md)
 
 > For additional information about converting you code from a notebook to run as a Job on GKE see the [Conversion Guide](CONVERSION.md)

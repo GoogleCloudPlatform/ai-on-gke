@@ -87,7 +87,10 @@ check_local_error_exit_on_error
 
 echo_title "Waiting for job to complete"
 
-print_and_execute "kubectl wait --namespace=ml-team --for=condition=complete --timeout=3600s job/job"
+print_and_execute "kubectl wait --namespace=ml-team --for=condition=complete --timeout=3600s job/job &
+kubectl wait --namespace=ml-team --for=condition=failed --timeout=3600s job/job &
+wait -n && \
+pkill -f 'kubectl wait --namespace=ml-team'"
 check_local_error_exit_on_error
 
 echo_title "Checking processed images"
@@ -97,6 +100,16 @@ echo "Processed ${IMAGES_PROCESS} images."
 
 print_and_execute "((IMAGES_PROCESS > 0))"
 check_local_error_exit_on_error
+
+echo_title "Removing IAM permissions"
+
+gcloud projects remove-iam-policy-binding ${PROJECT_ID} \
+    --member "serviceAccount:wi-ml-team-ray-head@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --role roles/storage.objectViewer
+
+gcloud projects remove-iam-policy-binding ${PROJECT_ID} \
+    --member "serviceAccount:wi-ml-team-ray-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --role roles/storage.objectAdmin
 
 echo_title "Deleting Artifact Registry repository"
 
