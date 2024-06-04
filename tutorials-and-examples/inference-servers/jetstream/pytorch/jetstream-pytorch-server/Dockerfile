@@ -5,7 +5,6 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTORCH_JETSTREAM_VERSION=jetstream-v0.2.2
-ENV JETSTREAM_VERSION=v0.2.2
 
 RUN apt -y update && apt install -y --no-install-recommends \
     ca-certificates \
@@ -20,11 +19,6 @@ RUN git clone https://github.com/google/jetstream-pytorch.git && \
 cd /jetstream-pytorch && \
 git checkout ${PYTORCH_JETSTREAM_VERSION} && \
 bash install_everything.sh
-
-RUN git clone https://github.com/google/JetStream.git && \
-cd /JetStream && \
-git checkout ${JETSTREAM_VERSION} && \
-pip install -e .
 
 ENV PYTHONPATH=$PYTHONPATH:$(pwd)/deps/xla/experimental/torch_xla2:$(pwd)/JetStream:$(pwd)
 
