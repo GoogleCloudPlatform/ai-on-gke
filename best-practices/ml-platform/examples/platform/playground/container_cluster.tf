@@ -100,53 +100,53 @@ resource "google_container_cluster" "mlp" {
     resource_limits {
       resource_type = "cpu"
       minimum       = 4
-      maximum       = 600
+      maximum       = 1024
     }
 
     resource_limits {
       resource_type = "memory"
       minimum       = 16
-      maximum       = 2400
+      maximum       = 4096
     }
 
     resource_limits {
       resource_type = "nvidia-a100-80gb"
-      maximum       = 30
+      maximum       = 32
     }
 
     resource_limits {
       resource_type = "nvidia-l4"
-      maximum       = 30
+      maximum       = 32
     }
 
     resource_limits {
       resource_type = "nvidia-tesla-t4"
-      maximum       = 300
+      maximum       = 256
     }
 
     resource_limits {
       resource_type = "nvidia-tesla-a100"
-      maximum       = 50
+      maximum       = 64
     }
 
     resource_limits {
       resource_type = "nvidia-tesla-k80"
-      maximum       = 30
+      maximum       = 32
     }
 
     resource_limits {
       resource_type = "nvidia-tesla-p4"
-      maximum       = 30
+      maximum       = 32
     }
 
     resource_limits {
       resource_type = "nvidia-tesla-p100"
-      maximum       = 30
+      maximum       = 32
     }
 
     resource_limits {
       resource_type = "nvidia-tesla-v100"
-      maximum       = 30
+      maximum       = 32
     }
   }
 
