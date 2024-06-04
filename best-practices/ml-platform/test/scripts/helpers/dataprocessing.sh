@@ -80,6 +80,9 @@ echo_title "Getting cluster credentials"
 print_and_execute "gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}"
 check_local_error_exit_on_error
 
+echo_title "Deleting exsting job"
+kubectl delete -f ${MLP_USE_CASE_BASE_DIR}/job.yaml
+
 echo_title "Creating job"
 
 print_and_execute "kubectl apply -f ${MLP_USE_CASE_BASE_DIR}/job.yaml"
@@ -88,7 +91,7 @@ check_local_error_exit_on_error
 echo_title "Waiting for job to complete"
 
 print_and_execute "kubectl wait --namespace=ml-team --for=condition=complete --timeout=3600s job/job &
-kubectl wait --namespace=ml-team --for=condition=failed --timeout=3600s job/job &
+kubectl wait --namespace=ml-team --for=condition=failed --timeout=3600s job/job && exit 1 &
 wait -n && \
 pkill -f 'kubectl wait --namespace=ml-team'"
 check_local_error_exit_on_error
