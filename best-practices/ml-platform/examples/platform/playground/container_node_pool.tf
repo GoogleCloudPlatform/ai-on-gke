@@ -16,7 +16,7 @@
 ###############################################################################
 resource "google_container_node_pool" "system" {
   # Variables
-  cluster            = module.gke.cluster_name
+  cluster            = google_container_cluster.mlp.name
   initial_node_count = 1
   location           = var.subnet_01_region
   name               = "system"
@@ -74,7 +74,7 @@ resource "google_container_node_pool" "cpu_n2s8" {
   depends_on = [google_container_node_pool.system]
 
   # Variables
-  cluster            = module.gke.cluster_name
+  cluster            = google_container_cluster.mlp.name
   initial_node_count = 1
   location           = var.subnet_01_region
   name               = "cpu-n2s8"
@@ -137,12 +137,13 @@ resource "google_container_node_pool" "cpu_n2s8" {
 
 
 # GPU
+# Available zones: https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-table
 ###############################################################################
 resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
   depends_on = [google_container_node_pool.system]
 
   # Variables
-  cluster  = module.gke.cluster_name
+  cluster  = google_container_cluster.mlp.name
   location = var.subnet_01_region
   name     = "gpu-h100x8-a3h8-dws"
   node_locations = [
@@ -199,6 +200,10 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
       }
     }
 
+    gvnic {
+      enabled = true
+    }
+
     reservation_affinity {
       consume_reservation_type = "NO_RESERVATION"
     }
@@ -231,10 +236,15 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24" {
   depends_on = [google_container_node_pool.system]
 
   # Variables
-  cluster  = module.gke.cluster_name
+  cluster  = google_container_cluster.mlp.name
   location = var.subnet_01_region
   name     = "gpu-l4x2-g2s24"
-  project  = data.google_project.environment.project_id
+  node_locations = [
+    "${var.subnet_01_region}-a",
+    "${var.subnet_01_region}-b",
+    "${var.subnet_01_region}-c"
+  ]
+  project = data.google_project.environment.project_id
 
   autoscaling {
     location_policy      = "ANY"
@@ -277,6 +287,10 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24" {
       gpu_driver_installation_config {
         gpu_driver_version = var.gpu_driver_version
       }
+    }
+
+    gvnic {
+      enabled = true
     }
 
     reservation_affinity {
@@ -307,10 +321,15 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
   depends_on = [google_container_node_pool.system]
 
   # Variables
-  cluster  = module.gke.cluster_name
+  cluster  = google_container_cluster.mlp.name
   location = var.subnet_01_region
   name     = "gpu-l4x2-g2s24-dws"
-  project  = data.google_project.environment.project_id
+  node_locations = [
+    "${var.subnet_01_region}-a",
+    "${var.subnet_01_region}-b",
+    "${var.subnet_01_region}-c"
+  ]
+  project = data.google_project.environment.project_id
 
   autoscaling {
     location_policy      = "ANY"
@@ -353,6 +372,10 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
       gpu_driver_installation_config {
         gpu_driver_version = var.gpu_driver_version
       }
+    }
+
+    gvnic {
+      enabled = true
     }
 
     reservation_affinity {
@@ -387,10 +410,15 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_spot" {
   depends_on = [google_container_node_pool.system]
 
   # Variables
-  cluster  = module.gke.cluster_name
+  cluster  = google_container_cluster.mlp.name
   location = var.subnet_01_region
   name     = "gpu-l4x2-g2s24-spot"
-  project  = data.google_project.environment.project_id
+  node_locations = [
+    "${var.subnet_01_region}-a",
+    "${var.subnet_01_region}-b",
+    "${var.subnet_01_region}-c"
+  ]
+  project = data.google_project.environment.project_id
 
   # Blocks
   autoscaling {
@@ -437,6 +465,10 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_spot" {
       }
     }
 
+    gvnic {
+      enabled = true
+    }
+
     reservation_affinity {
       consume_reservation_type = "NO_RESERVATION"
     }
@@ -462,4 +494,5 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_spot" {
 
 
 # TPU
+# Available zones: https://cloud.google.com/tpu/docs/regions-zones
 ###############################################################################

@@ -1,0 +1,242 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Create dedicated service account for node pools
+resource "google_service_account" "cluster" {
+  project      = data.google_project.environment.project_id
+  account_id   = "vm-${var.cluster_name}-${var.environment_name}"
+  display_name = "${var.cluster_name}-${var.environment_name} Service Account"
+  description  = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
+}
+
+# Apply minimal roles to nodepool SA
+# https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
+locals {
+  cluster_sa_roles = [
+    "roles/monitoring.viewer",
+    "roles/monitoring.metricWriter",
+    "roles/logging.logWriter",
+    "roles/stackdriver.resourceMetadata.writer",
+    "roles/autoscaling.metricsWriter",
+    "roles/artifactregistry.reader",
+    "roles/serviceusage.serviceUsageConsumer"
+  ]
+}
+
+# Bind minimum role list + additional roles to nodepool SA on project
+resource "google_project_iam_member" "cluster_sa" {
+  for_each = toset(local.cluster_sa_roles)
+  project  = data.google_project.environment.project_id
+  member   = google_service_account.cluster.member
+  role     = each.value
+}
+
+resource "google_container_cluster" "mlp" {
+  provider = google-beta
+
+  datapath_provider        = "ADVANCED_DATAPATH"
+  deletion_protection      = false
+  enable_shielded_nodes    = true
+  initial_node_count       = 1
+  location                 = var.subnet_01_region
+  name                     = "${var.cluster_name}-${var.environment_name}"
+  network                  = module.create-vpc.vpc
+  project                  = data.google_project.environment.project_id
+  remove_default_node_pool = false
+  subnetwork               = module.create-vpc.subnet-1
+
+  addons_config {
+    gcp_filestore_csi_driver_config {
+      enabled = true
+    }
+
+    gcs_fuse_csi_driver_config {
+      enabled = true
+    }
+
+    gce_persistent_disk_csi_driver_config {
+      enabled = true
+    }
+  }
+
+  cluster_autoscaling {
+    autoscaling_profile = "OPTIMIZE_UTILIZATION"
+    enabled             = true
+
+    auto_provisioning_defaults {
+      service_account = google_service_account.cluster.email
+      oauth_scopes = [
+        "https://www.googleapis.com/auth/cloud-platform"
+      ]
+
+      management {
+        auto_repair  = true
+        auto_upgrade = true
+      }
+
+      shielded_instance_config {
+        enable_integrity_monitoring = true
+        enable_secure_boot          = true
+      }
+
+      upgrade_settings {
+        max_surge       = 0
+        max_unavailable = 1
+        strategy        = "SURGE"
+      }
+    }
+
+    resource_limits {
+      resource_type = "cpu"
+      minimum       = 4
+      maximum       = 600
+    }
+
+    resource_limits {
+      resource_type = "memory"
+      minimum       = 16
+      maximum       = 2400
+    }
+
+    resource_limits {
+      resource_type = "nvidia-a100-80gb"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-l4"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-t4"
+      maximum       = 300
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-a100"
+      maximum       = 50
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-k80"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-p4"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-p100"
+      maximum       = 30
+    }
+
+    resource_limits {
+      resource_type = "nvidia-tesla-v100"
+      maximum       = 30
+    }
+  }
+
+  gateway_api_config {
+    channel = "CHANNEL_STANDARD"
+  }
+
+  ip_allocation_policy {
+  }
+
+  lifecycle {
+    ignore_changes = [
+      node_config[0]
+    ]
+  }
+
+  logging_config {
+    enable_components = [
+      "APISERVER",
+      "CONTROLLER_MANAGER",
+      "SCHEDULER",
+      "SYSTEM_COMPONENTS",
+      "WORKLOADS"
+    ]
+  }
+
+  master_authorized_networks_config {
+    cidr_blocks {
+      cidr_block   = var.subnet_01_ip
+      display_name = "vpc-cidr"
+    }
+  }
+
+  monitoring_config {
+    advanced_datapath_observability_config {
+      enable_metrics = true
+    }
+
+    enable_components = [
+      "APISERVER",
+      "CONTROLLER_MANAGER",
+      "DAEMONSET",
+      "DEPLOYMENT",
+      "HPA",
+      "POD",
+      "SCHEDULER",
+      "STATEFULSET",
+      "STORAGE",
+      "SYSTEM_COMPONENTS"
+    ]
+
+    managed_prometheus {
+      enabled = true
+    }
+  }
+
+  node_config {
+    machine_type    = "e2-standard-4"
+    service_account = google_service_account.cluster.email
+
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+    }
+  }
+
+  node_pool_defaults {
+    node_config_defaults {
+      gcfs_config {
+        enabled = true
+      }
+    }
+  }
+
+  private_cluster_config {
+    enable_private_nodes    = true
+    enable_private_endpoint = true
+    master_ipv4_cidr_block  = "172.16.0.32/28"
+  }
+
+  release_channel {
+    channel = "RAPID"
+  }
+
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_ENTERPRISE"
+  }
+
+  workload_identity_config {
+    workload_pool = "${data.google_project.environment.project_id}.svc.id.goog"
+  }
+}
