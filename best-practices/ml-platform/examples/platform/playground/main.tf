@@ -15,7 +15,7 @@
 locals {
   configsync_repository = module.configsync_repository
   # https://github.com/hashicorp/terraform-provider-google/issues/13325
-  connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${module.gke.cluster_name}"
+  connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${google_container_cluster.mlp.name}"
   git_repository           = replace(local.configsync_repository.html_url, "/https*:\\/\\//", "")
   kubeconfig_dir           = abspath("${path.module}/kubeconfig")
 }
@@ -140,8 +140,9 @@ module "cloud-nat" {
   router        = format("%s-%s", "router-for-acm", var.environment_name)
 }
 
-#
-# GKE
+
+
+# FLEET
 ##########################################################################
 resource "google_gke_hub_feature" "configmanagement" {
   depends_on = [
@@ -158,61 +159,6 @@ resource "google_gke_hub_feature" "configmanagement" {
   project  = data.google_project.environment.project_id
 }
 
-# Create dedicated service account for node pools
-resource "google_service_account" "cluster" {
-  project      = data.google_project.environment.project_id
-  account_id   = "vm-${var.cluster_name}-${var.environment_name}"
-  display_name = "${var.cluster_name}-${var.environment_name} Service Account"
-  description  = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
-}
-
-# Apply minimal roles to nodepool SA
-# https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
-locals {
-  cluster_sa_roles = [
-    "roles/monitoring.viewer",
-    "roles/monitoring.metricWriter",
-    "roles/logging.logWriter",
-    "roles/stackdriver.resourceMetadata.writer",
-    "roles/autoscaling.metricsWriter",
-    "roles/artifactregistry.reader",
-    "roles/serviceusage.serviceUsageConsumer"
-  ]
-}
-
-# Bind minimum role list + additional roles to nodepool SA on project
-resource "google_project_iam_member" "cluster_sa" {
-  for_each = toset(local.cluster_sa_roles)
-  project  = data.google_project.environment.project_id
-  member   = google_service_account.cluster.member
-  role     = each.value
-}
-
-module "gke" {
-  source = "../../../terraform/modules/cluster"
-
-  depends_on = [
-    google_gke_hub_feature.configmanagement,
-    google_project_service.compute_googleapis_com,
-    google_project_service.container_googleapis_com,
-    module.cloud-nat
-  ]
-
-  cluster_name                = format("%s-%s", var.cluster_name, var.environment_name)
-  env                         = var.environment_name
-  initial_node_count          = 1
-  machine_type                = "e2-standard-4"
-  master_auth_networks_ipcidr = var.subnet_01_ip
-  network                     = module.create-vpc.vpc
-  project_id                  = data.google_project.environment.project_id
-  region                      = var.subnet_01_region
-  release_channel             = "RAPID"
-  remove_default_node_pool    = true
-  service_account             = google_service_account.cluster.email
-  subnet                      = module.create-vpc.subnet-1
-  zone                        = "${var.subnet_01_region}-a"
-}
-
 resource "google_gke_hub_membership" "cluster" {
   depends_on = [
     google_gke_hub_feature.configmanagement,
@@ -220,12 +166,12 @@ resource "google_gke_hub_membership" "cluster" {
     google_project_service.gkehub_googleapis_com
   ]
 
-  membership_id = module.gke.cluster_name
+  membership_id = google_container_cluster.mlp.name
   project       = data.google_project.environment.project_id
 
   endpoint {
     gke_cluster {
-      resource_link = "//container.googleapis.com/${module.gke.cluster_id}"
+      resource_link = "//container.googleapis.com/${google_container_cluster.mlp.id}"
     }
   }
 }
