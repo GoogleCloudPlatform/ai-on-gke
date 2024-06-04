@@ -51,7 +51,7 @@ convert_maxtext_checkpoint() {
     MAXTEXT_VERSION=$5
 
     if [ -z $MAXTEXT_VERSION ]; then
-        MAXTEXT_VERSION=prometheus-flag-import-fix
+        MAXTEXT_VERSION=jetstream-v0.2.2
     fi
 
     git clone https://github.com/google/maxtext.git
