@@ -16,5 +16,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: kueue
     control-plane: controller-manager
   name: kueue-system
