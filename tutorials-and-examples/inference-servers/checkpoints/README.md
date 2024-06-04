@@ -5,8 +5,8 @@ The `checkpoint_entrypoint.sh` script overviews how to convert your inference ch
 Build the checkpoint conversion Dockerfile
 ```
 docker build -t inference-checkpoint .
-docker tag inference-checkpoint us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/inference-checkpoint:v0.2.2
-docker push us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/inference-checkpoint:v0.2.2
+docker tag inference-checkpoint us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.2
+docker push us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.2
 ```
 
 Now you can use it in a [Kubernetes job](../jetstream/maxtext/single-host-inference/checkpoint-job.yaml) and pass the following arguments
