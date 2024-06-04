@@ -24,7 +24,6 @@ import fastapi
 import grpc
 from jetstream.core.proto import jetstream_pb2
 from jetstream.core.proto import jetstream_pb2_grpc
-from jetstream.tools.load_tester import collect_tokens
 import pydantic
 
 
@@ -82,5 +81,7 @@ async def generate_prompt(
   async with grpc.aio.insecure_channel("127.0.0.1:9000", options=options) as channel:
     stub = jetstream_pb2_grpc.OrchestratorStub(channel)
     response = stub.Decode(request)
-    tokens = collect_tokens(response, print_interim=False)
-    return "".join(tokens)
+    output = ""
+    async for token_list in response:
+      output += str(token_list.response[0])
+    return output
