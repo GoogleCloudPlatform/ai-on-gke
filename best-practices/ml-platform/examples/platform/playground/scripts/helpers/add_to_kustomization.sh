@@ -16,7 +16,7 @@
 set -u
 
 if [ ! -f ${kustomization_file} ]; then
-  echo "${kustomization_file} not found"
+  echo "Kustomization file '${kustomization_file}' not found"
   exit 2
 fi
 
