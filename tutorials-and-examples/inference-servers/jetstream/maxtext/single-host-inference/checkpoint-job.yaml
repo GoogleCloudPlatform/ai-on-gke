@@ -9,9 +9,9 @@ spec:
       restartPolicy: Never
       containers:
       - name: inference-checkpoint
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.0
+        image: us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/inference-checkpoint:v0.2.2
         args:
-        - -b=BUCKET_NAME
+        - -b=slabe-jetstream
         - -m=google/gemma/maxtext/7b-it/2
         volumeMounts:
         - mountPath: "/kaggle/"
