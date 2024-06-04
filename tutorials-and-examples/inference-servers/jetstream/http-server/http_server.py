@@ -55,7 +55,7 @@ async def generate(request: GenerateRequest):
   try:
     request = jetstream_pb2.DecodeRequest(
         session_cache=request.session_cache,
-        additional_text=request.prompt,
+        text_content=jetstream_pb2.DecodeRequest.TextContent(text=request.prompt),
         priority=request.priority,
         max_tokens=request.max_tokens,
     )
