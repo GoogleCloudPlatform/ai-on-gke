@@ -276,15 +276,3 @@ data "kubernetes_namespace_v1" "team" {
     name = var.namespace
   }
 }
-
-
-
-# OUTPUT
-###############################################################################
-output "configsync_repository" {
-  value = local.configsync_repository.html_url
-}
-
-output "git_repository" {
-  value = local.git_repository
-}
