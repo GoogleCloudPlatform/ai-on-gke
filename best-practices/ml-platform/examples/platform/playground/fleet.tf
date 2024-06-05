@@ -46,7 +46,7 @@ resource "google_gke_hub_membership" "cluster" {
 
 resource "google_gke_hub_feature_membership" "cluster_configmanagement" {
   depends_on = [
-    google_container_node_pool.system,
+    google_container_cluster.mlp,
     google_project_service.anthos_googleapis_com,
     google_project_service.anthosconfigmanagement_googleapis_com,
     google_project_service.gkeconnect_googleapis_com,
