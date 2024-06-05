@@ -10,6 +10,8 @@ This reference architecture demonstrates how to build a GKE platform that facili
 - Platform admins will create a namespace per application and provide the application team member full access to it.
 - The namespace scoped resources will be created by the Application/ML teams either via [Config Sync][config-sync] or through a deployment tool like [Cloud Deploy][cloud-deploy]
 
+For an outline of products and features used in the platform, see the [Platform Products and Features](/best-practices/ml-platform/docs/platform/products-and-features.md) document.
+
 ## Critical User Journeys (CUJs)
 
 ### Persona : Platform Admin
