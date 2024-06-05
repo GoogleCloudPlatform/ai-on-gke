@@ -14,7 +14,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: tpu-provisioner-admission-controller
   annotations:
-    cert-manager.io/inject-ca-from: tpu-provisioner-system/admission-controller-issuer
+    cert-manager.io/inject-ca-from: tpu-provisioner-system/admission-controller
 webhooks:
 - name: admission-controller.tpu-provisioner-system.svc
   matchPolicy: Equivalent
@@ -26,10 +26,10 @@ webhooks:
     apiVersions: ["v1"]
     resources: ["jobs"]
     scope: "Namespaced"
-  failurePolicy: Ignore
+  failurePolicy: Fail
   timeoutSeconds: 20
   clientConfig:
-    caBundle: # base64 CA bundle here
+    #caBundle: # base64 CA bundle here
     service:
       namespace: tpu-provisioner-system
       name: admission-controller
