@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+locals {
+  # https://github.com/hashicorp/terraform-provider-google/issues/13325
+  connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${google_container_cluster.mlp.name}"
+  kubeconfig_dir           = abspath("${path.module}/kubeconfig")
+}
+
 provider "kubernetes" {
   host  = local.connect_gateway_host_url
   token = data.google_client_config.default.access_token

@@ -12,17 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Create dedicated service account for node pools
-resource "google_service_account" "cluster" {
-  project      = data.google_project.environment.project_id
-  account_id   = "vm-${var.cluster_name}-${var.environment_name}"
-  display_name = "${var.cluster_name}-${var.environment_name} Service Account"
-  description  = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
-}
-
-# Apply minimal roles to nodepool SA
-# https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
 locals {
+  # Minimal roles for nodepool SA https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
   cluster_sa_roles = [
     "roles/monitoring.viewer",
     "roles/monitoring.metricWriter",
@@ -32,6 +23,14 @@ locals {
     "roles/artifactregistry.reader",
     "roles/serviceusage.serviceUsageConsumer"
   ]
+}
+
+# Create dedicated service account for node pools
+resource "google_service_account" "cluster" {
+  project      = data.google_project.environment.project_id
+  account_id   = "vm-${var.cluster_name}-${var.environment_name}"
+  display_name = "${var.cluster_name}-${var.environment_name} Service Account"
+  description  = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
 }
 
 # Bind minimum role list + additional roles to nodepool SA on project
