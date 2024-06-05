@@ -12,66 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# SYSTEM
-###############################################################################
-resource "google_container_node_pool" "system" {
-  # Variables
-  cluster            = google_container_cluster.mlp.name
-  initial_node_count = 1
-  location           = var.subnet_01_region
-  name               = "system"
-  project            = data.google_project.environment.project_id
-
-  # Blocks
-  autoscaling {
-    location_policy      = "BALANCED"
-    total_max_node_count = 32
-    total_min_node_count = 1
-  }
-
-  network_config {
-    enable_private_nodes = true
-  }
-
-  node_config {
-    # Variables
-    machine_type    = "e2-standard-4"
-    service_account = google_service_account.cluster.email
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
-    ]
-
-    # Blocks
-    gcfs_config {
-      enabled = true
-    }
-
-    shielded_instance_config {
-      enable_integrity_monitoring = true
-      enable_secure_boot          = true
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      initial_node_count,
-      node_config[0].labels,
-      node_config[0].taint,
-    ]
-  }
-
-  timeouts {
-    create = "30m"
-    update = "20m"
-  }
-}
-
-
-
 # CPU
 ###############################################################################
 resource "google_container_node_pool" "cpu_n2s8" {
-  depends_on = [google_container_node_pool.system]
+  depends_on = [google_container_cluster.mlp]
 
   # Variables
   cluster            = google_container_cluster.mlp.name
@@ -140,7 +84,7 @@ resource "google_container_node_pool" "cpu_n2s8" {
 # Available zones: https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-table
 ###############################################################################
 resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
-  depends_on = [google_container_node_pool.system]
+  depends_on = [google_container_cluster.mlp]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -233,7 +177,7 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24" {
-  depends_on = [google_container_node_pool.system]
+  depends_on = [google_container_cluster.mlp]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -318,7 +262,7 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
-  depends_on = [google_container_node_pool.system]
+  depends_on = [google_container_cluster.mlp]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -407,7 +351,7 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24_spot" {
-  depends_on = [google_container_node_pool.system]
+  depends_on = [google_container_cluster.mlp]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
