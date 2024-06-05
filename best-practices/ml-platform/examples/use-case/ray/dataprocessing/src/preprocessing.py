@@ -19,7 +19,7 @@ IMAGE_BUCKET = os.environ['PROCESSING_BUCKET']
 RAY_CLUSTER_HOST = os.environ['RAY_CLUSTER_HOST']
 GCS_IMAGE_FOLDER = 'flipkart_images'
 
-logging.config.fileConfig('/app/logging.conf')
+logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('preprocessing')
 logger.debug(logger)
 @ray.remote(resources={"n2_cpu": 1})
@@ -42,25 +42,30 @@ def get_clean_df(df, logger, ray_worker_node_id):
 
         try:
             download_file = f"{download_dir}/{image_file_name}"
+
             socket.setdefaulttimeout(10)
             urllib.request.urlretrieve(image_url, download_file)
+
             bucket = storage_client.bucket(IMAGE_BUCKET)
             blob = bucket.blob(destination_blob_name)
             blob.upload_from_filename(download_file, retry=DEFAULT_RETRY)
-            #logger.info(f"ray_worker_node_id:{ray_worker_node_id} File {image_file_name} uploaded to {destination_blob_name}")
+            logger.info(f"ray_worker_node_id:{ray_worker_node_id} File {image_file_name} uploaded to {destination_blob_name}")
+
             os.remove(download_file)
             return True
+        except TimeoutError as err:
+            logger.warning(f"ray_worker_node_id:{ray_worker_node_id} Image '{image_url}' request timeout")
         except urllib.error.HTTPError as err:
             if err.code == 404:
                 logger.warning(f"ray_worker_node_id:{ray_worker_node_id} Image '{image_url}' not found")
             elif err.code == 504:
-                logger.warning(f"ray_worker_node_id:{ray_worker_node_id} Image '{image_url}' timed out")
+                logger.warning(f"ray_worker_node_id:{ray_worker_node_id} Image '{image_url}' gateway timeout")
             else:
-                logger.error(f"ray_worker_node_id:{ray_worker_node_id} Unhandled HTTPError exception: ${err}")
+                logger.error(f"ray_worker_node_id:{ray_worker_node_id} Unhandled HTTPError exception: {err}")
         except urllib.error.URLError as err:
-            logger.error(f"ray_worker_node_id:{ray_worker_node_id} URLError exception: ${err}")
+            logger.error(f"ray_worker_node_id:{ray_worker_node_id} URLError exception: {err}")
         except Exception as err:
-            logger.error(f"ray_worker_node_id:{ray_worker_node_id} Unhandled exception: ${err}")
+            logger.error(f"ray_worker_node_id:{ray_worker_node_id} Unhandled exception: {err}")
             raise
 
         return False

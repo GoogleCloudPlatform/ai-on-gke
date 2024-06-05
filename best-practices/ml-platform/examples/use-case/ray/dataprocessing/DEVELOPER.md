@@ -45,11 +45,22 @@
   pip install --no-cache-dir -r requirements.txt
   ```
 
-- Set the required environment variables
+- Set the Ray Cluster to run locally
 
   ```
-  export PROCESSING_BUCKET=<bucket-name>
   export RAY_CLUSTER_HOST=local
+  ```
+
+- Set the project for the GCS storage bucket
+
+  ```
+  gcloud config set project ${MLP_PROJECT_ID}
+  ```
+
+- Set the GCS storage bucket name
+
+  ```
+  export PROCESSING_BUCKET=
   ```
 
 - Run the `preprocessing.py` script
