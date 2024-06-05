@@ -8,6 +8,8 @@ This quick-start deployment guide can be used to set up an environment to famili
 
 For more information about the architecture, see the [Playground Machine learning platform (MLP) on GKE: Architecture](/best-practices/ml-platform/docs/platform/playground/architecture.md) document.
 
+For an outline of products and features used in the platform, see the [Platform Products and Features](/best-practices/ml-platform/docs/platform/products-and-features.md) document.
+
 ## Requirements
 
 ### Project
