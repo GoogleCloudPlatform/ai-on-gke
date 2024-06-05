@@ -16,11 +16,11 @@ locals {
   hostname_suffix             = "endpoints.${data.google_project.environment.project_id}.cloud.goog"
   gateway_manifests_directory = "${path.module}/manifests/ml-team/gateway"
   gateway_name                = "external-https"
+  iap_domain                  = var.iap_domain != null ? var.iap_domain : split("@", trimspace(data.google_client_openid_userinfo.identity.email))[1]
+  iap_oath_brand              = "projects/${data.google_project.environment.number}/brands/${data.google_project.environment.number}"
   ray_head_service_name       = "ray-cluster-kuberay-head-svc"
   ray_dashboard_endpoint      = "ray-dashboard.${data.kubernetes_namespace_v1.team.metadata[0].name}.mlp.${local.hostname_suffix}"
   ray_dashboard_port          = 8265
-  iap_domain                  = var.iap_domain != null ? var.iap_domain : split("@", trimspace(data.google_client_openid_userinfo.identity.email))[1]
-  iap_oath_brand              = "projects/${data.google_project.environment.number}/brands/${data.google_project.environment.number}"
 }
 
 ###############################################################################
