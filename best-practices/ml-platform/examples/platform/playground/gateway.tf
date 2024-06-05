@@ -128,14 +128,3 @@ resource "google_iap_web_iam_member" "domain_iap_https_resource_accessor" {
   member  = "domain:${local.iap_domain}"
   role    = "roles/iap.httpsResourceAccessor"
 }
-
-###############################################################################
-# OUTPUT
-###############################################################################
-output "iap_domain" {
-  value = local.iap_domain
-}
-
-output "ray_dashboard_url_https" {
-  value = "https://${local.ray_dashboard_endpoint}"
-}
