@@ -20,37 +20,6 @@ locals {
   kubeconfig_dir           = abspath("${path.module}/kubeconfig")
 }
 
-#
-# Networking
-##########################################################################
-module "create-vpc" {
-  source = "../../../terraform/modules/network"
-
-  depends_on = [
-    google_project_service.compute_googleapis_com
-  ]
-
-  network_name     = format("%s-%s", var.network_name, var.environment_name)
-  project_id       = data.google_project.environment.project_id
-  routing_mode     = var.routing_mode
-  subnet_01_ip     = var.subnet_01_ip
-  subnet_01_name   = format("%s-%s", var.subnet_01_name, var.environment_name)
-  subnet_01_region = var.subnet_01_region
-}
-
-module "cloud-nat" {
-  source = "../../../terraform/modules/cloud-nat"
-
-  create_router = true
-  name          = format("%s-%s", "nat-for-acm", var.environment_name)
-  network       = module.create-vpc.vpc
-  project_id    = data.google_project.environment.project_id
-  region        = split("/", module.create-vpc.subnet-1)[3]
-  router        = format("%s-%s", "router-for-acm", var.environment_name)
-}
-
-
-
 # FLEET
 ##########################################################################
 resource "google_gke_hub_feature" "configmanagement" {
