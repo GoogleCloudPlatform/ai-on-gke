@@ -49,7 +49,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 Deploy the controller locally.
 
 ```bash
-skaffold run
+skaffold dev
 ```
 
 ### Run Unit tests
