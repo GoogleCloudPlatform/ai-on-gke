@@ -64,7 +64,7 @@ variable "swap_space" {
   nullable    = false
   default     = 4
   validation {
-    condition     = var.swap_space >= 0 
+    condition     = var.swap_space >= 0
     error_message = "swap space must be greater than or equal to 0."
   }
 }
