@@ -58,6 +58,17 @@ variable "gpu_count" {
   }
 }
 
+variable "swap_space" {
+  description = "The size (GiB) of CPU memory per GPU to use as swap space. See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/llm.py#L65 for more details."
+  type        = number
+  nullable    = false
+  default     = 4
+  validation {
+    condition     = var.swap_space >= 0
+    error_message = "swap space must be greater than or equal to 0."
+  }
+}
+
 variable "ksa" {
   description = "Kubernetes Service Account used for workload."
   type        = string
