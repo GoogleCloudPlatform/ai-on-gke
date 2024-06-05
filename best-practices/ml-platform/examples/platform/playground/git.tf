@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-locals {
-  configsync_repository = module.configsync_repository
-  # https://github.com/hashicorp/terraform-provider-google/issues/13325
-  connect_gateway_host_url = "https://connectgateway.googleapis.com/v1/projects/${data.google_project.environment.number}/locations/global/gkeMemberships/${google_container_cluster.mlp.name}"
-  git_repository           = replace(local.configsync_repository.html_url, "/https*:\\/\\//", "")
-  kubeconfig_dir           = abspath("${path.module}/kubeconfig")
+module "configsync_repository" {
+  source = "../../../terraform/modules/github_repository"
+
+  branches = {
+    default = var.environment_name
+    names   = ["main", var.environment_name]
+  }
+  description = "Google Cloud Config Sync repository"
+  name        = var.configsync_repo_name
+  owner       = var.github_org
+  token       = var.github_token
 }
