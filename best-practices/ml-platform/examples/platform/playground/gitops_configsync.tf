@@ -197,6 +197,7 @@ resource "null_resource" "namespace_manifests" {
       GIT_USERNAME        = self.triggers.github_user
       KUBECONFIG          = self.triggers.kubeconfig
       K8S_NAMESPACE       = self.triggers.namespace
+      PROJECT_ID          = self.triggers.project_id
       REPO_SYNC_NAME      = self.triggers.repo_sync_name
       REPO_SYNC_NAMESPACE = self.triggers.repo_sync_namespace
       ROOT_SYNC_NAME      = self.triggers.root_sync_name
@@ -211,6 +212,7 @@ resource "null_resource" "namespace_manifests" {
     github_token        = var.github_token
     github_user         = var.github_user
     kubeconfig          = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
+    project_id          = data.google_project.environment.project_id
     md5_files           = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_cluster_template/team", "**") : md5("${path.module}/templates/configsync/templates/_cluster_template/team/${f}")]))
     md5_script          = filemd5("${path.module}/scripts/namespace_manifests.sh")
     namespace           = var.namespace

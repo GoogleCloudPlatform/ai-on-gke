@@ -47,7 +47,6 @@ resource "google_container_cluster" "mlp" {
   datapath_provider        = "ADVANCED_DATAPATH"
   deletion_protection      = false
   enable_shielded_nodes    = true
-  initial_node_count       = 1
   location                 = var.subnet_01_region
   name                     = "${var.cluster_name}-${var.environment_name}"
   network                  = module.create-vpc.vpc
@@ -202,13 +201,35 @@ resource "google_container_cluster" "mlp" {
     }
   }
 
-  node_config {
-    machine_type    = "e2-standard-4"
-    service_account = google_service_account.cluster.email
+  node_pool {
+    initial_node_count = 1
+    name               = "system"
 
-    shielded_instance_config {
-      enable_integrity_monitoring = true
-      enable_secure_boot          = true
+    autoscaling {
+      location_policy      = "BALANCED"
+      total_max_node_count = 32
+      total_min_node_count = 1
+    }
+
+    network_config {
+      enable_private_nodes = true
+    }
+
+    node_config {
+      machine_type    = "e2-standard-4"
+      service_account = google_service_account.cluster.email
+      oauth_scopes = [
+        "https://www.googleapis.com/auth/cloud-platform"
+      ]
+
+      gcfs_config {
+        enabled = true
+      }
+
+      shielded_instance_config {
+        enable_integrity_monitoring = true
+        enable_secure_boot          = true
+      }
     }
   }
 
