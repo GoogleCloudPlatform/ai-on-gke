@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-data "google_client_config" "default" {}
-
-data "google_client_openid_userinfo" "identity" {}
-
 locals {
   hostname_suffix             = "endpoints.${data.google_project.environment.project_id}.cloud.goog"
   gateway_manifests_directory = "${path.module}/manifests/ml-team/gateway"
