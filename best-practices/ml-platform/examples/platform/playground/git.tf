@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+locals {
+  configsync_repository = module.configsync_repository
+  git_repository        = replace(local.configsync_repository.html_url, "/https*:\\/\\//", "")
+}
+
 module "configsync_repository" {
   source = "../../../terraform/modules/github_repository"
 
