@@ -30,6 +30,28 @@ for changing to fit their use case.
 
 Update the Deployment in `manifests/manifest.yaml` with this container image.
 
+### Local Development
+
+Create a minikube (or kind) cluster.
+
+```bash
+minikube create cluster
+# OR: kind create cluster
+```
+
+Install dependencies.
+
+```bash
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.5.1/manifests.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.5/cert-manager.yaml
+```
+
+Deploy the controller locally.
+
+```bash
+skaffold dev
+```
+
 ### Run Unit tests
 
 This project uses [pytest](https://docs.pytest.org) for unit testing.
