@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source ${SCRIPT_PATH}/helpers/display.sh
-source ${SCRIPT_PATH}/helpers/functions.sh
+source ${SCRIPTS_DIR}/helpers/display.sh
+source ${SCRIPTS_DIR}/helpers/functions.sh
 
 start_runtime "script"
 
 # Create a logs file and send stdout and stderr to console and log file
-log_directory=$(realpath ${SCRIPT_PATH}/../log)
+log_directory=$(realpath ${SCRIPTS_DIR}/../log)
 export MLP_SCRIPT_NAME=$(basename $0)
 export MLP_LOG_TIMESTAMP=$(date +%s)
 
@@ -34,8 +34,9 @@ exec 1> >(tee -i ${MLP_LOG_FILE}) 2>&1
 echo_bold "A log file is available at '${MLP_LOG_FILE}'"
 
 # Set additional environment variable
-export MLP_BASE_DIR=$(realpath "${SCRIPT_PATH}/../..")
+export MLP_BASE_DIR=$(realpath "${SCRIPTS_DIR}/../..")
 export MLP_LOCK_DIR="${MLP_BASE_DIR}/test/scripts/locks"
+export MLP_TYPE_BASE_DIR="${MLP_BASE_DIR}/examples/platform/${MLP_TYPE}"
 
 # Set local_error to 0
 local_error=0

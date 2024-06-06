@@ -53,13 +53,28 @@ function print_and_execute() {
     eval "${clean_command}"
     return_code=$?
 
-    if [ -z ${NO_LOG} ]; then
-        if [ ${return_code} -eq "0" ]; then
-            echo_success "[OK]"
-        else
-            echo_error "[Return Code: ${return_code}]"
-            local_error=$(($local_error + 1))
-        fi
+    if [ ${return_code} -eq "0" ]; then
+        echo_success "[OK]"
+    else
+        echo_error "[Return Code: ${return_code}]"
+        local_error=$(($local_error + 1))
+    fi
+    echo
+
+    return ${return_code}
+}
+
+function print_and_execute_no_check() {
+    clean_command=$(echo ${@} | tr -s ' ')
+    printf "${GREEN}\$ ${clean_command}${RESET}"
+    printf "\n"
+    eval "${clean_command}"
+    return_code=$?
+
+    if [ ${return_code} -eq "0" ]; then
+        echo_success "[OK]"
+    else
+        echo_warning "[Return Code: ${return_code}]"
     fi
     echo
 
