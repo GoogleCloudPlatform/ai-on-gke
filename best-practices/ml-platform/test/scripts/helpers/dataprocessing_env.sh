@@ -14,18 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_PATH="$(
-    cd "$(dirname "$0")" >/dev/null 2>&1
-    pwd -P
-)"
-
-source ${SCRIPT_PATH}/helpers/include.sh
-
-echo_title "Preparing the environment"
-export MLP_TYPE_BASE_DIR="${MLP_BASE_DIR}/examples/platform/playground"
-
-echo_title "Checking required configuration"
-source ${SCRIPT_PATH}/helpers/kaggle.sh "datasets files atharvjairath/flipkart-ecommerce-dataset"
+echo_title "Checking dataprocessing required configuration"
+source ${SCRIPTS_DIR}/helpers/kaggle.sh "datasets files atharvjairath/flipkart-ecommerce-dataset"
 check_local_error_exit_on_error
 
 if [ -z "${MLP_PROJECT_ID}" ]; then
@@ -39,7 +29,3 @@ export CLUSTER_NAME="gke-ml-${ENVIRONMENT_NAME}"
 export PROJECT_ID="${MLP_PROJECT_ID}"
 export PROCESSING_BUCKET="${PROJECT_ID}-processing"
 export DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/dataprocessing/dp:v0.0.1
-
-source ${SCRIPT_PATH}/helpers/dataprocessing.sh
-
-check_local_error_and_exit

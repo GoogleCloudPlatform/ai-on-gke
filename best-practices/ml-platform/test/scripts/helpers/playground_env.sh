@@ -14,49 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_PATH="$(
-    cd "$(dirname "$0")" >/dev/null 2>&1
-    pwd -P
-)"
-
-source ${SCRIPT_PATH}/helpers/include.sh
-
-echo_title "Preparing the environment"
-export MLP_TYPE_BASE_DIR="${MLP_BASE_DIR}/examples/platform/playground"
-
-if [ ! -f ${HOME}/secrets/mlp-github-token ]; then
-    echo "Git token missing at '${HOME}/secrets/mlp-github-token'!"
-    exit 3
-fi
-
-if [ -z "${MLP_GITHUB_ORG}" ]; then
-    echo "MLP_GITHUB_ORG is not set!"
-    exit 4
-fi
-
-if [ -z "${MLP_GITHUB_USER}" ]; then
-    echo "MLP_GITHUB_USER is not set!"
-    exit 5
-fi
-
-if [ -z "${MLP_GITHUB_EMAIL}" ]; then
-    echo "MLP_GITHUB_EMAIL is not set!"
-    exit 6
-fi
-
-if [ -z "${MLP_PROJECT_ID}" ]; then
-    echo "MLP_PROJECT_ID is not set!"
-    exit 7
-fi
-
+echo_title "Applying terraform configuration"
 export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-terraform"
 
-# terraform apply
-###############################################################################
-echo_title "Applying terraform configuration"
-sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
 sed -i "s/YOUR_STATE_BUCKET/${MLP_STATE_BUCKET}/g" ${MLP_TYPE_BASE_DIR}/backend.tf
 sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
 
@@ -70,9 +30,3 @@ sed -i '/^iap_domain[[:blank:]]*=/{h;s/=.*/= "'"${MLP_IAP_DOMAIN}"'"/};${x;/^$/{
 
 echo_title "Checking ray-dashboard endpoint"
 gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
-
-export TF_VAR_github_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
-
-source ${SCRIPT_PATH}/helpers/terraform_apply.sh
-
-check_local_error_and_exit

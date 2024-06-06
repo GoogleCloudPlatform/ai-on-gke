@@ -14,18 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-start_runtime "features_initialize_apply"
+echo_title "Deleting Terraform GCS bucket"
+gsutil -m rm -rf gs://${MLP_STATE_BUCKET}/*
+gcloud storage buckets delete gs://${MLP_STATE_BUCKET} --project ${MLP_PROJECT_ID}
 
-echo_title "Initializing a new project"
+echo_title "Cleaning up local repository changes"
 
-print_and_execute "cd ${MLP_BASE_DIR}/terraform/features/initialize && \
-terraform init && \
-terraform plan -input=false -out=tfplan && \
-terraform apply -input=false tfplan && \
-rm tfplan && \
-terraform init -force-copy -migrate-state && \
-rm -rf state"
+cd ${MLP_BASE_DIR} &&
+    git restore \
+        examples/platform/playground/backend.tf \
+        examples/platform/playground/mlp.auto.tfvars
 
-total_runtime "features_initialize_apply"
-
-check_local_error_exit_on_error
+cd ${MLP_BASE_DIR} &&
+    rm -rf \
+        examples/platform/playground/.terraform \
+        examples/platform/playground/.terraform.lock.hcl
