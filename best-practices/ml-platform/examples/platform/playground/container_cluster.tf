@@ -157,7 +157,7 @@ resource "google_container_cluster" "mlp" {
 
   lifecycle {
     ignore_changes = [
-      node_config[0]
+      node_pool
     ]
   }
 
