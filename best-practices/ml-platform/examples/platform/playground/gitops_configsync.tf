@@ -460,6 +460,7 @@ resource "null_resource" "wait_for_configsync" {
       GIT_REPOSITORY      = local.git_repository
       GIT_TOKEN           = var.github_token
       GIT_USERNAME        = var.github_user
+      KUBECONFIG          = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
       REPO_SYNC_NAME      = "${var.environment_name}-${data.kubernetes_namespace_v1.team.metadata[0].name}"
       REPO_SYNC_NAMESPACE = data.kubernetes_namespace_v1.team.metadata[0].name
       ROOT_SYNC_NAME      = "root-sync"
