@@ -62,6 +62,10 @@ For an outline of products and features used in the platform, see the [Platform 
 
 - [Distributed Data Processing with Ray](examples/use-case/ray/dataprocessing/README.md): Run a distributed data processing job using Ray.
 
+## Resources
+
+- [Packaging Jupyter notebooks](docs/notebook/packaging.md): Patterns and tools to get your ipynb's ready for deployment in a container runtime.
+
 [gitops]: https://about.gitlab.com/topics/gitops/
 [repo-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields
 [root-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields
