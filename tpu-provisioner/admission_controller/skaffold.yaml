@@ -1,0 +1,13 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: admission-controller
+build:
+  local: {}
+  artifacts:
+    - image: example.com/tpu-provisioner/admission-controller
+      docker:
+        dockerfile: Dockerfile
+manifests:
+  rawYaml:
+    - manifests/manifest.yaml
