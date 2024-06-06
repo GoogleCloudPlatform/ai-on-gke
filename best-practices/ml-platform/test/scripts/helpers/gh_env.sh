@@ -14,18 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-start_runtime "features_initialize_apply"
-
-echo_title "Initializing a new project"
-
-print_and_execute "cd ${MLP_BASE_DIR}/terraform/features/initialize && \
-terraform init && \
-terraform plan -input=false -out=tfplan && \
-terraform apply -input=false tfplan && \
-rm tfplan && \
-terraform init -force-copy -migrate-state && \
-rm -rf state"
-
-total_runtime "features_initialize_apply"
-
-check_local_error_exit_on_error
+echo_title "Applying GitHub configuration"
+sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
