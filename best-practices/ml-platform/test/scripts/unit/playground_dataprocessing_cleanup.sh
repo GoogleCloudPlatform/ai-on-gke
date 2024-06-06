@@ -14,18 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-start_runtime "features_initialize_apply"
+SCRIPT_PATH="$(
+    cd "$(dirname "$0")" >/dev/null 2>&1
+    pwd -P
+)"
+SCRIPTS_DIR=$(realpath ${SCRIPT_PATH}/..)
 
-echo_title "Initializing a new project"
+export MLP_TYPE="playground"
+source ${SCRIPTS_DIR}/helpers/include.sh
 
-print_and_execute "cd ${MLP_BASE_DIR}/terraform/features/initialize && \
-terraform init && \
-terraform plan -input=false -out=tfplan && \
-terraform apply -input=false tfplan && \
-rm tfplan && \
-terraform init -force-copy -migrate-state && \
-rm -rf state"
+echo_title "Preparing the environment"
 
-total_runtime "features_initialize_apply"
+source ${SCRIPTS_DIR}/helpers/dataprocessing_env.sh
+source ${SCRIPTS_DIR}/helpers/dataprocessing_cleanup.sh
 
-check_local_error_exit_on_error
+check_local_error_and_exit

@@ -14,18 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-start_runtime "features_initialize_apply"
+echo_title "Checking byop_gh required configuration"
 
-echo_title "Initializing a new project"
+if [ ! -f ${HOME}/secrets/mlp-github-token ]; then
+    echo "Git token missing at '${HOME}/secrets/mlp-github-token'!"
+    exit 3
+fi
 
-print_and_execute "cd ${MLP_BASE_DIR}/terraform/features/initialize && \
-terraform init && \
-terraform plan -input=false -out=tfplan && \
-terraform apply -input=false tfplan && \
-rm tfplan && \
-terraform init -force-copy -migrate-state && \
-rm -rf state"
+if [ -z "${MLP_GITHUB_ORG}" ]; then
+    echo "MLP_GITHUB_ORG is not set!"
+    exit 4
+fi
 
-total_runtime "features_initialize_apply"
+if [ -z "${MLP_GITHUB_USER}" ]; then
+    echo "MLP_GITHUB_USER is not set!"
+    exit 5
+fi
 
-check_local_error_exit_on_error
+if [ -z "${MLP_GITHUB_EMAIL}" ]; then
+    echo "MLP_GITHUB_EMAIL is not set!"
+    exit 6
+fi
+
+if [ -z "${MLP_PROJECT_ID}" ]; then
+    echo "MLP_PROJECT_ID is not set!"
+    exit 7
+fi
+
+source ${SCRIPTS_DIR}/helpers/gh_env.sh

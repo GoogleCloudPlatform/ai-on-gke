@@ -18,16 +18,13 @@ SCRIPT_PATH="$(
     cd "$(dirname "$0")" >/dev/null 2>&1
     pwd -P
 )"
+SCRIPTS_DIR=$(realpath ${SCRIPT_PATH}/..)
 
-source ${SCRIPT_PATH}/helpers/include.sh
+export MLP_TYPE="playground"
+source ${SCRIPTS_DIR}/helpers/include.sh
 
 echo_title "Preparing the environment"
-export MLP_TYPE_BASE_DIR="${MLP_BASE_DIR}/examples/platform/playground"
-
-if [ ! -f ${HOME}/secrets/mlp-github-token ]; then
-    echo "Git token missing at '${HOME}/secrets/mlp-github-token'!"
-    exit 3
-fi
+source ${SCRIPTS_DIR}/helpers/new_gh_env.sh
 
 # terraform destroy
 ###############################################################################
@@ -36,7 +33,7 @@ if lock_is_set "terraform_destroy"; then
     echo_bold "Terraform destory previously completed successfully"
 else
     export TF_VAR_github_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
-    source ${SCRIPT_PATH}/helpers/terraform_destroy.sh
+    source ${SCRIPTS_DIR}/helpers/terraform_destroy.sh
     lock_set "terraform_destroy"
 fi
 
@@ -46,31 +43,16 @@ fi
 if lock_is_set "features_initialize_destroy"; then
     echo_bold "Feature initialize destroy previously completed successfully"
 else
-    source ${SCRIPT_PATH}/helpers/feature_initialize_destroy.sh
+    source ${SCRIPTS_DIR}/helpers/feature_initialize_destroy.sh
 
     lock_set "features_initialize_destroy"
 fi
 
 # cleanup
 ###############################################################################
-echo_title "Cleaning up local repository"
+echo_title "Cleaning up the environment"
 
-cd ${MLP_BASE_DIR} &&
-    git restore \
-        examples/platform/playground/backend.tf \
-        examples/platform/playground/mlp.auto.tfvars \
-        terraform/features/initialize/backend.tf \
-        terraform/features/initialize/backend.tf.bucket \
-        terraform/features/initialize/initialize.auto.tfvars
-
-cd ${MLP_BASE_DIR} &&
-    rm -rf \
-        examples/platform/playground/.terraform \
-        examples/platform/playground/.terraform.lock.hcl \
-        terraform/features/initialize/.terraform \
-        terraform/features/initialize/.terraform.lock.hcl \
-        terraform/features/initialize/backend.tf.local \
-        terraform/features/initialize/state
+source ${SCRIPTS_DIR}/helpers/new_gh_playground_cleanup.sh
 
 check_local_error_exit_on_error
 

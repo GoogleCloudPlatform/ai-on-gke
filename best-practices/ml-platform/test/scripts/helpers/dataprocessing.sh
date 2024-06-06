@@ -19,26 +19,23 @@ start_runtime "dataprocessing"
 echo_title "Preparing dataprocessing job"
 
 echo_title "Enabling Artifact Registry APIs"
-
-gcloud services enable artifactregistry.googleapis.com containerscanning.googleapis.com --project ${PROJECT_ID}
+print_and_execute_no_check "gcloud services enable artifactregistry.googleapis.com containerscanning.googleapis.com --project ${PROJECT_ID}"
 
 echo_title "Enabling Cloud Build APIs"
-
-gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
+print_and_execute_no_check "gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}"
 
 echo_title "Adding IAM permissions"
+print_and_execute_no_check "gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+--member 'serviceAccount:wi-ml-team-ray-head@${PROJECT_ID}.iam.gserviceaccount.com' \
+--role roles/storage.objectViewer"
 
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-    --member "serviceAccount:wi-ml-team-ray-head@${PROJECT_ID}.iam.gserviceaccount.com" \
-    --role roles/storage.objectViewer
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-    --member "serviceAccount:wi-ml-team-ray-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
-    --role roles/storage.objectAdmin
+print_and_execute_no_check "gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+--member 'serviceAccount:wi-ml-team-ray-worker@${PROJECT_ID}.iam.gserviceaccount.com' \
+--role roles/storage.objectAdmin"
 
 echo_title "Creating GCS bucket"
 
-gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID}
+print_and_execute_no_check "gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID}"
 
 echo_title "Downloading the dataset and uploading to GCS"
 
@@ -49,15 +46,13 @@ rm flipkart_com-ecommerce_sample.csv"
 
 echo_title "Creating Artifact Registry repository"
 
-gcloud artifacts repositories create dataprocessing \
-    --repository-format=docker \
-    --location=us \
-    --project=${PROJECT_ID}
+print_and_execute_no_check "gcloud artifacts repositories create dataprocessing \
+--repository-format=docker \
+--location=us \
+--project=${PROJECT_ID}"
 
 echo_title "Building container image"
-
-gcloud config set builds/use_kaniko True
-
+print_and_execute_no_check "gcloud config set builds/use_kaniko True"
 while ! gcloud services list --project ${PROJECT_ID} | grep cloudbuild.googleapis.com >/dev/null 2>&1; do
     sleep 10
 done
@@ -81,15 +76,13 @@ print_and_execute "gcloud container fleet memberships get-credentials ${CLUSTER_
 check_local_error_exit_on_error
 
 echo_title "Deleting exsting job"
-kubectl delete -f ${MLP_USE_CASE_BASE_DIR}/job.yaml
+print_and_execute_no_check "kubectl delete -f ${MLP_USE_CASE_BASE_DIR}/job.yaml"
 
 echo_title "Creating job"
-
 print_and_execute "kubectl apply -f ${MLP_USE_CASE_BASE_DIR}/job.yaml"
 check_local_error_exit_on_error
 
 echo_title "Waiting for job to complete"
-
 print_and_execute "kubectl wait --namespace=ml-team --for=condition=complete --timeout=3600s job/job &
 kubectl wait --namespace=ml-team --for=condition=failed --timeout=3600s job/job && exit 1 &
 wait -n && \
@@ -97,36 +90,14 @@ pkill -f 'kubectl wait --namespace=ml-team'"
 check_local_error_exit_on_error
 
 echo_title "Checking processed images"
-
 IMAGES_PROCESS=$(gsutil du gs://${PROCESSING_BUCKET}/flipkart_images | wc -l)
-echo "Processed ${IMAGES_PROCESS} images."
+echo_bold "Processed ${IMAGES_PROCESS} images."
 
 print_and_execute "((IMAGES_PROCESS > 0))"
 check_local_error_exit_on_error
 
-echo_title "Removing IAM permissions"
-
-gcloud projects remove-iam-policy-binding ${PROJECT_ID} \
-    --member "serviceAccount:wi-ml-team-ray-head@${PROJECT_ID}.iam.gserviceaccount.com" \
-    --role roles/storage.objectViewer
-
-gcloud projects remove-iam-policy-binding ${PROJECT_ID} \
-    --member "serviceAccount:wi-ml-team-ray-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
-    --role roles/storage.objectAdmin
-
-echo_title "Deleting Artifact Registry repository"
-
-gcloud artifacts repositories delete dataprocessing \
-    --location=us \
-    --project=${PROJECT_ID} \
-    --quiet
-
-echo_title "Deleting GCS buckets"
-
-print_and_execute "gsutil -m -q rm -rf gs://${PROCESSING_BUCKET}/*"
-print_and_execute "gcloud storage buckets delete gs://${PROCESSING_BUCKET} --project ${MLP_PROJECT_ID}"
-
-print_and_execute "gsutil -m -q rm -rf gs://${PROJECT_ID}_cloudbuild/*"
-print_and_execute "gcloud storage buckets delete gs://${PROJECT_ID}_cloudbuild --project ${MLP_PROJECT_ID}"
+echo_title "Cleaning up local repository changes"
+cd ${MLP_BASE_DIR} &&
+    git restore examples/use-case/ray/dataprocessing/job.yaml
 
 total_runtime "dataprocessing"
