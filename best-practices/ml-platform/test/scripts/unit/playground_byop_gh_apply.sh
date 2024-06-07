@@ -30,4 +30,5 @@ source ${SCRIPTS_DIR}/helpers/byop_gh_env.sh
 ###############################################################################
 export TF_VAR_github_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
 source ${SCRIPTS_DIR}/helpers/terraform_apply.sh
+
 check_local_error_and_exit
