@@ -50,7 +50,7 @@ else
     lock_set "terraform_apply"
 fi
 
-check_local_error_and_exit
+check_local_error_exit_on_error
 
 lock_unset "features_initialize_apply"
 lock_unset "terraform_apply"
