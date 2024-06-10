@@ -10,15 +10,15 @@ As part of this tutorial, you will get to do the following:
 
 1. Prepare your environment with a GKE cluster in
     Autopilot mode.
-2. Create a finetuning container.
-3. Use GPU to finetuning the Gemma 2B model and upload the model to huggingface.
+2. Create a finetune container.
+3. Use GPU to finetune the Gemma 2B model and upload the model to huggingface.
 
 ## Prerequisites
 
 * A terminal with `kubectl` and `gcloud` installed. Cloud Shell works great!
 * Create a [Hugging Face](https://huggingface.co/) account, if you don't already have one.
 * Ensure your project has sufficient quota for GPUs. To learn more, see [About GPUs](/kubernetes-engine/docs/concepts/gpus#gpu-quota) and [Allocation quotas](/compute/resource-usage#gpu_quota).
-* To get access to the Gemma models for deployment to GKE, you must first sign the license consent agreement then generate a Hugging Face access token.
+* To get access to the Gemma models for deployment to GKE, you must first sign the license consent agreement then generate a Hugging Face access token. Make sure the token has `Write` permission.
 
 ## Creating the GKE cluster with L4 nodepools
 
@@ -38,6 +38,7 @@ gcloud config set project <my-project-id>
 export PROJECT_ID=$(gcloud config get project)
 export REGION=us-central1
 export HF_TOKEN=<YOUR_HF_TOKEN>
+export CLUSTER_NAME=finetune-gemma
 ```
 
 > Note: You might have to rerun the export commands if for some reason you reset your shell and the variables are no longer set. This can happen for example when your Cloud Shell disconnects.
@@ -54,7 +55,7 @@ gcloud container clusters create-auto ${CLUSTER_NAME} \
 
 ### Create a Kubernetes secret for Hugging Face credentials {:#create-secret}
 
-In {{shell_name}}, do the following:
+In your shell session, do the following:
 
   1. Configure `kubectl` to communicate with your cluster:
 
@@ -72,7 +73,7 @@ In {{shell_name}}, do the following:
 
 ### Containerize the Code with Docker and Cloud Build
 
-1. Create a Artifact Registry Docker Repository
+1. Create an Artifact Registry Docker Repository
 
     ```sh
     gcloud artifacts repositories create gemma \
@@ -82,18 +83,7 @@ In {{shell_name}}, do the following:
         --description="Gemma Repo"
     ```
 
-2. Open the `cloudbuild.yaml` manifest.
-3. Edit the path of the container image
-
-```yaml
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-args: [ 'build', '-t', 'us-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0', '.' ]
-images:
-- 'us-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0'
-```
-
-4. Execute the build and create inference container image.
+2. Execute the build and create inference container image.
 
     ```sh
     gcloud builds submit .
@@ -102,7 +92,7 @@ images:
 ## Run Finetune Job on GKE
 
 1. Open the `finetune.yaml` manifest.
-2. Edit the `image` name with the container image built with Cloud Build and `NEW_MODEL` environment variable value. This `NEW_MODEL` will be the name of the model you want to save in Hugging Face.
+2. Edit the `image` name with the container image built with Cloud Build and `NEW_MODEL` environment variable value. This `NEW_MODEL` will be the name of the model you would save as a public model in your Hugging Face account.
 3. Run the following command to create the finetune job:
 
     ```sh
@@ -125,7 +115,7 @@ images:
 
 ## Serve the Finetuned Model on GKE
 
-To deploy the finetuned model on GKE you can follow the instructions from Deploy a pre-trained Gemma model on Hugging Face TGI or vLLM. Change the `MODEL_ID` to `<YOUR_HUGGING_FACE_PROFILE>/gemma-2b-sql-finetuned`.
+To deploy the finetuned model on GKE you can follow the instructions from Deploy a pre-trained Gemma model on [Hugging Face TGI](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-tgi#deploy-pretrained) or [vLLM](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#deploy-vllm). Select the Gemma 2B instruction and change the `MODEL_ID` to `<YOUR_HUGGING_FACE_PROFILE>/gemma-2b-sql-finetuned`.
 
 ### Set up port forwarding
 
@@ -144,6 +134,8 @@ Forwarding from 127.0.0.1:8000 -> 8000
 ### Interact with the model using curl
 
 Once the model is deployed In a new terminal session, use curl to chat with your model:
+
+> The following example command is for TGI.
 
 ```sh
 USER_PROMPT="Question: What is the total number of attendees with age over 30 at kubecon eu? Context: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)"
