@@ -53,7 +53,7 @@ gcloud container clusters create-auto ${CLUSTER_NAME} \
   --cluster-version=1.29
 ```
 
-### Create a Kubernetes secret for Hugging Face credentials {:#create-secret}
+### Create a Kubernetes secret for Hugging Face credentials
 
 In your shell session, do the following:
 
