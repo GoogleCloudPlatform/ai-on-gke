@@ -96,6 +96,16 @@ echo_bold "Processed ${IMAGES_PROCESS} images."
 print_and_execute "((IMAGES_PROCESS > 0))"
 check_local_error_exit_on_error
 
+echo_title "Removing IAM permissions"
+
+gcloud projects remove-iam-policy-binding ${MLP_PROJECT_ID} \
+    --member "serviceAccount:wi-ml-team-ray-head@${MLP_PROJECT_ID}.iam.gserviceaccount.com" \
+    --role roles/storage.objectViewer
+
+gcloud projects remove-iam-policy-binding ${MLP_PROJECT_ID} \
+    --member "serviceAccount:wi-ml-team-ray-worker@${MLP_PROJECT_ID}.iam.gserviceaccount.com" \
+    --role roles/storage.objectAdmin
+
 echo_title "Cleaning up local repository changes"
 cd ${MLP_BASE_DIR} &&
     git restore examples/use-case/ray/dataprocessing/job.yaml
