@@ -28,6 +28,8 @@ echo_title "Preparing the environment"
 source ${SCRIPTS_DIR}/helpers/byop_gh_env.sh
 source ${SCRIPTS_DIR}/helpers/dataprocessing_env.sh
 
+export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-terraform"
+
 # terraform apply
 ###############################################################################
 if lock_is_set "terraform_apply"; then

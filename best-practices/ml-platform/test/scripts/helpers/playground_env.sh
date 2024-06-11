@@ -15,7 +15,6 @@
 # limitations under the License.
 
 echo_title "Applying terraform configuration"
-export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-terraform"
 
 sed -i "s/YOUR_STATE_BUCKET/${MLP_STATE_BUCKET}/g" ${MLP_TYPE_BASE_DIR}/backend.tf
 sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
