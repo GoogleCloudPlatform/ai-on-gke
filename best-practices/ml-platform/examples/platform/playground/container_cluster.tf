@@ -251,6 +251,10 @@ resource "google_container_cluster" "mlp" {
     channel = "RAPID"
   }
 
+  secret_manager_config {
+    enabled = true
+  }
+
   security_posture_config {
     mode               = "BASIC"
     vulnerability_mode = "VULNERABILITY_ENTERPRISE"
