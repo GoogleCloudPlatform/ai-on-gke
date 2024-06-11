@@ -12,17 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_version = ">= 1.5.7"
-
-  required_providers {
-    gitlab = {
-      source = "gitlabhq/gitlab"
-      version = "17.0.1"
-    }
-  }
+output "branch_names" {
+  value = var.branches.names
 }
 
-provider "gitlab" {
-  token = var.token
+output "branches" {
+  value = var.branches.names
+}
+
+output "default_branch" {
+  value = var.branches.default
+}
+
+output "full_name" {
+  value = gitlab_project.project.path_with_namespace
+}
+
+output "html_url" {
+  value = gitlab_project.project.web_url
+}
+
+output "http_clone_url" {
+  value = gitlab_project.project.http_url_to_repo
+}
+
+output "repo" {
+  sensitive = true
+  value     = gitlab_project.project
 }
