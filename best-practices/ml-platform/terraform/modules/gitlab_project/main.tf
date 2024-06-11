@@ -12,17 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_version = ">= 1.5.7"
-
-  required_providers {
-    gitlab = {
-      source = "gitlabhq/gitlab"
-      version = "17.0.1"
-    }
-  }
+data "gitlab_group" "group" {
+  full_path = var.group_full_path
 }
 
-provider "gitlab" {
-  token = var.token
+resource "gitlab_project" "project" {
+  name             = var.project_name
+  default_branch   = var.branches.default
+  description      = var.description
+  namespace_id     = data.gitlab_group.group.id
+  visibility_level = var.visibility_level
+}
+
+resource "gitlab_branch" "branch" {
+  for_each = toset(setsubtract(var.branches.names, ["main"]))
+
+  name    = each.value
+  project = gitlab_project.project.id
+  ref     = "main"
 }
