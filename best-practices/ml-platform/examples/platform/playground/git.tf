@@ -21,11 +21,11 @@ module "configsync_repository" {
   source = "../../../terraform/modules/github_repository"
 
   branches = {
-    default = var.environment_name
-    names   = ["main", var.environment_name]
+    default = "main"
+    names   = ["main"]
   }
-  description = "Google Cloud Config Sync repository"
-  name        = var.configsync_repo_name
+  description = "MLP Config Sync repository for ${var.environment_name} environment"
+  name        = "${var.configsync_repo_name}-${var.environment_name}"
   owner       = var.github_org
   token       = var.github_token
 }

@@ -28,6 +28,7 @@ source ${SCRIPTS_DIR}/helpers/byop_gh_env.sh
 
 # terraform apply
 ###############################################################################
+source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
 export TF_VAR_github_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
 source ${SCRIPTS_DIR}/helpers/terraform_apply.sh
 

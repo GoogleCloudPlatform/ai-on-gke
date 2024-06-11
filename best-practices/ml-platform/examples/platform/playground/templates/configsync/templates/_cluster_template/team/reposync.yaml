@@ -26,7 +26,7 @@ spec:
   sourceFormat: unstructured
   git:
     repo: "GIT_REPO"
-    revision: "ENV"
+    revision: "main"
     #branch: NAMESPACE_BRANCH
     dir: "manifests/apps/NAMESPACE"
     auth: token

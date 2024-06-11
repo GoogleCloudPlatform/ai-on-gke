@@ -13,7 +13,7 @@
 # limitations under the License.
 
 variable "cluster_name" {
-  default     = "gke-ml"
+  default     = "mlp"
   description = "Name of the GKE cluster"
   type        = string
 }
@@ -25,7 +25,7 @@ variable "config_management_version" {
 }
 
 variable "configsync_repo_name" {
-  default     = "config-sync-repo"
+  default     = "mlp-configsync"
   description = "Name of the GitHub repo that will be synced to the cluster with Config sync."
   type        = string
 }
