@@ -330,7 +330,7 @@ Open Cloud Shell to execute the following commands:
   ```
   Starting to build Gateway kubeconfig...
   Current project_id: mlops-platform-417609
-  A new kubeconfig entry "connectgateway_mlops-platform-417609_global_gke-ml-dev" has been generated and set as the current context.
+  A new kubeconfig entry "connectgateway_mlops-platform-417609_global_mlp-dev" has been generated and set as the current context.
   ```
 
 - Fetch KubeRay operator CRDs

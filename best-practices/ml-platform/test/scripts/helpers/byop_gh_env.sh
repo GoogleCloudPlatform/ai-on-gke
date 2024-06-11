@@ -41,4 +41,6 @@ if [ -z "${MLP_PROJECT_ID}" ]; then
     exit 7
 fi
 
+export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-terraform"
+
 source ${SCRIPTS_DIR}/helpers/gh_env.sh
