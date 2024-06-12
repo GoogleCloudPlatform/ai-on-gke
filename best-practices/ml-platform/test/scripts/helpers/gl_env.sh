@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo_title "Checking GitHub required configuration"
+echo_title "Checking GitLab required configuration"
 
-export GIT_TOKEN_FILE=${GIT_TOKEN_FILE:-${HOME}/secrets/mlp-github-token}
+export GIT_TOKEN_FILE=${GIT_TOKEN_FILE:-${HOME}/secrets/mlp-gitlab-token}
 
 if [ ! -f ${GIT_TOKEN_FILE} ]; then
     echo "Git token missing at '${GIT_TOKEN_FILE}'!"

@@ -21,18 +21,18 @@ if [ ! -f ${HOME}/secrets/mlp-github-token ]; then
     exit 3
 fi
 
-if [ -z "${MLP_GITHUB_ORG}" ]; then
-    echo_error "MLP_GITHUB_ORG is not set!"
+if [ -z "${MLP_GIT_NAMESPACE}" ]; then
+    echo_error "MLP_GIT_NAMESPACE is not set!"
     exit 4
 fi
 
-if [ -z "${MLP_GITHUB_USER}" ]; then
-    echo_error "MLP_GITHUB_USER is not set!"
+if [ -z "${MLP_GIT_USER_NAME}" ]; then
+    echo_error "MLP_GIT_USER_NAME is not set!"
     exit 5
 fi
 
-if [ -z "${MLP_GITHUB_EMAIL}" ]; then
-    echo_error "MLP_GITHUB_EMAIL is not set!"
+if [ -z "${MLP_GIT_USER_EMAIL}" ]; then
+    echo_error "MLP_GIT_USER_EMAIL is not set!"
     exit 6
 fi
 

@@ -25,15 +25,12 @@ source ${SCRIPTS_DIR}/helpers/include.sh
 
 echo_title "Preparing the environment"
 source ${SCRIPTS_DIR}/helpers/byop_env.sh
-source ${SCRIPTS_DIR}/helpers/gh_env.sh
+source ${SCRIPTS_DIR}/helpers/gl_env.sh
+source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
 
-# terraform destroy
+# terraform apply
 ###############################################################################
 export TF_VAR_git_token=$(tr --delete '\n' <${GIT_TOKEN_FILE})
-source ${SCRIPTS_DIR}/helpers/terraform_destroy.sh
-
-check_local_error_exit_on_error
-
-source ${SCRIPTS_DIR}/helpers/byop_playground_cleanup.sh
+source ${SCRIPTS_DIR}/helpers/terraform_apply.sh
 
 check_local_error_and_exit

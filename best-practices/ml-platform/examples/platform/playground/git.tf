@@ -26,6 +26,22 @@ module "configsync_repository" {
   }
   description = "MLP Config Sync repository for ${var.environment_name} environment"
   name        = "${var.configsync_repo_name}-${var.environment_name}"
-  owner       = var.github_org
-  token       = var.github_token
+  owner       = var.git_namespace
+  token       = var.git_token
 }
+
+#
+# To use GitLab, uncomment this module and comment out the module above
+#
+# module "configsync_repository" {
+#   source = "../../../terraform/modules/gitlab_project"
+
+#   branches = {
+#     default = "main"
+#     names   = ["main"]
+#   }
+#   description     = "MLP Config Sync repository for ${var.environment_name} environment"
+#   group_full_path = var.git_namespace
+#   project_name    = "${var.configsync_repo_name}-${var.environment_name}"
+#   token           = var.git_token
+# }

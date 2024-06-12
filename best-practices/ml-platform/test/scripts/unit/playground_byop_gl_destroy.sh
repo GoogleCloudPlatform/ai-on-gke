@@ -24,39 +24,16 @@ export MLP_TYPE="playground"
 source ${SCRIPTS_DIR}/helpers/include.sh
 
 echo_title "Preparing the environment"
-source ${SCRIPTS_DIR}/helpers/new_gh_env.sh
+source ${SCRIPTS_DIR}/helpers/byop_env.sh
+source ${SCRIPTS_DIR}/helpers/gl_env.sh
 
 # terraform destroy
 ###############################################################################
-
-if lock_is_set "terraform_destroy"; then
-    echo_bold "Terraform destory previously completed successfully"
-else
-    export TF_VAR_git_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
-    source ${SCRIPTS_DIR}/helpers/terraform_destroy.sh
-    lock_set "terraform_destroy"
-fi
-
-# feature initialize destroy
-###############################################################################
-
-if lock_is_set "features_initialize_destroy"; then
-    echo_bold "Feature initialize destroy previously completed successfully"
-else
-    source ${SCRIPTS_DIR}/helpers/feature_initialize_destroy.sh
-
-    lock_set "features_initialize_destroy"
-fi
-
-# cleanup
-###############################################################################
-echo_title "Cleaning up the environment"
-
-source ${SCRIPTS_DIR}/helpers/new_gh_playground_cleanup.sh
+export TF_VAR_git_token=$(tr --delete '\n' <${GIT_TOKEN_FILE})
+source ${SCRIPTS_DIR}/helpers/terraform_destroy.sh
 
 check_local_error_exit_on_error
 
-lock_unset "features_initialize_destroy"
-lock_unset "terraform_destroy"
+source ${SCRIPTS_DIR}/helpers/byop_playground_cleanup.sh
 
 check_local_error_and_exit
