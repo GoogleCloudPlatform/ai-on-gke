@@ -56,6 +56,10 @@ resource "google_compute_global_address" "external_gateway_https" {
 }
 
 resource "google_endpoints_service" "ray_dashboard_https" {
+  depends_on = [
+    google_project_service.servicemanagement_googleapis_com
+  ]
+
   openapi_config = templatefile(
     "${path.module}/templates/openapi/endpoint.tftpl.yaml",
     {

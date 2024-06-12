@@ -99,3 +99,10 @@ resource "google_project_service" "serviceusage_googleapis_com" {
   project                    = data.google_project.environment.project_id
   service                    = "serviceusage.googleapis.com"
 }
+
+resource "google_project_service" "servicemanagement_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "servicemanagement.googleapis.com"
+}
