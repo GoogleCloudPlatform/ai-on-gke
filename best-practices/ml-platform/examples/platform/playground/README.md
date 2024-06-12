@@ -167,7 +167,7 @@ You only need to complete the section for the option that you have selected (eit
   sed -i "s/YOUR_PROJECT_ID/${MLP_PROJECT_ID}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
-You can now deploy the platform with Terraform in the [next section](#run-terraform).
+You can now configure OAuth consent screen for IAP in the [next section](#configure-oauth-consent-screen-for-iap).
 
 ### Option 2: Terraform managed project
 
@@ -280,7 +280,9 @@ Before running Terraform, make sure that the Service Usage API is enable.
 
 - Enable Service Usage API
 
-  `gcloud services enable serviceusage.googleapis.com`
+  ```
+  gcloud services enable serviceusage.googleapis.com
+  ```
 
 - Ensure the endpoint is not in a deleted state
 
