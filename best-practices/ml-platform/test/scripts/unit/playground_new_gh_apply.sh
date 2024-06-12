@@ -45,7 +45,7 @@ if lock_is_set "terraform_apply"; then
 else
     source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
 
-    export TF_VAR_github_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
+    export TF_VAR_git_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
     source ${SCRIPTS_DIR}/helpers/terraform_apply.sh
     lock_set "terraform_apply"
 fi

@@ -24,8 +24,8 @@ export MLP_TYPE="playground"
 source ${SCRIPTS_DIR}/helpers/include.sh
 
 echo_title "Preparing the environment"
-
-source ${SCRIPTS_DIR}/helpers/byop_gh_env.sh
+source ${SCRIPTS_DIR}/helpers/byop_env.sh
+source ${SCRIPTS_DIR}/helpers/gh_env.sh
 source ${SCRIPTS_DIR}/helpers/dataprocessing_env.sh
 
 # terraform apply
@@ -34,7 +34,7 @@ if lock_is_set "terraform_apply"; then
     echo_bold "Terraform apply previously completed successfully"
 else
     source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
-    export TF_VAR_github_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
+    export TF_VAR_git_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
     source ${SCRIPTS_DIR}/helpers/terraform_apply.sh
     lock_set "terraform_apply"
 fi
@@ -53,7 +53,7 @@ fi
 if lock_is_set "terraform_destroy"; then
     echo_bold "Terraform destory previously completed successfully"
 else
-    export TF_VAR_github_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
+    export TF_VAR_git_token=$(tr --delete '\n' <${HOME}/secrets/mlp-github-token)
     source ${SCRIPTS_DIR}/helpers/terraform_destroy.sh
     lock_set "terraform_destroy"
 fi
@@ -63,7 +63,7 @@ fi
 echo_title "Cleaning up the environment"
 
 source ${SCRIPTS_DIR}/helpers/dataprocessing_cleanup.sh
-source ${SCRIPTS_DIR}/helpers/byop_gh_playground_cleanup.sh
+source ${SCRIPTS_DIR}/helpers/byop_playground_cleanup.sh
 
 total_runtime "script"
 

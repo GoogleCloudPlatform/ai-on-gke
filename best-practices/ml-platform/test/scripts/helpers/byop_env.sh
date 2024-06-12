@@ -14,27 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo_title "Checking byop_gh required configuration"
-
-if [ ! -f ${HOME}/secrets/mlp-github-token ]; then
-    echo "Git token missing at '${HOME}/secrets/mlp-github-token'!"
-    exit 3
-fi
-
-if [ -z "${MLP_GITHUB_ORG}" ]; then
-    echo "MLP_GITHUB_ORG is not set!"
-    exit 4
-fi
-
-if [ -z "${MLP_GITHUB_USER}" ]; then
-    echo "MLP_GITHUB_USER is not set!"
-    exit 5
-fi
-
-if [ -z "${MLP_GITHUB_EMAIL}" ]; then
-    echo "MLP_GITHUB_EMAIL is not set!"
-    exit 6
-fi
+echo_title "Checking BYOP required configuration"
 
 if [ -z "${MLP_PROJECT_ID}" ]; then
     echo "MLP_PROJECT_ID is not set!"
@@ -42,5 +22,3 @@ if [ -z "${MLP_PROJECT_ID}" ]; then
 fi
 
 export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-terraform"
-
-source ${SCRIPTS_DIR}/helpers/gh_env.sh

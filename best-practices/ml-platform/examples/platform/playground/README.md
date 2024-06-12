@@ -103,26 +103,27 @@ The default quota given to a project should be sufficient for this guide.
   nano ${HOME}/secrets/mlp-github-token
   ```
 
-- Set the GitHub environment variables in Cloud Shell
+- Set the Git environment variables in Cloud Shell
 
   Replace the following values:
 
-  - `<GITHUB_ORGANIZATION>` is the GitHub organization or user namespace to use for the repositories
-  - `<GITHUB_USER>` is the GitHub account to use for authentication
-  - `<GITHUB_EMAIL>` is the email address to use for commit
+  - `<GIT_NAMESPACE>` is the GitHub organization or user namespace to use for the repositories
+  - `<GIT_USER_EMAIL>` is the email address to use for commit
+  - `<GIT_USER_NAME>` is the GitHub account to use for authentication
 
   ```
-  export MLP_GITHUB_ORG="<GITHUB_ORGANIZATION>"
-  export MLP_GITHUB_USER="<GITHUB_USER>"
-  export MLP_GITHUB_EMAIL="<GITHUB_EMAIL>"
+  export MLP_GIT_NAMESPACE="<GIT_NAMESPACE>"
+  export MLP_GIT_USER_EMAIL="<GIT_USER_EMAIL>"
+  export MLP_GIT_USER_NAME="<GIT_USER_NAME>"
+
   ```
 
 - Set the configuration variables
 
   ```
-  sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GIT_NAMESPACE/${MLP_GIT_NAMESPACE}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GIT_USER_EMAIL/${MLP_GIT_USER_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GIT_USER_NAME/${MLP_GIT_USER_NAME}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
 ## Project Configuration
