@@ -14,7 +14,7 @@ spec:
   - type: Pods
     pods:
       metric:
-        name: prometheus.googleapis.com|jetstream_prefill_backlog_size|gauge
+        name: prometheus.googleapis.com|${hpa_type}|gauge
       target:
         type: AverageValue
         averageValue: 1

@@ -18,11 +18,10 @@ locals {
   hpa_cpu_template           = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
   hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.jetstream.custom_metric.yaml.tftpl"
   jetstream_podmonitoring    = "${path.module}/monitoring-templates/jetstream-podmonitoring.yaml.tftpl"
-  custom_metrics_enabled     = var.custom_metrics_enabled
 }
 
 module "custom_metrics_stackdriver_adapter" {
-  count  = local.custom_metrics_enabled ? 1 : 0
+  count  = var.custom_metrics_enabled ? 1 : 0
   source = "./custom-metrics-stackdriver-adapter"
   workload_identity = {
     enabled    = true
@@ -37,12 +36,13 @@ resource "kubernetes_manifest" "tgi-pod-monitoring" {
 }
 
 resource "kubernetes_manifest" "hpa_custom_metric" {
-  count = local.custom_metrics_enabled ? 1 : 0
+  count = var.custom_metrics_enabled ? 1 : 0
   manifest = yamldecode(templatefile(local.hpa_custom_metric_template, {
     namespace               = var.namespace
     custom_metric_name      = var.hpa_type
     hpa_averagevalue_target = var.hpa_averagevalue_target
     hpa_min_replicas        = var.hpa_min_replicas
     hpa_max_replicas        = var.hpa_max_replicas
+    
   }))
 }

@@ -73,7 +73,7 @@ variable "hpa_type" {
   nullable    = true
   validation {
     condition     = var.hpa_type == null ? true : length(regexall("jetstream_.*", var.hpa_type)) > 0
-    error_message = "Allows values for hpa_type are ∈ {null, jetstream metrics (e.g., \"jetstream_prefill_backlog_size\", \"jetstream_slots_available_percentage\")}"
+    error_message = "Allows values for hpa_type are {null, jetstream metrics (e.g., \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\")}"
   }
 }
 

@@ -179,6 +179,33 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 Deploy jetstream with above, deploy (podMonitor, CMSA, HPA) with terraform, FIGURE THIS OUT
 
+For instructions on deploying components for handling metrics monitoring via Google Cloud Monitoring and autoscaling, see the readme in `./terraform`
+Note that the terraform config applied from following that readme will only apply one HPA resource. For those who want to scale based on multiple metrics, we reccomend using the following template:
+
+```
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jetstream-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: maxengine-server
+  minReplicas: <YOUR_MIN_REPLICAS>
+  maxReplicas: <YOUR_MAX_REPLICAS>
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: prometheus.googleapis.com|$<YOUR_METRIC_NAME>|gauge
+      target:
+        type: AverageValue
+        averageValue: <YOUR_VALUE_HERE>
+```
+
+ More info about the kubernetes HPA can be found [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+
 ### Send sample requests
 
 Run the following command to set up port forwarding to the http server:
