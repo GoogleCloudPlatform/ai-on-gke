@@ -36,11 +36,11 @@ resource "kubernetes_manifest" "tgi-pod-monitoring" {
 }
 
 resource "kubernetes_manifest" "hpa_custom_metric" {
-  count = var.custom_metrics_enabled ? 1 : 0
+  count = var.custom_metrics_enabled && var.hpa_type != null && var.hpa_averagevalue_target != null ? 1 : 0
   manifest = yamldecode(templatefile(local.hpa_custom_metric_template, {
     namespace               = var.namespace
-    custom_metric_name      = var.hpa_type
-    hpa_averagevalue_target = var.hpa_averagevalue_target
+    hpa_type                = try(var.hpa_type, "")
+    hpa_averagevalue_target = try(var.hpa_averagevalue_target, 1)
     hpa_min_replicas        = var.hpa_min_replicas
     hpa_max_replicas        = var.hpa_max_replicas
     

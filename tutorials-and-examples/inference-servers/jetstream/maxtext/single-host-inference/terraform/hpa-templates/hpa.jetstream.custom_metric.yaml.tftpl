@@ -17,4 +17,4 @@ spec:
         name: prometheus.googleapis.com|${hpa_type}|gauge
       target:
         type: AverageValue
-        averageValue: 1
+        averageValue: ${hpa_averagevalue_target}

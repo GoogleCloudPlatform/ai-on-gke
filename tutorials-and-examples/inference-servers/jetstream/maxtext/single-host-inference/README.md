@@ -205,13 +205,6 @@ spec:
         averageValue: <YOUR_VALUE_HERE>
 ```
 
-Next, do the following:
-```
-gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:cmsa-sa@${PROJECT_NAME}.iam.gserviceaccount.com --role=roles/monitoring.viewer --role=roles/monitoring.metricWriter --role=roles/iam.serviceAccountTokenCreator --role=roles/storage.admin --role=roles/storage.objectAdmin
-
-gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:${PROJECT_NAME}.svc.id.goog[custom-metrics/custom-metrics-stackdriver-adapter]" cmsa-sa@${PROJECT_NAME}.iam.gserviceaccount.com
-```
-
  More info about the kubernetes HPA can be found [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
 
 ### Send sample requests
