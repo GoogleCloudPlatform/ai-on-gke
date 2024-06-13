@@ -21,9 +21,9 @@ sleep 3
 function job_has_selector_len {
     key_val=$(kubectl get job $3 -ojsonpath="{.spec.template.spec.nodeSelector.$2}")
     if [[ ${#key_val} == $1 ]]; then
-        echo "Job has key with correct length"
+        echo "PASS: Job has node selector "$2" with correct length."
     else
-        echo "ERROR: Job key wrong length!"
+        echo "FAIL: Job node selector "$2" has the wrong length!"
         exit 1
     fi
 }
