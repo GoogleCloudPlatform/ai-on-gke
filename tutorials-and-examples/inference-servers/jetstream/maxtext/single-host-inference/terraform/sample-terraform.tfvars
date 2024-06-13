@@ -1,4 +1,4 @@
-namespace = "slabe-jetstream"
+namespace = "default"
 
 # How to (horizontally) scale the workload. Allowed values are:
 # - null (no scaling),
@@ -10,7 +10,6 @@ namespace = "slabe-jetstream"
 # - Other possibilities coming soon...
 #
 # See `autoscaling.md` for more details and recommendations.
-hpa_type = null
 custom_metrics_enabled = true
 
 #
@@ -22,4 +21,4 @@ custom_metrics_enabled = true
 hpa_min_replicas = 1
 hpa_max_replicas = 2
 
-project_id = "tpu-vm-gke-testing"
+project_id = "<project_id>"

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: maxengine-server
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: maxengine-server
@@ -18,7 +18,7 @@ spec:
       serviceAccountName: custom-metrics-stackdriver-adapter
       containers:
       - name: maxengine-server
-        image: us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/maxengine-server:latest
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2
         securityContext:
           privileged: true
         args:
@@ -43,7 +43,7 @@ spec:
           limits:
             google.com/tpu: 4
       - name: jetstream-http
-        image: us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/jetstream-http:latest
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2
         ports:
         - containerPort: 8000
 ---

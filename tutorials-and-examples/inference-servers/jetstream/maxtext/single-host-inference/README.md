@@ -49,7 +49,7 @@ Follow [these steps](https://cloud.google.com/kubernetes-engine/docs/how-to/work
 ```
 # Get credentials for your cluster
 $ gcloud container clusters get-credentials jetstream-maxtext \
-    --region=${ZONE}
+    --zone=${ZONE}
 
 # Create an IAM service account.
 $ gcloud iam service-accounts create jetstream-iam-sa
