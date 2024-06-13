@@ -33,7 +33,7 @@ spec:
         - ici_tensor_parallelism=1
         - scan_layers=false
         - weight_dtype=bfloat16
-        - load_parameters_path=gs://slabe-jetstream/final/unscanned/gemma_7b-it/0/checkpoints/0/items
+        - load_parameters_path=gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
         - prometheus_port=9100
         ports:
         - containerPort: 9000
@@ -66,6 +66,3 @@ spec:
     name: jetstream-grpc
     port: 9000
     targetPort: 9000
-  - protocol: TCP
-    name: prometheus-client-http
-    port: 9100
