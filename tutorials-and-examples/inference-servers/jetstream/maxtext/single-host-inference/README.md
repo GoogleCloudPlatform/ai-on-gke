@@ -186,8 +186,8 @@ For this we provide two options:
 
 ### Option 1: Terraform
 
-For instructions on deploying these components for handling metrics monitoring via Google Cloud Monitoring and autoscaling via terraform, see the readme in `./terraform`.
-Note that the terraform config applied from following that readme will only apply one HPA resource. For those who want to scale based on multiple metrics, we reccomend using the following template:
+For instructions on deploying these components for handling metrics monitoring via Google Cloud Monitoring and autoscaling via terraform, see the readme in `./terraform`. A few notes:
+  - The terraform config applied from following the readme will only apply one HPA resource. For those who want to scale based on multiple metrics, we reccomend using the following template:
 
 ```
 apiVersion: autoscaling/v2
@@ -214,7 +214,7 @@ spec:
 ### Option 2: Kubectl
   If terraform is not an option or not preffered, use `gcloud` and `kubectl` CLI tools instead to apply the following:
 
-  TODO: Add instructions here
+  TODO: Add instructions in follow up
 
 ### Send sample requests
 

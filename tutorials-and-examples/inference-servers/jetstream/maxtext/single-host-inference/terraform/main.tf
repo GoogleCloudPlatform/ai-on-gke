@@ -30,8 +30,10 @@ module "custom_metrics_stackdriver_adapter" {
 }
 
 resource "kubernetes_manifest" "tgi-pod-monitoring" {
+  count = var.custom_metrics_enabled && var.metrics_scrape_port != null ? 1 : 0
   manifest = yamldecode(templatefile(local.jetstream_podmonitoring, {
-    namespace = var.namespace
+    namespace             = var.namespace
+    metrics_scrape_port   = try(var.metrics_scrape_port, -1)
   }))
 }
 
@@ -43,6 +45,5 @@ resource "kubernetes_manifest" "hpa_custom_metric" {
     hpa_averagevalue_target = try(var.hpa_averagevalue_target, 1)
     hpa_min_replicas        = var.hpa_min_replicas
     hpa_max_replicas        = var.hpa_max_replicas
-    
   }))
 }

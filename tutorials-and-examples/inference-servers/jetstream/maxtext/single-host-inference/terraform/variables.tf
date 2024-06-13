@@ -112,3 +112,10 @@ variable "custom_metrics_enabled" {
   default = false
   nullable = false
 }
+
+variable "metrics_scrape_port" {
+  description = "Port to scrape metrics from"
+  type = number
+  default = 9100
+  nullable = true
+}
