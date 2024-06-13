@@ -252,10 +252,6 @@ resource "google_service_account" "cmsa-sa" {
   project    = var.workload_identity.project_id
 }
 
-# Need to do this in terraform
-# gcloud projects add-iam-policy-binding tpu-vm-gke-testing --member=serviceAccount:cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com --role=roles/monitoring.viewer --role=roles/monitoring.metricWriter --role=roles/iam.serviceAccountTokenCreator --role=roles/storage.admin --role=roles/storage.objectAdmin
-# gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:tpu-vm-gke-testing.svc.id.goog[custom-metrics/custom-metrics-stackdriver-adapter]" cmsa-sa@tpu-vm-gke-testing.iam.gserviceaccount.com
-
 # Equivalent to:
 #   gcloud projects add-iam-policy-binding PROJECT_ID \
 #       --member=serviceAccount:cmsa-sa@PROJECT_ID.iam.gserviceaccount.com \
