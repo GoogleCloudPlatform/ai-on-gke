@@ -180,7 +180,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 In situations where the deployment above is not sufficient for your inference load, you may consider metrics based horizontal pod autoscaling. To do this we recommend applying the following resources to your cluster:
  - PodMonitoring: For colelcting metrics and exporting them to Google Cloud Monitoring
  - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
- - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).: For reading metrics and setting the maxengine-servers deployments replica count accordingly.
+ - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
 
 For this we provide two options:
 
@@ -211,7 +211,7 @@ spec:
 ```
 
 ### Option 2: Kubectl
-  If terraform is not an option or not preffered, use `gcloud` and `kubectl` CLI tools instead to apply the following:
+  If terraform is not an option or not preferred, use `gcloud` and `kubectl` CLI tools instead to apply the following:
 
   TODO: Add instructions in follow up
 
