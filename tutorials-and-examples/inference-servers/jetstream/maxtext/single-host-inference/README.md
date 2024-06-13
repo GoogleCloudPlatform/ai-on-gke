@@ -175,6 +175,19 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
+## (optional) View Prometheus Metrics Manually
+
+The above deployment also sets the `--prometheus_port` flag to 9100 on the maxengine server container. Setting this starts a prometheus client endpoint and emits metrics on port 9100. Make HTTP requests to that endpoint and it will respond with the current value of the registered metrics:
+
+```
+# HELP jetstream_prefill_backlog_size Size of prefill queue
+# TYPE jetstream_prefill_backlog_size gauge
+jetstream_prefill_backlog_size{id="maxengine-server-58f8786f4c-4587n"} 57.0
+# HELP jetstream_slots_available_percentage The percentage of available slots in decode batch
+# TYPE jetstream_slots_available_percentage gauge
+jetstream_slots_used_percentage{id="maxengine-server-58f8786f4c-4587n",idx="0"} 1.0
+```
+
 ## (optional) Enable Horizontal Pod Autoscaling
 
 In situations where the deployment above is not sufficient for your inference load, you may consider metrics based horizontal pod autoscaling. To do this we recommend applying the following resources to your cluster:
@@ -240,7 +253,7 @@ The output should be similar to the following:
 }
 ```
 
-## Optionals
+## Other optional steps
 ### Build and upload Maxengine Server image
 
 Build the Maxengine Server from [here](../maxengine-server) and upload to your project
