@@ -177,10 +177,16 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 ## (optional) Enable Horizontal Pod Autoscaling
 
-TODO: 
-Deploy jetstream with above, deploy (podMonitor, CMSA, HPA) without terraform, FIGURE THIS OUT
+In situations where the deployment above is not sufficient for your inference load, you may consider horizontally scaling your pods based on certain metrics. To do this we recommend applying the following resources to your cluster:
+ - PodMonitoring: For colelcting metrics and exporting them to Google Cloud Monitoring
+ - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
+ - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).: For reading metrics and setting the replica count for your deployment accordingly.
 
-For instructions on deploying components for handling metrics monitoring via Google Cloud Monitoring and autoscaling via terraform, see the readme in `./terraform`.
+For this we provide two options:
+
+### Option 1: Terraform
+
+For instructions on deploying these components for handling metrics monitoring via Google Cloud Monitoring and autoscaling via terraform, see the readme in `./terraform`.
 Note that the terraform config applied from following that readme will only apply one HPA resource. For those who want to scale based on multiple metrics, we reccomend using the following template:
 
 ```
@@ -205,7 +211,10 @@ spec:
         averageValue: <YOUR_VALUE_HERE>
 ```
 
- More info about the kubernetes HPA can be found [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+### Option 2: Kubectl
+  If terraform is not an option or not preffered, use `gcloud` and `kubectl` CLI tools instead to apply the following:
+
+  TODO: Add instructions here
 
 ### Send sample requests
 
