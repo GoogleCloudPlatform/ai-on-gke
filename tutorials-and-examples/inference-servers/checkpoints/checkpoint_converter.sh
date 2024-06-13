@@ -54,7 +54,7 @@ convert_maxtext_checkpoint() {
         MAXTEXT_VERSION=jetstream-v0.2.2
     fi
 
-    git clone https://github.com/github/maxtext.git
+    git clone https://github.com/google/maxtext.git
 
     # checkout stable MaxText commit
     cd maxtext
