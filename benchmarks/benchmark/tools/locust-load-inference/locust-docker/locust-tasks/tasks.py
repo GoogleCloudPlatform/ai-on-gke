@@ -333,7 +333,7 @@ class GrpcBenchmarkUser(GrpcUser):
     def grpc_infer(self):
         prompt = get_random_prompt(self)
         request = jetstream_pb2.DecodeRequest(
-            text_content=jetstream_pb2.DecodeRequest.TextContent(text=prompt)
+            text_content=jetstream_pb2.DecodeRequest.TextContent(text=prompt),
             priority=0,
             max_tokens=model_params["max_output_len"],
         )
