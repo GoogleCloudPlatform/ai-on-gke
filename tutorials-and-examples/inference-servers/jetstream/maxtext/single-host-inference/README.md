@@ -177,7 +177,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 ## (optional) Enable Horizontal Pod Autoscaling
 
-In situations where the deployment above is not sufficient for your inference load, you may consider horizontally scaling your pods based on certain metrics. To do this we recommend applying the following resources to your cluster:
+In situations where the deployment above is not sufficient for your inference load, you may consider metrics based horizontal pod autoscaling. To do this we recommend applying the following resources to your cluster:
  - PodMonitoring: For colelcting metrics and exporting them to Google Cloud Monitoring
  - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
  - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).: For reading metrics and setting the replica count for your deployment accordingly.
@@ -186,8 +186,7 @@ For this we provide two options:
 
 ### Option 1: Terraform
 
-For instructions on deploying these components for handling metrics monitoring via Google Cloud Monitoring and autoscaling via terraform, see the readme in `./terraform`. A few notes:
-  - The terraform config applied from following the readme will only apply one HPA resource. For those who want to scale based on multiple metrics, we reccomend using the following template:
+For instructions on deploying these components via terraform, see the readme in `./terraform`. Note that only one HPA resource will be created from  following the readme. For those who want to scale based on multiple metrics, we recommend using the following template:
 
 ```
 apiVersion: autoscaling/v2
