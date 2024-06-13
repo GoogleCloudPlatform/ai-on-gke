@@ -211,9 +211,9 @@ spec:
 ```
 
 ### Option 2: Kubectl
-  If terraform is not an option or not preferred, use `gcloud` and `kubectl` CLI tools instead to apply the following:
+If terraform is not an option or not preferred, use `gcloud` and `kubectl` CLI tools instead to apply the following:
 
-  TODO: Add instructions in follow up
+TODO: Add instructions in follow up
 
 ### Send sample requests
 
