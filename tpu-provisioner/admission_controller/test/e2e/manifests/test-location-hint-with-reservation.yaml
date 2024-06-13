@@ -3,7 +3,7 @@ kind: JobSet
 metadata:
   # Running this JobSet should result in Jobs having the nodeSelector `cloud.google.com/gke-location-hint=cell` injected
   # using the example admission controller webhook.
-  name: test-jobset-location-hint
+  name: test-jobset-location-hint-with-reservation
   annotations:
     alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool # 1:1 job replica to node pool assignment
 spec:
