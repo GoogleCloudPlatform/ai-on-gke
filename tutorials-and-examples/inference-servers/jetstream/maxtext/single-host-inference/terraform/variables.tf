@@ -27,7 +27,7 @@ variable "credentials_config" {
   nullable = true
   default = {
     kubeconfig = {
-      path: "~/.kube/config"
+      path : "~/.kube/config"
     }
   }
   validation {
@@ -103,19 +103,19 @@ variable "hpa_averagevalue_target" {
 variable "project_id" {
   description = "Project id of existing or created project."
   type        = string
-  nullable = false
+  nullable    = false
 }
 
 variable "custom_metrics_enabled" {
   description = "Enable custom metrics collection"
-  type = bool
-  default = false
-  nullable = false
+  type        = bool
+  default     = false
+  nullable    = false
 }
 
 variable "metrics_scrape_port" {
   description = "Port to scrape metrics from"
-  type = number
-  default = 9100
-  nullable = true
+  type        = number
+  default     = 9100
+  nullable    = true
 }

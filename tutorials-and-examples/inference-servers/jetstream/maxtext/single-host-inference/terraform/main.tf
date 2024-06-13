@@ -32,8 +32,8 @@ module "custom_metrics_stackdriver_adapter" {
 resource "kubernetes_manifest" "tgi-pod-monitoring" {
   count = var.custom_metrics_enabled && var.metrics_scrape_port != null ? 1 : 0
   manifest = yamldecode(templatefile(local.jetstream_podmonitoring, {
-    namespace             = var.namespace
-    metrics_scrape_port   = try(var.metrics_scrape_port, -1)
+    namespace           = var.namespace
+    metrics_scrape_port = try(var.metrics_scrape_port, -1)
   }))
 }
 

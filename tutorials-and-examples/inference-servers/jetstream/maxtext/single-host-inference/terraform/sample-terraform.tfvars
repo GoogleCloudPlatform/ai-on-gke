@@ -9,11 +9,11 @@
 #
 # See `autoscaling.md` for more details and recommendations.
 custom_metrics_enabled = true
-metrics_scrape_port = 9100
+metrics_scrape_port    = 9100
 
 # Demonstrating autoscaling with jetstream_prefill_backlog_size, change as desired.
 # For jetstream_prefill_backlog_size. (experiment with this to determine optimal values).
-hpa_type = "jetstream_prefill_backlog_size"
+hpa_type                = "jetstream_prefill_backlog_size"
 hpa_averagevalue_target = 10
 
 # Adjust these if you want different min/max values
