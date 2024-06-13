@@ -177,9 +177,10 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 ## (optional) Enable Horizontal Pod Autoscaling
 
-Deploy jetstream with above, deploy (podMonitor, CMSA, HPA) with terraform, FIGURE THIS OUT
+TODO: 
+Deploy jetstream with above, deploy (podMonitor, CMSA, HPA) without terraform, FIGURE THIS OUT
 
-For instructions on deploying components for handling metrics monitoring via Google Cloud Monitoring and autoscaling, see the readme in `./terraform`
+For instructions on deploying components for handling metrics monitoring via Google Cloud Monitoring and autoscaling via terraform, see the readme in `./terraform`.
 Note that the terraform config applied from following that readme will only apply one HPA resource. For those who want to scale based on multiple metrics, we reccomend using the following template:
 
 ```
@@ -198,10 +199,17 @@ spec:
   - type: Pods
     pods:
       metric:
-        name: prometheus.googleapis.com|$<YOUR_METRIC_NAME>|gauge
+        name: prometheus.googleapis.com|<YOUR_METRIC_NAME>|gauge
       target:
         type: AverageValue
         averageValue: <YOUR_VALUE_HERE>
+```
+
+Next, do the following:
+```
+gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:cmsa-sa@${PROJECT_NAME}.iam.gserviceaccount.com --role=roles/monitoring.viewer --role=roles/monitoring.metricWriter --role=roles/iam.serviceAccountTokenCreator --role=roles/storage.admin --role=roles/storage.objectAdmin
+
+gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:${PROJECT_NAME}.svc.id.goog[custom-metrics/custom-metrics-stackdriver-adapter]" cmsa-sa@${PROJECT_NAME}.iam.gserviceaccount.com
 ```
 
  More info about the kubernetes HPA can be found [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).

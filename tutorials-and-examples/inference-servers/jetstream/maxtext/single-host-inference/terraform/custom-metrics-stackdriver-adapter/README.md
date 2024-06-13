@@ -27,5 +27,5 @@ module "custom_metrics_stackdriver_adapter" {
 
 # TODO
 
-This module should be moved out of the text-generation-inference subdirectory,
+This module should be moved out of the inference-servers subdirectory,
 as it should be more broadly applicable.

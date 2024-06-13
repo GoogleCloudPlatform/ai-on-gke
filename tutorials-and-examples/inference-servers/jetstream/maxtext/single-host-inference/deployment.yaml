@@ -13,7 +13,7 @@ spec:
         app: maxengine-server
     spec:
       nodeSelector:
-        cloud.google.com/gke-tpu-topology: 2x2
+        cloud.google.com/gke-tpu-topology: 2x4
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       serviceAccountName: custom-metrics-stackdriver-adapter
       containers:
@@ -39,9 +39,9 @@ spec:
         - containerPort: 9000
         resources:
           requests:
-            google.com/tpu: 4
+            google.com/tpu: 8
           limits:
-            google.com/tpu: 4
+            google.com/tpu: 8
       - name: jetstream-http
         image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2
         ports:
