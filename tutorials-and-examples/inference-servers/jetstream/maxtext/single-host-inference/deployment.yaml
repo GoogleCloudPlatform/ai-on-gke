@@ -18,6 +18,7 @@ spec:
       containers:
       - name: maxengine-server
         image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2
+        imagePullPolicy: Always
         securityContext:
           privileged: true
         args:
@@ -44,6 +45,7 @@ spec:
             google.com/tpu: 8
       - name: jetstream-http
         image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
 ---

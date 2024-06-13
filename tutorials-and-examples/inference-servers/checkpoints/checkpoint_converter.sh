@@ -80,7 +80,7 @@ convert_pytorch_checkpoint() {
     JETSTREAM_VERSION=v0.2.2
 
     if [ -z $PYTORCH_VERSION ]; then
-        PYTORCH_VERSION=jetstream-v0.2.0
+        PYTORCH_VERSION=jetstream-v0.2.2
     fi
 
     CKPT_PATH="$(echo ${INPUT_CKPT_DIR} | awk -F'gs://' '{print $2}')"
