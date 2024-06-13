@@ -7,7 +7,7 @@ This tutorial shows you how to serve a large language model (LLM) using Tensor P
 
 ### Set default environment variables
 ```
-gcloud config set project tpu-vm-gke-testing
+gcloud config set project [PROJECT_ID]
 export PROJECT_ID=$(gcloud config get project)
 export REGION=[COMPUTE_REGION]
 export ZONE=[ZONE]
@@ -18,8 +18,8 @@ export ZONE=[ZONE]
 # Create zonal cluster with 2 CPU nodes
 gcloud container clusters create jetstream-maxtext \
     --zone=${ZONE} \
-    --project=tpu-vm-gke-testing \
-    --workload-pool=tpu-vm-gke-testing.svc.id.goog \
+    --project=${PROJECT_ID} \
+    --workload-pool=${PROJECT_ID}.svc.id.goog \
     --release-channel=rapid \
     --num-nodes=2
 
@@ -29,7 +29,7 @@ gcloud container node-pools create tpu \
     --zone=${ZONE} \
     --num-nodes=2 \
     --machine-type=ct5lp-hightpu-8t \
-    --project=tpu-vm-gke-testing
+    --project=${PROJECT_ID}
 ```
 You have created the following resources:
 
@@ -49,28 +49,28 @@ Follow [these steps](https://cloud.google.com/kubernetes-engine/docs/how-to/work
 ```
 # Get credentials for your cluster
 $ gcloud container clusters get-credentials jetstream-maxtext \
-    --region=us-east1
+    --region=${ZONE}
 
 # Create an IAM service account.
 $ gcloud iam service-accounts create jetstream-iam-sa
 
 # Ensure the IAM service account has necessary roles. Here we add roles/storage.objectUser for gcs bucket access.
-$ gcloud projects add-iam-policy-binding tpu-vm-gke-testing \
-    --member "serviceAccount:jetstream-iam-sa@tpu-vm-gke-testing.iam.gserviceaccount.com" \
+$ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member "serviceAccount:jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
     --role roles/storage.objectUser
 
-$ gcloud projects add-iam-policy-binding tpu-vm-gke-testing \
-    --member "serviceAccount:jetstream-iam-sa@tpu-vm-gke-testing.iam.gserviceaccount.com" \
+$ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member "serviceAccount:jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
     --role roles/storage.insightsCollectorService
 
 # Allow the Kubernetes default service account to impersonate the IAM service account
-$ gcloud iam service-accounts add-iam-policy-binding jetstream-iam-sa@tpu-vm-gke-testing.iam.gserviceaccount.com \
+$ gcloud iam service-accounts add-iam-policy-binding jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com \
     --role roles/iam.workloadIdentityUser \
-    --member "serviceAccount:tpu-vm-gke-testing.svc.id.goog[default/default]"
+    --member "serviceAccount:${PROJECT_ID}.svc.id.goog[default/default]"
 
 # Annotate the Kubernetes service account with the email address of the IAM service account.
 $ kubectl annotate serviceaccount default \
-    iam.gke.io/gcp-service-account=jetstream-iam-sa@tpu-vm-gke-testing.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account=jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
 ### Create a Cloud Storage bucket to store the Gemma-7b model checkpoint
@@ -207,10 +207,10 @@ The output should be similar to the following:
 ### Build and upload Maxengine Server image
 
 Build the Maxengine Server from [here](../maxengine-server) and upload to your project
-```us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/
+```
 docker build -t maxengine-server .
-docker tag maxengine-server us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/maxengine-server:latest
-docker push us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/maxengine-server:latest
+docker tag maxengine-server gcr.io/${PROJECT_ID}/jetstream/maxtext/maxengine-server:latest
+docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/maxengine-server:latest
 ```
 
 ### Build and upload HTTP Server image
@@ -218,8 +218,8 @@ docker push us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/maxengin
 Build the HTTP Server Dockerfile from [here](../http-server) and upload to your project
 ```
 docker build -t jetstream-http .
-docker tag jetstream-http us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/jetstream-http:latest
-docker push us-central1-docker.pkg.dev/tpu-vm-gke-testing/slabe-maxtext/jetstream-http:latest
+docker tag jetstream-http gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
+docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 ```
 
 ### Interact with the Maxengine server directly using gRPC

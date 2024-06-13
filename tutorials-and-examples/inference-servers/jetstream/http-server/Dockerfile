@@ -17,6 +17,7 @@ RUN update-alternatives --install \
 
 RUN git clone https://github.com/google/JetStream.git && \
 cd /JetStream && \
+git checkout ${JETSTREAM_VERSION} && \
 pip install -e .
 
 RUN pip3 install uvicorn
