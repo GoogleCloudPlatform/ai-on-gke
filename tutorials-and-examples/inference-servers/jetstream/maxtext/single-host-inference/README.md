@@ -160,9 +160,9 @@ In situations where the deployment above is not sufficient for your inference lo
  - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
  - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
 
-These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following input conditions should be satisfied: `custom_metrics_enabled` should be `true` and `metrics_port`, `hpa_type`, `hpa_averagevalue_target`, `hpa_min_replicas`, `hpa_max_replicas should all be set.
+These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following input conditions should be satisfied: `custom_metrics_enabled` should be `true` and `metrics_port`, `hpa_type`, `hpa_averagevalue_target`, `hpa_min_replicas`, `hpa_max_replicas` should all be set.
 
- Note that only one HPA resource will be created. For those who want to scale based on multiple metrics, we recommend using the following template to apply more HPA resources.:
+ Note that only one HPA resource will be created. For those who want to scale based on multiple metrics, we recommend using the following template to apply more HPA resources:
 
 ```
 apiVersion: autoscaling/v2
