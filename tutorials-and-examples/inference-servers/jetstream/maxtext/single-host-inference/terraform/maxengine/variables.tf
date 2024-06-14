@@ -26,3 +26,18 @@ variable "metrics_port" {
   default     = 9100
   nullable    = true
 }
+
+variable "maxengine_server_image" {
+  description = "maxengine-server container image"
+  type        = string
+  default     = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
+  nullable    = false
+}
+
+variable "jetstream_http_server_image" {
+  description = "jetstream-http container image"
+  type        = string
+  default     = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
+  nullable    = false
+}
+

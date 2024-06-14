@@ -49,7 +49,7 @@ resource "kubernetes_deployment" "deployment_maxengine_server" {
             "attention=dot_product",
             var.metrics_port != null ? format("prometheus_port=%d", var.metrics_port) : "",
           ]
-          image             = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
+          image             = var.maxengine_server_image
           image_pull_policy = "Always"
           name              = "maxengine-server"
           port {
@@ -68,7 +68,7 @@ resource "kubernetes_deployment" "deployment_maxengine_server" {
           }
         }
         container {
-          image             = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
+          image             = var.jetstream_http_server_image
           image_pull_policy = "Always"
           name              = "jetstream-http"
           port {
