@@ -46,11 +46,10 @@ variable "namespace" {
   default     = "default"
 }
 
-variable "model_id" {
-  description = "Model used for inference."
+ variable "bucket_name" {
+  description = "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
   type        = string
   nullable    = false
-  default     = "tiiuae/falcon-7b"
 }
 
 variable "ksa" {
@@ -113,9 +112,8 @@ variable "custom_metrics_enabled" {
   nullable    = false
 }
 
-variable "metrics_scrape_port" {
+variable "metrics_port" {
   description = "Port to scrape metrics from"
   type        = number
-  default     = 9100
   nullable    = true
 }

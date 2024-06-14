@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-variable "workload_identity" {
-  type = object({
-    enabled    = bool
-    project_id = optional(string)
-  })
-  default = {
-    enabled = false
-  }
-  validation {
-    condition = (
-      (var.workload_identity.enabled && var.workload_identity.project_id != null)
-      || (!var.workload_identity.enabled)
-    )
-    error_message = "A project_id must be specified if workload_identity_enabled is set."
-  }
+ variable "bucket_name" {
+  description = "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
+  type        = string
+  nullable    = false
+}
+
+variable "metrics_port" {
+  description = "Port to emit metrics from"
+  type        = number
+  default     = 9100
+  nullable    = true
 }

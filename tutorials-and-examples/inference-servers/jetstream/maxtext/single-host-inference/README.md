@@ -121,7 +121,9 @@ Completed unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/
 
 ## Deploy Maxengine Server and HTTP Server
 
-In this example, we will deploy a Maxengine server targeting Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#optionals).
+Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#build-and-upload-maxengine-server-image). Depending on your needs and constraints you can select to deploy your Maxengine server either via Terraform or via Kubectl.
+
+### Deploy via Kubectl
 
 Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
 
@@ -147,7 +149,55 @@ Deploy the manifest file for the Maxengine server and HTTP server:
 kubectl apply -f deployment.yaml
 ```
 
-## Verify the deployment
+### Deploy via Terraform
+
+Navigate to the `./terraform` directory and do the standard [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Finally run `terraform apply` to apply these resources to your cluster.
+
+#### (optional) Enable Horizontal Pod Autoscaling via Terraform
+
+In situations where the deployment above is not sufficient for your inference load, you may consider metrics based horizontal pod autoscaling. To do this we recommend applying the following resources to your cluster:
+ - PodMonitoring: For scraping metrics and exporting them to Google Cloud Monitoring
+ - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
+ - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
+
+These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following input conditions should be satisfied: `custom_metrics_enabled` should be `true` and `metrics_port`, `hpa_type`, `hpa_averagevalue_target`, `hpa_min_replicas`, `hpa_max_replicas should all be set.
+
+ Note that only one HPA resource will be created. For those who want to scale based on multiple metrics, we recommend using the following template to apply more HPA resources.:
+
+```
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jetstream-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: maxengine-server
+  minReplicas: <YOUR_MIN_REPLICAS>
+  maxReplicas: <YOUR_MAX_REPLICAS>
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: prometheus.googleapis.com|<YOUR_METRIC_NAME>|gauge
+      target:
+        type: AverageValue
+        averageValue: <YOUR_VALUE_HERE>
+```
+
+If you would like to probe the metrics manually, `cURL` your maxengine-server container on whatever metrics port you set and you should see something similar to the following:
+
+```
+# HELP jetstream_prefill_backlog_size Size of prefill queue
+# TYPE jetstream_prefill_backlog_size gauge
+jetstream_prefill_backlog_size{id="SOME-HOSTNAME-HERE>"} 0.0
+# HELP jetstream_slots_used_percentage The percentage of decode slots currently being used
+# TYPE jetstream_slots_used_percentage gauge
+jetstream_slots_used_percentage{id="<SOME-HOSTNAME-HERE>",idx="0"} 0.04166666666666663
+```
+
+### Verify the deployment
 
 Wait for the containers to finish creating:
 ```
@@ -174,60 +224,6 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
-
-## (optional) View Prometheus Metrics Manually
-
-The above deployment also sets the `--prometheus_port` flag to 9100 on the maxengine server container. Setting this starts a prometheus client endpoint and emits metrics on port 9100. Make HTTP requests to that endpoint and it will respond with the current value of the registered metrics:
-
-```
-# HELP jetstream_prefill_backlog_size Size of prefill queue
-# TYPE jetstream_prefill_backlog_size gauge
-jetstream_prefill_backlog_size{id="SOME-HOSTNAME-HERE>"} 0.0
-# HELP jetstream_slots_used_percentage The percentage of decode slots currently being used
-# TYPE jetstream_slots_used_percentage gauge
-jetstream_slots_used_percentage{id="<SOME-HOSTNAME-HERE>",idx="0"} 0.04166666666666663
-```
-
-## (optional) Enable Horizontal Pod Autoscaling
-
-In situations where the deployment above is not sufficient for your inference load, you may consider metrics based horizontal pod autoscaling. To do this we recommend applying the following resources to your cluster:
- - PodMonitoring: For scraping metrics and exporting them to Google Cloud Monitoring
- - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
- - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
-
-For this we provide two options:
-
-### Option 1: Terraform
-
-For instructions on deploying these components via terraform, see the readme in `./terraform`. Note that only one HPA resource will be created from  following the readme. For those who want to scale based on multiple metrics, we recommend using the following template:
-
-```
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: jetstream-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: maxengine-server
-  minReplicas: <YOUR_MIN_REPLICAS>
-  maxReplicas: <YOUR_MAX_REPLICAS>
-  metrics:
-  - type: Pods
-    pods:
-      metric:
-        name: prometheus.googleapis.com|<YOUR_METRIC_NAME>|gauge
-      target:
-        type: AverageValue
-        averageValue: <YOUR_VALUE_HERE>
-```
-
-### Option 2: Kubectl
-
-If terraform is not an option or not preferred, use `gcloud` and `kubectl` CLI tools instead to apply the following:
-
-TODO: Add instructions in follow up
 
 ### Send sample requests
 
