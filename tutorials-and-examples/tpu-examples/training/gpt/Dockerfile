@@ -5,7 +5,7 @@ RUN apt-get update -y
 RUN apt-get install libomp5 -y
 RUN pip3 install mkl mkl-include
 RUN pip3 install tf-nightly tb-nightly tbp-nightly
-RUN pip3 install numpy
+RUN pip3 install numpy -y
 RUN apt-get install numactl libopenblas-dev -y
 
 RUN ln -s /usr/local/lib/libmkl_intel_ilp64.so.2 /usr/local/lib/libmkl_intel_ilp64.so.1
