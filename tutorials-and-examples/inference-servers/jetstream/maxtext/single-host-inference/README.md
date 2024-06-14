@@ -121,7 +121,7 @@ Completed unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/
 
 ## Deploy Maxengine Server and HTTP Server
 
-Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#build-and-upload-maxengine-server-image). Depending on your needs and constraints you can select to deploy your Maxengine server either via Terraform or via Kubectl.
+Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#build-and-upload-maxengine-server-image). Depending on your needs and constraints you can elect to deploy either via Terraform or via Kubectl.
 
 ### Deploy via Kubectl
 
