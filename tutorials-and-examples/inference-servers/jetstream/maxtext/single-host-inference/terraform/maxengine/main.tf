@@ -22,13 +22,13 @@ resource "kubernetes_deployment" "deployment_maxengine_server" {
     replicas = 2
     selector {
       match_labels = {
-        App = "maxengine-server"
+        app = "maxengine-server"
       }
     }
     template {
       metadata {
         labels = {
-          App = "maxengine-server"
+          app = "maxengine-server"
         }
       }
       spec {
@@ -102,7 +102,7 @@ resource "kubernetes_service" "service_jetstream_svc" {
       target_port = 9000
     }
     selector = {
-      App = "maxengine-server"
+      app = "maxengine-server"
     }
   }
 }
