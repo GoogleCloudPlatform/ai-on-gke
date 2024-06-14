@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- variable "bucket_name" {
+variable "bucket_name" {
   description = "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
   type        = string
   nullable    = false

@@ -30,16 +30,16 @@ module "custom_metrics_stackdriver_adapter" {
 }
 
 module "maxengine" {
-  count = 1
-  source = "./maxengine"
-  bucket_name = var.bucket_name
+  count        = 1
+  source       = "./maxengine"
+  bucket_name  = var.bucket_name
   metrics_port = var.metrics_port
 }
 
 resource "kubernetes_manifest" "tgi-pod-monitoring" {
   count = var.custom_metrics_enabled && var.metrics_port != null ? 1 : 0
   manifest = yamldecode(templatefile(local.jetstream_podmonitoring, {
-    namespace           = var.namespace
+    namespace    = var.namespace
     metrics_port = try(var.metrics_port, -1)
   }))
 }
