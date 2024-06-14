@@ -30,10 +30,12 @@ module "custom_metrics_stackdriver_adapter" {
 }
 
 module "maxengine" {
-  count        = 1
-  source       = "./maxengine"
-  bucket_name  = var.bucket_name
-  metrics_port = var.metrics_port
+  count                       = 1
+  source                      = "./maxengine"
+  bucket_name                 = var.bucket_name
+  metrics_port                = var.metrics_port
+  maxengine_server_image      = var.maxengine_server_image
+  jetstream_http_server_image = var.jetstream_http_server_image
 }
 
 resource "kubernetes_manifest" "tgi-pod-monitoring" {

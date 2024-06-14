@@ -46,6 +46,21 @@ variable "namespace" {
   default     = "default"
 }
 
+variable "maxengine_server_image" {
+  description = "maxengine-server container image"
+  type        = string
+  default     = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
+  nullable    = false
+}
+
+variable "jetstream_http_server_image" {
+  description = "jetstream-http container image"
+  type        = string
+  default     = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
+  nullable    = false
+}
+
+
 variable "bucket_name" {
   description = "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
   type        = string
