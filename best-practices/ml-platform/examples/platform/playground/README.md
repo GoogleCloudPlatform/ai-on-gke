@@ -295,7 +295,7 @@ Before running Terraform, make sure that the Service Usage API is enable.
   ```
   cd ${MLP_TYPE_BASE_DIR} && \
   terraform init && \
-  terraform plan -input=false -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
+  terraform plan -input=false -var git_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
   terraform apply -input=false tfplan && \
   rm tfplan
   ```
@@ -426,7 +426,7 @@ Open Cloud Shell to execute the following commands:
   ```
   cd ${MLP_TYPE_BASE_DIR} && \
   terraform init && \
-  terraform destroy -auto-approve -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" && \
+  terraform destroy -auto-approve -var git_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" && \
   rm -rf .terraform .terraform.lock.hcl
   ```
 
