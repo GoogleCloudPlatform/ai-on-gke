@@ -18,7 +18,7 @@ spec:
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       containers:
       - name: maxengine-server
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2
         args:
         - model_name=gemma-7b
         - tokenizer_path=assets/tokenizer.gemma
@@ -32,6 +32,8 @@ spec:
         - scan_layers=false
         - weight_dtype=bfloat16
         - load_parameters_path=gs://GEMMA_BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
+        - attention=dot_product
+        - prometheus_port=9100
         ports:
         - containerPort: 9000
         resources:
@@ -40,7 +42,7 @@ spec:
           limits:
             google.com/tpu: 4
       - name: jetstream-http
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2
         ports:
         - containerPort: 8000
 ---
