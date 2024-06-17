@@ -15,9 +15,9 @@
  */
 
 locals {
-  hpa_cpu_template           = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
-  hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.jetstream.custom_metric.yaml.tftpl"
-  jetstream_podmonitoring    = "${path.module}/monitoring-templates/jetstream-podmonitoring.yaml.tftpl"
+  hpa_cpu_template        = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
+  hpa_jetstream_template  = "${path.module}/hpa-templates/hpa.jetstream.yaml.tftpl"
+  jetstream_podmonitoring = "${path.module}/monitoring-templates/jetstream-podmonitoring.yaml.tftpl"
 }
 
 module "custom_metrics_stackdriver_adapter" {
@@ -47,8 +47,8 @@ resource "kubernetes_manifest" "tgi-pod-monitoring" {
 }
 
 resource "kubernetes_manifest" "hpa_custom_metric" {
-  count = var.custom_metrics_enabled && var.hpa_type != null && var.hpa_averagevalue_target != null ? 1 : 0
-  manifest = yamldecode(templatefile(local.hpa_custom_metric_template, {
+  count = (var.custom_metrics_enabled && var.hpa_type != null || var.hpa_type != "memory_used") && var.hpa_averagevalue_target != null ? 1 : 0
+  manifest = yamldecode(templatefile(local.hpa_jetstream_template, {
     namespace               = var.namespace
     hpa_type                = try(var.hpa_type, "")
     hpa_averagevalue_target = try(var.hpa_averagevalue_target, 1)
