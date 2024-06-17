@@ -121,9 +121,11 @@ Completed unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/
 
 ## Deploy Maxengine Server and HTTP Server
 
-In this example, we will deploy a Maxengine server targeting Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#optionals).
+Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the provided Maxengine server and HTTP server images or [build your own](#build-and-upload-maxengine-server-image). Depending on your needs and constraints you can elect to deploy either via Terraform or via Kubectl.
 
-Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
+### Deploy via Kubectl
+
+First navigate to the `./kubectl` directory. Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
 
 In the manifest, ensure the value of the BUCKET_NAME is the name of the Cloud Storage bucket that was used when converting your checkpoint.
 
@@ -147,7 +149,55 @@ Deploy the manifest file for the Maxengine server and HTTP server:
 kubectl apply -f deployment.yaml
 ```
 
-## Verify the deployment
+### Deploy via Terraform
+
+Navigate to the `./terraform` directory and do the standard [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Finally run `terraform apply` to apply these resources to your cluster.
+
+#### (optional) Enable Horizontal Pod Autoscaling via Terraform
+
+Applying the following resources to your cluster will enable autoscaling with customer metrics:
+ - PodMonitoring: For scraping metrics and exporting them to Google Cloud Monitoring
+ - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
+ - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
+
+These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following input conditions should be satisfied: `custom_metrics_enabled` should be `true` and `metrics_port`, `hpa_type`, `hpa_averagevalue_target`, `hpa_min_replicas`, `hpa_max_replicas` should all be set.
+
+ Note that only one HPA resource will be created. For those who want to scale based on multiple metrics, we recommend using the following template to apply more HPA resources:
+
+```
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jetstream-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: maxengine-server
+  minReplicas: <YOUR_MIN_REPLICAS>
+  maxReplicas: <YOUR_MAX_REPLICAS>
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: prometheus.googleapis.com|<YOUR_METRIC_NAME>|gauge
+      target:
+        type: AverageValue
+        averageValue: <YOUR_VALUE_HERE>
+```
+
+If you would like to probe the metrics manually, `cURL` your maxengine-server container on whatever metrics port you set and you should see something similar to the following:
+
+```
+# HELP jetstream_prefill_backlog_size Size of prefill queue
+# TYPE jetstream_prefill_backlog_size gauge
+jetstream_prefill_backlog_size{id="SOME-HOSTNAME-HERE>"} 0.0
+# HELP jetstream_slots_used_percentage The percentage of decode slots currently being used
+# TYPE jetstream_slots_used_percentage gauge
+jetstream_slots_used_percentage{id="<SOME-HOSTNAME-HERE>",idx="0"} 0.04166666666666663
+```
+
+### Verify the deployment
 
 Wait for the containers to finish creating:
 ```
@@ -199,7 +249,7 @@ The output should be similar to the following:
 }
 ```
 
-## Optionals
+## Other optional steps
 ### Build and upload Maxengine Server image
 
 Build the Maxengine Server from [here](../maxengine-server) and upload to your project
@@ -223,7 +273,7 @@ docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. If you would like to interact directly with the Maxengine server directly for use cases such as [benchmarking](https://github.com/google/JetStream/tree/main/benchmarks), you can do so by following the Jetstream benchmarking setup and applying the `deployment.yaml` manifest file and interacting with the Jetstream gRPC server at port 9000.
 
 ```
-kubectl apply -f deployment.yaml
+kubectl apply -f kubectl/deployment.yaml
 
 kubectl port-forward svc/jetstream-svc 9000:9000
 ```
