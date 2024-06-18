@@ -286,8 +286,9 @@ Before running Terraform, make sure that the Service Usage API is enable.
 - Ensure the endpoint is not in a deleted state
 
   ```
+  MLP_ENVIRONMENT_NAME=$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
   MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-  gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
+  gcloud endpoints services undelete ray-dashboard.ml-team.${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
   ```
 
 - Create the resources
@@ -409,8 +410,9 @@ Open Cloud Shell to execute the following commands:
 - Open the `ml-team` Ray dashboard
 
   ```
+  MLP_ENVIRONMENT_NAME=$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
   MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-  echo -e "\nml-team Ray dashboard: https://ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog\n"
+  echo -e "\nml-team Ray dashboard: https://ray-dashboard.ml-team.${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog\n"
   ```
 
   > If you get `ERR_CONNECTION_CLOSED` or `ERR_CONNECTION_RESET` when trying to go to the Ray dashboard, the [Gateway](https://console.cloud.google.com/kubernetes/gateways) is still being provisioned. Retry in a couple of minutes.
@@ -506,7 +508,7 @@ The OAuth Consent screen was not configured, see the [Configure OAuth consent sc
 ---
 
 ```
-│ Error: googleapi: Error 400: Service ray-dashboard.ml-team.mlp.endpoints.<project_id>.cloud.goog has been deleted and
+│ Error: googleapi: Error 400: Service ray-dashboard.ml-team.<environment_name>.endpoints.<project_id>.cloud.goog has been deleted and
 will be purged after 30 days. To reuse this service, please undelete the service following https://cloud.google.com/service-infrastructure/docs/create-services#undeleting., failedPrecondition
 │
 │   with google_endpoints_service.ray_dashboard_https,
@@ -519,7 +521,7 @@ The endpoint is in a deleted state and needs to be undeleted, run the following 
 
 ```
 MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet
+gcloud endpoints services undelete ray-dashboard.ml-team.<environment_name>.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet
 ```
 
 ---
