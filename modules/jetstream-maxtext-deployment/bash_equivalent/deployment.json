@@ -2,7 +2,7 @@
     "apiVersion": "apps/v1",
     "kind": "Deployment",
     "metadata": {
-      "name": "maxengine-server-2"
+      "name": "maxengine-server"
     },
     "spec": {
       "replicas": 2,
