@@ -22,7 +22,7 @@ GCS_IMAGE_FOLDER = 'flipkart_images'
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('preprocessing')
 logger.debug(logger)
-@ray.remote(resources={"n2_cpu": 1})
+@ray.remote(resources={"cpu": 1})
 def get_clean_df(df, logger, ray_worker_node_id):
 
     # extract image urls

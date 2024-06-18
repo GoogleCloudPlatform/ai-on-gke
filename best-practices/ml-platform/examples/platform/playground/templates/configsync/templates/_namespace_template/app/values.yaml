@@ -119,7 +119,7 @@ head:
       name: ray-logs
 
 worker:
-  groupName: cpu-n2x2
+  groupName: cpu-n4x2
   replicas: 0
   minReplicas: 0
   maxReplicas: 16
@@ -131,7 +131,7 @@ worker:
   serviceAccountName: "KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER"
   rayStartParams:
     block: 'true'
-    resources: '"{\"n2_cpu\": 2}"'
+    resources: '"{\"cpu\": 2}"'
   initContainerImage: 'busybox:1.28'
   initContainerSecurityContext: {}
   containerEnv:

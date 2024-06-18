@@ -13,16 +13,21 @@
 # limitations under the License.
 
 # CPU
+# Available zones: https://cloud.google.com/compute/docs/regions-zones#available
 ###############################################################################
-resource "google_container_node_pool" "cpu_n2s8" {
+resource "google_container_node_pool" "cpu_n4s8" {
   depends_on = [google_container_cluster.mlp]
 
   # Variables
   cluster            = google_container_cluster.mlp.name
   initial_node_count = 1
   location           = var.subnet_01_region
-  name               = "cpu-n2s8"
-  project            = data.google_project.environment.project_id
+  name               = "cpu-n4s8"
+  node_locations = [
+    "${var.subnet_01_region}-a",
+    "${var.subnet_01_region}-c"
+  ]
+  project = data.google_project.environment.project_id
 
   # Blocks
   autoscaling {
@@ -38,10 +43,10 @@ resource "google_container_node_pool" "cpu_n2s8" {
   node_config {
     # Variables
     labels = {
-      "resource-model" : "n2"
+      "resource-model" : "n4"
       "resource-type" : "cpu"
     }
-    machine_type    = "n2-standard-8"
+    machine_type    = "n4-standard-8"
     service_account = google_service_account.cluster.email
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
