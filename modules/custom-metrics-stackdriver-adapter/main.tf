@@ -256,7 +256,7 @@ resource "google_service_account" "cmsa-sa" {
 #   gcloud projects add-iam-policy-binding PROJECT_ID \
 #       --member=serviceAccount:cmsa-sa@PROJECT_ID.iam.gserviceaccount.com \
 #       --role=roles/monitoring.viewer
-resource "google_project_iam_binding" "cmsa-project-binding-monitoring-viewer" {
+resource "google_project_iam_binding" "cmsa-project-binding-sa-monitoring-viewer" {
   count   = var.workload_identity.enabled ? 1 : 0
   project = var.workload_identity.project_id
   role    = "roles/monitoring.viewer"

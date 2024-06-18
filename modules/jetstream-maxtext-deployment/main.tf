@@ -19,7 +19,7 @@ resource "kubernetes_deployment" "deployment_maxengine_server" {
     name = "maxengine-server"
   }
   spec {
-    replicas = 2
+    replicas = 1
     selector {
       match_labels = {
         app = "maxengine-server"

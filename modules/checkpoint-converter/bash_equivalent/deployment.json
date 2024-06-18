@@ -1,0 +1,49 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "checkpoint-converter"
+  },
+  "spec": {
+    "ttlSecondsAfterFinished": 30,
+    "template": {
+      "spec": {
+        "restartPolicy": "Never",
+        "containers": [
+          {
+            "name": "inference-checkpoint",
+            "image": "us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.0",
+            "volumeMounts": [
+              {
+                "mountPath": "/kaggle/",
+                "name": "kaggle-credentials",
+                "readOnly": true
+              }
+            ],
+            "resources": {
+              "requests": {
+                "google.com/tpu": 4
+              },
+              "limits": {
+                "google.com/tpu": 4
+              }
+            }
+          }
+        ],
+        "nodeSelector": {
+          "cloud.google.com/gke-tpu-topology": "2x2",
+          "cloud.google.com/gke-tpu-accelerator": "tpu-v5-lite-podslice"
+        },
+        "volumes": [
+          {
+            "name": "kaggle-credentials",
+            "secret": {
+              "defaultMode": 256,
+              "secretName": "kaggle-secret"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

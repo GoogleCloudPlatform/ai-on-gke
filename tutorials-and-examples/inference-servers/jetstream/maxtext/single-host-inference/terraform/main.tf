@@ -22,7 +22,7 @@ locals {
 
 module "custom_metrics_stackdriver_adapter" {
   count  = var.custom_metrics_enabled ? 1 : 0
-  source = "./custom-metrics-stackdriver-adapter"
+  source = "../../../../../../modules/custom-metrics-stackdriver-adapter"
   workload_identity = {
     enabled    = true
     project_id = var.project_id
@@ -31,7 +31,7 @@ module "custom_metrics_stackdriver_adapter" {
 
 module "maxengine" {
   count                       = 1
-  source                      = "./maxengine"
+  source                      = "../../../../../../modules/jetstream-maxtext-deployment"
   bucket_name                 = var.bucket_name
   metrics_port                = var.metrics_port
   maxengine_server_image      = var.maxengine_server_image
