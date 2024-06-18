@@ -2,6 +2,7 @@ import datetime
 import logging
 import json
 import csv
+import os
 from datetime import datetime
 from google.cloud import storage
 
@@ -72,7 +73,7 @@ class MetricCollector:
         now = datetime.now()
         bucket_name = "jetstream-benchmark-output-bucket-01"
         storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
+        bucket = storage_client.bucket(os.environ['BUCKET'])
         timestamp = now.strftime('metrics%Y-%m-%d%H:%M:%S.csv')
         blob = bucket.blob(timestamp)
         with blob.open('w') as metricsfile:
