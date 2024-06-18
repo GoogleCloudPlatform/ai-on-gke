@@ -60,7 +60,7 @@ with strategy.scope():
 # Define the checkpoint directory to store the checkpoints.
 checkpoint_dir = './training_checkpoints'
 # Define the name of the checkpoint files.
-checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
+checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}.weights.h5")
 
 def decay(epoch):
     if epoch < 3:
@@ -74,7 +74,7 @@ def decay(epoch):
 class PrintLR(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         print('\nLearning rate for epoch {} is {}'.format(epoch + 1,
-                                                        model.optimizer.lr.numpy()))
+                                                        model.optimizer.learning_rate.numpy()))
 
 callbacks = [
     tf.keras.callbacks.TensorBoard(log_dir='./logs'),
