@@ -11,4 +11,3 @@ subjects:
 - kind: ServiceAccount
   name: custom-metrics-stackdriver-adapter
   namespace: custom-metrics
-  
