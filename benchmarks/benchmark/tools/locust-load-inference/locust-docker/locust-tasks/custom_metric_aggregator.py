@@ -71,7 +71,6 @@ class MetricCollector:
     def dump_to_csv(self):
         fields = ['success', 'total_request_time', 'time_to_first_token', 'input_tokens', 'output_tokens']
         now = datetime.now()
-        bucket_name = "jetstream-benchmark-output-bucket-01"
         storage_client = storage.Client()
         bucket = storage_client.bucket(os.environ['BUCKET'])
         timestamp = now.strftime('metrics%Y-%m-%d%H:%M:%S.csv')
