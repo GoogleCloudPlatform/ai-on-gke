@@ -21,4 +21,6 @@ if [ -z "${MLP_PROJECT_ID}" ]; then
     exit 7
 fi
 
-export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-terraform"
+export MLP_ENVIRONMENT_NAME=${MLP_ENVIRONMENT_NAME:-$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)}
+
+export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-${MLP_ENVIRONMENT_NAME}-terraform"
