@@ -21,8 +21,9 @@ echo_title "Running terraform apply"
 print_and_execute "cd ${MLP_TYPE_BASE_DIR} && \
 terraform init && \
 terraform plan -input=false -out=tfplan && \
-terraform apply -input=false tfplan && \
-rm tfplan"
+terraform apply -input=false tfplan"
+
+rm tfplan
 
 total_runtime "terraform_apply"
 

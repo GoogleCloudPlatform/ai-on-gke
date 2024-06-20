@@ -16,7 +16,7 @@
 
 echo_title "Deleting data processing Artifact Registry repository"
 
-gcloud artifacts repositories delete dataprocessing \
+gcloud artifacts repositories delete ${MLP_ENVIRONMENT_NAME}-dataprocessing \
     --location=us \
     --project=${MLP_PROJECT_ID} \
     --quiet

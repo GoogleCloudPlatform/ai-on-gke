@@ -56,7 +56,7 @@ kubectl delete namespace ${K8S_NAMESPACE}
 echo "Namespace '${K8S_NAMESPACE}', deleted"
 
 echo "Cleaning up network endpoint groups..."
-negs=$(gcloud compute network-endpoint-groups list --filter="name~'k8s.*-${K8S_NAMESPACE}-.*'" --format='value(format("{0},{1}", name, zone.basename()))' --project=${PROJECT_ID})
+negs=$(gcloud compute network-endpoint-groups list --filter="name~'k8s.*-${K8S_NAMESPACE}-.*' AND network~'.*-${ENVIRONMENT_NAME}$'" --format='value(format("{0},{1}", name, zone.basename()))' --project=${PROJECT_ID})
 for neg in ${negs}; do
     name="${neg%,*}"
     zone="${neg#*,}"

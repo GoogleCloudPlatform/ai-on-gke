@@ -27,5 +27,5 @@ cd ${MLP_BASE_DIR} &&
 
 cd ${MLP_BASE_DIR} &&
     rm -rf \
-        examples/platform/playground/.terraform \
+        examples/platform/playground/${TF_DATA_DIR} \
         examples/platform/playground/.terraform.lock.hcl

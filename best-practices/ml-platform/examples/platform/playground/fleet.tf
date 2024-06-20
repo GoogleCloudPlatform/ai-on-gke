@@ -12,7 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "google_gke_hub_feature" "configmanagement" {
+#
+# Removing to all for multiple environments in the same project
+#
+# resource "google_gke_hub_feature" "configmanagement" {
+#   depends_on = [
+#     google_project_service.anthos_googleapis_com,
+#     google_project_service.anthosconfigmanagement_googleapis_com,
+#     google_project_service.compute_googleapis_com,
+#     google_project_service.gkeconnect_googleapis_com,
+#     google_project_service.gkehub_googleapis_com,
+#     local.configsync_repository
+#   ]
+
+#   location = "global"
+#   name     = "configmanagement"
+#   project  = data.google_project.environment.project_id
+# }
+
+resource "null_resource" "gke_hub_feature_configmanagement" {
   depends_on = [
     google_project_service.anthos_googleapis_com,
     google_project_service.anthosconfigmanagement_googleapis_com,
@@ -22,14 +40,13 @@ resource "google_gke_hub_feature" "configmanagement" {
     local.configsync_repository
   ]
 
-  location = "global"
-  name     = "configmanagement"
-  project  = data.google_project.environment.project_id
+  provisioner "local-exec" {
+    command = "gcloud beta container fleet config-management enable --project ${var.environment_project_id}"
+  }
 }
 
 resource "google_gke_hub_membership" "cluster" {
   depends_on = [
-    google_gke_hub_feature.configmanagement,
     google_project_service.gkeconnect_googleapis_com,
     google_project_service.gkehub_googleapis_com
   ]
@@ -47,12 +64,14 @@ resource "google_gke_hub_membership" "cluster" {
 resource "google_gke_hub_feature_membership" "cluster_configmanagement" {
   depends_on = [
     google_container_cluster.mlp,
+    #google_gke_hub_feature" "configmanagement,
     google_project_service.anthos_googleapis_com,
     google_project_service.anthosconfigmanagement_googleapis_com,
     google_project_service.gkeconnect_googleapis_com,
     google_project_service.gkehub_googleapis_com,
     local.configsync_repository,
-    module.cloud-nat
+    module.cloud-nat,
+    null_resource.gke_hub_feature_configmanagement
   ]
 
   feature    = "configmanagement"

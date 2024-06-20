@@ -152,22 +152,6 @@ resource "null_resource" "kuberay_manifests" {
 
 # NAMESPACE
 ###############################################################################
-resource "google_service_account" "namespace_default" {
-  account_id   = "wi-${var.namespace}-${local.namespace_default_kubernetes_service_account}"
-  display_name = "${var.namespace}/${local.namespace_default_kubernetes_service_account} workload identity service account"
-  project      = data.google_project.environment.project_id
-}
-
-resource "google_service_account_iam_member" "namespace_default_iam_workload_identity_user" {
-  depends_on = [
-    google_container_cluster.mlp
-  ]
-
-  member             = "serviceAccount:${data.google_project.environment.project_id}.svc.id.goog[${var.namespace}/${local.namespace_default_kubernetes_service_account}]"
-  role               = "roles/iam.workloadIdentityUser"
-  service_account_id = google_service_account.namespace_default.id
-}
-
 resource "null_resource" "namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
@@ -191,6 +175,7 @@ resource "null_resource" "namespace_manifests" {
   provisioner "local-exec" {
     command = "scripts/namespace_cleanup.sh"
     environment = {
+      ENVIRONMENT_NAME    = self.triggers.environment_name
       GIT_EMAIL           = self.triggers.github_email
       GIT_REPOSITORY      = self.triggers.git_repository
       GIT_TOKEN           = self.triggers.github_token
@@ -207,6 +192,7 @@ resource "null_resource" "namespace_manifests" {
   }
 
   triggers = {
+    environment_name    = var.environment_name
     git_repository      = local.git_repository
     github_email        = var.git_user_email
     github_token        = var.git_token
@@ -278,38 +264,6 @@ resource "null_resource" "kuberay_watch_namespace_manifests" {
 
 # RAY CLUSTER IN NAMESPACE
 ###############################################################################
-resource "google_service_account" "namespace_ray_head" {
-  account_id   = "wi-${var.namespace}-${local.ray_head_kubernetes_service_account}"
-  display_name = "${var.namespace}/${local.ray_head_kubernetes_service_account} workload identity service account"
-  project      = data.google_project.environment.project_id
-}
-
-resource "google_service_account_iam_member" "namespace_ray_head_iam_workload_identity_user" {
-  depends_on = [
-    google_container_cluster.mlp
-  ]
-
-  member             = "serviceAccount:${data.google_project.environment.project_id}.svc.id.goog[${var.namespace}/${local.ray_head_kubernetes_service_account}]"
-  role               = "roles/iam.workloadIdentityUser"
-  service_account_id = google_service_account.namespace_ray_head.id
-}
-
-resource "google_service_account" "namespace_ray_worker" {
-  account_id   = "wi-${var.namespace}-${local.ray_worker_kubernetes_service_account}"
-  display_name = "${var.namespace}/${local.ray_worker_kubernetes_service_account} workload identity service account"
-  project      = data.google_project.environment.project_id
-}
-
-resource "google_service_account_iam_member" "namespace_ray_worker_iam_workload_identity_user" {
-  depends_on = [
-    google_container_cluster.mlp
-  ]
-
-  member             = "serviceAccount:${data.google_project.environment.project_id}.svc.id.goog[${var.namespace}/${local.ray_worker_kubernetes_service_account}]"
-  role               = "roles/iam.workloadIdentityUser"
-  service_account_id = google_service_account.namespace_ray_worker.id
-}
-
 resource "null_resource" "ray_cluster_namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
@@ -319,15 +273,13 @@ resource "null_resource" "ray_cluster_namespace_manifests" {
   provisioner "local-exec" {
     command = "${path.module}/scripts/ray_cluster_namespace_manifests.sh"
     environment = {
-      GIT_EMAIL                     = var.git_user_email
-      GIT_REPOSITORY                = local.git_repository
-      GIT_TOKEN                     = var.git_token
-      GIT_USERNAME                  = var.git_user_name
-      GOOGLE_SERVICE_ACCOUNT_HEAD   = google_service_account.namespace_ray_head.email
-      GOOGLE_SERVICE_ACCOUNT_WORKER = google_service_account.namespace_ray_worker.email
-      K8S_NAMESPACE                 = var.namespace
-      K8S_SERVICE_ACCOUNT_HEAD      = local.ray_head_kubernetes_service_account
-      K8S_SERVICE_ACCOUNT_WORKER    = local.ray_worker_kubernetes_service_account
+      GIT_EMAIL                  = var.git_user_email
+      GIT_REPOSITORY             = local.git_repository
+      GIT_TOKEN                  = var.git_token
+      GIT_USERNAME               = var.git_user_name
+      K8S_NAMESPACE              = var.namespace
+      K8S_SERVICE_ACCOUNT_HEAD   = local.ray_head_kubernetes_service_account
+      K8S_SERVICE_ACCOUNT_WORKER = local.ray_worker_kubernetes_service_account
     }
   }
 
@@ -392,6 +344,7 @@ resource "null_resource" "gateway_manifests" {
   provisioner "local-exec" {
     command = "scripts/gateway_manifests.sh"
     environment = {
+      ENVIRONMENT_NAME    = self.triggers.environment_name
       GIT_EMAIL           = self.triggers.github_email
       GIT_REPOSITORY      = self.triggers.git_repository
       GIT_TOKEN           = self.triggers.github_token
@@ -423,13 +376,14 @@ resource "null_resource" "gateway_manifests" {
   }
 
   triggers = {
-    gateway_name   = local.gateway_name
-    git_repository = local.git_repository
-    github_email   = var.git_user_email
-    github_token   = var.git_token
-    github_user    = var.git_user_name
-    kubeconfig     = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
-    md5_script     = filemd5("${path.module}/scripts/gateway_manifests.sh")
+    environment_name = var.environment_name
+    gateway_name     = local.gateway_name
+    git_repository   = local.git_repository
+    github_email     = var.git_user_email
+    github_token     = var.git_token
+    github_user      = var.git_user_name
+    kubeconfig       = "${local.kubeconfig_dir}/${data.google_project.environment.project_id}_${google_gke_hub_membership.cluster.membership_id}"
+    md5_script       = filemd5("${path.module}/scripts/gateway_manifests.sh")
     md5_files = md5(join("", [
       local_file.gateway_external_https_yaml.content_md5,
       local_file.policy_iap_ray_head_yaml.content_md5,
