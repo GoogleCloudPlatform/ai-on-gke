@@ -20,8 +20,7 @@ echo_title "Running terraform destroy"
 
 print_and_execute "cd ${MLP_TYPE_BASE_DIR} && \
 terraform init && \
-terraform destroy -auto-approve && \
-rm -rf .terraform .terraform.lock.hcl"
+terraform destroy -auto-approve"
 
 total_runtime "terraform_destroy"
 

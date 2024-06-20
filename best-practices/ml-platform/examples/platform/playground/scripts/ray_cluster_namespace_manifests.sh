@@ -40,9 +40,7 @@ fi
 
 cp -r ${namespace_template_path}/app/* ${namespace_path}/
 sed -i "s?NAMESPACE?${K8S_NAMESPACE}?g" ${namespace_path}/*
-sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_HEAD?${GOOGLE_SERVICE_ACCOUNT_HEAD}?g" ${namespace_path}/*
 sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_HEAD?${K8S_SERVICE_ACCOUNT_HEAD}?g" ${namespace_path}/*
-sed -i "s?GOOGLE_SERVICE_ACCOUNT_RAY_WORKER?${GOOGLE_SERVICE_ACCOUNT_WORKER}?g" ${namespace_path}/*
 sed -i "s?KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER?${K8S_SERVICE_ACCOUNT_WORKER}?g" ${namespace_path}/*
 
 # Add, commit, and push changes to the repository

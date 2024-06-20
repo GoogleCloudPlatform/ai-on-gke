@@ -31,7 +31,7 @@ cd "${namespace_path}" || {
   exit 100
 }
 
-generated_manifests_directory="${SCRIPT_PATH}/../manifests/${K8S_NAMESPACE}/gateway"
+generated_manifests_directory="${SCRIPT_PATH}/../manifests/${ENVIRONMENT_NAME}/${K8S_NAMESPACE}/gateway"
 cp -pr ${generated_manifests_directory} ${namespace_path}/
 
 # Added entries to the kustomization file

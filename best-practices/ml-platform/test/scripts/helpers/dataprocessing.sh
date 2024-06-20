@@ -26,16 +26,15 @@ print_and_execute_no_check "gcloud services enable cloudbuild.googleapis.com --p
 
 echo_title "Adding IAM permissions"
 print_and_execute_no_check "gcloud projects add-iam-policy-binding ${PROJECT_ID} \
---member 'serviceAccount:wi-ml-team-ray-head@${PROJECT_ID}.iam.gserviceaccount.com' \
+--member 'serviceAccount:${MLP_PROJECT_ID}.svc.id.goog[ml-team/ray-head]' \
 --role roles/storage.objectViewer"
 
 print_and_execute_no_check "gcloud projects add-iam-policy-binding ${PROJECT_ID} \
---member 'serviceAccount:wi-ml-team-ray-worker@${PROJECT_ID}.iam.gserviceaccount.com' \
+--member 'serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]' \
 --role roles/storage.objectAdmin"
 
 echo_title "Creating GCS bucket"
-
-print_and_execute_no_check "gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID}"
+print_and_execute_no_check "gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID} --uniform-bucket-level-access"
 
 echo_title "Downloading the dataset and uploading to GCS"
 
@@ -46,7 +45,7 @@ rm flipkart_com-ecommerce_sample.csv"
 
 echo_title "Creating Artifact Registry repository"
 
-print_and_execute_no_check "gcloud artifacts repositories create dataprocessing \
+print_and_execute_no_check "gcloud artifacts repositories create ${MLP_ENVIRONMENT_NAME}-dataprocessing \
 --repository-format=docker \
 --location=us \
 --project=${PROJECT_ID}"
@@ -99,11 +98,11 @@ check_local_error_exit_on_error
 echo_title "Removing IAM permissions"
 
 gcloud projects remove-iam-policy-binding ${MLP_PROJECT_ID} \
-    --member "serviceAccount:wi-ml-team-ray-head@${MLP_PROJECT_ID}.iam.gserviceaccount.com" \
+    --member "serviceAccount:${MLP_PROJECT_ID}.svc.id.goog[ml-team/ray-head]" \
     --role roles/storage.objectViewer
 
 gcloud projects remove-iam-policy-binding ${MLP_PROJECT_ID} \
-    --member "serviceAccount:wi-ml-team-ray-worker@${MLP_PROJECT_ID}.iam.gserviceaccount.com" \
+    --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]" \
     --role roles/storage.objectAdmin
 
 echo_title "Cleaning up local repository changes"

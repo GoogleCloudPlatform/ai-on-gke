@@ -14,7 +14,7 @@
 
 locals {
   hostname_suffix             = "endpoints.${data.google_project.environment.project_id}.cloud.goog"
-  gateway_manifests_directory = "${path.module}/manifests/ml-team/gateway"
+  gateway_manifests_directory = "${path.module}/manifests/${var.environment_name}/${var.namespace}/gateway"
   gateway_name                = "external-https"
   iap_domain                  = var.iap_domain != null ? var.iap_domain : split("@", trimspace(data.google_client_openid_userinfo.identity.email))[1]
   iap_oath_brand              = "projects/${data.google_project.environment.number}/brands/${data.google_project.environment.number}"
@@ -38,7 +38,7 @@ resource "google_compute_managed_ssl_certificate" "external_gateway" {
     google_project_service.certificatemanager_googleapis_com,
   ]
 
-  name    = "${var.namespace}-external-gateway"
+  name    = "${var.environment_name}-${var.namespace}-external-gateway"
   project = data.google_project.environment.project_id
 
   managed {
@@ -51,7 +51,7 @@ resource "google_compute_global_address" "external_gateway_https" {
     google_project_service.compute_googleapis_com
   ]
 
-  name    = "${data.kubernetes_namespace_v1.team.metadata[0].name}-external-gateway-https"
+  name    = "${var.environment_name}-${data.kubernetes_namespace_v1.team.metadata[0].name}-external-gateway-https"
   project = data.google_project.environment.project_id
 }
 
@@ -109,7 +109,7 @@ resource "google_iap_client" "ray_head_client" {
   ]
 
   brand        = local.iap_oath_brand
-  display_name = "IAP-gkegw-${data.kubernetes_namespace_v1.team.metadata[0].name}-ray-head-dashboard"
+  display_name = "IAP-gkegw-${var.environment_name}-${data.kubernetes_namespace_v1.team.metadata[0].name}-ray-head-dashboard"
 }
 
 # TODO: Look at possibly converting to google_iap_web_backend_service_iam_member, but would need the gateway to be created first.

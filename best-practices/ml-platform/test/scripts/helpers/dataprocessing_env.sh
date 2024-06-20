@@ -26,5 +26,5 @@ fi
 echo_title "Applying dataprocessing configuration"
 export CLUSTER_NAME="mlp-${MLP_ENVIRONMENT_NAME}"
 export PROJECT_ID="${MLP_PROJECT_ID}"
-export PROCESSING_BUCKET="${PROJECT_ID}-processing"
-export DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/dataprocessing/dp:v0.0.1
+export PROCESSING_BUCKET="${PROJECT_ID}-${MLP_ENVIRONMENT_NAME}-processing"
+export DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/${MLP_ENVIRONMENT_NAME}-dataprocessing/dp:v0.0.1

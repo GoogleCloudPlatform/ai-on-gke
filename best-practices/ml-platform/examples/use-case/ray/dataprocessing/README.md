@@ -40,7 +40,7 @@ The preprocessing.py file does the following:
 1. Create a Cloud Storage bucket to store raw data
 
    ```
-   gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID}
+   gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID} --uniform-bucket-level-access
    ```
 
 1. Download the raw data csv file from above and store into the bucket created in the previous step.
@@ -61,11 +61,11 @@ The preprocessing.py file does the following:
 
    ```
    gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-   --member "serviceAccount:wi-ml-team-ray-head@${PROJECT_ID}.iam.gserviceaccount.com" \
+   --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-head]" \
    --role roles/storage.objectViewer
 
    gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-   --member "serviceAccount:wi-ml-team-ray-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
+   --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]" \ \
    --role roles/storage.objectAdmin
    ```
 
