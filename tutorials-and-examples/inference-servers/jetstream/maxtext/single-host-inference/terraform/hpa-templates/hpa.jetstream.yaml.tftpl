@@ -20,12 +20,11 @@ spec:
         type: AverageValue
         averageValue: ${hpa_averagevalue_target}
 %{ else }
-  - type: Pods
-    pods:
+  - type: External
+    external:
       metric:
         name: kubernetes.io|node|accelerator|memory_used
       target:
         type: AverageValue
         averageValue: ${hpa_averagevalue_target}
 %{ endif }
-
