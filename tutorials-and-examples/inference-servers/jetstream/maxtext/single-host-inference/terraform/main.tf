@@ -38,7 +38,7 @@ module "maxengine" {
   jetstream_http_server_image = var.jetstream_http_server_image
 }
 
-resource "kubernetes_manifest" "tgi-pod-monitoring" {
+resource "kubernetes_manifest" "jetstream-pod-monitoring" {
   count = var.custom_metrics_enabled && var.metrics_port != null ? 1 : 0
   manifest = yamldecode(templatefile(local.jetstream_podmonitoring, {
     namespace    = var.namespace
