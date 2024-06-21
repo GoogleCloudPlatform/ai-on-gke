@@ -3,7 +3,7 @@
 The repository contains examples on how to use DWS in GKE. More information about DWS is
 available [here](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest).
 
-## Prerequisites:
+## Prerequisites
 
 ### [Kueue](https://kueue.sigs.k8s.io/)
 To install a released version of Kueue in your cluster, run the following command:
