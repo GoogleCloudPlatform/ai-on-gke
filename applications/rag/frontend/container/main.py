@@ -19,7 +19,7 @@ import traceback
 
 from flask import Flask, render_template, request, jsonify
 from langchain.chains import LLMChain
-from langchain.llms import HuggingFaceTextGenInference
+from langchain_community.llms import HuggingFaceTextGenInference
 from langchain.prompts import PromptTemplate
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
 from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
