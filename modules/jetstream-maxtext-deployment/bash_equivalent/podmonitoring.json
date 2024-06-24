@@ -1,0 +1,22 @@
+{
+    "apiVersion": "monitoring.googleapis.com/v1",
+    "kind": "PodMonitoring",
+    "metadata": {
+      "name": "jetstream-podmonitoring"
+    },
+    "spec": {
+      "endpoints": [
+        {
+          "interval": "1s",
+          "path": "/"
+        }
+      ],
+      "targetLabels": {
+        "metadata": [
+          "pod",
+          "container",
+          "node"
+        ]
+      }
+    }
+  }

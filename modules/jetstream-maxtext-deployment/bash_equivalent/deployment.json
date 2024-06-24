@@ -42,8 +42,7 @@
                 "ici_tensor_parallelism=1",
                 "scan_layers=false",
                 "weight_dtype=bfloat16",
-                "attention=dot_product",
-                "prometheus_port=9100"
+                "attention=dot_product"
               ],
               "ports": [
                 {
