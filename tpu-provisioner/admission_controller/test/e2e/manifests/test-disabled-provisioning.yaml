@@ -3,7 +3,7 @@ kind: JobSet
 metadata:
   # Running this JobSet should result in Jobs having the nodeSelector `cloud.google.com/gke-location-hint=cell` injected
   # using the example admission controller webhook.
-  name: test-jobset-location-hint
+  name: test-disabled-provisioning
   annotations:
     alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool # 1:1 job replica to node pool assignment
 spec:
@@ -13,6 +13,9 @@ spec:
   - name: workers
     replicas: 3 # set to number of node pools
     template:
+      metadata:
+        labels:
+          tpu-provisioner.cloud.google.com/disable-autoprovisioning: "true"
       spec: 
         backoffLimit: 0
         # completions and parallelism should be the number of cores divided by 8
@@ -21,6 +24,8 @@ spec:
         parallelism: 2
         template:
           spec:
+            nodeSelector:
+              cloud.google.com/reservation-name: "my-reservation"
             restartPolicy: Never
             containers:
             - name: tpu-job
