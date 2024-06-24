@@ -115,7 +115,7 @@ For the following models, replace the following arguments in `checkpoint-job.yam
 ```
 - -s=jetstream-pytorch
 - -m=meta-llama/Llama-2-7b-hf
-- -o=gs://BUCKET_NAME/pytorch/llama2-7b/final/bf16/
+- -o=gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/
 - -n=llama-2
 - -q=False
 - -h=True
@@ -125,7 +125,7 @@ For the following models, replace the following arguments in `checkpoint-job.yam
 ```
 - -s=jetstream-pytorch
 - -m=meta-llama/Meta-Llama-3-8B
-- -o=gs://BUCKET_NAME/pytorch/llama3-8b/final/bf16/
+- -o=gs://BUCKET_NAME/pytorch/llama-3-8b/final/bf16/
 - -n=llama-3
 - -q=False
 - -h=True
@@ -154,10 +154,10 @@ Observe your checkpoint
 kubectl logs -f jobs/checkpoint-converter
 # This can take several minutes
 ...
-Completed uploading converted checkpoint from local path /pt-ckpt/ to GSBucket gs://BUCKET_NAME/pytorch/llama2-7b/final/bf16/"
+Completed uploading converted checkpoint from local path /pt-ckpt/ to GSBucket gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/"
 ```
 
-Now your converted checkpoint will be located in `gs://BUCKET_NAME/pytorch/llama2-7b/final/bf16/`
+Now your converted checkpoint will be located in `gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/`
 
 ## Deploy the Jetstream Pytorch server
 

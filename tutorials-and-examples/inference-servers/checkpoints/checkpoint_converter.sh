@@ -135,8 +135,8 @@ convert_pytorch_checkpoint() {
         HUGGINGFACE="False"
 
         # Example: 
-        # the input checkpoint directory is gs://jetstream-checkpoints/llama2-7b/base-checkpoint/
-        # the local checkpoint directory will be /models/llama2-7b/base-checkpoint/
+        # the input checkpoint directory is gs://jetstream-checkpoints/llama-2-7b/base-checkpoint/
+        # the local checkpoint directory will be /models/llama-2-7b/base-checkpoint/
         # INPUT_CKPT_DIR_LOCAL=${INPUT_CKPT_DIR/${TO_REPLACE}/${MODEL_PATH}}
         INPUT_CKPT_DIR_LOCAL=${INPUT_CKPT_DIR/${TO_REPLACE}/${MODEL_PATH}}
         TOKENIZER_PATH=${INPUT_CKPT_DIR_LOCAL}/tokenizer.model
