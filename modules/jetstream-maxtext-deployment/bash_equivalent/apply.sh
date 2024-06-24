@@ -22,5 +22,5 @@ JETSTREAM_MANIFEST="$(echo "$JETSTREAM_MANIFEST" \
         --arg LOAD_PARAMETERS_ARG "load_parameters=gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items" \
         '.spec.template.spec.containers[0].args += [$LOAD_PARAMETERS_ARG]')"
 
-kubectl apply -f -$("$JETSTREAM_MANIFEST")
-kubectl apply -f -$("$PODMONITORING_MANIFEST")
+echo $JETSTREAM_MANIFEST | kubectl apply -f -
+echo $PODMONITORING_MANIFEST | kubectl apply -f -
