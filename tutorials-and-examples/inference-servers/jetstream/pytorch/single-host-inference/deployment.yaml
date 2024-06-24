@@ -21,12 +21,14 @@ spec:
       - name: jetstream-pytorch-server
         image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-pytorch-server:v0.2.0
         args:
-        - --param_size=7b
+        - --size=7b
+        - --model_name=llama-2
         - --batch_size=80
         - --max_cache_length=2048
-        - --platform=tpu=8  
+        - --quantize_weights=False
+        - --quantize_kv_cache=False
         - --tokenizer_path=/jetstream-pytorch/jetstream_pt/third_party/llama2/tokenizer.model
-        - --checkpoint_path=/models/pytorch/llama-2-7b/final/bf16/model.safetensors
+        - --checkpoint_path=/models/pytorch/llama2-7b/final/bf16/model.safetensors
         ports:
         - containerPort: 9000
         volumeMounts:
