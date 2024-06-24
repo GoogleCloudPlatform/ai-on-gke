@@ -9,17 +9,11 @@ import pg8000
 db = None
 
 TABLE_NAME = os.environ.get('TABLE_NAME', '')  # CloudSQL table name
+DB_USER = os.environ.get('DB_USER', 'username')
+DB_PASS = os.environ.get('DB_PASS', 'password')
 INSTANCE_CONNECTION_NAME = os.environ.get('INSTANCE_CONNECTION_NAME', '')
 SENTENCE_TRANSFORMER_MODEL = 'intfloat/multilingual-e5-small' # Transformer to use for converting text chunks to vector embeddings
 DB_NAME = "pgvector-database"
-
-db_username_file = open("/etc/secret-volume/username", "r")
-DB_USER = db_username_file.read()
-db_username_file.close()
-
-db_password_file = open("/etc/secret-volume/password", "r")
-DB_PASS = db_password_file.read()
-db_password_file.close()
 
 transformer = SentenceTransformer(SENTENCE_TRANSFORMER_MODEL)
 

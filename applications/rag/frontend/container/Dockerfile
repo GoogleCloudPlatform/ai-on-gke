@@ -49,6 +49,14 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8080
 
-RUN gcloud auth application-default login
+COPY ./service-account.json /app/
+
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+
+ARG GCP_PROJECT_ID
+ENV GCP_PROJECT_ID=${GCP_PROJECT_ID}
+
+RUN gcloud auth activate-service-account --key-file=/app/service-account.json && \
+    gcloud config set project  ${GCP_PROJECT_ID}
 
 CMD ["python", "main.py"]
