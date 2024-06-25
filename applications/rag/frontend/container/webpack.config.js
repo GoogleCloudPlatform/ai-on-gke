@@ -44,7 +44,12 @@ module.exports = {
     devMiddleware: {
       writeToDisk: true,
     },
-    proxy: [],
+    proxy: [
+      {
+        context: ["/prompt"],
+        target: "http://localhost:8082/",
+      },
+    ],
   },
   plugins: [new webpack.DefinePlugin(envKeys)],
 };

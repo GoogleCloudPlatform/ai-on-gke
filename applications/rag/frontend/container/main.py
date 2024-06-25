@@ -24,7 +24,6 @@ from langchain.prompts import PromptTemplate
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
 from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 from cloud_sql import cloud_sql
-import sqlalchemy
 
 # Setup logging
 logging_client = logging.Client()
@@ -137,6 +136,34 @@ def handlePrompt():
             response['warnings'] = warnings
         log.info(f"response: {response}")
         return {'response': response}
+    except Exception as err:
+        log.info(f"exception from llm: {err}")
+        traceback.print_exc()
+        error_traceback = traceback.format_exc()
+        response = jsonify({
+            "warnings": warnings,
+            "error": "An error occurred",
+            "errorMessage": f"Error: {err}\nTraceback:\n{error_traceback}"
+        })
+        response.status_code = 500
+        return response
+
+@app.route('/upload_documents', methods=['POST'])
+def handleDocuments():
+    warnings = []
+    try:
+        data = request.get_json()
+        log.info(data)
+        if 'files' not in request.files:
+            warnings.append({'error': 'No files part in the request'})
+
+        files = request.files.getlist('files')
+
+        for file in files:
+            file_content = file.read()
+            text = file_content.decode('utf-8')
+            cloud_sql.storeEmbeddings(text)
+
     except Exception as err:
         log.info(f"exception from llm: {err}")
         traceback.print_exc()

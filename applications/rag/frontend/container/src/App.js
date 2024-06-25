@@ -12,6 +12,8 @@ import {
   Button,
 } from "semantic-ui-react";
 
+import { sendRequestToApi } from "./utils/sendRequestToAPI";
+
 const ChatScreen = () => {
   const [messages, setMessages] = useState([
     { id: 1, sender: "system", text: "Hello there!" },
@@ -23,6 +25,7 @@ const ChatScreen = () => {
   const [textModerationEnabled, setTextModerationEnabled] = useState(false);
   const [textModerationValue, setTextModerationValue] = useState(50);
   //   const [selectLLM, setSelectLLM] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const handleMessageChange = (e) => {
     setNewMessage(e.target.value);
@@ -30,15 +33,43 @@ const ChatScreen = () => {
 
   const sendMessage = () => {
     if (newMessage.trim() !== "") {
+      setIsSending(true);
       const newMsg = {
         id: messages.length + 1,
         sender: "user",
         text: newMessage,
       };
-      setMessages([...messages, newMsg]);
-      setNewMessage("");
+      const payload = {
+        prompt: newMessage,
+        nlpFilterLevel: textModerationValue,
+        inspectTemplate: null,
+        deidentifyTemplate: null,
+      };
+      sendRequestToApi("/prompt", payload)
+        .then((data) => {
+          // const data = {
+          //   generatedText: generated_text,
+          //   elapsedTime: elapsed_time,
+          // };
+          console.log(data);
+          setMessages([...messages, newMsg]);
+        })
+        .catch((error) => {
+          console.error(error);
+          const errorMsg = {
+            id: messages.length + 2,
+            sender: "system",
+            text: `Error: ${error.message}`,
+          };
+          setMessages((prevMessages) => [...prevMessages, errorMsg]);
+        })
+        .finally(() => {
+          setIsSending(false);
+          setNewMessage("");
+        });
     }
   };
+
   const handleFileChange = (e) => {
     setSelectedFiles(Array.from(e.target.files));
   };
@@ -48,6 +79,20 @@ const ChatScreen = () => {
 
     const formData = new FormData();
     selectedFiles.forEach((file) => formData.append("files", file));
+    sendRequestToApi(
+      "/upload_documents",
+      formData,
+      (contentType = "multipart/form-data")
+    )
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setSelectedFiles([]);
+      });
   };
 
   const handleAccordionClick = (index) => {
@@ -90,12 +135,14 @@ const ChatScreen = () => {
         </Grid.Row>
         <Grid.Row style={{ margin: "3.4rem" }}>
           <Grid.Column width={10}>
-            <Segment padded style={{ height: "74vh" }}>
+            <Segment padded style={{ height: "74vh", overflow: "auto" }}>
               <Container>
                 <Comment.Group
                   style={{
                     height: "57vh",
                     marginBottom: "2.3em",
+                    overflowY: "auto",
+                    maxWidth: "fit-content",
                   }}
                 >
                   <Header as="h3" dividing>
@@ -117,6 +164,8 @@ const ChatScreen = () => {
                     onChange={handleMessageChange}
                     placeholder="Type your message..."
                     width={14}
+                    disabled={isSending}
+                    style={{ border: "0.1rem solid black" }}
                   />
                   <Form.Button content="Send" icon="edit" primary />
                 </Form.Group>
