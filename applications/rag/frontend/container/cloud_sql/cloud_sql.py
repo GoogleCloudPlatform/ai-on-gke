@@ -8,18 +8,17 @@ import pg8000
 
 db = None
 
+GCP_PROJECT_NAME = os.environ.get("PROJECT_ID")
+GCP_CLOUD_SQL_REGION = os.environ.get("cloudsql_instance_region")
+GCP_CLOUD_SQL_INSTANCE = os.environ.get("cloudsql_instance")
+
 TABLE_NAME = os.environ.get('TABLE_NAME', '')  # CloudSQL table name
-INSTANCE_CONNECTION_NAME = os.environ.get('INSTANCE_CONNECTION_NAME', '')
+DB_USER = os.environ.get('DB_USER', 'username')
+DB_PASS = os.environ.get('DB_PASS', 'password')
+
+INSTANCE_CONNECTION_NAME = f"{GCP_PROJECT_NAME}:{GCP_CLOUD_SQL_REGION}:{GCP_CLOUD_SQL_INSTANCE}"
 SENTENCE_TRANSFORMER_MODEL = 'intfloat/multilingual-e5-small' # Transformer to use for converting text chunks to vector embeddings
 DB_NAME = "pgvector-database"
-
-db_username_file = open("/etc/secret-volume/username", "r")
-DB_USER = db_username_file.read()
-db_username_file.close()
-
-db_password_file = open("/etc/secret-volume/password", "r")
-DB_PASS = db_password_file.read()
-db_password_file.close()
 
 transformer = SentenceTransformer(SENTENCE_TRANSFORMER_MODEL)
 
@@ -81,3 +80,21 @@ def fetchContext(query_text):
       raise Exception(f"General error: {err}")
 
   return query_results[0][1]
+
+def storeEmbeddings(data):
+  with db.connect() as conn:
+    try:
+      embeddings = transformer.encode(data).tolist()
+      embeddings = embeddings.tobytes()
+      query_request =  "INSERT INTO documents (text, embedding) VALUES (%s, %s)",
+      conn.execute(sqlalchemy.text(query_request),(data, embeddings))
+      conn.commit()
+      
+    except sqlalchemy.exc.DBAPIError or pg8000.exceptions.DatabaseError as err:
+      message = f"Table {TABLE_NAME} does not exist: {err}"
+      raise sqlalchemy.exc.DataError(message)
+    except sqlalchemy.exc.DatabaseError as err:
+      message = f"Database {INSTANCE_CONNECTION_NAME} does not exist: {err}"
+      raise sqlalchemy.exc.DataError(message)
+    except Exception as err:
+      raise Exception(f"General error: {err}")

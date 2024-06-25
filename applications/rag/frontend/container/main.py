@@ -19,32 +19,33 @@ import traceback
 
 from flask import Flask, render_template, request, jsonify
 from langchain.chains import LLMChain
-from langchain_community.llms import HuggingFaceTextGenInference
+from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 from langchain.prompts import PromptTemplate
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
 from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 from cloud_sql import cloud_sql
-import sqlalchemy
 
 # Setup logging
 logging_client = logging.Client()
 logging_client.setup_logging()
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder='public', static_url_path='/public')
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 
 # initialize parameters
 INFERENCE_ENDPOINT=os.environ.get('INFERENCE_ENDPOINT', '127.0.0.1:8081')
+HUGGINGFACE_HUB_TOKEN = os.environ.get('HUGGINGFACE_HUB_TOKEN')
 
-llm = HuggingFaceTextGenInference(
-    inference_server_url=f'http://{INFERENCE_ENDPOINT}/',
+llm = HuggingFaceEndpoint(
+    endpoint_url=f'http://{INFERENCE_ENDPOINT}/',
     max_new_tokens=512,
     top_k=10,
     top_p=0.95,
     typical_p=0.95,
     temperature=0.01,
     repetition_penalty=1.03,
+    huggingfacehub_api_token=HUGGINGFACE_HUB_TOKEN
 )
 
 prompt_template = """
@@ -135,6 +136,34 @@ def handlePrompt():
             response['warnings'] = warnings
         log.info(f"response: {response}")
         return {'response': response}
+    except Exception as err:
+        log.info(f"exception from llm: {err}")
+        traceback.print_exc()
+        error_traceback = traceback.format_exc()
+        response = jsonify({
+            "warnings": warnings,
+            "error": "An error occurred",
+            "errorMessage": f"Error: {err}\nTraceback:\n{error_traceback}"
+        })
+        response.status_code = 500
+        return response
+
+@app.route('/upload_documents', methods=['POST'])
+def handleDocuments():
+    warnings = []
+    try:
+        data = request.get_json()
+        log.info(data)
+        if 'files' not in request.files:
+            warnings.append({'error': 'No files part in the request'})
+
+        files = request.files.getlist('files')
+
+        for file in files:
+            file_content = file.read()
+            text = file_content.decode('utf-8')
+            cloud_sql.storeEmbeddings(text)
+
     except Exception as err:
         log.info(f"exception from llm: {err}")
         traceback.print_exc()
