@@ -17,6 +17,9 @@ RUN update-alternatives --install \
 
 RUN git clone https://github.com/google/maxtext.git
 
+# Pylint served on image to satisfy the terms of GPLv2.
+RUN git clone https://github.com/pylint-dev/pylint.git
+
 RUN cd maxtext/ && \
 git checkout ${MAXTEXT_VERSION} && \
 bash setup.sh
