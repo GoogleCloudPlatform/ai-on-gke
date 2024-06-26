@@ -14,7 +14,7 @@
 
 Flask==3.0.0
 gunicorn==22.0.0
-Werkzeug==3.0.1
+Werkzeug==3.0.3
 langchain==0.1.9
 sentence-transformers==2.5.1
 text_generation==0.6.1
