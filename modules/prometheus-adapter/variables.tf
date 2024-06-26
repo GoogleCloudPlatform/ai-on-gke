@@ -34,5 +34,5 @@ variable "credentials_config" {
 variable "project_id" {
   type        = string
   description = "GCP project id"
-  nullable = false
+  nullable    = false
 }
