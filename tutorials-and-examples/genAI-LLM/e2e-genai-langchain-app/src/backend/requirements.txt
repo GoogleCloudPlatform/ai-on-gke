@@ -1644,9 +1644,9 @@ tqdm==4.66.1 \
     # via
     #   huggingface-hub
     #   transformers
-transformers==4.36.2 \
-    --hash=sha256:462066c4f74ee52516f12890dcc9ec71d1a5e97998db621668455117a54330f6 \
-    --hash=sha256:d8068e897e47793281501e547d2bbdfc5b8556409c2cb6c3d9e2ca77d4c0b4ec
+transformers==4.38.0 \
+    --hash=sha256:a6d7ae9afcfcc0773d8b9ef20940344bd1cae54fe49175ddea61c7c8d11fb52a \
+    --hash=sha256:aa98177980467cb0c73f34b19d70d0577ec021c7c00706fbaca46ac358fd083c
     # via -r requirements.in
 triton==2.1.0 \
     --hash=sha256:143582ca31dd89cd982bd3bf53666bab1c7527d41e185f9e3d8a3051ce1b663b \
