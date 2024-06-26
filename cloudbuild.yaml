@@ -71,7 +71,7 @@ steps:
         echo "pass" > /workspace/gke_cluster_result.txt
     dir: 'infrastructure/'
     allowFailure: true
-    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
+    waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag']
 
   - id: 'test ray cluster'
     name: 'gcr.io/$PROJECT_ID/terraform'
