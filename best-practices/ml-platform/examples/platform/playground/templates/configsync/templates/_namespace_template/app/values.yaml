@@ -1,0 +1,298 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+image:
+  repository: rayproject/ray
+  tag: 2.7.1-py310-gpu
+  pullPolicy: IfNotPresent
+
+nameOverride: "kuberay"
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+head:
+  groupName: headgroup
+  rayVersion: 2.7.1
+  enableInTreeAutoscaling: true
+  autoscalerOptions:
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+  labels:
+    cloud.google.com/gke-ray-node-type: head
+    created-by: ray-on-gke
+  serviceAccountName: "KUBERNETES_SERVICE_ACCOUNT_RAY_HEAD"
+  rayStartParams:
+    dashboard-host: '0.0.0.0'
+    block: 'true'
+    num-cpus: '0' # Prevent tasks from begins scheduled on the head
+  image:
+    repository: rayproject/ray
+    tag: 2.7.1-py310
+    pullPolicy: IfNotPresent
+  containerEnv:
+  - name: RAY_memory_monitor_refresh_ms
+    value: "0"
+  envFrom: []
+  ports: []
+  resources:
+    limits:
+      cpu: "4"
+      memory: "10G"
+      ephemeral-storage: 20Gi
+    requests:
+      cpu: "4"
+      memory: "10G"
+      ephemeral-storage: 10Gi
+  annotations: {}
+  nodeSelector:
+    resource-type: "cpu"
+    iam.gke.io/gke-metadata-server-enabled: "true"
+  tolerations:
+  - key: "on-demand"
+    operator: "Exists"
+    effect: "NoSchedule"
+  affinity: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+  volumes:
+  - name: fluent-bit-config
+    configMap:
+      name: fluentbit-config
+  - name: fluent-bit-tmp
+    emptyDir: {}
+  - name: ray-logs
+    emptyDir: {}
+  - name: ray-tmp
+    emptyDir: {}
+  # Ray writes logs to /tmp/ray/session_latests/logs
+  volumeMounts:
+  - mountPath: /tmp
+    name: ray-tmp
+  - mountPath: /tmp/ray
+    name: ray-logs
+  sidecarContainers:
+  - name: fluent-bit
+    image: fluent/fluent-bit:1.9.6
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 2Gi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 4Gi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      # fluent/fluent-bit does not support runAsNonRoot
+      # runAsNonRoot: true
+    volumeMounts:
+    - mountPath: /fluent-bit/etc/
+      name: fluent-bit-config
+    - mountPath: /tmp
+      name: fluent-bit-tmp
+    - mountPath: /tmp/ray
+      name: ray-logs
+
+worker:
+  groupName: cpu-n2x2
+  replicas: 0
+  minReplicas: 0
+  maxReplicas: 16
+  type: worker
+  labels:
+    cloud.google.com/gke-ray-node-type: worker
+    cloud.google.com/gke-ray-node-resource-type: cpu
+    created-by: ray-on-gke
+  serviceAccountName: "KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER"
+  rayStartParams:
+    block: 'true'
+    resources: '"{\"n2_cpu\": 2}"'
+  initContainerImage: 'busybox:1.28'
+  initContainerSecurityContext: {}
+  containerEnv:
+  - name: RAYCLUSTER_HELM_CHART_WORKAROUND
+    value: "true"
+  envFrom: []
+  ports: []
+  resources:
+    limits:
+      cpu: 2
+      memory: "4G"
+    requests:
+      cpu: 2
+      memory: "4G"
+  annotations: {}
+  nodeSelector:
+    resource-type: cpu
+  tolerations:
+  - key: "on-demand"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "spot"
+    operator: "Exists"
+    effect: "NoSchedule"
+  affinity: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+  volumes:
+  - name: fluent-bit-config
+    configMap:
+      name: fluentbit-config
+  - name: fluent-bit-tmp
+    emptyDir: {}
+  - name: ray-logs
+    emptyDir: {}
+  - name: ray-tmp
+    emptyDir: {}
+  # Ray writes logs to /tmp/ray/session_latests/logs
+  volumeMounts:
+  - mountPath: /tmp
+    name: ray-tmp
+  - mountPath: /tmp/ray
+    name: ray-logs
+  sidecarContainers:
+  - name: fluent-bit
+    image: fluent/fluent-bit:1.9.6
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 2Gi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 4Gi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      # fluent/fluent-bit does not support runAsNonRoot
+      # runAsNonRoot: true
+    volumeMounts:
+    - mountPath: /fluent-bit/etc/
+      name: fluent-bit-config
+    - mountPath: /tmp
+      name: fluent-bit-tmp
+    - mountPath: /tmp/ray
+      name: ray-logs
+
+additionalWorkerGroups:
+  gpul4x2:
+    minReplicas: 0
+    maxReplicas: 3
+    replicas: 0
+    type: worker
+    labels:
+      cloud.google.com/gke-ray-node-type: worker
+      cloud.google.com/gke-ray-node-resource-type: gpu
+      created-by: ray-on-gke
+    serviceAccountName: "KUBERNETES_SERVICE_ACCOUNT_RAY_WORKER"
+    rayStartParams:
+      block: 'true'
+      resources: '"{\"l4_gpu\": 2}"'
+    initContainerImage: 'busybox:1.28'
+    initContainerSecurityContext: {}
+    containerEnv:
+    - name: RAYCLUSTER_HELM_CHART_WORKAROUND
+      value: "true"
+    envFrom: []
+    ports: []
+    resources:
+      limits:
+        cpu: "22"
+        nvidia.com/gpu: "2"
+        memory: "90G"
+        ephemeral-storage: 20Gi
+      requests:
+        cpu: "22"
+        nvidia.com/gpu: "2"
+        memory: "90G"
+        ephemeral-storage: 10Gi
+    annotations: {}
+    nodeSelector:
+      iam.gke.io/gke-metadata-server-enabled: "true"
+      cloud.google.com/gke-accelerator: "nvidia-l4"
+    tolerations:
+    - key: "nvidia.com/gpu"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "on-demand"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "spot"
+      operator: "Exists"
+      effect: "NoSchedule"
+    affinity: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+    volumes:
+    - name: fluent-bit-config
+      configMap:
+        name: fluentbit-config
+    - name: fluent-bit-tmp
+      emptyDir: {}
+    - name: ray-logs
+      emptyDir: {}
+    - name: ray-tmp
+      emptyDir: {}
+    # Ray writes logs to /tmp/ray/session_latests/logs
+    volumeMounts:
+    - mountPath: /tmp
+      name: ray-tmp
+    - mountPath: /tmp/ray
+      name: ray-logs
+    sidecarContainers:
+    - name: fluent-bit
+      image: fluent/fluent-bit:1.9.6
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+          ephemeral-storage: 2Gi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+          ephemeral-storage: 4Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        # fluent/fluent-bit does not support runAsNonRoot
+        # runAsNonRoot: true
+      volumeMounts:
+      - mountPath: /fluent-bit/etc/
+        name: fluent-bit-config
+      - mountPath: /tmp
+        name: fluent-bit-tmp
+      - mountPath: /tmp/ray
+        name: ray-logs
+
+service:
+  type: ClusterIP
