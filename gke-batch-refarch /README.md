@@ -1,0 +1,1 @@
+Moved to [Reference Architecture: Batch Processing Platform on GKE](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/best-practices/gke-batch-refarch)
