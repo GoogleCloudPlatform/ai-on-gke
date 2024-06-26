@@ -21,6 +21,9 @@ PROMETHEUS_FRONTEND_MANIFEST="$(echo "$PROMETHEUS_FRONTEND_MANIFEST" \
 echo $PROMETHEUS_FRONTEND_MANIFEST | kubectl apply -f -
 echo $PROMETHEUS_SERVICE_MANIFEST | kubectl apply -f -
 
+# TODO: remove when helm uninstall correctly removes this resource on uninstall
+kubectl delete apiservice v1beta1.metrics.k8s.io
+
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm install "$RELEASE_NAME" prometheus-community/prometheus-adapter
+helm install "$RELEASE_NAME" prometheus-community/prometheus-adapter -f values.yaml
