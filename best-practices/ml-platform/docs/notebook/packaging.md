@@ -58,9 +58,9 @@ This process can also be automated utilizing Continuous Integration (CI) tools s
         apt-get -y --no-install-recommends install python3-dev gcc python3-pip git && \
         rm -rf /var/lib/apt/lists/*
 
+    COPY requirements.txt _THE_GENERATED_PYTHON_FILE_ /_THE_GENERATED_PYTHON_FILE_
+    
     RUN pip3 install --no-cache-dir -r requirements.txt
-
-    COPY _THE_GENERATED_PYTHON_FILE_ /_THE_GENERATED_PYTHON_FILE_
 
     ENV PYTHONUNBUFFERED 1
 
