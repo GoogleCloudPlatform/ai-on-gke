@@ -52,7 +52,7 @@ variable "env" {
   type        = set(string)
 }
 
-variable "git_namespace" { 
+variable "git_namespace" {
   description = "The namespace of the git repository"
   type        = string
 
