@@ -36,3 +36,9 @@ variable "project_id" {
   description = "GCP project id"
   nullable    = false
 }
+
+variable "cluster_name" {
+  type        = string
+  description = "Cluster name, see README for more details"
+  nullable    = false
+}

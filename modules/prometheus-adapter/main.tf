@@ -16,7 +16,7 @@ resource "helm_release" "prometheus_adapter" {
   name       = "my-release"
   chart      = "prometheus-adapter"
   repository = "https://prometheus-community.github.io/helm-charts"
-  values     = [file("./bash_equivalent/values.yaml")]
+  values     = [templatefile("templates/values.yaml.tftpl", {cluster_name=var.cluster_name})]
 }
 
 resource "kubernetes_deployment_v1" "frontend" {
