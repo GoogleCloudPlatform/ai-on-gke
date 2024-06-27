@@ -56,7 +56,7 @@ After installing cert-manager, it may take up to two minutes for the certificate
 
 Installing the webhook:
 1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
-2. `cd applications/ray/kuberay-tpu-webhook` 
+2. `cd ai-on-gke/ray-on-gke/tpu/kuberay-tpu-webhook`
 3. `make deploy`
     - this will create the webhook deployment, configs, and service in the "ray-system" namespace
     - to change the namespace, edit the "namespace" value in each .yaml in deployments/ and certs/
