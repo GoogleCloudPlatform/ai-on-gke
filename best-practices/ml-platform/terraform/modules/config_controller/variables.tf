@@ -13,36 +13,36 @@
 # limitations under the License.
 
 variable "full_management" {
-    description = "Use a fully managed (Autopilot) cluster"
-    type = bool
+  description = "Use a fully managed (Autopilot) cluster"
+  type        = bool
 }
 
 variable "kubeconfig_directory" {
-    description = "Path to store the kubeconfig"
-    type = string   
+  description = "Path to store the kubeconfig"
+  type        = string
 }
 
 variable "location" {
-    description = "Location of the config controller cluster"
-    type = string   
+  description = "Location of the config controller cluster"
+  type        = string
 }
 
 variable "project_id" {
-    description = "Project ID for the config controller cluster"
-    type = string
+  description = "Project ID for the config controller cluster"
+  type        = string
 }
 
 variable "name" {
-    description = "Name of the config controller cluster"
-    type = string   
+  description = "Name of the config controller cluster"
+  type        = string
 }
 
 variable "network" {
-    description = "Existing VPC Network to use for the config controller cluster and nodes"
-    type = string
+  description = "Existing VPC Network to use for the config controller cluster and nodes"
+  type        = string
 }
 
 variable "subnet" {
-    description = "Specifies the subnet that the VM instances are a part of"
-    type = string
+  description = "Specifies the subnet that the VM instances are a part of"
+  type        = string
 }
