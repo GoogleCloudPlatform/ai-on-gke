@@ -1,0 +1,91 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "frontend"
+  },
+  "spec": {
+    "replicas": 2,
+    "selector": {
+      "matchLabels": {
+        "app": "frontend"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "frontend"
+        }
+      },
+      "spec": {
+        "automountServiceAccountToken": true,
+        "affinity": {
+          "nodeAffinity": {
+            "requiredDuringSchedulingIgnoredDuringExecution": {
+              "nodeSelectorTerms": [
+                {
+                  "matchExpressions": [
+                    {
+                      "key": "kubernetes.io/arch",
+                      "operator": "In",
+                      "values": [
+                        "arm64",
+                        "amd64"
+                      ]
+                    },
+                    {
+                      "key": "kubernetes.io/os",
+                      "operator": "In",
+                      "values": [
+                        "linux"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "containers": [
+          {
+            "name": "frontend",
+            "image": "gke.gcr.io/prometheus-engine/frontend:v0.8.0-gke.4",
+            "args": [
+              "--web.listen-address=:9090"
+            ],
+            "ports": [
+              {
+                "name": "web",
+                "containerPort": 9090
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/-/ready",
+                "port": "web"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "all"
+                ]
+              },
+              "privileged": false,
+              "runAsGroup": 1000,
+              "runAsNonRoot": true,
+              "runAsUser": 1000
+            },
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/-/healthy",
+                "port": "web"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
