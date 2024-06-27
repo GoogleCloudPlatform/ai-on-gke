@@ -66,7 +66,7 @@ $ kubectl annotate serviceaccount default \
     iam.gke.io/gcp-service-account=jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
-### Create a Cloud Storage bucket to store the Llama2-7b model checkpoint
+### Create a Cloud Storage bucket to store your model checkpoint
 
 ```
 BUCKET_NAME=<your desired gsbucket name>
@@ -74,12 +74,71 @@ gcloud storage buckets create $BUCKET_NAME
 ```
 
 ## Checkpoint conversion
+
+### [Option #1] Download weights from GitHub
 Follow the instructions here to download the llama-2-7b weights: https://github.com/meta-llama/llama#download 
 
-Upload your weights to your GSBucket
+```
+ls llama
+
+llama-2-7b tokenizer.model ..
+```
+
+Upload your weights and tokenizer to your GSBucket
 
 ```
-gcloud storage cp -r <directory where weights are stored>/* gs://BUCKET_NAME/llama-2-7b/base/
+gcloud storage cp -r llama-2-7b/* gs://BUCKET_NAME/llama-2-7b/base/
+gcloud storage cp tokenizer.model gs://BUCKET_NAME/llama-2-7b/base/
+```
+
+### [Option #2] Download weights from HuggingFace
+Accept the terms and conditions from https://huggingface.co/meta-llama/Llama-2-7b-hf.
+
+For llama-3-8b: https://huggingface.co/meta-llama/Meta-Llama-3-8B.
+
+For gemma-2b: https://huggingface.co/google/gemma-2b-pytorch.
+
+Obtain a HuggingFace CLI token by going to your HuggingFace settings and under the `Access Tokens`, generate a `New token`. Edit permissions to your access token to have read access to your respective checkpoint repository.
+
+Copy your access token and create a Secret to store the HuggingFace token
+
+```
+kubectl create secret generic huggingface-secret \
+  --from-literal=HUGGINGFACE_TOKEN=<access_token>
+```
+
+### Apply the checkpoint conversion job
+
+For the following models, replace the following arguments in `checkpoint-job.yaml`
+
+#### Llama-2-7b-hf
+```
+- -s=jetstream-pytorch
+- -m=meta-llama/Llama-2-7b-hf
+- -o=gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/
+- -n=llama-2
+- -q=False
+- -h=True
+```
+
+#### Llama-3-8b
+```
+- -s=jetstream-pytorch
+- -m=meta-llama/Meta-Llama-3-8B
+- -o=gs://BUCKET_NAME/pytorch/llama-3-8b/final/bf16/
+- -n=llama-3
+- -q=False
+- -h=True
+```
+
+#### Gemma-2b
+```
+- -s=jetstream-pytorch
+- -m=google/gemma-2b-pytorch
+- -o=gs://BUCKET_NAME/pytorch/gemma-2b/final/bf16/
+- -n=gemma
+- -q=False
+- -h=True
 ```
 
 Run the checkpoint conversion job. This will use the [checkpoint conversion script](https://github.com/google/jetstream-pytorch/blob/main/convert_checkpoints.py) from Jetstream-pytorch to create a compatible Pytorch checkpoint
@@ -95,24 +154,36 @@ Observe your checkpoint
 kubectl logs -f jobs/checkpoint-converter
 # This can take several minutes
 ...
-Completed uploading converted checkpoint from local path /pt-ckpt/ to GSBucket gs://BUCKET_NAME/pytorch/llama2-7b/final/bf16/"
+Completed uploading converted checkpoint from local path /pt-ckpt/ to GSBucket gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/"
 ```
 
-Now your converted checkpoint will be located in `gs://BUCKET_NAME/pytorch/llama2-7b/final/bf16/`
+Now your converted checkpoint will be located in `gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/`
 
 ## Deploy the Jetstream Pytorch server
 
 The following flags are set in the manifest file
 ```
---param_size: Size of model
+--size: Size of model
+--model_name: Name of model (llama-2, llama-3, gemma)
 --batch_size: Batch size
 --max_cache_length: Maximum length of kv cache 
---platform=tpu: TPU machine type (8 for v5e-8, 4 for v4-8)
 --tokenizer_path: Path to model tokenizer file
 --checkpoint_path: Path to checkpoint
 Optional flags to add
 --quantize_weights (Default False): Checkpoint is quantized
 --quantize_kv_cache (Default False): Quantized kv cache
+```
+
+For llama3-8b, you can use the following arguments:
+```
+- --size=8b
+- --model_name=llama-3
+- --batch_size=80
+- --max_cache_length=2048
+- --quantize_weights=False
+- --quantize_kv_cache=False
+- --tokenizer_path=/models/pytorch/llama3-8b/final/bf16/tokenizer.model
+- --checkpoint_path=/models/pytorch/llama3-8b/final/bf16/model.safetensors
 ```
 
 ```
@@ -122,8 +193,8 @@ kubectl apply -f deployment.yaml
 ### Verify the deployment
 ```
 kubectl get deployment
-NAME               		READY   UP-TO-DATE   AVAILABLE   AGE
-jetstream-pytorch-server   2/2     2            2           ##s
+NAME               		   READY   UP-TO-DATE   AVAILABLE   AGE
+jetstream-pytorch-server    2/2       2            2         ##s
 ```
 
 View the HTTP server logs to check that the model has been loaded and compiled. It may take the server a few minutes to complete this operation.

@@ -11,20 +11,37 @@ docker push gcr.io/${PROJECT_ID}/inference-checkpoint:latest
 
 Now you can use it in a [Kubernetes job](../jetstream/maxtext/single-host-inference/checkpoint-job.yaml) and pass the following arguments
 
-Jetstream + MaxText
+## Jetstream + MaxText
 ```
-- -i=INFERENCE_SERVER
+- -s=INFERENCE_SERVER
 - -b=BUCKET_NAME
 - -m=MODEL_PATH
 - -v=VERSION (Optional)
 ```
 
-Jetstream + Pytorch/XLA
+## Jetstream + Pytorch/XLA
 ```
-- -i=INFERENCE_SERVER
+- -s=INFERENCE_SERVER
 - -m=MODEL_PATH
-- -q=QUANTIZE (Optional)
-- -v=VERSION
-- -1=EXTRA_PARAM_1
-- -2=EXTRA_PARAM_2
+- -n=MODEL_NAME
+- -q=QUANTIZE_WEIGHTS (Optional) (default=False)
+- -t=QUANTIZE_TYPE (Optional) (default=int8_per_channel)
+- -v=VERSION (Optional) (default=jetstream-v0.2.3)
+- -i=INPUT_DIRECTORY (Optional)
+- -o=OUTPUT_DIRECTORY
+- -h=HUGGINGFACE (Optional) (default=False)
+```
+
+## Argument descriptions:
+```
+b) BUCKET_NAME: (str) GSBucket, without gs://
+s) INFERENCE_SERVER: (str) Inference server, ex. jetstream-maxtext, jetstream-pytorch
+m) MODEL_PATH: (str) Model path, varies depending on inference server and location of base checkpoint
+n) MODEL_NAME: (str) Model name, ex. llama-2, llama-3, gemma
+h) HUGGINGFACE: (bool) Checkpoint is from HuggingFace.
+q) QUANTIZE_WEIGHTS: (str) Whether to quantize weights
+t) QUANTIZE_TYPE: (str) Quantization type, QUANTIZE_WEIGHTS must be set to true. Availabe quantize type: {"int8", "int4"} x {"per_channel", "blockwise"},
+v) VERSION: (str) Version of inference server to override, ex. jetstream-v0.2.2, jetstream-v0.2.3
+i) INPUT_DIRECTORY: (str) Input checkpoint directory, likely a GSBucket path
+o) OUTPUT_DIRECTORY: (str) Output checkpoint directory, likely a GSBucket path
 ```
