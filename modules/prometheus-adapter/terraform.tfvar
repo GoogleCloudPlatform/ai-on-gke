@@ -1,5 +1,0 @@
-credentials_config = {
-      kubeconfig = {
-        path = "~/.kube/config"
-      }
-    }

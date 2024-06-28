@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 
-locals {
-  hpa_cpu_template        = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
-  hpa_jetstream_template  = "${path.module}/hpa-templates/hpa.jetstream.yaml.tftpl"
-  jetstream_podmonitoring = "${path.module}/monitoring-templates/jetstream-podmonitoring.yaml.tftpl"
-}
-
-module "custom_metrics_stackdriver_adapter" {
-  count  = var.custom_metrics_enabled ? 1 : 0
-  source = "../../../../../../modules/custom-metrics-stackdriver-adapter"
-  workload_identity = {
-    enabled    = true
-    project_id = var.project_id
-  }
-}
-
 module "maxengine" {
   count                       = 1
   source                      = "../../../../../../modules/jetstream-maxtext-deployment"
@@ -36,23 +21,11 @@ module "maxengine" {
   metrics_port                = var.metrics_port
   maxengine_server_image      = var.maxengine_server_image
   jetstream_http_server_image = var.jetstream_http_server_image
-}
-
-resource "kubernetes_manifest" "jetstream-pod-monitoring" {
-  count = var.custom_metrics_enabled && var.metrics_port != null ? 1 : 0
-  manifest = yamldecode(templatefile(local.jetstream_podmonitoring, {
-    namespace    = var.namespace
-    metrics_port = try(var.metrics_port, -1)
-  }))
-}
-
-resource "kubernetes_manifest" "hpa_custom_metric" {
-  count = (var.custom_metrics_enabled && var.hpa_type != null || var.hpa_type != "memory_used") && var.hpa_averagevalue_target != null ? 1 : 0
-  manifest = yamldecode(templatefile(local.hpa_jetstream_template, {
-    namespace               = var.namespace
-    hpa_type                = try(var.hpa_type, "")
-    hpa_averagevalue_target = try(var.hpa_averagevalue_target, 1)
-    hpa_min_replicas        = var.hpa_min_replicas
-    hpa_max_replicas        = var.hpa_max_replicas
-  }))
+  custom_metrics_enabled      = var.custom_metrics_enabled
+  project_id                  = var.project_id
+  metrics_adapter             = "custom-metrics-stackdriver-adapter"
+  hpa_type                    = var.hpa_type
+  hpa_max_replicas            = var.hpa_max_replicas
+  hpa_min_replicas            = var.hpa_min_replicas
+  hpa_averagevalue_target     = var.hpa_averagevalue_target
 }

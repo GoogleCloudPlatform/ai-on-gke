@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-variable "bucket_name" {
-  description = "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
+ variable "project_id" {
+  description = "Project id of existing or created project."
   type        = string
   nullable    = false
 }
 
-variable "metrics_port" {
-  description = "Port to emit metrics from"
-  type        = number
-  default     = 9100
-  nullable    = true
+variable "bucket_name" {
+  description = "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
+  type        = string
+  nullable    = false
 }
 
 variable "maxengine_server_image" {
@@ -41,3 +40,61 @@ variable "jetstream_http_server_image" {
   nullable    = false
 }
 
+variable "custom_metrics_enabled" {
+  description = "Enable custom metrics collection"
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
+variable "metrics_port" {
+  description = "Port to emit metrics from, set to null to disable metrics"
+  type        = number
+  default     = 9100
+  nullable    = true
+}
+
+variable "metrics_adapter" {
+  description = "Adapter to use for exposing GKE metrics to cluster"
+  type    = string
+  nullable = true
+
+  validation {
+    condition     = contains(["", "custom-metrics-stackdriver-adapter", "prometheus-adapter"], var.metrics_adapter)
+    error_message = "Allowed values for metrics_adapter are \"custom-metrics-stackdriver-adapter\", or \"prometheus-adapter\"."
+  }
+}
+
+variable "hpa_type" {
+  description = "How the Jetstream workload should be scaled."
+  type        = string
+  default     = null
+  nullable    = true
+  validation {
+    condition     = var.hpa_type == null ? true : length(regexall("jetstream_.*", var.hpa_type)) > 0 || length(regexall("memory_used", var.hpa_type)) > 0 || length(regexall("accelerator_memory_used_percentage", var.hpa_type)) > 0
+    error_message = "Allows values for hpa_type are {null, memory_used, predefined promql queries (i.e. accelerator_memory_used_percentage, or jetstream metrics (e.g., \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\")}"
+  }
+}
+
+# TODO: combine hpa variables into a single object (so that they can be
+# validated together)
+variable "hpa_averagevalue_target" {
+  description = "AverageValue target for the `hpa_type` metric. Must be set if `hpa_type` is not null."
+  type        = number
+  default     = null
+  nullable    = true
+}
+
+variable "hpa_min_replicas" {
+  description = "Minimum number of HPA replicas."
+  type        = number
+  default     = 1
+  nullable    = false
+}
+
+variable "hpa_max_replicas" {
+  description = "Maximum number of HPA replicas."
+  type        = number
+  default     = 5
+  nullable    = false
+}

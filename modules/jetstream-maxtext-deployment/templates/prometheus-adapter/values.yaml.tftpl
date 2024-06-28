@@ -34,5 +34,5 @@ rules:
       template: <<.Resource>>
     name:
       matches: ""
-      as: "my_external_metric"
+      as: "accelerator_memory_used_percentage"
     metricsQuery: avg(kubernetes_io:node_accelerator_memory_used{cluster_name="${cluster_name}"}) / avg(kubernetes_io:node_accelerator_memory_total{cluster_name="${cluster_name}"})

@@ -1,244 +1,83 @@
+locals {
+  v1beta1-custom-metrics-k8s-io                       = "${path.module}/templates/apiservice_v1beta1.custom.metrics.k8s.io.yaml.tftpl"
+  v1beta1-external-metrics-k8s-io                     = "${path.module}/templates/apiservice_v1beta1.external.metrics.k8s.io.yaml.tftpl"
+  v1beta2-custom-metrics-k8s-io                       = "${path.module}/templates/apiservice_v1beta2.custom.metrics.k8s.io.yaml.tftpl"
+  cluster-role-custom-metrics-resource-reader         = "${path.module}/templates/clusterrole_custom-metrics-resource-reader.yaml.tftpl"
+  cluster-role-binding-custom-metrics-resource-reader = "${path.module}/templates/clusterrolebinding_custom-metrics-resource-reader.yaml.tftpl"
+  custom-metrics-system-auth-delegator                = "${path.module}/templates/clusterrolebinding_custom-metrics:system:auth-delegator.yaml.tftpl"
+  external-metrics-reader                             = "${path.module}/templates/clusterrolebinding_external-metrics-reader.yaml.tftpl"
+  deployment-custom-metrics-stackdriver-adapter       = "${path.module}/templates/deployment_custom-metrics-stackdriver-adapter.yaml.tftpl"
+  service-custom-metrics-stackdriver-adapter          = "${path.module}/templates/service_custom-metrics-stackdriver-adapter.yaml.tftpl"
+  service-account-custom-metrics-stackdriver-adapter  = "${path.module}/templates/serviceaccount_custom-metrics-stackdriver-adapter.yaml.tftpl"
+  custom-metrics-auth-reader                          = "${path.module}/templates/rolebinding_custom-metrics-auth-reader.yaml.tftpl"
+}
+
 resource "kubernetes_namespace_v1" "custom-metrics" {
   metadata {
     name = "custom-metrics"
   }
 }
 
-resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter-no-wi" {
-  count = var.workload_identity.enabled ? 0 : 1
+resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter" {
+  count = 1
   metadata {
     name      = "custom-metrics-stackdriver-adapter"
     namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-  }
-}
-
-resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter-wi" {
-  count = var.workload_identity.enabled ? 1 : 0
-  metadata {
-    name      = "custom-metrics-stackdriver-adapter"
-    namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-    annotations = {
+    annotations = var.workload_identity.enabled ? {
       "iam.gke.io/gcp-service-account" = google_service_account.cmsa-sa[0].email
-    }
+    } : {}
   }
 }
 
-resource "kubernetes_cluster_role_binding_v1" "custom-metrics-system-auth-delegator" {
-  metadata {
-    name = "custom-metrics:system:auth-delegator"
-  }
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = "system:auth-delegator"
-  }
-  subject {
-    kind = "ServiceAccount"
-    name = (var.workload_identity.enabled
-      ? kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-wi[0].metadata[0].name
-      : kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-no-wi[0].metadata[0].name
-    )
-    namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-  }
+resource "kubernetes_manifest" "custom-metrics-system-auth-delegator" {
+  count    = 1
+  manifest = yamldecode(file(local.custom-metrics-system-auth-delegator))
 }
 
-resource "kubernetes_role_binding_v1" "custom-metrics-auth-reader" {
-  metadata {
-    name      = "custom-metrics-auth-reader"
-    namespace = "kube-system"
-  }
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "Role"
-    name      = "extension-apiserver-authentication-reader"
-  }
-  subject {
-    kind = "ServiceAccount"
-    name = (var.workload_identity.enabled
-      ? kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-wi[0].metadata[0].name
-      : kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-no-wi[0].metadata[0].name
-    )
-    namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-  }
+resource "kubernetes_manifest" "custom-metrics-auth-reader" {
+  count    = 1
+  manifest = yamldecode(file(local.custom-metrics-auth-reader))
 }
 
-resource "kubernetes_cluster_role_v1" "custom-metrics-resource-reader" {
-  metadata {
-    name = "custom-metrics-resource-reader"
-  }
-  rule {
-    api_groups = [""]
-    resources  = ["pods", "nodes", "nodes/stats"]
-    verbs      = ["get", "list", "watch"]
-  }
+resource "kubernetes_manifest" "cluster-role-custom-metrics-resource-reader" {
+  count    = 1
+  manifest = yamldecode(file(local.cluster-role-custom-metrics-resource-reader))
 }
 
-resource "kubernetes_cluster_role_binding_v1" "custom-metrics-resource-reader" {
-  metadata {
-    name = "custom-metrics-resource-reader"
-  }
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = kubernetes_cluster_role_v1.custom-metrics-resource-reader.metadata[0].name
-  }
-  subject {
-    kind = "ServiceAccount"
-    name = (var.workload_identity.enabled
-      ? kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-wi[0].metadata[0].name
-      : kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-no-wi[0].metadata[0].name
-    )
-    namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-  }
+resource "kubernetes_manifest" "cluster-role-binding-custom-metrics-resource-reader" {
+  count    = 1
+  manifest = yamldecode(file(local.cluster-role-binding-custom-metrics-resource-reader))
 }
 
-resource "kubernetes_deployment_v1" "custom-metrics-stackdriver-adapter" {
-  metadata {
-    name      = "custom-metrics-stackdriver-adapter"
-    namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-    labels = {
-      run     = "custom-metrics-stackdriver-adapter"
-      k8s-app = "custom-metrics-stackdriver-adapter"
-    }
-  }
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        run     = "custom-metrics-stackdriver-adapter"
-        k8s-app = "custom-metrics-stackdriver-adapter"
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          run                             = "custom-metrics-stackdriver-adapter"
-          k8s-app                         = "custom-metrics-stackdriver-adapter"
-          "kubernetes.io/cluster-service" = "true"
-        }
-      }
-
-      spec {
-        service_account_name = (var.workload_identity.enabled
-          ? kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-wi[0].metadata[0].name
-          : kubernetes_service_account_v1.custom-metrics-stackdriver-adapter-no-wi[0].metadata[0].name
-        )
-
-        container {
-          image             = "gcr.io/gke-release/custom-metrics-stackdriver-adapter:v0.14.2-gke.0"
-          image_pull_policy = "Always"
-          name              = "pod-custom-metrics-stackdriver-adapter"
-          command           = ["/adapter", "--use-new-resource-model=true", "--fallback-for-container-metrics=true"]
-          resources {
-            limits = {
-              cpu    = "250m"
-              memory = "200Mi"
-            }
-            requests = {
-              cpu    = "250m"
-              memory = "200Mi"
-            }
-          }
-        }
-      }
-    }
-  }
+resource "kubernetes_manifest" "deployment-custom-metrics-stackdriver-adapter" {
+  count    = 1
+  manifest = yamldecode(file(local.deployment-custom-metrics-stackdriver-adapter))
 }
 
-resource "kubernetes_service_v1" "custom-metrics-stackdriver-adapter" {
-  metadata {
-    name      = "custom-metrics-stackdriver-adapter"
-    namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-    labels = {
-      run                             = "custom-metrics-stackdriver-adapter"
-      k8s-app                         = "custom-metrics-stackdriver-adapter"
-      "kubernetes.io/cluster-service" = "true"
-      "kubernetes.io/name"            = "Adapter"
-    }
-  }
-  spec {
-    selector = {
-      run     = "custom-metrics-stackdriver-adapter"
-      k8s-app = "custom-metrics-stackdriver-adapter"
-    }
-    port {
-      port        = 443
-      protocol    = "TCP"
-      target_port = 443
-    }
-    type = "ClusterIP"
-  }
+resource "kubernetes_manifest" "service-custom-metrics-stackdriver-adapter" {
+  count    = 1
+  manifest = yamldecode(file(local.service-custom-metrics-stackdriver-adapter))
 }
 
-resource "kubernetes_api_service_v1" "v1beta1-custom-metrics-k8s-io" {
-  metadata {
-    name = "v1beta1.custom.metrics.k8s.io"
-  }
-  spec {
-    insecure_skip_tls_verify = true
-    group                    = "custom.metrics.k8s.io"
-    group_priority_minimum   = 100
-    version_priority         = 100
-    service {
-      name      = kubernetes_service_v1.custom-metrics-stackdriver-adapter.metadata[0].name
-      namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-    }
-    version = "v1beta1"
-  }
+resource "kubernetes_manifest" "v1beta1-custom-metrics-k8s-io" {
+  count    = 1
+  manifest = yamldecode(file(local.v1beta1-custom-metrics-k8s-io))
 }
 
-resource "kubernetes_api_service_v1" "v1beta2-custom-metrics-k8s-io" {
-  metadata {
-    name = "v1beta2.custom.metrics.k8s.io"
-  }
-  spec {
-    insecure_skip_tls_verify = true
-    group                    = "custom.metrics.k8s.io"
-    group_priority_minimum   = 100
-    version_priority         = 200
-    service {
-      name      = kubernetes_service_v1.custom-metrics-stackdriver-adapter.metadata[0].name
-      namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-    }
-    version = "v1beta2"
-  }
+resource "kubernetes_manifest" "v1beta2-custom-metrics-k8s-io" {
+  count    = 1
+  manifest = yamldecode(file(local.v1beta2-custom-metrics-k8s-io))
 }
 
-resource "kubernetes_api_service_v1" "v1beta1-external-metrics-k8s-io" {
-  metadata {
-    name = "v1beta1.external.metrics.k8s.io"
-  }
-  spec {
-    insecure_skip_tls_verify = true
-    group                    = "external.metrics.k8s.io"
-    group_priority_minimum   = 100
-    version_priority         = 100
-    service {
-      name      = kubernetes_service_v1.custom-metrics-stackdriver-adapter.metadata[0].name
-      namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
-    }
-    version = "v1beta1"
-  }
+resource "kubernetes_manifest" "v1beta1-external-metrics-k8s-io" {
+  count    = 1
+  manifest = yamldecode(file(local.v1beta1-external-metrics-k8s-io))
 }
 
-resource "kubernetes_cluster_role_binding_v1" "external-metrics-reader" {
-  metadata {
-    name = "external-metrics-reader"
-  }
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = "external-metrics-reader"
-  }
-  subject {
-    kind      = "ServiceAccount"
-    name      = "horizontal-pod-autoscaler"
-    namespace = "kube-system"
-  }
+resource "kubernetes_manifest" "external-metrics-reader" {
+  count    = 1
+  manifest = yamldecode(file(local.external-metrics-reader))
 }
-
 
 # If workload identity is enabled, extra steps are required. We need to:
 # - create a service account
