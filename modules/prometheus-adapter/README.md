@@ -1,3 +1,5 @@
+This module deploys a [prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter) to a cluster. See repo for more details.
+
 ## Bash equivalent of this module
 
 Assure the following are set before running
