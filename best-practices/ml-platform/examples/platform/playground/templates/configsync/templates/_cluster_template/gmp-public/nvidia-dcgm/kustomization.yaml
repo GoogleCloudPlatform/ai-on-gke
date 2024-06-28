@@ -14,4 +14,18 @@
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+# Another option is to use the NVIDIA Helm chart
+# helmCharts:
+# - name: dcgm-exporter
+#   repo: https://nvidia.github.io/dcgm-exporter/helm-charts/
+#   version: 3.4.2
+#   releaseName: dcgm-exporter
+#   includeCRDs: true
+#   valuesFile: dcgm-exporter-values.yaml
+
 resources:
+- dcgm-daemons-set.yaml
+- dcgm-exporter-cluster-pod-monitoring.yaml
+- dcgm-exporter-daemon-set.yaml
+- dcgm-exporter-metrics-config-map.yaml
