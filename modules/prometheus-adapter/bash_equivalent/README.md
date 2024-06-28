@@ -5,7 +5,7 @@ Assure the following are set before running
    - (optional) PROMETHEUS_HELM_VALUES_FILE: Values file to pass when deploying `prometheus-community/prometheus-adapter` chart
 
 ```
-export PROJECT_ID="slabe-jetstream" && curl https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.10.0/examples/frontend.yaml | envsubst
+curl https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.10.0/examples/frontend.yaml | envsubst
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
