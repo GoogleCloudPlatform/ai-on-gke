@@ -1,4 +1,4 @@
-This module deploys a [prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter) to a cluster. See repo for more details.
+This module deploys a [prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter) and a [Prometheus frontend](https://github.com/GoogleCloudPlatform/prometheus-engine/blob/main/examples/frontend.yaml) to a cluster. See [prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter) repo for more details.
 
 ## Bash equivalent of this module
 
