@@ -93,7 +93,7 @@ kubectl create secret generic kaggle-secret \
 
 ## Convert the Gemma-7b checkpoint
 
-To convert the Gemma-7b checkpoint, we have created a job `checkpoint-job.yaml` that does the following:
+To convert the Gemma-7b checkpoint, we have created a job that does the following:
 1. Download the base orbax checkpoint from kaggle
 2. Upload the checkpoint to a Cloud Storage bucket
 3. Convert the checkpoint to a MaxText compatible checkpoint
@@ -101,14 +101,14 @@ To convert the Gemma-7b checkpoint, we have created a job `checkpoint-job.yaml` 
 
 In the manifest, ensure the value of the BUCKET_NAME environment variable is the name of the Cloud Storage bucket you created above. Do not include the `gs://` prefix.
 
-Apply the manifest:
+Apply the manifest from the root of this repo to create the job:
 ```
-kubectl apply -f checkpoint-job.yaml
+BUCKET_NAME=<YOUR_BUCKET_NAME> IMPLEMENTATION="JAX" ./modules/checkpoint-converter/bash-equivalent/apply.sh
 ```
 
 Observe the logs:
 ```
-kubectl logs -f jobs/data-loader-7b
+kubectl logs -f jobs/checkpoint-converter
 ```
 
 You should see the following output once the job has completed. This will take around 10 minutes:
@@ -125,9 +125,7 @@ Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the prov
 
 ### Deploy via Kubectl
 
-First navigate to the `./kubectl` directory. Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
-
-In the manifest, ensure the value of the BUCKET_NAME is the name of the Cloud Storage bucket that was used when converting your checkpoint.
+First, from the root of this repo navigate to ./modules/jetstream-maxtext-deployment/bash_equivalent. Within the base `deployment.json` in `./modules/jetstream-maxtext-deployment/bash_equivalent`  Add desired overrides to your yaml file by editing the `args` in `deployment.json`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
 
 Argument descriptions:
 ```
@@ -144,10 +142,7 @@ weight_dtype: Weight data type (e.g. bfloat16)
 scan_layers: Scan layers boolean flag
 ```
 
-Deploy the manifest file for the Maxengine server and HTTP server:
-```
-kubectl apply -f deployment.yaml
-```
+Finally, run `BUCKET_NAME=<YOUR_BUCKET_NAME> ./apply.sh` to deploy the Maxengine server and HTTP server (assure the value of the BUCKET_NAME is the name of the Cloud Storage bucket that was used when converting your checkpoint).
 
 ### Deploy via Terraform
 
@@ -252,7 +247,7 @@ The output should be similar to the following:
 ## Other optional steps
 ### Build and upload Maxengine Server image
 
-Build the Maxengine Server from [here](../maxengine-server) and upload to your project
+Build the Maxengine Server from [here](../../../../../images/maxengine-server/) and upload to your project
 ```
 docker build -t maxengine-server .
 docker tag maxengine-server gcr.io/${PROJECT_ID}/jetstream/maxtext/maxengine-server:latest
@@ -261,7 +256,7 @@ docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/maxengine-server:latest
 
 ### Build and upload HTTP Server image
 
-Build the HTTP Server Dockerfile from [here](../http-server) and upload to your project
+Build the HTTP Server Dockerfile from [here](../../../../../images/http-server/) and upload to your project
 ```
 docker build -t jetstream-http .
 docker tag jetstream-http gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest

@@ -108,13 +108,13 @@ variable "hpa_averagevalue_target" {
 }
 
 variable "project_id" {
-  description = "Project id of existing or created project."
+  description = "GKE project ID"
   type        = string
   nullable    = false
 }
 
 variable "custom_metrics_enabled" {
-  description = "Enable custom metrics collection"
+  description = "Enable custom metrics collection from metrics_port"
   type        = bool
   default     = false
   nullable    = false
