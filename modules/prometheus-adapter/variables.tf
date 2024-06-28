@@ -42,3 +42,10 @@ variable "cluster_name" {
   description = "Cluster name, see README for more details"
   nullable    = false
 }
+
+variable "config_file" {
+  type        = string
+  description = "Values file for prometheus-config Helm chart"
+  nullable    = false
+  default     = ""
+}

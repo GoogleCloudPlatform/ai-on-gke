@@ -1,11 +1,18 @@
-This module requires the cluster name to be passed in manually via the CLUSTER_NAME variable to filter incoming metrics. This is a consequence of differing cluster name schemas between GKE and standard k8s clusters. Instructions for each are as follows for if the cluster name isnt already known.
+## Bash equivalent of this module
 
-## For GKE clusters
+Assure the following are set before running
+   - PROJECT_ID: GKE Project ID
+   - (optional) PROMETHEUS_HELM_VALUES_FILE: Values file to pass when deploying `prometheus-community/prometheus-adapter` chart
 
-Remove any charachters prior to and including the last underscore:
-`kubectl config current-context | awk -F'_' ' { print $NF }'`
+```
+export PROJECT_ID="slabe-jetstream" && curl https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.10.0/examples/frontend.yaml | envsubst
 
-## For other clusters
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
 
-The cluster name is simply:
- `kubectl config current-context`
+if [ -z "$PROMETHEUS_HELM_VALUES_FILE" ]
+    helm install jetstream prometheus-community/prometheus-adapter
+else
+    helm install jetstream prometheus-community/prometheus-adapter -f "$PROMETHEUS_HELM_VALUES_FILE"
+fi
+```

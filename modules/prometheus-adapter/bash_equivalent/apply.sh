@@ -35,9 +35,11 @@ PROMETHEUS_FRONTEND_MANIFEST="$(echo "$PROMETHEUS_FRONTEND_MANIFEST" \
 echo $PROMETHEUS_FRONTEND_MANIFEST | kubectl apply -f -
 echo $PROMETHEUS_SERVICE_MANIFEST | kubectl apply -f -
 
-PROMETHEUS_HELM_VALUES_FILE=$(mktemp)
-sed "s/\${cluster_name}/$CLUSTER_NAME/g" ../templates/values.yaml.tftpl >> "$PROMETHEUS_HELM_VALUES_FILE"
-
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm install jetstream prometheus-community/prometheus-adapter -f "$PROMETHEUS_HELM_VALUES_FILE"
+
+if [ -z "$PROMETHEUS_HELM_VALUES_FILE" ]
+    helm install jetstream prometheus-community/prometheus-adapter
+else
+    helm install jetstream prometheus-community/prometheus-adapter -f "$PROMETHEUS_HELM_VALUES_FILE"
+fi
