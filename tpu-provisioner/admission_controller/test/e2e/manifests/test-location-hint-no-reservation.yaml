@@ -1,0 +1,38 @@
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  # Running this JobSet should result in Jobs having the nodeSelector `cloud.google.com/gke-location-hint=cell` injected
+  # using the example admission controller webhook.
+  name: test-jobset-location-hint-no-reservation
+  annotations:
+    alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool # 1:1 job replica to node pool assignment
+spec:
+  failurePolicy:
+    maxRestarts: 3
+  replicatedJobs:
+  - name: workers
+    replicas: 3 # set to number of node pools
+    template:
+      spec: 
+        backoffLimit: 0
+        # completions and parallelism should be the number of cores divided by 8
+        # (e.g. 4 for a v4-32)
+        completions: 2
+        parallelism: 2
+        template:
+          spec:
+            restartPolicy: Never
+            containers:
+            - name: tpu-job
+              image: python:3.8
+              ports: 
+              - containerPort: 8471 # Default port using which TPU VMs communicate
+              securityContext:
+                privileged: true
+              command:
+              - bash
+              - -c
+              - |
+                echo "Sleeping..."
+                sleep 100
+                echo "Done!"

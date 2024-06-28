@@ -26,6 +26,14 @@ webhooks:
     apiVersions: ["v1"]
     resources: ["jobs"]
     scope: "Namespaced"
+  objectSelector:
+    matchExpressions:
+    # Only mutate Jobs managed by a JobSet
+    - key: jobset.sigs.k8s.io/job-key
+      operator: Exists
+    - key: tpu-provisioner.cloud.google.com/disable-autoprovisioning
+      operator: NotIn
+      values: ["true"]
   failurePolicy: Fail
   timeoutSeconds: 20
   clientConfig:

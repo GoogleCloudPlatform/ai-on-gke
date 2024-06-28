@@ -1,0 +1,1 @@
+Please see the TPU guide [here](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/guides/tpu#manually-installing-the-tpu-initialization-webhook) for instructions for installing the webhook.
