@@ -160,11 +160,9 @@ func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, nam
 	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.headless-worker-svc
 	for j := 0; j < int(numOfHosts); j++ {
 		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", groupName, replicaIndex, j, clusterName, headlessServiceSuffix)
-	for j := 0; j < int(numOfHosts); j++ {
-		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", groupName, replicaIndex, j, clusterName, headlessServiceSuffix)
 	}
 	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts, "Replica Index", replicaIndex)
-	return strings.Join(hostNames, ","), nil
+	return strings.Join(hostNames, ",")
 }
 
 // inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
