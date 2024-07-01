@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- variable "project_id" {
+variable "project_id" {
   description = "Project id of existing or created project."
   type        = string
   nullable    = false
@@ -56,8 +56,8 @@ variable "metrics_port" {
 
 variable "metrics_adapter" {
   description = "Adapter to use for exposing GKE metrics to cluster"
-  type    = string
-  nullable = true
+  type        = string
+  nullable    = true
 
   validation {
     condition     = contains(["", "custom-metrics-stackdriver-adapter", "prometheus-adapter"], var.metrics_adapter)

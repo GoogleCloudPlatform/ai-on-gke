@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
- locals {
-  deployment_template = "${path.module}/templates/deployment.yaml.tftpl"
-  service_template = "${path.module}/templates/service.yaml.tftpl"
-  podmonitoring_template = "${path.module}/templates/podmonitoring.yaml.tftpl"
+locals {
+  deployment_template         = "${path.module}/templates/deployment.yaml.tftpl"
+  service_template            = "${path.module}/templates/service.yaml.tftpl"
+  podmonitoring_template      = "${path.module}/templates/podmonitoring.yaml.tftpl"
   cmsa_jetstream_hpa_template = "${path.module}/templates/custom-metrics-stackdriver-adapter/hpa.jetstream.yaml.tftpl"
- }
+}
 
 resource "kubernetes_manifest" "jetstream-deployment" {
   count = 1
   manifest = yamldecode(templatefile(local.deployment_template, {
-    maxengine_server_image = var.maxengine_server_image
+    maxengine_server_image      = var.maxengine_server_image
     jetstream_http_server_image = var.jetstream_http_server_image
-    load_parameters_path_arg = format("load_parameters_path=gs://%s/final/unscanned/gemma_7b-it/0/checkpoints/0/items", var.bucket_name)
-    metrics_port_arg = var.metrics_port != null ? format("prometheus_port=%d", var.metrics_port) : "",
+    load_parameters_path_arg    = format("load_parameters_path=gs://%s/final/unscanned/gemma_7b-it/0/checkpoints/0/items", var.bucket_name)
+    metrics_port_arg            = var.metrics_port != null ? format("prometheus_port=%d", var.metrics_port) : "",
   }))
 }
 
 resource "kubernetes_manifest" "jetstream-service" {
-  count = 1
+  count    = 1
   manifest = yamldecode(file(local.service_template))
 }
 
