@@ -39,8 +39,3 @@ deploy-cert:
 uninstall-cert:
 	kubectl delete -f certs/
 
-tests:
-	kubectl apply -f tests/
-
-delete-tests:
-	kubectl delete -f tests/
