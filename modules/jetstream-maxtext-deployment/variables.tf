@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
+ variable "cluster_name" {
+  type        = string
+  nullable    = false
+}
+
 variable "project_id" {
-  description = "Project id of existing or created project."
   type        = string
   nullable    = false
 }

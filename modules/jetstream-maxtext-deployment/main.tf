@@ -43,6 +43,8 @@ resource "kubernetes_manifest" "jetstream-podmonitoring" {
   }))
 }
 
+
+## CMSA module pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/718/files merge
 module "custom_metrics_stackdriver_adapter" {
   count  = var.metrics_adapter == "custom-metrics-stackdriver-adapter" ? 1 : 0
   source = "../custom-metrics-stackdriver-adapter"
@@ -52,8 +54,21 @@ module "custom_metrics_stackdriver_adapter" {
   }
 }
 
-## Prometheus adapter deployment pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/716/files merge
-
+## Prometheus adapter module pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/716/files merge
+module "prometheus_adapter" {
+  count = var.metrics_adapter == "prometheus-adapter" ? 1 : 0
+  source = "../prometheus-adapter"
+  credentials_config = {
+    kubeconfig = {
+      path : "~/.kube/config"
+    }
+  }
+  project_id = var.project_id
+  cluster_name = var.cluster_name
+  config_file = templatefile("/templates/prometheus-adapter/values.yaml.tftpl", {
+    cluster_name = var.cluster_name
+  })
+}
 
 resource "kubernetes_manifest" "hpa_custom_metric" {
   count = (var.custom_metrics_enabled && var.hpa_type != null || var.hpa_type != "memory_used") && var.hpa_averagevalue_target != null ? 1 : 0
