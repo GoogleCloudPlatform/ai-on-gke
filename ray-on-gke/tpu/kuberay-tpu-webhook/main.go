@@ -131,14 +131,19 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
-func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, namespace string, replicaIndex int) string {
+func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, namespace string, replicaIndex int) (string, error) {
+	if numOfHosts == 0 {
+		err := errors.New("workerGroupSpec NumOfHosts not set")
+		klog.ErrorS(err, "genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts)
+		return "", err
+	}
 	hostNames := make([]string, numOfHosts)
 	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.headless-worker-svc
 	for j := 0; j < int(numOfHosts); j++ {
 		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", groupName, replicaIndex, j, clusterName, headlessServiceSuffix)
 	}
 	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts, "Replica Index", replicaIndex)
-	return strings.Join(hostNames, ",")
+	return strings.Join(hostNames, ","), nil
 }
 
 // inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
@@ -463,7 +468,10 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 				path := fmt.Sprintf("/spec/containers/%d/env", i)
 				if numOfHosts > 1 {
 					// inject TPU_WORKER_HOSTNAMES
-					hostnames := genDNSHostnames(numOfHosts, groupName, clusterName, namespace, replicaIndex)
+					hostnames, err := genDNSHostnames(numOfHosts, groupName, clusterName, namespace, replicaIndex)
+					if err != nil {
+						return nil, err
+					}
 					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", hostnames)
 					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", clusterName+"-"+headlessServiceSuffix)
 					injectHostnames(clusterName, hostnames, path, container, &patches)
