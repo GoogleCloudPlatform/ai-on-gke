@@ -2,7 +2,7 @@ This module deploys a [prometheus-adapter](https://github.com/kubernetes-sigs/pr
 
 ## Bash equivalent of this module
 
-Assure the following are set before running
+Assure the following are set before running:
    - PROJECT_ID: GKE Project ID
    - (optional) PROMETHEUS_HELM_VALUES_FILE: Values file to pass when deploying `prometheus-community/prometheus-adapter` chart
 
