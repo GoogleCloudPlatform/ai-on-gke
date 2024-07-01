@@ -13,8 +13,8 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 
 if [ -z "$PROMETHEUS_HELM_VALUES_FILE" ]
-    helm install jetstream prometheus-community/prometheus-adapter
+    helm install example-release prometheus-community/prometheus-adapter
 else
-    helm install jetstream prometheus-community/prometheus-adapter -f "$PROMETHEUS_HELM_VALUES_FILE"
+    helm install example-release prometheus-community/prometheus-adapter -f "$PROMETHEUS_HELM_VALUES_FILE"
 fi
 ```
