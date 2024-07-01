@@ -1,6 +1,6 @@
 ## Bash equivalent of this module
 
-Assure the following are set before running
+Assure the following are set before running:
    - BUCKET_NAME: Bucket name to be used in your checkpoint path
    - METRICS_PORT: Port to emit custom metrics on
    - (optional) MAXENGINE_SERVER_IMAGE: Maxengine server container image
