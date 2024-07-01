@@ -27,7 +27,7 @@ module "custom_metrics_stackdriver_adapter" {
 
 ## Bash equivalent of this module
 
-Assure the following are set before running
+Assure the following are set before running:
    - PROJECT_ID: Your GKE project ID
    - WORKLOAD_IDENTITY: Is workload identity federation enabled in the target cluster?
 
