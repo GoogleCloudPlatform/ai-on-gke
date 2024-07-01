@@ -162,7 +162,7 @@ func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, nam
 		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", groupName, replicaIndex, j, clusterName, headlessServiceSuffix)
 	}
 	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts, "Replica Index", replicaIndex)
-	return strings.Join(hostNames, ",")
+	return strings.Join(hostNames, ","), nil
 }
 
 // inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
