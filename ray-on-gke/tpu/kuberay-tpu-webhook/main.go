@@ -50,9 +50,6 @@ var (
 	// map of pod slices to workers in the slice
 	sliceToWorkers map[slice][]worker
 
-	// map of pod slices to TPU_WORKER_HOSTNAMES in that pod slice
-	sliceToHostnames map[slice]string
-
 	// Flag arguments.
 	BindAddr   string
 	CACert     string
@@ -134,19 +131,14 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
-func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec, clusterName string, namespace string, replicaIndex int) (string, error) {
-	numHosts := workerGroupSpec.NumOfHosts
-	if numHosts == 0 {
-		return "", errors.New("workerGroupSpec NumOfHosts not set")
-	}
-	workerGroupName := workerGroupSpec.GroupName
-	hostNames := make([]string, numHosts)
+func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, namespace string, replicaIndex int) string {
+	hostNames := make([]string, numOfHosts)
 	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.headless-worker-svc
-	for j := 0; j < int(numHosts); j++ {
-		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", workerGroupName, replicaIndex, j, clusterName, headlessServiceSuffix)
+	for j := 0; j < int(numOfHosts); j++ {
+		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", groupName, replicaIndex, j, clusterName, headlessServiceSuffix)
 	}
-	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numHosts, "Replica Index", replicaIndex)
-	return strings.Join(hostNames, ","), nil
+	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts, "Replica Index", replicaIndex)
+	return strings.Join(hostNames, ",")
 }
 
 // inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
@@ -268,23 +260,13 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 		workerGroupSpec := workerGroupSpecs[i]
 		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
 			klog.V(1).InfoS("validateRayCluster", "RayCluster", namespace+"/"+clusterName, "Worker Group", workerGroupSpec.GroupName, "Requests TPUs", true)
-			// create mapping for pod slices -> TPU_WORKER_HOSTNAMES in cluster
 			replicas := int(*workerGroupSpec.Replicas)
 			numOfHosts := workerGroupSpec.NumOfHosts
 			for replicaIndex := 0; replicaIndex < replicas; replicaIndex++ {
-				// reset past sliceToWorkers and sliceToHostnames entries for slice in ray cluster
+				// reset past sliceToWorkers entries for slice in ray cluster
 				groupName := workerGroupSpec.GroupName
 				podSlice := slice{clusterName, groupName, namespace, replicaIndex, numOfHosts}
 				sliceToWorkers[podSlice] = nil
-				sliceToHostnames[podSlice] = ""
-				// generate TPU_WORKER_HOSTNAMES
-				if numOfHosts > 1 {
-					joinedHostNames, err := genDNSHostnames(workerGroupSpec, clusterName, namespace, replicaIndex)
-					if err != nil {
-						klog.Error("Failed to generate DNS Hostnames")
-					}
-					sliceToHostnames[podSlice] = joinedHostNames
-				}
 			}
 		} else {
 			// RayCluster worker group does not request TPUs
@@ -480,10 +462,11 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 			if containerRequestingTPUs(container) {
 				path := fmt.Sprintf("/spec/containers/%d/env", i)
 				if numOfHosts > 1 {
-					// inject TPU_WORKER_HOSTNAMES set during RayCluster interception
-					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", sliceToHostnames[podSlice])
+					// inject TPU_WORKER_HOSTNAMES
+					hostnames := genDNSHostnames(numOfHosts, groupName, clusterName, namespace, replicaIndex)
+					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", hostnames)
 					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", clusterName+"-"+headlessServiceSuffix)
-					injectHostnames(clusterName, sliceToHostnames[podSlice], path, container, &patches)
+					injectHostnames(clusterName, hostnames, path, container, &patches)
 				}
 				// inject TPU_WORKER_ID
 				if getEnvironmentVariable("TPU_WORKER_ID", container) == "" {
@@ -621,7 +604,6 @@ func writeCertfile(filename string, encodedData string) error {
 
 func init() {
 	sliceToWorkers = make(map[slice][]worker)
-	sliceToHostnames = make(map[slice]string)
 
 	flag.StringVar(&BindAddr, "bind-address", ":443", "Address to bind HTTPS service to")
 	flag.StringVar(&CACert, "ca-cert", "", "base64-encoded root certificate for TLS")
