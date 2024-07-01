@@ -530,7 +530,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
 	if err != nil {
-		klog.Fatalf("Pod extraction failed: %s", err)
+		klog.Errorf("Pod extraction failed: %s", err)
 	}
 
 	clusterName := pod.Labels["ray.io/cluster"]
