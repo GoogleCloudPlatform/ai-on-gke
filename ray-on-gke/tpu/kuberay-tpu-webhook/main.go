@@ -528,6 +528,16 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 // update sliceToWorkers map on pod deletion
 func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
+	// Create AdmissionResponse - we never deny the deletion request
+	admissionResponse := &admissionv1.AdmissionResponse{
+		UID:     admissionReview.Request.UID,
+		Allowed: true,
+		Result: &metav1.Status{
+			Status:  "Success",
+			Message: "",
+		},
+	}
+
 	pod, err := extractPod(admissionReview)
 	if err != nil {
 		klog.Errorf("Pod extraction failed: %s", err)
@@ -535,11 +545,11 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 	clusterName := pod.Labels["ray.io/cluster"]
 	if clusterName == "" {
-		return nil, errors.New("Kuberay Pod missing RayCluster label")
+		return admissionResponse, errors.New("Kuberay Pod missing RayCluster label")
 	}
 	groupName := pod.Labels["ray.io/group"]
 	if groupName == "" {
-		return nil, errors.New("Kuberay Pod missing Ray group label")
+		return admissionResponse, errors.New("Kuberay Pod missing Ray group label")
 	}
 	namespace := pod.Namespace
 	replicaIndexLabel := pod.Labels["replicaIndex"]
@@ -550,20 +560,20 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 		containers := pod.Spec.Containers
 		if containers == nil {
-			return nil, errors.New("Pod spec missing containers")
+			return admissionResponse, errors.New("Pod spec missing containers")
 		}
 		tpuWorkerID := -1
 		for _, container := range pod.Spec.Containers {
 			if containerRequestingTPUs(container) {
 				tpuWorkerID, err = strconv.Atoi(getEnvironmentVariable("TPU_WORKER_ID", container))
 				if err != nil {
-					return nil, errors.New("Unable to extract TPU_WORKER_ID")
+					return admissionResponse, errors.New("Unable to extract TPU_WORKER_ID")
 				}
 				break
 			}
 		}
 		if tpuWorkerID == -1 {
-			return nil, errors.New("Kuberay Pod missing TPU_WORKER_ID")
+			return admissionResponse, errors.New("Kuberay Pod missing TPU_WORKER_ID")
 		}
 		// update sliceToWorkers map
 		for slice, _ := range sliceToWorkers {
@@ -581,15 +591,6 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		}
 	}
 
-	// Create AdmissionResponse - we never deny the deletion request
-	admissionResponse := &admissionv1.AdmissionResponse{
-		UID:     admissionReview.Request.UID,
-		Allowed: true,
-		Result: &metav1.Status{
-			Status:  "Success",
-			Message: "",
-		},
-	}
 	return admissionResponse, nil
 }
 
