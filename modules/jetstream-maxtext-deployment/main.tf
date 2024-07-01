@@ -56,14 +56,14 @@ module "custom_metrics_stackdriver_adapter" {
 
 ## Prometheus adapter module pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/716/files merge
 module "prometheus_adapter" {
-  count = var.metrics_adapter == "prometheus-adapter" ? 1 : 0
+  count  = var.metrics_adapter == "prometheus-adapter" ? 1 : 0
   source = "../prometheus-adapter"
   credentials_config = {
     kubeconfig = {
       path : "~/.kube/config"
     }
   }
-  project_id = var.project_id
+  project_id   = var.project_id
   cluster_name = var.cluster_name
   config_file = templatefile("/templates/prometheus-adapter/values.yaml.tftpl", {
     cluster_name = var.cluster_name

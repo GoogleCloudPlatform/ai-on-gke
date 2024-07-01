@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
- variable "cluster_name" {
-  type        = string
-  nullable    = false
+variable "cluster_name" {
+  type     = string
+  nullable = false
 }
 
 variable "project_id" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }
 
 variable "bucket_name" {
