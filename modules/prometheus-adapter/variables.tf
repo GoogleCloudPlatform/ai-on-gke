@@ -37,12 +37,6 @@ variable "project_id" {
   nullable    = false
 }
 
-variable "cluster_name" {
-  type        = string
-  description = "Cluster name, see README for more details"
-  nullable    = false
-}
-
 variable "config_file" {
   type        = string
   description = "Values file for prometheus-config Helm chart"
