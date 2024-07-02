@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maxengine-server
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maxengine-server
+  template:
+    metadata:
+      labels:
+        app: maxengine-server
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 2x2
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+      containers:
+      - name: maxengine-server
+        image: ${maxengine_server_image}
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        args:
+        - model_name=gemma-7b
+        - tokenizer_path=assets/tokenizer.gemma
+        - per_device_batch_size=4
+        - max_prefill_predict_length=1024
+        - max_target_length=2048
+        - async_checkpointing=false
+        - ici_fsdp_parallelism=1
+        - ici_autoregressive_parallelism=-1
+        - ici_tensor_parallelism=1
+        - scan_layers=false
+        - weight_dtype=bfloat16
+        - attention=dot_product
+        - ${load_parameters_path_arg}
+        - ${metrics_port_arg}
+        ports:
+        - containerPort: 9000
+        resources:
+          requests:
+            google.com/tpu: 4
+          limits:
+            google.com/tpu: 4
+      - name: jetstream-http
+        image: ${jetstream_http_server_image}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
