@@ -41,6 +41,11 @@ variable "maxengine_deployment_settings" {
       chip_count  = number
     })
   })
+
+  validation {
+    condition = contains(["gemma-7b", "llama2-7b", "llama2-13b"], var.maxengine_deployment_settings.model_name) 
+    error_message = "model_name must be one of \"gemma-7b\", \"llama2-7b\", or \"llama2-13b\""
+  }
 }
 
 variable "hpa_config" {

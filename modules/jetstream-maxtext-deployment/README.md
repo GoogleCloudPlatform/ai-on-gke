@@ -47,11 +47,15 @@ cat $JETSTREAM_MANIFEST | kubectl apply -f -
 
 #### Custom Metrics Stackdriver Adapter
 
-Follow the [Custom-metrics-stackdriver-adapter README](LINK HERE)
+Follow the [Custom-metrics-stackdriver-adapter README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/modules/custom-metrics-stackdriver-adapter/README.md) to install without terraform
+
+Once installed the following metrics can be used as averageValues in a HorisontalPodAutoscaler (HPA):
+  - Jetstream metrics (i.e. any metric prefixed with "jetstream_")
+  - "memory_used" (the current sum of memory usage across all accelerators used by a node in bytes)
 
 #### Prometheus Adapter
 
-Follow the [Prometheus-adapter README](AWAITING OTHER MERGE), a few notes:
+Follow the [Prometheus-adapter README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/modules/prometheus-adapter/README.md) to install without terraform, a few notes:
 
 This module requires the cluster name to be passed in manually via the CLUSTER_NAME variable to filter incoming metrics. This is a consequence of differing cluster name schemas between GKE and standard k8s clusters. Instructions for each are as follows for if the cluster name isnt already known. For GKE clusters, Remove any characters prior to and including the last underscore with `kubectl config current-context | awk -F'_' ' { print $NF }'` to get the cluster name. For other clusters, The cluster name is simply: `kubectl config current-context`.
 
@@ -62,4 +66,7 @@ PROMETHEUS_HELM_VALUES_FILE=$(mktemp)
 sed "s/\${cluster_name}/$CLUSTER_NAME/g" ../templates/values.yaml.tftpl >> "$PROMETHEUS_HELM_VALUES_FILE"
 ```
 
+Once installed the following metrics can be used as averageValues in a HorisontalPodAutoscaler (HPA):
+  - Jetstream metrics (i.e. any metric prefixed with "jetstream_")
+  - "accelerator_memory_used_percentage" (the percentage of total accelerator memory used across all accelerators used by a node)
 

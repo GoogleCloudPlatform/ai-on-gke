@@ -160,7 +160,25 @@ Applying the following resources to your cluster will enable autoscaling with cu
  - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
  - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
 
-These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following input conditions should be satisfied: `custom_metrics_enabled` should be `true` and `metrics_port`, `hpa_type`, `hpa_averagevalue_target`, `hpa_min_replicas`, `hpa_max_replicas` should all be set.
+These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following inputs should be set:
+
+```
+maxengine_deployment_settings = {
+  custom_metrics_enabled = true
+  metrics_port = <same as above>
+  metrics_scrape_interval
+}
+
+hpa_config = {
+  metrics_adapter = <either 'prometheus-adapter` (recommended) or 'custom-metrics-stackdriver-adapter' >
+  max_replicas
+  min_replicas
+  rules = [{
+    target_query = <see [jetstream-maxtext-module README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/modules//jetstream-maxtext-deployment/README.md) for a list of valid values>
+    average_value_target
+  }]
+}
+```
 
 If you would like to probe the metrics manually, `cURL` your maxengine-server container on whatever metrics port you set and you should see something similar to the following:
 
