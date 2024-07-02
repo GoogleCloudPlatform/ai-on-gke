@@ -1,8 +1,12 @@
 ## Bash equivalent of this module
 
 Assure the following are set before running:
-   - BUCKET_NAME: Bucket name to be used in your checkpoint path
+   - MODEL_NAME: The name of your LLM (as of the writing of this README valid options are "gemma-7b", "llama2-7b", "llama2-13b")
+   - PARAMETERS_PATH: Where to find the parameters for your LLM (if using the checkpoint-converter it will be "gs:\/\/$BUCKET_NAME\/final\/unscanned\/gemma_7b-it\/0\/checkpoints\/0\/items" where $BUCKET_NAME is the same one used in the checkpoint-converter)
    - METRICS_PORT: Port to emit custom metrics on
+   - (optional) TPU_TOPOLOGY: Topology of TPU chips used by jetstream (default: "2x4")
+   - (optional) TPU_TYPE: Type of TPUs used (default: "tpu-v5-lite-podslice")
+   - (optional) TPU_CHIP_COUNT: Number of TPU chips requested, can be obtained by algebraically evaluating TPU_TOPOLOGY
    - (optional) MAXENGINE_SERVER_IMAGE: Maxengine server container image
    - (optional) JETSTREAM_HTTP_SERVER_IMAGE: Jetstream HTTP server container image
 
@@ -15,8 +19,25 @@ if [ -z "$JETSTREAM_HTTP_SERVER_IMAGE" ]; then
     JETSTREAM_HTTP_SERVER_IMAGE="us-docker.pkg.dev\/cloud-tpu-images\/inferenc\/jetstream-http:v0.2.2"
 fi
 
-if [ -z "$BUCKET_NAME" ]; then
-    echo "Must provide BUCKET_NAME in environment" 1>&2
+if [ -z "$TPU_TOPOLOGY" ]; then
+    TPU_TOPOLOGY="2x4"
+fi
+
+if [ -z "$TPU_TYPE" ]; then
+    TPU_TYPE="tpu-v5-lite-podslice"
+fi
+
+if [ -z "$TPU_CHIP_COUNT" ]; then
+    TPU_CHIP_COUNT="8"
+fi
+
+if [ -z "$MODEL_NAME" ]; then
+    echo "Must provide MODEL_NAME in environment" 1>&2
+    exit 2;
+fi
+
+if [ -z "$PARAMETERS_PATH" ]; then
+    echo "Must provide PARAMETERS_PATH in environment" 1>&2
     exit 2;
 fi
 
@@ -36,9 +57,13 @@ else
 fi
 
 cat $JETSTREAM_MANIFEST \
+| sed "s/\${tpu-type}/$TPU_TYPE/g" \
+| sed "s/\${tpu-topology}/$TPU_TOPOLOGY/g" \
+| sed "s/\${tpu-chip-count}/$TPU_CHIP_COUNT/g" \
 | sed "s/\${maxengine_server_image}/$MAXENGINE_SERVER_IMAGE/g" \
 | sed "s/\${jetstream_http_server_image}/$JETSTREAM_HTTP_SERVER_IMAGE/g" \
-| sed "s/\${load_parameters_path_arg}/load_parameters=gs:\/\/$BUCKET_NAME\/final\/unscanned\/gemma_7b-it\/0\/checkpoints\/0\/items/g" >> "$JETSTREAM_MANIFEST"
+| sed "s/\${model_name}/$MODEL_NAME/g" \
+| sed "s/\${load_parameters_path_arg}/$PARAMETERS_PATH/g" >> "$JETSTREAM_MANIFEST"
 
 cat $JETSTREAM_MANIFEST | kubectl apply -f -
 ```
