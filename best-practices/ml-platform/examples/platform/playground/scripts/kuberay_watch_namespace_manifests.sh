@@ -20,11 +20,15 @@ SCRIPT_PATH="$(
   pwd -P
 )"
 
+KUBERAY_NAMESPACE=${KUBERAY_NAMESPACE:-"default"}
+
 source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
 # Set directory and path variables
 clusters_directory="manifests/clusters"
 clusters_path="${GIT_REPOSITORY_PATH}/${clusters_directory}"
+clusters_namespace_directory="${clusters_directory}/${K8S_NAMESPACE}"
+clusters_namespace_path="${GIT_REPOSITORY_PATH}/${clusters_namespace_directory}"
 
 ns_exists=$(grep ${K8S_NAMESPACE} ${clusters_path}/kuberay/values.yaml | wc -l)
 if [ "${ns_exists}" -ne 0 ]; then
@@ -34,6 +38,16 @@ fi
 
 # TODO: this will need to be fixed for multiple namespaces
 sed -i "s/watchNamespace:/watchNamespace:\n  - ${K8S_NAMESPACE}/g" ${clusters_path}/kuberay/values.yaml
+
+cat <<EOF >>${clusters_namespace_path}/network-policy.yaml
+    # Allow KubeRay Operator
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ${KUBERAY_NAMESPACE}
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: kuberay-operator
+EOF
 
 # Add, commit, and push changes to the repository
 cd ${GIT_REPOSITORY_PATH}
