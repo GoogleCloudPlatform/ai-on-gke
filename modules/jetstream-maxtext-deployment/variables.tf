@@ -43,7 +43,7 @@ variable "maxengine_deployment_settings" {
   })
 
   validation {
-    condition = contains(["gemma-7b", "llama2-7b", "llama2-13b"], var.maxengine_deployment_settings.model_name) 
+    condition     = contains(["gemma-7b", "llama2-7b", "llama2-13b"], var.maxengine_deployment_settings.model_name)
     error_message = "model_name must be one of \"gemma-7b\", \"llama2-7b\", or \"llama2-13b\""
   }
 }
