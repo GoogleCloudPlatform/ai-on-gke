@@ -2,6 +2,8 @@ credentials_config = {
   fleet_host = "https://connectgateway.googleapis.com/v1/projects/$PROJECT_NUMBER/locations/global/gkeMemberships/ai-benchmark"
 }
 
+project_id = "$PROJECT_ID"
+
 namespace = "benchmark"
 ksa       = "benchmark-ksa"
 model_id  = "tiiuae/falcon-7b"
@@ -33,5 +35,3 @@ hpa_type = null
 # Adjust these if you want different min/max values
 # hpa_min_replicas = 1
 # hpa_max_replicas = 5
-
-project_id = "<project_id>"

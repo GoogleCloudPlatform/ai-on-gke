@@ -6,7 +6,7 @@ credentials_config = {
 
 # can be obtained from stage-1 by running:
 # terraform output -json  | jq '."project_id".value'
-project_id = "change-me"
+project_id = "$PROJECT_ID"
 
 bucket_name     = "${PROJECT_ID}-ai-gke-benchmark-fuse"
 bucket_location = "US"
