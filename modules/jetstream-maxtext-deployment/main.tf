@@ -15,10 +15,10 @@
  */
 
 locals {
-  deployment_template         = "${path.module}/templates/deployment.yaml.tftpl"
-  service_template            = "${path.module}/templates/service.yaml.tftpl"
-  podmonitoring_template      = "${path.module}/templates/podmonitoring.yaml.tftpl"
-  cmsa_jetstream_hpa_template = "${path.module}/templates/custom-metrics-stackdriver-adapter/hpa.jetstream.yaml.tftpl"
+  deployment_template               = "${path.module}/templates/deployment.yaml.tftpl"
+  service_template                  = "${path.module}/templates/service.yaml.tftpl"
+  podmonitoring_template            = "${path.module}/templates/podmonitoring.yaml.tftpl"
+  cmsa_jetstream_hpa_template       = "${path.module}/templates/custom-metrics-stackdriver-adapter/hpa.jetstream.yaml.tftpl"
   prometheus_jetstream_hpa_template = "${path.module}/templates/prometheus-adapter/hpa.jetstream.yaml.tftpl"
 }
 
@@ -43,7 +43,7 @@ resource "kubernetes_manifest" "jetstream-service" {
 resource "kubernetes_manifest" "jetstream-podmonitoring" {
   count = var.maxengine_deployment_settings.metrics_port != null ? 1 : 0
   manifest = yamldecode(templatefile(local.podmonitoring_template, {
-    metrics_port = var.maxengine_deployment_settings.metrics_port != null ? var.maxengine_deployment_settings.metrics_port : "",
+    metrics_port            = var.maxengine_deployment_settings.metrics_port != null ? var.maxengine_deployment_settings.metrics_port : "",
     metrics_scrape_interval = var.maxengine_deployment_settings.metrics_scrape_interval
   }))
 }
@@ -68,7 +68,7 @@ module "prometheus_adapter" {
       path : "~/.kube/config"
     }
   }
-  project_id   = var.project_id
+  project_id = var.project_id
   config_file = templatefile("${path.module}/templates/prometheus-adapter/values.yaml.tftpl", {
     cluster_name = var.cluster_name
   })
