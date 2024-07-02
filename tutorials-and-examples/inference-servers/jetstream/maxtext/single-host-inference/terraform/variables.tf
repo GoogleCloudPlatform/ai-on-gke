@@ -54,7 +54,7 @@ variable "maxengine_deployment_settings" {
     maxengine_server_image      = string
     jetstream_http_server_image = string
 
-    parameters_path         = string // Path to the parameters for your model
+    parameters_path         = string           // Path to the parameters for your model
     metrics_port            = optional(number) // Emit Jetstream metrics on this port of each contaienr
     custom_metrics_enabled  = bool             // Whether or not custom metrics are also emitted
     metrics_scrape_interval = optional(number) // Interval for scraping metrics (default: 10s)

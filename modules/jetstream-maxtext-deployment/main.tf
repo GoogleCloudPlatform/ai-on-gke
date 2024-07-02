@@ -78,9 +78,9 @@ resource "kubernetes_manifest" "prometheus_adapter_hpa_custom_metric" {
   for_each = {
     for index, rule in var.hpa_config.rules :
     index => {
-      index                   = index
-      target_query            = rule.target_query
-      average_value_target    = rule.average_value_target
+      index                = index
+      target_query         = rule.target_query
+      average_value_target = rule.average_value_target
     }
     if var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "prometheus-adapter"
   }
@@ -98,9 +98,9 @@ resource "kubernetes_manifest" "cmsa_hpa_custom_metric" {
   for_each = {
     for index, rule in var.hpa_config.rules :
     index => {
-      index                   = index
-      target_query            = rule.target_query
-      average_value_target    = rule.average_value_target
+      index                = index
+      target_query         = rule.target_query
+      average_value_target = rule.average_value_target
     }
     if var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter"
   }
