@@ -142,5 +142,5 @@ variable "nvidia_dcgm_create" {
 variable "gcs_fuse_create" {
   description = "Give the SA object admin privileges"
   type        = bool
-  default     = false
+  default     = true
 }
