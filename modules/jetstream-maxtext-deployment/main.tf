@@ -27,7 +27,7 @@ resource "kubernetes_manifest" "jetstream-deployment" {
   manifest = yamldecode(templatefile(local.deployment_template, {
     maxengine_server_image      = var.maxengine_deployment_settings.maxengine_server_image
     jetstream_http_server_image = var.maxengine_deployment_settings.jetstream_http_server_image
-    load_parameters_path_arg    = format("load_parameters_path=gs://%s/final/unscanned/gemma_7b-it/0/checkpoints/0/items", var.maxengine_deployment_settings.bucket_name)
+    load_parameters_path_arg    = var.maxengine_deployment_settings.parameters_path
     metrics_port_arg            = var.maxengine_deployment_settings.metrics_port != null ? format("prometheus_port=%d", var.maxengine_deployment_settings.metrics_port) : "",
     tpu-topology                = var.maxengine_deployment_settings.accelerator_selectors.topology
     tpu-type                    = var.maxengine_deployment_settings.accelerator_selectors.accelerator
@@ -75,22 +75,41 @@ module "prometheus_adapter" {
 }
 
 resource "kubernetes_manifest" "prometheus_adapter_hpa_custom_metric" {
-  count = var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "prometheus-adapter" && var.hpa_config.rules[0].target_query != null && var.hpa_config.rules[0].average_value_target != null ? 1 : 0
+  for_each = {
+    for index, rule in var.hpa_config.rules :
+    index => {
+      index                   = index
+      target_query            = rule.target_query
+      average_value_target    = rule.average_value_target
+    }
+    if var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "prometheus-adapter"
+  }
+
   manifest = yamldecode(templatefile(local.prometheus_jetstream_hpa_template, {
-    hpa_type                = try(var.hpa_config.rules[0].target_query, "")
-    hpa_averagevalue_target = try(var.hpa_config.rules[0].average_value_target, 1)
+    index                   = each.value.index
+    hpa_type                = try(each.value.target_query, "")
+    hpa_averagevalue_target = try(each.value.average_value_target, 1)
     hpa_min_replicas        = var.hpa_config.min_replicas
     hpa_max_replicas        = var.hpa_config.max_replicas
   }))
 }
 
 resource "kubernetes_manifest" "cmsa_hpa_custom_metric" {
-  count = (var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter" && (var.hpa_config.rules[0].target_query != null || var.hpa_config.rules[0].target_query != "memory_used")) && var.hpa_config.rules[0].average_value_target != null ? 1 : 0
+  for_each = {
+    for index, rule in var.hpa_config.rules :
+    index => {
+      index                   = index
+      target_query            = rule.target_query
+      average_value_target    = rule.average_value_target
+    }
+    if var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter"
+  }
+
   manifest = yamldecode(templatefile(local.cmsa_jetstream_hpa_template, {
-    hpa_type                = try(var.hpa_config.rules[0].target_query, "")
-    hpa_averagevalue_target = try(var.hpa_config.rules[0].average_value_target, 1)
+    index                   = each.value.index
+    hpa_type                = try(each.value.target_query, "")
+    hpa_averagevalue_target = try(each.value.average_value_target, 1)
     hpa_min_replicas        = var.hpa_config.min_replicas
     hpa_max_replicas        = var.hpa_config.max_replicas
   }))
-
 }

@@ -1,7 +1,7 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: jetstream-hpa
+  name: jetstream-hpa-${index}
   namespace: default
 spec:
   scaleTargetRef:

@@ -151,7 +151,7 @@ kubectl apply -f deployment.yaml
 
 ### Deploy via Terraform
 
-Navigate to the `./terraform` directory and do the standard [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Finally run `terraform apply` to apply these resources to your cluster.
+Navigate to the `./terraform` directory and do the standard [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Since we're using gemma-7b the `maxengine_deployment_settings.parameters_path` terraform variable should be set to the following: `gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items`. Finally run `terraform apply` to apply these resources to your cluster.
 
 #### (optional) Enable Horizontal Pod Autoscaling via Terraform
 
@@ -161,30 +161,6 @@ Applying the following resources to your cluster will enable autoscaling with cu
  - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
 
 These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following input conditions should be satisfied: `custom_metrics_enabled` should be `true` and `metrics_port`, `hpa_type`, `hpa_averagevalue_target`, `hpa_min_replicas`, `hpa_max_replicas` should all be set.
-
- Note that only one HPA resource will be created. For those who want to scale based on multiple metrics, we recommend using the following template to apply more HPA resources:
-
-```
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: jetstream-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: maxengine-server
-  minReplicas: <YOUR_MIN_REPLICAS>
-  maxReplicas: <YOUR_MAX_REPLICAS>
-  metrics:
-  - type: Pods
-    pods:
-      metric:
-        name: prometheus.googleapis.com|<YOUR_METRIC_NAME>|gauge
-      target:
-        type: AverageValue
-        averageValue: <YOUR_VALUE_HERE>
-```
 
 If you would like to probe the metrics manually, `cURL` your maxengine-server container on whatever metrics port you set and you should see something similar to the following:
 

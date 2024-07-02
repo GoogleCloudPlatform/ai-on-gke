@@ -35,7 +35,7 @@ spec:
         - scan_layers=false
         - weight_dtype=bfloat16
         - attention=dot_product
-        - ${load_parameters_path_arg}
+        - load_parameters_path=${load_parameters_path_arg}
         - ${metrics_port_arg}
         ports:
         - containerPort: 9000
