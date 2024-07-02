@@ -25,10 +25,10 @@ locals {
 resource "kubernetes_manifest" "jetstream-deployment" {
   count = 1
   manifest = yamldecode(templatefile(local.deployment_template, {
-    maxengine_server_image      = var.maxengine_server_image
-    jetstream_http_server_image = var.jetstream_http_server_image
-    load_parameters_path_arg    = format("load_parameters_path=gs://%s/final/unscanned/gemma_7b-it/0/checkpoints/0/items", var.bucket_name)
-    metrics_port_arg            = var.metrics_port != null ? format("prometheus_port=%d", var.metrics_port) : "",
+    maxengine_server_image      = var.maxengine_deployment_settings.maxengine_server_image
+    jetstream_http_server_image = var.maxengine_deployment_settings.jetstream_http_server_image
+    load_parameters_path_arg    = format("load_parameters_path=gs://%s/final/unscanned/gemma_7b-it/0/checkpoints/0/items", var.maxengine_deployment_settings.bucket_name)
+    metrics_port_arg            = var.maxengine_deployment_settings.metrics_port != null ? format("prometheus_port=%d", var.maxengine_deployment_settings.metrics_port) : "",
   }))
 }
 
@@ -38,16 +38,16 @@ resource "kubernetes_manifest" "jetstream-service" {
 }
 
 resource "kubernetes_manifest" "jetstream-podmonitoring" {
-  count = var.metrics_port != null ? 1 : 0
+  count = var.maxengine_deployment_settings.metrics_port != null ? 1 : 0
   manifest = yamldecode(templatefile(local.podmonitoring_template, {
-    metrics_port = var.metrics_port != null ? var.metrics_port : "",
+    metrics_port = var.maxengine_deployment_settings.metrics_port != null ? var.maxengine_deployment_settings.metrics_port : "",
   }))
 }
 
 
 ## CMSA module pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/718/files merge
 module "custom_metrics_stackdriver_adapter" {
-  count  = var.metrics_adapter == "custom-metrics-stackdriver-adapter" ? 1 : 0
+  count  = var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter" ? 1 : 0
   source = "../custom-metrics-stackdriver-adapter"
   workload_identity = {
     enabled    = true
@@ -57,7 +57,7 @@ module "custom_metrics_stackdriver_adapter" {
 
 ## Prometheus adapter module pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/716/files merge
 module "prometheus_adapter" {
-  count  = var.metrics_adapter == "prometheus-adapter" ? 1 : 0
+  count  = var.hpa_config.metrics_adapter == "prometheus-adapter" ? 1 : 0
   source = "../prometheus-adapter"
   credentials_config = {
     kubeconfig = {
@@ -71,22 +71,22 @@ module "prometheus_adapter" {
 }
 
 resource "kubernetes_manifest" "prometheus_adapter_hpa_custom_metric" {
-  count = var.custom_metrics_enabled && var.metrics_adapter == "prometheus-adapter" && var.hpa_configs.rules[0].target_query != null && var.hpa_configs.rules[0].average_value_target != null ? 1 : 0
+  count = var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "prometheus-adapter" && var.hpa_config.rules[0].target_query != null && var.hpa_config.rules[0].average_value_target != null ? 1 : 0
   manifest = yamldecode(templatefile(local.prometheus_jetstream_hpa_template, {
-    hpa_type                = try(var.hpa_configs.rules[0].target_query, "")
-    hpa_averagevalue_target = try(var.hpa_configs.rules[0].average_value_target, 1)
-    hpa_min_replicas        = var.hpa_configs.min_replicas
-    hpa_max_replicas        = var.hpa_configs.max_replicas
+    hpa_type                = try(var.hpa_config.rules[0].target_query, "")
+    hpa_averagevalue_target = try(var.hpa_config.rules[0].average_value_target, 1)
+    hpa_min_replicas        = var.hpa_config.min_replicas
+    hpa_max_replicas        = var.hpa_config.max_replicas
   }))
 }
 
 resource "kubernetes_manifest" "cmsa_hpa_custom_metric" {
-  count = (var.custom_metrics_enabled && var.metrics_adapter == "custom-metrics-stackdriver-adapter" && (var.hpa_configs.rules[0].target_query != null || var.hpa_configs.rules[0].target_query != "memory_used")) && var.hpa_configs.rules[0].average_value_target != null ? 1 : 0
+  count = (var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter" && (var.hpa_config.rules[0].target_query != null || var.hpa_config.rules[0].target_query != "memory_used")) && var.hpa_config.rules[0].average_value_target != null ? 1 : 0
   manifest = yamldecode(templatefile(local.cmsa_jetstream_hpa_template, {
-    hpa_type                = try(var.hpa_configs.rules[0].target_query, "")
-    hpa_averagevalue_target = try(var.hpa_configs.rules[0].average_value_target, 1)
-    hpa_min_replicas        = var.hpa_configs.min_replicas
-    hpa_max_replicas        = var.hpa_configs.max_replicas
+    hpa_type                = try(var.hpa_config.rules[0].target_query, "")
+    hpa_averagevalue_target = try(var.hpa_config.rules[0].average_value_target, 1)
+    hpa_min_replicas        = var.hpa_config.min_replicas
+    hpa_max_replicas        = var.hpa_config.max_replicas
   }))
 
 }

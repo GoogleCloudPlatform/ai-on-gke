@@ -19,20 +19,6 @@ module "maxengine" {
   source                      = "../../../../../../modules/jetstream-maxtext-deployment"
   cluster_name = var.cluster_name
   project_id = var.project_id
-  metrics_adapter = "prometheus-adapter"
-  custom_metrics_enabled = true
-
-  bucket_name                 = var.bucket_name
-  metrics_port                = var.metrics_port
-  maxengine_server_image      = var.maxengine_server_image
-  jetstream_http_server_image = var.jetstream_http_server_image
-
-  hpa_configs = {
-    min_replicas = 1
-    max_replicas = 5
-    rules = [{
-      target_query = "accelerator_memory_used_percentage"
-      average_value_target = 10
-    }]
-  }
+  maxengine_deployment_settings = var.maxengine_deployment_settings
+  hpa_config = var.hpa_config
 }
