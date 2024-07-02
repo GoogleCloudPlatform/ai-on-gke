@@ -35,7 +35,6 @@ resource "google_project" "environment" {
   project_id      = "${local.project_id_prefix}-${random_string.project_id_suffix.result}"
 }
 
-
 resource "google_storage_bucket" "mlp" {
   force_destroy               = false
   location                    = var.storage_bucket_location
@@ -46,6 +45,19 @@ resource "google_storage_bucket" "mlp" {
   versioning {
     enabled = true
   }
+}
+
+resource "google_project_service" "iap_googleapis_com" {
+  disable_dependent_services = true
+  disable_on_destroy         = true
+  project                    = google_project.environment.project_id
+  service                    = "iap.googleapis.com"
+}
+
+resource "google_iap_brand" "project_brand" {
+  support_email     = var.iap_support_email
+  application_title = "IAP Secured Application"
+  project           = google_project_service.iap_googleapis_com.project
 }
 
 resource "null_resource" "write_environment_name" {
