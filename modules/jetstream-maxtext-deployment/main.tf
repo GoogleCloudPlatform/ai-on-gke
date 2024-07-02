@@ -19,6 +19,7 @@ locals {
   service_template            = "${path.module}/templates/service.yaml.tftpl"
   podmonitoring_template      = "${path.module}/templates/podmonitoring.yaml.tftpl"
   cmsa_jetstream_hpa_template = "${path.module}/templates/custom-metrics-stackdriver-adapter/hpa.jetstream.yaml.tftpl"
+  prometheus_jetstream_hpa_template = "${path.module}/templates/prometheus-adapter/hpa.jetstream.yaml.tftpl"
 }
 
 resource "kubernetes_manifest" "jetstream-deployment" {
@@ -64,18 +65,28 @@ module "prometheus_adapter" {
     }
   }
   project_id   = var.project_id
-  cluster_name = var.cluster_name
-  config_file = templatefile("/templates/prometheus-adapter/values.yaml.tftpl", {
+  config_file = templatefile("${path.module}/templates/prometheus-adapter/values.yaml.tftpl", {
     cluster_name = var.cluster_name
   })
 }
 
-resource "kubernetes_manifest" "hpa_custom_metric" {
-  count = (var.custom_metrics_enabled && var.hpa_type != null || var.hpa_type != "memory_used") && var.hpa_averagevalue_target != null ? 1 : 0
-  manifest = yamldecode(templatefile(local.cmsa_jetstream_hpa_template, {
-    hpa_type                = try(var.hpa_type, "")
-    hpa_averagevalue_target = try(var.hpa_averagevalue_target, 1)
-    hpa_min_replicas        = var.hpa_min_replicas
-    hpa_max_replicas        = var.hpa_max_replicas
+resource "kubernetes_manifest" "prometheus_adapter_hpa_custom_metric" {
+  count = var.custom_metrics_enabled && var.metrics_adapter == "prometheus-adapter" && var.hpa_configs.rules[0].target_query != null && var.hpa_configs.rules[0].average_value_target != null ? 1 : 0
+  manifest = yamldecode(templatefile(local.prometheus_jetstream_hpa_template, {
+    hpa_type                = try(var.hpa_configs.rules[0].target_query, "")
+    hpa_averagevalue_target = try(var.hpa_configs.rules[0].average_value_target, 1)
+    hpa_min_replicas        = var.hpa_configs.min_replicas
+    hpa_max_replicas        = var.hpa_configs.max_replicas
   }))
+}
+
+resource "kubernetes_manifest" "cmsa_hpa_custom_metric" {
+  count = (var.custom_metrics_enabled && var.metrics_adapter == "custom-metrics-stackdriver-adapter" && (var.hpa_configs.rules[0].target_query != null || var.hpa_configs.rules[0].target_query != "memory_used")) && var.hpa_configs.rules[0].average_value_target != null ? 1 : 0
+  manifest = yamldecode(templatefile(local.cmsa_jetstream_hpa_template, {
+    hpa_type                = try(var.hpa_configs.rules[0].target_query, "")
+    hpa_averagevalue_target = try(var.hpa_configs.rules[0].average_value_target, 1)
+    hpa_min_replicas        = var.hpa_configs.min_replicas
+    hpa_max_replicas        = var.hpa_configs.max_replicas
+  }))
+
 }

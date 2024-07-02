@@ -39,11 +39,8 @@ variable "credentials_config" {
   }
 }
 
-variable "namespace" {
-  description = "Namespace used for Jetstream resources."
-  type        = string
-  nullable    = false
-  default     = "default"
+variable "cluster_name" {
+  type = string
 }
 
 variable "maxengine_server_image" {

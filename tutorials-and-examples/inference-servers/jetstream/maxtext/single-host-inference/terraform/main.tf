@@ -14,45 +14,25 @@
  * limitations under the License.
  */
 
-locals {
-  hpa_cpu_template        = "${path.module}/hpa-templates/hpa.cpu.yaml.tftpl"
-  hpa_jetstream_template  = "${path.module}/hpa-templates/hpa.jetstream.yaml.tftpl"
-  jetstream_podmonitoring = "${path.module}/monitoring-templates/jetstream-podmonitoring.yaml.tftpl"
-}
-
-module "custom_metrics_stackdriver_adapter" {
-  count  = var.custom_metrics_enabled ? 1 : 0
-  source = "./custom-metrics-stackdriver-adapter"
-  workload_identity = {
-    enabled    = true
-    project_id = var.project_id
-  }
-}
-
 module "maxengine" {
   count                       = 1
-  source                      = "./maxengine"
+  source                      = "../../../../../../modules/jetstream-maxtext-deployment"
+  cluster_name = var.cluster_name
+  project_id = var.project_id
+  metrics_adapter = "prometheus-adapter"
+  custom_metrics_enabled = true
+
   bucket_name                 = var.bucket_name
   metrics_port                = var.metrics_port
   maxengine_server_image      = var.maxengine_server_image
   jetstream_http_server_image = var.jetstream_http_server_image
-}
 
-resource "kubernetes_manifest" "tgi-pod-monitoring" {
-  count = var.custom_metrics_enabled && var.metrics_port != null ? 1 : 0
-  manifest = yamldecode(templatefile(local.jetstream_podmonitoring, {
-    namespace    = var.namespace
-    metrics_port = try(var.metrics_port, -1)
-  }))
-}
-
-resource "kubernetes_manifest" "hpa_custom_metric" {
-  count = (var.custom_metrics_enabled && var.hpa_type != null || var.hpa_type != "memory_used") && var.hpa_averagevalue_target != null ? 1 : 0
-  manifest = yamldecode(templatefile(local.hpa_jetstream_template, {
-    namespace               = var.namespace
-    hpa_type                = try(var.hpa_type, "")
-    hpa_averagevalue_target = try(var.hpa_averagevalue_target, 1)
-    hpa_min_replicas        = var.hpa_min_replicas
-    hpa_max_replicas        = var.hpa_max_replicas
-  }))
+  hpa_configs = {
+    min_replicas = 1
+    max_replicas = 5
+    rules = [{
+      target_query = "accelerator_memory_used_percentage"
+      average_value_target = 10
+    }]
+  }
 }

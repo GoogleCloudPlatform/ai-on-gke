@@ -62,6 +62,7 @@ variable "metrics_adapter" {
   description = "Adapter to use for exposing GKE metrics to cluster"
   type        = string
   nullable    = true
+  default     = null
 
   validation {
     condition     = contains(["", "custom-metrics-stackdriver-adapter", "prometheus-adapter"], var.metrics_adapter)
@@ -80,25 +81,23 @@ variable "hpa_type" {
   }
 }
 
-# TODO: combine hpa variables into a single object (so that they can be
-# validated together)
-variable "hpa_averagevalue_target" {
-  description = "AverageValue target for the `hpa_type` metric. Must be set if `hpa_type` is not null."
-  type        = number
-  default     = null
-  nullable    = true
-}
+variable "hpa_configs" {
+  type = object({
+    min_replicas = number
+    max_replicas = number
+    rules = list(object({
+      target_query = string
+      average_value_target = number
+    }))
+  })
+  default = null
 
-variable "hpa_min_replicas" {
-  description = "Minimum number of HPA replicas."
-  type        = number
-  default     = 1
-  nullable    = false
-}
-
-variable "hpa_max_replicas" {
-  description = "Maximum number of HPA replicas."
-  type        = number
-  default     = 5
-  nullable    = false
+  validation {
+    condition = alltrue([
+      for hpa_config in var.hpa_configs.rules : 
+        hpa_config.target_query == null ? true : length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used", hpa_config.target_query)) > 0 || length(regexall("accelerator_memory_used_percentage", hpa_config.target_query)) > 0
+    ])
+    
+    error_message = "Allows values for hpa_type are {null, memory_used, predefined promql queries (i.e. accelerator_memory_used_percentage, or jetstream metrics (e.g., \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\")}"
+  }
 }
