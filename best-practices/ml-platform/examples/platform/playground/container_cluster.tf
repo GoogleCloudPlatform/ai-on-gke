@@ -73,10 +73,11 @@ resource "google_container_cluster" "mlp" {
     enabled             = true
 
     auto_provisioning_defaults {
-      service_account = google_service_account.cluster.email
+      disk_type = "pd-balanced"
       oauth_scopes = [
         "https://www.googleapis.com/auth/cloud-platform"
       ]
+      service_account = google_service_account.cluster.email
 
       management {
         auto_repair  = true
