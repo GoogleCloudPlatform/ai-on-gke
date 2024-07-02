@@ -32,6 +32,7 @@ variable "maxengine_deployment_settings" {
     bucket_name            = optional(string) // "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
     metrics_port           = optional(number) // Emit Jetstream metrics on this port of each contaienr
     custom_metrics_enabled = bool             // Whether or not custom metrics are also emitted
+    metrics_scrape_interval        = optional(number) // Interval for scraping metrics (default: 10s)
 
     accelerator_selectors = object({
       topology = string
@@ -44,6 +45,7 @@ variable "maxengine_deployment_settings" {
     maxengine_server_image = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
     jetstream_http_server_image = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
     custom_metrics_enabled = false
+    metrics_scrape_interval = 10
     accelerator_selectors = {
       topology = "2x4"
       accelerator = "tpu-v5-lite-podslice"

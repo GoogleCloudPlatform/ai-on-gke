@@ -44,6 +44,7 @@ resource "kubernetes_manifest" "jetstream-podmonitoring" {
   count = var.maxengine_deployment_settings.metrics_port != null ? 1 : 0
   manifest = yamldecode(templatefile(local.podmonitoring_template, {
     metrics_port = var.maxengine_deployment_settings.metrics_port != null ? var.maxengine_deployment_settings.metrics_port : "",
+    metrics_scrape_interval = var.maxengine_deployment_settings.metrics_scrape_interval
   }))
 }
 

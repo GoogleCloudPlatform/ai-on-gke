@@ -1,6 +1,7 @@
 maxengine_deployment_settings = {
     custom_metrics_enabled = true
     metrics_port           = 9100
+    metrics_scrape_interval = 10
     accelerator_selectors = {
       topology = "2x4"
       accelerator = "tpu-v5-lite-podslice"

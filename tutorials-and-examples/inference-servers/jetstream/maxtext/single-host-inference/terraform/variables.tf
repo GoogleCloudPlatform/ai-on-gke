@@ -57,6 +57,7 @@ variable "maxengine_deployment_settings" {
     bucket_name            = optional(string) // "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
     metrics_port           = optional(number) // Emit Jetstream metrics on this port of each contaienr
     custom_metrics_enabled = bool             // Whether or not custom metrics are also emitted
+    metrics_scrape_interval        = optional(number) // Interval for scraping metrics (default: 10s)
 
     accelerator_selectors = object({
       topology = string

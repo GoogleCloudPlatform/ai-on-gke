@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   endpoints:
-  - interval: 1s
+  - interval: ${metrics_scrape_interval}s
     path: "/"
     port: ${metrics_port}
   targetLabels:
