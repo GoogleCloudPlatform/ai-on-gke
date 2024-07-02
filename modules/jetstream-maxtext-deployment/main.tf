@@ -29,6 +29,9 @@ resource "kubernetes_manifest" "jetstream-deployment" {
     jetstream_http_server_image = var.maxengine_deployment_settings.jetstream_http_server_image
     load_parameters_path_arg    = format("load_parameters_path=gs://%s/final/unscanned/gemma_7b-it/0/checkpoints/0/items", var.maxengine_deployment_settings.bucket_name)
     metrics_port_arg            = var.maxengine_deployment_settings.metrics_port != null ? format("prometheus_port=%d", var.maxengine_deployment_settings.metrics_port) : "",
+    tpu-topology                = var.maxengine_deployment_settings.accelerator_selectors.topology
+    tpu-type                    = var.maxengine_deployment_settings.accelerator_selectors.accelerator
+    tpu-chip-count              = var.maxengine_deployment_settings.accelerator_selectors.chip_count
   }))
 }
 

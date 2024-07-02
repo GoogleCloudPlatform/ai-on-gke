@@ -14,8 +14,8 @@ spec:
         app: maxengine-server
     spec:
       nodeSelector:
-        cloud.google.com/gke-tpu-topology: 2x2
-        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+        cloud.google.com/gke-tpu-topology: ${tpu-topology}
+        cloud.google.com/gke-tpu-accelerator: ${tpu-type}
       containers:
       - name: maxengine-server
         image: ${maxengine_server_image}
@@ -41,9 +41,9 @@ spec:
         - containerPort: 9000
         resources:
           requests:
-            google.com/tpu: 4
+            google.com/tpu: ${tpu-chip-count}
           limits:
-            google.com/tpu: 4
+            google.com/tpu: ${tpu-chip-count}
       - name: jetstream-http
         image: ${jetstream_http_server_image}
         imagePullPolicy: Always

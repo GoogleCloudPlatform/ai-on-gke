@@ -36,6 +36,7 @@ variable "maxengine_deployment_settings" {
     accelerator_selectors = object({
       topology = string
       accelerator = string
+      chip_count = number
     })
   })
 
@@ -46,6 +47,7 @@ variable "maxengine_deployment_settings" {
     accelerator_selectors = {
       topology = "2x4"
       accelerator = "tpu-v5-lite-podslice"
+      chip_count = 8
     }
   }
 }

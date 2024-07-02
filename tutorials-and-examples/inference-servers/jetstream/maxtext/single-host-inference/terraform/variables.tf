@@ -61,18 +61,9 @@ variable "maxengine_deployment_settings" {
     accelerator_selectors = object({
       topology = string
       accelerator = string
+      chip_count = number
     })
   })
-
-  default = {
-    maxengine_server_image = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
-    jetstream_http_server_image = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
-    custom_metrics_enabled = false
-    accelerator_selectors = {
-      topology = "2x4"
-      accelerator = "tpu-v5-lite-podslice"
-    }
-  }
 }
 
 variable "hpa_config" {

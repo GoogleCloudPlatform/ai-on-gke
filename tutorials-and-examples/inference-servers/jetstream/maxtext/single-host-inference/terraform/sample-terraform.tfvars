@@ -1,6 +1,11 @@
 maxengine_deployment_settings = {
     custom_metrics_enabled = true
     metrics_port           = 9100
+    accelerator_selectors = {
+      topology = "2x4"
+      accelerator = "tpu-v5-lite-podslice"
+      chip_count: 8
+    }
 }
 
 hpa_config = {
