@@ -1,4 +1,7 @@
 maxengine_deployment_settings = {
+  maxengine_server_image      = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
+  jetstream_http_server_image = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
+
   custom_metrics_enabled  = true
   metrics_port            = 9100
   metrics_scrape_interval = 10

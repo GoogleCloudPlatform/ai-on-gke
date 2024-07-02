@@ -27,6 +27,7 @@ resource "kubernetes_manifest" "jetstream-deployment" {
   manifest = yamldecode(templatefile(local.deployment_template, {
     maxengine_server_image      = var.maxengine_deployment_settings.maxengine_server_image
     jetstream_http_server_image = var.maxengine_deployment_settings.jetstream_http_server_image
+    model_name                  = var.maxengine_deployment_settings.model_name
     load_parameters_path_arg    = var.maxengine_deployment_settings.parameters_path
     metrics_port_arg            = var.maxengine_deployment_settings.metrics_port != null ? format("prometheus_port=%d", var.maxengine_deployment_settings.metrics_port) : "",
     tpu-topology                = var.maxengine_deployment_settings.accelerator_selectors.topology

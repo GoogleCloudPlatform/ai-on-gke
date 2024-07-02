@@ -29,7 +29,8 @@ variable "maxengine_deployment_settings" {
     maxengine_server_image      = string
     jetstream_http_server_image = string
 
-    parameters_path         = optional(string) // Path to the paramters for your model
+    model_name              = string           // Name of your LLM (for example: "gemma-7b")
+    parameters_path         = string           // Path to the paramters for your model
     metrics_port            = optional(number) // Emit Jetstream metrics on this port of each contaienr
     custom_metrics_enabled  = bool             // Whether or not custom metrics are also emitted
     metrics_scrape_interval = optional(number) // Interval for scraping metrics (default: 10s)
@@ -40,18 +41,6 @@ variable "maxengine_deployment_settings" {
       chip_count  = number
     })
   })
-
-  default = {
-    maxengine_server_image      = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
-    jetstream_http_server_image = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
-    custom_metrics_enabled      = false
-    metrics_scrape_interval     = 10
-    accelerator_selectors = {
-      topology    = "2x4"
-      accelerator = "tpu-v5-lite-podslice"
-      chip_count  = 8
-    }
-  }
 }
 
 variable "hpa_config" {
