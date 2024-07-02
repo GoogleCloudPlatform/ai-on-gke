@@ -15,10 +15,10 @@
  */
 
 module "maxengine" {
-  count                       = 1
-  source                      = "../../../../../../modules/jetstream-maxtext-deployment"
-  cluster_name = var.cluster_name
-  project_id = var.project_id
+  count                         = 1
+  source                        = "../../../../../../modules/jetstream-maxtext-deployment"
+  cluster_name                  = var.cluster_name
+  project_id                    = var.project_id
   maxengine_deployment_settings = var.maxengine_deployment_settings
-  hpa_config = var.hpa_config
+  hpa_config                    = var.hpa_config
 }
