@@ -1,0 +1,694 @@
+displayName: Benchmark
+mosaicLayout:
+  columns: 48
+  tiles:
+  - height: 13
+    widget:
+      title: Locust Request Avg Response Time
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/locust_requests_avg_response_time/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 11
+    xPos: 27
+    yPos: 15
+  - height: 16
+    widget:
+      title: TGI Queue Size
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/tgi_queue_size/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 14
+    xPos: 17
+    yPos: 45
+  - height: 14
+    widget:
+      title: Tgi batch current size
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_MEAN
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/tgi_batch_current_size/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 14
+    yPos: 76
+  - height: 15
+    widget:
+      title: TGI Batch Current Max Tokens
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/tgi_batch_current_max_tokens/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 18
+    xPos: 30
+    yPos: 74
+  - height: 15
+    widget:
+      title: TGI Request Mean Time per token (s)
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_99
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_mean_time_per_token_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_95
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_mean_time_per_token_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_50
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_mean_time_per_token_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_05
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_mean_time_per_token_duration/histogram"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 15
+    xPos: 12
+    yPos: 61
+  - height: 15
+    widget:
+      title: prometheus/DCGM_FI_DEV_MEM_COPY_UTIL/gauge [MEAN]
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/DCGM_FI_DEV_MEM_COPY_UTIL/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 10
+    xPos: 38
+    yPos: 28
+  - height: 14
+    widget:
+      title: Locust Requests Max Response Time
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_MEAN
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/locust_requests_max_response_time/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 15
+    xPos: 12
+    yPos: 15
+  - height: 15
+    widget:
+      title: Tgi batch inference duration
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_99
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_batch_inference_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_95
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_batch_inference_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_50
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_batch_inference_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_05
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_batch_inference_duration/histogram"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 15
+    xPos: 33
+    yPos: 59
+  - height: 16
+    widget:
+      title: Tgi Request Inference Duration
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_99
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_inference_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_95
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_inference_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_50
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_inference_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_05
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_inference_duration/histogram"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 12
+    yPos: 90
+  - height: 15
+    widget:
+      title: TGI Pod count
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_SUM
+                groupByFields:
+                - resource.label."pod_name"
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="kubernetes.io/container/uptime" resource.type="k8s_container"
+                resource.label."pod_name"=monitoring.regex.full_match("tgi.*")
+              secondaryAggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_COUNT
+                perSeriesAligner: ALIGN_MEAN
+        yAxis:
+          scale: LINEAR
+    width: 13
+  - height: 15
+    widget:
+      title: Tgi request queue duration
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_99
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_queue_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_95
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_queue_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_50
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_queue_duration/histogram"
+                resource.type="prometheus_target"
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_PERCENTILE_05
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_queue_duration/histogram"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 14
+    xPos: 13
+    yPos: 90
+  - height: 14
+    widget:
+      title: Locust Requests Current RPS
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/locust_requests_current_rps/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 12
+    yPos: 15
+  - height: 15
+    widget:
+      title: Locust Avg Output Tokens  Per Sec
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_SUM
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/locust_custom_metrics_avg_tokens_received/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 13
+    xPos: 13
+  - height: 16
+    widget:
+      title: Nvidia GPU Utilization Mean
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_MEAN
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/DCGM_FI_DEV_GPU_UTIL/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 13
+    yPos: 29
+  - height: 16
+    widget:
+      title: prometheus/DCGM_FI_DEV_FB_USED/gauge [MEAN]
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/DCGM_FI_DEV_FB_USED/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 13
+    xPos: 13
+    yPos: 29
+  - height: 15
+    widget:
+      title: prometheus/DCGM_FI_PROF_PIPE_TENSOR_ACTIVE/gauge [MEAN]
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/DCGM_FI_PROF_PIPE_TENSOR_ACTIVE/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 11
+    xPos: 1
+    yPos: 61
+  - height: 15
+    widget:
+      title: Locust Workers Count
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_SUM
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/locust_workers_running_count/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 9
+    xPos: 39
+  - height: 15
+    widget:
+      title: Locust Users
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/locust_users/gauge" resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 13
+    xPos: 26
+  - height: 16
+    widget:
+      title: TGI Queue Size Mean
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_MEAN
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/tgi_queue_size/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 16
+    yPos: 45
+  - height: 15
+    widget:
+      title: Tgi request queue duration mean
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_MEAN
+                perSeriesAligner: ALIGN_DELTA
+              filter: metric.type="prometheus.googleapis.com/tgi_request_queue_duration/histogram"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 14
+    xPos: 31
+    yPos: 44
+  - height: 13
+    widget:
+      title: Locust requests fail ratio
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/locust_requests_fail_ratio/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 10
+    xPos: 38
+    yPos: 15
+  - height: 15
+    widget:
+      title: Kubernetes Container - Accelerator duty cycle [MEAN]
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="kubernetes.io/container/accelerator/duty_cycle"
+                resource.type="k8s_container"
+        yAxis:
+          scale: LINEAR
+    width: 12
+    xPos: 26
+    yPos: 29
+  - height: 16
+    widget:
+      title: Nvidia GPU Utilization Per GPU
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/DCGM_FI_DEV_GPU_UTIL/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 20
+    xPos: 28
+    yPos: 89
+  - height: 14
+    widget:
+      title: Tgi batch current size per pod
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/tgi_batch_current_size/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 14
+    xPos: 14
+    yPos: 76
+  - height: 16
+    widget:
+      title: prometheus/DCGM_FI_DEV_FB_USED/gauge [SUM]
+      xyChart:
+        chartOptions:
+          mode: COLOR
+        dataSets:
+        - minAlignmentPeriod: 60s
+          plotType: LINE
+          targetAxis: Y1
+          timeSeriesQuery:
+            timeSeriesFilter:
+              aggregation:
+                alignmentPeriod: 60s
+                crossSeriesReducer: REDUCE_SUM
+                perSeriesAligner: ALIGN_MEAN
+              filter: metric.type="prometheus.googleapis.com/DCGM_FI_DEV_FB_USED/gauge"
+                resource.type="prometheus_target"
+        yAxis:
+          scale: LINEAR
+    width: 24
+    xPos: 12
+    yPos: 105
