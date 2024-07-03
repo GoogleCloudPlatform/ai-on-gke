@@ -125,42 +125,20 @@ Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the prov
 
 ### Deploy via Kubectl
 
-First navigate to the `./kubectl` directory. Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
-
-In the manifest, ensure the value of the BUCKET_NAME is the name of the Cloud Storage bucket that was used when converting your checkpoint.
-
-Argument descriptions:
-```
-tokenizer_path: The file path to your model’s tokenizer
-load_parameters_path: Your checkpoint path (GSBucket)
-per_device_batch_size: Decoding batch size per device (1 TPU chip = 1 device)
-max_prefill_predict_length: Maximum length for the prefill when doing autoregression
-max_target_length: Maximum sequence length
-model_name: Model name
-ici_fsdp_parallelism: The number of shards for FSDP parallelism
-ici_autoregressive_parallelism: The number of shards for autoregressive parallelism
-ici_tensor_parallelism: The number of shards for tensor parallelism
-weight_dtype: Weight data type (e.g. bfloat16)
-scan_layers: Scan layers boolean flag
-```
-
-Deploy the manifest file for the Maxengine server and HTTP server:
-```
-kubectl apply -f deployment.yaml
-```
+See the [install with bash instructions in the Jetstream module README](../../../../../modules/jetstream-maxtext-deployment/README.md#bash-equivalent-of-this-module) for detailed instructions, assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
 
 ### Deploy via Terraform
 
-Navigate to the `./terraform` directory and do the standard [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Since we're using gemma-7b the `maxengine_deployment_settings.parameters_path` terraform variable should be set to the following: `gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items`. Finally run `terraform apply` to apply these resources to your cluster.
+Navigate to the `./terraform` directory and run [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Since we're using gemma-7b the `maxengine_deployment_settings.parameters_path` terraform variable should be set to the following: `gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items`. Finally run `terraform apply` to apply these resources to your cluster.
 
-#### (optional) Enable Horizontal Pod Autoscaling via Terraform
+#### (optional) Enable Horizontal Pod Autoscaling
 
 Applying the following resources to your cluster will enable autoscaling with customer metrics:
  - PodMonitoring: For scraping metrics and exporting them to Google Cloud Monitoring
- - Custom Metrics Stackdriver Adapter (CMSA): For enabling your HPA objects to read metrics from the Google Cloud Monitoring API.
+ - Metrics Adapter (either [Prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter)(recommended) or [CMSA](https://github.com/GoogleCloudPlatform/k8s-stackdriver/tree/master/custom-metrics-stackdriver-adapter)): For making metrics from the Google Cloud Monitoring API visible to resources within the cluster.
  - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
 
-These components require a few more inputs and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following inputs should be set:
+Adding these components require a few more variables to be set, doing so and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following variables should be set:
 
 ```
 maxengine_deployment_settings = {
@@ -179,6 +157,8 @@ hpa_config = {
   }]
 }
 ```
+
+If using Terraform is not an option and you would like to install the components with bash, see the [metrics adapter section of the Jetstream module README](../../../../../modules/jetstream-maxtext-deployment/README.md#horizontal-pod-autoscalers).
 
 If you would like to probe the metrics manually, `cURL` your maxengine-server container on whatever metrics port you set and you should see something similar to the following:
 

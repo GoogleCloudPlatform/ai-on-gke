@@ -23,7 +23,7 @@ spec:
   - type: External
     external:
       metric:
-        name: kubernetes.io|node|accelerator|memory_used
+        name: kubernetes.io|node|accelerator|${hpa_type}
       target:
         type: AverageValue
         averageValue: ${hpa_averagevalue_target}

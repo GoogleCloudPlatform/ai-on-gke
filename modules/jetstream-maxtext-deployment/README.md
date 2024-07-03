@@ -1,3 +1,5 @@
+This module deploys Jetstream Maxtext to a cluster, see the [deployment template](./templates/deployment.yaml.tftpl) to see which command line args are passed by default. For additional configuration please reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) for a list of configurable command line args and their explainations.
+
 ## Bash equivalent of this module
 
 Assure the following are set before running:
@@ -95,3 +97,71 @@ Once installed the values of the following metrics can be used as averageValues 
   - Jetstream metrics (i.e. any metric prefixed with "jetstream_")
   - "memory_used_percentage" (the percentage of total accelerator memory used across all accelerators used by a node)
 
+
+## Horizontal Pod Autoscalers
+
+The following should be run for each HPA, assure the following are set before running:
+ - ADAPTER: The adapter currently in cluster, can be either 'custom-metrics-stackdriver-adapter' or 'prometheus-adapter'
+ - MIN_REPLICAS: Lower bound for number of jetstream replicas
+ - MAX_REPLICAS: Upper bound for number of jetstream replicas
+ - METRIC: The metrics whose value will be compared against the average value, can be any metric listed above
+ - AVERAGE_VALUE: Average value to be used for calculating replica cound, see [docs](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#algorithm-details) for more details
+ 
+ ```
+if [ -z "$ADAPTER" ]; then
+    echo "Must provide ADAPTER in environment" 1>&2
+    exit 2;
+fi
+
+if [ -z "$MIN_REPLICAS" ]; then
+    echo "Must provide MIN_REPLICAS in environment" 1>&2
+    exit 2;
+fi
+
+if [ -z "$MAX_REPLICAS" ]; then
+    echo "Must provide MAX_REPLICAS in environment" 1>&2
+    exit 2;
+fi
+
+if [[ $METRIC =~ ^jetstream_.* ]]; then
+    METRICS_SOURCE_TYPE="Pods"
+    METRICS_SOURCE="pods"
+elif [ $METRIC == memory_used ] && [ "$ADAPTER" == custom-metrics-stackdriver-adapter ]; then
+    METRICS_SOURCE_TYPE="External"
+    METRICS_SOURCE="external"
+    METRIC="kubernetes.io|node|accelerator|${METRIC}"
+elif [ $METRIC == memory_used_percentage ] && [ "$ADAPTER" == prometheus-adapter ]; then
+    METRICS_SOURCE_TYPE="External"
+    METRICS_SOURCE="external"
+else
+    echo "Must provide valid METRIC for ${ADAPTER} in environment" 1>&2
+    exit 2;
+fi
+
+if [ -z "$AVERAGE_VALUE" ]; then
+    echo "Must provide AVERAGE_VALUE in environment" 1>&2
+    exit 2;
+fi
+
+echo "apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jetstream-hpa-$(uuidgen)
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: maxengine-server
+  minReplicas: ${MIN_REPLICAS}
+  maxReplicas: ${MAX_REPLICAS}
+  metrics:
+  - type: ${METRICS_SOURCE_TYPE}
+    ${METRICS_SOURCE}:
+      metric:
+        name: ${METRIC}
+      target:
+        type: AverageValue
+        averageValue: ${AVERAGE_VALUE}
+" | kubectl apply -f -
+ ```
