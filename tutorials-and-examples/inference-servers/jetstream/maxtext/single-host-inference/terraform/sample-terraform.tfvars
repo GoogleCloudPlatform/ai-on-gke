@@ -12,7 +12,9 @@ maxengine_deployment_settings = {
   }
 }
 
-# Example config for autoscaling:
+# Demonstrating autoscaling with jetstream_prefill_backlog_size, change as desired.
+# For jetstream_prefill_backlog_size. (experiment with this to determine optimal values).
+
 # hpa_config = {
 #   metrics_adapter = "prometheus-adapter"
 #   max_replicas    = 5
