@@ -320,7 +320,7 @@ func Test_GetReplicaIndex(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		sliceToWorkerIDs        map[slice][]int
+		sliceToWorkerIDs      map[slice][]int
 		numOfHosts            int32
 		numReplicas           int
 		additionalGroupStr    string
@@ -721,9 +721,9 @@ func Test_GenDNSHostnames(t *testing.T) {
 	}{
 		"genDNSHostnames with NumOfHosts == 0": {
 			// a workergroup can't have NumOfHosts set to 0 so this should error out
-			replicaIndex:    0,
-			numOfHosts:      int32(0),
-			expectedError:   errors.New("workerGroupSpec NumOfHosts not set"),
+			replicaIndex:  0,
+			numOfHosts:    int32(0),
+			expectedError: errors.New("workerGroupSpec NumOfHosts not set"),
 		},
 		"genDNSHostnames with NumOfHosts == 1": {
 			// Single-host worker group, should return a single DNS hostname. This function will
@@ -734,8 +734,8 @@ func Test_GenDNSHostnames(t *testing.T) {
 		},
 		"genDNSHostnames with NumOfHosts > 1": {
 			// multi-host worker group, should return a string list of DNS hostnames for the given replica
-			replicaIndex:    1,
-			numOfHosts:      int32(4),
+			replicaIndex: 1,
+			numOfHosts:   int32(4),
 			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 0, instanceName, headlessServiceSuffix),
 				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 1, instanceName, headlessServiceSuffix),
 				fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 2, instanceName, headlessServiceSuffix),
@@ -958,26 +958,26 @@ func Test_ValidateRayCluster(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		rayCluster       	*rayv1.RayCluster
-		topology         	string
-		numOfHosts       	int32
-		replicas         	*int32
-		missingWorkerGroups	bool
-		expectedResponse 	*admissionv1.AdmissionResponse
-		expectedAllowed  	bool
-		expectedResult   	*metav1.Status
+		rayCluster          *rayv1.RayCluster
+		topology            string
+		numOfHosts          int32
+		replicas            *int32
+		missingWorkerGroups bool
+		expectedResponse    *admissionv1.AdmissionResponse
+		expectedAllowed     bool
+		expectedResult      *metav1.Status
 	}{
 		"validateRayCluster no workerGroupSpecs": {
 			// doesn't create any workergroups, pass-through
-			rayCluster:      	 testRayCluster.DeepCopy(),
-			topology:        	 "",
-			numOfHosts:      	 int32(1),
+			rayCluster:          testRayCluster.DeepCopy(),
+			topology:            "",
+			numOfHosts:          int32(1),
 			missingWorkerGroups: false,
-			expectedAllowed: 	 true,
-			expectedResult: 	 &metav1.Status{
-									Status:  "Success",
-									Message: "",
-								},
+			expectedAllowed:     true,
+			expectedResult: &metav1.Status{
+				Status:  "Success",
+				Message: "",
+			},
 		},
 		"validateRayCluster no TPUs requested": {
 			// doesn't request TPUs, pass-through

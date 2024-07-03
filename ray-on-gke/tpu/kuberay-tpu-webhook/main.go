@@ -52,11 +52,11 @@ var (
 	sliceToWorkerIDs map[slice][]int
 
 	// Flag arguments.
-	BindAddr   	   string
-	CACert     	   string
-	ServerCert 	   string
-	ServerKey  	   string
+	BindAddr       string
+	CACert         string
 	KubeConfigPath string
+	ServerCert     string
+	ServerKey      string
 )
 
 // check if containers are requesting TPU resources
@@ -358,17 +358,18 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 }
 
 // queries k8s client to build mapping representing the current RayCluster state of TPU pods
-func updatesliceToWorkerIDs(clusterName string, groupName string, namespace string, numOfHosts int32) {
+func updateSliceToWorkerIDs(clusterName string, groupName string, namespace string, numOfHosts int32) {
 	// retrieve list of Pods in the same namespace as the intercepted Pod
 	if client == nil {
+		klog.ErrorS(errors.New("k8s go client not initialized"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
 	}
 	podsInNamespace, err := client.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		klog.ErrorS(err, "updatesliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
+		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
 	}
-	
+
 	if podsInNamespace != nil {
 		for _, existingPod := range podsInNamespace.Items {
 			if existingPod.Status.Phase == "Pending" || existingPod.Status.Phase == "Running" {
@@ -461,7 +462,8 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		chipsPerHost := getNumTPUChipsRequested(containers...)
 		numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, chipsPerHost) // ignore error here because topology may not be set yet
 
-		// query k8s client to update sliceToWorkerIDs to then retrieve the next TPU_WORKER_ID and replicaIndex
+		// query k8s client to populate sliceToWorkerIDs to then calculate the next TPU_WORKER_ID and replicaIndex
+		sliceToWorkerIDs = make(map[slice][]int)
 		updatesliceToWorkerIDs(clusterName, groupName, namespace, numOfHosts)
 		replicaIndex := getReplicaIndex(clusterName, groupName, namespace)
 		podSlice := slice{clusterName, groupName, namespace, replicaIndex, numOfHosts}
@@ -566,8 +568,6 @@ func writeCertfile(filename string, encodedData string) error {
 }
 
 func init() {
-	sliceToWorkerIDs = make(map[slice][]int)
-
 	flag.StringVar(&BindAddr, "bind-address", ":443", "Address to bind HTTPS service to")
 	flag.StringVar(&CACert, "ca-cert", "", "base64-encoded root certificate for TLS")
 	flag.StringVar(&ServerCert, "server-cert", "", "base64-encoded server certificate for TLS")
