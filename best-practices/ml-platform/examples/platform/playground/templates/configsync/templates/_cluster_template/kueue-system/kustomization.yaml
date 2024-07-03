@@ -1,0 +1,31 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kueue-system
+resources:
+- kueue.yaml
+
+# There is no publicly available Kueue Helm chart repository and kustomize does not support private or OCI-based (Artifact Registry) Helm repository
+# https://github.com/kubernetes-sigs/kueue/issues/2311
+# https://cloud.google.com/kubernetes-engine/enterprise/config-sync/docs/concepts/kustomize
+# helmCharts:
+# - includeCRDs: true
+#   name: kueue
+#   namespace: kueue-system
+#   releaseName: kueue
+#   repo: <repo>
+#   valuesFile: kueue_values.yaml
+#   version: 0.1.0
