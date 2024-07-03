@@ -22,17 +22,20 @@ SCRIPT_PATH="$(
 
 source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
-team_namespace_directory="manifests/apps/${K8S_NAMESPACE}"
-team_namespace_path="${GIT_REPOSITORY_PATH}/${team_namespace_directory}"
+# Set directory and path variables
+namespace_directory="manifests/apps/${K8S_NAMESPACE}"
+namespace_path="${GIT_REPOSITORY_PATH}/${namespace_directory}"
 
-cd "${team_namespace_path}" || {
-  echo "Team namespace directory '${team_namespace_directory}' does not exist"
-  exit 2
+cd "${namespace_path}" || {
+  echo "Namespace directory '${namespace_directory}' does not exist"
+  exit 100
 }
 
-git rm -rf gateway
-sed -i '/- .\/gateway/d' kustomization.yaml
+git rm -rf ${namespace_path}/gateway
+sed -i '/- .\/gateway/d' ${namespace_path}/kustomization.yaml
 
+# Add, commit, and push changes to the repository
+cd ${GIT_REPOSITORY_PATH}
 git add .
 git commit -m "Removed manifests for '${K8S_NAMESPACE}' gateway"
 git push origin
