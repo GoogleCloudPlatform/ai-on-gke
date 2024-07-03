@@ -303,13 +303,13 @@ func setupTest(t *testing.T) {
 	}
 }
 
-// helper function used by tests which mutate sliceToWorkers
-func deepCopySliceToWorkers() map[slice][]worker {
-	deepCopy := make(map[slice][]worker)
-	for slice, workerList := range sliceToWorkers {
-		deepCopy[slice] = []worker{}
-		for _, worker := range workerList {
-			deepCopy[slice] = append(deepCopy[slice], worker)
+// helper function used by tests which mutate sliceToWorkerIDs
+func deepCopysliceToWorkerIDs() map[slice][]int {
+	deepCopy := make(map[slice][]int)
+	for slice, workerIDList := range sliceToWorkerIDs {
+		deepCopy[slice] = []int{}
+		for _, workerID := range workerIDList {
+			deepCopy[slice] = append(deepCopy[slice], workerID)
 		}
 	}
 
@@ -320,13 +320,12 @@ func Test_GetReplicaIndex(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		sliceToWorkers        map[slice][]worker
+		sliceToWorkerIDs        map[slice][]int
 		numOfHosts            int32
 		numReplicas           int
 		additionalGroupStr    string
 		additionalNumOfHosts  int32
 		additionalNumReplicas int
-		workersToDelete       []worker
 	}{
 		"single-host, single-slice worker group": {
 			// single-slice, replicaIndex should always be 0
@@ -357,81 +356,26 @@ func Test_GetReplicaIndex(t *testing.T) {
 			additionalNumOfHosts:  2,
 			additionalNumReplicas: 3,
 		},
-		"deleted pods from replica": {
-			// should re-assign pods to lowest index replicas with # isCreated pods < NumOfHosts
-			numOfHosts:      4,
-			numReplicas:     4,
-			workersToDelete: []worker{worker{0, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
-		},
-		"delete pods from different multi-host groups": {
-			// pods should be reassigned the lowest replica ID with # isCreated pods < NumOfHosts
-			// in each respective worker group
-			numOfHosts:            4,
-			numReplicas:           4,
-			additionalGroupStr:    "another-worker-group",
-			additionalNumOfHosts:  4,
-			additionalNumReplicas: 3,
-			workersToDelete:       []worker{worker{1, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
-		},
 	}
 
 	// validate getReplicaIndex() returns the expected Replica ID for TPU pods in varying pod slices
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkersCopy := deepCopySliceToWorkers()
+			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
 			for i := 0; i < tc.numReplicas; i++ {
 				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
 				for j := 0; j < int(tc.numOfHosts); j++ {
 					replicaIndex := getReplicaIndex(instanceName, groupNameStr, namespaceStr)
 					assert.Equal(t, i, replicaIndex)
 
-					// add the worker to sliceToWorkers - this would happen in getNextWorkerID
-					testWorker := worker{j, replicaIndex, true}
-					if sliceToWorkers[testPodSlice] == nil {
-						sliceToWorkers[testPodSlice] = []worker{testWorker}
+					// add the worker ID to sliceToWorkerIDs - this would happen in getNextWorkerID
+					if sliceToWorkerIDs[testPodSlice] == nil {
+						sliceToWorkerIDs[testPodSlice] = []int{j}
 					} else {
-						sliceToWorkers[testPodSlice] = append(sliceToWorkers[testPodSlice], testWorker)
+						sliceToWorkerIDs[testPodSlice] = append(sliceToWorkerIDs[testPodSlice], j)
 					}
 				}
 			}
-
-			if len(tc.workersToDelete) > 0 {
-				// test deleting and then re-assigning one pod at a time
-				for _, workerToDelete := range tc.workersToDelete {
-					// "delete" the pod
-					replicaToDeleteFrom := workerToDelete.replicaIndex
-					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, replicaToDeleteFrom, tc.numOfHosts}
-					// set the pod isCreated value to false to simulate pod deletion
-					for index, worker := range sliceToWorkers[testPodSlice] {
-						if worker.workerIndex == workerToDelete.workerIndex {
-							sliceToWorkers[testPodSlice][index].isCreated = false
-						}
-					}
-
-					// should re-assign the pod to the same replica
-					replicaIndex := getReplicaIndex(instanceName, groupNameStr, namespaceStr)
-					// set the pod isCreated value back to true to simulate pod re-creation
-					for index, worker := range sliceToWorkers[testPodSlice] {
-						if worker.workerIndex == workerToDelete.workerIndex {
-							sliceToWorkers[testPodSlice][index].isCreated = true
-						}
-					}
-					assert.Equal(t, replicaToDeleteFrom, replicaIndex)
-				}
-
-				// test deleting pods simultaneously and then re-assigning
-				for _, workerToDelete := range tc.workersToDelete {
-					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
-
-					// set the pod isCreated value to false to simulate pod deletion
-					for index, worker := range sliceToWorkers[testPodSlice] {
-						if worker.workerIndex == workerToDelete.workerIndex {
-							sliceToWorkers[testPodSlice][index].isCreated = false
-						}
-					}
-				}
-			}
-
 			// test assigning pods to replicas for a different worker group
 			if tc.additionalGroupStr != "" {
 				for i := 0; i < tc.additionalNumReplicas; i++ {
@@ -440,59 +384,18 @@ func Test_GetReplicaIndex(t *testing.T) {
 						replicaIndex := getReplicaIndex(instanceName, tc.additionalGroupStr, namespaceStr)
 						assert.Equal(t, i, replicaIndex)
 
-						// add the worker to sliceToWorkers - this would happen in getNextWorkerID
-						testWorker := worker{j, replicaIndex, true}
-						if sliceToWorkers[testAdditionalPodSlice] == nil {
-							sliceToWorkers[testAdditionalPodSlice] = []worker{testWorker}
+						// add the worker ID to sliceToWorkerIDs - this would happen in getNextWorkerID
+						if sliceToWorkerIDs[testAdditionalPodSlice] == nil {
+							sliceToWorkerIDs[testAdditionalPodSlice] = []int{j}
 						} else {
-							sliceToWorkers[testAdditionalPodSlice] = append(sliceToWorkers[testAdditionalPodSlice], testWorker)
-						}
-					}
-				}
-
-				// test deleting pods from a different worker group
-				if len(tc.workersToDelete) > 0 {
-					for _, workerToDelete := range tc.workersToDelete {
-						replicaToDeleteFrom := workerToDelete.replicaIndex
-						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, replicaToDeleteFrom, tc.additionalNumOfHosts}
-						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
-							if worker.workerIndex == workerToDelete.workerIndex {
-								sliceToWorkers[testAdditionalPodSlice][index].isCreated = false
-							}
+							sliceToWorkerIDs[testAdditionalPodSlice] = append(sliceToWorkerIDs[testAdditionalPodSlice], j)
 						}
 					}
 				}
 			}
 
-			// should re-assign the pod to the same replica for each respective worker group
-			if len(tc.workersToDelete) > 0 {
-				for _, workerToDelete := range tc.workersToDelete {
-					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
-					replicaIndex := getReplicaIndex(instanceName, groupNameStr, namespaceStr)
-					// "re-create" the worker pod
-					for index, worker := range sliceToWorkers[testPodSlice] {
-						if worker.workerIndex == workerToDelete.workerIndex {
-							sliceToWorkers[testPodSlice][index].isCreated = true
-						}
-					}
-					assert.Equal(t, workerToDelete.replicaIndex, replicaIndex)
-
-					if tc.additionalGroupStr != "" {
-						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, workerToDelete.replicaIndex, tc.additionalNumOfHosts}
-						additionalReplicaIndex := getReplicaIndex(instanceName, tc.additionalGroupStr, namespaceStr)
-						// "re-create" the worker pod
-						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
-							if worker.workerIndex == workerToDelete.workerIndex {
-								sliceToWorkers[testAdditionalPodSlice][index].isCreated = true
-							}
-						}
-						assert.Equal(t, workerToDelete.replicaIndex, additionalReplicaIndex)
-					}
-				}
-			}
-
-			assert.Equal(t, tc.numReplicas+tc.additionalNumReplicas, len(sliceToWorkers))
-			sliceToWorkers = sliceToWorkersCopy // reset sliceToWorkers to previous state
+			assert.Equal(t, tc.numReplicas+tc.additionalNumReplicas, len(sliceToWorkerIDs))
+			sliceToWorkerIDs = sliceToWorkerIDsCopy // reset sliceToWorkerIDs to previous state
 		})
 	}
 }
@@ -503,7 +406,6 @@ func Test_GetNextWorkerID(t *testing.T) {
 	tests := map[string]struct {
 		numOfHosts            int32
 		numReplicas           int
-		workersToDelete       []worker
 		additionalGroupStr    string
 		additionalNumOfHosts  int32
 		additionalNumReplicas int
@@ -528,63 +430,24 @@ func Test_GetNextWorkerID(t *testing.T) {
 			numOfHosts:  4,
 			numReplicas: 4,
 		},
-		"delete pods from multi-host group": {
-			// pods should be reassigned the lowest integer ID with isCreated == false belonging to the replica
-			numOfHosts:      4,
-			numReplicas:     4,
-			workersToDelete: []worker{worker{0, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
-		},
-		"delete pods from different multi-host groups": {
-			// pods should be reassigned the lowest TPU_WORKER_ID ID with isCreated == false belonging to the replica
-			// in each respective worker group
-			numOfHosts:            4,
-			numReplicas:           4,
-			workersToDelete:       []worker{worker{0, 0, true}, worker{2, 1, true}, worker{3, 2, true}},
-			additionalGroupStr:    "another-worker-group",
-			additionalNumOfHosts:  4,
-			additionalNumReplicas: 3,
-		},
 	}
 
-	// validate getNextWorkerID() returns the expected TPU_WORKER ID for different worker group specifications
+	// validate getNextWorkerID() returns the expected TPU_WORKER ID for different worker group configurations
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkersCopy := deepCopySliceToWorkers()
-			for i := 0; i < tc.numReplicas; i++ {
-				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
+			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
+			for replicaIndex := 0; replicaIndex < tc.numReplicas; replicaIndex++ {
+				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, replicaIndex, tc.numOfHosts}
 				for j := 0; j < int(tc.numOfHosts); j++ {
-					workerID := getNextWorkerID(testPodSlice, namespaceStr, i)
+					workerID := getNextWorkerID(testPodSlice, namespaceStr, replicaIndex)
+					if sliceToWorkerIDs[testPodSlice] == nil {
+						sliceToWorkerIDs[testPodSlice] = []int{j}
+					} else {
+						sliceToWorkerIDs[testPodSlice] = append(sliceToWorkerIDs[testPodSlice], j)
+					}
 					assert.Equal(t, j, workerID)
 				}
 			}
-
-			if len(tc.workersToDelete) > 0 {
-				// test deleting and then re-assigning one pod at a time
-				for _, workerToDelete := range tc.workersToDelete {
-					replicaToDeleteFrom := workerToDelete.replicaIndex
-					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, replicaToDeleteFrom, tc.numOfHosts}
-					// set the pod isCreated value to false to simulate pod deletion
-					for index, worker := range sliceToWorkers[testPodSlice] {
-						if worker.workerIndex == workerToDelete.workerIndex {
-							sliceToWorkers[testPodSlice][index].isCreated = false
-						}
-					}
-					workerID := getNextWorkerID(testPodSlice, namespaceStr, replicaToDeleteFrom)
-					assert.Equal(t, workerToDelete.workerIndex, workerID)
-				}
-
-				// test deleting pods simultaneously and then re-assigning
-				for _, workerToDelete := range tc.workersToDelete {
-					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
-					// set the pod isCreated value to false to simulate pod deletion
-					for index, worker := range sliceToWorkers[testPodSlice] {
-						if worker.workerIndex == workerToDelete.workerIndex {
-							sliceToWorkers[testPodSlice][index].isCreated = false
-						}
-					}
-				}
-			}
-
 			// test assigning TPU_WORKER_IDs to pods for a different worker group
 			if tc.additionalGroupStr != "" {
 				for i := 0; i < tc.additionalNumReplicas; i++ {
@@ -594,42 +457,8 @@ func Test_GetNextWorkerID(t *testing.T) {
 						assert.Equal(t, j, workerID)
 					}
 				}
-
-				// test deleting pods from a different worker group
-				if len(tc.workersToDelete) > 0 {
-					for _, workerToDelete := range tc.workersToDelete {
-						replicaToDeleteFrom := workerToDelete.replicaIndex
-						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, replicaToDeleteFrom, tc.additionalNumOfHosts}
-						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
-							if worker.workerIndex == workerToDelete.workerIndex {
-								sliceToWorkers[testAdditionalPodSlice][index].isCreated = false
-							}
-						}
-					}
-				}
 			}
-
-			// should re-assign the pod to the same replica for each respective worker group
-			if len(tc.workersToDelete) > 0 {
-				for _, workerToDelete := range tc.workersToDelete {
-					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, workerToDelete.replicaIndex, tc.numOfHosts}
-					workerID := getNextWorkerID(testPodSlice, namespaceStr, workerToDelete.replicaIndex)
-					assert.Equal(t, workerToDelete.workerIndex, workerID)
-
-					if tc.additionalGroupStr != "" {
-						testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, workerToDelete.replicaIndex, tc.additionalNumOfHosts}
-						additionalWorkerID := getNextWorkerID(testAdditionalPodSlice, namespaceStr, workerToDelete.replicaIndex)
-						// "re-create" the worker pod
-						for index, worker := range sliceToWorkers[testAdditionalPodSlice] {
-							if worker.workerIndex == workerToDelete.workerIndex {
-								sliceToWorkers[testAdditionalPodSlice][index].isCreated = true
-							}
-						}
-						assert.Equal(t, workerToDelete.workerIndex, additionalWorkerID)
-					}
-				}
-			}
-			sliceToWorkers = sliceToWorkersCopy // reset sliceToWorkers to previous state
+			sliceToWorkerIDs = sliceToWorkerIDsCopy // reset sliceToWorkerIDs to previous state
 		})
 	}
 }
@@ -1226,7 +1055,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 	// check validateRayCluster
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkersCopy := deepCopySliceToWorkers()
+			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
 
 			// set up admissionReview object
 			admissionReview := testAdmissionReview.DeepCopy()
@@ -1257,7 +1086,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 			}
 
 			// reset map previous values
-			sliceToWorkers = sliceToWorkersCopy
+			sliceToWorkerIDs = sliceToWorkerIDsCopy
 		})
 	}
 }
@@ -1385,8 +1214,8 @@ func Test_MutatePod(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// save copy of sliceToWorkers
-			sliceToWorkersCopy := deepCopySliceToWorkers()
+			// save copy of sliceToWorkerIDs
+			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
 
 			// set up Pod object
 			if tc.missingClusterLabel {
@@ -1441,139 +1270,8 @@ func Test_MutatePod(t *testing.T) {
 					assert.Equal(t, expectedNamePatch, patches[6]["value"])
 				}
 				// reset map values after test
-				sliceToWorkers = sliceToWorkersCopy
+				sliceToWorkerIDs = sliceToWorkerIDsCopy
 			}
-		})
-	}
-}
-
-func Test_DeletePod(t *testing.T) {
-	setupTest(t)
-
-	tests := map[string]struct {
-		testPod             *corev1.Pod
-		testPodSlice        slice
-		testWorker          worker
-		testReplicaLabel    string
-		missingClusterLabel bool
-		missingGroupLabel   bool
-		missingContainers   bool
-		missingTPUWorkerID  bool
-		expectedAllowed     bool
-		expectedResult      *metav1.Status
-		expectedError       error
-	}{
-		"deletePod missing cluster label": {
-			// Kuberay pod missing Ray cluster label - returns error
-			testPod:             testTPUWorker.DeepCopy(),
-			missingClusterLabel: true,
-			expectedError:       errors.New("Kuberay Pod missing RayCluster label"),
-		},
-		"deletePod missing group label": {
-			// Kuberay pod missing Ray worker group label - returns error
-			testPod:           testTPUWorker.DeepCopy(),
-			missingGroupLabel: true,
-			expectedError:     errors.New("Kuberay Pod missing Ray group label"),
-		},
-		"deletePod missing containers": {
-			// TPU Pod missing containers - returns error
-			testPod:           testTPUWorker.DeepCopy(),
-			testReplicaLabel:  fmt.Sprintf("%s-%d", groupNameStr, 0),
-			missingContainers: true,
-			expectedError:     errors.New("Pod spec missing containers"),
-		},
-		"deletePod missing TPU_WORKER_ID": {
-			// TPU Pod missing TPU_WORKER_ID env var - returns error (since this should be set)
-			testPod:            testTPUWorker.DeepCopy(),
-			testReplicaLabel:   fmt.Sprintf("%s-%d", groupNameStr, 0),
-			missingTPUWorkerID: true,
-			expectedError:      errors.New("Unable to extract TPU_WORKER_ID"),
-		},
-		"deletePod non-TPU pod": {
-			// missing replicaIndex label - pass-through (Pod is not from a TPU worker group)
-			testPod:          testCPUWorker.DeepCopy(),
-			testReplicaLabel: "",
-			expectedAllowed:  true,
-			expectedResult: &metav1.Status{
-				Status:  "Success",
-				Message: "",
-			},
-		},
-		"deletePod TPU single-host pod": {
-			// Pod is part of a single-host TPU worker group, set its worker struct isCreated value to false
-			testPod:          testTPUWorker.DeepCopy(),
-			testPodSlice:     slice{instanceName, groupNameStr, namespaceStr, 0, 1},
-			testWorker:       worker{0, 0, true},
-			testReplicaLabel: fmt.Sprintf("%s-%d", groupNameStr, 0),
-			expectedAllowed:  true,
-			expectedResult: &metav1.Status{
-				Status:  "Success",
-				Message: "",
-			},
-		},
-		"deletePod TPU multi-host pod": {
-			// Pod is part of a multi-host TPU worker group, set its worker struct isCreated value to false
-			testPod:          testTPUWorker.DeepCopy(),
-			testPodSlice:     slice{instanceName, groupNameStr, namespaceStr, 1, 4},
-			testWorker:       worker{1, 1, true},
-			testReplicaLabel: fmt.Sprintf("%s-%d", groupNameStr, 1),
-			expectedAllowed:  true,
-			expectedResult: &metav1.Status{
-				Status:  "Success",
-				Message: "",
-			},
-		},
-	}
-
-	// validate that deletePod "deletes" the correct worker struct from sliceToWorkers
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// save copy of sliceToWorkers
-			sliceToWorkersCopy := deepCopySliceToWorkers()
-
-			// set up Pod object
-			tc.testPod.Labels["replicaIndex"] = tc.testReplicaLabel
-			if tc.missingClusterLabel {
-				tc.testPod.Labels["ray.io/cluster"] = ""
-			}
-			if tc.missingGroupLabel {
-				tc.testPod.Labels["ray.io/group"] = ""
-			}
-			if tc.missingContainers {
-				tc.testPod.Spec.Containers = nil
-			} else if !tc.missingTPUWorkerID {
-				// add TPU_WORKER_ID
-				tpuWorkerID := corev1.EnvVar{
-					Name:  "TPU_WORKER_ID",
-					Value: fmt.Sprint(tc.testWorker.workerIndex),
-				}
-				tc.testPod.Spec.Containers[0].Env = append(tc.testPod.Spec.Containers[0].Env, tpuWorkerID)
-			}
-			sliceToWorkers[tc.testPodSlice] = []worker{tc.testWorker}
-
-			// set up admissionReview object
-			admissionReview := testAdmissionReview.DeepCopy()
-			admissionReview.Request.Kind.Kind = "Pod"
-			admissionReview.Request.Operation = "DELETE"
-			jsonPod, _ := json.Marshal(tc.testPod)
-			admissionReview.Request.OldObject.Raw = jsonPod
-			admissionReview.Request.OldObject.Object = tc.testPod
-
-			admissionResponse, err := deletePod(admissionReview)
-			if err != nil {
-				assert.Equal(t, tc.expectedError, err)
-			} else {
-				var patches []patch
-				json.Unmarshal(admissionResponse.Patch, &patches)
-
-				workerIsCreated := sliceToWorkers[tc.testPodSlice][0].isCreated
-				assert.False(t, workerIsCreated)
-				assert.Equal(t, tc.expectedAllowed, admissionResponse.Allowed)
-				assert.Equal(t, tc.expectedResult.Status, admissionResponse.Result.Status)
-				assert.Equal(t, tc.expectedResult.Message, admissionResponse.Result.Message)
-			}
-			// reset map values after test
-			sliceToWorkers = sliceToWorkersCopy
 		})
 	}
 }
