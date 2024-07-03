@@ -1,4 +1,4 @@
-project_id = "$PROJECT_ID"
+project_id   = "$PROJECT_ID"
 cluster_name = "ai-benchmark"
 region       = "us-central1"
 gke_location = "us-central1-a"
