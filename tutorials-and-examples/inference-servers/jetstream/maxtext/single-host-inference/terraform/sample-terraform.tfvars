@@ -12,12 +12,13 @@ maxengine_deployment_settings = {
   }
 }
 
-hpa_config = {
-  metrics_adapter = "prometheus-adapter"
-  max_replicas    = 5
-  min_replicas    = 1
-  rules = [{
-    target_query         = "jetstream_prefill_backlog_size"
-    average_value_target = 5
-  }]
-}
+# Example config for autoscaling:
+# hpa_config = {
+#   metrics_adapter = "prometheus-adapter"
+#   max_replicas    = 5
+#   min_replicas    = 1
+#   rules = [{
+#     target_query         = "jetstream_prefill_backlog_size"
+#     average_value_target = 5
+#   }]
+# }
