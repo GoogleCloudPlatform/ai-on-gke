@@ -5,7 +5,7 @@ This module deploys Jetstream Maxtext to a cluster, see the [deployment template
 Assure the following are set before running:
    - MODEL_NAME: The name of your LLM (as of the writing of this README valid options are "gemma-7b", "llama2-7b", "llama2-13b")
    - PARAMETERS_PATH: Where to find the parameters for your LLM (if using the checkpoint-converter it will be "gs:\/\/$BUCKET_NAME\/final\/unscanned\/gemma_7b-it\/0\/checkpoints\/0\/items" where $BUCKET_NAME is the same one used in the checkpoint-converter)
-   - METRICS_PORT: Port to emit custom metrics on
+   - (optional) METRICS_PORT: Port to emit custom metrics on
    - (optional) TPU_TOPOLOGY: Topology of TPU chips used by jetstream (default: "2x4")
    - (optional) TPU_TYPE: Type of TPUs used (default: "tpu-v5-lite-podslice")
    - (optional) TPU_CHIP_COUNT: Number of TPU chips requested, can be obtained by algebraically evaluating TPU_TOPOLOGY
