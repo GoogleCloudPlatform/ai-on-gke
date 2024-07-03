@@ -49,8 +49,6 @@ resource "kubernetes_manifest" "jetstream-podmonitoring" {
   }))
 }
 
-
-## CMSA module pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/718/files merge
 module "custom_metrics_stackdriver_adapter" {
   count  = var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter" ? 1 : 0
   source = "../custom-metrics-stackdriver-adapter"
@@ -60,7 +58,6 @@ module "custom_metrics_stackdriver_adapter" {
   }
 }
 
-## Prometheus adapter module pending https://github.com/GoogleCloudPlatform/ai-on-gke/pull/716/files merge
 module "prometheus_adapter" {
   count  = var.hpa_config.metrics_adapter == "prometheus-adapter" ? 1 : 0
   source = "../prometheus-adapter"

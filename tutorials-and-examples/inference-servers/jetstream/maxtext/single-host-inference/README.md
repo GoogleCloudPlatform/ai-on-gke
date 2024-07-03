@@ -125,7 +125,7 @@ Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the prov
 
 ### Deploy via Kubectl
 
-See the [install with bash instructions in the Jetstream module README](../../../../../modules/jetstream-maxtext-deployment/README.md#bash-equivalent-of-this-module) for detailed instructions, assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
+See the [install with bash instructions in the Jetstream module README](../../../../../modules/jetstream-maxtext-deployment/README.md#bash-equivalent-of-this-module), assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
 
 ### Deploy via Terraform
 
