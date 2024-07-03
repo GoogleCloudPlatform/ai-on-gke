@@ -67,22 +67,22 @@
 
 This test script will stand up the `playground` platform using GitHub for the Config Sync repository in an existing project, run the `dataprocessing` job, teardown the platform, and cleanup the environment.
 
-- Set GitHub owner
+- Set the GitHub organization or user namespace
 
   ```
-  export MLP_GITHUB_ORG=
+  export MLP_GIT_NAMESPACE=
   ```
 
-- Set GitHub user
+- Set GitHub user name
 
   ```
-  export MLP_GITHUB_USER=
+  export MLP_GIT_USER_NAME=
   ```
 
-- Set GitHub email
+- Set GitHub email address
 
   ```
-  export MLP_GITHUB_EMAIL=
+  export MLP_GIT_USER_EMAIL=
   ```
 
 - Set Project ID
@@ -113,22 +113,22 @@ This test script will stand up the `playground` platform using GitHub for the Co
 
 This test script will initialize a new project, stand up the `playground` platform using GitHub for the Config Sync repository in , run the `dataprocessing` job, and delete the project.
 
-- Set GitHub owner
+- Set the GitHub organization or user namespace
 
   ```
-  export MLP_GITHUB_ORG=
+  export MLP_GIT_NAMESPACE=
   ```
 
-- Set GitHub user
+- Set GitHub user name
 
   ```
-  export MLP_GITHUB_USER=
+  export MLP_GIT_USER_NAME=
   ```
 
-- Set GitHub email
+- Set GitHub email address
 
   ```
-  export MLP_GITHUB_EMAIL=
+  export MLP_GIT_USER_EMAIL=
   ```
 
 - Set the billing account ID to assign to the new project
