@@ -362,6 +362,9 @@ func Test_GetReplicaIndex(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
+			if sliceToWorkerIDs == nil {
+				sliceToWorkerIDs = make(map[slice][]int)
+			}
 			for i := 0; i < tc.numReplicas; i++ {
 				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
 				for j := 0; j < int(tc.numOfHosts); j++ {
