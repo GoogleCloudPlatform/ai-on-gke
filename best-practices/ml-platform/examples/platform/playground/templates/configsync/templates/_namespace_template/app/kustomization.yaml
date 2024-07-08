@@ -24,7 +24,7 @@ helmCharts:
   valuesFile: values.yaml
 
 resources:
-- fluentd_config.yaml
+- fluentbit_config.yaml
 - podmonitoring_ray.yaml
 - serviceaccount_ray_head.yaml
 - serviceaccount_ray_worker.yaml
