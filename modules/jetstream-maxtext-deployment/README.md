@@ -84,7 +84,7 @@ Once installed the values of the following metrics can be used as averageValues 
 
 Follow the [Prometheus-adapter README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/modules/prometheus-adapter/README.md) to install without terraform. A few notes:
 
-This modules Helm charts values file that needs to know the value of CLUSTER_NAME in order to properly filter metrics. This is a consequence of differing cluster name schemes between GKE and standard k8s clusters. Instructions for each are as follows for if the cluster name isnt already known. For GKE clusters, Remove any characters prior to and including the last underscore with `kubectl config current-context | awk -F'_' ' { print $NF }'` to get the cluster name. For other clusters, The cluster name is simply: `kubectl config current-context`.
+This module uses the the prometheus-community/prometheus-adapter Helm chart as part of the install process, it has a values that requires "CLUSTER_NAME" to be replaced with your cluster name in order to properly filter metrics. This is a consequence of differing cluster name schemes between GKE and standard k8s clusters. Instructions for each are as follows for if the cluster name isnt already known. For GKE clusters, Remove any characters prior to and including the last underscore with `kubectl config current-context | awk -F'_' ' { print $NF }'` to get the cluster name. For other clusters, The cluster name is simply: `kubectl config current-context`.
 
 Instructions to set the PROMETHEUS_HELM_VALUES_FILE env var as follows:
 
