@@ -83,7 +83,7 @@ Follow the [Custom-metrics-stackdriver-adapter README](https://github.com/Google
 
 Once installed the values of the following metrics can be used as averageValues in a HorisontalPodAutoscaler (HPA):
   - Jetstream metrics (i.e. any metric prefixed with "jetstream_")
-  - "memory_used" (the current sum of memory usage across all accelerators used by a node in bytes)
+  - "memory_used" (the current sum of memory usage across all accelerators used by a node in bytes, note this value can be extremely large since the unit of measurement is bytes)
 
 #### Prometheus Adapter
 
@@ -101,7 +101,6 @@ sed "s/\${cluster_name}/$CLUSTER_NAME/g" ../templates/values.yaml.tftpl >> "$PRO
 Once installed the values of the following metrics can be used as averageValues in a HorisontalPodAutoscaler (HPA):
   - Jetstream metrics (i.e. any metric prefixed with "jetstream_")
   - "memory_used_percentage" (the percentage of total accelerator memory used across all accelerators used by a node)
-
 
 ### Horizontal Pod Autoscalers
 
