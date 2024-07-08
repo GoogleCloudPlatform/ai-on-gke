@@ -83,21 +83,21 @@ variable "hpa_config" {
   validation {
     condition = alltrue([
       for hpa_config in var.hpa_config.rules :
-      hpa_config.target_query == null ? true : length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used", hpa_config.target_query)) > 0 || length(regexall("memory_used_percentage", hpa_config.target_query)) > 0
+      hpa_config.target_query != null && hpa_config.average_value_target != null && length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used", hpa_config.target_query)) > 0 || length(regexall("memory_used_percentage", hpa_config.target_query)) > 0
     ])
     error_message = "Allows values for hpa_type are {null, memory_used, predefined promql queries (i.e. memory_used_percentage, or jetstream metrics (e.g., \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\")}"
   }
   validation {
     condition = var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter" && alltrue([
       for hpa_config in var.hpa_config.rules :
-      hpa_config.target_query == null ? true : length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used", hpa_config.target_query)) > 0
+      hpa_config.target_query != null && hpa_config.average_value_target != null && length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used", hpa_config.target_query)) > 0
     ]) || var.hpa_config.metrics_adapter != "custom-metrics-stackdriver-adapter"
     error_message = "Allowed values for target_query when using the custom-metrics-stackdriver are \"memory_used\", or jetstream metrics (i.e. \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\", etc)"
   }
   validation {
     condition = var.hpa_config.metrics_adapter == "prometheus-adapter" && alltrue([
       for hpa_config in var.hpa_config.rules :
-      hpa_config.target_query == null ? true : length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used_percentage", hpa_config.target_query)) > 0
+      hpa_config.target_query != null && hpa_config.average_value_target != null && length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used_percentage", hpa_config.target_query)) > 0
     ]) || var.hpa_config.metrics_adapter != "prometheus-adapter"
     error_message = "Allowed values for target_query when using the prometheus adapter include predefined promql queries (i.e. \"memory_used_percentage\") and jetstream metrics (i.e. \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\", etc)"
   }
