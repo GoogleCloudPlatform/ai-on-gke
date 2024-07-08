@@ -20,29 +20,32 @@ kind: ConfigMap
 metadata:
   name: fluentbit-config
 data:
-  # Based on https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/kuberay-logging/config/fluent-bit.conf
-  fluent-bit.conf: |
+  fluent-bit.conf: |-
     [SERVICE]
+        Flush 1 // Flush logs every 1 second, even if the buffer is not full to minimize log entry arrival delay
+        Grace 5
         Parsers_File parsers.conf
     [INPUT]
         Name tail
         Path /tmp/ray/session_latest/logs/*
         Tag ray
         Path_Key filename
+        Buffer_Max_Size  1MB
+        Mem_Buf_Limit    5MB
         Refresh_Interval 5
-    [FILTERS]
+    [FILTER]
         Name parser
         Match ray
         Key_Name filename
         Parser rayjob
         Reserve_Data On
+        Preserve_Key True
     [OUTPUT]
         Name stdout
         Format json_lines
         Match *
-  # Based on https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/kuberay-logging/config/parsers.conf
-  parsers.conf: |
+  parsers.conf: |-
     [PARSER]
         Name rayjob
         Format regex
-        Regex (?<job_id>raysubmit_[^.]*)
+        Regex job-driver-(?<ray_submission_id>[^.]*)\.log
