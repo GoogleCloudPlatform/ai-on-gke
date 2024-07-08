@@ -1,8 +1,8 @@
-This module deploys Jetstream Maxtext to a cluster, see the [deployment template](./templates/deployment.yaml.tftpl) to see which command line args are passed by default. For additional configuration please reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) for a list of configurable command line args and their explainations.
+This module deploys Jetstream Maxtext to a cluster. If `prometheus_port` is set then a [PodMontoring CR](https://cloud.google.com/stackdriver/docs/managed-prometheus/setup-managed#gmp-pod-monitoring) will be deployed for scraping metrics and exporting them to Google Cloud Monitoring. See the [deployment template](./templates/deployment.yaml.tftpl) to see which command line args are passed by default. For additional configuration please reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) for a list of configurable command line args and their explainations.
 
-## Bash equivalent of this module
+## Installation via bash and kubectl
 
-Assure the following are set before running:
+Assure the following environment variables are set:
    - MODEL_NAME: The name of your LLM (as of the writing of this README valid options are "gemma-7b", "llama2-7b", "llama2-13b")
    - PARAMETERS_PATH: Where to find the parameters for your LLM (if using the checkpoint-converter it will be "gs:\/\/$BUCKET_NAME\/final\/unscanned\/gemma_7b-it\/0\/checkpoints\/0\/items" where $BUCKET_NAME is the same one used in the checkpoint-converter)
    - (optional) METRICS_PORT: Port to emit custom metrics on
@@ -69,6 +69,11 @@ cat $JETSTREAM_MANIFEST \
 
 cat $JETSTREAM_MANIFEST | kubectl apply -f -
 ```
+## (Optional) Autoscaling Components
+
+Applying the following resources to your cluster will enable you to scale the number of Jetstream server pods with custom or system metrics:
+ - Metrics Adapter (either [Prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter)(recommended) or [CMSA](https://github.com/GoogleCloudPlatform/k8s-stackdriver/tree/master/custom-metrics-stackdriver-adapter)): For making metrics from the Google Cloud Monitoring API visible to resources within the cluster.
+ - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
 
 ### Metrics Adapter
 
@@ -98,7 +103,7 @@ Once installed the values of the following metrics can be used as averageValues 
   - "memory_used_percentage" (the percentage of total accelerator memory used across all accelerators used by a node)
 
 
-## Horizontal Pod Autoscalers
+### Horizontal Pod Autoscalers
 
 The following should be run for each HPA, assure the following are set before running:
  - ADAPTER: The adapter currently in cluster, can be either 'custom-metrics-stackdriver-adapter' or 'prometheus-adapter'

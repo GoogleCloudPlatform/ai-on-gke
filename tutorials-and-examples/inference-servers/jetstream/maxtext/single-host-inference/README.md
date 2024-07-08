@@ -125,20 +125,15 @@ Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the prov
 
 ### Deploy via Kubectl
 
-See the [install with bash instructions in the Jetstream module README](../../../../../modules/jetstream-maxtext-deployment/README.md#bash-equivalent-of-this-module), assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
+See the [Jetstream component README](../../../../../modules/jetstream-maxtext-deployment/README.md#installation-via-bash-and-kubectl) for start to finish instructions on how to deploy jetsteram to your cluster, assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
+
+ This README also includes [instructions for setting up autoscaling](../../../../../modules//jetstream-maxtext-deployment/README.md#optional-autoscaling-components). Follow those instructions to install the required components for autoscaling and configuring your HPAs appropriately.
 
 ### Deploy via Terraform
 
 Navigate to the `./terraform` directory and run [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Since we're using gemma-7b the `maxengine_deployment_settings.parameters_path` terraform variable should be set to the following: `gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items`. Finally run `terraform apply` to apply these resources to your cluster.
 
-#### (optional) Enable Horizontal Pod Autoscaling
-
-Applying the following resources to your cluster will enable autoscaling with customer metrics:
- - PodMonitoring: For scraping metrics and exporting them to Google Cloud Monitoring
- - Metrics Adapter (either [Prometheus-adapter](https://github.com/kubernetes-sigs/prometheus-adapter)(recommended) or [CMSA](https://github.com/GoogleCloudPlatform/k8s-stackdriver/tree/master/custom-metrics-stackdriver-adapter)): For making metrics from the Google Cloud Monitoring API visible to resources within the cluster.
- - [Horizontal Pod Autoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/): For reading metrics and setting the maxengine-servers deployments replica count accordingly.
-
-Adding these components require a few more variables to be set, doing so and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following variables should be set:
+For deploying autoscaling components via terraform, a few more variables to be set, doing so and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following variables should be set:
 
 ```
 maxengine_deployment_settings = {
@@ -156,19 +151,6 @@ hpa_config = {
     average_value_target
   }]
 }
-```
-
-If using Terraform is not an option and you would like to install the components with bash, see the [metrics adapter section of the Jetstream module README](../../../../../modules/jetstream-maxtext-deployment/README.md#horizontal-pod-autoscalers).
-
-If you would like to probe the metrics manually, `cURL` your maxengine-server container on whatever metrics port you set and you should see something similar to the following:
-
-```
-# HELP jetstream_prefill_backlog_size Size of prefill queue
-# TYPE jetstream_prefill_backlog_size gauge
-jetstream_prefill_backlog_size{id="SOME-HOSTNAME-HERE>"} 0.0
-# HELP jetstream_slots_used_percentage The percentage of decode slots currently being used
-# TYPE jetstream_slots_used_percentage gauge
-jetstream_slots_used_percentage{id="<SOME-HOSTNAME-HERE>",idx="0"} 0.04166666666666663
 ```
 
 ### Verify the deployment
@@ -253,3 +235,16 @@ kubectl port-forward svc/jetstream-svc 9000:9000
 ```
 
 To run benchmarking, pass in the flag `--server 127.0.0.1` when running the benchmarking script.
+
+### Observe custom metrics
+
+This step assumes you specified a metrics port to your jetstream deployment via `prometheus_port`. If you would like to probe the metrics manually, `cURL` your maxengine-server container on the metrics port you set and you should see something similar to the following:
+
+```
+# HELP jetstream_prefill_backlog_size Size of prefill queue
+# TYPE jetstream_prefill_backlog_size gauge
+jetstream_prefill_backlog_size{id="SOME-HOSTNAME-HERE>"} 0.0
+# HELP jetstream_slots_used_percentage The percentage of decode slots currently being used
+# TYPE jetstream_slots_used_percentage gauge
+jetstream_slots_used_percentage{id="<SOME-HOSTNAME-HERE>",idx="0"} 0.04166666666666663
+```
