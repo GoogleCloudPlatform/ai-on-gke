@@ -81,7 +81,7 @@ Applying the following resources to your cluster will enable you to scale the nu
 
 Follow the [Custom-metrics-stackdriver-adapter README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/modules/custom-metrics-stackdriver-adapter/README.md) to install without terraform.
 
-Once installed the values of the following metrics can be used as averageValues in a HorisontalPodAutoscaler (HPA):
+Once installed the values of the following metrics can be used as averageValues in a HorizontalPodAutoscaler (HPA):
   - Jetstream metrics (i.e. any metric prefixed with "jetstream_")
   - "memory_used" (the current sum of memory usage across all accelerators used by a node in bytes, note this value can be extremely large since the unit of measurement is bytes)
 
@@ -98,7 +98,7 @@ PROMETHEUS_HELM_VALUES_FILE=$(mktemp)
 sed "s/\${cluster_name}/$CLUSTER_NAME/g" ../templates/values.yaml.tftpl >> "$PROMETHEUS_HELM_VALUES_FILE"
 ```
 
-Once installed the values of the following metrics can be used as averageValues in a HorisontalPodAutoscaler (HPA):
+Once installed the values of the following metrics can be used as averageValues in a HorizontalPodAutoscaler (HPA):
   - Jetstream metrics (i.e. any metric prefixed with "jetstream_")
   - "memory_used_percentage" (the percentage of total accelerator memory used across all accelerators used by a node)
 

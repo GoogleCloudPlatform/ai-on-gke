@@ -125,7 +125,7 @@ Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the prov
 
 ### Deploy via Kubectl
 
-See the [Jetstream component README](../../../../../modules/jetstream-maxtext-deployment/README.md#installation-via-bash-and-kubectl) for start to finish instructions on how to deploy jetsteram to your cluster, assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
+See the [Jetstream component README](../../../../../modules/jetstream-maxtext-deployment/README.md#installation-via-bash-and-kubectl) for start to finish instructions on how to deploy jetstream to your cluster, assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
 
  This README also includes [instructions for setting up autoscaling](../../../../../modules//jetstream-maxtext-deployment/README.md#optional-autoscaling-components). Follow those instructions to install the required components for autoscaling and configuring your HPAs appropriately.
 
