@@ -1,0 +1,15 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: jetstream-podmonitoring
+  namespace: default
+spec:
+  endpoints:
+  - interval: ${metrics_scrape_interval}s
+    path: "/"
+    port: ${metrics_port}
+  targetLabels:
+    metadata:
+    - pod
+    - container
+    - node

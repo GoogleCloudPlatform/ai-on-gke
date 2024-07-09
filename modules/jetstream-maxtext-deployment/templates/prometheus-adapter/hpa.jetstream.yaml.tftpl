@@ -1,8 +1,8 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: jetstream-hpa
-  namespace: ${namespace}
+  name: jetstream-hpa-${index}
+  namespace: default
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -15,17 +15,16 @@ spec:
   - type: Pods
     pods:
       metric:
-        name: prometheus.googleapis.com|${hpa_type}|gauge
+        name: ${hpa_type}
       target:
         type: AverageValue
         averageValue: ${hpa_averagevalue_target}
 %{ else }
-  - type: Pods
-    pods:
+  - type: External
+    external:
       metric:
-        name: kubernetes.io|node|accelerator|memory_used
+        name: ${hpa_type}
       target:
         type: AverageValue
         averageValue: ${hpa_averagevalue_target}
 %{ endif }
-
