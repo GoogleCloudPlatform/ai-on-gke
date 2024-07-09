@@ -2,32 +2,9 @@
 
 Adapted from https://raw.githubusercontent.com/GoogleCloudPlatform/k8s-stackdriver/master/custom-metrics-stackdriver-adapter/deploy/production/adapter_new_resource_model.yaml
 
-## Usage
+## Installation via bash, gcloud, and kubectl
 
-To use this module, include it from your terraform main:
-
-```
-module "custom_metrics_stackdriver_adapter" {
-  source = "./path/to/custom-metrics-stackdriver-adapter"
-}
-```
-
-For a workload identity enabled cluster, some additional configuration is
-needed:
-
-```
-module "custom_metrics_stackdriver_adapter" {
-  source = "./path/to/custom-metrics-stackdriver-adapter"
-  workload_identity = {
-    enabled = true
-    project_id = "<PROJECT_ID>"
-  }
-}
-```
-
-## Bash equivalent of this module
-
-Assure the following are set before running:
+Assure the following environment variables are set:
    - PROJECT_ID: Your GKE project ID
    - WORKLOAD_IDENTITY: Is workload identity federation enabled in the target cluster?
 
@@ -62,4 +39,27 @@ kubectl apply -f apiservice_v1beta1.custom.metrics.k8s.io.yaml.tftpl
 kubectl apply -f apiservice_v1beta2.custom.metrics.k8s.io.yaml.tftpl
 kubectl apply -f apiservice_v1beta1.external.metrics.k8s.io.yaml.tftpl
 kubectl apply -f clusterrolebinding_external-metrics-reader.yaml.tftpl
+```
+
+## Installation via Terraform
+
+To use this as a module, include it from your terraform main:
+
+```
+module "custom_metrics_stackdriver_adapter" {
+  source = "./path/to/custom-metrics-stackdriver-adapter"
+}
+```
+
+For a workload identity enabled cluster, some additional configuration is
+needed:
+
+```
+module "custom_metrics_stackdriver_adapter" {
+  source = "./path/to/custom-metrics-stackdriver-adapter"
+  workload_identity = {
+    enabled = true
+    project_id = "<PROJECT_ID>"
+  }
+}
 ```
