@@ -155,10 +155,10 @@ variable "autopilot_cluster" {
 
 variable "cpu_pools" {
   type = list(object({
-    name                   = string
-    machine_type           = string
+    name                   = optional(string, "cpu-pool")
+    machine_type           = optional(string, "n1-standard-16")
     node_locations         = optional(string, "")
-    autoscaling            = optional(bool, false)
+    autoscaling            = optional(bool, true)
     min_count              = optional(number, 1)
     max_count              = optional(number, 3)
     local_ssd_count        = optional(number, 0)
@@ -166,7 +166,7 @@ variable "cpu_pools" {
     disk_size_gb           = optional(number, 100)
     disk_type              = optional(string, "pd-standard")
     image_type             = optional(string, "COS_CONTAINERD")
-    enable_gcfs            = optional(bool, false)
+    enable_gcfs            = optional(bool, true)
     enable_gvnic           = optional(bool, false)
     logging_variant        = optional(string, "DEFAULT")
     auto_repair            = optional(bool, true)
@@ -176,16 +176,6 @@ variable "cpu_pools" {
     initial_node_count     = optional(number, 1)
     accelerator_count      = optional(number, 0)
   }))
-  default = [{
-    name         = "cpu-pool"
-    machine_type = "n1-standard-16"
-    autoscaling  = true
-    min_count    = 1
-    max_count    = 3
-    enable_gcfs  = true
-    disk_size_gb = 100
-    disk_type    = "pd-standard"
-  }]
 }
 
 variable "gpu_pools" {
@@ -213,7 +203,6 @@ variable "gpu_pools" {
     accelerator_type       = optional(string, "nvidia-tesla-t4")
     gpu_driver_version     = optional(string, "DEFAULT")
   }))
-  default = []
 }
 
 variable "goog_cm_deployment_name" {
