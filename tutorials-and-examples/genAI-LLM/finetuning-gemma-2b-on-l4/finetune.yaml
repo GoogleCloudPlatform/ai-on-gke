@@ -3,6 +3,8 @@ kind: Job
 metadata:
   name: finetune-job
   namespace: default
+  labels:
+    app: gemma-finetune
 spec:
   backoffLimit: 2
   template:
