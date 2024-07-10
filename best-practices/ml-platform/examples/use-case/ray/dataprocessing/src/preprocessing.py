@@ -15,7 +15,6 @@ import numpy as np
 from google.cloud import storage
 from google.cloud.storage.retry import DEFAULT_RETRY
 from typing import List
-
 IMAGE_BUCKET = os.environ['PROCESSING_BUCKET']
 RAY_CLUSTER_HOST = os.environ['RAY_CLUSTER_HOST']
 GCS_IMAGE_FOLDER = 'flipkart_images'
@@ -152,17 +151,26 @@ def get_clean_df(df, logger, ray_worker_node_id):
 
     # Helper function to reformat the given text
     def reformat(text: str) -> str:
+<<<<<<< HEAD
         if pd.isnull(text):
             return ''
+=======
+>>>>>>> eb318005 (adding product category cleanup)
         return text.replace('[', '').replace(']', '').replace('"', '')
 
     def prep_cat(df: pd.DataFrame) -> pd.DataFrame:
         df['product_category_tree'] = df['product_category_tree'].apply(lambda x: reformat(x))
         temp_df = df['product_category_tree'].str.split('>>', expand=True)
+<<<<<<< HEAD
         max_splits = temp_df.shape[1]  # Get the number of columns after splitting
         # Create column names dynamically
         column_names = [f'c{i}_name' for i in range(max_splits)]  
         temp_df.columns = column_names
+=======
+        print(temp_df)
+        # Flipkart dataset category tree has maximum depth of 8
+        temp_df.columns = ['c0_name', 'c1_name', 'c2_name', 'c3_name', 'c4_name', 'c5_name', 'c6_name', 'c7_name']
+>>>>>>> eb318005 (adding product category cleanup)
         for col in temp_df.columns:
             temp_df[col] = temp_df[col].apply(lambda x: x.strip() if x else x)
         # concatenating df1 and df2 along rows
@@ -175,6 +183,10 @@ def get_clean_df(df, logger, ray_worker_node_id):
     df_with_desc['attributes'] = df_with_desc['product_specifications'].apply(
         parse_attributes)
     result_df = prep_cat(df_with_desc)
+<<<<<<< HEAD
+=======
+
+>>>>>>> eb318005 (adding product category cleanup)
     return result_df
 
 
