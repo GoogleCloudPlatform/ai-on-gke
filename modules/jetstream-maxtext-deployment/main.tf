@@ -73,41 +73,17 @@ module "prometheus_adapter" {
 }
 
 resource "kubernetes_manifest" "prometheus_adapter_hpa_custom_metric" {
-  for_each = {
-    for index, rule in var.hpa_config.rules :
-    index => {
-      index                = index
-      target_query         = rule.target_query
-      average_value_target = rule.average_value_target
-    }
-    if var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "prometheus-adapter"
-  }
-
   manifest = yamldecode(templatefile(local.prometheus_jetstream_hpa_template, {
-    index                   = each.value.index
-    hpa_type                = try(each.value.target_query, "")
-    hpa_averagevalue_target = try(each.value.average_value_target, 1)
-    hpa_min_replicas        = var.hpa_config.min_replicas
-    hpa_max_replicas        = var.hpa_config.max_replicas
+    hpa_min_replicas = var.hpa_config.min_replicas
+    hpa_max_replicas = var.hpa_config.max_replicas
+    rules            = var.hpa_config.rules
   }))
 }
 
 resource "kubernetes_manifest" "cmsa_hpa_custom_metric" {
-  for_each = {
-    for index, rule in var.hpa_config.rules :
-    index => {
-      index                = index
-      target_query         = rule.target_query
-      average_value_target = rule.average_value_target
-    }
-    if var.maxengine_deployment_settings.custom_metrics_enabled && var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter"
-  }
-
   manifest = yamldecode(templatefile(local.cmsa_jetstream_hpa_template, {
-    index                   = each.value.index
-    hpa_type                = try(each.value.target_query, "")
-    hpa_averagevalue_target = try(each.value.average_value_target, 1)
-    hpa_min_replicas        = var.hpa_config.min_replicas
-    hpa_max_replicas        = var.hpa_config.max_replicas
+    hpa_min_replicas = var.hpa_config.min_replicas
+    hpa_max_replicas = var.hpa_config.max_replicas
+    rules            = var.hpa_config.rules
   }))
 }
