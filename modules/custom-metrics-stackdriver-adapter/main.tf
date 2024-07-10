@@ -4,12 +4,12 @@ locals {
   v1beta2-custom-metrics-k8s-io                       = "${path.module}/templates/apiservice_v1beta2.custom.metrics.k8s.io.yaml.tftpl"
   cluster-role-custom-metrics-resource-reader         = "${path.module}/templates/clusterrole_custom-metrics-resource-reader.yaml.tftpl"
   cluster-role-binding-custom-metrics-resource-reader = "${path.module}/templates/clusterrolebinding_custom-metrics-resource-reader.yaml.tftpl"
-  custom-metrics-system-auth-delegator                = "${path.module}/templates/clusterrolebinding_custom-metrics:system:auth-delegator.yaml.tftpl"
-  external-metrics-reader                             = "${path.module}/templates/clusterrolebinding_external-metrics-reader.yaml.tftpl"
+  cluster-role-binding-custom-metrics-system-auth-delegator                = "${path.module}/templates/clusterrolebinding_custom-metrics:system:auth-delegator.yaml.tftpl"
+  cluster-role-binding-external-metrics-reader                             = "${path.module}/templates/clusterrolebinding_external-metrics-reader.yaml.tftpl"
   deployment-custom-metrics-stackdriver-adapter       = "${path.module}/templates/deployment_custom-metrics-stackdriver-adapter.yaml.tftpl"
   service-custom-metrics-stackdriver-adapter          = "${path.module}/templates/service_custom-metrics-stackdriver-adapter.yaml.tftpl"
   service-account-custom-metrics-stackdriver-adapter  = "${path.module}/templates/serviceaccount_custom-metrics-stackdriver-adapter.yaml.tftpl"
-  custom-metrics-auth-reader                          = "${path.module}/templates/rolebinding_custom-metrics-auth-reader.yaml.tftpl"
+  role-binding-custom-metrics-auth-reader                          = "${path.module}/templates/rolebinding_custom-metrics-auth-reader.yaml.tftpl"
 }
 
 resource "kubernetes_namespace_v1" "custom-metrics" {
@@ -18,8 +18,7 @@ resource "kubernetes_namespace_v1" "custom-metrics" {
   }
 }
 
-resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter" {
-  count = 1
+resource "kubernetes_service_account_v1" "service-account-custom-metrics-stackdriver-adapter" {
   metadata {
     name      = "custom-metrics-stackdriver-adapter"
     namespace = kubernetes_namespace_v1.custom-metrics.metadata[0].name
@@ -31,12 +30,16 @@ resource "kubernetes_service_account_v1" "custom-metrics-stackdriver-adapter" {
 
 resource "kubernetes_manifest" "custom-metrics-system-auth-delegator" {
   count    = 1
-  manifest = yamldecode(file(local.custom-metrics-system-auth-delegator))
+  manifest = yamldecode(templatefile(local.cluster-role-binding-custom-metrics-system-auth-delegator, {
+    cmsa-serviceaccount-name = kubernetes_service_account_v1.service-account-custom-metrics-stackdriver-adapter.metadata[0].name
+  }))
 }
 
-resource "kubernetes_manifest" "custom-metrics-auth-reader" {
+resource "kubernetes_manifest" "role-binding-custom-metrics-auth-reader" {
   count    = 1
-  manifest = yamldecode(file(local.custom-metrics-auth-reader))
+  manifest = yamldecode(templatefile(local.role-binding-custom-metrics-auth-reader, {
+    cmsa-serviceaccount-name = kubernetes_service_account_v1.service-account-custom-metrics-stackdriver-adapter.metadata[0].name
+  }))
 }
 
 resource "kubernetes_manifest" "cluster-role-custom-metrics-resource-reader" {
@@ -46,12 +49,16 @@ resource "kubernetes_manifest" "cluster-role-custom-metrics-resource-reader" {
 
 resource "kubernetes_manifest" "cluster-role-binding-custom-metrics-resource-reader" {
   count    = 1
-  manifest = yamldecode(file(local.cluster-role-binding-custom-metrics-resource-reader))
+  manifest = yamldecode(templatefile(local.cluster-role-binding-custom-metrics-resource-reader, {
+    cmsa-serviceaccount-name =kubernetes_service_account_v1.service-account-custom-metrics-stackdriver-adapter.metadata[0].name
+  }))
 }
 
 resource "kubernetes_manifest" "deployment-custom-metrics-stackdriver-adapter" {
   count    = 1
-  manifest = yamldecode(file(local.deployment-custom-metrics-stackdriver-adapter))
+  manifest = yamldecode(templatefile(local.deployment-custom-metrics-stackdriver-adapter, {
+    cmsa-serviceaccount-name = kubernetes_service_account_v1.service-account-custom-metrics-stackdriver-adapter.metadata[0].name
+  }))
 }
 
 resource "kubernetes_manifest" "service-custom-metrics-stackdriver-adapter" {
@@ -76,7 +83,7 @@ resource "kubernetes_manifest" "v1beta1-external-metrics-k8s-io" {
 
 resource "kubernetes_manifest" "external-metrics-reader" {
   count    = 1
-  manifest = yamldecode(file(local.external-metrics-reader))
+  manifest = yamldecode(file(local.cluster-role-binding-external-metrics-reader))
 }
 
 # If workload identity is enabled, extra steps are required. We need to:
