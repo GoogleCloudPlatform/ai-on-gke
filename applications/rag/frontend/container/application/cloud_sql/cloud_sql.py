@@ -52,7 +52,7 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
         user=DB_USER,
         password=DB_PASS,
         db=DB_NAME,
-        ip_type=IPTypes.PUBLIC
+        ip_type=IPTypes.PRIVATE
     )
     return conn
         
@@ -71,7 +71,7 @@ def create_sync_postgres_engine():
         database=DB_NAME,
         user=DB_USER,
         password=DB_PASS,
-        ip_type=IPTypes.PUBLIC        
+        ip_type=IPTypes.PRIVATE        
     )
     engine.init_chat_history_table(table_name=CHAT_HISTORY_TABLE_NAME)
     return engine

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging as log
 import google.cloud.logging as logging
 import traceback
@@ -21,16 +20,14 @@ import uuid
 from flask import render_template, request, jsonify, session
 from datetime import datetime, timedelta, timezone
 
-from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
-from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
+from application import create_app
+from application.rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
+from application.rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 
-from rag_langchain.rag_chain import clear_chat_history, create_chain, take_chat_turn
-
-from . import create_app
+from application.rag_langchain.rag_chain import clear_chat_history, create_chain, take_chat_turn
 
 SESSION_TIMEOUT_MINUTES = 30
 
-GCP_PROJECT_ID= os.environ.get("PROJECT_ID")
 # Setup logging
 logging_client = logging.Client()
 logging_client.setup_logging()
@@ -39,10 +36,6 @@ app = create_app()
 
 # Create llm chain
 llm_chain = create_chain()
-
-@app.before_first_request
-def before_first_request():
-    os.system(f"gcloud config set project {GCP_PROJECT_ID}")
 
 @app.route('/get_nlp_status', methods=['GET'])
 def get_nlp_status():
