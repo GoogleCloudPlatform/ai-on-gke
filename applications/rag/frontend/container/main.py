@@ -134,12 +134,3 @@ def handlePrompt():
         })
         response.status_code = 500
         return response
-
-
-if __name__ == '__main__':
-    # TODO using gunicorn to start the server results in the first request being really slow.
-    # Sometimes, the worker thread has to restart due to an unknown error.
-    # This change should be made from Dockerfile, gunicorn expects something like 
-    # gunicorn --bind 0.0.0.0:$PORT app:app on app startup.
-
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
