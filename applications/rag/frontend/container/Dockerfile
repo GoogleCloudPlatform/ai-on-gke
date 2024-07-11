@@ -14,9 +14,31 @@
 
 FROM python:3.12.2
 
+ENV DEBIAN_FRONTEND=noninteractive 
+
+RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+
+RUN mkdir -p /usr/local/gcloud \
+    && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
+    && /usr/local/gcloud/google-cloud-sdk/install.sh
+
+ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
+
 ADD ./ /workspace/frontend
 WORKDIR /workspace/frontend
 
 RUN pip install -r requirements.txt
+
+EXPOSE 8080
+
+COPY ./service-account.json /app/
+
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+
+# ARG GCP_PROJECT_ID
+# ENV GCP_PROJECT_ID=${GCP_PROJECT_ID}
+
+RUN gcloud auth activate-service-account --key-file=/app/service-account.json 
+# && \ gcloud config set project ${GCP_PROJECT_ID}
 
 CMD ["python", "main.py"]
