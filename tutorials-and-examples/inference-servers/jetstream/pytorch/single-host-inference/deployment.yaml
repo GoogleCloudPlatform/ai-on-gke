@@ -19,7 +19,7 @@ spec:
         cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
       containers:
       - name: jetstream-pytorch-server
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-pytorch-server:v0.2.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-pytorch-server:v0.2.3
         args:
         - --size=7b
         - --model_name=llama-2
@@ -41,7 +41,7 @@ spec:
           limits:
             google.com/tpu: 8
       - name: jetstream-http
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2
         ports:
         - containerPort: 8000
       volumes:

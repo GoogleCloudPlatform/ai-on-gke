@@ -12,7 +12,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: inference-checkpoint
-        image: us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.0
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.3
         args:
         - -s=jetstream-pytorch
         - -m=/models
