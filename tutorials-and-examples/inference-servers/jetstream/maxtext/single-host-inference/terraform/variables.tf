@@ -39,89 +39,70 @@ variable "credentials_config" {
   }
 }
 
-variable "namespace" {
-  description = "Namespace used for Jetstream resources."
-  type        = string
-  nullable    = false
-  default     = "default"
-}
-
-variable "maxengine_server_image" {
-  description = "maxengine-server container image"
-  type        = string
-  default     = "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2"
-  nullable    = false
-}
-
-variable "jetstream_http_server_image" {
-  description = "jetstream-http container image"
-  type        = string
-  default     = "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2"
-  nullable    = false
-}
-
-
-variable "bucket_name" {
-  description = "Name of Google Cloud Storage bucket hosting unscanned checkpoints"
-  type        = string
-  nullable    = false
-}
-
-variable "templates_path" {
-  description = "Path where manifest templates will be read from. Set to null to use the default manifests"
-  type        = string
-  default     = null
-}
-
-variable "hpa_type" {
-  description = "How the Jetstream workload should be scaled."
-  type        = string
-  default     = null
-  nullable    = true
-  validation {
-    condition     = var.hpa_type == null ? true : length(regexall("jetstream_.*", var.hpa_type)) > 0 || length(regexall("memory_used", var.hpa_type)) > 0
-    error_message = "Allows values for hpa_type are {null, memory_used, jetstream metrics (e.g., \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\")}"
-  }
-}
-
-variable "hpa_min_replicas" {
-  description = "Minimum number of HPA replicas."
-  type        = number
-  default     = 1
-  nullable    = false
-}
-
-variable "hpa_max_replicas" {
-  description = "Maximum number of HPA replicas."
-  type        = number
-  default     = 5
-  nullable    = false
-}
-
-# TODO: combine hpa variables into a single object (so that they can be
-# validated together)
-variable "hpa_averagevalue_target" {
-  description = "AverageValue target for the `hpa_type` metric. Must be set if `hpa_type` is not null."
-  type        = number
-  default     = null
-  nullable    = true
-}
-
 variable "project_id" {
   description = "Project id of existing or created project."
   type        = string
   nullable    = false
 }
 
-variable "custom_metrics_enabled" {
-  description = "Enable custom metrics collection"
-  type        = bool
-  default     = false
-  nullable    = false
+variable "cluster_name" {
+  type = string
 }
 
-variable "metrics_port" {
-  description = "Port to scrape metrics from"
-  type        = number
-  nullable    = true
+variable "maxengine_deployment_settings" {
+  type = object({
+    maxengine_server_image      = string
+    jetstream_http_server_image = string
+
+    model_name              = string           // Name of your LLM (for example: "gemma-7b")
+    parameters_path         = string           // Path to the parameters for your model
+    metrics_port            = optional(number) // Emit Jetstream metrics on this port of each contaienr
+    custom_metrics_enabled  = bool             // Whether or not custom metrics are also emitted
+    metrics_scrape_interval = optional(number) // Interval for scraping metrics (default: 10s)
+
+    accelerator_selectors = object({
+      topology    = string
+      accelerator = string
+      chip_count  = number
+    })
+  })
+}
+
+variable "hpa_config" {
+  type = object({
+    metrics_adapter = string
+    min_replicas    = number
+    max_replicas    = number
+    rules = list(object({
+      target_query         = string
+      average_value_target = number
+    }))
+  })
+  default = null
+
+  validation {
+    condition = alltrue([
+      for hpa_config in var.hpa_config.rules :
+      hpa_config.target_query != null && hpa_config.average_value_target != null && length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used", hpa_config.target_query)) > 0 || length(regexall("memory_used_percentage", hpa_config.target_query)) > 0
+    ])
+    error_message = "Allows values for hpa_type are {null, memory_used, predefined promql queries (i.e. memory_used_percentage, or jetstream metrics (e.g., \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\")}"
+  }
+  validation {
+    condition = var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter" && alltrue([
+      for hpa_config in var.hpa_config.rules :
+      hpa_config.target_query != null && hpa_config.average_value_target != null && length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used", hpa_config.target_query)) > 0
+    ]) || var.hpa_config.metrics_adapter != "custom-metrics-stackdriver-adapter"
+    error_message = "Allowed values for target_query when using the custom-metrics-stackdriver are \"memory_used\", or jetstream metrics (i.e. \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\", etc)"
+  }
+  validation {
+    condition = var.hpa_config.metrics_adapter == "prometheus-adapter" && alltrue([
+      for hpa_config in var.hpa_config.rules :
+      hpa_config.target_query != null && hpa_config.average_value_target != null && length(regexall("jetstream_.*", hpa_config.target_query)) > 0 || length(regexall("memory_used_percentage", hpa_config.target_query)) > 0
+    ]) || var.hpa_config.metrics_adapter != "prometheus-adapter"
+    error_message = "Allowed values for target_query when using the prometheus adapter include predefined promql queries (i.e. \"memory_used_percentage\") and jetstream metrics (i.e. \"jetstream_prefill_backlog_size\", \"jetstream_slots_used_percentage\", etc)"
+  }
+  validation {
+    condition     = contains(["", "custom-metrics-stackdriver-adapter", "prometheus-adapter"], var.hpa_config.metrics_adapter)
+    error_message = "Allowed values for metrics_adapter are \"custom-metrics-stackdriver-adapter\", or \"prometheus-adapter\"."
+  }
 }

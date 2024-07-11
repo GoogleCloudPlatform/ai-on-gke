@@ -8,6 +8,8 @@ This quick-start deployment guide can be used to set up an environment to famili
 
 For more information about the architecture, see the [Playground Machine learning platform (MLP) on GKE: Architecture](/best-practices/ml-platform/docs/platform/playground/architecture.md) document.
 
+For an outline of products and features used in the platform, see the [Platform Products and Features](/best-practices/ml-platform/docs/platform/products-and-features.md) document.
+
 ## Requirements
 
 ### Project
@@ -101,26 +103,27 @@ The default quota given to a project should be sufficient for this guide.
   nano ${HOME}/secrets/mlp-github-token
   ```
 
-- Set the GitHub environment variables in Cloud Shell
+- Set the Git environment variables in Cloud Shell
 
   Replace the following values:
 
-  - `<GITHUB_ORGANIZATION>` is the GitHub organization or user namespace to use for the repositories
-  - `<GITHUB_USER>` is the GitHub account to use for authentication
-  - `<GITHUB_EMAIL>` is the email address to use for commit
+  - `<GIT_NAMESPACE>` is the GitHub organization or user namespace to use for the repositories
+  - `<GIT_USER_EMAIL>` is the email address to use for commit
+  - `<GIT_USER_NAME>` is the GitHub account to use for authentication
 
   ```
-  export MLP_GITHUB_ORG="<GITHUB_ORGANIZATION>"
-  export MLP_GITHUB_USER="<GITHUB_USER>"
-  export MLP_GITHUB_EMAIL="<GITHUB_EMAIL>"
+  export MLP_GIT_NAMESPACE="<GIT_NAMESPACE>"
+  export MLP_GIT_USER_EMAIL="<GIT_USER_EMAIL>"
+  export MLP_GIT_USER_NAME="<GIT_USER_NAME>"
+
   ```
 
 - Set the configuration variables
 
   ```
-  sed -i "s/YOUR_GITHUB_EMAIL/${MLP_GITHUB_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_ORG/${MLP_GITHUB_ORG}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-  sed -i "s/YOUR_GITHUB_USER/${MLP_GITHUB_USER}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GIT_NAMESPACE/${MLP_GIT_NAMESPACE}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GIT_USER_EMAIL/${MLP_GIT_USER_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i "s/YOUR_GIT_USER_NAME/${MLP_GIT_USER_NAME}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
 ## Project Configuration
@@ -176,7 +179,8 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
   ```
 
   ```
-  environment_name = "dev"
+  environment_name  = "dev"
+  iap_support_email = ""
   project = {
     billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
     folder_id          = "############"
@@ -186,6 +190,7 @@ You can now deploy the platform with Terraform in the [next section](#run-terraf
   ```
 
   - `environment_name`: the name of the environment
+  - `iap_support_email`: the email to use as the support contact for the IAP brand
   - `project.billing_account_id`: the billing account ID
   - `project.name`: the prefix for the display name of the project, the full name will be `<project.name>-<environment_name>`
 
@@ -230,9 +235,9 @@ For more information on IAP, see the [Identity-Aware Proxy documentation](https:
 
 For this guide we will configure a generic OAuth consent screen setup for internal use. Internal use means that only users within your organization can be granted IAM permissions to access the IAP secured applications and resource.
 
-See the [Configuring the OAuth consent screen documenation](https://developers.google.com/workspace/guides/configure-oauth-consent) for additional information
+See the [Configuring the OAuth consent screen documentation](https://developers.google.com/workspace/guides/configure-oauth-consent) for additional information
 
-**NOTE: These steps only need to be completed once for a project.**
+**NOTE: These steps only need to be completed once for a project. If you are using the Terraform managed project option, this has already been completed for you.**
 
 - Go to [APIs & Services](https://console.cloud.google.com/apis/dashboard?) > [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) configuration page.
 - Select **Internal** for the **User Type**
@@ -254,20 +259,20 @@ For simplicity, in this guide access to the IAP secured applications will be con
 - Set the IAP allow domain
 
   ```
-  IAP_DOMAIN=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | awk -F@ '{print $2}')
-  echo "IAP_DOMAIN=${IAP_DOMAIN}"
+  MLP_IAP_DOMAIN=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | awk -F@ '{print $2}')
+  echo "MLP_IAP_DOMAIN=${MLP_IAP_DOMAIN}"
   ```
 
-  **If the domain of the active `gcloud` user is different from the organization that the `MLP_PROJECT_ID` project is in, you will need to manually set `IAP_DOMAIN` environment variable**
+  **If the domain of the active `gcloud` user is different from the organization that the `MLP_PROJECT_ID` project is in, you will need to manually set `MLP_IAP_DOMAIN` environment variable**
 
   ```
-  IAP_DOMAIN=<MLP_PROJECT_ID organization domain>
+  MLP_IAP_DOMAIN=<MLP_PROJECT_ID organization domain>
   ```
 
 - Set the IAP domain in the configuration file
 
   ```
-  sed -i '/^iap_domain[[:blank:]]*=/{h;s/=.*/= "'"${IAP_DOMAIN}"'"/};${x;/^$/{s//iap_domain             = "'"${IAP_DOMAIN}"'"/;H};x}' ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+  sed -i '/^iap_domain[[:blank:]]*=/{h;s/=.*/= "'"${MLP_IAP_DOMAIN}"'"/};${x;/^$/{s//iap_domain             = "'"${MLP_IAP_DOMAIN}"'"/;H};x}' ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
   ```
 
 ## Create the resources
@@ -281,8 +286,9 @@ Before running Terraform, make sure that the Service Usage API is enable.
 - Ensure the endpoint is not in a deleted state
 
   ```
+  MLP_ENVIRONMENT_NAME=$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
   MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-  gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
+  gcloud endpoints services undelete ray-dashboard.ml-team.mlp-${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
   ```
 
 - Create the resources
@@ -290,7 +296,7 @@ Before running Terraform, make sure that the Service Usage API is enable.
   ```
   cd ${MLP_TYPE_BASE_DIR} && \
   terraform init && \
-  terraform plan -input=false -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
+  terraform plan -input=false -var git_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" -out=tfplan && \
   terraform apply -input=false tfplan && \
   rm tfplan
   ```
@@ -326,7 +332,7 @@ Open Cloud Shell to execute the following commands:
   ```
   Starting to build Gateway kubeconfig...
   Current project_id: mlops-platform-417609
-  A new kubeconfig entry "connectgateway_mlops-platform-417609_global_gke-ml-dev" has been generated and set as the current context.
+  A new kubeconfig entry "connectgateway_mlops-platform-417609_global_mlp-dev" has been generated and set as the current context.
   ```
 
 - Fetch KubeRay operator CRDs
@@ -404,8 +410,9 @@ Open Cloud Shell to execute the following commands:
 - Open the `ml-team` Ray dashboard
 
   ```
+  MLP_ENVIRONMENT_NAME=$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
   MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-  echo -e "\nml-team Ray dashboard: https://ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog\n"
+  echo -e "\nml-team Ray dashboard: https://ray-dashboard.ml-team.mlp-${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog\n"
   ```
 
   > If you get `ERR_CONNECTION_CLOSED` or `ERR_CONNECTION_RESET` when trying to go to the Ray dashboard, the [Gateway](https://console.cloud.google.com/kubernetes/gateways) is still being provisioned. Retry in a couple of minutes.
@@ -421,7 +428,7 @@ Open Cloud Shell to execute the following commands:
   ```
   cd ${MLP_TYPE_BASE_DIR} && \
   terraform init && \
-  terraform destroy -auto-approve -var github_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" && \
+  terraform destroy -auto-approve -var git_token="$(tr --delete '\n' < ${HOME}/secrets/mlp-github-token)" && \
   rm -rf .terraform .terraform.lock.hcl
   ```
 
@@ -501,7 +508,7 @@ The OAuth Consent screen was not configured, see the [Configure OAuth consent sc
 ---
 
 ```
-│ Error: googleapi: Error 400: Service ray-dashboard.ml-team.mlp.endpoints.<project_id>.cloud.goog has been deleted and
+│ Error: googleapi: Error 400: Service ray-dashboard.ml-team.mlp-<environment_name>.endpoints.<project_id>.cloud.goog has been deleted and
 will be purged after 30 days. To reuse this service, please undelete the service following https://cloud.google.com/service-infrastructure/docs/create-services#undeleting., failedPrecondition
 │
 │   with google_endpoints_service.ray_dashboard_https,
@@ -513,8 +520,9 @@ will be purged after 30 days. To reuse this service, please undelete the service
 The endpoint is in a deleted state and needs to be undeleted, run the following command and then rerun the Terraform apply.
 
 ```
+MLP_ENVIRONMENT_NAME=$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
 MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-gcloud endpoints services undelete ray-dashboard.ml-team.mlp.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet
+gcloud endpoints services undelete ray-dashboard.ml-team.mlp-${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet
 ```
 
 ---

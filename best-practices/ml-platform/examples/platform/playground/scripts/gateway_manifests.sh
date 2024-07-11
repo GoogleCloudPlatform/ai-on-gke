@@ -22,36 +22,27 @@ SCRIPT_PATH="$(
 
 source ${SCRIPT_PATH}/helpers/clone_git_repo.sh
 
-team_namespace_directory="manifests/apps/${K8S_NAMESPACE}"
-team_namespace_path="${GIT_REPOSITORY_PATH}/${team_namespace_directory}"
+# Set directory and path variables
+namespace_directory="manifests/apps/${K8S_NAMESPACE}"
+namespace_path="${GIT_REPOSITORY_PATH}/${namespace_directory}"
 
-cd "${team_namespace_path}" || {
-  echo "Team namespace directory '${team_namespace_directory}' does not exist"
-  exit 2
+cd "${namespace_path}" || {
+  echo "Namespace directory '${namespace_directory}' does not exist"
+  exit 100
 }
 
-generated_manifests_directory="${SCRIPT_PATH}/../manifests/${K8S_NAMESPACE}/gateway"
-cp -pr ${generated_manifests_directory} ${team_namespace_path}/
+generated_manifests_directory="${SCRIPT_PATH}/../manifests/${ENVIRONMENT_NAME}/${K8S_NAMESPACE}/gateway"
+cp -pr ${generated_manifests_directory} ${namespace_path}/
 
-resources=$(find ${team_namespace_path} -maxdepth 1 -mindepth 1 -type d)
+# Added entries to the kustomization file
+resources=$(find ${namespace_path} -maxdepth 1 -mindepth 1 -type d | sort)
 resources+=" "
-resources+=$(find ${team_namespace_path} -maxdepth 1 -type f -name "*.yaml" ! -name "kustomization.yaml" ! -name "*values.yaml")
-for resource in ${resources}; do
-  resource_basename=$(basename ${resource})
+export resources+=$(find ${namespace_path} -maxdepth 1 -type f -name "*.yaml" ! -name "kustomization.yaml" ! -name "*values.yaml" | sort)
+export kustomization_file=${namespace_path}/kustomization.yaml
+source ${SCRIPT_PATH}/helpers/add_to_kustomization.sh
 
-  if [ -d "${resource}" ]; then
-    resource_entry="./${resource_basename}"
-  elif [ -f "${resource}" ]; then
-    resource_entry="${resource_basename}"
-  else
-    echo "${resource} is not a directory or file"
-    exit 3
-  fi
-
-  grep -qx "\- ${resource_entry}" ${team_namespace_path}/kustomization.yaml || echo "- ${resource_entry}" >>${team_namespace_path}/kustomization.yaml
-done
-
-cd "${team_namespace_path}"
+# Add, commit, and push changes to the repository
+cd ${GIT_REPOSITORY_PATH}
 git add .
 git commit -m "Manifests for ${K8S_NAMESPACE} gateway"
 git push origin

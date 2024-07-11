@@ -13,7 +13,7 @@
 # limitations under the License.
 
 variable "cluster_name" {
-  default     = "gke-ml"
+  default     = "mlp"
   description = "Name of the GKE cluster"
   type        = string
 }
@@ -25,7 +25,7 @@ variable "config_management_version" {
 }
 
 variable "configsync_repo_name" {
-  default     = "config-sync-repo"
+  default     = "mlp-configsync"
   description = "Name of the GitHub repo that will be synced to the cluster with Config sync."
   type        = string
 }
@@ -52,37 +52,37 @@ variable "env" {
   type        = set(string)
 }
 
-variable "github_email" {
-  description = "GitHub user email."
+variable "git_namespace" {
+  description = "The namespace of the git repository"
   type        = string
 
   validation {
-    condition     = var.github_email != "YOUR_GITHUB_EMAIL"
-    error_message = "'github_email' was not set, please set the value in the mlp.auto.tfvars file"
+    condition     = var.git_namespace != "YOUR_GIT_NAMESPACE"
+    error_message = "'git_namespace' was not set, please set the value in the mlp.auto.tfvars file"
   }
 }
 
-variable "github_org" {
-  description = "GitHub org."
+variable "git_token" {
+  description = "The token with permissions to create the project/repository in the namespace."
+  type        = string
+}
+
+variable "git_user_email" {
+  description = "The user email to configure for git"
   type        = string
 
   validation {
-    condition     = var.github_org != "YOUR_GITHUB_ORG"
-    error_message = "'github_org' was not set, please set the value in the mlp.auto.tfvars file"
+    condition     = var.git_user_email != "YOUR_GIT_USER_EMAIL"
+    error_message = "'git_user_email' was not set, please set the value in the mlp.auto.tfvars file"
   }
 }
 
-variable "github_token" {
-  description = "GitHub token. It is a token with write permissions as it will create a repo in the GitHub org."
-  type        = string
-}
-
-variable "github_user" {
-  description = "GitHub user name."
+variable "git_user_name" {
+  description = "The user name to configure for git"
   type        = string
 
   validation {
-    condition     = var.github_user != "YOUR_GITHUB_USER"
+    condition     = var.git_user_name != "YOUR_GIT_USER"
     error_message = "'github_user' was not set, please set the value in the mlp.auto.tfvars file"
   }
 }

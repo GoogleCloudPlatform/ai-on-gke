@@ -1,0 +1,38 @@
+rules:
+  default: false
+  external:
+  - seriesQuery: 'jetstream_prefill_backlog_size'
+    resources:
+      template: <<.Resource>>
+    name:
+      matches: ""
+      as: "jetstream_prefill_backlog_size"
+    metricsQuery: sum(<<.Series>>{<<.LabelMatchers>>,cluster="${cluster_name}"})
+  - seriesQuery: 'jetstream_transfer_backlog_size'
+    resources:
+      template: <<.Resource>>
+    name:
+      matches: ""
+      as: "jetstream_transfer_backlog_size"
+    metricsQuery: sum(<<.Series>>{<<.LabelMatchers>>,cluster="${cluster_name}"})
+  - seriesQuery: 'jetstream_generate_backlog_size'
+    resources:
+      template: <<.Resource>>
+    name:
+      matches: ""
+      as: "jetstream_generate_backlog_size"
+    metricsQuery: sum(<<.Series>>{<<.LabelMatchers>>,cluster="${cluster_name}"})
+  - seriesQuery: 'jetstream_slots_used_percentage'
+    resources:
+      template: <<.Resource>>
+    name:
+      matches: ""
+      as: "jetstream_slots_used_percentage"
+    metricsQuery: sum(<<.Series>>{<<.LabelMatchers>>,cluster="${cluster_name}"})
+  - seriesQuery: 'kubernetes_io:node_accelerator_memory_used'
+    resources:
+      template: <<.Resource>>
+    name:
+      matches: ""
+      as: "memory_used_percentage"
+    metricsQuery: avg(kubernetes_io:node_accelerator_memory_used{cluster_name="${cluster_name}"}) / avg(kubernetes_io:node_accelerator_memory_total{cluster_name="${cluster_name}"})
