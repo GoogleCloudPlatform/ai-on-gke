@@ -14,10 +14,9 @@
 
 import os
 
-from google.cloud.sql.connector import Connector, IPTypes
 import pymysql
 import sqlalchemy
-from sqlalchemy.exc import OperationalError
+from google.cloud.sql.connector import Connector, IPTypes
 
 from langchain_google_cloud_sql_pg import PostgresEngine
 
@@ -27,10 +26,9 @@ GCP_CLOUD_SQL_INSTANCE = os.environ.get("CLOUDSQL_INSTANCE")
 
 INSTANCE_CONNECTION_NAME = f"{GCP_PROJECT_ID}:{GCP_CLOUD_SQL_REGION}:{GCP_CLOUD_SQL_INSTANCE}"
 
-VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get('TABLE_NAME', '') # CloudSQL table name for vector embeddings
-# TODO make this configurable from tf
-CHAT_HISTORY_TABLE_NAME = "message_store" # CloudSQL table name where chat history is stored
-DB_NAME = "pgvector-database"
+DB_NAME = os.environ.get('DB_NAME', "pgvector-database")
+VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get('EMBEDDINGS_TABLE_NAME', '') 
+CHAT_HISTORY_TABLE_NAME = os.environ.get('CHAT_HISTORY_TABLE_NAME', "message_store")
 
 try:
   db_username_file = open("/etc/secret-volume/username", "r")
@@ -57,14 +55,6 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
         ip_type=IPTypes.PUBLIC
     )
     return conn
-  try:
-    with getconn().connect() as conn:
-      conn.execute(f"CREATE DATABASE {DB_NAME}")
-  except OperationalError as e:
-    if 'already exists' in str(e):
-      pass
-    else:
-      raise e
         
   # create connection pool
   pool = sqlalchemy.create_engine(
