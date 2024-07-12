@@ -11,17 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-FROM python:3.12.2
+from flask import Flask
 
-ADD ./ /workspace/frontend
-WORKDIR /workspace/frontend
+def create_app():
+    app = Flask(__name__, static_folder='static', template_folder='templates')
+    app.jinja_env.trim_blocks = True
+    app.jinja_env.lstrip_blocks = True
+    app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 
-RUN pip install -r requirements.txt
+    return app
 
-EXPOSE 8080
-
-ENV FLASK_APP=/workspace/frontend/main.py
-ENV PYTHONPATH=.
-# Run the application with Gunicorn
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "main:app"]

@@ -13,42 +13,47 @@
 # limitations under the License.
 
 import os
-from typing import (Dict)
-from cloud_sql.cloud_sql import CHAT_HISTORY_TABLE_NAME, init_connection_pool, create_sync_postgres_engine, CustomVectorStore
+
 from google.cloud.sql.connector import Connector
-from langchain_community.llms.huggingface_text_gen_inference import HuggingFaceTextGenInference
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
-from langchain_core.prompts import PromptTemplate
+
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 from langchain_core.runnables.history import RunnableWithMessageHistory
+
 from langchain_google_cloud_sql_pg import PostgresChatMessageHistory
+from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
+
+from application.cloud_sql.cloud_sql import CHAT_HISTORY_TABLE_NAME, init_connection_pool, create_sync_postgres_engine
+from application.vector_storages import CustomVectorStore
 
 QUESTION = "question"
 HISTORY = "history"
 CONTEXT = "context"
 
 INFERENCE_ENDPOINT=os.environ.get('INFERENCE_ENDPOINT', '127.0.0.1:8081')
+HUGGINGFACE_HUB_TOKEN = os.environ.get('HUGGINGFACE_HUB_TOKEN')
+
 SENTENCE_TRANSFORMER_MODEL = 'intfloat/multilingual-e5-small' # Transformer to use for converting text chunks to vector embeddings
 
+# TODO use a chat model instead of an LLM in the chain.
 
-# TODO use a chat model instead of an LLM in the chain. Convert the prompt to a chat prompt template
-# prompt = ChatPromptTemplate.from_messages(
-#     [
-#         ("system", """You help everyone by answering questions, and improve your answers from previous answers in history. 
-#          You stick to the facts by basing your answers off of the context provided:"""),
-#         MessagesPlaceholder(variable_name="history"),
-#         MessagesPlaceholder(variable_name="context"),
-#         ("human", "{question}"),
-#     ]    
-# )
-template = """Answer the Question given by the user. Keep the answer to no more than 2 sentences. 
+
+template_str = """Answer the Question given by the user. Keep the answer to no more than 2 sentences. 
 Improve upon your previous answers using History, a list of messages. 
 Messages of type HumanMessage were asked by the user, and messages of type AIMessage were your previous responses.
 Stick to the facts by basing your answers off of the Context provided.
 Be brief in answering.
-History: {""" + HISTORY + "}\n\nContext: {" + CONTEXT + "}\n\nQuestion: {" + QUESTION + "}\n"
 
-prompt = PromptTemplate(template=template, input_variables=[HISTORY, CONTEXT, QUESTION])
+Question: {question} 
+Context: {context} 
+Answer:"""
+
+prompt = ChatPromptTemplate.from_messages([
+  ("system",template_str),
+  MessagesPlaceholder("chat_history"),
+ ("human", "{input}"),
+])
 
 engine = create_sync_postgres_engine()
 # TODO: Dict is not safe for multiprocessing. Introduce a cache using Flask-caching or libcache
@@ -79,33 +84,15 @@ def clear_chat_history(session_id: str):
 # (as specified in hugging face TGI input parameter)
 
 def create_chain() -> RunnableWithMessageHistory: 
-    # TODO HuggingFaceTextGenInference class is deprecated. 
-    # The warning is: 
-    #                The class `langchain_community.llms.huggingface_text_gen_inference.HuggingFaceTextGenInference` 
-    #                was deprecated in langchain-community 0.0.21 and will be removed in 0.2.0. Use HuggingFaceEndpoint instead
-    # The replacement is HuggingFace Endoint, which requires a huggingface
-    # hub API token. Either need to add the token to the environment, or need to find a method to call TGI
-    # without the token.
-    # Example usage of HuggingFaceEndpoint:
-    # llm = HuggingFaceEndpoint(
-    #                 endpoint_url=f'http://{INFERENCE_ENDPOINT}/',
-    #                 max_new_tokens=512,
-    #                 top_k=10,
-    #                 top_p=0.95,
-    #                 typical_p=0.95,
-    #                 temperature=0.01,
-    #                 repetition_penalty=1.03,
-    #                 huggingfacehub_api_token="my-api-key"
-    #             )
-    # TODO: Give guidance on what these parameters should be and describe why these values were chosen.
-    model = HuggingFaceTextGenInference(
-        inference_server_url=f'http://{INFERENCE_ENDPOINT}/',
+    model = HuggingFaceEndpoint(
+        endpoint_url=f'http://{INFERENCE_ENDPOINT}/',
         max_new_tokens=512,
         top_k=10,
         top_p=0.95,
         typical_p=0.95,
         temperature=0.01,
         repetition_penalty=1.03,
+        huggingfacehub_api_token=HUGGINGFACE_HUB_TOKEN,
     )
 
     langchain_embed = HuggingFaceEmbeddings(model_name=SENTENCE_TRANSFORMER_MODEL)

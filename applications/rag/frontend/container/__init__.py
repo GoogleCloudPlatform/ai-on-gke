@@ -11,17 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-FROM python:3.12.2
-
-ADD ./ /workspace/frontend
-WORKDIR /workspace/frontend
-
-RUN pip install -r requirements.txt
-
-EXPOSE 8080
-
-ENV FLASK_APP=/workspace/frontend/main.py
-ENV PYTHONPATH=.
-# Run the application with Gunicorn
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "main:app"]
