@@ -10,6 +10,7 @@ import spacy
 import time
 import urllib.error
 import urllib.request
+import numpy as np
 
 from google.cloud import storage
 from google.cloud.storage.retry import DEFAULT_RETRY
@@ -150,14 +151,17 @@ def get_clean_df(df, logger, ray_worker_node_id):
 
     # Helper function to reformat the given text
     def reformat(text: str) -> str:
+        if pd.isnull(text):
+            return ''
         return text.replace('[', '').replace(']', '').replace('"', '')
 
     def prep_cat(df: pd.DataFrame) -> pd.DataFrame:
         df['product_category_tree'] = df['product_category_tree'].apply(lambda x: reformat(x))
         temp_df = df['product_category_tree'].str.split('>>', expand=True)
-        print(temp_df)
-        # Flipkart dataset category tree has maximum depth of 8
-        temp_df.columns = ['c0_name', 'c1_name', 'c2_name', 'c3_name', 'c4_name', 'c5_name', 'c6_name', 'c7_name']
+        max_splits = temp_df.shape[1]  # Get the number of columns after splitting
+        # Create column names dynamically
+        column_names = [f'c{i}_name' for i in range(max_splits)]  
+        temp_df.columns = column_names
         for col in temp_df.columns:
             temp_df[col] = temp_df[col].apply(lambda x: x.strip() if x else x)
         # concatenating df1 and df2 along rows
@@ -170,7 +174,6 @@ def get_clean_df(df, logger, ray_worker_node_id):
     df_with_desc['attributes'] = df_with_desc['product_specifications'].apply(
         parse_attributes)
     result_df = prep_cat(df_with_desc)
-
     return result_df
 
 
@@ -195,12 +198,16 @@ def run_remote():
              'image',
              'product_specifications',
              'product_category_tree']]
-
+    print('Original dataset shape:',df.shape)
+    # Drop rows with null values in specified columns
+    df.dropna(subset=['description', 'image', 'product_specifications', 'product_category_tree'], inplace=True)
+    print('After dropping null values:',df.shape)
     #Ray runtime env
     runtime_env = {"pip": ["google-cloud-storage==2.16.0",
                            "spacy==3.7.4",
-                           "jsonpickle==3.0.3"],
-                   "env_vars": {"PIP_NO_CACHE_DIR": "1", 
+                           "jsonpickle==3.0.3",
+                           "pandas==2.2.1"],
+                   "env_vars": {"PIP_NO_CACHE_DIR": "1",
                                 "PIP_DISABLE_PIP_VERSION_CHECK": "1"}}
 
     # Initiate a driver: start and connect with Ray cluster
@@ -211,7 +218,7 @@ def run_remote():
         # Get the ID of the node where the driver process is running
         driver_process_node_id = ray.get_runtime_context().get_node_id() #HEX
         logger.debug(f"ray_driver_node_id={driver_process_node_id}")
-        
+
         logger.debug(ray.cluster_resources())
     else:
         RayContext = ray.init()
@@ -228,10 +235,13 @@ def run_remote():
 
     #Disconnect the worker, and terminate processes started by ray.init()
     ray.shutdown()
-    
-    #Store the preprocessed data into GCS
+  
+    #concat all the resulting data frames
     result_df = pd.concat(results, axis=0, ignore_index=True)
+    # Replace NaN with None
+    result_df = result_df.replace({np.nan: None})
 
+    #Store the preprocessed data into GCS
     result_df.to_csv('gs://'+IMAGE_BUCKET +
                      '/flipkart_preprocessed_dataset/flipkart.csv', index=False)
     return result_df
