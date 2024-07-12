@@ -20,6 +20,8 @@ from google.cloud.sql.connector import Connector, IPTypes
 
 from langchain_google_cloud_sql_pg import PostgresEngine
 
+ENVIRONMENT= os.environ.get("ENVIRONMENT")
+
 GCP_PROJECT_ID= os.environ.get("PROJECT_ID")
 GCP_CLOUD_SQL_REGION = os.environ.get("CLOUDSQL_INSTANCE_REGION")
 GCP_CLOUD_SQL_INSTANCE = os.environ.get("CLOUDSQL_INSTANCE")
@@ -52,7 +54,7 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
         user=DB_USER,
         password=DB_PASS,
         db=DB_NAME,
-        ip_type=IPTypes.PRIVATE
+        ip_type=IPTypes.PUBLIC if ENVIRONMENT == "development" else IPTypes.PRIVATE
     )
     return conn
         
@@ -71,7 +73,7 @@ def create_sync_postgres_engine():
         database=DB_NAME,
         user=DB_USER,
         password=DB_PASS,
-        ip_type=IPTypes.PRIVATE        
+        ip_type=IPTypes.PUBLIC if ENVIRONMENT == "development" else IPTypes.PRIVATE
     )
     engine.init_chat_history_table(table_name=CHAT_HISTORY_TABLE_NAME)
     return engine

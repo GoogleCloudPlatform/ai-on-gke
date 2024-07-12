@@ -24,8 +24,8 @@ from langchain_google_cloud_sql_pg import PostgresChatMessageHistory
 from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 
-from cloud_sql.cloud_sql import CHAT_HISTORY_TABLE_NAME, init_connection_pool, create_sync_postgres_engine
-from vector_storages import CustomVectorStore
+from application.cloud_sql.cloud_sql import CHAT_HISTORY_TABLE_NAME, init_connection_pool, create_sync_postgres_engine
+from application.vector_storages import CustomVectorStore
 
 QUESTION = "question"
 HISTORY = "history"
