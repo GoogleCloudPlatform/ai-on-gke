@@ -13,6 +13,8 @@ RUN apt -y update && apt install -y --no-install-recommends \
     curl \
     gnupg
 
+RUN python3 -m pip install --upgrade pip
+
 RUN update-alternatives --install \
     /usr/bin/python3 python3 /usr/bin/python3.10 1
 
