@@ -369,12 +369,15 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 
 // queries k8s client to build mapping representing the current RayCluster state of TPU pods
 func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) {
-	// retrieve list of Pods in the same namespace as the intercepted Pod
+	// retrieve list of Pods in the same namespace and Ray worker group as the intercepted Pod
 	if client == nil {
 		klog.ErrorS(errors.New("k8s go client not initialized"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
 	}
-	podsInNamespace, err := client.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
+	listOptions := metav1.ListOptions{
+        LabelSelector: fmt.Sprintf("ray.io/group=%s",groupName),
+    }
+	podsInNamespace, err := client.CoreV1().Pods(namespace).List(context.Background(), listOptions)
 	if err != nil {
 		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
