@@ -73,6 +73,7 @@ module "prometheus_adapter" {
 }
 
 resource "kubernetes_manifest" "prometheus_adapter_hpa_custom_metric" {
+  count = var.hpa_config.metrics_adapter == "prometheus-adapter" ? 1 : 0
   manifest = yamldecode(templatefile(local.prometheus_jetstream_hpa_template, {
     hpa_min_replicas = var.hpa_config.min_replicas
     hpa_max_replicas = var.hpa_config.max_replicas
@@ -81,6 +82,7 @@ resource "kubernetes_manifest" "prometheus_adapter_hpa_custom_metric" {
 }
 
 resource "kubernetes_manifest" "cmsa_hpa_custom_metric" {
+  count = var.hpa_config.metrics_adapter == "custom-metrics-stackdriver-adapter" ? 1 : 0
   manifest = yamldecode(templatefile(local.cmsa_jetstream_hpa_template, {
     hpa_min_replicas = var.hpa_config.min_replicas
     hpa_max_replicas = var.hpa_config.max_replicas
