@@ -13,8 +13,8 @@ spec:
   metrics:
 %{ for rule in rules }
 %{ if length(regexall("jetstream_.*", rule.target_query)) > 0 }
-  - type: Pods
-    pods:
+  - type: External
+    external:
       metric:
         name: ${rule.target_query}
       target:
