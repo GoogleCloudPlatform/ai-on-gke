@@ -4,7 +4,7 @@
 ### Prerequisites
 
 > [!IMPORTANT]
-> Before you proceed further, ensure you have the NVIDIA AI Enterprise License (NVAIE) to access the NIMs.  Trial access is available through the [request form](https://www.nvidia.com/en-us/ai/nim-notifyme)
+> Before you proceed further, ensure you have the NVIDIA AI Enterprise License (NVAIE) to access the NIMs.  To get started, go to [build.nvidia.com](https://build.nvidia.com/explore/discover?signin=true) and provide your company email address
 
 * [Google Cloud Project](https://console.cloud.google.com) with billing enabled
 * [gcloud CLI](https://cloud.google.com/sdk/docs/install)
