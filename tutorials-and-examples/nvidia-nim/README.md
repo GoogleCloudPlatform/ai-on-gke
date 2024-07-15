@@ -3,14 +3,14 @@
 ## Prerequisites
 ### Prerequisites
 
-> [!NOTE]
+> [!IMPORTANT]
 > Before you proceed further, ensure you have the NVIDIA AI Enterprise License (NVAIE) to access the NIMs.  Trial access is available through the [request form](https://www.nvidia.com/en-us/ai/nim-notifyme)
 
-1. [Google Cloud Project](https://console.cloud.google.com) with billing enabled
-2. [gcloud CLI](https://cloud.google.com/sdk/docs/install)
-3. [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
-3. [Terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli)
-4. [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [Google Cloud Project](https://console.cloud.google.com) with billing enabled
+* [gcloud CLI](https://cloud.google.com/sdk/docs/install)
+* [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
+* [Terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli)
+* [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 *  [yq](https://pypi.org/project/yq/)
 
 ## Set up your GKE Cluster
@@ -64,23 +64,23 @@ export NGC_CLI_API_KEY="<YOUR_API_KEY>"
 > [!NOTE]
 > If you have not set up NGC, see [NGC Setup](https://ngc.nvidia.com/setup) to get your access key and begin using NGC.
 
-1. As a part of the NGC setup, set your configs
+2. As a part of the NGC setup, set your configs
 ```bash
 ngc config set
 ```
 
-1. Ensure you have access to the repository by listing the models
+3. Ensure you have access to the repository by listing the models
 ```bash
 ngc registry model list
 ```
 
-1. Create a Kuberntes namespace and switch context to that namespace
+4. Create a Kuberntes namespace and switch context to that namespace
 ```bash
 kubectl create namespace nim
 kubectl config set-context --current --namespace nim
 ```
 
-1. Create Kubernetes secrets to enable access to NGC resources from within your cluster
+5. Create Kubernetes secrets to enable access to NGC resources from within your cluster
 ```bash
 kubectl -n nim create secret docker-registry registry-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=$NGC_CLI_API_KEY
 kubectl -n nim create secret generic ngc-api --from-literal=NGC_CLI_API_KEY=$NGC_CLI_API_KEY
@@ -89,7 +89,7 @@ kubectl -n nim create secret generic ngc-api --from-literal=NGC_CLI_API_KEY=$NGC
 ## Deploy a PVC to persist the model
 1. Clone this repository
 
-1. Create a PVC to persist the model weights - recommended for deployments with more than one (1) replica.  Save the following yaml as `pvc.yaml` or use existing file in this repository
+2. Create a PVC to persist the model weights - recommended for deployments with more than one (1) replica.  Save the following yaml as `pvc.yaml` or use existing file in this repository
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -105,7 +105,7 @@ spec:
   storageClassName: standard-rwx
 ```
 
-2. Apply PVC
+3. Apply PVC
 ```bash
 kubectl apply -f pvc.yaml
 ```
@@ -118,21 +118,18 @@ git clone https://github.com/NVIDIA/nim-deploy.git
 cd nim-deploy/helm
 ```
 
-1. Deploy chart with minimal configurations
+2. Deploy chart with minimal configurations
 ```bash
 helm --namespace nim install demo-nim nim-llm/ --set model.ngcAPIKey=$NGC_CLI_API_KEY --set persistence.enabled=true --set persistence.existingClaim=model-store-pvc
 ```
-<!-- ```bash
-envsubst < values.${GPU_TYPE?}.yaml | helm --namespace nim install inference-ms-${GPU_TYPE?} nemo-ms/nemollm-inference --version=0.1.2 -f -
-``` -->
 
 ## Test the NIM
 1. Expose the service
 ```bash
-kubectl port-forward services/demo-nim-nim-llm 8005
+kubectl port-forward services/demo-nim-nim-llm 8000
 ```
 
-1. Send a test prompt - A100
+2. Send a test prompt - A100
 ```bash
 curl -X 'POST' \
   'http://localhost:8000/v1/chat/completions' \
@@ -158,4 +155,4 @@ curl -X 'POST' \
 }' | jq '.choices[0].message.content' -
 ```
 
-1. Browse the API by navigating to http://localhost:8000/docs
+3. Browse the API by navigating to http://localhost:8000/docs
