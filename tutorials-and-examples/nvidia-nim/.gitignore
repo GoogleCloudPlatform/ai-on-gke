@@ -1,4 +1,4 @@
 jupyter-server.yaml
-values.nvidia-tesla-a100.yaml
+values.yaml
 nemollm-inference
 .env
