@@ -88,7 +88,7 @@ cd inference-server/text-generation-inference
 # Copy the sample variables and update the project number and cluster name in
 # the fleet_host variable "https://connectgateway.googleapis.com/v1/projects/<project-number>/locations/global/gkeMemberships/<cluster-name>"
 # in the `terraform.tfvars` file.
-cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
+cp ./sample-terraform.tfvars terraform.tfvars
 
 # Initialize the Terraform modules.
 terraform init

@@ -58,6 +58,8 @@ You will set the `gcs_path` in your `terraform.tfvars` to this gcs path containi
 
 The Locust workload requires storage.admin access to view the dataset in the given gcs bucket. If you are running with workload identity, it obtains this access via a kubernetes service account that is backed by a gcloud service account. If you followed steps in `../../infra`, then you already have a kubernetes and gcloud service account created that you can use here.
 
+**Note: If you would like your raw benchmark data as a CSV, add the Locust master serviceAccount as a Storage Admin to the GCS bucket**
+
 To give viewer permissions on the gcs bucket to the gcloud service account, run the following:
 
 ```

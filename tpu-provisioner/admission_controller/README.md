@@ -46,9 +46,17 @@ kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/release
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.5/cert-manager.yaml
 ```
 
+Wait for dependencies to become ready. NOTE: You might need to edit/remove Deployment resource requests based on your machine size.
+
+```bash
+kubectl rollout status --timeout=30s deployment -n jobset-system jobset-controller-manager
+kubectl rollout status --timeout=30s deployment -n cert-manager cert-manager cert-manager-cainjector cert-manager-webhook
+```
+
 Deploy the controller locally.
 
 ```bash
+kubectl create namespace tpu-provisioner-system
 skaffold dev
 ```
 
@@ -60,9 +68,10 @@ To run unit tests, run the command `pytest` from the `admission_controller/` dir
 
 ### Run E2E tests
 
-E2E testing is currently done manually via the following steps:
+Run the steps above in the Local Development section. Make sure that the `skaffold dev` step is running.
 
-1. [Install JobSet](https://jobset.sigs.k8s.io/docs/installation/)
-2. **Deploy admission controller**: Run `kubectl apply -f manifests/` from the `admission_controller/` directory.
-3. **Create a test JobSet**: Run `kubectl apply -f test/test-jobset.yaml`
-4. **Check Jobs were mutated correctly**: Run `kubectl describe jobs` and view the nodeSelectors in the pod template.
+Run the e2e test script.
+
+```bash
+./test/e2e/test.sh
+```
