@@ -5,8 +5,8 @@ initContainers:
     secretName: ngc-api
     env:
       STORE_MOUNT_PATH: /model-store
-      NGC_CLI_ORG: ohlfw0olaadg
-      NGC_CLI_TEAM: ea-participants
+      NGC_CLI_ORG: ${NGC_ORG}
+      NGC_CLI_TEAM: ${NGC_TEAM}
       NGC_MODEL_NAME: llama-2-7b-chat
       NGC_MODEL_VERSION: LLAMA-2-7B-CHAT-4K-FP16.23.12.a
       NGC_EXE: ngc
@@ -22,7 +22,7 @@ imagePullSecrets:
   - name: registry-secret
 
 model:
-  numGpus: 1
+  numGpus: ${GPU_COUNT}
   name: llama-2-7b-chat
 
 persistence:

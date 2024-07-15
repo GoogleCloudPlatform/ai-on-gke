@@ -1,9 +1,17 @@
 # NVIDIA NIM on GKE with NVIDIA A100s
 
 ## Prerequisites
-* docker
-* golang
-* yq
+### Prerequisites
+
+> [!NOTE]
+> Before you proceed further, ensure you have the NVIDIA AI Enterprise License (NVAIE) to access the NIMs.  Trial access is available through the [request form](https://www.nvidia.com/en-us/ai/nim-notifyme)
+
+1. [Google Cloud Project](https://console.cloud.google.com) with billing enabled
+2. [gcloud CLI](https://cloud.google.com/sdk/docs/install)
+3. [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
+3. [Terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli)
+4. [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+*  [yq](https://pypi.org/project/yq/)
 
 ## Set up your GKE Cluster
 
@@ -16,14 +24,6 @@ export ZONE=${REGION?}-b
 export MACH=a2-highgpu-1g
 export GPU_TYPE=nvidia-tesla-a100
 export GPU_COUNT=1
-```
-
-Set model variables
-```bash
-export NGC_MODEL_NAME=llama-2-7b
-export TRT_MODEL_NAME=trt_llm_0.0.1_trtllm
-export TRITON_MODEL_NAME=trt_llm
-export NGC_MODEL_VERSION=LLAMA-2-7B-4K-FP16
 ```
 
 
@@ -50,103 +50,112 @@ gcloud container node-pools create ${MACH?}-node-pool --cluster nim-demo \
   --enable-autoscaling --enable-image-streaming \
   --num-nodes=1 --min-nodes=1 --max-nodes=3 \
   --node-locations ${REGION?}-b \
-  --region ${REGION?}
+  --region ${REGION?} \
   --spot
 ```
 
-## Set Up Access to NVIDIA NIM
-Access to NVIDIA NIM is available through the request form: https://www.nvidia.com/en-us/ai/nim-notifyme/ 
 
-Get your NGC_API_KEY from NGC
+## Set Up Access to NVIDIA NIMs and prepare environment
+
+1. Get your NGC_API_KEY from NGC
 ```bash
 export NGC_CLI_API_KEY="<YOUR_API_KEY>"
 ```
+> [!NOTE]
+> If you have not set up NGC, see [NGC Setup](https://ngc.nvidia.com/setup) to get your access key and begin using NGC.
 
-Ensure you have access to the repository by listing the models
+1. As a part of the NGC setup, set your configs
 ```bash
-ngc registry model list "ohlfw0olaadg/ea-participants/*"
+ngc config set
 ```
 
-Add the NVIDIA NIM helm repo
+1. Ensure you have access to the repository by listing the models
 ```bash
-helm repo add nemo-ms "https://helm.ngc.nvidia.com/ohlfw0olaadg/ea-participants" --username=\$oauthtoken --password=$NGC_CLI_API_KEY
+ngc registry model list
 ```
 
-Create a Kuberntes namespace and switch context to that namespace
+1. Create a Kuberntes namespace and switch context to that namespace
 ```bash
 kubectl create namespace nim
 kubectl config set-context --current --namespace nim
-
 ```
-Create Kubernetes secrets to enable access to NGC resources from within your cluster
+
+1. Create Kubernetes secrets to enable access to NGC resources from within your cluster
 ```bash
 kubectl -n nim create secret docker-registry registry-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=$NGC_CLI_API_KEY
 kubectl -n nim create secret generic ngc-api --from-literal=NGC_CLI_API_KEY=$NGC_CLI_API_KEY
 ```
-## Deploy a PVC to persist the model
 
+## Deploy a PVC to persist the model
+1. Clone this repository
+
+1. Create a PVC to persist the model weights - recommended for deployments with more than one (1) replica.  Save the following yaml as `pvc.yaml` or use existing file in this repository
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-store-pvc
+  namespace: nim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+  storageClassName: standard-rwx
+```
+
+2. Apply PVC
 ```bash
-kubectl apply -f apply -f pvc.yaml
+kubectl apply -f pvc.yaml
 ```
 
 ## Deploy the NIM with the generated engine using a Helm chart
 
+1. Clone the nim-deploy repository
 ```bash
-# create a service account if it hasn't already been created
-kubectl create serviceaccount nim-demo
+git clone https://github.com/NVIDIA/nim-deploy.git
+cd nim-deploy/helm
 ```
 
-Deploy the helm chart.  NOTE: We're making a small patch on the chart based [this known issue](#issue-chart-incompatible-version)
+1. Deploy chart with minimal configurations
 ```bash
-helm pull nemo-ms/nemollm-inference --version=0.1.2 --untar
-yq -i '.kubeVersion = ">=v1.23.0-1"' ./nemollm-inference/Chart.yaml
+helm --namespace nim install demo-nim nim-llm/ --set model.ngcAPIKey=$NGC_CLI_API_KEY --set persistence.enabled=true --set persistence.existingClaim=model-store-pvc
 ```
-
-```bash
-envsubst < values.${GPU_TYPE?}.yaml | helm --namespace nim install inference-ms-${GPU_TYPE?} ./nemollm-inference --version=0.1.2 -f -
-```
+<!-- ```bash
+envsubst < values.${GPU_TYPE?}.yaml | helm --namespace nim install inference-ms-${GPU_TYPE?} nemo-ms/nemollm-inference --version=0.1.2 -f -
+``` -->
 
 ## Test the NIM
-Expose the service
+1. Expose the service
 ```bash
-kubectl port-forward services/inference-ms-nemollm-inference 8005
+kubectl port-forward services/demo-nim-nim-llm 8005
 ```
 
-Send a test prompt - A100
+1. Send a test prompt - A100
 ```bash
 curl -X 'POST' \
-  'http://localhost:8005/v1/chat/completions' \
+  'http://localhost:8000/v1/chat/completions' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
   "messages": [
     {
-      "content": "You are a polite and respectful chatbot helping people plan a vacation.",
+      "content": "You are a polite and respectful poet.",
       "role": "system"
     },
     {
-      "content": "What should I do for a 4 day vacation in Spain?",
+      "content": "Write a limerick about the wonders of GPUs and Kubernetes?",
       "role": "user"
     }
   ],
-  "model": "llama-2-7b-chat",
-  "max_tokens": 160,
+  "model": "meta/llama3-8b-instruct",
+  "max_tokens": 256,
   "top_p": 1,
   "n": 1,
   "stream": false,
-  "stop": "\n",
   "frequency_penalty": 0.0
 }' | jq '.choices[0].message.content' -
 ```
 
-
-## Appendix
-
-### Known Issues
-
-#### nemollm-inference helm chart incompatible version {#issue-chart-incompatible-version}
-```bash
-$ helm --namespace nim install my-inference-ms nemo-ms/nemollm-inference --version=0.1.2 -f values.yaml
-
-Error: INSTALLATION FAILED: chart requires kubeVersion: >=v1.23.0 which is incompatible with Kubernetes v1.27.8-gke.1067004
-```
+1. Browse the API by navigating to http://localhost:8000/docs
