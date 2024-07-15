@@ -15,6 +15,7 @@ import numpy as np
 from google.cloud import storage
 from google.cloud.storage.retry import DEFAULT_RETRY
 from typing import List
+
 IMAGE_BUCKET = os.environ['PROCESSING_BUCKET']
 RAY_CLUSTER_HOST = os.environ['RAY_CLUSTER_HOST']
 GCS_IMAGE_FOLDER = 'flipkart_images'
