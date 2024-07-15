@@ -9,13 +9,13 @@
 * [Google Cloud Project](https://console.cloud.google.com) with billing enabled
 * [gcloud CLI](https://cloud.google.com/sdk/docs/install)
 * [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
-* [Terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli)
+<!-- * [Terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli) -->
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 *  [yq](https://pypi.org/project/yq/)
 
 ## Set up your GKE Cluster
 
-Choose your region and set your project and machine variables:
+1. Choose your region and set your project and machine variables:
 ```bash
 export PROJECT_ID=$(gcloud config get project)
 export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID?} --format="value(projectNumber)")
@@ -27,7 +27,7 @@ export GPU_COUNT=1
 ```
 
 
-Create a GKE cluster:
+2. Create a GKE cluster:
 ```bash
 gcloud container clusters create nim-demo --location ${REGION?} \
   --workload-pool ${PROJECT_ID?}.svc.id.goog \
@@ -41,7 +41,7 @@ gcloud container clusters create nim-demo --location ${REGION?} \
   --ephemeral-storage-local-ssd=count=2
 ```
 
-Create a nodepool
+3. Create a nodepool
 ```bash
 gcloud container node-pools create ${MACH?}-node-pool --cluster nim-demo \
    --accelerator type=${GPU_TYPE?},count=${GPU_COUNT?},gpu-driver-version=latest \
