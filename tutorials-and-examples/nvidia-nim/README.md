@@ -98,7 +98,7 @@ metadata:
   namespace: nim
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 30Gi
