@@ -16,7 +16,7 @@ spec:
   - type: Pods
     pods:
       metric:
-        name: ${rule.target_query}
+        name: prometheus.googleapis.com|${rule.target_query}|gauge
       target:
         type: AverageValue
         averageValue: ${rule.average_value_target}
