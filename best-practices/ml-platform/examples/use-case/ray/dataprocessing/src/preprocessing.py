@@ -174,6 +174,7 @@ def get_clean_df(df, logger, ray_worker_node_id):
     df_with_desc = prep_product_desc(df_with_gcs_image_uri, logger)
     df_with_desc['attributes'] = df_with_desc['product_specifications'].apply(
         parse_attributes)
+    df_with_desc = df_with_desc.drop('product_specifications', axis=1)
     result_df = prep_cat(df_with_desc)
     return result_df
 
