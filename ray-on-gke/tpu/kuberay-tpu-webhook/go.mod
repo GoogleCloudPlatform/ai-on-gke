@@ -1,9 +1,9 @@
 module github.com/GoogleCloudPlatform/kuberay-tpu-webhook
 
-go 1.21
+go 1.21.11
 
 require (
-	github.com/ray-project/kuberay/ray-operator v1.1.0-rc.0
+	github.com/ray-project/kuberay/ray-operator v1.1.1
 	github.com/stretchr/testify v1.8.4
 	k8s.io/api v0.29.1
 	k8s.io/apimachinery v0.29.1
