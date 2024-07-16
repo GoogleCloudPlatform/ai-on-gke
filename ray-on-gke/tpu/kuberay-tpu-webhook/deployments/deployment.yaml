@@ -3,10 +3,15 @@ kind: Namespace
 metadata:
   name: ray-system
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kuberay-tpu-webhook-sa
+---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: pod-reader
+  name: kuberay-tpu-webhook-pod-reader
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -15,14 +20,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: pod-reader
+  name: kuberay-tpu-webhook-pod-reader
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: kuberay-tpu-webhook-sa
     namespace: ray-system
 roleRef:
   kind: ClusterRole
-  name: pod-reader
+  name: kuberay-tpu-webhook-pod-reader
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
