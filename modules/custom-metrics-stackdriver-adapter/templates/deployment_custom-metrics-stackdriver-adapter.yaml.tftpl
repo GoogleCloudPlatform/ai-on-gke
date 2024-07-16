@@ -19,7 +19,7 @@ spec:
         k8s-app: custom-metrics-stackdriver-adapter
         kubernetes.io/cluster-service: "true"
     spec:
-      serviceAccountName: custom-metrics-stackdriver-adapter
+      serviceAccountName: ${cmsa-serviceaccount-name}
       containers:
       - image: gcr.io/gke-release/custom-metrics-stackdriver-adapter:v0.14.2-gke.0
         imagePullPolicy: Always
