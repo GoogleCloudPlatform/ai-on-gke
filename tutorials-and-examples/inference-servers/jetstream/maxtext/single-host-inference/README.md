@@ -137,7 +137,6 @@ For deploying autoscaling components via terraform, a few more variables to be s
 
 ```
 maxengine_deployment_settings = {
-  custom_metrics_enabled = true
   metrics_port = <same as above>
   metrics_scrape_interval
 }
