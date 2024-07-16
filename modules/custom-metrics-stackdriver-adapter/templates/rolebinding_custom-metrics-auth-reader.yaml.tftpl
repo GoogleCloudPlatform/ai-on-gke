@@ -9,5 +9,5 @@ roleRef:
   name: extension-apiserver-authentication-reader
 subjects:
 - kind: ServiceAccount
-  name: custom-metrics-stackdriver-adapter
+  name: ${cmsa-serviceaccount-name}
   namespace: custom-metrics
