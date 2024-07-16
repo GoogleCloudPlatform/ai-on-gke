@@ -48,7 +48,7 @@ spec:
         app: kuberay-tpu-webhook
     spec:
       containers:
-        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.2
+        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.1
           imagePullPolicy: Always
           name: kuberay-tpu-webhook
           args:
