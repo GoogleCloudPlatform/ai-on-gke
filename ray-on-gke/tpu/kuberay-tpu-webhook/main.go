@@ -374,20 +374,21 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 }
 
 // builds mapping representing the current RayCluster state of TPU pods using PodInformer
-func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) {
+func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) error {
 	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
 	if podLister == nil {
-		klog.ErrorS(errors.New("k8s Pod Informer Lister not initialized"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
-		return
+		err := errors.New("k8s Pod Informer Lister not initialized")
+		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
+		return err
 	}
 	podsInGroup, err := podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
 	if err != nil {
 		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
-		return
+		return err
 	}
 
 	if podsInGroup == nil {
-		return
+		return nil
 	}
 	klog.V(1).InfoS("updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "# Pods in Group", len(podsInGroup))
 	for _, existingPod := range podsInGroup {
@@ -418,8 +419,9 @@ func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName strin
 						}
 					}
 					if existingPod.Status.Phase == "Running" && existingWorkerID == -1 {
-						klog.ErrorS(errors.New("existing TPU worker missing TPU_WORKER_ID"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
-						continue
+						err := errors.New("existing TPU worker missing TPU_WORKER_ID")
+						klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
+						return err
 					}
 					if existingWorkerID != -1 {
 						// Pod has been intercepted by the webhook
@@ -435,6 +437,7 @@ func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName strin
 			}
 		}
 	}
+	return nil
 }
 
 // unmarshal pod from admission request
@@ -491,7 +494,10 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 		// query k8s client to populate sliceToWorkerIDs to then calculate the next TPU_WORKER_ID and replicaIndex
 		sliceToWorkerIDs = make(map[slice][]int)
-		updateSliceToWorkerIDs(pod, clusterName, groupName, namespace, numOfHosts)
+		err := updateSliceToWorkerIDs(pod, clusterName, groupName, namespace, numOfHosts)
+		if err != nil {
+			return nil, err
+		}
 		replicaIndex := getReplicaIndex(clusterName, groupName, namespace)
 		podSlice := slice{clusterName, groupName, namespace, replicaIndex, numOfHosts}
 		tpuWorkerID := getNextWorkerID(podSlice, namespace, replicaIndex) // defaults to 0 for single-host
