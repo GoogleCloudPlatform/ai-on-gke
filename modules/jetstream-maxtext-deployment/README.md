@@ -33,8 +33,12 @@ if [ -z "$TPU_CHIP_COUNT" ]; then
     TPU_CHIP_COUNT="8"
 fi
 
-if [ -z "$MODEL_NAME" ]; then
-    echo "Must provide MODEL_NAME in environment" 1>&2
+if [ "$MODEL_NAME" = "gemma-7b"  ]; then
+    TOKENIZER="assets/tokenizer.gemma"
+elif [ "$MODEL_NAME" = "llama2-7b" ] || [ "$MODEL_NAME" = "llama2-13b" ]; then
+    TOKENIZER="assets/tokenizer.llama2"
+else
+    echo "Must provide valid MODEL_NAME in environment, valid options include 'gemma-7b', 'llama2-7b', 'llama2-13b'" 1>&2
     exit 2;
 fi
 
@@ -65,6 +69,7 @@ cat $JETSTREAM_MANIFEST \
 | sed "s/\${maxengine_server_image}/$MAXENGINE_SERVER_IMAGE/g" \
 | sed "s/\${jetstream_http_server_image}/$JETSTREAM_HTTP_SERVER_IMAGE/g" \
 | sed "s/\${model_name}/$MODEL_NAME/g" \
+| sed "s/\${tokenizer}/$TOKENIZER/g" \
 | sed "s/\${load_parameters_path_arg}/$PARAMETERS_PATH/g" >> "$JETSTREAM_MANIFEST"
 
 cat $JETSTREAM_MANIFEST | kubectl apply -f -
