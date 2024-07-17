@@ -18,13 +18,12 @@ import (
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	informersv1 "k8s.io/client-go/informers/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 )
@@ -53,7 +52,7 @@ var (
 	client *kubernetes.Clientset
 
 	// k8s Pod informer to query current cluster Pod list
-	podInformer informersv1.PodInformer
+	podLister listersv1.PodLister
 
 	// map of pod slices to workers in the slice
 	sliceToWorkerIDs map[slice][]int
@@ -377,11 +376,11 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 // builds mapping representing the current RayCluster state of TPU pods using PodInformer
 func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) {
 	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
-	if podInformer == nil {
-		klog.ErrorS(errors.New("k8s Pod informer not initialized"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
+	if podLister == nil {
+		klog.ErrorS(errors.New("k8s Pod Informer Lister not initialized"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
 	}
-	podsInGroup, err := podInformer.Lister().Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
+	podsInGroup, err := podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
 	if err != nil {
 		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
@@ -626,18 +625,10 @@ func main() {
 
 	// instantiate PodInformer for Ray worker pods in the GKE cluster
 	tweakListOptionsFunc := func(options *metav1.ListOptions) {
-		options.LabelSelector = "ray.io/node-type=worker"
+		options.LabelSelector = "ray.io/node-type=worker,app.kubernetes.io/created-by=kuberay-operator"
 	}
 	factory := informers.NewFilteredSharedInformerFactory(client, 5*time.Minute, metav1.NamespaceAll, tweakListOptionsFunc)
-	podInformer = factory.Core().V1().Pods()
-
-	// Log the intercepted Pod
-	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			pod := obj.(*corev1.Pod)
-			klog.V(1).InfoS("Intercepted Pod", "Namespace", pod.Namespace, "Name", pod.Name)
-		},
-	})
+	podLister = factory.Core().V1().Pods().Lister()
 
 	// start the PodInformer and wait for cache sync
 	stopCh := make(chan struct{})
