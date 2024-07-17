@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -14,13 +13,18 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	informersv1 "k8s.io/client-go/informers/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 )
@@ -47,6 +51,9 @@ var (
 
 	// k8s client used to query running Pods in-cluster
 	client *kubernetes.Clientset
+
+	// k8s Pod informer to query current cluster Pod list
+	podInformer informersv1.PodInformer
 
 	// map of pod slices to workers in the slice
 	sliceToWorkerIDs map[slice][]int
@@ -367,60 +374,63 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 	return tpuWorkerID
 }
 
-// queries k8s client to build mapping representing the current RayCluster state of TPU pods
+// builds mapping representing the current RayCluster state of TPU pods using PodInformer
 func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) {
-	// retrieve list of Pods in the same namespace and Ray worker group as the intercepted Pod
-	if client == nil {
-		klog.ErrorS(errors.New("k8s go client not initialized"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
+	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
+	if podInformer == nil {
+		klog.ErrorS(errors.New("k8s Pod informer not initialized"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
 	}
-	listOptions := metav1.ListOptions{
-        LabelSelector: fmt.Sprintf("ray.io/group=%s",groupName),
-    }
-	podsInNamespace, err := client.CoreV1().Pods(namespace).List(context.Background(), listOptions)
+	podsInGroup, err := podInformer.Lister().Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
 	if err != nil {
 		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return
 	}
-	if podsInNamespace != nil {
-		for _, existingPod := range podsInNamespace.Items {
-			if existingPod.Status.Phase == "Pending" || existingPod.Status.Phase == "Running" {
-				existingClusterName := existingPod.Labels["ray.io/cluster"]
-				existingGroupName := existingPod.Labels["ray.io/group"]
-				// we only care about workers in the same RayCluster and worker group when assigning IDs
-				if clusterName == existingClusterName && groupName == existingGroupName {
-					if containerRequestingTPUs(existingPod.Spec.Containers...) {
-						replicaIndexLabel := existingPod.Labels["replicaIndex"]
-						if replicaIndexLabel != "" {
-							replicaIndexLabelValues := strings.Split(replicaIndexLabel, "-")
-							existingReplicaIndex, _ := strconv.Atoi(replicaIndexLabelValues[len(replicaIndexLabelValues)-1])
-							existingWorkerID := -1
-							for _, container := range existingPod.Spec.Containers {
-								if containerRequestingTPUs(container) {
-									tpuWorkerIDEnvVar := getEnvironmentVariable("TPU_WORKER_ID", container)
-									tempVar, err := strconv.Atoi(tpuWorkerIDEnvVar)
-									if err != nil {
-										klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_ID", tpuWorkerIDEnvVar)
-										existingWorkerID = tempVar
-									}
-									break
-								}
-							}
-							if existingPod.Status.Phase == "Running" && existingWorkerID == -1 {
-								klog.ErrorS(errors.New("existing TPU worker missing TPU_WORKER_ID"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
+
+	if podsInGroup == nil {
+		return
+	}
+	klog.V(1).InfoS("updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "# Pods in Group", len(podsInGroup))
+	for _, existingPod := range podsInGroup {
+		if existingPod.Status.Phase != "Pending" && existingPod.Status.Phase != "Running" {
+			continue
+		}
+		existingClusterName := existingPod.Labels["ray.io/cluster"]
+		existingGroupName := existingPod.Labels["ray.io/group"]
+		existingNamespace := existingPod.Namespace
+		// we only care about workers in the same RayCluster and worker group when assigning IDs
+		if clusterName == existingClusterName && groupName == existingGroupName && namespace == existingNamespace {
+			if containerRequestingTPUs(existingPod.Spec.Containers...) {
+				replicaIndexLabel := existingPod.Labels["replicaIndex"]
+				if replicaIndexLabel != "" {
+					replicaIndexLabelValues := strings.Split(replicaIndexLabel, "-")
+					existingReplicaIndex, _ := strconv.Atoi(replicaIndexLabelValues[len(replicaIndexLabelValues)-1])
+					existingWorkerID := -1
+					for _, container := range existingPod.Spec.Containers {
+						if containerRequestingTPUs(container) {
+							tpuWorkerIDEnvVar := getEnvironmentVariable("TPU_WORKER_ID", container)
+							tempVar, err := strconv.Atoi(tpuWorkerIDEnvVar)
+							if err != nil {
+								klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_ID", tpuWorkerIDEnvVar)
 								continue
 							}
-							if existingWorkerID != -1 {
-								// Pod has been intercepted by the webhook
-								podSlice := slice{existingClusterName, existingGroupName, namespace, existingReplicaIndex, numOfHosts}
-								if sliceToWorkerIDs[podSlice] == nil {
-									sliceToWorkerIDs[podSlice] = []int{existingWorkerID}
-								} else {
-									sliceToWorkerIDs[podSlice] = append(sliceToWorkerIDs[podSlice], existingWorkerID)
-								}
-								klog.V(1).InfoS("updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "Worker Group", groupName, "TPU_WORKER_ID", existingWorkerID)
-							}
+							existingWorkerID = tempVar
+							break
 						}
+					}
+					if existingPod.Status.Phase == "Running" && existingWorkerID == -1 {
+						klog.ErrorS(errors.New("existing TPU worker missing TPU_WORKER_ID"), "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
+						continue
+					}
+					if existingWorkerID != -1 {
+						// Pod has been intercepted by the webhook
+						podSlice := slice{existingClusterName, existingGroupName, namespace, existingReplicaIndex, numOfHosts}
+						if sliceToWorkerIDs[podSlice] == nil {
+							sliceToWorkerIDs[podSlice] = []int{existingWorkerID}
+						} else {
+							sliceToWorkerIDs[podSlice] = append(sliceToWorkerIDs[podSlice], existingWorkerID)
+						}
+						klog.V(1).InfoS("updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "ReplicaIndex", existingReplicaIndex, "TPU_WORKER_ID", existingWorkerID)
 					}
 				}
 			}
@@ -613,6 +623,26 @@ func main() {
 		}
 		client = kubernetes.NewForConfigOrDie(config)
 	}
+
+	// instantiate PodInformer for Ray worker pods in the GKE cluster
+	tweakListOptionsFunc := func(options *metav1.ListOptions) {
+		options.LabelSelector = "ray.io/node-type=worker"
+	}
+	factory := informers.NewFilteredSharedInformerFactory(client, 5*time.Minute, metav1.NamespaceAll, tweakListOptionsFunc)
+	podInformer = factory.Core().V1().Pods()
+
+	// Log the intercepted Pod
+	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			pod := obj.(*corev1.Pod)
+			klog.V(1).InfoS("Intercepted Pod", "Namespace", pod.Namespace, "Name", pod.Name)
+		},
+	})
+
+	// start the PodInformer and wait for cache sync
+	stopCh := make(chan struct{})
+	factory.Start(stopCh)
+	factory.WaitForCacheSync(stopCh)
 
 	mux := http.NewServeMux()
 
