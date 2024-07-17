@@ -1,5 +1,3 @@
-# Copyright 2023 Google LLC
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -17,30 +15,46 @@ variable "project_id" {
   description = "GCP project id"
 }
 
-variable "network_name" {
-  type        = string
-  description = "Name of the VPC network to create the CloudSQL instance in"
-}
-
 variable "region" {
   type        = string
-  description = "CloudSQL instance region"
+  description = "GCP project region or zone"
   default     = "us-central1"
 }
 
-variable "db_user" {
-  type        = string
-  description = "Cloud SQL instance user"
-  default     = "rag-user"
+variable "private_cluster" {
+  type    = bool
+  default = true
 }
 
-variable "db_password" {
-  type        = string
-  description = "Cloud SQL instance user's password"
+variable "network_name" {
+  type = string
 }
 
-variable "instance_name" {
-  type        = string
-  description = "Name of the CloudSQL instance for RAG VectorDB"
-  default     = "pgvector-instance"
+variable "subnetwork_name" {
+  type = string
+}
+
+variable "subnetwork_cidr" {
+  type    = string
+  default = "10.128.0.0/20"
+}
+
+variable "subnetwork_region" {
+  type    = string
+  default = "us-central1"
+}
+
+variable "subnetwork_private_access" {
+  type    = string
+  default = "true"
+}
+
+variable "subnetwork_description" {
+  type    = string
+  default = ""
+}
+
+variable "network_secondary_ranges" {
+  type    = map(list(object({ range_name = string, ip_cidr_range = string })))
+  default = {}
 }
