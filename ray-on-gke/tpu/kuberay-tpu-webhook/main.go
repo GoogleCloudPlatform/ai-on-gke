@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
@@ -56,6 +57,9 @@ var (
 
 	// map of pod slices to workers in the slice
 	sliceToWorkerIDs map[slice][]int
+
+	// mutex lock for webhook go routines accessing Informer cache
+	cacheMutex sync.Mutex
 
 	// Flag arguments.
 	BindAddr       string
@@ -375,6 +379,10 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 
 // builds mapping representing the current RayCluster state of TPU pods using PodInformer
 func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) error {
+	// webhook go routine acquires cache lock
+	cacheMutex.Lock()
+    defer cacheMutex.Unlock()
+
 	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
 	if podLister == nil {
 		err := errors.New("k8s Pod Informer Lister not initialized")
