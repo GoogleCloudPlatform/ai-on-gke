@@ -1,0 +1,20 @@
+# Default values for the KubeRay TPU webhook.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+kuberay-tpu-webhook: 
+  namespace:
+    name: ray-system
+  
+  image:
+    repository: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook
+    tag: v1.1
+    pullPolicy: Always
+
+  deployment:
+    replicas: 1
+    verbosity: 0
+  
+  webhook-svc:
+    type: ClusterIP
+    port: 443
