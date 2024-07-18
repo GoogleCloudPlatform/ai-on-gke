@@ -19,11 +19,11 @@ import (
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
-	listersv1 "k8s.io/client-go/listers/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
@@ -378,10 +378,12 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 }
 
 // builds mapping representing the current RayCluster state of TPU pods using PodInformer
-func updateSliceToWorkerIDs(pod *corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) error {
+func updateSliceToWorkerIDs(clusterName string, groupName string, namespace string, numOfHosts int32) error {
 	// webhook go routine acquires cache lock
 	cacheMutex.Lock()
-    defer cacheMutex.Unlock()
+	defer cacheMutex.Unlock()
+
+	sliceToWorkerIDs = make(map[slice][]int)
 
 	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
 	if podLister == nil {
@@ -501,8 +503,7 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, chipsPerHost) // ignore error here because topology may not be set yet
 
 		// query k8s client to populate sliceToWorkerIDs to then calculate the next TPU_WORKER_ID and replicaIndex
-		sliceToWorkerIDs = make(map[slice][]int)
-		err := updateSliceToWorkerIDs(pod, clusterName, groupName, namespace, numOfHosts)
+		err := updateSliceToWorkerIDs(clusterName, groupName, namespace, numOfHosts)
 		if err != nil {
 			return nil, err
 		}

@@ -4,34 +4,39 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
 	rayv1 "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	"github.com/ray-project/kuberay/ray-operator/controllers/ray/utils"
+	"github.com/stretchr/testify/assert"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes/fake"
+	listersv1 "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/pointer"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var (
-	namespaceStr        string
-	instanceName        string
-	groupNameStr        string
-	headGroupNameStr    string
-	testCPUWorker       *corev1.Pod
-	testTPUWorker       *corev1.Pod
-	testCPUPods         []*corev1.Pod
-	testTPUPods         []*corev1.Pod
-	testAdmissionReview *admissionv1.AdmissionReview
-	testRayCluster      *rayv1.RayCluster
-	headNodeIP          string
-	testWorkerGroupSpec *rayv1.WorkerGroupSpec
+	namespaceStr           string
+	instanceName           string
+	groupNameStr           string
+	headGroupNameStr       string
+	testCPUWorker          *corev1.Pod
+	testTPUWorker          *corev1.Pod
+	testCPUPods            []*corev1.Pod
+	testTPUPods            []*corev1.Pod
+	testInterceptedTPUPods []*corev1.Pod
+	testAdmissionReview    *admissionv1.AdmissionReview
+	testRayCluster         *rayv1.RayCluster
+	headNodeIP             string
+	testWorkerGroupSpec    *rayv1.WorkerGroupSpec
 )
 
 func setupTest(t *testing.T) {
@@ -301,6 +306,71 @@ func setupTest(t *testing.T) {
 			},
 		},
 	}
+
+	// add 4 TPU worker pods with env vars set
+	numOfHosts := 2
+	numSlices := 2
+	podIndex := 0
+	testInterceptedTPUPods = []*corev1.Pod{}
+	for i := 0; i < numSlices; i++ {
+		// generate hostnames for this slice
+		hostnames := make([]string, numOfHosts)
+		for ind := 0; ind < numOfHosts; ind++ {
+			hostnames[i] = fmt.Sprintf("%s-%d-%d", groupNameStr, i, ind)
+		}
+		testHostnames := strings.Join(hostnames, ",")
+		replicaIndex := fmt.Sprintf("%s-%d", groupNameStr, i)
+		for j := 0; j < numOfHosts; j++ {
+			testTPUWorkerCopy := testTPUWorker.DeepCopy()
+			// set TPU environment variables for this Pod
+			env := []corev1.EnvVar{
+				{
+					Name:  "TPU_WORKER_ID",
+					Value: fmt.Sprint(j),
+				},
+				{
+					Name:  "TPU_WORKER_HOSTNAMES",
+					Value: testHostnames,
+				},
+				{
+					Name:  "TPU_NAME",
+					Value: replicaIndex,
+				},
+			}
+			testTPUWorkerCopy.Spec.Containers[0].Env = env
+			testTPUWorkerCopy.Name = fmt.Sprintf("%s-%d", "intercepted-tpu-pod", podIndex)
+			podIndex += 1
+			testTPUWorkerCopy.Labels["replicaIndex"] = replicaIndex
+			testInterceptedTPUPods = append(testInterceptedTPUPods, testTPUWorkerCopy)
+		}
+	}
+}
+
+func setupInformer(pods []*corev1.Pod) {
+	// initialize fake Clientset with pod objects
+	tpuObjects := make([]runtime.Object, len(pods))
+	for i, pod := range pods {
+		tpuObjects[i] = pod
+	}
+	fakeClientSet := fake.NewSimpleClientset(tpuObjects...)
+
+	// initialize podLister using the fake client for testing
+	factory := informers.NewSharedInformerFactory(fakeClientSet, 0)
+	podInformer := factory.Core().V1().Pods().Informer()
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	factory.Start(stopCh)
+	factory.WaitForCacheSync(stopCh)
+
+	// wait for cache to sync before creating the Lister
+	if !cache.WaitForCacheSync(stopCh, podInformer.HasSynced) {
+		fmt.Printf("Timed out waiting for fake client to sync")
+		return
+	}
+
+	podLister = factory.Core().V1().Pods().Lister()
 }
 
 // helper function used by tests which mutate sliceToWorkerIDs
@@ -1147,8 +1217,65 @@ func Test_GetEnvironmentVariable(t *testing.T) {
 	}
 }
 
+func Test_UpdateSliceToWorkerIDs(t *testing.T) {
+	setupTest(t)
+
+	setupInformer(testInterceptedTPUPods)
+
+	tests := map[string]struct {
+		testPodLister       listersv1.PodLister
+		numOfHosts          int32
+		numReplicas         int
+		expectedPodsInGroup []*corev1.Pod
+		expectedWorkerID    string
+		expectedError       error
+	}{
+		"updateSliceToWorkerIDs missing PodLister": {
+			// PodLister is not initialized - returns error
+			testPodLister: nil,
+			expectedError: errors.New("k8s Pod Informer Lister not initialized"),
+		},
+		"updateSliceToWorkerIDs for with TPU pod list": {
+			// sliceToWorkerIDs should be populated with TPU worker IDs
+			testPodLister:       podLister,
+			numOfHosts:          int32(2),
+			numReplicas:         2,
+			expectedPodsInGroup: testInterceptedTPUPods,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
+
+			podLister = tc.testPodLister
+			err := updateSliceToWorkerIDs(instanceName, groupNameStr, namespaceStr, tc.numOfHosts)
+
+			if tc.expectedError != nil {
+				assert.Equal(t, tc.expectedError, err)
+			} else {
+				// sliceToWorkerIDs should be populated with slices and unique TPU_WORKER_IDs for each Pod
+				assert.Equal(t, err, nil)
+				assert.Equal(t, tc.numReplicas, len(sliceToWorkerIDs))
+				for i := 0; i < tc.numReplicas; i++ {
+					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
+					workerIDs := sliceToWorkerIDs[testPodSlice]
+					sort.Ints(workerIDs)
+					assert.Equal(t, int(tc.numOfHosts), len(workerIDs))
+					for j := 0; j < int(tc.numOfHosts); j++ {
+						assert.Equal(t, j, workerIDs[j])
+					}
+				}
+			}
+			sliceToWorkerIDs = sliceToWorkerIDsCopy
+		})
+	}
+}
+
 func Test_MutatePod(t *testing.T) {
 	setupTest(t)
+
+	setupInformer(testTPUPods)
 
 	tests := map[string]struct {
 		testPod              *corev1.Pod
