@@ -51,8 +51,8 @@ variable "cluster_name" {
 
 variable "maxengine_deployment_settings" {
   type = object({
-    maxengine_server_image      = string
-    jetstream_http_server_image = string
+    maxengine_server_image      = optional(string)
+    jetstream_http_server_image = optional(string)
 
     model_name              = string           // Name of your LLM (for example: "gemma-7b")
     parameters_path         = string           // Path to the parameters for your model

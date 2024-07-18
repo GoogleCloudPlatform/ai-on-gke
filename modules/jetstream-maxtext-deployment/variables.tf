@@ -26,8 +26,8 @@ variable "project_id" {
 
 variable "maxengine_deployment_settings" {
   type = object({
-    maxengine_server_image      = string
-    jetstream_http_server_image = string
+    maxengine_server_image      = optional(string, "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2")
+    jetstream_http_server_image = optional(string, "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2")
 
     model_name              = string           // Name of your LLM (for example: "gemma-7b")
     parameters_path         = string           // Path to the paramters for your model
