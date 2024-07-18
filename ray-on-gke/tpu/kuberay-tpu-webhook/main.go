@@ -50,6 +50,7 @@ var (
 	headlessServiceSuffix = "headless-worker-svc"
 
 	// k8s Pod informer to query current cluster Pod list
+	// TODO: refactor webhook to remove global vars
 	podLister listersv1.PodLister
 
 	// map of pod slices to workers in the slice
