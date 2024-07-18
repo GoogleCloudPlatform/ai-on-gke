@@ -384,13 +384,10 @@ func updateSliceToWorkerIDs(clusterName string, groupName string, namespace stri
 
 	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
 	if podLister == nil {
-		err := errors.New("k8s Pod Informer Lister not initialized")
-		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
-		return err
+		return errors.New("k8s Pod Informer Lister not initialized")
 	}
 	podsInGroup, err := podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
 	if err != nil {
-		klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
 		return err
 	}
 
@@ -426,9 +423,7 @@ func updateSliceToWorkerIDs(clusterName string, groupName string, namespace stri
 						}
 					}
 					if existingPod.Status.Phase == "Running" && existingWorkerID == -1 {
-						err := errors.New("existing TPU worker missing TPU_WORKER_ID")
-						klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName)
-						return err
+						return errors.New("existing TPU worker missing TPU_WORKER_ID")
 					}
 					if existingWorkerID != -1 {
 						// Pod has been intercepted by the webhook
