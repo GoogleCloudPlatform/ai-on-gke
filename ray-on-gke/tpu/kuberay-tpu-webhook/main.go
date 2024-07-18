@@ -49,9 +49,6 @@ var (
 	// headless svc will be of the form: {kuberay-cluster-name}-headless-worker-svc
 	headlessServiceSuffix = "headless-worker-svc"
 
-	// k8s client used to query running Pods in-cluster
-	client *kubernetes.Clientset
-
 	// k8s Pod informer to query current cluster Pod list
 	podLister listersv1.PodLister
 
@@ -624,6 +621,7 @@ func main() {
 	flag.Parse()
 
 	// use in-cluster config if kubeConfig path is not passed as a flag
+	var client *kubernetes.Clientset
 	if KubeConfigPath == "" {
 		config, err := rest.InClusterConfig()
 		if err != nil {
