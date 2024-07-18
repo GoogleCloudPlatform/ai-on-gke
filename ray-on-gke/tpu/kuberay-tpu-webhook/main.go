@@ -59,6 +59,9 @@ var (
 	// mutex lock for webhook go routines accessing Informer cache
 	cacheMutex sync.Mutex
 
+	// mutex lock for webhook go routines accessing sliceToWorkerIDs mapping
+	readMutex sync.Mutex
+
 	// Flag arguments.
 	BindAddr       string
 	CACert         string
@@ -334,6 +337,10 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 //     - we keep track of how many replicas of the same worker group have been added to sliceToWorkerIDs
 //     so far, and assign this pod to the next integer replicaIndex
 func getReplicaIndex(clusterName string, groupName string, namespace string) int {
+	// webhook go routine acquires read lock
+	readMutex.Lock()
+	defer readMutex.Unlock()
+
 	// first pod created in cluster
 	if sliceToWorkerIDs == nil {
 		return 0
@@ -361,6 +368,10 @@ func getReplicaIndex(clusterName string, groupName string, namespace string) int
 
 // returns next lowest TPU_WORKER_ID in pod slice and updates mappings
 func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
+	// webhook go routine acquires read lock
+	readMutex.Lock()
+	defer readMutex.Unlock()
+
 	tpuWorkerID := 0 // defaults to 0 (first Pod in slice)
 	if sliceToWorkerIDs[podSlice] != nil {
 		sort.Ints(sliceToWorkerIDs[podSlice])
