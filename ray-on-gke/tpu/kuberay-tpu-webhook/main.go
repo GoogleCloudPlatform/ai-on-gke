@@ -649,6 +649,9 @@ func main() {
 	factory.Start(stopCh)
 	factory.WaitForCacheSync(stopCh)
 
+	// close the PodInformer on termination
+	defer close(stopCh)
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
