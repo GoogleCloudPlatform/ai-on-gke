@@ -303,16 +303,6 @@ func setupTest(t *testing.T) {
 	}
 }
 
-// helper function used by tests which mutate sliceToHostnames
-func deepCopySliceToHostnames() map[slice]string {
-	deepCopy := make(map[slice]string)
-	for slice, hostnames := range sliceToHostnames {
-		deepCopy[slice] = hostnames
-	}
-
-	return deepCopy
-}
-
 // helper function used by tests which mutate sliceToWorkers
 func deepCopySliceToWorkers() map[slice][]worker {
 	deepCopy := make(map[slice][]worker)
@@ -895,15 +885,13 @@ func Test_GenDNSHostnames(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		workerGroupSpec   *rayv1.WorkerGroupSpec
 		replicaIndex      int
 		numOfHosts        int32
 		expectedHostnames string
 		expectedError     error
 	}{
 		"genDNSHostnames with NumOfHosts == 0": {
-			// you can't have a workergroup with NumOfHosts set to 0 so this should error out
-			workerGroupSpec: testWorkerGroupSpec,
+			// a workergroup can't have NumOfHosts set to 0 so this should error out
 			replicaIndex:    0,
 			numOfHosts:      int32(0),
 			expectedError:   errors.New("workerGroupSpec NumOfHosts not set"),
@@ -911,14 +899,12 @@ func Test_GenDNSHostnames(t *testing.T) {
 		"genDNSHostnames with NumOfHosts == 1": {
 			// Single-host worker group, should return a single DNS hostname. This function will
 			// never be called for single-host groups, but we don't necessarily want it to error if it does.
-			workerGroupSpec:   testWorkerGroupSpec,
 			replicaIndex:      0,
 			numOfHosts:        int32(1),
 			expectedHostnames: fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 0, 0, instanceName, headlessServiceSuffix),
 		},
 		"genDNSHostnames with NumOfHosts > 1": {
 			// multi-host worker group, should return a string list of DNS hostnames for the given replica
-			workerGroupSpec: testWorkerGroupSpec,
 			replicaIndex:    1,
 			numOfHosts:      int32(4),
 			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, 1, 0, instanceName, headlessServiceSuffix),
@@ -932,8 +918,7 @@ func Test_GenDNSHostnames(t *testing.T) {
 	// validate that genDNSHostnames correctly returns a string list of DNS addressable hostnames
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tc.workerGroupSpec.NumOfHosts = tc.numOfHosts
-			hostnames, err := genDNSHostnames(*tc.workerGroupSpec, instanceName, namespaceStr, tc.replicaIndex)
+			hostnames, err := genDNSHostnames(tc.numOfHosts, groupNameStr, instanceName, namespaceStr, tc.replicaIndex)
 			if err != nil {
 				assert.Equal(t, tc.expectedError, err)
 			} else {
@@ -1241,7 +1226,6 @@ func Test_ValidateRayCluster(t *testing.T) {
 	// check validateRayCluster
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToHostnamesCopy := deepCopySliceToHostnames()
 			sliceToWorkersCopy := deepCopySliceToWorkers()
 
 			// set up admissionReview object
@@ -1272,22 +1256,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 				assert.Equal(t, tc.expectedResult.Message, admissionResponse.Result.Message)
 			}
 
-			// check that sliceToHostnames entry is generated
-			if tc.topology != "" && tc.numOfHosts > 1 {
-				for replicaIndex := 0; replicaIndex < int(*tc.replicas); replicaIndex++ {
-					// generate TPU_WORKER_HOSTNAME values
-					var expectedHostnames []string
-					for hostIndex := 0; hostIndex < int(tc.numOfHosts); hostIndex++ {
-						expectedHostnames = append(expectedHostnames, fmt.Sprintf("%s-%d-%d.%s-%s", groupNameStr, replicaIndex, hostIndex, instanceName, headlessServiceSuffix))
-					}
-					// check that expectedHostnames have been set for each slice
-					testSlice := slice{instanceName, groupNameStr, namespaceStr, replicaIndex, tc.numOfHosts}
-					assert.Equal(t, strings.Join(expectedHostnames, ","), sliceToHostnames[testSlice])
-				}
-			}
-
-			// set maps back to their previous values
-			sliceToHostnames = sliceToHostnamesCopy
+			// reset map previous values
 			sliceToWorkers = sliceToWorkersCopy
 		})
 	}
@@ -1418,11 +1387,6 @@ func Test_MutatePod(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// save copy of sliceToWorkers
 			sliceToWorkersCopy := deepCopySliceToWorkers()
-			sliceToHostnamesCopy := deepCopySliceToHostnames()
-
-			// set sliceToHostnames value to be injected during mutatePod
-			testSlice := slice{instanceName, groupNameStr, namespaceStr, tc.expectedReplicaID, tc.numOfHosts}
-			sliceToHostnames[testSlice] = tc.expectedHostnames
 
 			// set up Pod object
 			if tc.missingClusterLabel {
@@ -1478,7 +1442,6 @@ func Test_MutatePod(t *testing.T) {
 				}
 				// reset map values after test
 				sliceToWorkers = sliceToWorkersCopy
-				sliceToHostnames = sliceToHostnamesCopy
 			}
 		})
 	}
