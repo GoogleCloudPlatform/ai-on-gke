@@ -134,7 +134,6 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, namespace string, replicaIndex int) (string, error) {
 	if numOfHosts == 0 {
 		err := errors.New("workerGroupSpec NumOfHosts not set")
-		klog.ErrorS(err, "genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts)
 		return "", err
 	}
 	hostNames := make([]string, numOfHosts)
