@@ -50,9 +50,6 @@ var (
 	// map of pod slices to workers in the slice
 	sliceToWorkers map[slice][]worker
 
-	// map of pod slices to TPU_WORKER_HOSTNAMES in that pod slice
-	sliceToHostnames map[slice]string
-
 	// Flag arguments.
 	BindAddr   string
 	CACert     string
@@ -134,18 +131,17 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
-func genDNSHostnames(workerGroupSpec ray.WorkerGroupSpec, clusterName string, namespace string, replicaIndex int) (string, error) {
-	numHosts := workerGroupSpec.NumOfHosts
-	if numHosts == 0 {
-		return "", errors.New("workerGroupSpec NumOfHosts not set")
+func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, namespace string, replicaIndex int) (string, error) {
+	if numOfHosts == 0 {
+		err := errors.New("workerGroupSpec NumOfHosts not set")
+		return "", err
 	}
-	workerGroupName := workerGroupSpec.GroupName
-	hostNames := make([]string, numHosts)
+	hostNames := make([]string, numOfHosts)
 	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.headless-worker-svc
-	for j := 0; j < int(numHosts); j++ {
-		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", workerGroupName, replicaIndex, j, clusterName, headlessServiceSuffix)
+	for j := 0; j < int(numOfHosts); j++ {
+		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", groupName, replicaIndex, j, clusterName, headlessServiceSuffix)
 	}
-	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numHosts, "Replica Index", replicaIndex)
+	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts, "Replica Index", replicaIndex)
 	return strings.Join(hostNames, ","), nil
 }
 
@@ -268,23 +264,13 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 		workerGroupSpec := workerGroupSpecs[i]
 		if containerRequestingTPUs(workerGroupSpec.Template.Spec.Containers...) {
 			klog.V(1).InfoS("validateRayCluster", "RayCluster", namespace+"/"+clusterName, "Worker Group", workerGroupSpec.GroupName, "Requests TPUs", true)
-			// create mapping for pod slices -> TPU_WORKER_HOSTNAMES in cluster
 			replicas := int(*workerGroupSpec.Replicas)
 			numOfHosts := workerGroupSpec.NumOfHosts
 			for replicaIndex := 0; replicaIndex < replicas; replicaIndex++ {
-				// reset past sliceToWorkers and sliceToHostnames entries for slice in ray cluster
+				// reset past sliceToWorkers entries for slice in ray cluster
 				groupName := workerGroupSpec.GroupName
 				podSlice := slice{clusterName, groupName, namespace, replicaIndex, numOfHosts}
 				sliceToWorkers[podSlice] = nil
-				sliceToHostnames[podSlice] = ""
-				// generate TPU_WORKER_HOSTNAMES
-				if numOfHosts > 1 {
-					joinedHostNames, err := genDNSHostnames(workerGroupSpec, clusterName, namespace, replicaIndex)
-					if err != nil {
-						klog.Error("Failed to generate DNS Hostnames")
-					}
-					sliceToHostnames[podSlice] = joinedHostNames
-				}
 			}
 		} else {
 			// RayCluster worker group does not request TPUs
@@ -480,10 +466,14 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 			if containerRequestingTPUs(container) {
 				path := fmt.Sprintf("/spec/containers/%d/env", i)
 				if numOfHosts > 1 {
-					// inject TPU_WORKER_HOSTNAMES set during RayCluster interception
-					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", sliceToHostnames[podSlice])
+					// inject TPU_WORKER_HOSTNAMES
+					hostnames, err := genDNSHostnames(numOfHosts, groupName, clusterName, namespace, replicaIndex)
+					if err != nil {
+						return nil, err
+					}
+					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", hostnames)
 					klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", clusterName+"-"+headlessServiceSuffix)
-					injectHostnames(clusterName, sliceToHostnames[podSlice], path, container, &patches)
+					injectHostnames(clusterName, hostnames, path, container, &patches)
 				}
 				// inject TPU_WORKER_ID
 				if getEnvironmentVariable("TPU_WORKER_ID", container) == "" {
@@ -545,18 +535,28 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 // update sliceToWorkers map on pod deletion
 func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
+	// Create AdmissionResponse - we never deny the deletion request
+	admissionResponse := &admissionv1.AdmissionResponse{
+		UID:     admissionReview.Request.UID,
+		Allowed: true,
+		Result: &metav1.Status{
+			Status:  "Success",
+			Message: "",
+		},
+	}
+
 	pod, err := extractPod(admissionReview)
 	if err != nil {
-		klog.Fatalf("Pod extraction failed: %s", err)
+		klog.Errorf("Pod extraction failed: %s", err)
 	}
 
 	clusterName := pod.Labels["ray.io/cluster"]
 	if clusterName == "" {
-		return nil, errors.New("Kuberay Pod missing RayCluster label")
+		return admissionResponse, errors.New("Kuberay Pod missing RayCluster label")
 	}
 	groupName := pod.Labels["ray.io/group"]
 	if groupName == "" {
-		return nil, errors.New("Kuberay Pod missing Ray group label")
+		return admissionResponse, errors.New("Kuberay Pod missing Ray group label")
 	}
 	namespace := pod.Namespace
 	replicaIndexLabel := pod.Labels["replicaIndex"]
@@ -567,20 +567,20 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 
 		containers := pod.Spec.Containers
 		if containers == nil {
-			return nil, errors.New("Pod spec missing containers")
+			return admissionResponse, errors.New("Pod spec missing containers")
 		}
 		tpuWorkerID := -1
 		for _, container := range pod.Spec.Containers {
 			if containerRequestingTPUs(container) {
 				tpuWorkerID, err = strconv.Atoi(getEnvironmentVariable("TPU_WORKER_ID", container))
 				if err != nil {
-					return nil, errors.New("Unable to extract TPU_WORKER_ID")
+					return admissionResponse, errors.New("Unable to extract TPU_WORKER_ID")
 				}
 				break
 			}
 		}
 		if tpuWorkerID == -1 {
-			return nil, errors.New("Kuberay Pod missing TPU_WORKER_ID")
+			return admissionResponse, errors.New("Kuberay Pod missing TPU_WORKER_ID")
 		}
 		// update sliceToWorkers map
 		for slice, _ := range sliceToWorkers {
@@ -598,15 +598,6 @@ func deletePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		}
 	}
 
-	// Create AdmissionResponse - we never deny the deletion request
-	admissionResponse := &admissionv1.AdmissionResponse{
-		UID:     admissionReview.Request.UID,
-		Allowed: true,
-		Result: &metav1.Status{
-			Status:  "Success",
-			Message: "",
-		},
-	}
 	return admissionResponse, nil
 }
 
@@ -621,7 +612,6 @@ func writeCertfile(filename string, encodedData string) error {
 
 func init() {
 	sliceToWorkers = make(map[slice][]worker)
-	sliceToHostnames = make(map[slice]string)
 
 	flag.StringVar(&BindAddr, "bind-address", ":443", "Address to bind HTTPS service to")
 	flag.StringVar(&CACert, "ca-cert", "", "base64-encoded root certificate for TLS")
