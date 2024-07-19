@@ -346,7 +346,8 @@ func setupTest(t *testing.T) {
 	}
 }
 
-func setupInformer(pods []*corev1.Pod) {
+// sets up a PodInformer, waits for cache to sync, and returns the Informer PodLister
+func setupInformer(pods []*corev1.Pod) listersv1.PodLister {
 	// initialize fake Clientset with pod objects
 	tpuObjects := make([]runtime.Object, len(pods))
 	for i, pod := range pods {
@@ -367,30 +368,16 @@ func setupInformer(pods []*corev1.Pod) {
 	// wait for cache to sync before creating the Lister
 	if !cache.WaitForCacheSync(stopCh, podInformer.HasSynced) {
 		fmt.Printf("Timed out waiting for fake client to sync")
-		return
+		return nil
 	}
 
-	podLister = factory.Core().V1().Pods().Lister()
-}
-
-// helper function used by tests which mutate sliceToWorkerIDs
-func deepCopysliceToWorkerIDs() map[slice][]int {
-	deepCopy := make(map[slice][]int)
-	for slice, workerIDList := range sliceToWorkerIDs {
-		deepCopy[slice] = []int{}
-		for _, workerID := range workerIDList {
-			deepCopy[slice] = append(deepCopy[slice], workerID)
-		}
-	}
-
-	return deepCopy
+	return factory.Core().V1().Pods().Lister()
 }
 
 func Test_GetReplicaIndex(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		sliceToWorkerIDs      map[slice][]int
 		numOfHosts            int32
 		numReplicas           int
 		additionalGroupStr    string
@@ -431,14 +418,11 @@ func Test_GetReplicaIndex(t *testing.T) {
 	// validate getReplicaIndex() returns the expected Replica ID for TPU pods in varying pod slices
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
-			if sliceToWorkerIDs == nil {
-				sliceToWorkerIDs = make(map[slice][]int)
-			}
+			sliceToWorkerIDs := make(map[slice][]int)
 			for i := 0; i < tc.numReplicas; i++ {
 				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
 				for j := 0; j < int(tc.numOfHosts); j++ {
-					replicaIndex := getReplicaIndex(instanceName, groupNameStr, namespaceStr)
+					replicaIndex := getReplicaIndex(sliceToWorkerIDs, instanceName, groupNameStr, namespaceStr)
 					assert.Equal(t, i, replicaIndex)
 
 					// add the worker ID to sliceToWorkerIDs - this would happen in getNextWorkerID
@@ -454,7 +438,7 @@ func Test_GetReplicaIndex(t *testing.T) {
 				for i := 0; i < tc.additionalNumReplicas; i++ {
 					testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.additionalNumOfHosts}
 					for j := 0; j < int(tc.additionalNumOfHosts); j++ {
-						replicaIndex := getReplicaIndex(instanceName, tc.additionalGroupStr, namespaceStr)
+						replicaIndex := getReplicaIndex(sliceToWorkerIDs, instanceName, tc.additionalGroupStr, namespaceStr)
 						assert.Equal(t, i, replicaIndex)
 
 						// add the worker ID to sliceToWorkerIDs - this would happen in getNextWorkerID
@@ -466,9 +450,7 @@ func Test_GetReplicaIndex(t *testing.T) {
 					}
 				}
 			}
-
 			assert.Equal(t, tc.numReplicas+tc.additionalNumReplicas, len(sliceToWorkerIDs))
-			sliceToWorkerIDs = sliceToWorkerIDsCopy // reset sliceToWorkerIDs to previous state
 		})
 	}
 }
@@ -508,11 +490,11 @@ func Test_GetNextWorkerID(t *testing.T) {
 	// validate getNextWorkerID() returns the expected TPU_WORKER ID for different worker group configurations
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
+			sliceToWorkerIDs := make(map[slice][]int)
 			for replicaIndex := 0; replicaIndex < tc.numReplicas; replicaIndex++ {
 				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, replicaIndex, tc.numOfHosts}
 				for j := 0; j < int(tc.numOfHosts); j++ {
-					workerID := getNextWorkerID(testPodSlice, namespaceStr, replicaIndex)
+					workerID := getNextWorkerID(sliceToWorkerIDs, testPodSlice, namespaceStr, replicaIndex)
 					if sliceToWorkerIDs[testPodSlice] == nil {
 						sliceToWorkerIDs[testPodSlice] = []int{j}
 					} else {
@@ -526,12 +508,11 @@ func Test_GetNextWorkerID(t *testing.T) {
 				for i := 0; i < tc.additionalNumReplicas; i++ {
 					testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.additionalNumOfHosts}
 					for j := 0; j < int(tc.additionalNumOfHosts); j++ {
-						workerID := getNextWorkerID(testAdditionalPodSlice, namespaceStr, i)
+						workerID := getNextWorkerID(sliceToWorkerIDs, testAdditionalPodSlice, namespaceStr, i)
 						assert.Equal(t, j, workerID)
 					}
 				}
 			}
-			sliceToWorkerIDs = sliceToWorkerIDsCopy // reset sliceToWorkerIDs to previous state
 		})
 	}
 }
@@ -1128,8 +1109,6 @@ func Test_ValidateRayCluster(t *testing.T) {
 	// check validateRayCluster
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
-
 			// set up admissionReview object
 			admissionReview := testAdmissionReview.DeepCopy()
 			admissionReview.Request.Kind.Kind = "RayCluster"
@@ -1157,9 +1136,6 @@ func Test_ValidateRayCluster(t *testing.T) {
 				assert.Equal(t, tc.expectedResult.Status, admissionResponse.Result.Status)
 				assert.Equal(t, tc.expectedResult.Message, admissionResponse.Result.Message)
 			}
-
-			// reset map previous values
-			sliceToWorkerIDs = sliceToWorkerIDsCopy
 		})
 	}
 }
@@ -1217,27 +1193,27 @@ func Test_GetEnvironmentVariable(t *testing.T) {
 	}
 }
 
-func Test_UpdateSliceToWorkerIDs(t *testing.T) {
+func Test_GetSliceToWorkerIDs(t *testing.T) {
 	setupTest(t)
 
-	setupInformer(testInterceptedTPUPods)
+	testPodLister := setupInformer(testInterceptedTPUPods)
 
 	tests := map[string]struct {
-		testPodLister       listersv1.PodLister
+		podLister           listersv1.PodLister
 		numOfHosts          int32
 		numReplicas         int
 		expectedPodsInGroup []*corev1.Pod
 		expectedWorkerID    string
 		expectedError       error
 	}{
-		"updateSliceToWorkerIDs missing PodLister": {
+		"getSliceToWorkerIDs missing PodLister": {
 			// PodLister is not initialized - returns error
-			testPodLister: nil,
+			podLister:     nil,
 			expectedError: errors.New("k8s Pod Informer Lister not initialized"),
 		},
-		"updateSliceToWorkerIDs for with TPU pod list": {
+		"getSliceToWorkerIDs for with TPU pod list": {
 			// sliceToWorkerIDs should be populated with TPU worker IDs
-			testPodLister:       podLister,
+			podLister:           testPodLister,
 			numOfHosts:          int32(2),
 			numReplicas:         2,
 			expectedPodsInGroup: testInterceptedTPUPods,
@@ -1246,10 +1222,7 @@ func Test_UpdateSliceToWorkerIDs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
-
-			podLister = tc.testPodLister
-			err := updateSliceToWorkerIDs(instanceName, groupNameStr, namespaceStr, tc.numOfHosts)
+			sliceToWorkerIDs, err := getSliceToWorkerIDs(tc.podLister, instanceName, groupNameStr, namespaceStr, tc.numOfHosts)
 
 			if tc.expectedError != nil {
 				assert.Equal(t, tc.expectedError, err)
@@ -1267,7 +1240,6 @@ func Test_UpdateSliceToWorkerIDs(t *testing.T) {
 					}
 				}
 			}
-			sliceToWorkerIDs = sliceToWorkerIDsCopy
 		})
 	}
 }
@@ -1275,7 +1247,7 @@ func Test_UpdateSliceToWorkerIDs(t *testing.T) {
 func Test_MutatePod(t *testing.T) {
 	setupTest(t)
 
-	setupInformer(testTPUPods)
+	testPodLister := setupInformer(testTPUPods)
 
 	tests := map[string]struct {
 		testPod              *corev1.Pod
@@ -1344,9 +1316,6 @@ func Test_MutatePod(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// save copy of sliceToWorkerIDs
-			sliceToWorkerIDsCopy := deepCopysliceToWorkerIDs()
-
 			// set up Pod object
 			if tc.missingClusterLabel {
 				tc.testPod.Labels["ray.io/cluster"] = ""
@@ -1369,7 +1338,7 @@ func Test_MutatePod(t *testing.T) {
 			admissionReview.Request.Object.Raw = jsonPod
 			admissionReview.Request.Object.Object = tc.testPod
 
-			admissionResponse, err := mutatePod(admissionReview)
+			admissionResponse, err := mutatePod(testPodLister, admissionReview)
 			if err != nil {
 				assert.Equal(t, tc.expectedError, err)
 			} else {
@@ -1399,8 +1368,6 @@ func Test_MutatePod(t *testing.T) {
 					assert.Equal(t, expectedIDPatch, patches[5]["value"])
 					assert.Equal(t, expectedNamePatch, patches[6]["value"])
 				}
-				// reset map values after test
-				sliceToWorkerIDs = sliceToWorkerIDsCopy
 			}
 		})
 	}

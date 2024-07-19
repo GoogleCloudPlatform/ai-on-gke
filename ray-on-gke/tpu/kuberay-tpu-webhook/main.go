@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
@@ -38,6 +37,11 @@ type slice struct {
 	numOfHosts   int32
 }
 
+type TPUWebhookServer struct {
+	// k8s Pod informer to query current cluster Pod list
+	podLister listersv1.PodLister
+}
+
 // JSON patch describing mutate operation(s) for incoming object
 type patch map[string]any
 
@@ -49,16 +53,6 @@ var (
 	// headless svc will be of the form: {kuberay-cluster-name}-headless-worker-svc
 	headlessServiceSuffix = "headless-worker-svc"
 
-	// k8s Pod informer to query current cluster Pod list
-	// TODO: refactor webhook to remove global vars
-	podLister listersv1.PodLister
-
-	// map of pod slices to workers in the slice
-	sliceToWorkerIDs map[slice][]int
-
-	// mutex lock for webhook go routines accessing Informer cache or sliceToWorkerIDs mapping
-	cacheMutex sync.RWMutex
-
 	// Flag arguments.
 	BindAddr       string
 	CACert         string
@@ -67,8 +61,62 @@ var (
 	ServerKey      string
 )
 
+func NewTPUWebhookServer(podLister listersv1.PodLister) *TPUWebhookServer {
+	return &TPUWebhookServer{
+		podLister: podLister,
+	}
+}
+
+func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
+	admissionReview := &admissionv1.AdmissionReview{}
+	if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
+		http.Error(w, "Error decoding request body", http.StatusBadRequest)
+		return
+	}
+
+	if admissionReview.Request.Kind.Kind == "Pod" {
+		klog.V(1).Info("Received review for Pod creation")
+		response, err := mutatePod(t.podLister, admissionReview)
+		if err != nil {
+			klog.Errorf("Failed to mutate pod: %s", err)
+			return
+		}
+		admissionReview.Response = response
+		responseBytes, err := json.Marshal(admissionReview)
+		if err != nil {
+			klog.Errorf("Failed to encode response: %s", err)
+			return
+		}
+		fmt.Fprint(w, string(responseBytes))
+	}
+}
+
+func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
+	admissionReview := &admissionv1.AdmissionReview{}
+	if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
+		http.Error(w, "Error decoding request body", http.StatusBadRequest)
+		return
+	}
+
+	if admissionReview.Request.Kind.Kind == "RayCluster" {
+		klog.V(0).Info("Received review for RayCluster")
+		response, err := validateRayCluster(admissionReview)
+		if err != nil {
+			klog.Errorf("Failed to validate ray cluster: %s", err)
+			return
+		}
+		admissionReview.Response = response
+		responseBytes, err := json.Marshal(admissionReview)
+		if err != nil {
+			klog.Errorf("Failed to encode response: %s", err)
+			return
+		}
+		fmt.Fprint(w, string(responseBytes))
+	}
+}
+
 // helper function used for logging and testing
-func printSliceToWorkerIds() {
+func printSliceToWorkerIds(sliceToWorkerIDs map[slice][]int) {
 	for slice, workerList := range sliceToWorkerIDs {
 		klog.V(1).InfoS("printSliceToWorkerIds", "RayCluster", slice.namespace+"/"+slice.clusterName, "Worker Group", slice.groupName)
 		for _, workerID := range workerList {
@@ -330,11 +378,7 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 //     - this occurs when the pod we intercept is the first pod of a different slice in the cluster
 //     - we keep track of how many replicas of the same worker group have been added to sliceToWorkerIDs
 //     so far, and assign this pod to the next integer replicaIndex
-func getReplicaIndex(clusterName string, groupName string, namespace string) int {
-	// webhook go routine acquires read lock
-	cacheMutex.RLock()
-	defer cacheMutex.RUnlock()
-
+func getReplicaIndex(sliceToWorkerIDs map[slice][]int, clusterName string, groupName string, namespace string) int {
 	// first pod created in cluster
 	if sliceToWorkerIDs == nil {
 		return 0
@@ -361,11 +405,7 @@ func getReplicaIndex(clusterName string, groupName string, namespace string) int
 }
 
 // returns next lowest TPU_WORKER_ID in pod slice and updates mappings
-func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
-	// webhook go routine acquires read lock
-	cacheMutex.RLock()
-	defer cacheMutex.RUnlock()
-
+func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace string, replicaIndex int) int {
 	tpuWorkerID := 0 // defaults to 0 (first Pod in slice)
 	if sliceToWorkerIDs[podSlice] != nil {
 		sort.Ints(sliceToWorkerIDs[podSlice])
@@ -381,26 +421,23 @@ func getNextWorkerID(podSlice slice, namespace string, replicaIndex int) int {
 }
 
 // builds mapping representing the current RayCluster state of TPU pods using PodInformer
-func updateSliceToWorkerIDs(clusterName string, groupName string, namespace string, numOfHosts int32) error {
-	// webhook go routine acquires cache lock
-	cacheMutex.Lock()
-	defer cacheMutex.Unlock()
-
-	sliceToWorkerIDs = make(map[slice][]int)
+func getSliceToWorkerIDs(podLister listersv1.PodLister, clusterName string, groupName string, namespace string, numOfHosts int32) (map[slice][]int, error) {
+	sliceToWorkerIDs := make(map[slice][]int)
 
 	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
 	if podLister == nil {
-		return errors.New("k8s Pod Informer Lister not initialized")
+		return nil, errors.New("k8s Pod Informer Lister not initialized")
 	}
 	podsInGroup, err := podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if podsInGroup == nil {
-		return nil
+		// return an empty mapping if no Pods with 'ray.io/group' label found
+		return sliceToWorkerIDs, nil
 	}
-	klog.V(1).InfoS("updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "# Pods in Group", len(podsInGroup))
+	klog.V(1).InfoS("getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "# Pods in Group", len(podsInGroup))
 	for _, existingPod := range podsInGroup {
 		if existingPod.Status.Phase != "Pending" && existingPod.Status.Phase != "Running" {
 			continue
@@ -421,7 +458,7 @@ func updateSliceToWorkerIDs(clusterName string, groupName string, namespace stri
 							tpuWorkerIDEnvVar := getEnvironmentVariable("TPU_WORKER_ID", container)
 							tempVar, err := strconv.Atoi(tpuWorkerIDEnvVar)
 							if err != nil {
-								klog.ErrorS(err, "updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_ID", tpuWorkerIDEnvVar)
+								klog.ErrorS(err, "getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_ID", tpuWorkerIDEnvVar)
 								continue
 							}
 							existingWorkerID = tempVar
@@ -429,7 +466,7 @@ func updateSliceToWorkerIDs(clusterName string, groupName string, namespace stri
 						}
 					}
 					if existingPod.Status.Phase == "Running" && existingWorkerID == -1 {
-						return errors.New("existing TPU worker missing TPU_WORKER_ID")
+						return nil, errors.New("existing TPU worker missing TPU_WORKER_ID")
 					}
 					if existingWorkerID != -1 {
 						// Pod has been intercepted by the webhook
@@ -439,13 +476,13 @@ func updateSliceToWorkerIDs(clusterName string, groupName string, namespace stri
 						} else {
 							sliceToWorkerIDs[podSlice] = append(sliceToWorkerIDs[podSlice], existingWorkerID)
 						}
-						klog.V(1).InfoS("updateSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "ReplicaIndex", existingReplicaIndex, "TPU_WORKER_ID", existingWorkerID)
+						klog.V(1).InfoS("getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "ReplicaIndex", existingReplicaIndex, "TPU_WORKER_ID", existingWorkerID)
 					}
 				}
 			}
 		}
 	}
-	return nil
+	return sliceToWorkerIDs, nil
 }
 
 // unmarshal pod from admission request
@@ -469,7 +506,7 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 }
 
 // add DNS hostname and TPU_WORKER_ID env var to the Pod
-func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
+func mutatePod(podLister listersv1.PodLister, admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
 	if err != nil {
 		return nil, err
@@ -501,13 +538,13 @@ func mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.Admis
 		numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, chipsPerHost) // ignore error here because topology may not be set yet
 
 		// query k8s client to populate sliceToWorkerIDs to then calculate the next TPU_WORKER_ID and replicaIndex
-		err := updateSliceToWorkerIDs(clusterName, groupName, namespace, numOfHosts)
+		sliceToWorkerIDs, err := getSliceToWorkerIDs(podLister, clusterName, groupName, namespace, numOfHosts)
 		if err != nil {
 			return nil, err
 		}
-		replicaIndex := getReplicaIndex(clusterName, groupName, namespace)
+		replicaIndex := getReplicaIndex(sliceToWorkerIDs, clusterName, groupName, namespace)
 		podSlice := slice{clusterName, groupName, namespace, replicaIndex, numOfHosts}
-		tpuWorkerID := getNextWorkerID(podSlice, namespace, replicaIndex) // defaults to 0 for single-host
+		tpuWorkerID := getNextWorkerID(sliceToWorkerIDs, podSlice, namespace, replicaIndex) // defaults to 0 for single-host
 
 		// inject replica index label
 		injectReplicaLabel(clusterName, namespace, replicaIndex, groupName, &patches)
@@ -642,68 +679,27 @@ func main() {
 		options.LabelSelector = "ray.io/node-type=worker,app.kubernetes.io/created-by=kuberay-operator"
 	}
 	factory := informers.NewFilteredSharedInformerFactory(client, 5*time.Minute, metav1.NamespaceAll, tweakListOptionsFunc)
-	podLister = factory.Core().V1().Pods().Lister()
+	podLister := factory.Core().V1().Pods().Lister()
 
 	// start the PodInformer and wait for cache sync
 	stopCh := make(chan struct{})
 	factory.Start(stopCh)
 	factory.WaitForCacheSync(stopCh)
 
-	// close the PodInformer on termination
+	// close the PodInformer on exit
 	defer close(stopCh)
+
+	tpuWebhookServer := NewTPUWebhookServer(podLister)
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "kuberay-tpu-webhook")
 	})
-	mux.HandleFunc("/mutate", func(w http.ResponseWriter, r *http.Request) {
-		admissionReview := &admissionv1.AdmissionReview{}
-		if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
-			http.Error(w, "Error decoding request body", http.StatusBadRequest)
-			return
-		}
 
-		if admissionReview.Request.Kind.Kind == "Pod" {
-			klog.V(1).Info("Received review for Pod creation")
-			response, err := mutatePod(admissionReview)
-			if err != nil {
-				klog.Errorf("Failed to mutate pod: %s", err)
-				return
-			}
-			admissionReview.Response = response
-			responseBytes, err := json.Marshal(admissionReview)
-			if err != nil {
-				klog.Errorf("Failed to encode response: %s", err)
-				return
-			}
-			fmt.Fprint(w, string(responseBytes))
-		}
-	})
+	mux.HandleFunc("/mutate", tpuWebhookServer.Mutate)
 
-	mux.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) {
-		admissionReview := &admissionv1.AdmissionReview{}
-		if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
-			http.Error(w, "Error decoding request body", http.StatusBadRequest)
-			return
-		}
-
-		if admissionReview.Request.Kind.Kind == "RayCluster" {
-			klog.V(0).Info("Received review for RayCluster")
-			response, err := validateRayCluster(admissionReview)
-			if err != nil {
-				klog.Errorf("Failed to validate ray cluster: %s", err)
-				return
-			}
-			admissionReview.Response = response
-			responseBytes, err := json.Marshal(admissionReview)
-			if err != nil {
-				klog.Errorf("Failed to encode response: %s", err)
-				return
-			}
-			fmt.Fprint(w, string(responseBytes))
-		}
-	})
+	mux.HandleFunc("/validate", tpuWebhookServer.Validate)
 
 	srv := &http.Server{
 		Addr:    BindAddr,
