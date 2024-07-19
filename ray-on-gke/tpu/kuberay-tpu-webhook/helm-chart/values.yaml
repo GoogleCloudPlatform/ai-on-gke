@@ -1,8 +1,7 @@
 # Default values for the KubeRay TPU webhook.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
-kuberay-tpu-webhook: 
+tpuWebhook:
   namespace:
     name: ray-system
   
@@ -15,6 +14,6 @@ kuberay-tpu-webhook:
     replicas: 1
     verbosity: 0
   
-  webhook-svc:
+  service:
     type: ClusterIP
     port: 443

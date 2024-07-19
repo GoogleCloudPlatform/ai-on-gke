@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{ .Values.kuberay-tpu-webhook.namespace.name }}
+  name: {{ .Values.tpuWebhook.namespace.name }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: kuberay-tpu-webhook-sa
-  namespace: {{ .Values.kuberay-tpu-webhook.namespace.name }}
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -25,7 +25,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: kuberay-tpu-webhook-sa
-    namespace: {{ .Values.kuberay-tpu-webhook.namespace.name }}
+    namespace: {{ .Values.tpuWebhook.namespace.name }}
 roleRef:
   kind: ClusterRole
   name: kuberay-tpu-webhook-pod-reader
@@ -37,9 +37,9 @@ metadata:
   labels:
     app: kuberay-tpu-webhook
   name: kuberay-tpu-webhook
-  namespace: {{ .Values.kuberay-tpu-webhook.namespace.name }}
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
 spec:
-  replicas: {{ .Values.kuberay-tpu-webhook.deployment.replicas }}
+  replicas: {{ .Values.tpuWebhook.deployment.replicas }}
   selector:
     matchLabels:
       app:  kuberay-tpu-webhook
@@ -49,11 +49,11 @@ spec:
         app:  kuberay-tpu-webhook
     spec:
       containers:
-        - image: "{{ .Values.kuberay-tpu-webhook.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.kuberay-tpu-webhook.image.repository }}
+        - image: "{{ .Values.tpuWebhook.image.repository }}:{{ .Values.tpuWebhook.image.tag }}"
+          imagePullPolicy: {{ .Values.tpuWebhook.image.pullPolicy }}
           name: {{ .Chart.Name }}
           args:
-          - --v={{ .Values.kuberay-tpu-webhook.deployment.verbosity }}
+          - --v={{ .Values.tpuWebhook.deployment.verbosity }}
           ports:
           - name: https
             containerPort: 443

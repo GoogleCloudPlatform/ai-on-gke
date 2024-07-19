@@ -4,13 +4,13 @@ metadata:
   labels:
     app: kuberay-tpu-webhook
   name: kuberay-tpu-webhook
-  namespace: {{ .Values.kuberay-tpu-webhook.namespace.name }}
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
 spec:
-  type: {{ .Values.kuberay-tpu-webhook.webhook-svc.type }}
+  type: {{ .Values.tpuWebhook.service.type }}
   selector:
     app: kuberay-tpu-webhook
   ports:
-    - port: {{ .Values.kuberay-tpu-webhook.webhook-svc.port }}
+    - port: {{ .Values.tpuWebhook.service.port }}
       targetPort: https
       protocol: TCP
       name: https
