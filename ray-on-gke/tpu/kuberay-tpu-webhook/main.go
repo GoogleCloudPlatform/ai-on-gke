@@ -75,23 +75,26 @@ func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if admissionReview.Request.Kind.Kind == "Pod" {
-		klog.V(1).Info("Received review for Pod creation")
-		response, err := t.mutatePod(admissionReview)
-		if err != nil {
-			klog.Errorf("Failed to mutate pod: %s", err)
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		admissionReview.Response = response
-		responseBytes, err := json.Marshal(admissionReview)
-		if err != nil {
-			klog.Errorf("Failed to encode response: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprint(w, string(responseBytes))
+	if admissionReview.Request.Kind.Kind != "Pod" {
+		http.Error(w, "Invalid Kind", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+	klog.V(1).Info("Received review for Pod creation")
+	response, err := t.mutatePod(admissionReview)
+	if err != nil {
+		klog.Errorf("Failed to mutate pod: %s", err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	admissionReview.Response = response
+	responseBytes, err := json.Marshal(admissionReview)
+	if err != nil {
+		klog.Errorf("Failed to encode response: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprint(w, string(responseBytes))
 }
 
 func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
@@ -102,23 +105,26 @@ func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if admissionReview.Request.Kind.Kind == "RayCluster" {
-		klog.V(0).Info("Received review for RayCluster")
-		response, err := validateRayCluster(admissionReview)
-		if err != nil {
-			klog.Errorf("Failed to validate ray cluster: %s", err)
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		admissionReview.Response = response
-		responseBytes, err := json.Marshal(admissionReview)
-		if err != nil {
-			klog.Errorf("Failed to encode response: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprint(w, string(responseBytes))
+	if admissionReview.Request.Kind.Kind != "RayCluster" {
+		http.Error(w, "Invalid Kind", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+	klog.V(0).Info("Received review for RayCluster")
+	response, err := validateRayCluster(admissionReview)
+	if err != nil {
+		klog.Errorf("Failed to validate ray cluster: %s", err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	admissionReview.Response = response
+	responseBytes, err := json.Marshal(admissionReview)
+	if err != nil {
+		klog.Errorf("Failed to encode response: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprint(w, string(responseBytes))
 }
 
 // helper function used for logging and testing
