@@ -1196,48 +1196,49 @@ func Test_GetEnvironmentVariable(t *testing.T) {
 func Test_GetSliceToWorkerIDs(t *testing.T) {
 	setupTest(t)
 
-	testPodLister := setupInformer(testInterceptedTPUPods)
-
 	tests := map[string]struct {
-		podLister           listersv1.PodLister
-		numOfHosts          int32
-		numReplicas         int
-		expectedPodsInGroup []*corev1.Pod
-		expectedWorkerID    string
-		expectedError       error
+		numOfHosts               int32
+		numReplicas              int
+		podsInGroup              []*corev1.Pod
+		expectedSliceToWorkerIDs map[slice][]int
 	}{
-		"getSliceToWorkerIDs missing PodLister": {
-			// PodLister is not initialized - returns error
-			podLister:     nil,
-			expectedError: errors.New("k8s Pod Informer Lister not initialized"),
+		"getSliceToWorkerIDs with nil Pod list": {
+			// this can occur when no Pods with the Ray group name have been cached
+			// should return an empty mapping
+			podsInGroup:              nil,
+			expectedSliceToWorkerIDs: make(map[slice][]int),
+		},
+		"getSliceToWorkerIDs for with CPU pod list": {
+			// sliceToWorkerIDs should return an empty mapping
+			numOfHosts:               int32(1),
+			numReplicas:              1,
+			podsInGroup:              testCPUPods,
+			expectedSliceToWorkerIDs: make(map[slice][]int),
 		},
 		"getSliceToWorkerIDs for with TPU pod list": {
 			// sliceToWorkerIDs should be populated with TPU worker IDs
-			podLister:           testPodLister,
-			numOfHosts:          int32(2),
-			numReplicas:         2,
-			expectedPodsInGroup: testInterceptedTPUPods,
+			numOfHosts:  int32(2),
+			numReplicas: 2,
+			podsInGroup: testInterceptedTPUPods,
+			expectedSliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(2)}: []int{0, 1},
+				slice{instanceName, groupNameStr, namespaceStr, 1, int32(2)}: []int{0, 1},
+			},
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDs, err := getSliceToWorkerIDs(tc.podLister, instanceName, groupNameStr, namespaceStr, tc.numOfHosts)
+			sliceToWorkerIDs, err := getSliceToWorkerIDs(tc.podsInGroup, instanceName, groupNameStr, namespaceStr, tc.numOfHosts)
 
-			if tc.expectedError != nil {
-				assert.Equal(t, tc.expectedError, err)
-			} else {
-				// sliceToWorkerIDs should be populated with slices and unique TPU_WORKER_IDs for each Pod
-				assert.Equal(t, err, nil)
-				assert.Equal(t, tc.numReplicas, len(sliceToWorkerIDs))
-				for i := 0; i < tc.numReplicas; i++ {
-					testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
-					workerIDs := sliceToWorkerIDs[testPodSlice]
-					sort.Ints(workerIDs)
-					assert.Equal(t, int(tc.numOfHosts), len(workerIDs))
-					for j := 0; j < int(tc.numOfHosts); j++ {
-						assert.Equal(t, j, workerIDs[j])
-					}
+			// sliceToWorkerIDs should be populated with slices and unique TPU_WORKER_IDs for each Pod
+			assert.Equal(t, err, nil)
+			for slice, workerIDs := range tc.expectedSliceToWorkerIDs {
+				assert.Contains(t, sliceToWorkerIDs, slice)
+				assert.Equal(t, len(workerIDs), len(sliceToWorkerIDs[slice]))
+				sort.Ints(workerIDs)
+				for index, value := range workerIDs {
+					assert.Equal(t, sliceToWorkerIDs[slice][index], value)
 				}
 			}
 		})
@@ -1338,7 +1339,10 @@ func Test_MutatePod(t *testing.T) {
 			admissionReview.Request.Object.Raw = jsonPod
 			admissionReview.Request.Object.Object = tc.testPod
 
-			admissionResponse, err := mutatePod(testPodLister, admissionReview)
+			// set up TPUWebhookServer
+			tpuWebhookServer := NewTPUWebhookServer(testPodLister)
+
+			admissionResponse, err := tpuWebhookServer.mutatePod(admissionReview)
 			if err != nil {
 				assert.Equal(t, tc.expectedError, err)
 			} else {
