@@ -694,8 +694,7 @@ func main() {
 	podLister := factory.Core().V1().Pods().Lister()
 
 	if podLister == nil {
-		klog.Error("Failed to initialize Pod Lister")
-		return
+		klog.Fatal("Failed to initialize Pod Lister")
 	}
 
 	// start the PodInformer and wait for cache sync
