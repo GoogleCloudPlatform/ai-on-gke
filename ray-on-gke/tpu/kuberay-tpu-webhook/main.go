@@ -340,7 +340,7 @@ func checkWorkersMatchTopology(clusterName string, namespace string, workerGroup
 func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, err := extractRayCluster(admissionReview)
 	if err != nil {
-		klog.Fatalf("Ray Cluster extraction failed: %s", err)
+		return nil, err
 	}
 
 	admit := true
