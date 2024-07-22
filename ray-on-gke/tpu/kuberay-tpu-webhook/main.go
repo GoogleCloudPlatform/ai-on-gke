@@ -298,7 +298,7 @@ func checkWorkersMatchTopology(clusterName string, namespace string, workerGroup
 	}
 	groupName := workerGroupSpec.GroupName
 	containers := workerGroupSpec.Template.Spec.Containers
-	if containers == nil {
+	if len(containers) == 0 {
 		return false, errors.New("Container path not specified")
 	}
 	if containerRequestingTPUs(containers...) {
@@ -534,25 +534,21 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 	// use mapping of {cluster name, group name, replicaIndex} -> workers to extract next TPU_WORKER_ID
 	clusterName := pod.Labels["ray.io/cluster"]
 	if clusterName == "" {
-		return nil, errors.New("Kuberay Pod missing RayCluster label")
+		return nil, errors.New("KubeRay Pod missing RayCluster label")
 	}
 	groupName := pod.Labels["ray.io/group"]
 	if groupName == "" {
-		return nil, errors.New("Kuberay Pod missing Group label")
+		return nil, errors.New("KubeRay Pod missing Group label")
 	}
 	namespace := pod.Namespace
 	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 	if topology == "" {
-		klog.ErrorS(errors.New("TPU topology not specified"), "mutatePod", "RayCluster", namespace+"/"+clusterName, "gke-tpu-topology", topology)
+		return nil, errors.New("TPU topology not specified")
 	}
 	// assign worker to the next unique ID in the pod slice and update map
 	chipsPerHost := getNumTPUChipsRequested(containers...)
 	numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, chipsPerHost) // ignore error here because topology may not be set yet
 
-	// retrieve list of Pods in the same Ray worker group as the intercepted Pod
-	if t.podLister == nil {
-		return nil, errors.New("k8s Pod Informer Lister not initialized")
-	}
 	podsInGroup, err := t.podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
 	if err != nil {
 		return nil, err
@@ -696,6 +692,11 @@ func main() {
 	}
 	factory := informers.NewFilteredSharedInformerFactory(client, 5*time.Minute, metav1.NamespaceAll, tweakListOptionsFunc)
 	podLister := factory.Core().V1().Pods().Lister()
+
+	if podLister == nil {
+		klog.Error("Failed to initialize Pod Lister")
+		return
+	}
 
 	// start the PodInformer and wait for cache sync
 	stopCh := make(chan struct{})
