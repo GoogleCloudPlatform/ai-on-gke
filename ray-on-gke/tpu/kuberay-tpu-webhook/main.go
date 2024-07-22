@@ -84,7 +84,8 @@ func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
 	klog.V(1).Info("Received review for Pod creation")
 	response, err := t.mutatePod(admissionReview)
 	if err != nil {
-		klog.Errorf("Failed to mutate pod: %s", err)
+		klog.Errorf("Failed to mutate Pod: %s", err)
+		http.Error(w, "Failed to mutate Pod", http.StatusForbidden)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -92,6 +93,7 @@ func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
 	responseBytes, err := json.Marshal(admissionReview)
 	if err != nil {
 		klog.Errorf("Failed to encode response: %s", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -115,7 +117,8 @@ func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
 	klog.V(0).Info("Received review for RayCluster")
 	response, err := validateRayCluster(admissionReview)
 	if err != nil {
-		klog.Errorf("Failed to validate ray cluster: %s", err)
+		klog.Errorf("Failed to validate RayCluster: %s", err)
+		http.Error(w, "Failed to validate RayCluster", http.StatusForbidden)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -123,6 +126,7 @@ func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
 	responseBytes, err := json.Marshal(admissionReview)
 	if err != nil {
 		klog.Errorf("Failed to encode response: %s", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
