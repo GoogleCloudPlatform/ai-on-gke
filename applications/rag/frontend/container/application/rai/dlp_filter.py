@@ -108,3 +108,4 @@ def inspect_content(inspect_template_path, deidentify_template_path, input):
     # Print out the results.
     print(response.item.value)
     return response.item.value
+
