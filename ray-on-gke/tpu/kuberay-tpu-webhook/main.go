@@ -399,7 +399,7 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 //     so far, and assign this pod to the next integer replicaIndex
 func getReplicaIndex(sliceToWorkerIDs map[slice][]int, clusterName string, groupName string, namespace string) int {
 	// first pod created in cluster
-	if sliceToWorkerIDs == nil {
+	if len(sliceToWorkerIDs) == 0 {
 		return 0
 	}
 	nextLowestId := math.MaxInt32
