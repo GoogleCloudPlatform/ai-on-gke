@@ -534,16 +534,16 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 	// use mapping of {cluster name, group name, replicaIndex} -> workers to extract next TPU_WORKER_ID
 	clusterName := pod.Labels["ray.io/cluster"]
 	if clusterName == "" {
-		return nil, errors.New("KubeRay Pod missing RayCluster label")
+		return nil, errors.New("Ray Pod created by KubeRay missing RayCluster label")
 	}
 	groupName := pod.Labels["ray.io/group"]
 	if groupName == "" {
-		return nil, errors.New("KubeRay Pod missing Group label")
+		return nil, errors.New("Ray Pod created by KubeRay missing Group label")
 	}
 	namespace := pod.Namespace
 	topology := pod.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"]
 	if topology == "" {
-		return nil, errors.New("TPU topology not specified")
+		return nil, errors.New("Ray Pod created by KubeRay missing TPU topology nodeSelector")
 	}
 	// assign worker to the next unique ID in the pod slice and update map
 	chipsPerHost := getNumTPUChipsRequested(containers...)
