@@ -76,7 +76,7 @@ func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if admissionReview.Request.Kind.Kind != "Pod" {
+	if admissionReview.Request == nil || admissionReview.Request.Kind.Kind != "Pod" {
 		http.Error(w, "Invalid Kind", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -109,7 +109,7 @@ func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if admissionReview.Request.Kind.Kind != "RayCluster" {
+	if admissionReview.Request == nil || admissionReview.Request.Kind.Kind != "RayCluster" {
 		http.Error(w, "Invalid Kind", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
