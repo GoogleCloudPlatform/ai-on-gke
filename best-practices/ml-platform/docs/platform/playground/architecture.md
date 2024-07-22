@@ -1,5 +1,7 @@
 # Playground Machine learning platform (MLP) on GKE: Architecture
 
+![Playground Architecture](/best-practices/ml-platform/docs/images/platform/playground/mlp_playground_architecture.svg)
+
 ## Platform
 
 - [Google Cloud Project](https://console.cloud.google.com/cloud-resource-manager)
