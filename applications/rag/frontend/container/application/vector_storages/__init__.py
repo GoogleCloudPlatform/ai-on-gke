@@ -1,4 +1,4 @@
-from .custom_vector_storage import CustomVectorStore
+from .cloud_sql import CloudSQLVectorStore
 
 
-__all__ = ["CustomVectorStore"]
+__all__ = ["CloudSQLVectorStore"]

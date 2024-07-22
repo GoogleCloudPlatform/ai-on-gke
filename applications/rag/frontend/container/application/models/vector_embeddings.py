@@ -12,4 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file is required to make Python treat the subfolder as a package
+import os
+
+from sqlalchemy import Column, String, Text
+from sqlalchemy.orm import mapped_column, declarative_base
+from pgvector.sqlalchemy import Vector
+
+Base = declarative_base()
+
+VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
+
+
+class VectorEmbeddings(Base):
+    __tablename__ = VECTOR_EMBEDDINGS_TABLE_NAME
+
+    id = Column(String(255), primary_key=True)
+    text = Column(Text)
+    text_embedding = mapped_column(Vector(384))

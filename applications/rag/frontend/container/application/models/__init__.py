@@ -12,4 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file is required to make Python treat the subfolder as a package
+from .vector_embeddings import VectorEmbeddings
+
+__all__ = ["VectorEmbeddings"]
