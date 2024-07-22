@@ -28,7 +28,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// our representation of a pod slice
+// A slice represents a TPU Pod slice.
 type slice struct {
 	clusterName  string
 	groupName    string
@@ -37,12 +37,13 @@ type slice struct {
 	numOfHosts   int32
 }
 
+// A TPUWebhookServer is a KubeRay TPU webhook server instance.
 type TPUWebhookServer struct {
-	// k8s Pod informer to query current cluster Pod list
+	// A k8s Pod Lister to query current cluster Pod list.
 	podLister listersv1.PodLister
 }
 
-// JSON patch describing mutate operation(s) for incoming object
+// A JSON patch describing mutate operation(s) for incoming object.
 type patch map[string]any
 
 var (
