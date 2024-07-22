@@ -1268,7 +1268,7 @@ func Test_MutatePod(t *testing.T) {
 			// missing Ray cluster label - returns error
 			testPod:             testCPUWorker.DeepCopy(),
 			missingClusterLabel: true,
-			expectedError:       errors.New("Kuberay Pod missing RayCluster label"),
+			expectedError:       errors.New("Ray Pod created by KubeRay missing RayCluster label"),
 		},
 		"mutatePod missing container": {
 			// missing containers - returns error
@@ -1283,7 +1283,7 @@ func Test_MutatePod(t *testing.T) {
 			missingClusterLabel: false,
 			missingContainers:   false,
 			expectedTopology:    "",
-			expectedError:       errors.New("TPU topology not specified"),
+			expectedError:       errors.New("Ray Pod created by KubeRay missing TPU topology nodeSelector"),
 		},
 		"mutatePod in single-host TPU worker group": {
 			// requests TPUs, single-host - injects TPU_WORKER_ID, TPU_NAME and replicaIndex label
