@@ -1,4 +1,4 @@
-# NVIDIA NIM on GKE with NVIDIA A100s
+# NVIDIA NIM on GKE
 
 ## Prerequisites
 ### Prerequisites
@@ -9,7 +9,6 @@
 * [Google Cloud Project](https://console.cloud.google.com) with billing enabled
 * [gcloud CLI](https://cloud.google.com/sdk/docs/install)
 * [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
-<!-- * [Terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli) -->
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 *  [yq](https://pypi.org/project/yq/)
 
@@ -18,7 +17,6 @@
 1. Choose your region and set your project and machine variables:
 ```bash
 export PROJECT_ID=$(gcloud config get project)
-export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID?} --format="value(projectNumber)")
 export REGION=us-central1
 export ZONE=${REGION?}-b
 export MACH=a2-highgpu-1g
