@@ -28,7 +28,7 @@ This requires a minimum Terraform version of 1.7.4
 
 Python script used in this tutorial assumes in your environment you are running Python >= 3.9
 
-You may need to run pip install -r requirements.txt to install the library dependencies. (Optionally, you can run this within a venv, i.e. python3 -m venv ./venv && source ./venv/bin/activate && pip install ...)
+You may need to run pip install -r benchmark/dataset/ShareGPT_v3_unflitered_cleaned_split/requirements.txt to install the library dependencies. (Optionally, you can run this within a venv, i.e. python3 -m venv ./venv && source ./venv/bin/activate && pip install ...)
 
 ## Deploy and benchmark an ML model
 
