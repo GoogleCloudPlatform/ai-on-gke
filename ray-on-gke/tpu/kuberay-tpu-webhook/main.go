@@ -426,15 +426,18 @@ func getReplicaIndex(sliceToWorkerIDs map[slice][]int, clusterName string, group
 // getNextWorkerID returns the next lowest TPU_WORKER_ID in the Pod slice
 func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace string, replicaIndex int) int {
 	tpuWorkerID := 0 // defaults to 0 (first Pod in slice)
-	if sliceToWorkerIDs[podSlice] != nil {
-		sort.Ints(sliceToWorkerIDs[podSlice])
-		// iterate through existing workers and get the next lowest, unused ID
-		for _, workerID := range sliceToWorkerIDs[podSlice] {
-			if workerID == tpuWorkerID {
-				tpuWorkerID++
-			}
+	if sliceToWorkerIDs[podSlice] == nil {
+		return tpuWorkerID
+	}
+	sort.Ints(sliceToWorkerIDs[podSlice])
+	// iterate through existing workers and get the next lowest, unused ID
+	for _, workerID := range sliceToWorkerIDs[podSlice] {
+		if workerID == tpuWorkerID {
+			tpuWorkerID++
+			// break here?
 		}
 	}
+
 	klog.V(1).InfoS("getNextWorkerID", "RayCluster", namespace+"/"+podSlice.clusterName, "Worker Group", podSlice.groupName, "TPU_WORKER_ID", tpuWorkerID)
 	return tpuWorkerID
 }
@@ -456,44 +459,49 @@ func getSliceToWorkerIDs(podsInGroup []*corev1.Pod, clusterName string, groupNam
 		existingGroupName := existingPod.Labels["ray.io/group"]
 		existingNamespace := existingPod.Namespace
 		// we only care about workers in the same RayCluster and worker group when assigning IDs
-		if clusterName == existingClusterName && groupName == existingGroupName && namespace == existingNamespace {
-			if !containerRequestingTPUs(existingPod.Spec.Containers...) {
-				// Pod does not request TPUs, 'ray.io/group' is not a TPU worker group
-				return sliceToWorkerIDs, nil
-			}
-			replicaIndexLabel := existingPod.Labels["replicaIndex"]
-			if replicaIndexLabel == "" {
-				// Pod has not been intercepted by the KubeRay TPU webhook yet
+		if clusterName != existingClusterName || groupName != existingGroupName || namespace != existingNamespace {
+			continue
+		}
+
+		if !containerRequestingTPUs(existingPod.Spec.Containers...) {
+			// Pod does not request TPUs, 'ray.io/group' is not a TPU worker group
+			return sliceToWorkerIDs, nil
+		}
+		replicaIndexLabel := existingPod.Labels["replicaIndex"]
+		if replicaIndexLabel == "" {
+			// Pod has not been intercepted by the KubeRay TPU webhook yet
+			continue
+		}
+		replicaIndexLabelValues := strings.Split(replicaIndexLabel, "-")
+		existingReplicaIndex, _ := strconv.Atoi(replicaIndexLabelValues[len(replicaIndexLabelValues)-1])
+		existingWorkerID := -1
+		for _, container := range existingPod.Spec.Containers {
+			if !containerRequestingTPUs(container) {
 				continue
 			}
-			replicaIndexLabelValues := strings.Split(replicaIndexLabel, "-")
-			existingReplicaIndex, _ := strconv.Atoi(replicaIndexLabelValues[len(replicaIndexLabelValues)-1])
-			existingWorkerID := -1
-			for _, container := range existingPod.Spec.Containers {
-				if containerRequestingTPUs(container) {
-					tpuWorkerIDEnvVar := getEnvironmentVariable("TPU_WORKER_ID", container)
-					tempVar, err := strconv.Atoi(tpuWorkerIDEnvVar)
-					if err != nil {
-						klog.ErrorS(err, "getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_ID", tpuWorkerIDEnvVar)
-						continue
-					}
-					existingWorkerID = tempVar
-					break
-				}
+
+			tpuWorkerIDEnvVar := getEnvironmentVariable("TPU_WORKER_ID", container)
+			tempVar, err := strconv.Atoi(tpuWorkerIDEnvVar)
+			if err != nil {
+				klog.ErrorS(err, "getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_ID", tpuWorkerIDEnvVar)
+				continue
 			}
-			if existingPod.Status.Phase == "Running" && existingWorkerID == -1 {
-				return nil, errors.New("existing TPU worker missing TPU_WORKER_ID")
+			existingWorkerID = tempVar
+			break
+		}
+		if existingPod.Status.Phase == "Running" && existingWorkerID == -1 {
+			return nil, errors.New("existing TPU worker missing TPU_WORKER_ID")
+		}
+		if existingWorkerID != -1 {
+			// Pod has been intercepted by the webhook
+			podSlice := slice{existingClusterName, existingGroupName, namespace, existingReplicaIndex, numOfHosts}
+			if sliceToWorkerIDs[podSlice] == nil {
+				sliceToWorkerIDs[podSlice] = []int{existingWorkerID}
+			} else {
+				sliceToWorkerIDs[podSlice] = append(sliceToWorkerIDs[podSlice], existingWorkerID)
 			}
-			if existingWorkerID != -1 {
-				// Pod has been intercepted by the webhook
-				podSlice := slice{existingClusterName, existingGroupName, namespace, existingReplicaIndex, numOfHosts}
-				if sliceToWorkerIDs[podSlice] == nil {
-					sliceToWorkerIDs[podSlice] = []int{existingWorkerID}
-				} else {
-					sliceToWorkerIDs[podSlice] = append(sliceToWorkerIDs[podSlice], existingWorkerID)
-				}
-				klog.V(1).InfoS("getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "ReplicaIndex", existingReplicaIndex, "TPU_WORKER_ID", existingWorkerID)
-			}
+			klog.V(1).InfoS("getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "ReplicaIndex", existingReplicaIndex, "TPU_WORKER_ID", existingWorkerID)
+
 		}
 	}
 	return sliceToWorkerIDs, nil
