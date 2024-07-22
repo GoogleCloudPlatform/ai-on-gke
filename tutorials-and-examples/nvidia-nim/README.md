@@ -1,16 +1,25 @@
 # NVIDIA NIM on GKE
 
-## Prerequisites
-### Prerequisites
+## Before you begin
 
+1. Get access to NVIDIA NIMs
 > [!IMPORTANT]
 > Before you proceed further, ensure you have the NVIDIA AI Enterprise License (NVAIE) to access the NIMs.  To get started, go to [build.nvidia.com](https://build.nvidia.com/explore/discover?signin=true) and provide your company email address
 
-* [Google Cloud Project](https://console.cloud.google.com) with billing enabled
+2. In the [Google Cloud console](https://console.cloud.google.com), on the project selector page, select or create a new project with [billing enabled](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#console)
+
+3. Ensure you have the following tools installed on your workstation
 * [gcloud CLI](https://cloud.google.com/sdk/docs/install)
 * [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
-* [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-*  [yq](https://pypi.org/project/yq/)
+* [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [yq](https://pypi.org/project/yq/)
+
+4. Enable the required APIs
+```bash
+gcloud services enable \
+  container.googleapis.com \
+  file.googleapis.com
+```
 
 ## Set up your GKE Cluster
 
