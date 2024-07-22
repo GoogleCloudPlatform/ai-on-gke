@@ -17,46 +17,50 @@ import google.cloud.language_v1 as language
 from . import retry
 
 # Convert the project id into a full resource id.
-parent = os.environ.get('PROJECT_ID', 'NULL')
+parent = os.environ.get("PROJECT_ID", "NULL")
 
 # Instantiate a nlp client.
 nature_language_client = language.LanguageServiceClient()
 
+
 def is_nlp_api_enabled():
-  if parent == 'NULL':
-    return False
-  # Check if the DLP API is enabled
-  try:
-    sum_moderation_confidences("test")
-    return True
-  except Exception as e:
-    print(f"Error: {e}")
-    return False
+    if parent == "NULL":
+        return False
+    # Check if the DLP API is enabled
+    try:
+        sum_moderation_confidences("test")
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+
 
 def sum_moderation_confidences(text):
-  document = language.types.Document(
-      content=text, type_=language.types.Document.Type.PLAIN_TEXT
-  )
+    document = language.types.Document(
+        content=text, type_=language.types.Document.Type.PLAIN_TEXT
+    )
 
-  request = language.ModerateTextRequest(
-      document=document,
-  )
-  # Detects the sentiment of the text
-  response = nature_language_client.moderate_text(
-      request=request, retry=retry.retry_policy
-  )
-  print(f'get response: {response}')
-  # Parse response and sum the confidences of moderation, the categories are from https://cloud.google.com/natural-language/docs/moderating-text
-  largest_confidence = 0.0
-  excluding_names = ["Health", "Politics", "Finance", "Legal"]
-  for category in response.moderation_categories:
-    if category.name in excluding_names:
-      continue
-    if category.confidence > largest_confidence:
-      largest_confidence = category.confidence
+    request = language.ModerateTextRequest(
+        document=document,
+    )
+    # Detects the sentiment of the text
+    response = nature_language_client.moderate_text(
+        request=request, retry=retry.retry_policy
+    )
+    print(f"get response: {response}")
+    # Parse response and sum the confidences of moderation, the categories are from https://cloud.google.com/natural-language/docs/moderating-text
+    largest_confidence = 0.0
+    excluding_names = ["Health", "Politics", "Finance", "Legal"]
+    for category in response.moderation_categories:
+        if category.name in excluding_names:
+            continue
+        if category.confidence > largest_confidence:
+            largest_confidence = category.confidence
 
-  print(f'largest confidence is: {largest_confidence}')
-  return int(largest_confidence * 100)
+    print(f"largest confidence is: {largest_confidence}")
+    return int(largest_confidence * 100)
+
 
 def is_content_inappropriate(text, nlp_filter_level):
-  return sum_moderation_confidences(text) > (100 - int(nlp_filter_level))
+    return sum_moderation_confidences(text) > (100 - int(nlp_filter_level))
+

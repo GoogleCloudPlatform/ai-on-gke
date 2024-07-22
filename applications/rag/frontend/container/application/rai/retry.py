@@ -17,13 +17,15 @@ from google.api_core.retry import Retry
 
 
 _RETRIABLE_TYPES = [
-exceptions.TooManyRequests,  # 429
-exceptions.InternalServerError,  # 500
-exceptions.BadGateway,  # 502
-exceptions.ServiceUnavailable,  # 503
+    exceptions.TooManyRequests,  # 429
+    exceptions.InternalServerError,  # 500
+    exceptions.BadGateway,  # 502
+    exceptions.ServiceUnavailable,  # 503
 ]
+
 
 def is_retryable(exc):
     return isinstance(exc, _RETRIABLE_TYPES)
+
 
 retry_policy = Retry(predicate=is_retryable)
