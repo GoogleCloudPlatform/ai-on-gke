@@ -67,6 +67,7 @@ func NewTPUWebhookServer(podLister listersv1.PodLister) *TPUWebhookServer {
 	}
 }
 
+// Mutate handles http Request for Pod creation and writes a response
 func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
 	admissionReview := &admissionv1.AdmissionReview{}
 	if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
@@ -97,6 +98,7 @@ func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(responseBytes))
 }
 
+// Validate handles http Request for RayCluster creation and writes a response
 func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
 	admissionReview := &admissionv1.AdmissionReview{}
 	if err := json.NewDecoder(r.Body).Decode(admissionReview); err != nil {
@@ -127,7 +129,7 @@ func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(responseBytes))
 }
 
-// helper function used for logging and testing
+// printSliceToWorkerIds logs sliceToWorkerIDs contents for debugging
 func printSliceToWorkerIds(sliceToWorkerIDs map[slice][]int) {
 	for slice, workerList := range sliceToWorkerIDs {
 		klog.V(1).InfoS("printSliceToWorkerIds", "RayCluster", slice.namespace+"/"+slice.clusterName, "Worker Group", slice.groupName)
@@ -137,7 +139,7 @@ func printSliceToWorkerIds(sliceToWorkerIDs map[slice][]int) {
 	}
 }
 
-// check if containers are requesting TPU resources
+// containerRequestingTPUs returns whether containers are requesting TPU resources
 func containerRequestingTPUs(containers ...corev1.Container) bool {
 	for _, container := range containers {
 		if l := container.Resources.Limits; l != nil {
@@ -154,7 +156,7 @@ func containerRequestingTPUs(containers ...corev1.Container) bool {
 	return false
 }
 
-// returns `google.com/TPU` Resource request value for the container
+// getNumTPUChipsRequested returns `google.com/TPU` Resource request value for the container
 // this indicates the number of TPU chips for the container to use
 func getNumTPUChipsRequested(containers ...corev1.Container) int64 {
 	tpuLimit := int64(0)
@@ -177,6 +179,7 @@ func getNumTPUChipsRequested(containers ...corev1.Container) int64 {
 	return min(tpuLimit, tpuRequest)
 }
 
+// getNumTPUHostsFromTopology returns number of TPU VM hosts in Pod slice specified by gke-tpu-topology Pod nodeSelector
 func getNumTPUHostsFromTopology(clusterName string, groupName string, namespace string, topology string, chipsPerHost int64) (int32, error) {
 	if topology == "" {
 		return 0, errors.New("TPU topology not specified")
@@ -197,7 +200,7 @@ func getNumTPUHostsFromTopology(clusterName string, groupName string, namespace 
 	return hosts, nil
 }
 
-// unmarshal raycluster from admission request
+// extractRayCluster returns RayCluster unmarshalled from an admission request
 func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCluster, error) {
 	if admissionReview.Request.Kind.Kind != "RayCluster" {
 		return nil, fmt.Errorf("Expected RayCluster but got %s", admissionReview.Request.Kind.Kind)
@@ -211,6 +214,7 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
+// genDNSHostnames returns list of DNS hostnames for TPU VM hosts as a string
 func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, namespace string, replicaIndex int) (string, error) {
 	if numOfHosts == 0 {
 		err := errors.New("workerGroupSpec NumOfHosts not set")
@@ -225,7 +229,7 @@ func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, nam
 	return strings.Join(hostNames, ","), nil
 }
 
-// inject subdomain and TPU_WORKER_HOSTNAMES into pods for TPU multi-host initialization
+// injectHostnames injects subdomain and TPU_WORKER_HOSTNAMES into a Pod for TPU multi-host initialization
 func injectHostnames(clusterName string, hostNames string, envPath string, container corev1.Container, patches *[]patch) {
 	subdomainPatch, hostNamesPatch := patch{"op": "add"}, patch{"op": "add"}
 	subdomainPath := "/spec/subdomain"
@@ -246,6 +250,7 @@ func injectHostnames(clusterName string, hostNames string, envPath string, conta
 	*patches = append(*patches, subdomainPatch, hostNamesPatch)
 }
 
+// injectReplicaLabel injects replicaIndex label into a Pod for TPU Pod scheduling and Ray multi-host autoscaling
 func injectReplicaLabel(clusterName string, namespace string, replicaIndex int, workerGroupName string, patches *[]patch) {
 	labelPatch := patch{"op": "replace"}
 	labelPath := "/metadata/labels/replicaIndex"
@@ -259,7 +264,7 @@ func injectReplicaLabel(clusterName string, namespace string, replicaIndex int, 
 	*patches = append(*patches, labelPatch)
 }
 
-// inject pod affinity and anti-affinity scheduling constraints using replicaIndex label
+// injectPodAffinity injects pod affinity and anti-affinity scheduling constraints using replicaIndex label
 func injectPodAffinity(pod *corev1.Pod, replicaIndex int, workerGroupName string, patches *[]patch) {
 	key := "replicaIndex"
 	value := workerGroupName + "-" + strconv.Itoa(replicaIndex)
@@ -289,7 +294,7 @@ func injectPodAffinity(pod *corev1.Pod, replicaIndex int, workerGroupName string
 	*patches = append(*patches, podAffinityPatch)
 }
 
-// check that the # of Ray TPU worker pods equals the # of hosts defined in the topology key
+// checkWorkersMatchTopology returns whether the # of Ray TPU worker pods equals the # of hosts defined in the topology key
 func checkWorkersMatchTopology(clusterName string, namespace string, workerGroupSpec ray.WorkerGroupSpec) (bool, error) {
 	klog.V(1).InfoS("checkWorkersMatchTopology", "RayCluster", namespace+"/"+clusterName, "workerGroup", workerGroupSpec.GroupName)
 	numHosts := workerGroupSpec.NumOfHosts // 1 TPU VM host -> 1 Ray worker pod
@@ -327,6 +332,7 @@ func checkWorkersMatchTopology(clusterName string, namespace string, workerGroup
 	return true, nil
 }
 
+// validateRayCluster returns an Admission Response after checking Ray worker groups match TPU scheduling constraints
 func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	raycluster, err := extractRayCluster(admissionReview)
 	if err != nil {
@@ -368,6 +374,7 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	return admissionResponse, nil
 }
 
+// getEnvironmentVariable returns value associated with a given Container environment variable
 func getEnvironmentVariable(varName string, container corev1.Container) string {
 	if container.Env != nil && len(container.Env) > 0 {
 		for _, envVar := range container.Env {
@@ -379,7 +386,7 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 	return ""
 }
 
-// gets the  next lowest-index pod slice (worker group replica) to assign a pod to in the RayCluster
+// getReplicaIndex returns the next lowest-index Pod slice (worker group replica) to assign a Pod to in the RayCluster
 // there are three possible cases here:
 //  1. sliceToWorkerIDs is empty, this is the first pod the webhook intercepts
 //     - assign this pod to replica 0
@@ -416,7 +423,7 @@ func getReplicaIndex(sliceToWorkerIDs map[slice][]int, clusterName string, group
 	return nextLowestId
 }
 
-// returns next lowest TPU_WORKER_ID in pod slice and updates mappings
+// getNextWorkerID returns the next lowest TPU_WORKER_ID in the Pod slice
 func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace string, replicaIndex int) int {
 	tpuWorkerID := 0 // defaults to 0 (first Pod in slice)
 	if sliceToWorkerIDs[podSlice] != nil {
@@ -432,7 +439,7 @@ func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace
 	return tpuWorkerID
 }
 
-// builds mapping representing the current RayCluster state of TPU pods using PodInformer
+// getSliceToWorkerIDs returns a mapping representing the current RayCluster state of TPU pods using a PodLister
 func getSliceToWorkerIDs(podsInGroup []*corev1.Pod, clusterName string, groupName string, namespace string, numOfHosts int32) (map[slice][]int, error) {
 	sliceToWorkerIDs := make(map[slice][]int)
 
@@ -492,7 +499,7 @@ func getSliceToWorkerIDs(podsInGroup []*corev1.Pod, clusterName string, groupNam
 	return sliceToWorkerIDs, nil
 }
 
-// unmarshal pod from admission request
+// extractPod returns a Pod unmarshalled from an Admission Request
 func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, error) {
 	if admissionReview.Request.Kind.Kind != "Pod" {
 		return nil, fmt.Errorf("Expected Pod but got %s", admissionReview.Request.Kind.Kind)
@@ -508,7 +515,7 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 	return &pod, nil
 }
 
-// add DNS hostname and TPU_WORKER_ID env var to the Pod
+// mutatePod returns an Admission Response after injecting TPU related fields to a given Pod
 func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
 	if err != nil {
