@@ -431,16 +431,16 @@ func getReplicaIndex(sliceToWorkerIDs map[slice][]int, clusterName string, group
 // getNextWorkerID returns the next lowest TPU_WORKER_ID in the Pod slice
 func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace string, replicaIndex int) int {
 	tpuWorkerID := 0 // defaults to 0 (first Pod in slice)
-	if sliceToWorkerIDs[podSlice] == nil {
+	if len(sliceToWorkerIDs) == 0 {
 		return tpuWorkerID
 	}
 	sort.Ints(sliceToWorkerIDs[podSlice])
 	// iterate through existing workers and get the next lowest, unused ID
 	for _, workerID := range sliceToWorkerIDs[podSlice] {
-		if workerID == tpuWorkerID {
-			tpuWorkerID++
-			// break here?
+		if workerID != tpuWorkerID {
+			break
 		}
+		tpuWorkerID++
 	}
 
 	klog.V(1).InfoS("getNextWorkerID", "RayCluster", namespace+"/"+podSlice.clusterName, "Worker Group", podSlice.groupName, "TPU_WORKER_ID", tpuWorkerID)
