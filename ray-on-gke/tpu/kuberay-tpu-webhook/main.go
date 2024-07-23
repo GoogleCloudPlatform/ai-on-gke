@@ -431,7 +431,7 @@ func getReplicaIndex(sliceToWorkerIDs map[slice][]int, clusterName string, group
 // getNextWorkerID returns the next lowest TPU_WORKER_ID in the Pod slice
 func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace string, replicaIndex int) int {
 	tpuWorkerID := 0 // defaults to 0 (first Pod in slice)
-	if len(sliceToWorkerIDs) == 0 {
+	if len(sliceToWorkerIDs) == 0 || len(sliceToWorkerIDs[podSlice]) == 0 {
 		return tpuWorkerID
 	}
 	sort.Ints(sliceToWorkerIDs[podSlice])

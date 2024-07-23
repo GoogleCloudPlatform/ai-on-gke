@@ -378,79 +378,64 @@ func Test_GetReplicaIndex(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		numOfHosts            int32
-		numReplicas           int
-		additionalGroupStr    string
-		additionalNumOfHosts  int32
-		additionalNumReplicas int
+		sliceToWorkerIDs     map[slice][]int
+		expectedReplicaIndex int
 	}{
-		"single-host, single-slice worker group": {
-			// single-slice, replicaIndex should always be 0
-			numOfHosts:  1,
-			numReplicas: 1,
+		"nil sliceToWorkerIDs": {
+			// defaults to assigning Pod to replica 0
+			sliceToWorkerIDs:     nil,
+			expectedReplicaIndex: 0,
 		},
-		"single-host, multi-slice worker group": {
-			// multi-slice, replicaIndex should always be 0-numReplicas
-			numOfHosts:  1,
-			numReplicas: 4,
+		"empty sliceToWorkerIDs": {
+			// should assign Pod to replica 0 since no other Pods in slice
+			sliceToWorkerIDs:     make(map[slice][]int),
+			expectedReplicaIndex: 0,
 		},
-		"multi-host, single-slice worker group": {
-			// single-slice, replicaIndex should always be 0
-			numOfHosts:  4,
-			numReplicas: 1,
+		"single-host worker group missing worker": {
+			// should assign Pod to replica 0 since # workers < 1 for that slice
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(1)}: []int{},
+			},
+			expectedReplicaIndex: 0,
 		},
-		"multi-host, multi-slice worker group": {
-			// multi-slice, replicaIndex should always be 0-numReplicas for 0-numOfHosts pods
-			numOfHosts:  4,
-			numReplicas: 4,
+		"single-host worker group with all workers created": {
+			// should assign Pod to replica 1 since one existing slice with all workers created
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(1)}: []int{0},
+			},
+			expectedReplicaIndex: 1,
 		},
-		"multiple worker groups": {
-			// should assign replicaIndex 0-numReplicas and TPU_WORKER_ID 0-numOfHosts
-			// for each respective worker group
-			numOfHosts:            4,
-			numReplicas:           4,
-			additionalGroupStr:    "another-worker-group",
-			additionalNumOfHosts:  2,
-			additionalNumReplicas: 3,
+		"multi-host worker group missing worker": {
+			// should assign Pod to replica 0 since # workers < 4 for that slice
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(4)}: []int{0, 1, 2},
+				slice{instanceName, groupNameStr, namespaceStr, 1, int32(4)}: []int{0, 1, 2, 3},
+			},
+			expectedReplicaIndex: 0,
+		},
+		"multi-host worker group with all workers created": {
+			// should assign Pod to replica 1 since one existing slice with all workers created
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(4)}: []int{0, 1, 2, 3},
+			},
+			expectedReplicaIndex: 1,
+		},
+		"multi-slice worker group": {
+			// should assign Pod to replica 4 since 3 existing slices with all workers created
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(4)}: []int{0, 1, 2, 3},
+				slice{instanceName, groupNameStr, namespaceStr, 1, int32(4)}: []int{0, 1, 2, 3},
+				slice{instanceName, groupNameStr, namespaceStr, 2, int32(4)}: []int{0, 1, 2, 3},
+			},
+			expectedReplicaIndex: 3,
 		},
 	}
 
 	// validate getReplicaIndex() returns the expected Replica ID for TPU pods in varying pod slices
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDs := make(map[slice][]int)
-			for i := 0; i < tc.numReplicas; i++ {
-				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, i, tc.numOfHosts}
-				for j := 0; j < int(tc.numOfHosts); j++ {
-					replicaIndex := getReplicaIndex(sliceToWorkerIDs, instanceName, groupNameStr, namespaceStr)
-					assert.Equal(t, i, replicaIndex)
-
-					// add the worker ID to sliceToWorkerIDs - this would happen in getNextWorkerID
-					if sliceToWorkerIDs[testPodSlice] == nil {
-						sliceToWorkerIDs[testPodSlice] = []int{j}
-					} else {
-						sliceToWorkerIDs[testPodSlice] = append(sliceToWorkerIDs[testPodSlice], j)
-					}
-				}
-			}
-			// test assigning pods to replicas for a different worker group
-			if tc.additionalGroupStr != "" {
-				for i := 0; i < tc.additionalNumReplicas; i++ {
-					testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.additionalNumOfHosts}
-					for j := 0; j < int(tc.additionalNumOfHosts); j++ {
-						replicaIndex := getReplicaIndex(sliceToWorkerIDs, instanceName, tc.additionalGroupStr, namespaceStr)
-						assert.Equal(t, i, replicaIndex)
-
-						// add the worker ID to sliceToWorkerIDs - this would happen in getNextWorkerID
-						if sliceToWorkerIDs[testAdditionalPodSlice] == nil {
-							sliceToWorkerIDs[testAdditionalPodSlice] = []int{j}
-						} else {
-							sliceToWorkerIDs[testAdditionalPodSlice] = append(sliceToWorkerIDs[testAdditionalPodSlice], j)
-						}
-					}
-				}
-			}
-			assert.Equal(t, tc.numReplicas+tc.additionalNumReplicas, len(sliceToWorkerIDs))
+			replicaIndex := getReplicaIndex(tc.sliceToWorkerIDs, instanceName, groupNameStr, namespaceStr)
+			assert.Equal(t, tc.expectedReplicaIndex, replicaIndex)
 		})
 	}
 }
@@ -459,60 +444,71 @@ func Test_GetNextWorkerID(t *testing.T) {
 	setupTest(t)
 
 	tests := map[string]struct {
-		numOfHosts            int32
-		numReplicas           int
-		additionalGroupStr    string
-		additionalNumOfHosts  int32
-		additionalNumReplicas int
+		sliceToWorkerIDs    map[slice][]int
+		podSlice            slice
+		replicaIndex        int
+		expectedTPUWorkerID int
 	}{
-		"single-host, single-slice worker group": {
-			// single-host, TPU_WORKER_ID should always be 0
-			numOfHosts:  1,
-			numReplicas: 1,
+		"nil sliceToWorkerIDs": {
+			// defaults to assigning Pod to TPU_WORKER_ID=0
+			sliceToWorkerIDs:    nil,
+			podSlice:            slice{instanceName, groupNameStr, namespaceStr, 0, int32(1)},
+			replicaIndex:        0,
+			expectedTPUWorkerID: 0,
 		},
-		"single-host, multi-slice worker group": {
-			// multi-slice, TPU_WORKER_ID should be 0 for all replicas
-			numOfHosts:  1,
-			numReplicas: 4,
+		"empty sliceToWorkerIDs": {
+			// should assign Pod to TPU_WORKER_ID=0 since no other Pods in slice
+			sliceToWorkerIDs:    make(map[slice][]int),
+			podSlice:            slice{instanceName, groupNameStr, namespaceStr, 0, int32(1)},
+			replicaIndex:        0,
+			expectedTPUWorkerID: 0,
 		},
-		"multi-host, single-slice worker group": {
-			// multi-host, TPU_WORKER_ID should range from 0 to NumOfHosts-1
-			numOfHosts:  4,
-			numReplicas: 1,
+		"single-host worker group with empty worker ID list": {
+			// should assign Pod to TPU_WORKER_ID=0 since # workers < 1 for that slice
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(1)}: []int{},
+			},
+			podSlice:            slice{instanceName, groupNameStr, namespaceStr, 0, int32(1)},
+			replicaIndex:        0,
+			expectedTPUWorkerID: 0,
 		},
-		"multi-host, multi-slice worker group": {
-			// multi-slice, unique TPU_WORKER_IDs should range from 0 to NumOfHosts-1 for each replica
-			numOfHosts:  4,
-			numReplicas: 4,
+		"multi-host worker group with deleted worker": {
+			// should assign Pod to TPU_WORKER_ID=2 since that's the next lowest int ID in the slice
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(4)}: []int{3, 0, 1},
+			},
+			podSlice:            slice{instanceName, groupNameStr, namespaceStr, 0, int32(4)},
+			replicaIndex:        0,
+			expectedTPUWorkerID: 2,
+		},
+		"multi-host worker group with # worker IDs < NumOfHosts": {
+			// should assign Pod to TPU_WORKER_ID=3 since that's the next lowest int ID in the slice
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(4)}: []int{0, 1, 2, 3},
+				slice{instanceName, groupNameStr, namespaceStr, 1, int32(4)}: []int{0, 1, 2},
+			},
+			podSlice:            slice{instanceName, groupNameStr, namespaceStr, 1, int32(4)},
+			replicaIndex:        1,
+			expectedTPUWorkerID: 3,
+		},
+		"multi-slice worker group with all workers created": {
+			// should always assign Pod to TPU_WORKER_ID=0 in a new slice
+			sliceToWorkerIDs: map[slice][]int{
+				slice{instanceName, groupNameStr, namespaceStr, 0, int32(4)}: []int{0, 1, 2, 3},
+				slice{instanceName, groupNameStr, namespaceStr, 1, int32(4)}: []int{0, 1, 2, 3},
+				slice{instanceName, groupNameStr, namespaceStr, 2, int32(4)}: []int{0, 1, 2, 3},
+			},
+			podSlice:            slice{instanceName, groupNameStr, namespaceStr, 3, int32(4)},
+			replicaIndex:        3,
+			expectedTPUWorkerID: 0,
 		},
 	}
 
-	// validate getNextWorkerID() returns the expected TPU_WORKER ID for different worker group configurations
+	// validate getNextWorkerID() returns the expected TPU_WORKER ID for different sliceToWorkerIDs
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDs := make(map[slice][]int)
-			for replicaIndex := 0; replicaIndex < tc.numReplicas; replicaIndex++ {
-				testPodSlice := slice{instanceName, groupNameStr, namespaceStr, replicaIndex, tc.numOfHosts}
-				for j := 0; j < int(tc.numOfHosts); j++ {
-					workerID := getNextWorkerID(sliceToWorkerIDs, testPodSlice, namespaceStr, replicaIndex)
-					if sliceToWorkerIDs[testPodSlice] == nil {
-						sliceToWorkerIDs[testPodSlice] = []int{j}
-					} else {
-						sliceToWorkerIDs[testPodSlice] = append(sliceToWorkerIDs[testPodSlice], j)
-					}
-					assert.Equal(t, j, workerID)
-				}
-			}
-			// test assigning TPU_WORKER_IDs to pods for a different worker group
-			if tc.additionalGroupStr != "" {
-				for i := 0; i < tc.additionalNumReplicas; i++ {
-					testAdditionalPodSlice := slice{instanceName, tc.additionalGroupStr, namespaceStr, i, tc.additionalNumOfHosts}
-					for j := 0; j < int(tc.additionalNumOfHosts); j++ {
-						workerID := getNextWorkerID(sliceToWorkerIDs, testAdditionalPodSlice, namespaceStr, i)
-						assert.Equal(t, j, workerID)
-					}
-				}
-			}
+			workerID := getNextWorkerID(tc.sliceToWorkerIDs, tc.podSlice, namespaceStr, tc.replicaIndex)
+			assert.Equal(t, tc.expectedTPUWorkerID, workerID)
 		})
 	}
 }
