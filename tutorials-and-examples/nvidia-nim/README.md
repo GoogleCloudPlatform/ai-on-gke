@@ -88,7 +88,7 @@ kubectl create namespace nim
 ```
 
 ## Deploy a PVC to persist the model
-1. Create a PVC to persist the model weights - recommended for deployments with more than one (1) replica.  Save the following yaml as `pvc.yaml` or use existing file in this repository
+1. Create a PVC to persist the model weights - recommended for deployments with more than one (1) replica.  Save the following yaml as `pvc.yaml`.
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
