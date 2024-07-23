@@ -13,6 +13,7 @@
 * [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
 * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [jq](https://jqlang.github.io/jq/)
+* [ngc](https://ngc.nvidia.com/setup)
 
 4. Enable the required APIs
 ```bash
