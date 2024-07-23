@@ -88,9 +88,7 @@ kubectl create namespace nim
 ```
 
 ## Deploy a PVC to persist the model
-1. Clone this repository
-
-2. Create a PVC to persist the model weights - recommended for deployments with more than one (1) replica.  Save the following yaml as `pvc.yaml` or use existing file in this repository
+1. Create a PVC to persist the model weights - recommended for deployments with more than one (1) replica.  Save the following yaml as `pvc.yaml` or use existing file in this repository
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -106,10 +104,12 @@ spec:
   storageClassName: standard-rwx
 ```
 
-3. Apply PVC
+2. Apply PVC
 ```bash
 kubectl apply -f pvc.yaml
 ```
+> [!NOTE]
+> This PVC will [dynamically provision a PV](https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes#dynamic_provisioning) with the necessary storage to persist model weights across replicas of your pods.
 
 ## Deploy the NIM with the generated engine using a Helm chart
 
