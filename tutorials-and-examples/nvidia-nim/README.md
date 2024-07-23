@@ -12,7 +12,7 @@
 * [gcloud CLI](https://cloud.google.com/sdk/docs/install)
 * [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
 * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [yq](https://pypi.org/project/yq/)
+* [jq](https://jqlang.github.io/jq/)
 
 4. Enable the required APIs
 ```bash
