@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - build
+  - -t
+  - us-docker.pkg.dev/${PROJECT_ID}/llm/dataprep:${_VERSION}
+  - .
+  dir: "./dataprep"
+images:
+  - us-docker.pkg.dev/${PROJECT_ID}/llm/dataprep:${_VERSION}
+substitutions:
+  _VERSION: "v1.0.0"
