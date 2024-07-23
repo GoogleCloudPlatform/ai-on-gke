@@ -1273,7 +1273,7 @@ func Test_MutatePod(t *testing.T) {
 			admissionReview.Request.Object.Object = tc.testPod
 
 			// generate Pod list and create Pod Lister
-			testTPUPods := getTestPods("test-cluster", "test-namespace", tc.testPod, 1)
+			testTPUPods := getTestPods("test-cluster", "test-namespace", tc.testPod, int(tc.numOfHosts))
 			testPodLister := setupInformer(testTPUPods)
 
 			// set up TPUWebhookServer
