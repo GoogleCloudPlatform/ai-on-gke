@@ -41,7 +41,7 @@ gcloud container clusters create nim-demo --location ${REGION?} \
   --workload-pool ${PROJECT_ID?}.svc.id.goog \
   --enable-image-streaming \
   --enable-ip-alias \
-  --node-locations=$REGION-a \
+  --node-locations ${ZONE?} \
   --workload-pool=${PROJECT_ID?}.svc.id.goog \
   --addons=GcpFilestoreCsiDriver  \
   --machine-type n2d-standard-4 \
@@ -57,7 +57,7 @@ gcloud container node-pools create ${MACH?}-node-pool --cluster nim-demo \
   --ephemeral-storage-local-ssd=count=${GPU_COUNT?} \
   --enable-autoscaling --enable-image-streaming \
   --num-nodes=1 --min-nodes=1 --max-nodes=3 \
-  --node-locations ${REGION?}-b \
+  --node-locations ${ZONE?} \
   --region ${REGION?} \
   --spot
 ```
