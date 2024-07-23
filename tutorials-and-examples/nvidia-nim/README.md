@@ -85,7 +85,6 @@ ngc registry model list
 4. Create a Kuberntes namespace and switch context to that namespace
 ```bash
 kubectl create namespace nim
-kubectl config set-context --current --namespace nim
 ```
 
 ## Deploy a PVC to persist the model
@@ -128,7 +127,7 @@ helm --namespace nim install demo-nim nim-llm/ --set model.ngcAPIKey=$NGC_CLI_AP
 ## Test the NIM
 1. Expose the service
 ```bash
-kubectl port-forward services/demo-nim-nim-llm 8000
+kubectl port-forward --namespace nim services/demo-nim-nim-llm 8000
 ```
 
 2. Send a test prompt - A100
