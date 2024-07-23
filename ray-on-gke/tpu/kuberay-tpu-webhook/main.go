@@ -82,7 +82,7 @@ func (t *TPUWebhookServer) Mutate(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	klog.V(1).Info("Received review for Pod creation")
+	klog.V(0).InfoS("Mutate", "Received review for Pod creation: %s", admissionReview.Request.Name)
 	response, err := t.mutatePod(admissionReview)
 	if err != nil {
 		klog.Errorf("Failed to mutate Pod: %s", err)
@@ -115,7 +115,7 @@ func (t *TPUWebhookServer) Validate(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	klog.V(0).Info("Received review for RayCluster")
+	klog.V(0).InfoS("Validate", "Received review for RayCluster creation: %s", admissionReview.Request.Name)
 	response, err := validateRayCluster(admissionReview)
 	if err != nil {
 		klog.Errorf("Failed to validate RayCluster: %s", err)
