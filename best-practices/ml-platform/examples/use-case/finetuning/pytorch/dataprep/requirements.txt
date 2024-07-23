@@ -1,0 +1,11 @@
+jsonpickle==3.2.1
+numpy==1.26.4
+pandas==2.2.2
+vertexai==1.49.0
+## lowered version
+protobuf==4.24.4
+## added manually
+google-cloud-storage==2.17.0
+google-cloud-aiplatform==1.49.0
+gcsfs==2024.5.0
+datasets==2.20.0
