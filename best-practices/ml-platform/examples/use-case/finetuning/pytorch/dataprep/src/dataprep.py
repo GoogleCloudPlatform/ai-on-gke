@@ -1,14 +1,16 @@
-import pandas as pd
-import vertexai
-import vertexai.preview.generative_models as generative_models
-from vertexai.preview.generative_models import GenerativeModel
 import re
 import time
+import os
+import logging.config
+import pandas as pd
 import numpy as np
 import json
+import vertexai
+import vertexai.preview.generative_models as generative_models
+
+from vertexai.preview.generative_models import GenerativeModel
 from datasets import DatasetDict
 from datasets import Dataset
-import os
 
 PROJECT_ID = os.getenv("PROJECT_ID", "gkebatchexpce3c8dcb")
 # The bucket which contains the preprocessed data
@@ -32,6 +34,10 @@ num_questions = 3
 
 vertexai.init(project=PROJECT_ID, location=REGION)
 model = GenerativeModel(MODEL_ID)
+
+logging.config.fileConfig("logging.conf")
+logger = logging.getLogger("processing")
+logger.debug(logger)
 
 
 def filter_low_value_count_rows(df, column_name, min_count=10):
@@ -194,7 +200,7 @@ def generate_qa(context, category):
         temp_df = pd.DataFrame(new_data, columns=temp_df.columns)
         return temp_df
     except Exception as e:
-        print(e)
+        logger.error(e)
         return None
 
 
@@ -220,14 +226,14 @@ def data_prep(finetune_ds):
 
 
 def train_validate_test_split(df):
-    print("Total Data Size:", len(df))
+    logger.info("Total Data Size:", len(df))
     train_size = int(0.8 * len(df))
     val_size = int(0.1 * len(df))
     train_df = df.sample(n=train_size, random_state=42)
     remaining_df = df.drop(train_df.index)
     val_df = remaining_df.sample(n=val_size, random_state=42)
     test_df = remaining_df.drop(val_df.index)
-    print(
+    logger.info(
         "Training data size:",
         len(train_df),
         "\n",
