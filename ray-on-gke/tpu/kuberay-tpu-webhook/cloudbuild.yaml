@@ -16,15 +16,15 @@ steps:
   - id: 'kuberay tpu webhook fmt'
     name: 'golang:1.21.11'
     dir: /workspace/ray-on-gke/tpu/kuberay-tpu-webhook
-    args: ["fmt", "./..."]
+    args: ["fmt"]
   - id: 'kuberay tpu webhook vet'
     name: 'golang:1.21.11'
     dir: /workspace/ray-on-gke/tpu/kuberay-tpu-webhook
-    args: ["vet", "./..."]
+    args: ["vet"]
   - id: 'kuberay tpu webhook test'
     name: 'golang:1.21.11'
     dir: /workspace/ray-on-gke/tpu/kuberay-tpu-webhook
-    args: ["test", "./..."]
+    args: ["test"]
     allowFailure: false
 options:
   machineType: 'E2_HIGHCPU_8'
