@@ -43,4 +43,4 @@ steps:
     allowFailure: false
 options:
   machineType: 'E2_HIGHCPU_8'
-timeout: 60s
+timeout: 600s
