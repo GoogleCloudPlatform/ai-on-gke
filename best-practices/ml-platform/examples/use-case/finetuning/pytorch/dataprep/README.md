@@ -5,7 +5,7 @@ The prompts are generated using Vertex AI's Gemini Flash model. The output is a 
 the base model.
 
 
-## Preparation
+## Steps
 
 1. Clone the repository and change directory to the guide directory
 
@@ -83,7 +83,7 @@ the base model.
 
 1. Update Data Preparation Job variables
 
-   ## Data Prepraration Job inputs
+   Data Prepraration Job inputs:
    | Variable | Description | Example |
    | --- | --- | --- |
    | BUCKET | The bucket used for input and output. | | 
@@ -94,14 +94,14 @@ the base model.
    | PROMPT_MODEL_ID | The Vertex AI model for prompt generation | gemini-1.5-flash-001 |
    | VERTEX_REGION | The region for the Vertex AI API | |
 
+   Update respective variables in the dataprep job submission manifest to reflect your configuration.
+
    ``` 
    DATASET_INPUT_PATH="flipkart_preprocessed_dataset"
    DATASET_INPUT_FILE="flipkart.csv"
    DATASET_OUTPUT_PATH="dataset/output"
    PROMPT_MODEL_ID="gemini-1.5-flash-001"
    ```
-
-   Update respective variables in the dataprep job submission manifest to reflect your configuration.
    
    ``` 
    sed -i "s|V_BUCKET|${BUCKET}|" dataprep.yaml && \
