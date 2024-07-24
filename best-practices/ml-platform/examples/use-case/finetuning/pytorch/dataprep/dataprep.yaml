@@ -21,7 +21,7 @@ spec:
         - name: "DATASET_INPUT_FILE"
           value: "V_DATASET_INPUT_FILE"
         - name: "DATASET_OUTPUT_PATH"
-          value: "V_DATASET_OUTPUT_PATHD"
+          value: "V_DATASET_OUTPUT_PATH"
         - name: "PROJECT_ID"
           value: "V_PROJECT_ID"
         - name: "PROMPT_MODEL_ID"
