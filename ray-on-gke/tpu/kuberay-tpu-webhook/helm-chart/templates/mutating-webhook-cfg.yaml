@@ -17,9 +17,9 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: kuberay-tpu-mutating-webhook-cfg
   annotations:
-    cert-manager.io/inject-ca-from: ray-system/kuberay-tpu-webhook-certs
+    cert-manager.io/inject-ca-from: {{ .Values.tpuWebhook.namespace.name }}/kuberay-tpu-webhook-certs
 webhooks:
-  - name: kuberay-tpu-webhook.ray-system.svc
+  - name: kuberay-tpu-webhook.{{ .Values.tpuWebhook.namespace.name }}.svc
     admissionReviewVersions: [v1]
     sideEffects: NoneOnDryRun
     namespaceSelector:
@@ -32,7 +32,7 @@ webhooks:
     clientConfig:
       service:
         name: kuberay-tpu-webhook
-        namespace: ray-system
+        namespace: {{ .Values.tpuWebhook.namespace.name }}
         path: /mutate
     rules:
       - operations: ["CREATE"]

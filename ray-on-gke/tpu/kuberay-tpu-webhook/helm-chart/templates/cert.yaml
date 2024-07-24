@@ -12,19 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Service
+apiVersion: cert-manager.io/v1
+kind: Issuer
 metadata:
-  labels:
-    app: kuberay-tpu-webhook
-  name: kuberay-tpu-webhook
-  namespace: ray-system
+  name: selfsigned-issuer
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
 spec:
-  type: ClusterIP
-  selector:
-    app: kuberay-tpu-webhook
-  ports:
-    - port: 443
-      targetPort: https
-      protocol: TCP
-      name: https
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kuberay-tpu-webhook-certs
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
+spec:
+  secretName: kuberay-tpu-webhook-certs
+  dnsNames:
+    - kuberay-tpu-webhook.{{ .Values.tpuWebhook.namespace.name }}.svc
+    - kuberay-tpu-webhook.{{ .Values.tpuWebhook.namespace.name }}.svc.cluster.local
+  issuerRef:
+    name: selfsigned-issuer
