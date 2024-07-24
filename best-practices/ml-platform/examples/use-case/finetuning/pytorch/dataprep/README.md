@@ -105,6 +105,10 @@ the base model.
    | PROMPT_MODEL_ID | The Vertex AI model for prompt generation | gemini-1.5-flash-001 |
    | VERTEX_REGION | The region for the Vertex AI API | |
 
+   DATASET_INPUT_PATH="flipkart_preprocessed_dataset"
+   DATASET_INPUT_FILE="flipkart.csv"
+   DATASET_OUTPUT_PATH="dataset/output"
+   PROMPT_MODEL_ID="gemini-1.5-flash-001"
    
    ``` 
    sed -i "s|V_BUCKET|${BUCKET}|" dataprep.yaml && \
