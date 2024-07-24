@@ -24,7 +24,7 @@ fmt:
 
 # Run go vet against code.
 vet:
-	go fmt ./...
+	go vet ./...
 
 # Build and run go test against code.
 test: webhook
