@@ -75,17 +75,6 @@ the base model.
     gcloud builds submit . --project ${PROJECT_ID}
     ```
 
-
-9. Update respective variables in the Job submission manifest to reflect your configuration.
-
-   - Image is the docker image that was built in the previous step
-   - Processing bucket is the location of the GCS bucket where the source data and results will be stored
-
-   ```
-   sed -i "s|#IMAGE|${DOCKER_IMAGE_URL}|" job.yaml && \
-   sed -i "s|#BUCKET|${BUCKET}|" job.yaml
-   ```
-
 1. Get credentials for the GKE cluster
 
    ```
@@ -111,6 +100,8 @@ the base model.
    DATASET_OUTPUT_PATH="dataset/output"
    PROMPT_MODEL_ID="gemini-1.5-flash-001"
    ```
+
+   Update respective variables in the dataprep job submission manifest to reflect your configuration.
    
    ``` 
    sed -i "s|V_BUCKET|${BUCKET}|" dataprep.yaml && \
@@ -122,6 +113,7 @@ the base model.
    sed -i "s|V_VERTEX_REGION|${VERTEX_REGION}|" dataprep.yaml && \
    sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" dataprep.yaml 
    ```
+
 1. Create the Job in the “ml-team” namespace using kubectl command
 
    ``` 
