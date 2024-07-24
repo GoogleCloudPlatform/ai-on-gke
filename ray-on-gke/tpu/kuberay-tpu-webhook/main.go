@@ -356,7 +356,7 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 		workerGroupContainers := workerGroupSpec.Template.Spec.Containers
 		if len(workerGroupContainers) != 0 && !containerRequestingTPUs(workerGroupContainers...) {
 			// pass through if no TPUs are requested
-			break
+			continue
 		}
 		// validate NumOfHosts for worker group matches topology nodeSelector
 		workersMatchTopology, err := checkWorkersMatchTopology(clusterName, namespace, workerGroupSpec)
