@@ -28,7 +28,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// A slice represents a TPU Pod slice.
+// slice represents a TPU Pod Slice.
 type slice struct {
 	clusterName  string
 	groupName    string
@@ -37,13 +37,13 @@ type slice struct {
 	numOfHosts   int32
 }
 
-// A TPUWebhookServer is a KubeRay TPU webhook server instance.
+// TPUWebhookServer is a KubeRay TPU webhook server instance.
 type TPUWebhookServer struct {
-	// A k8s Pod Lister to query current cluster Pod list.
+	// podLister is used to query Pods from an informer cache.
 	podLister listersv1.PodLister
 }
 
-// A JSON patch describing mutate operation(s) for incoming object.
+// patch is a JSON patch describing mutate operation(s) for an incoming object.
 type patch map[string]any
 
 var (
@@ -184,7 +184,7 @@ func getNumTPUChipsRequested(containers ...corev1.Container) int64 {
 	return min(tpuLimit, tpuRequest)
 }
 
-// getNumTPUHostsFromTopology returns number of TPU VM hosts in Pod slice specified by gke-tpu-topology Pod nodeSelector
+// getNumTPUHostsFromTopology returns number of TPU VM hosts in Pod Slice specified by gke-tpu-topology Pod nodeSelector
 func getNumTPUHostsFromTopology(clusterName string, groupName string, namespace string, topology string, chipsPerHost int64) (int32, error) {
 	if topology == "" {
 		return 0, errors.New("TPU topology not specified")
@@ -282,7 +282,7 @@ func injectPodAffinity(pod *corev1.Pod, replicaIndex int, workerGroupName string
 	// construct affinity value to inject - schedule pods with the same replicaIndex together
 	podAffinityPatch := patch{"op": "add"}
 
-	affinitySelectorRequirement := metav1.LabelSelectorRequirement{key, metav1.LabelSelectorOpIn, []string{value}}
+	affinitySelectorRequirement := metav1.LabelSelectorRequirement{Key: key, Operator: metav1.LabelSelectorOpIn, Values: []string{value}}
 	affinityMatchExpressions := []metav1.LabelSelectorRequirement{affinitySelectorRequirement}
 	affinityLabelSelector := metav1.LabelSelector{MatchExpressions: affinityMatchExpressions}
 	podAffinityTerms := []corev1.PodAffinityTerm{corev1.PodAffinityTerm{LabelSelector: &affinityLabelSelector, TopologyKey: topologyKey}}
@@ -391,11 +391,11 @@ func getEnvironmentVariable(varName string, container corev1.Container) string {
 	return ""
 }
 
-// getReplicaIndex returns the next lowest-index Pod slice (worker group replica) to assign a Pod to in the RayCluster
+// getReplicaIndex returns the next lowest-index Pod Slice (worker group replica) to assign a Pod to in the RayCluster
 // there are three possible cases here:
 //  1. sliceToWorkerIDs is empty, this is the first pod the webhook intercepts
 //     - assign this pod to replica 0
-//  2. The pod slice exists in sliceToWorkerIDs, but has # created workers < NumOfHosts
+//  2. The Pod Slice exists in sliceToWorkerIDs, but has # created workers < NumOfHosts
 //     - assign this pod to the lowest index replica with # created workers < NumOfHosts
 //     pods to the same replica
 //  3. sliceToWorkerIDs isn't empty, but all slices have # workers == NumOfHosts
@@ -428,7 +428,7 @@ func getReplicaIndex(sliceToWorkerIDs map[slice][]int, clusterName string, group
 	return nextLowestId
 }
 
-// getNextWorkerID returns the next lowest TPU_WORKER_ID in the Pod slice
+// getNextWorkerID returns the next lowest TPU_WORKER_ID in the Pod Slice
 func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace string, replicaIndex int) int {
 	tpuWorkerID := 0 // defaults to 0 (first Pod in slice)
 	if len(sliceToWorkerIDs) == 0 || len(sliceToWorkerIDs[podSlice]) == 0 {
@@ -565,7 +565,7 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 	if topology == "" {
 		return nil, errors.New("Ray Pod created by KubeRay missing TPU topology nodeSelector")
 	}
-	// assign worker to the next unique ID in the pod slice and update map
+	// assign worker to the next unique ID in the Pod Slice and update map
 	chipsPerHost := getNumTPUChipsRequested(containers...)
 	numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, chipsPerHost) // ignore error here because topology may not be set yet
 
