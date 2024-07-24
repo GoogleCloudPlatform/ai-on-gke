@@ -40,7 +40,6 @@ steps:
       - |
         set -e
         make test
-    allowFailure: false
 options:
   machineType: 'E2_HIGHCPU_8'
 timeout: 600s

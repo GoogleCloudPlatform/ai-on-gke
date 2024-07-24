@@ -26,8 +26,8 @@ fmt:
 vet:
 	go vet ./...
 
-# Build and run go test against code.
-test: webhook
+# Run go test against code.
+test:
 	go test ./...
   
 uninstall:  
