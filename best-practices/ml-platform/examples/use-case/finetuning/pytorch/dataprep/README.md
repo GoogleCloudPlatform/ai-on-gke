@@ -78,8 +78,10 @@ the base model.
     
 8. Build container image using Cloud Build and push the image to Artifact Registry
     - Modify cloudbuild.yaml to specify the image url
+      
 
     ```
+    sed -i "s|#IMAGE|${DOCKER_IMAGE_URL}|" job.yaml && \
     gcloud builds submit . --project ${PROJECT_ID}
     ```
 
