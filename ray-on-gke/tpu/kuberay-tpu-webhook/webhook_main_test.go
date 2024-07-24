@@ -247,7 +247,7 @@ func getTestAdmissionReview(kind string, operation string) *admissionv1.Admissio
 }
 
 // getTestRayCluster returns a RayCluster manifest with a TPU worker group
-func getTestRayCluster(clusterName string, groupName string, namespace string, numOfHosts int32, numReplicas int32, tpuResource string) *rayv1.RayCluster {
+func getTestRayCluster(clusterName string, groupName string, namespace string, numOfHosts int32, numReplicas int32, tpuResource string, accelerator string, topology string) *rayv1.RayCluster {
 	return &rayv1.RayCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      clusterName,
@@ -299,7 +299,10 @@ func getTestRayCluster(clusterName string, groupName string, namespace string, n
 									},
 								},
 							},
-							NodeSelector: map[string]string{},
+							NodeSelector: map[string]string{
+								"cloud.google.com/gke-tpu-accelerator": accelerator,
+								"cloud.google.com/gke-tpu-topology":    topology,
+							},
 						},
 					},
 				},
@@ -677,13 +680,13 @@ func Test_ExtractRayCluster(t *testing.T) {
 	}{
 		"extractRayCluster with wrong admissionRequest Kind": {
 			// should return an error since Kind != RayCluster
-			testRayCluster: getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0"),
+			testRayCluster: getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0", "", ""),
 			expectedKind:   "Pod",
 			expectedError:  errors.New("Expected RayCluster but got Pod"),
 		},
 		"extractRayCluster with admissionRequest Kind == RayCluster": {
 			// should successfully unmarshal the RayCluster object
-			testRayCluster: getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0"),
+			testRayCluster: getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0", "", ""),
 			expectedKind:   "RayCluster",
 		},
 	}
@@ -955,9 +958,6 @@ func Test_CheckWorkersMatchTopology(t *testing.T) {
 func Test_ValidateRayCluster(t *testing.T) {
 	tests := map[string]struct {
 		rayCluster          *rayv1.RayCluster
-		topology            string
-		numOfHosts          int32
-		replicas            *int32
 		missingWorkerGroups bool
 		expectedResponse    *admissionv1.AdmissionResponse
 		expectedAllowed     bool
@@ -965,9 +965,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 	}{
 		"validateRayCluster no workerGroupSpecs": {
 			// doesn't create any workergroups, pass-through
-			rayCluster:          getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0"),
-			topology:            "",
-			numOfHosts:          int32(1),
+			rayCluster:          getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0", "", ""),
 			missingWorkerGroups: false,
 			expectedAllowed:     true,
 			expectedResult: &metav1.Status{
@@ -977,9 +975,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 		},
 		"validateRayCluster no TPUs requested": {
 			// doesn't request TPUs, pass-through
-			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0"),
-			topology:        "",
-			numOfHosts:      int32(1),
+			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "0", "", ""),
 			expectedAllowed: true,
 			expectedResult: &metav1.Status{
 				Status:  "Success",
@@ -988,10 +984,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 		},
 		"validateRayCluster worker group spec not compatible with gke-tpu-topology": {
 			// request TPUs, workers don't match topology, return false
-			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(2), 1, "4"),
-			topology:        "2x2x2",
-			numOfHosts:      int32(1),
-			replicas:        pointer.Int32(1),
+			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(2), 1, "4", "tpu-v4-podslice", "2x2x1"),
 			expectedAllowed: false,
 			expectedResult: &metav1.Status{
 				Status:  "Failure",
@@ -1000,10 +993,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 		},
 		"validateRayCluster RayCluster with single-slice, single-host TPU worker group": {
 			// request TPUs, workers match topology, return true
-			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "4"),
-			topology:        "2x2x1",
-			numOfHosts:      int32(1),
-			replicas:        pointer.Int32(1),
+			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 1, "4", "tpu-v4-podslice", "2x2x1"),
 			expectedAllowed: true,
 			expectedResult: &metav1.Status{
 				Status:  "Success",
@@ -1012,10 +1002,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 		},
 		"validateRayCluster RayCluster with single-slice, multi-host TPU worker group": {
 			// request TPUs, workers match topology, return true
-			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(4), 1, "4"),
-			topology:        "2x2x4",
-			numOfHosts:      int32(4),
-			replicas:        pointer.Int32(1),
+			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(4), 1, "4", "tpu-v4-podslice", "2x2x4"),
 			expectedAllowed: true,
 			expectedResult: &metav1.Status{
 				Status:  "Success",
@@ -1024,10 +1011,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 		},
 		"validateRayCluster RayCluster with multi-slice, single-host TPU worker group": {
 			// request TPUs, workers match topology, return true
-			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 4, "4"),
-			topology:        "2x2x1",
-			numOfHosts:      int32(1),
-			replicas:        pointer.Int32(4),
+			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(1), 4, "4", "tpu-v4-podslice", "2x2x1"),
 			expectedAllowed: true,
 			expectedResult: &metav1.Status{
 				Status:  "Success",
@@ -1036,10 +1020,7 @@ func Test_ValidateRayCluster(t *testing.T) {
 		},
 		"validateRayCluster RayCluster with multi-slice, multi-host TPU worker group": {
 			// request TPUs, workers match topology, return true
-			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(4), 4, "4"),
-			topology:        "2x2x4",
-			numOfHosts:      int32(4),
-			replicas:        pointer.Int32(4),
+			rayCluster:      getTestRayCluster("test-cluster", "test-group", "test-namespace", int32(4), 4, "4", "tpu-v4-podslice", "2x2x4"),
 			expectedAllowed: true,
 			expectedResult: &metav1.Status{
 				Status:  "Success",
@@ -1056,14 +1037,6 @@ func Test_ValidateRayCluster(t *testing.T) {
 			// set RayCluster worker group values
 			if tc.missingWorkerGroups {
 				tc.rayCluster.Spec.WorkerGroupSpecs = nil
-			} else {
-				if tc.topology == "" {
-					tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.Containers[0].Resources.Limits["google.com/tpu"] = resource.MustParse("0")
-					tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.Containers[0].Resources.Requests["google.com/tpu"] = resource.MustParse("0")
-				}
-				tc.rayCluster.Spec.WorkerGroupSpecs[0].Replicas = tc.replicas
-				tc.rayCluster.Spec.WorkerGroupSpecs[0].NumOfHosts = tc.numOfHosts
-				tc.rayCluster.Spec.WorkerGroupSpecs[0].Template.Spec.NodeSelector["cloud.google.com/gke-tpu-topology"] = tc.topology
 			}
 			jsonRayCluster, _ := json.Marshal(tc.rayCluster)
 			admissionReview.Request.Object.Raw = jsonRayCluster
