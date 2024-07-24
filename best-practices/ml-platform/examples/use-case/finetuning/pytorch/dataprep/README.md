@@ -5,14 +5,21 @@ The prompts are generated using Vertex AI's Gemini Flash model. The output is a 
 the base model.
 
 
-## Permissions
+## Preparation
 - Environment Variables
 ```
 PROJECT_ID=gkebatchexpce3c8dcb
 PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-BUCKET=kh-finetune-ds
+BUCKET=kh-finetune-ds1
 NAMESPACE=ml-team
 KSA=ray-worker
+```
+
+- Create the bucket for storing the training data set
+```
+gcloud storage buckets create gs://${BUCKET} \
+    --project ${PROJECT_ID} \
+    --location us
 ```
 
 - Setup Workload Identity Federation access to read/write to the bucket
@@ -30,6 +37,12 @@ gcloud projects add-iam-policy-binding projects/${PROJECT_ID} \
     --condition=None
 ```
 
+## Build the image of the source
+- Modify cloudbuild.yaml to specify the image url
+```
+gcloud builds submit . --project ${PROJECT_ID}
+```
+
 ## Data Prepraration Job inputs
 | Variable | Description | Example |
 | --- | --- | --- |
@@ -40,10 +53,3 @@ gcloud projects add-iam-policy-binding projects/${PROJECT_ID} \
 | PROJECT_ID | The Project ID for the Vertex AI API | |
 | PROMPT_MODEL_ID | The Vertex AI model for prompt generation | gemini-1.5-flash-001 |
 | VERTEX_REGION | The region for the Vertex AI API | |
-
-
-## Build the image of the source
-- Modify cloudbuild.yaml to specify the image url
-```
-gcloud builds submit .
-```

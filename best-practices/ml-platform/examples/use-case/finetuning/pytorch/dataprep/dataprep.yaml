@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: dataprep-job
+  name: dataprep-job-J_ID
 spec:
   template:
     metadata:
@@ -21,7 +21,7 @@ spec:
         - name: "DATASET_INPUT_FILE"
           value: "V_DATASET_INPUT_FILE"
         - name: "DATASET_OUTPUT_PATH"
-          value: "dataset/output"
+          value: "dataset/output-J_ID"
         - name: "PROJECT_ID"
           value: "V_PROJECT_ID"
         - name: "PROMPT_MODEL_ID"

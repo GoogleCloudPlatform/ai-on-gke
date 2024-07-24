@@ -6,6 +6,7 @@ RUN apt-get update && \
 
 COPY dataprep.py \
     requirements.txt \
+    logging.conf \
     /
 
 RUN pip3 install --no-cache-dir -r requirements.txt
