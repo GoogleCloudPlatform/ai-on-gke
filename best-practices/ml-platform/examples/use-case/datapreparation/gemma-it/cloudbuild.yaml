@@ -1,0 +1,10 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - build
+  - -t
+  - IMAGE_URL
+  - .
+  dir: "src"
+images:
+  - IMAGE_URL

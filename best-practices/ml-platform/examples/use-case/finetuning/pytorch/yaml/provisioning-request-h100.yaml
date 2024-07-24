@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: PodTemplate
+metadata:
+  name: h100-job
+  namespace: ml-team
+template:
+  spec:
+    nodeSelector:
+      cloud.google.com/gke-nodepool: gpu-h100x8-a3h8-dws
+    tolerations:
+    - key: "nvidia.com/gpu"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "on-demand"
+      value: "true"
+      operator: "Equal"
+      effect: "NoSchedule"    
+    containers:
+    - name: pi
+      image: perl
+      command: ["/bin/sh"]
+      resources:
+        limits:
+          cpu: "700m"
+          nvidia.com/gpu: 8
+        requests:
+          cpu: "700m"
+          nvidia.com/gpu: 8
+    restartPolicy: Never
+---
+apiVersion: autoscaling.x-k8s.io/v1beta1
+kind: ProvisioningRequest
+metadata:
+  name: h100-job
+  namespace: ml-team
+spec:
+  provisioningClassName: queued-provisioning.gke.io
+  parameters:
+    maxRunDurationSeconds: "86400"
+  podSets:
+  - count: 1
+    podTemplateRef:
+      name: h100-job
