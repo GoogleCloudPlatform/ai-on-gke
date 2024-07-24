@@ -26,6 +26,17 @@ the base model.
     DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/dataprocessing/dp:v0.0.1
    ```
 
+   ## Data Prepraration Job inputs
+   | Variable | Description | Example |
+   | --- | --- | --- |
+   | BUCKET | The bucket used for input and output. | | 
+   | DATASET_INPUT_PATH | The folder path of where the preprocessed flipkart data resides | flipkart_preprocessed_dataset |
+   | DATASET_INPUT_FILE | The filename of the preprocessed flipkart data | flipkart.csv |
+   | DATASET_OUTPUT_PATH | The folder path of where the generated output data set will reside. This path will be needed for fine-tuning. | dataset/output |
+   | PROJECT_ID | The Project ID for the Vertex AI API | |
+   | PROMPT_MODEL_ID | The Vertex AI model for prompt generation | gemini-1.5-flash-001 |
+   | VERTEX_REGION | The region for the Vertex AI API | |
+
 3. Create the bucket for storing the prepared dataset
 
     ```
@@ -72,13 +83,38 @@ the base model.
     gcloud builds submit . --project ${PROJECT_ID}
     ```
 
-## Data Prepraration Job inputs
-| Variable | Description | Example |
-| --- | --- | --- |
-| BUCKET | The bucket used for input and output. | kh-finetune-ds | 
-| DATASET_INPUT_PATH | The folder path of where the preprocessed flipkart data resides | flipkart_preprocessed_dataset |
-| DATASET_INPUT_FILE | The filename of the preprocessed flipkart data | flipkart.csv |
-| DATASET_OUTPUT_PATH | The folder path of where the generated output data set will reside. This path will be needed for fine-tuning. | dataset/output |
-| PROJECT_ID | The Project ID for the Vertex AI API | |
-| PROMPT_MODEL_ID | The Vertex AI model for prompt generation | gemini-1.5-flash-001 |
-| VERTEX_REGION | The region for the Vertex AI API | |
+
+9. Update respective variables in the Job submission manifest to reflect your configuration.
+
+   - Image is the docker image that was built in the previous step
+   - Processing bucket is the location of the GCS bucket where the source data and results will be stored
+
+   ```
+   sed -i "s|#IMAGE|${DOCKER_IMAGE_URL}|" job.yaml && \
+   sed -i "s|#BUCKET|${BUCKET}|" job.yaml
+   ```
+
+1. Get credentials for the GKE cluster
+
+   ```
+   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
+   ```
+
+1. Create the Job in the “ml-team” namespace using kubectl command
+
+   ```
+   kubectl apply -f dataprep.yaml
+   ```
+
+
+1. Once the Job is completed, both the prepared datasets are stored in Google Cloud Storage.
+
+   ```
+   gcloud storage ls gs://${BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
+   gcloud storage ls gs://${BUCKET}/flipkart_images
+   ```
+
+> For additional information about developing using this codebase see the [Developer Guide](DEVELOPER.md)
+
+> For additional information about converting you code from a notebook to run as a Job on GKE see the [Conversion Guide](CONVERSION.md)
+
