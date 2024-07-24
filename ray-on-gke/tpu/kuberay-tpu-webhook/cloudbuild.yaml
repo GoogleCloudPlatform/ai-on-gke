@@ -15,12 +15,15 @@
 steps:
   - id: 'kuberay tpu webhook fmt'
     name: 'golang:1.21.11'
+    dir: /workspace/ray-on-gke/tpu/kuberay-tpu-webhook
     args: ["fmt", "./..."]
   - id: 'kuberay tpu webhook vet'
     name: 'golang:1.21.11'
+    dir: /workspace/ray-on-gke/tpu/kuberay-tpu-webhook
     args: ["vet", "./..."]
   - id: 'kuberay tpu webhook test'
     name: 'golang:1.21.11'
+    dir: /workspace/ray-on-gke/tpu/kuberay-tpu-webhook
     args: ["test", "./..."]
     allowFailure: false
 options:
