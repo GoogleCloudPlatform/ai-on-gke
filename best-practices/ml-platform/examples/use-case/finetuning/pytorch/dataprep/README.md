@@ -6,42 +6,71 @@ the base model.
 
 
 ## Preparation
-- Environment Variables
-```
-PROJECT_ID=gkebatchexpce3c8dcb
-PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-BUCKET=kh-finetune-ds1
-NAMESPACE=ml-team
-KSA=ray-worker
-```
 
-- Create the bucket for storing the training data set
-```
-gcloud storage buckets create gs://${BUCKET} \
-    --project ${PROJECT_ID} \
-    --location us
-```
+1. Clone the repository and change directory to the guide directory
 
-- Setup Workload Identity Federation access to read/write to the bucket
-```
-gcloud storage buckets add-iam-policy-binding gs://${BUCKET} \
-    --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-    --role "roles/storage.objectUser"
-```
+   ```
+   git clone https://github.com/GoogleCloudPlatform/ai-on-gke && \
+   cd ai-on-gke/best-practices/ml-platform/examples/use-case/finetuning/pytorch/dataprep
+   ```
 
-- The Kubernetes Service Account user will need access to Vertex AI
-```
-gcloud projects add-iam-policy-binding projects/${PROJECT_ID} \
-    --member=principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA} \
-    --role=roles/aiplatform.user \
-    --condition=None
-```
+2. Set environment variables
 
-## Build the image of the source
-- Modify cloudbuild.yaml to specify the image url
-```
-gcloud builds submit . --project ${PROJECT_ID}
-```
+    ```
+    PROJECT_ID=<your_project_id>
+    PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
+    BUCKET=<your_bucket_name>
+    NAMESPACE=ml-team
+    KSA=ray-worker
+    CLUSTER_NAME=<your_cluster_name>
+    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/dataprocessing/dp:v0.0.1
+   ```
+
+3. Create the bucket for storing the prepared dataset
+
+    ```
+    gcloud storage buckets create gs://${BUCKET} \
+        --project ${PROJECT_ID} \
+        --location us
+    ```
+
+4. Setup Workload Identity Federation access to read/write to the bucket
+
+    ```
+    gcloud storage buckets add-iam-policy-binding gs://${BUCKET} \
+        --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
+        --role "roles/storage.objectUser"
+    ```
+
+5. The Kubernetes Service Account user will need access to Vertex AI
+
+    ```
+    gcloud projects add-iam-policy-binding projects/${PROJECT_ID} \
+        --member=principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA} \
+        --role=roles/aiplatform.user \
+        --condition=None
+    ```
+
+6. Create Artifact Registry repository for your docker image
+    ```
+    gcloud artifacts repositories create dataprocessing \
+    --repository-format=docker \
+    --location=us \
+    --project=${PROJECT_ID} \
+    --async
+    ```
+
+7. Enable the Cloud Build APIs
+    ```
+    gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
+    ```
+    
+8. Build container image using Cloud Build and push the image to Artifact Registry
+    - Modify cloudbuild.yaml to specify the image url
+
+    ```
+    gcloud builds submit . --project ${PROJECT_ID}
+    ```
 
 ## Data Prepraration Job inputs
 | Variable | Description | Example |
