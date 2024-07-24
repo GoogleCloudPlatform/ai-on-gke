@@ -113,8 +113,5 @@ the base model.
    gcloud storage ls gs://${BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
    gcloud storage ls gs://${BUCKET}/flipkart_images
    ```
-
-> For additional information about developing using this codebase see the [Developer Guide](DEVELOPER.md)
-
-> For additional information about converting you code from a notebook to run as a Job on GKE see the [Conversion Guide](CONVERSION.md)
+   
 
