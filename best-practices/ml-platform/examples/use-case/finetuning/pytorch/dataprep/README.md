@@ -110,7 +110,7 @@ the base model.
    sed -i "s|V_BUCKET|${BUCKET}|" dataprep.yaml && \
    sed -i "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" dataprep.yaml && \
    sed -i "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" dataprep.yaml && \
-   sed -i "s|V_DATASET_OUTPUT_PATH|${V_DATASET_OUTPUT_PATH}|" dataprep.yaml && \
+   sed -i "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" dataprep.yaml && \
    sed -i "s|V_PROJECT_ID|${PROJECT_ID}|" dataprep.yaml && \
    sed -i "s|V_PROMPT_MODEL_ID|${PROMPT_MODEL_ID}|" dataprep.yaml && \
    sed -i "s|V_VERTEX_REGION|${VERTEX_REGION}|" dataprep.yaml
