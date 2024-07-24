@@ -23,7 +23,7 @@ the base model.
     NAMESPACE=ml-team
     KSA=<your-k8s-service-account>
     CLUSTER_NAME=<your_cluster_name>
-    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm_finetuning/dataprep:v1.0.0
+    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0
    ```
 
    ## Data Prepraration Job inputs
@@ -64,7 +64,7 @@ the base model.
 
 6. Create Artifact Registry repository for your docker image
     ```
-    gcloud artifacts repositories create llm_finetuning \
+    gcloud artifacts repositories create llm-finetuning \
     --repository-format=docker \
     --location=us \
     --project=${PROJECT_ID} \
