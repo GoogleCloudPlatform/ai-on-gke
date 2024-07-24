@@ -123,8 +123,7 @@ the base model.
 1. Once the Job is completed, both the prepared datasets are stored in Google Cloud Storage.
 
    ```
-   gcloud storage ls gs://${BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
-   gcloud storage ls gs://${BUCKET}/flipkart_images
+   gcloud storage ls gs://${BUCKET}/${DATASET_OUTPUT_PATH}
    ```
    
 
