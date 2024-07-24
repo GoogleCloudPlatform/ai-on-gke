@@ -6,13 +6,13 @@ the base model.
 
 
 ## Preparation
-- Environment Variables
+- Set Environment Variables
 ```
-PROJECT_ID=gkebatchexpce3c8dcb
+PROJECT_ID=<your-project-id>
 PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-BUCKET=kh-finetune-ds1
-NAMESPACE=ml-team
-KSA=ray-worker
+BUCKET=<your-gcs-bucket>
+NAMESPACE=<you-gke-cluster-namespace>
+KSA=<your-kubernates-service-account>
 ```
 
 - Create the bucket for storing the training data set
