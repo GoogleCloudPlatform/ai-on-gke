@@ -24,18 +24,8 @@ the base model.
     KSA=<your-k8s-service-account>
     CLUSTER_NAME=<your_cluster_name>
     DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0
+    VERTEX_REGION=<region>
    ```
-
-   ## Data Prepraration Job inputs
-   | Variable | Description | Example |
-   | --- | --- | --- |
-   | BUCKET | The bucket used for input and output. | | 
-   | DATASET_INPUT_PATH | The folder path of where the preprocessed flipkart data resides | flipkart_preprocessed_dataset |
-   | DATASET_INPUT_FILE | The filename of the preprocessed flipkart data | flipkart.csv |
-   | DATASET_OUTPUT_PATH | The folder path of where the generated output data set will reside. This path will be needed for fine-tuning. | dataset/output |
-   | PROJECT_ID | The Project ID for the Vertex AI API | |
-   | PROMPT_MODEL_ID | The Vertex AI model for prompt generation | gemini-1.5-flash-001 |
-   | VERTEX_REGION | The region for the Vertex AI API | |
 
 3. Create the bucket for storing the prepared dataset
 
@@ -102,12 +92,34 @@ the base model.
    gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
    ```
 
+1. Update Data Preparation Job variables
+
+   ## Data Prepraration Job inputs
+   | Variable | Description | Example |
+   | --- | --- | --- |
+   | BUCKET | The bucket used for input and output. | | 
+   | DATASET_INPUT_PATH | The folder path of where the preprocessed flipkart data resides | flipkart_preprocessed_dataset |
+   | DATASET_INPUT_FILE | The filename of the preprocessed flipkart data | flipkart.csv |
+   | DATASET_OUTPUT_PATH | The folder path of where the generated output data set will reside. This path will be needed for fine-tuning. | dataset/output |
+   | PROJECT_ID | The Project ID for the Vertex AI API | |
+   | PROMPT_MODEL_ID | The Vertex AI model for prompt generation | gemini-1.5-flash-001 |
+   | VERTEX_REGION | The region for the Vertex AI API | |
+
+   
+   ``` 
+   sed -i "s|V_BUCKET|${BUCKET}|" dataprep.yaml && \
+   sed -i "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" dataprep.yaml && \
+   sed -i "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" dataprep.yaml && \
+   sed -i "s|V_DATASET_OUTPUT_PATH|${V_DATASET_OUTPUT_PATH}|" dataprep.yaml && \
+   sed -i "s|V_PROJECT_ID|${PROJECT_ID}|" dataprep.yaml && \
+   sed -i "s|V_PROMPT_MODEL_ID|${PROMPT_MODEL_ID}|" dataprep.yaml && \
+   sed -i "s|V_VERTEX_REGION|${VERTEX_REGION}|" dataprep.yaml
+   ```
 1. Create the Job in the “ml-team” namespace using kubectl command
 
+   ``` 
+   kubectl apply -f dataprep.yaml -n ml-team
    ```
-   kubectl apply -f dataprep.yaml
-   ```
-
 
 1. Once the Job is completed, both the prepared datasets are stored in Google Cloud Storage.
 
