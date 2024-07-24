@@ -13,7 +13,17 @@
 # limitations under the License.
 
 steps:
-  - id: 'kuberay tpu webhook tests'
+  - id: 'kuberay tpu webhook vet'
+    name: 'golang:1.21.11'
+    dir: /workspace/kuberay-tpu-webhook
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        make vet
+    allowFailure: false
+  - id: 'kuberay tpu webhook test'
     name: 'golang:1.21.11'
     dir: /workspace/kuberay-tpu-webhook
     entrypoint: 'bash'
@@ -22,25 +32,5 @@ steps:
       - |
         set -e
         make test
-    allowFailure: false
-  - id: 'tpu provisioner fmt'
-    name: 'golang:1.22'
-    dir: /workspace/tpu-provisioner
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -e
-        make fmt
-    allowFailure: false
-  - id: 'tpu provisioner vet'
-    name: 'golang:1.22'
-    dir: /workspace/tpu-provisioner
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -e
-        make vet
     allowFailure: false
 timeout: 60s
