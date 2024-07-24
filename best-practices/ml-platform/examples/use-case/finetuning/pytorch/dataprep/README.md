@@ -120,7 +120,7 @@ the base model.
    sed -i "s|V_PROJECT_ID|${PROJECT_ID}|" dataprep.yaml && \
    sed -i "s|V_PROMPT_MODEL_ID|${PROMPT_MODEL_ID}|" dataprep.yaml && \
    sed -i "s|V_VERTEX_REGION|${VERTEX_REGION}|" dataprep.yaml && \
-   sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" job.yaml 
+   sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" dataprep.yaml 
    ```
 1. Create the Job in the “ml-team” namespace using kubectl command
 
