@@ -1,0 +1,20 @@
+steps:
+- name: 'python:slim'
+  entrypoint: "bash"
+  args: 
+  - -c
+  - |
+    pip install -r requirements.txt
+    export ACTION=predict
+    python validate_fine_tuned_model.py
+artifacts:
+  objects:
+    location: gs://kh-finetune-ds
+    paths: 
+    - "/workspace/predictions.txt"
+timeout: "86400s"
+serviceAccount: "projects/${PROJECT_ID}/serviceAccounts/deploy-gke-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+options:
+  logging: CLOUD_LOGGING_ONLY
+  pool:
+    name: "projects/${PROJECT_ID}/locations/us-central1/workerPools/private-pool"
