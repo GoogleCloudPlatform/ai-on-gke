@@ -21,9 +21,9 @@ the base model.
     PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
     BUCKET=<your_bucket_name>
     NAMESPACE=ml-team
-    KSA=ray-worker
+    KSA=<your-k8s-service-account>
     CLUSTER_NAME=<your_cluster_name>
-    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/dataprocessing/dp:v0.0.1
+    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm_finetuning/dataprep:v1.0.0
    ```
 
    ## Data Prepraration Job inputs
