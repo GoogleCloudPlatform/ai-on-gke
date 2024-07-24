@@ -353,6 +353,11 @@ func validateRayCluster(admissionReview *admissionv1.AdmissionReview) (*admissio
 	workerGroupSpecs := raycluster.Spec.WorkerGroupSpecs
 	for i := 0; i < len(workerGroupSpecs); i++ {
 		workerGroupSpec := workerGroupSpecs[i]
+		workerGroupContainers := workerGroupSpec.Template.Spec.Containers
+		if len(workerGroupContainers) != 0 && !containerRequestingTPUs(workerGroupContainers...) {
+			// pass through if no TPUs are requested
+			break
+		}
 		// validate NumOfHosts for worker group matches topology nodeSelector
 		workersMatchTopology, err := checkWorkersMatchTopology(clusterName, namespace, workerGroupSpec)
 		if err != nil {
