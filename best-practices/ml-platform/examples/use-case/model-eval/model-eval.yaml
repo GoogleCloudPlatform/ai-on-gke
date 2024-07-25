@@ -9,7 +9,7 @@ spec:
       labels:
         app: model-eval-job
     spec:
-      serviceAccountName: ray-worker
+      serviceAccountName: KSA
       containers:
       - name: job
         image: IMAGE_URL
