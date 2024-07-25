@@ -137,6 +137,6 @@ ACCELERATOR="l4"
 ## Deploy the respective resources for the job and type of resource
 
 ```
-kubectl apply -f yaml/provisioning-request-${_ACCELERATOR}.yaml -n ml-team
-kubectl apply -f yaml/fine-tune-${_ACCELERATOR}-dws.yaml -n ml-team
+kubectl apply -f yaml/provisioning-request-${ACCELERATOR}.yaml -n ml-team
+kubectl apply -f yaml/fine-tune-${ACCELERATOR}-dws.yaml -n ml-team
 ```
