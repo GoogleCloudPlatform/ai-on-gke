@@ -23,8 +23,9 @@ the base model.
     NAMESPACE=ml-team
     KSA=<your-k8s-service-account>
     CLUSTER_NAME=<your_cluster_name>
+    CLUSTER_REGION=<cluster-region>
     DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0
-    VERTEX_REGION=<region>
+    VERTEX_REGION=<vertex-region>
    ```
 
 3. Create the bucket for storing the prepared dataset
@@ -78,7 +79,7 @@ the base model.
 1. Get credentials for the GKE cluster
 
    ```
-   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
+   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${CLUSTER_REGION} --project ${PROJECT_ID}
    ```
 
 1. Update Data Preparation Job variables
@@ -104,14 +105,17 @@ the base model.
    ```
    
    ``` 
-   sed -i "s|V_BUCKET|${BUCKET}|" dataprep.yaml && \
-   sed -i "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" dataprep.yaml && \
-   sed -i "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" dataprep.yaml && \
-   sed -i "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" dataprep.yaml && \
-   sed -i "s|V_PROJECT_ID|${PROJECT_ID}|" dataprep.yaml && \
-   sed -i "s|V_PROMPT_MODEL_ID|${PROMPT_MODEL_ID}|" dataprep.yaml && \
-   sed -i "s|V_VERTEX_REGION|${VERTEX_REGION}|" dataprep.yaml && \
-   sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" dataprep.yaml 
+   sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
+      -i -e "s|KSA|${KSA}|" \
+      -i -e "s|V_PROJECT_ID|${PROJECT_ID}|" \
+      -i -e "s|V_BUCKET|${BUCKET}|" \
+      -i -e "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" \
+      -i -e "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" \
+      -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
+      -i -e "s|V_PROMPT_MODEL_ID|${PROMPT_MODEL_ID}|" \
+      -i -e "s|V_VERTEX_REGION|${VERTEX_REGION}|" \
+      dataprep.yaml
+
    ```
 
 1. Create the Job in the “ml-team” namespace using kubectl command
