@@ -13,13 +13,14 @@
 # limitations under the License.
 
 apiVersion: admissionregistration.k8s.io/v1
-kind: MutatingWebhookConfiguration
+kind: ValidatingWebhookConfiguration
 metadata:
-  name: kuberay-tpu-mutating-webhook-cfg
+  name: kuberay-tpu-validating-webhook-cfg
   annotations:
-    cert-manager.io/inject-ca-from: ray-system/kuberay-tpu-webhook-certs
+    cert-manager.io/inject-ca-from: {{ .Values.tpuWebhook.namespace.name }}/kuberay-tpu-webhook-certs
 webhooks:
-  - name: kuberay-tpu-webhook.ray-system.svc
+{{- if eq .Chart.AppVersion "1.1.0" }}
+  - name: pods-kuberay-tpu-webhook.{{ .Values.tpuWebhook.namespace.name }}.svc
     admissionReviewVersions: [v1]
     sideEffects: NoneOnDryRun
     namespaceSelector:
@@ -32,10 +33,10 @@ webhooks:
     clientConfig:
       service:
         name: kuberay-tpu-webhook
-        namespace: ray-system
-        path: /mutate
+        namespace: {{ .Values.tpuWebhook.namespace.name }}
+        path: /validate
     rules:
-      - operations: ["CREATE"]
+      - operations: ["DELETE"]
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
@@ -43,3 +44,25 @@ webhooks:
     objectSelector:
       matchLabels:
         app.kubernetes.io/name: kuberay
+  {{- end }}
+  - name: raycluster-kuberay-tpu-webhook.{{ .Values.tpuWebhook.namespace.name }}.svc
+    admissionReviewVersions: [v1]
+    sideEffects: NoneOnDryRun
+    namespaceSelector:
+      matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values:
+        - kube-system
+        - kube-node-lease
+    clientConfig:
+      service:
+        name: kuberay-tpu-webhook
+        namespace: {{ .Values.tpuWebhook.namespace.name }}
+        path: /validate
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: ["ray.io"]
+        apiVersions: ["*"]
+        resources: ["rayclusters"]
+        scope: Namespaced
