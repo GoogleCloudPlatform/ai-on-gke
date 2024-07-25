@@ -71,7 +71,7 @@ the base model.
       
 
     ```
-    sed -i "s|#IMAGE|${DOCKER_IMAGE_URL}|" cloudbuild.yaml && \
+    sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" cloudbuild.yaml && \
     gcloud builds submit . --project ${PROJECT_ID}
     ```
 
