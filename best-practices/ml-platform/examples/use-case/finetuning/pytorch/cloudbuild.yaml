@@ -3,10 +3,8 @@ steps:
   args:
   - build
   - -t
-  - us-docker.pkg.dev/${PROJECT_ID}/llm/finetune:${_VERSION}
+  - IMAGE_URL
   - .
   dir: "src"
 images:
-  - us-docker.pkg.dev/${PROJECT_ID}/llm/finetune:${_VERSION}
-substitutions:
-  _VERSION: "v1.0.0"
+  - IMAGE_URL
