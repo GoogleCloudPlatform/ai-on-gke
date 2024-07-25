@@ -40,4 +40,4 @@ spec:
   podSets:
   - count: 2
     podTemplateRef:
-      name: l4-job-J_ID
+      name: l4-job
