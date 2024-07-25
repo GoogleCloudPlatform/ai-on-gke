@@ -16,7 +16,19 @@ webhook:
   
 # Run against the configured Kubernetes cluster in ~/.kube/config  
 run: webhook  
-	go run ./main.go  
+	go run ./main.go
+
+# Run go fmt against code.
+fmt:
+	go fmt ./...
+
+# Run go vet against code.
+vet:
+	go vet ./...
+
+# Run go test against code.
+test:
+	go test ./...
   
 uninstall:  
 	kubectl delete -f deployments/

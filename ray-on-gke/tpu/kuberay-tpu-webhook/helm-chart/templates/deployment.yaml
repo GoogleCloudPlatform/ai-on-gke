@@ -20,7 +20,7 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kuberay-tpu-webhook-sa
+  name: kuberay-tpu-webhook
   namespace: {{ .Values.tpuWebhook.namespace.name }}
 ---
 kind: ClusterRole
@@ -38,7 +38,7 @@ metadata:
   name: kuberay-tpu-webhook-pod-reader
 subjects:
   - kind: ServiceAccount
-    name: kuberay-tpu-webhook-sa
+    name: kuberay-tpu-webhook
     namespace: {{ .Values.tpuWebhook.namespace.name }}
 roleRef:
   kind: ClusterRole
@@ -62,6 +62,7 @@ spec:
       labels:
         app:  kuberay-tpu-webhook
     spec:
+      serviceAccountName: kuberay-tpu-webhook
       containers:
         - image: "{{ .Values.tpuWebhook.image.repository }}:{{ .Values.tpuWebhook.image.tag }}"
           imagePullPolicy: {{ .Values.tpuWebhook.image.pullPolicy }}

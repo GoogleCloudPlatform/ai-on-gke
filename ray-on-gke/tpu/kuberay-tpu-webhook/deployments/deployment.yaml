@@ -17,6 +17,34 @@ kind: Namespace
 metadata:
   name: ray-system
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kuberay-tpu-webhook
+  namespace: ray-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kuberay-tpu-webhook-pod-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kuberay-tpu-webhook-pod-reader
+subjects:
+  - kind: ServiceAccount
+    name: kuberay-tpu-webhook
+    namespace: ray-system
+roleRef:
+  kind: ClusterRole
+  name: kuberay-tpu-webhook-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,12 +62,13 @@ spec:
       labels:
         app: kuberay-tpu-webhook
     spec:
+      serviceAccountName: kuberay-tpu-webhook
       containers:
         - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.1
           imagePullPolicy: Always
           name: kuberay-tpu-webhook
           args:
-          - --v=0 # change this value to 1 for verbose logging 
+          - --v=0 # change this value to 1 for verbose logging
           ports:
           - name: https
             containerPort: 443
