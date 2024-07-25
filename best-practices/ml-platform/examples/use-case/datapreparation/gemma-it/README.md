@@ -33,7 +33,8 @@ the base model.
     ```
     gcloud storage buckets create gs://${BUCKET} \
         --project ${PROJECT_ID} \
-        --location us
+        --location us \
+        --uniform-bucket-level-access
     ```
 
 4. Setup Workload Identity Federation access to read/write to the bucket
