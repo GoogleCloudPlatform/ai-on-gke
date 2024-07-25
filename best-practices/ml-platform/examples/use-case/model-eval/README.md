@@ -51,16 +51,19 @@ gcloud builds submit . --project ${PROJECT_ID}
 
 ## Model evaluation Job inputs
 - For `model-eval.yaml`
+  
 | Variable | Description | Example |
 | --- | --- | --- |
 | IMAGE_URL | The image url of the validate image | |
-| BUCKET | The bucket where the fine-tuning data set is located | kh-finetune-ds | 
+| BUCKET | The bucket where the fine-tuning data set is located | | 
 | MODEL_PATH | The output folder path for the fine-tuned model.  This is used by model evaluation to generate the prompt. | /model-data/model-gemma2-a100/experiment |
 | DATASET_OUTPUT_PATH | The folder path of the generated output data set. | dataset/output |
 | ENDPOINT | This is the endpoint URL of the inference server | http://10.40.0.51:8000/v1/chat/completions | 
 
 - For `vllm-openai.yaml`
+  
+| Variable | Description | Example |
 | --- | --- | --- |
 | IMAGE_URL | The image url for the vllm image | |
 | MODEL | The output folder path for the fine-tuned model | /model-data/model-gemma2-a100/experiment |
-| V_BUCKET | The bucket where the model weights are located | kr-finetune |
+| V_BUCKET | The bucket where the model weights are located | |
