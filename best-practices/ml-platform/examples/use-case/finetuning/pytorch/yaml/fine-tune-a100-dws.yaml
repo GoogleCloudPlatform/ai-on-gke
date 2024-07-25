@@ -58,24 +58,23 @@ spec:
             fine_tune.py
         env:
         - name: "EXPERIMENT"
-          value: "gemma2-a100"
+          value: "V_EXPERIMENT"
         - name: "MLFLOW_ENABLE"
-          value: "true"
+          value: "V_MLFLOW_ENABLE"
         - name: "MLFLOW_TRACKING_URI"
-          value: "http://mlflow-tracking-service.ml-tools:5000"
+          value: "V_MLFLOW_TRACKING_URI"
         - name: "MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"
-          value: "true"
+          value: "V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"
         - name: "TRAINING_DATASET_BUCKET"
-          value: "kh-finetune-ds"
+          value: "V_TRAINING_DATASET_BUCKET"
         - name: "TRAINING_DATASET_PATH"
           value: "V_TRAINING_DATASET_PATH"
-          #value: "/new-format/dataset-it/training"
         - name: MODEL_NAME
-          value: "google/gemma-2-9b-it"
+          value: "V_MODEL_NAME"
         - name: NEW_MODEL
           value: "gemma-ft"
         - name: MODEL_PATH
-          value: "/model-data/model-gemma2-a100/experiment"
+          value: "V_MODEL_PATH"
         - name: EPOCHS
           value: "1"
         - name: NCCL_DEBUG
