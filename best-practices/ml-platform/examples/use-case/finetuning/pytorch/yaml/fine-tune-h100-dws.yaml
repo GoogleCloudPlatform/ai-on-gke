@@ -28,7 +28,7 @@ spec:
         cluster-autoscaler.kubernetes.io/provisioning-class-name: "queued-provisioning.gke.io"
     spec:
       subdomain: headless-svc
-      serviceAccountName: ray-worker
+      serviceAccountName: KSA
       terminationGracePeriodSeconds: 600
       containers:
       - name: gpu-job
