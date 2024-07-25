@@ -94,9 +94,9 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${
 | EXPERIMENT | If MLflow is enabled. experiment ID used in MLflow | experiment- | 
 | MLFLOW_TRACKING_URI | If MLflow is enabled, the tracking server URI | http://mlflow-tracking-service.ml-tools:5000 |
 | MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING | If MLflow is enabled, track system level metrics, CPU/Memory/GPU| true/false |
-| TRAINING_DATASET_BUCKET | The bucket which contains the generated prompts for fine-tuning. | kh-finetune-ds |
+| TRAINING_DATASET_BUCKET | The bucket which contains the generated prompts for fine-tuning. |  |
 | TRAINING_DATASET_PATH | The path where the generated prompt data is for fine-tuning. | dataset/output |
-| V_MODEL_BUCKET | The bucket which will be the destination of the fine-tuned model. | kr-finetune |
+| V_MODEL_BUCKET | The bucket which will be the destination of the fine-tuned model. | |
 | MODEL_PATH | The output folder path for the fine-tuned model. This location will be used by the inference serving engine and model evaluation. | /model-data/model-gemma2-a100/experiment |
 | MODEL_NAME | The Hugging Face path to the base model for fine-tuning. | google/gemma-2-9b-it |
 | HF_TOKEN | The Hugging Face token used to pull the base model. | |
