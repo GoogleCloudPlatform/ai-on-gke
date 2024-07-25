@@ -11,9 +11,12 @@ PROJECT_ID=<your-project-id>
 PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
 TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
 V_MODEL_BUCKET=<model-artifacts-bucket>
+CLUSTER_NAME=<your-gke-cluster>
+CLUSTER_REGION=<gke-cluster-location>
 NAMESPACE=ml-team
 KSA=<k8s-service-account>
 HF_TOKEN=<your-Hugging-Face-account-token>
+DOCKER_IMAGE_URL=<finetune-image-url>
 ```
 
 ## GCS
@@ -46,10 +49,27 @@ gcloud storage buckets add-iam-policy-binding gs://${V_MODEL_BUCKET} \
 ```
 
 ## Build the image of the source
-- Modify cloudbuild.yaml to specify the image url
-```
-gcloud builds submit . --project ${PROJECT_ID}
-```
+Create Artifact Registry repository for your docker image
+    ```
+    gcloud artifacts repositories create llm-finetuning \
+    --repository-format=docker \
+    --location=us \
+    --project=${PROJECT_ID} \
+    --async
+    ```
+
+Enable the Cloud Build APIs
+    ```
+    gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
+    ```
+    
+Build container image using Cloud Build and push the image to Artifact Registry
+    - Modify cloudbuild.yaml to specify the image url
+      
+    ```
+    sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" cloudbuild.yaml && \
+    gcloud builds submit . --project ${PROJECT_ID}
+    ```
 
 ## Deploy your Hugging Face token in your cluster
 - Create secret for HF in your namespace
@@ -60,6 +80,13 @@ kubectl create secret generic hf-secret \
 ```
 
 # Deploy the Job
+
+Get credentials for the GKE cluster
+
+   ```
+   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${CLUSTER_REGION} --project ${PROJECT_ID}
+   ```
+
 ## Fine-tuning Job Inputs
 | Variable | Description | Example |
 | --- | --- | --- |
