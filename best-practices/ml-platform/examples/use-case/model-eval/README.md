@@ -8,12 +8,15 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 ## Preparation
 - Environment Variables
 ```
-PROJECT_ID=gkebatchexpce3c8dcb
+PROJECT_ID=<your-project-id>
 PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-TRAINING_DATASET_BUCKET=kh-finetune-ds
-V_MODEL_BUCKET=kr-finetune
+TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
+V_MODEL_BUCKET=<model-artifacts-bucket>
+CLUSTER_NAME=<your-gke-cluster>
+CLUSTER_REGION=<gke-cluster-location>
 NAMESPACE=ml-team
-KSA=ray-worker
+KSA=<k8s-service-account>
+DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0
 ```
 
 # GCS
