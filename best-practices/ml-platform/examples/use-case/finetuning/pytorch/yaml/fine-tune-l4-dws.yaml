@@ -62,7 +62,7 @@ spec:
         - name: "MLFLOW_ENABLE"
           value: "V_MLFLOW_ENABLE"
         - name: "MLFLOW_TRACKING_URI"
-          value: "http://mlflow-tracking-service.ml-tools:5000"
+          value: "V_MLFLOW_TRACKING_URI"
         - name: "MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"
           value: "V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"
         - name: "TRAINING_DATASET_BUCKET"
@@ -75,7 +75,7 @@ spec:
         - name: NEW_MODEL
           value: "gemma-ft"
         - name: MODEL_PATH
-          value: "/model-data/model-gemma2-l4/experiment"
+          value: "V_MODEL_PATH"
         - name: EPOCHS
           value: "1"
         - name: HF_TOKEN
