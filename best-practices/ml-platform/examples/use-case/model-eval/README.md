@@ -16,7 +16,7 @@ CLUSTER_NAME=<your-gke-cluster>
 CLUSTER_REGION=<gke-cluster-location>
 NAMESPACE=ml-team
 KSA=<k8s-service-account>
-DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0
+DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/validate:v1.0.0
 ```
 
 # GCS
