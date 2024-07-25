@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: model-eval-J_ID
+  name: model-eval
 spec:
   backoffLimit: 10
   template:
