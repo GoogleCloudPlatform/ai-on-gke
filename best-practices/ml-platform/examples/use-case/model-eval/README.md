@@ -45,6 +45,7 @@ gcloud storage buckets add-iam-policy-binding gs://${V_MODEL_BUCKET} \
 ## Build the image of the source
 - Modify cloudbuild.yaml to specify the image url
 ```
+sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" cloudbuild.yaml && \
 gcloud builds submit . --project ${PROJECT_ID}
 ```
 
