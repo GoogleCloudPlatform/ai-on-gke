@@ -120,6 +120,7 @@ ACCELERATOR="l4"
 
    ``` 
    sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
+      -i -e "s|KSA|${KSA}|" \
       -i -e "s|V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING|${MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING}|" \
       -i -e "s|V_MLFLOW_ENABLE|${MLFLOW_ENABLE}|" \
       -i -e "s|V_EXPERIMENT|${EXPERIMENT}|" \
