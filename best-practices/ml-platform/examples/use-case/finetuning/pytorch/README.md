@@ -129,7 +129,7 @@ ACCELERATOR="l4"
       -i -e "s|V_MODEL_BUCKET|${V_MODEL_BUCKET}|" \
       -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
       -i -e "s|V_MODEL_NAME|${MODEL_NAME}|" \
-      -i -e "s|V_HF_TOKEN|${HF_TOKEN}|" \
+      -i -e "s|HF_TOKEN|${HF_TOKEN}|" \
       yaml/fine-tune-${ACCELERATOR}-dws.yaml
 
    ```
