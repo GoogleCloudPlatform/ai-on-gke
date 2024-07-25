@@ -17,6 +17,7 @@ NAMESPACE=ml-team
 KSA=<k8s-service-account>
 HF_TOKEN=<your-Hugging-Face-account-token>
 DOCKER_IMAGE_URL=<finetune-image-url>
+DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0
 ```
 
 ## GCS
