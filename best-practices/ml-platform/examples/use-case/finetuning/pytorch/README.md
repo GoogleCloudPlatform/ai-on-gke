@@ -114,7 +114,10 @@ MODEL_NAME="google/gemma-2-9b-it"
 ```
 
 Choose the accelerator (L4 | A100 | H100) as per your configuration
-   
+```
+ACCELERATOR="L4"
+```
+
    ``` 
    sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
       -i -e "s|V_MLFLOW_ENABLE|${MLFLOW_ENABLE}|" \
@@ -127,25 +130,13 @@ Choose the accelerator (L4 | A100 | H100) as per your configuration
       -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
       -i -e "s|V_MODEL_NAME|${MODEL_NAME}|" \
       -i -e "s|V_HF_TOKEN|${HF_TOKEN}|" \
-      fine-tune-l4.yaml
+      fine-tune-${ACCELERATOR}.yaml
 
    ```
 
 ## Deploy the respective resources for the job and type of resource
-- L4 - DWS
-```
-kubectl apply -f yaml/provisioning-request-l4.yaml -n ml-team
-kubectl apply -f yaml/fine-tune-l4.yaml -n ml-team
-```
 
-- A100 - DWS
 ```
-kubectl apply -f yaml/provisioning-request-a100.yaml -n ml-team
-kubectl apply -f yaml/fine-tune-a100.yaml -n ml-team
-```
-
-- H100 - DWS
-```
-kubectl apply -f yaml/provisioning-request-h100.yaml -n ml-team
-kubectl apply -f yaml/fine-tune-h100.yaml -n ml-team
+kubectl apply -f yaml/provisioning-request-${_ACCELERATOR}.yaml -n ml-team
+kubectl apply -f yaml/fine-tune-${_ACCELERATOR}-dws.yaml -n ml-team
 ```
