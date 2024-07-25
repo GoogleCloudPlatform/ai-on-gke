@@ -11,7 +11,7 @@ the base model.
 
    ```
    git clone https://github.com/GoogleCloudPlatform/ai-on-gke && \
-   cd ai-on-gke/best-practices/ml-platform/examples/use-case/finetuning/pytorch/dataprep
+   cd ai-on-gke/best-practices/ml-platform/examples/use-case/datapreparation/gemma-it
    ```
 
 2. Set environment variables
