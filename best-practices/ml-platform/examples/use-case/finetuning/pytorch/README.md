@@ -113,9 +113,9 @@ MODEL_PATH="/model-data/model-gemma2/experiment"
 MODEL_NAME="google/gemma-2-9b-it"
 ```
 
-Choose the accelerator (L4 | A100 | H100) as per your configuration
+Choose the accelerator (l4 | a100 | h100) as per your configuration
 ```
-ACCELERATOR="L4"
+ACCELERATOR="l4"
 ```
 
    ``` 
