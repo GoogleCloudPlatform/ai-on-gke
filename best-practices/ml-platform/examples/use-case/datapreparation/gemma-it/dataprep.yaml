@@ -1,14 +1,14 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: dataprep-job-J_ID
+  name: dataprep-job
 spec:
   template:
     metadata:
       labels:
         app: dataprep-job
     spec:
-      serviceAccountName: ray-worker
+      serviceAccountName: KSA
       containers:
       - name: job
         image: IMAGE_URL
