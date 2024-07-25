@@ -97,9 +97,39 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${
 | TRAINING_DATASET_BUCKET | The bucket which contains the generated prompts for fine-tuning. |  |
 | TRAINING_DATASET_PATH | The path where the generated prompt data is for fine-tuning. | dataset/output |
 | V_MODEL_BUCKET | The bucket which will be the destination of the fine-tuned model. | |
-| MODEL_PATH | The output folder path for the fine-tuned model. This location will be used by the inference serving engine and model evaluation. | /model-data/model-gemma2-a100/experiment |
+| MODEL_PATH | The output folder path for the fine-tuned model. This location will be used by the inference serving engine and model evaluation. | /model-data/model-gemma2/experiment |
 | MODEL_NAME | The Hugging Face path to the base model for fine-tuning. | google/gemma-2-9b-it |
 | HF_TOKEN | The Hugging Face token used to pull the base model. | |
+
+Update variables in the respective job submission manifest to reflect your configuration.
+
+```
+MLFLOW_ENABLE="true"
+EXPERIMENT="experiment-1"
+MLFLOW_TRACKING_URI="http://mlflow-tracking-service.ml-tools:5000"
+MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING="true"
+TRAINING_DATASET_PATH="dataset/output"
+MODEL_PATH="/model-data/model-gemma2/experiment"
+MODEL_NAME="google/gemma-2-9b-it"
+```
+
+Choose the accelerator (L4 | A100 | H100) as per your configuration
+   
+   ``` 
+   sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
+      -i -e "s|V_MLFLOW_ENABLE|${MLFLOW_ENABLE}|" \
+      -i -e "s|V_EXPERIMENT|${EXPERIMENT}|" \
+      -i -e "s|V_MLFLOW_TRACKING_URI|${MLFLOW_TRACKING_URI}|" \
+      -i -e "s|V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING|${MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING}|" \
+      -i -e "s|V_TRAINING_DATASET_BUCKET|${TRAINING_DATASET_BUCKET}|" \
+      -i -e "s|V_TRAINING_DATASET_PATH|${TRAINING_DATASET_PATH}|" \
+      -i -e "s|V_MODEL_BUCKET|${V_MODEL_BUCKET}|" \
+      -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
+      -i -e "s|V_MODEL_NAME|${MODEL_NAME}|" \
+      -i -e "s|V_HF_TOKEN|${HF_TOKEN}|" \
+      fine-tune-l4.yaml
+
+   ```
 
 ## Deploy the respective resources for the job and type of resource
 - L4 - DWS
