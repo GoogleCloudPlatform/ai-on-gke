@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-openai-J_ID
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-openai-J_ID
+  template:
+    metadata:
+      labels:
+        app: vllm-openai-J_ID
+      annotations:
+        gke-gcsfuse/volumes: "true"
+    spec:
+      serviceAccountName: ray-worker
+      containers:
+      - name: inference-server
+        image: IMAGE_URL
+        resources:
+          requests:
+            cpu: "2"
+            memory: "25Gi"
+            ephemeral-storage: "25Gi"
+            nvidia.com/gpu: "2"
+          limits:
+            cpu: "2"
+            memory: "25Gi"
+            ephemeral-storage: "25Gi"
+            nvidia.com/gpu: "2"
+        args:
+        - --model=$(MODEL)
+        - --tensor-parallel-size=2
+        env:
+        - name: MODEL
+          value: V_MODEL_PATH
+        - name: VLLM_ATTENTION_BACKEND
+          value: FLASHINFER
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /model-data
+          readOnly: true
+      volumes:
+      - name: dshm
+        emptyDir:
+            medium: Memory
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: V_BUCKET
+            mountOptions: "implicit-dirs"
+            fileCacheCapacity: "20Gi"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-tesla-a100
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "on-demand"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-openai-J_ID
+spec:
+  selector:
+    app: vllm-openai-J_ID
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
