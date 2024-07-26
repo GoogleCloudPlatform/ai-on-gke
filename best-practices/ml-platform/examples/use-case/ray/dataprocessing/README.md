@@ -140,9 +140,7 @@ The preprocessing.py file does the following:
 
 ## Observability
 
-By default, both GKE and the workloads you run expose metrics and logs in Google Cloud's Observability suite.
-
-You can view that information either from the Cloud Observability console or the GKE Observability page.
+By default, both GKE and the workloads you run expose metrics and logs in Google Cloud's Observability suite. You can view that information either from the Cloud Observability console or the GKE Observability page.
 
 For more information about infrastructure and application metrics, see [View observability metrics](https://cloud.google.com/kubernetes-engine/docs/how-to/view-observability-metrics).
 
@@ -168,7 +166,7 @@ resource.type="k8s_container"
 severity=ERROR
 ```
 
-3) Search for specific errors from the `textPayload`` using a regex expression:
+3) Search for specific errors from the `textPayload` using a regex expression:
 
 ```shell
 labels."k8s-pod/app"="job"
@@ -177,9 +175,7 @@ textPayload =~ "ray_worker_node_id.+Image.+not found$"
 severity=ERROR
 ```
 
-You can narrow down the results by adding extra filters, such as using additional labels.
-
-For more GKE query samles, you can read [Kubernetes-related queries](https://cloud.google.com/logging/docs/view/query-library#kubernetes-filters).
+You can narrow down the results by adding extra filters, such as using additional labels. For more GKE query samles, you can read [Kubernetes-related queries](https://cloud.google.com/logging/docs/view/query-library#kubernetes-filters).
 
 ### Log-based Metrics
 
@@ -187,7 +183,7 @@ To gain insight into your workload status, you can also  utilize [log-based metr
 
 ![log-based-metrics](../../../../docs/images/create-log-based-metrics.png)
 
-For this example, the following query is used, utilizing a more specific regular expression to search the error logs.
+For this example, the following query is used, utilizing a more specific regular expression to search the error logs. With the log entries found, you can create log-based metrics.
 
 ```shell
 labels."k8s-pod/app"="job"
@@ -195,8 +191,6 @@ resource.type="k8s_container"
 textPayload =~ "ray_worker_node_id.+Image.+not found$"
 severity=ERROR
 ```
-
-With the log entries found, you can create log-based metrics.
 
 The following is a definition for a metric such as `No_Image_found_Product`. Notics both the GKE node and Ray worker node id are added as labels.
 
