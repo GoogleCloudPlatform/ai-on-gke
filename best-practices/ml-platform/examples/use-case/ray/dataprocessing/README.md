@@ -137,3 +137,128 @@ The preprocessing.py file does the following:
 > For additional information about developing using this codebase see the [Developer Guide](DEVELOPER.md)
 
 > For additional information about converting you code from a notebook to run as a Job on GKE see the [Conversion Guide](CONVERSION.md)
+
+## Observability
+
+By default, both GKE and the workloads you run expose metrics and logs in Google Cloud's Observability suite.
+
+You can view that information either from the Cloud Observability console or the GKE Observability page.
+
+For more information about infrastructure and application metrics, see [View observability metrics](https://cloud.google.com/kubernetes-engine/docs/how-to/view-observability-metrics).
+
+Specifically for the data processing use case described in this example, you can perform additional analysis based on the workload logs.
+
+### Log query sample
+
+In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run your queries.
+
+1) Find when the data preparation job started and finished:
+
+```shell
+labels."k8s-pod/app"="job"
+resource.type="k8s_container"
+textPayload: "preprocessing - DEBUG - Data Preparation "
+```
+
+2) Find all error logs for the job:
+
+```shell
+labels."k8s-pod/app"="job"
+resource.type="k8s_container"
+severity=ERROR
+```
+
+3) Search for specific errors from the `textPayload`` using a regex expression:
+
+```shell
+labels."k8s-pod/app"="job"
+resource.type="k8s_container"
+textPayload =~ "ray_worker_node_id.+Image.+not found$"
+severity=ERROR
+```
+
+You can narrow down the results by adding extra filters, such as using additional labels.
+
+For more GKE query samles, you can read [Kubernetes-related queries](https://cloud.google.com/logging/docs/view/query-library#kubernetes-filters).
+
+### Log-based Metrics
+
+To gain insight into your workload status, you can also  utilize [log-based metrics](https://cloud.google.com/logging/docs/logs-based-metrics). Several methods exist for their creation. The most straightforward approach involves modifying your log queries to locate the relevant logs. Subsequently, you can generate a custom metric by clicking the `Create metric` link and defining it as per your requirements. For example:
+
+![log-based-metrics](../../../../docs/images/create-log-based-metrics.png)
+
+For this example, the following query is used, utilizing a more specific regular expression to search the error logs.
+
+```shell
+labels."k8s-pod/app"="job"
+resource.type="k8s_container"
+textPayload =~ "ray_worker_node_id.+Image.+not found$"
+severity=ERROR
+```
+
+With the log entries found, you can create log-based metrics.
+
+The following is a definition for a metric such as `No_Image_found_Product`. Notics both the GKE node and Ray worker node id are added as labels.
+
+```yaml
+filter: |-
+  labels."k8s-pod/app"="job"
+  resource.type="k8s_container"
+  textPayload =~ "ray_worker_node_id.+Image.+not found$"
+  severity=ERROR
+labelExtractors:
+  gke_node: EXTRACT(labels."compute.googleapis.com/resource_name")
+  ray_woker_node_id: REGEXP_EXTRACT(textPayload, "ray_worker_node_id:(.+) Image")
+metricDescriptor:
+  labels:
+  - key: gke_node
+  - key: ray_woker_node_id
+  metricKind: DELTA
+  name: projects/xxxxx/metricDescriptors/logging.googleapis.com/user/No_Image_Found_Product
+  type: logging.googleapis.com/user/No_Image_Found_Product
+  unit: '1'
+  valueType: INT64
+name: No_Image_Found_Product
+resourceName: projects/xxxxx/metrics/No_Image_Found_Product
+```
+
+Once the metrics are defined, the next time you run your workloads, you will be able to use them. For example, the following chart visualizes the metric defined above:
+
+![use-log-based-metrics](../../../../docs/images/use-log-based-metrics.png)
+
+### Log Analytics
+
+You can also use [Log Analytics](https://cloud.google.com/logging/docs/analyze/query-and-view) to analyze your logs. After it is enabled, you can run SQL queries to gain insight from the logs. The result can also be charted. For example, the following query extracts the product type from the log text payload and count the numbers of them: 
+
+```sql
+SELECT
+ ARRAY_REVERSE(SPLIT(text_payload, '>>'))[2] AS clothing_type,
+ COUNT(*) AS number
+FROM
+ `gkebatchexpce3c8dcb.global._Default._Default`
+WHERE
+ text_payload LIKE '%Clothing >> Women\'s Clothing >> Western Wear%'
+GROUP BY
+ clothing_type
+LIMIT 1000
+```
+
+You should see output like the following:
+
+|clothing_type          |number|
+|-----------------------|------|
+| Skirts                |5     |
+| Shirts, Tops & Tunics |485   |
+| Western Wear          |2     |
+| Fashion Jackets       |3     |
+| Polos & T-Shirts      |12    |
+| Jeans                 |19    |
+| Dresses & Skirts      |361   |
+| Tops                  |38    |
+| Leggings & Jeggings   |22    |
+| Shorts                |1     |
+| Sports Jackets        |1     |
+| Shrugs                |7     |
+| Shirts                |1     |
+
+
