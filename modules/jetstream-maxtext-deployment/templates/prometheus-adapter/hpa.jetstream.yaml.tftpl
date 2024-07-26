@@ -1,0 +1,32 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jetstream-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: maxengine-server
+  minReplicas: ${hpa_min_replicas}
+  maxReplicas: ${hpa_max_replicas}
+  metrics:
+%{ for rule in rules }
+%{ if length(regexall("jetstream_.*", rule.target_query)) > 0 }
+  - type: External
+    external:
+      metric:
+        name: ${rule.target_query}
+      target:
+        type: AverageValue
+        averageValue: ${rule.average_value_target}
+%{ else }
+  - type: External
+    external:
+      metric:
+        name: ${rule.target_query}
+      target:
+        type: AverageValue
+        averageValue: ${rule.average_value_target}
+%{ endif }
+%{ endfor ~}

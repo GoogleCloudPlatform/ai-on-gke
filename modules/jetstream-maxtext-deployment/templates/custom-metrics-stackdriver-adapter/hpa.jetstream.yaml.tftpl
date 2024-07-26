@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: jetstream-hpa
-  namespace: ${namespace}
+  namespace: default
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -11,21 +11,22 @@ spec:
   minReplicas: ${hpa_min_replicas}
   maxReplicas: ${hpa_max_replicas}
   metrics:
-%{ if length(regexall("jetstream_.*", hpa_type)) > 0 }
+%{ for rule in rules }
+%{ if length(regexall("jetstream_.*", rule.target_query)) > 0 }
   - type: Pods
     pods:
       metric:
-        name: prometheus.googleapis.com|${hpa_type}|gauge
+        name: prometheus.googleapis.com|${rule.target_query}|gauge
       target:
         type: AverageValue
-        averageValue: ${hpa_averagevalue_target}
+        averageValue: ${rule.average_value_target}
 %{ else }
-  - type: Pods
-    pods:
+  - type: External
+    external:
       metric:
-        name: kubernetes.io|node|accelerator|memory_used
+        name: kubernetes.io|node|accelerator|${rule.target_query}
       target:
         type: AverageValue
-        averageValue: ${hpa_averagevalue_target}
+        averageValue: ${rule.average_value_target}
 %{ endif }
-
+%{ endfor ~}

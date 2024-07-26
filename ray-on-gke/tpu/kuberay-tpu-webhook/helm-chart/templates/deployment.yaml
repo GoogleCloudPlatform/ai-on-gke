@@ -15,13 +15,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: ray-system
+  name: {{ .Values.tpuWebhook.namespace.name }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: kuberay-tpu-webhook
-  namespace: ray-system
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -39,7 +39,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: kuberay-tpu-webhook
-    namespace: ray-system
+    namespace: {{ .Values.tpuWebhook.namespace.name }}
 roleRef:
   kind: ClusterRole
   name: kuberay-tpu-webhook-pod-reader
@@ -51,24 +51,24 @@ metadata:
   labels:
     app: kuberay-tpu-webhook
   name: kuberay-tpu-webhook
-  namespace: ray-system
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.tpuWebhook.deployment.replicas }}
   selector:
     matchLabels:
-      app: kuberay-tpu-webhook
+      app:  kuberay-tpu-webhook
   template:
     metadata:
       labels:
-        app: kuberay-tpu-webhook
+        app:  kuberay-tpu-webhook
     spec:
       serviceAccountName: kuberay-tpu-webhook
       containers:
-        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.1
-          imagePullPolicy: Always
-          name: kuberay-tpu-webhook
+        - image: "{{ .Values.tpuWebhook.image.repository }}:{{ .Values.tpuWebhook.image.tag }}"
+          imagePullPolicy: {{ .Values.tpuWebhook.image.pullPolicy }}
+          name: {{ .Chart.Name }}
           args:
-          - --v=0 # change this value to 1 for verbose logging
+          - --v={{ .Values.tpuWebhook.deployment.verbosity }}
           ports:
           - name: https
             containerPort: 443

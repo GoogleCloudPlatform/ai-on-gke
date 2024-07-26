@@ -14,48 +14,23 @@
  * limitations under the License.
  */
 
-
-variable "credentials_config" {
-  description = "Configure how Terraform authenticates to the cluster."
-  type = object({
-    fleet_host = optional(string)
-    kubeconfig = optional(object({
-      context = optional(string)
-      path    = optional(string, "~/.kube/config")
-    }))
-  })
-  nullable = true
-  default = {
-    kubeconfig = {
-      path : "~/.kube/config"
-    }
-  }
-  validation {
-    condition = (
-      (var.credentials_config.fleet_host != null) !=
-      (var.credentials_config.kubeconfig != null)
-    )
-    error_message = "Exactly one of fleet host or kubeconfig must be set."
-  }
+variable "cluster_name" {
+  type     = string
+  nullable = false
 }
 
 variable "project_id" {
-  description = "Project id of existing or created project."
-  type        = string
-  nullable    = false
-}
-
-variable "cluster_name" {
-  type = string
+  type     = string
+  nullable = false
 }
 
 variable "maxengine_deployment_settings" {
   type = object({
-    maxengine_server_image      = optional(string)
-    jetstream_http_server_image = optional(string)
+    maxengine_server_image      = optional(string, "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2")
+    jetstream_http_server_image = optional(string, "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2")
 
     model_name              = string           // Name of your LLM (for example: "gemma-7b")
-    parameters_path         = string           // Path to the parameters for your model
+    parameters_path         = string           // Path to the paramters for your model
     metrics_port            = optional(number) // Emit Jetstream metrics on this port of each container
     metrics_scrape_interval = optional(number) // Interval for scraping metrics (default: 10s)
 
@@ -65,6 +40,11 @@ variable "maxengine_deployment_settings" {
       chip_count  = number
     })
   })
+
+  validation {
+    condition     = contains(["gemma-7b", "llama2-7b", "llama2-13b"], var.maxengine_deployment_settings.model_name)
+    error_message = "model_name must be one of \"gemma-7b\", \"llama2-7b\", or \"llama2-13b\""
+  }
 }
 
 variable "hpa_config" {

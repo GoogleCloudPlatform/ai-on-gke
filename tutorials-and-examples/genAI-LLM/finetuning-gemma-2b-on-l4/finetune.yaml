@@ -15,7 +15,7 @@ spec:
       terminationGracePeriodSeconds: 600
       containers:
       - name: finetuner
-        image: <YOUR_IMAGE>
+        image: $IMAGE_URL
         resources:
           limits:
             nvidia.com/gpu: "8"
@@ -23,7 +23,7 @@ spec:
         - name: MODEL_NAME
           value: "google/gemma-2b"
         - name: NEW_MODEL
-          value: "<FINETUNED_MODEL_ID>"
+          value: "gemma-2b-sql-finetuned"
         - name: LORA_R
           value: "8"
         - name: LORA_ALPHA

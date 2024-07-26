@@ -18,13 +18,13 @@ metadata:
   labels:
     app: kuberay-tpu-webhook
   name: kuberay-tpu-webhook
-  namespace: ray-system
+  namespace: {{ .Values.tpuWebhook.namespace.name }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.tpuWebhook.service.type }}
   selector:
     app: kuberay-tpu-webhook
   ports:
-    - port: 443
+    - port: {{ .Values.tpuWebhook.service.port }}
       targetPort: https
       protocol: TCP
       name: https

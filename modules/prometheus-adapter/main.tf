@@ -16,7 +16,7 @@ resource "helm_release" "prometheus_adapter" {
   name       = "my-release"
   chart      = "prometheus-adapter"
   repository = "https://prometheus-community.github.io/helm-charts"
-  values     = var.config_file != "" ? [file(var.config_file)] : []
+  values     = var.config_file != "" ? [var.config_file] : []
 }
 
 resource "kubernetes_deployment_v1" "frontend" {

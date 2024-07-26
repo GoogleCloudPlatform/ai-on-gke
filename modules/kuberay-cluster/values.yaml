@@ -36,7 +36,7 @@ head:
   # If enableInTreeAutoscaling is true, the autoscaler sidecar will be added to the Ray head pod.
   # Ray autoscaler integration is supported only for Ray versions >= 1.11.0
   # Ray autoscaler integration is Beta with KubeRay >= 0.3.0 and Ray >= 2.0.0.
-  # enableInTreeAutoscaling: true
+  enableInTreeAutoscaling: true
   # autoscalerOptions is an OPTIONAL field specifying configuration overrides for the Ray autoscaler.
   # The example configuration shown below below represents the DEFAULT values.
   # autoscalerOptions:
@@ -95,17 +95,17 @@ head:
       # Ray recommends at least 8G memory for production workloads.
       memory: "8G"
       # Sum of ephemeral storage requests must be max 10Gi on Autopilot default class.
-      # This includes, ray-head, gcsfuse-sidecar, and fluent-bit.
-      ephemeral-storage: 4Gi
+      # This includes, ray-head, gcsfuse-sidecar, fluent-bit, and ray Autoscaler sidecar which requests 1Gi by default.
+      ephemeral-storage: 3Gi
     requests:
       cpu: "4"
       memory: "8G"
-      ephemeral-storage: 4Gi
+      ephemeral-storage: 3Gi
   annotations:
     gke-gcsfuse/volumes: "true"
     gke-gcsfuse/cpu-limit: "1"
     gke-gcsfuse/memory-limit: 2Gi
-    gke-gcsfuse/ephemeral-storage-limit: 4Gi
+    gke-gcsfuse/ephemeral-storage-limit: 3Gi
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
   tolerations: []
@@ -165,7 +165,9 @@ worker:
   # uncomment the line below
   # disabled: true
   groupName: workerGroup
-  replicas: 1
+  replicas: 0
+  minReplicas: 0
+  maxReplicas: 5
   type: worker
   labels:
     cloud.google.com/gke-ray-node-type: worker
