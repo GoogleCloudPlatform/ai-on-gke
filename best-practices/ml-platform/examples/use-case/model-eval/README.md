@@ -83,13 +83,23 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${P
 | V_BUCKET | The bucket where the model weights are located | |
 
 ```
-sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
+VLLM_IMAGE_URL=""
+BUCKET=""
+MODEL="/model-data/model-gemma2-a100/experiment"
+
+```
+```
+sed -i -e "s|IMAGE_URL|${VLLM_IMAGE_URL}|" \
    -i -e "s|KSA|${KSA}|" \
    -i -e "s|V_BUCKET|${BUCKET}|" \
    -i -e "s|V_MODEL_PATH|${MODEL}|" \
    vllm-openai.yaml
 ```
+Create the Job in the “ml-team” namespace using kubectl command
 
+``` 
+kubectl apply -f vllm-openai.yaml -n ml-team
+```
 
 - For `model-eval.yaml`
   
@@ -117,4 +127,8 @@ sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
    model-eval.yaml
 ```
 
-   
+Create the Job in the “ml-team” namespace using kubectl command
+
+``` 
+kubectl apply -f model-eval.yaml -n ml-team
+```
