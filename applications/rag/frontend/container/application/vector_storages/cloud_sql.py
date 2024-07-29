@@ -83,3 +83,4 @@ class CloudSQLVectorStore(VectorStore):
 
         except Exception as err:
             raise Exception(f"General error: {err}")
+

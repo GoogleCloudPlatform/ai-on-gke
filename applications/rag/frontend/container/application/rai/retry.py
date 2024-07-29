@@ -27,5 +27,4 @@ _RETRIABLE_TYPES = [
 def is_retryable(exc):
     return isinstance(exc, _RETRIABLE_TYPES)
 
-
 retry_policy = Retry(predicate=is_retryable)
