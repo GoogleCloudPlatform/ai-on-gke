@@ -14,18 +14,16 @@
 
 import logging
 
-from google.cloud.sql.connector import Connector
-
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from langchain_google_cloud_sql_pg import PostgresChatMessageHistory
 from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_google_cloud_sql_pg import PostgresChatMessageHistory
+
 
 from application.cloud_sql.cloud_sql import (
     CHAT_HISTORY_TABLE_NAME,
-    init_connection_pool,
     create_sync_postgres_engine,
 )
 from application.rag_langchain.huggingface_inference_model import (
@@ -61,10 +59,6 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 engine = create_sync_postgres_engine()
-# TODO: Dict is not safe for multiprocessing. Introduce a cache using Flask-caching or libcache
-# The in-memory SimpleCache implementations for each of these libraries is not safe either.
-# Consider redis or memcached (e.g., Memorystore)
-# chat_history_map: Dict[str, PostgresChatMessageHistory] = {}
 
 
 def get_chat_history(session_id: str) -> PostgresChatMessageHistory:
@@ -72,7 +66,9 @@ def get_chat_history(session_id: str) -> PostgresChatMessageHistory:
         engine, session_id=session_id, table_name=CHAT_HISTORY_TABLE_NAME
     )
 
-    print(f"Retrieving history for session {session_id} with {len(history.messages)}")
+    logging.info(
+        f"Retrieving history for session {session_id} with {len(history.messages)}"
+    )
     return history
 
 
@@ -87,9 +83,8 @@ def create_chain() -> RunnableWithMessageHistory:
     model = HuggingFaceCustomChatModel()
 
     langchain_embed = HuggingFaceEmbeddings(model_name=SENTENCE_TRANSFORMER_MODEL)
-    vector_store = CloudSQLVectorStore(
-        langchain_embed, init_connection_pool(Connector())
-    )
+    vector_store = CloudSQLVectorStore(langchain_embed, engine)
+
     retriever = vector_store.as_retriever()
 
     setup_and_retrieval = RunnableParallel(
@@ -99,6 +94,7 @@ def create_chain() -> RunnableWithMessageHistory:
             HISTORY: RunnableLambda(lambda d: d[HISTORY]),
         }
     )
+
     chain = setup_and_retrieval | prompt | model
     chain_with_history = RunnableWithMessageHistory(
         chain,
@@ -113,7 +109,6 @@ def create_chain() -> RunnableWithMessageHistory:
 def take_chat_turn(
     chain: RunnableWithMessageHistory, session_id: str, query_text: str
 ) -> str:
-    # TODO limit the number of history messages
     config = {"configurable": {"session_id": session_id}}
     result = chain.invoke({"input": query_text}, config=config)
-    return str(result)
+    return result

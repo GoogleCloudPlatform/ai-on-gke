@@ -18,21 +18,17 @@ import logging
 
 from typing import List, Optional, Iterable, Any
 
-import pg8000
-import sqlalchemy
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import func, text
-
 from langchain_core.vectorstores import VectorStore
 from langchain_core.embeddings import Embeddings
 from langchain_core.documents import Document
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from application.models import VectorEmbeddings
+from langchain_google_cloud_sql_pg import PostgresVectorStore
+
 
 VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
-INSTANCE_CONNECTION_NAME = os.environ.get("INSTANCE_CONNECTION_NAME", "")
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 10
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -50,91 +46,40 @@ class CloudSQLVectorStore(VectorStore):
     ):
         raise NotImplementedError
 
-    def __init__(self, embedding: Embeddings, engine: Engine):
-        self.embedding = embedding
-        self.engine = engine
-        self.text_splitter = CharacterTextSplitter(
-            separator="\n\n",
-            chunk_size=1024,
-            chunk_overlap=200,
+    def __init__(self, embedding_provider, engine):
+        self.vector_store = PostgresVectorStore.create_sync(
+            engine=engine,
+            embedding_service=embedding_provider,
+            table_name=VECTOR_EMBEDDINGS_TABLE_NAME,
         )
-
-    @property
-    def embeddings(self) -> Embeddings:
-        return self.embedding
+        self.splitter = RecursiveCharacterTextSplitter(
+            chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP, length_function=len
+        )
+        self.embeddings_service = embedding_provider
 
     # TODO implement
     def add_texts(
         self, texts: Iterable[str], metadatas: List[dict] | None = None, **kwargs: Any
     ) -> List[str]:
-        with self.engine.connect() as conn:
-            try:
-                Session = sessionmaker(bind=conn)
-                session = Session(bind=conn)
-                for raw_text in texts:
-                    id = uuid.uuid4()
-
-                    texts = self.text_splitter.split_text(raw_text)
-                    embeddings = self.embedding.encode(texts).tolist()
-                    vector_embedding = VectorEmbeddings(
-                        id=id, text=texts, text_embedding=embeddings[0]
-                    )
-                    session.add(vector_embedding)
-                    conn.commit()
-
-            except sqlalchemy.exc.DBAPIError or pg8000.exceptions.DatabaseError as err:
-                message = f"Table {VECTOR_EMBEDDINGS_TABLE_NAME} does not exist: {err}"
-                raise sqlalchemy.exc.DataError(message)
-            except sqlalchemy.exc.DatabaseError as err:
-                message = f"Database {INSTANCE_CONNECTION_NAME} does not exist: {err}"
-                raise sqlalchemy.exc.DataError(message)
-            except Exception as err:
-                raise Exception(f"General error: {err}")
+        try:
+            splits = self.splitter.split_documents(texts)
+            ids = [str(uuid.uuid4()) for _ in range(len(splits))]
+            self.vector_store.add_documents(splits, ids)
+        except Exception as e:
+            logging.info(f"Error: {e}")
+            raise e
 
     # TODO implement similarity search with cosine similarity threshold
 
     def similarity_search(
         self, query: dict, k: int = 4, **kwargs: Any
     ) -> List[Document]:
-        with self.engine.connect() as conn:
-            try:
-                Session = sessionmaker(bind=conn)
-                session = Session(bind=conn)
+        try:
 
-                q = query.get("input")
-                # embed query & fetch matches
-                query_emb = self.embedding.embed_query(q)
-                query_request = (
-                    "SELECT id, text, text_embedding, 1 - ('["
-                    + ",".join(map(str, query_emb))
-                    + "]' <=> text_embedding) AS cosine_similarity FROM "
-                    + VECTOR_EMBEDDINGS_TABLE_NAME
-                    + " ORDER BY cosine_similarity DESC LIMIT "
-                    + str(k)
-                    + ";"
-                )
-                query_results = session.execute(text(query_request)).fetchall()
+            query_input = query.get("input")
+            query_vector = self.embeddings_service.embed_query(query_input)
+            docs = self.vector_store.similarity_search_by_vector(query_vector, k=4)
+            return docs
 
-                print(f"GOT {len(query_results)} results")
-
-                session.commit()
-                session.close()
-
-                if not query_results:
-                    message = (
-                        f"Table {VECTOR_EMBEDDINGS_TABLE_NAME} returned empty result"
-                    )
-                    raise ValueError(message)
-
-            except sqlalchemy.exc.DataError or pg8000.exceptions.DatabaseError as err:
-                message = f"Table {VECTOR_EMBEDDINGS_TABLE_NAME} does not exist: {err}"
-                raise sqlalchemy.exc.DataError(message)
-            except sqlalchemy.exc.DatabaseError as err:
-                message = f"Database {INSTANCE_CONNECTION_NAME} does not exist: {err}"
-                raise sqlalchemy.exc.DataError(message)
-            except Exception as err:
-                raise Exception(f"General error: {err}")
-
-        # convert query results into List[Document]
-        texts = [result[1] for result in query_results]
-        return [Document(page_content=text) for text in texts]
+        except Exception as err:
+            raise Exception(f"General error: {err}")
