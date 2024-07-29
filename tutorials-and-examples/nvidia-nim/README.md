@@ -82,7 +82,7 @@ ngc config set
 ngc registry model list
 ```
 
-4. Create a Kuberntes namespace and switch context to that namespace
+4. Create a Kuberntes namespace
 ```bash
 kubectl create namespace nim
 ```
