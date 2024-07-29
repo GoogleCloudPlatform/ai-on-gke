@@ -5,6 +5,13 @@
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,12 +20,15 @@
 # limitations under the License.
 
 import os
+import logging
 
-import pymysql
-import sqlalchemy
-from google.cloud.sql.connector import Connector, IPTypes
+from google.cloud.sql.connector import IPTypes
 
-from langchain_google_cloud_sql_pg import PostgresEngine
+from langchain_google_cloud_sql_pg import PostgresEngine, PostgresVectorStore
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
@@ -34,6 +44,8 @@ DB_NAME = os.environ.get("DB_NAME", "pgvector-database")
 VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
 CHAT_HISTORY_TABLE_NAME = os.environ.get("CHAT_HISTORY_TABLE_NAME", "message_store")
 
+VECTOR_DIMENSION = os.environ.get("VECTOR_DIMENSION", 384)
+
 try:
     db_username_file = open("/etc/secret-volume/username", "r")
     DB_USER = db_username_file.read()
@@ -47,28 +59,6 @@ except:
     DB_PASS = os.environ.get("DB_PASS", "postgres")
 
 
-# helper function to return SQLAlchemy connection pool
-def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
-    # function used to generate database connection
-    def getconn() -> pymysql.connections.Connection:
-        conn = connector.connect(
-            INSTANCE_CONNECTION_NAME,
-            "pg8000",
-            user=DB_USER,
-            password=DB_PASS,
-            db=DB_NAME,
-            ip_type=IPTypes.PUBLIC if ENVIRONMENT == "development" else IPTypes.PRIVATE,
-        )
-        return conn
-
-    # create connection pool
-    pool = sqlalchemy.create_engine(
-        "postgresql+pg8000://",
-        creator=getconn,
-    )
-    return pool
-
-
 def create_sync_postgres_engine():
     engine = PostgresEngine.from_instance(
         project_id=GCP_PROJECT_ID,
@@ -79,5 +69,24 @@ def create_sync_postgres_engine():
         password=DB_PASS,
         ip_type=IPTypes.PUBLIC if ENVIRONMENT == "development" else IPTypes.PRIVATE,
     )
-    engine.init_chat_history_table(table_name=CHAT_HISTORY_TABLE_NAME)
+    try:
+        engine.init_chat_history_table(table_name=CHAT_HISTORY_TABLE_NAME)
+        engine.init_vectorstore_table(
+            VECTOR_EMBEDDINGS_TABLE_NAME,
+            vector_size=VECTOR_DIMENSION,
+            overwrite_existing=False,
+        )
+    except Exception as e:
+        logging.info(f"Error: {e}")
+
     return engine
+
+
+def create_sync_postgres_vector_store(engine, embedding_provider):
+    vector_store = PostgresVectorStore.create_sync(
+        engine=engine,
+        embedding_service=embedding_provider,
+        table_name=VECTOR_EMBEDDINGS_TABLE_NAME,
+    )
+
+    return vector_store

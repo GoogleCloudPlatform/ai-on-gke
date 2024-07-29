@@ -1,3 +1,6 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -9,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import uuid
 import traceback
 import logging as log
 
 import google.cloud.logging as logging
 
-from flask import render_template, request, jsonify, session
+from flask import render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, timedelta, timezone
 
 from application import create_app
@@ -31,11 +33,12 @@ from application.rag_langchain.rag_chain import (
     clear_chat_history,
     create_chain,
     take_chat_turn,
+    get_chat_history,
 )
 
 log.basicConfig(level=log.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-SESSION_TIMEOUT_MINUTES = 30
+SESSION_TIMEOUT_MINUTES = 10
 
 # Setup logging
 logging_client = logging.Client()
@@ -45,28 +48,6 @@ app = create_app()
 
 # Create llm chain
 llm_chain = create_chain()
-
-
-@app.route("/get_nlp_status", methods=["GET"])
-def get_nlp_status():
-    nlp_enabled = nlp_filter.is_nlp_api_enabled()
-    return jsonify({"nlpEnabled": nlp_enabled})
-
-
-@app.route("/get_dlp_status", methods=["GET"])
-def get_dlp_status():
-    dlp_enabled = dlp_filter.is_dlp_api_enabled()
-    return jsonify({"dlpEnabled": dlp_enabled})
-
-
-@app.route("/get_inspect_templates")
-def get_inspect_templates():
-    return jsonify(dlp_filter.list_inspect_templates_from_parent())
-
-
-@app.route("/get_deidentify_templates")
-def get_deidentify_templates():
-    return jsonify(dlp_filter.list_deidentify_templates_from_parent())
 
 
 @app.before_request
@@ -94,6 +75,54 @@ def check_inactivity():
     session["last_activity"] = datetime.now(timezone.utc)
 
 
+@app.route("/get_nlp_status", methods=["GET"])
+def get_nlp_status():
+    nlp_enabled = nlp_filter.is_nlp_api_enabled()
+    return jsonify({"nlpEnabled": nlp_enabled})
+
+
+@app.route("/get_dlp_status", methods=["GET"])
+def get_dlp_status():
+    dlp_enabled = dlp_filter.is_dlp_api_enabled()
+    return jsonify({"dlpEnabled": dlp_enabled})
+
+
+@app.route("/get_inspect_templates")
+def get_inspect_templates():
+    return jsonify(dlp_filter.list_inspect_templates_from_parent())
+
+
+@app.route("/get_deidentify_templates")
+def get_deidentify_templates():
+    return jsonify(dlp_filter.list_deidentify_templates_from_parent())
+
+
+@app.route("/get_chat_history", methods=["GET"])
+def get_chat_history_endpoint():
+    try:
+        session_id = session.get("session_id")
+        history = get_chat_history(session_id)
+        log.info(history)
+
+        response = jsonify({"history_messages": []})
+        response.status_code = 200
+
+        return response
+
+    except Exception as err:
+        log.info(f"exception from llm: {err}")
+        traceback.print_exc()
+        error_traceback = traceback.format_exc()
+        response = jsonify(
+            {
+                "error": "An error occurred",
+                "errorMessage": f"Error: {err}\nTraceback:\n{error_traceback}",
+            }
+        )
+        response.status_code = 500
+        return response
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -113,8 +142,11 @@ def handlePrompt():
     log.info(f"handle user prompt: {user_prompt}")
 
     try:
+        session_id = session.get("session_id")
+        if not session_id:
+            return redirect(url_for("index"))
         response = {}
-        result = take_chat_turn(llm_chain, session["session_id"], user_prompt)
+        result = take_chat_turn(llm_chain, session_id, user_prompt)
         log.info("After the result")
         log.info(result)
         response["text"] = result
