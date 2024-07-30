@@ -5,6 +5,10 @@ against the dataset used to fine-tune the model. In this example, the model is d
 inference serving engine to host the model for the model validaiton to take place.  Two steps are performed
 for this activity, the first is to send prompts to the fine-tuned model, the second is to validate the results.
 
+## Prerequisites
+- The [ML Platform Playground](../../../platform/playground) must be deployed
+- Model weights from the [Fine tuning example](../../finetuning/pytorch)
+
 ## Preparation
 - Environment Variables
 ```
