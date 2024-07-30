@@ -12,7 +12,6 @@ spec:
   maxReplicas: ${hpa_max_replicas}
   metrics:
 %{ for rule in rules }
-%{ if length(regexall("jetstream_.*", rule.target_query)) > 0 }
   - type: External
     external:
       metric:
@@ -20,13 +19,4 @@ spec:
       target:
         type: AverageValue
         averageValue: ${rule.average_value_target}
-%{ else }
-  - type: External
-    external:
-      metric:
-        name: ${rule.target_query}
-      target:
-        type: AverageValue
-        averageValue: ${rule.average_value_target}
-%{ endif }
 %{ endfor ~}
