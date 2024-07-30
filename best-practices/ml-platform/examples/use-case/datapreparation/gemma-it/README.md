@@ -80,7 +80,7 @@ the base model.
 1. Get credentials for the GKE cluster
 
    ```
-   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${CLUSTER_REGION} --project ${PROJECT_ID}
+   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
    ```
 
 1. Update Data Preparation Job variables
@@ -130,5 +130,3 @@ the base model.
    ```
    gcloud storage ls gs://${BUCKET}/${DATASET_OUTPUT_PATH}
    ```
-   
-

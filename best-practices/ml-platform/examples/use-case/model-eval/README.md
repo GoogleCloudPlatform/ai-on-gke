@@ -13,7 +13,6 @@ PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectN
 TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
 V_MODEL_BUCKET=<model-artifacts-bucket>
 CLUSTER_NAME=<your-gke-cluster>
-CLUSTER_REGION=<gke-cluster-location>
 NAMESPACE=ml-team
 KSA=<k8s-service-account>
 DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/validate:v1.0.0
@@ -69,10 +68,38 @@ gcloud builds submit . --project ${PROJECT_ID}
 Get credentials for the GKE cluster
 
 ```
-gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${CLUSTER_REGION} --project ${PROJECT_ID}
+gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
 ```
 
 ## Model evaluation Job inputs
+
+- For `vllm-openai.yaml`
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| IMAGE_URL | The image url for the vllm image | |
+| MODEL | The output folder path for the fine-tuned model | /model-data/model-gemma2-a100/experiment |
+| V_BUCKET | The bucket where the model weights are located | |
+
+```
+VLLM_IMAGE_URL=""
+BUCKET=""
+MODEL="/model-data/model-gemma2-a100/experiment"
+```
+
+```
+sed -i -e "s|IMAGE_URL|${VLLM_IMAGE_URL}|" \
+   -i -e "s|KSA|${KSA}|" \
+   -i -e "s|V_BUCKET|${BUCKET}|" \
+   -i -e "s|V_MODEL_PATH|${MODEL}|" \
+   vllm-openai.yaml
+```
+Create the Job in the “ml-team” namespace using kubectl command
+
+```
+kubectl apply -f vllm-openai.yaml -n ml-team
+```
+
 - For `model-eval.yaml`
   
 | Variable | Description | Example |
@@ -83,10 +110,24 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${
 | DATASET_OUTPUT_PATH | The folder path of the generated output data set. | dataset/output |
 | ENDPOINT | This is the endpoint URL of the inference server | http://10.40.0.51:8000/v1/chat/completions | 
 
-- For `vllm-openai.yaml`
-  
-| Variable | Description | Example |
-| --- | --- | --- |
-| IMAGE_URL | The image url for the vllm image | |
-| MODEL | The output folder path for the fine-tuned model | /model-data/model-gemma2-a100/experiment |
-| V_BUCKET | The bucket where the model weights are located | |
+```
+BUCKET="<fine-tuning-dataset-bucket>"
+MODEL_PATH=""
+DATASET_OUTPUT_PATH=""
+ENDPOINT="http://vllm-openai:8000/v1/chat/completions"
+```
+```
+sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
+   -i -e "s|KSA|${KSA}|" \
+   -i -e "s|V_BUCKET|${BUCKET}|" \
+   -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
+   -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
+   -i -e "s|V_ENDPOINT|${ENDPOINT}|" \
+   model-eval.yaml
+```
+
+Create the Job in the `ml-team` namespace using kubectl command
+
+```
+kubectl apply -f model-eval.yaml -n ml-team
+```
