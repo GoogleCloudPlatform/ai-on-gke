@@ -71,13 +71,10 @@ variable "max_concurrent_requests" {
 }
 
 variable "quantization" {
-  description = "Quantization used for the model."
+  description = "Quantization used for the model. Can be one of the quantization options mentioned in https://huggingface.co/docs/text-generation-inference/en/basic_tutorials/launcher#quantize. `eetq` and `bitsandbytes` can be applied to any models whereas others might require the use of quantized checkpoints."
   type        = string
   nullable    = true
-  # Can be one of the quantization options mentioned in https://huggingface.co/docs/text-generation-inference/en/basic_tutorials/launcher#quantize.
-  # `eetq` and `bitsandbytes` can be applied to any models whereas others might
-  # require the use of quantized checkpoints.
-  default = ""
+  default     = ""
 }
 
 variable "ksa" {
