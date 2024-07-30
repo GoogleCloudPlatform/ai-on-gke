@@ -4,6 +4,9 @@ Preprocessed flipkart product catalog data is used as input data to generate pro
 The prompts are generated using Vertex AI's Gemini Flash model. The output is a data set that can be used for fine-tuning
 the base model.
 
+## Prerequisites
+- The [ML Platform Playground](../../../platform/playground) must be deployed
+- Data output from the [Data Preprocessing example](../../datapreprocessing)
 
 ## Steps
 
