@@ -140,7 +140,7 @@ class ModelEvaluation:
     def calculate_accuracy(self):
         ground_truth = pd.DataFrame(self.training_df["Answer"])
         total_test_size = len(self.df)
-        logger.info("Test dataset size: ", total_test_size)
+        logger.info(f"Test dataset size: {total_test_size}")
 
         product_names = self.extract_product_names(self.output_file)
 
@@ -148,14 +148,14 @@ class ModelEvaluation:
             product_names, ground_truth
         )
         none_predictions = self.count_no_products_prediction(product_names)
-        logger.info("True Positives Count:", true_positives_count)
-        logger.info("False Positives Count:", false_positives_count)
-        logger.info("Number of predictions with no product details: ", none_predictions)
+        logger.info(f"True Positives Count: {true_positives_count}")
+        logger.info(f"False Positives Count: {false_positives_count}")
+        logger.info(
+            f"Number of predictions with no product details: {none_predictions}"
+        )
 
         accuracy = round((true_positives_count / total_test_size) * 100, 2)
-        logger.info(
-            f"Accuracy of Gemma2 9B IT model on test dataset is ", accuracy, "%"
-        )
+        logger.info(f"Accuracy of Gemma2 9B IT model on test dataset is {accuracy}%")
 
         if true_positives_count | false_positives_count:
             precision = round(
@@ -164,7 +164,7 @@ class ModelEvaluation:
                 2,
             )
             logger.info(
-                f"Precision of Gemma2 9B IT model on test dataset is ", precision, "%"
+                f"Precision of Gemma2 9B IT model on test dataset is {precision}%"
             )
 
     def evaluate(self):

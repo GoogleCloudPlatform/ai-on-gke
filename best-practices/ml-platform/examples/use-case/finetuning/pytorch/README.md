@@ -12,7 +12,6 @@ PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectN
 TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
 V_MODEL_BUCKET=<model-artifacts-bucket>
 CLUSTER_NAME=<your-gke-cluster>
-CLUSTER_REGION=<gke-cluster-location>
 NAMESPACE=ml-team
 KSA=<k8s-service-account>
 HF_TOKEN=<your-Hugging-Face-account-token>
@@ -83,7 +82,7 @@ kubectl create secret generic hf-secret \
 Get credentials for the GKE cluster
 
 ```
-gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${CLUSTER_REGION} --project ${PROJECT_ID}
+gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
 ```
 
 ## Fine-tuning Job Inputs
@@ -104,10 +103,7 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --location=${
 Update variables in the respective job submission manifest to reflect your configuration.
 
 ```
-MLFLOW_ENABLE="true"
-EXPERIMENT="experiment-1"
-MLFLOW_TRACKING_URI="http://mlflow-tracking-service.ml-tools:5000"
-MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING="true"
+MLFLOW_ENABLE="false"
 TRAINING_DATASET_PATH="dataset/output"
 MODEL_PATH="/model-data/model-gemma2/experiment"
 MODEL_NAME="google/gemma-2-9b-it"
