@@ -77,7 +77,7 @@ variable "quantization" {
   # Can be one of the quantization options mentioned in https://huggingface.co/docs/text-generation-inference/en/basic_tutorials/launcher#quantize.
   # `eetq` and `bitsandbytes` can be applied to any models whereas others might
   # require the use of quantized checkpoints.
-  default     = ""
+  default = ""
 }
 
 variable "ksa" {
