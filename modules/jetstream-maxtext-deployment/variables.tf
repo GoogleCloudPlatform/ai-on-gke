@@ -47,7 +47,7 @@ variable "maxengine_deployment_settings" {
   }
 
   validation {
-    condition = !(var.maxengine_deployment_settings.metrics_scrape_interval < 5)
+    condition     = !(var.maxengine_deployment_settings.metrics_scrape_interval < 5)
     error_message = "Metrics scrape interval must be at least 5s"
   }
 }
