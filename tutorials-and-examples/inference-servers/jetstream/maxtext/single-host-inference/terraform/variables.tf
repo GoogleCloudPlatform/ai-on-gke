@@ -57,7 +57,7 @@ variable "maxengine_deployment_settings" {
     model_name              = string           // Name of your LLM (for example: "gemma-7b")
     parameters_path         = string           // Path to the parameters for your model
     metrics_port            = optional(number) // Emit Jetstream metrics on this port of each container
-    metrics_scrape_interval = optional(number) // Interval for scraping metrics (default: 10s)
+    metrics_scrape_interval = optional(number) // Interval for scraping metrics
 
     accelerator_selectors = object({
       topology    = string
