@@ -129,27 +129,27 @@ resource "null_resource" "kueue" {
 
 # NVIDIA DCGM
 ###############################################################################
-resource "null_resource" "nvidia_dcgm" {
-  depends_on = [
-    google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.kueue
-  ]
+# resource "null_resource" "nvidia_dcgm" {
+#   depends_on = [
+#     google_gke_hub_feature_membership.cluster_configmanagement,
+#     null_resource.kueue
+#   ]
 
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/nvidia_dcgm_manifests.sh"
-    environment = {
-      GIT_EMAIL      = var.git_user_email
-      GIT_REPOSITORY = local.git_repository
-      GIT_TOKEN      = var.git_token
-      GIT_USERNAME   = var.git_user_name
-    }
-  }
+#   provisioner "local-exec" {
+#     command = "${path.module}/scripts/nvidia_dcgm_manifests.sh"
+#     environment = {
+#       GIT_EMAIL      = var.git_user_email
+#       GIT_REPOSITORY = local.git_repository
+#       GIT_TOKEN      = var.git_token
+#       GIT_USERNAME   = var.git_user_name
+#     }
+#   }
 
-  triggers = {
-    md5_files  = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_cluster_template/gmp-public/nvidia-dcgm", "**") : md5("${path.module}/templates/configsync/templates/_cluster_template/gmp-public/nvidia-dcgm/${f}")]))
-    md5_script = filemd5("${path.module}/scripts/nvidia_dcgm_manifests.sh")
-  }
-}
+#   triggers = {
+#     md5_files  = md5(join("", [for f in fileset("${path.module}/templates/configsync/templates/_cluster_template/gmp-public/nvidia-dcgm", "**") : md5("${path.module}/templates/configsync/templates/_cluster_template/gmp-public/nvidia-dcgm/${f}")]))
+#     md5_script = filemd5("${path.module}/scripts/nvidia_dcgm_manifests.sh")
+#   }
+# }
 
 
 
@@ -158,7 +158,8 @@ resource "null_resource" "nvidia_dcgm" {
 resource "null_resource" "kuberay_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.nvidia_dcgm,
+    null_resource.kueue
+    #null_resource.nvidia_dcgm,
   ]
 
   provisioner "local-exec" {
