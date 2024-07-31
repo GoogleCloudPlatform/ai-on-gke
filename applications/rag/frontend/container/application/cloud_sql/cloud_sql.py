@@ -5,13 +5,6 @@
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
-# Copyright 2024 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,73 +13,73 @@
 # limitations under the License.
 
 import os
+import uuid
 import logging
 
-from google.cloud.sql.connector import IPTypes
+from typing import List, Optional, Iterable, Any
 
-from langchain_google_cloud_sql_pg import PostgresEngine, PostgresVectorStore
+from langchain_core.vectorstores import VectorStore
+from langchain_core.embeddings import Embeddings
+from langchain_core.documents import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+from langchain_google_cloud_sql_pg import PostgresVectorStore
+
+
+VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 10
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
-GCP_PROJECT_ID = os.environ.get("PROJECT_ID")
-GCP_CLOUD_SQL_REGION = os.environ.get("CLOUDSQL_INSTANCE_REGION")
-GCP_CLOUD_SQL_INSTANCE = os.environ.get("CLOUDSQL_INSTANCE")
+class CloudSQLVectorStore(VectorStore):
+    @classmethod
+    def from_texts(
+        cls,
+        texts: List[str],
+        embedding: Embeddings,
+        metadatas: Optional[List[dict]] = None,
+        **kwargs: Any,
+    ):
+        raise NotImplementedError
 
-INSTANCE_CONNECTION_NAME = (
-    f"{GCP_PROJECT_ID}:{GCP_CLOUD_SQL_REGION}:{GCP_CLOUD_SQL_INSTANCE}"
-)
-
-DB_NAME = os.environ.get("DB_NAME", "pgvector-database")
-VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
-CHAT_HISTORY_TABLE_NAME = os.environ.get("CHAT_HISTORY_TABLE_NAME", "message_store")
-
-VECTOR_DIMENSION = os.environ.get("VECTOR_DIMENSION", 384)
-
-try:
-    db_username_file = open("/etc/secret-volume/username", "r")
-    DB_USER = db_username_file.read()
-    db_username_file.close()
-
-    db_password_file = open("/etc/secret-volume/password", "r")
-    DB_PASS = db_password_file.read()
-    db_password_file.close()
-except:
-    DB_USER = os.environ.get("DB_USERNAME", "postgres")
-    DB_PASS = os.environ.get("DB_PASS", "postgres")
-
-
-def create_sync_postgres_engine():
-    engine = PostgresEngine.from_instance(
-        project_id=GCP_PROJECT_ID,
-        region=GCP_CLOUD_SQL_REGION,
-        instance=GCP_CLOUD_SQL_INSTANCE,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        ip_type=IPTypes.PUBLIC if ENVIRONMENT == "development" else IPTypes.PRIVATE,
-    )
-    try:
-        engine.init_chat_history_table(table_name=CHAT_HISTORY_TABLE_NAME)
-        engine.init_vectorstore_table(
-            VECTOR_EMBEDDINGS_TABLE_NAME,
-            vector_size=VECTOR_DIMENSION,
-            overwrite_existing=False,
+    def __init__(self, embedding_provider, engine):
+        self.vector_store = PostgresVectorStore.create_sync(
+            engine=engine,
+            embedding_service=embedding_provider,
+            table_name=VECTOR_EMBEDDINGS_TABLE_NAME,
         )
-    except Exception as e:
-        logging.info(f"Error: {e}")
+        self.splitter = RecursiveCharacterTextSplitter(
+            chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP, length_function=len
+        )
+        self.embeddings_service = embedding_provider
 
-    return engine
+    # TODO implement
+    def add_texts(
+        self, texts: Iterable[str], metadatas: List[dict] | None = None, **kwargs: Any
+    ) -> List[str]:
+        try:
+            splits = self.splitter.split_documents(texts)
+            ids = [str(uuid.uuid4()) for _ in range(len(splits))]
+            self.vector_store.add_documents(splits, ids)
+        except Exception as e:
+            logging.info(f"Error: {e}")
+            raise e
 
+    # TODO implement similarity search with cosine similarity threshold
 
-def create_sync_postgres_vector_store(engine, embedding_provider):
-    vector_store = PostgresVectorStore.create_sync(
-        engine=engine,
-        embedding_service=embedding_provider,
-        table_name=VECTOR_EMBEDDINGS_TABLE_NAME,
-    )
+    def similarity_search(
+        self, query: dict, k: int = 4, **kwargs: Any
+    ) -> List[Document]:
+        try:
 
-    return vector_store
+            query_input = query.get("input")
+            query_vector = self.embeddings_service.embed_query(query_input)
+            docs = self.vector_store.similarity_search_by_vector(query_vector, k=k)
+            return docs
+
+        except Exception as err:
+            raise Exception(f"General error: {err}")

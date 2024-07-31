@@ -112,4 +112,3 @@ def take_chat_turn(
     config = {"configurable": {"session_id": session_id}}
     result = chain.invoke({"input": query_text}, config=config)
     return result
-

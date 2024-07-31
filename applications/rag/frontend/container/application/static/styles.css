@@ -66,12 +66,22 @@ p.prompt::before {
     font-weight: bold;
 }
 
-p.instruct {
+p.instruct{
     background-color: rgba(255, 255, 0, 0.2);
 }
 
-p.instruct::before {
+
+p.instruct::before  {
     content: 'Instructions: ';
+    font-weight: bold;
+}
+
+p.previous_message {
+    background-color: rgba(73, 240, 240, 0.753);
+}
+
+p.previous_message::before  {
+    content: 'Previous message: ';
     font-weight: bold;
 }
 

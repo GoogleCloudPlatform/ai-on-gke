@@ -13,14 +13,22 @@
 # limitations under the License.
 
 import os
+import logging
+
 import google.cloud.dlp
+
 from . import retry
 
 # Convert the project id into a full resource id.
-parent = os.environ.get("PROJECT_ID", "NULL")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "NULL")
+parent = f"projects/{GCP_PROJECT_ID}"
 
 # Instantiate a dlp client.
 dlp_client = google.cloud.dlp_v2.DlpServiceClient()
+
+logging.basicConfig(
+    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def is_dlp_api_enabled():
@@ -38,74 +46,98 @@ def is_dlp_api_enabled():
 
 
 def list_inspect_templates_from_parent():
-    # Initialize request argument(s)
-    request = google.cloud.dlp_v2.ListInspectTemplatesRequest(
-        parent=parent,
-    )
+    try:
+        # Initialize request argument(s)
+        request = google.cloud.dlp_v2.ListInspectTemplatesRequest(
+            parent=parent,
+        )
 
-    # Make the request
-    page_result = dlp_client.list_inspect_templates(
-        request=request, retry=retry.retry_policy
-    )
+        # Make the request
+        page_result = dlp_client.list_inspect_templates(
+            request=request, retry=retry.retry_policy
+        )
 
-    name_list = []
-    # Handle the response
-    for response in page_result:
-        name_list.append(response.name)
-    return name_list
+        name_list = []
+        # Handle the response
+        for response in page_result:
+            name_list.append(response.name)
+        return name_list
+    except Exception as e:
+        logging.error(e)
+        raise e
 
 
 def get_inspect_templates_from_name(name):
-    request = google.cloud.dlp_v2.GetInspectTemplateRequest(
-        name=name,
-    )
+    try:
+        request = google.cloud.dlp_v2.GetInspectTemplateRequest(
+            name=name,
+        )
 
-    return dlp_client.get_inspect_template(request=request)
+        return dlp_client.get_inspect_template(request=request)
+    except Exception as e:
+        logging.error(e)
+        raise e
 
 
 def list_deidentify_templates_from_parent():
-    # Initialize request argument(s)
-    request = google.cloud.dlp_v2.ListDeidentifyTemplatesRequest(
-        parent=parent,
-    )
+    try:
+        # Initialize request argument(s)
+        request = google.cloud.dlp_v2.ListDeidentifyTemplatesRequest(
+            parent=parent,
+        )
 
-    # Make the request
-    page_result = dlp_client.list_deidentify_templates(request=request)
+        # Make the request
+        page_result = dlp_client.list_deidentify_templates(request=request)
 
-    name_list = []
-    # Handle the response
-    for response in page_result:
-        name_list.append(response.name)
-    return name_list
+        name_list = []
+        # Handle the response
+        for response in page_result:
+            name_list.append(response.name)
+        return name_list
+
+    except Exception as e:
+        logging.error(e)
+        raise e
 
 
 def get_deidentify_templates_from_name(name):
-    request = google.cloud.dlp_v2.GetDeidentifyTemplateRequest(
-        name=name,
-    )
+    try:
+        request = google.cloud.dlp_v2.GetDeidentifyTemplateRequest(
+            name=name,
+        )
 
-    return dlp_client.get_deidentify_template(request=request, retry=retry.retry_policy)
+        return dlp_client.get_deidentify_template(
+            request=request, retry=retry.retry_policy
+        )
+    except Exception as e:
+        logging.error(e)
+        raise e
 
 
 def inspect_content(inspect_template_path, deidentify_template_path, input):
-    inspect_templates = get_inspect_templates_from_name(inspect_template_path)
-    deidentify_template = get_deidentify_templates_from_name(deidentify_template_path)
+    try:
+        inspect_templates = get_inspect_templates_from_name(inspect_template_path)
+        deidentify_template = get_deidentify_templates_from_name(
+            deidentify_template_path
+        )
 
-    # Construct item
-    item = {"value": input}
+        # Construct item
+        item = {"value": input}
 
-    # Call the API
-    response = dlp_client.deidentify_content(
-        request={
-            "parent": parent,
-            "deidentify_config": deidentify_template.deidentify_config,
-            "inspect_config": inspect_templates.inspect_config,
-            "item": item,
-        },
-        retry=retry.retry_policy,
-    )
+        # Call the API
+        response = dlp_client.deidentify_content(
+            request={
+                "parent": parent,
+                "deidentify_config": deidentify_template.deidentify_config,
+                "inspect_config": inspect_templates.inspect_config,
+                "item": item,
+            },
+            retry=retry.retry_policy,
+        )
 
-    # Print out the results.
-    print(response.item.value)
-    return response.item.value
-
+        # Print out the results.
+        print(response.item.value)
+        return response.item.value
+    except Exception as e:
+        logging.error(e)
+        raise e

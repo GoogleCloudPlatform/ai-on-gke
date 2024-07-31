@@ -38,7 +38,7 @@ from application.rag_langchain.rag_chain import (
 
 log.basicConfig(level=log.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-SESSION_TIMEOUT_MINUTES = 10
+SESSION_TIMEOUT_MINUTES = 20
 
 # Setup logging
 logging_client = logging.Client()
@@ -101,10 +101,17 @@ def get_deidentify_templates():
 def get_chat_history_endpoint():
     try:
         session_id = session.get("session_id")
-        history = get_chat_history(session_id)
-        log.info(history)
+        if not session_id:
+            return redirect(url_for("index"))
 
-        response = jsonify({"history_messages": []})
+        history = get_chat_history(session_id)
+
+        messages_response = []
+        for message in history.messages:
+            data = {"prompt": message.type, "message": message.content}
+            messages_response.append(data)
+
+        response = jsonify({"history_messages": messages_response})
         response.status_code = 200
 
         return response
@@ -147,8 +154,6 @@ def handlePrompt():
             return redirect(url_for("index"))
         response = {}
         result = take_chat_turn(llm_chain, session_id, user_prompt)
-        log.info("After the result")
-        log.info(result)
         response["text"] = result
 
         # TODO: enable filtering in chain
@@ -169,8 +174,8 @@ def handlePrompt():
 
         if warnings:
             response["warnings"] = warnings
-        log.info(f"response: {response}")
         return {"response": response}
+
     except Exception as err:
         log.info(f"exception from llm: {err}")
         traceback.print_exc()
