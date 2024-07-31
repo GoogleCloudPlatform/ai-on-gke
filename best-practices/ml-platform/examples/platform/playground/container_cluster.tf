@@ -186,10 +186,13 @@ resource "google_container_cluster" "mlp" {
 
     enable_components = [
       "APISERVER",
+      "CADVISOR",
       "CONTROLLER_MANAGER",
       "DAEMONSET",
+      "DCGM",
       "DEPLOYMENT",
       "HPA",
+      "KUBELET",
       "POD",
       "SCHEDULER",
       "STATEFULSET",
