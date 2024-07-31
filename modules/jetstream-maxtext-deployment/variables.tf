@@ -45,6 +45,11 @@ variable "maxengine_deployment_settings" {
     condition     = contains(["gemma-7b", "llama2-7b", "llama2-13b"], var.maxengine_deployment_settings.model_name)
     error_message = "model_name must be one of \"gemma-7b\", \"llama2-7b\", or \"llama2-13b\""
   }
+
+  validation {
+    condition = !(var.maxengine_deployment_settings.metrics_scrape_interval < 5)
+    error_message = "Metrics scrape interval must be at least 5s"
+  }
 }
 
 variable "hpa_config" {

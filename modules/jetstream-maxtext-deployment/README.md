@@ -6,6 +6,7 @@ Assure the following environment variables are set:
    - MODEL_NAME: The name of your LLM (as of the writing of this README valid options are "gemma-7b", "llama2-7b", "llama2-13b")
    - PARAMETERS_PATH: Where to find the parameters for your LLM (if using the checkpoint-converter it will be "gs:\/\/$BUCKET_NAME\/final\/unscanned\/gemma_7b-it\/0\/checkpoints\/0\/items" where $BUCKET_NAME is the same one used in the checkpoint-converter)
    - (optional) METRICS_PORT: Port to emit custom metrics on
+   - (optional) METRICS_SCRAPE_INTERVAL: How often to scrape metrics
    - (optional) TPU_TOPOLOGY: Topology of TPU chips used by jetstream (default: "2x4")
    - (optional) TPU_TYPE: Type of TPUs used (default: "tpu-v5-lite-podslice")
    - (optional) TPU_CHIP_COUNT: Number of TPU chips requested, can be obtained by algebraically evaluating TPU_TOPOLOGY
@@ -53,11 +54,21 @@ cat ./templates/deployment.yaml.tftpl >> "$JETSTREAM_MANIFEST"
 PODMONITORING_MANIFEST=$(mktemp)
 cat ./templates/podmonitoring.yaml.tftpl >> "$PODMONITORING_MANIFEST"
 
-if [ "$METRICS_PORT" != "" ]; then
-    cat $PODMONITORING_MANIFEST | sed "s/\${metrics_port}/$METRICS_PORT/g" >> "$PODMONITORING_MANIFEST"
+PODMONITORING_TPU_MANIFEST=$(mktemp)
+cat ./templates/podmonitoring-tpu.yaml.tftpl >> "$PODMONITORING_TPU_MANIFEST"
+
+if [ "$METRICS_PORT" != "" ] && [ "$METRICS_SCRAPE_INTERVAL" != "" ]; then
+    cat $PODMONITORING_MANIFEST \
+    | sed "s/\${metrics_port}/$METRICS_PORT/g" \
+    | sed "s/\${metrics_scrape_interval}/$METRICS_SCRAPE_INTERVAL/g" >> "$PODMONITORING_MANIFEST"
+
+    cat $PODMONITORING_TPU_MANIFEST \
+    | sed "s/\${metrics_scrape_interval}/$METRICS_SCRAPE_INTERVAL/g" >> "$PODMONITORING_TPU_MANIFEST"
+
     cat $JETSTREAM_MANIFEST | sed "s/\${metrics_port_arg}/prometheus_port=$METRICS_PORT/g" >> "$JETSTREAM_MANIFEST"
     
     cat $PODMONITORING_MANIFEST | kubectl apply -f -
+    cat $PODMONITORING_TPU_MANIFEST | kubectl apply -f -
 else
     cat $JETSTREAM_MANIFEST | sed "s/\${metrics_port_arg}//g" >> "$JETSTREAM_MANIFEST"
 fi
