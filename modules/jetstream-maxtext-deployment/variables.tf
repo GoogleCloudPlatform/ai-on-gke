@@ -29,10 +29,18 @@ variable "maxengine_deployment_settings" {
     maxengine_server_image      = optional(string, "us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2")
     jetstream_http_server_image = optional(string, "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2")
 
-    model_name              = string           // Name of your LLM (for example: "gemma-7b")
-    parameters_path         = string           // Path to the paramters for your model
-    metrics_port            = optional(number) // Emit Jetstream server metrics on this port of each container, no server metrics will be emitted if not set
-    metrics_scrape_interval = optional(number) // Interval for scraping metrics, no metrics will be emitted if not set
+    model_name      = string // Name of your LLM (for example: "gemma-7b")
+    parameters_path = string // Path to the paramters for your model
+
+    metrics = optional(object({  // Settings for metrics server
+      server = optional(object({ // Settings for Jetstream server metrics
+        port            = number
+        scrape_interval = number
+      }))
+      system = optional(object({ // Settings for TPU metrics
+        scrape_interval = number
+      }))
+    }))
 
     accelerator_selectors = object({
       topology    = string
@@ -47,8 +55,13 @@ variable "maxengine_deployment_settings" {
   }
 
   validation {
-    condition     = !(var.maxengine_deployment_settings.metrics_scrape_interval < 5)
-    error_message = "Metrics scrape interval must be at least 5s"
+    condition     = try(var.maxengine_deployment_settings.metrics.server.scrape_interval >= 5, true)
+    error_message = "Server metrics scrape interval may not be shorter than 5s"
+  }
+
+  validation {
+    condition     = try(var.maxengine_deployment_settings.metrics.system.scrape_interval >= 15, true)
+    error_message = "TPU system metrics scrape interal may not be shorter than 15s"
   }
 }
 

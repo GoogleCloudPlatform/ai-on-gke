@@ -54,10 +54,18 @@ variable "maxengine_deployment_settings" {
     maxengine_server_image      = optional(string)
     jetstream_http_server_image = optional(string)
 
-    model_name              = string           // Name of your LLM (for example: "gemma-7b")
-    parameters_path         = string           // Path to the parameters for your model
-    metrics_port            = optional(number) // Emit Jetstream server metrics on this port of each container, no server metrics will be emitted if not set
-    metrics_scrape_interval = optional(number) // Interval for scraping metrics, no metrics will be emitted if not set
+    model_name      = string // Name of your LLM (for example: "gemma-7b")
+    parameters_path = string // Path to the parameters for your model
+
+    metrics = optional(object({  // Settings for metrics server
+      server = optional(object({ // Settings for Jetstream server metrics
+        port            = number
+        scrape_interval = number
+      }))
+      system = optional(object({ // Settings for TPU metrics
+        scrape_interval = number
+      }))
+    }))
 
     accelerator_selectors = object({
       topology    = string

@@ -31,7 +31,7 @@ resource "kubernetes_manifest" "jetstream-deployment" {
     model_name                  = var.maxengine_deployment_settings.model_name
     tokenizer                   = strcontains(var.maxengine_deployment_settings.model_name, "gemma") ? "assets/tokenizer.gemma" : (strcontains(var.maxengine_deployment_settings.model_name, "llama") ? "assets/tokenizer.llama2" : "")
     load_parameters_path_arg    = var.maxengine_deployment_settings.parameters_path
-    metrics_port_arg            = var.maxengine_deployment_settings.metrics_port != null ? format("prometheus_port=%d", var.maxengine_deployment_settings.metrics_port) : "",
+    metrics_port_arg            = try(format("prometheus_port=%d", var.maxengine_deployment_settings.metrics.server.port), ""),
     tpu-topology                = var.maxengine_deployment_settings.accelerator_selectors.topology
     tpu-type                    = var.maxengine_deployment_settings.accelerator_selectors.accelerator
     tpu-chip-count              = var.maxengine_deployment_settings.accelerator_selectors.chip_count
@@ -44,17 +44,17 @@ resource "kubernetes_manifest" "jetstream-service" {
 }
 
 resource "kubernetes_manifest" "jetstream-podmonitoring" {
-  count = var.maxengine_deployment_settings.metrics_port != null && var.maxengine_deployment_settings.metrics_scrape_interval != null ? 1 : 0
+  count = try(var.maxengine_deployment_settings.metrics.server != null ? 1 : 0, 0)
   manifest = yamldecode(templatefile(local.podmonitoring_template, {
-    metrics_port            = var.maxengine_deployment_settings.metrics_port != null ? var.maxengine_deployment_settings.metrics_port : "",
-    metrics_scrape_interval = var.maxengine_deployment_settings.metrics_scrape_interval
+    metrics_port            = try(var.maxengine_deployment_settings.metrics.server.port, 0),
+    metrics_scrape_interval = try(var.maxengine_deployment_settings.metrics.server.scrape_interval, 0),
   }))
 }
 
 resource "kubernetes_manifest" "jetstream-podmonitoring-tpu" {
-  count = var.maxengine_deployment_settings.metrics_scrape_interval != null ? 1 : 0
+  count = try(var.maxengine_deployment_settings.metrics.system != null ? 1 : 0, 0)
   manifest = yamldecode(templatefile(local.podmonitoring_tpu_template, {
-    metrics_scrape_interval = max(15, var.maxengine_deployment_settings.metrics_scrape_interval)
+    metrics_scrape_interval = try(var.maxengine_deployment_settings.metrics.system.scrape_interval, 0)
   }))
 }
 
