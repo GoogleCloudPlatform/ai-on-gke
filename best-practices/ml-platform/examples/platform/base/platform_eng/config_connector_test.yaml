@@ -1,0 +1,14 @@
+apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
+kind: Service
+metadata:
+  name: pubsub.googleapis.com
+spec:
+  projectRef:
+    external: projects/rueth-platform-eng-prod
+---
+  apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
+  kind: PubSubTopic
+  metadata:
+    annotations:
+      cnrm.cloud.google.com/project-id: rueth-platform-eng-prod
+    name: pubsub-test-topic

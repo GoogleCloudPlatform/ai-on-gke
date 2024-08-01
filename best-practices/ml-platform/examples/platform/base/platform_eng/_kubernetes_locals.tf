@@ -1,0 +1,1 @@
+../shared_config/kubernetes_locals.tf

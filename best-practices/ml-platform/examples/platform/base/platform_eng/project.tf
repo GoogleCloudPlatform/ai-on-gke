@@ -1,0 +1,115 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+data "google_project" "platform_eng" {
+  project_id = var.platform_eng_project_id
+}
+
+resource "google_project_service" "platform_eng_anthos_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "anthos.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_anthosconfigmanagement_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "anthosconfigmanagement.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_cloudresourcemanager_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "cloudresourcemanager.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_compute_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "compute.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_connectgateway_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "connectgateway.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_container_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "container.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_containerfilesystem_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "containerfilesystem.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_containersecurity_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "containersecurity.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_gkeconnect_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "gkeconnect.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_gkehub_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "gkehub.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_iam_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "iam.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_secretmanager_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "secretmanager.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_serviceusage_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "serviceusage.googleapis.com"
+}
+
+resource "google_project_service" "platform_eng_sqladmin_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.platform_eng.project_id
+  service                    = "sqladmin.googleapis.com"
+}
