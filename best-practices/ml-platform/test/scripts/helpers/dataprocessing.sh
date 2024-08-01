@@ -26,10 +26,12 @@ print_and_execute_no_check "gcloud services enable cloudbuild.googleapis.com --p
 
 echo_title "Adding IAM permissions"
 print_and_execute_no_check "gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+--condition None \
 --member 'serviceAccount:${MLP_PROJECT_ID}.svc.id.goog[ml-team/ray-head]' \
 --role roles/storage.objectViewer"
 
 print_and_execute_no_check "gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+--condition None \
 --member 'serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]' \
 --role roles/storage.objectAdmin"
 
@@ -38,7 +40,7 @@ print_and_execute_no_check "gcloud storage buckets create gs://${PROCESSING_BUCK
 
 echo_title "Downloading the dataset and uploading to GCS"
 
-print_and_execute "kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset && \
+print_and_execute "kaggle datasets download --force --unzip atharvjairath/flipkart-ecommerce-dataset && \
 gcloud storage cp flipkart_com-ecommerce_sample.csv \
 gs://${PROCESSING_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
 rm flipkart_com-ecommerce_sample.csv"
@@ -56,7 +58,7 @@ while ! gcloud services list --project ${PROJECT_ID} | grep cloudbuild.googleapi
     sleep 10
 done
 
-export MLP_USE_CASE_BASE_DIR="${MLP_BASE_DIR}/examples/use-case/ray/dataprocessing"
+export MLP_USE_CASE_BASE_DIR="${MLP_BASE_DIR}/examples/use-case/datapreprocessing/ray"
 print_and_execute "cd ${MLP_USE_CASE_BASE_DIR}/src && \
 gcloud builds submit \
 --project ${PROJECT_ID} \
@@ -98,15 +100,17 @@ check_local_error_exit_on_error
 echo_title "Removing IAM permissions"
 
 gcloud projects remove-iam-policy-binding ${MLP_PROJECT_ID} \
+    --condition None \
     --member "serviceAccount:${MLP_PROJECT_ID}.svc.id.goog[ml-team/ray-head]" \
     --role roles/storage.objectViewer
 
 gcloud projects remove-iam-policy-binding ${MLP_PROJECT_ID} \
+    --condition None \
     --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]" \
     --role roles/storage.objectAdmin
 
 echo_title "Cleaning up local repository changes"
 cd ${MLP_BASE_DIR} &&
-    git restore examples/use-case/ray/dataprocessing/job.yaml
+    git restore ${MLP_USE_CASE_BASE_DIR}/job.yaml
 
 total_runtime "dataprocessing"
