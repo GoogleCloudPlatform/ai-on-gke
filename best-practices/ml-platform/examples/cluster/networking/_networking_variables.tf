@@ -1,0 +1,1 @@
+../shared_config/networking_variables.tf
