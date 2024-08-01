@@ -150,49 +150,49 @@ Specifically for the data processing use case described in this example, you can
 
 In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run your queries.
 
-1) Find when the data preparation job started and finished:
+1. Find when the data preparation job started and finished:
 
-```shell
+```
 labels."k8s-pod/app"="job"
 resource.type="k8s_container"
 textPayload: "preprocessing - DEBUG - Data Preparation "
 ```
 
-2) Find all error logs for the job:
+1. Find all error logs for the job:
 
-```shell
+```
 labels."k8s-pod/app"="job"
 resource.type="k8s_container"
 severity=ERROR
 ```
 
-3) Search for specific errors from the `textPayload` using a regex expression:
+1. Search for specific errors from the `textPayload` using a regex expression:
 
-```shell
+```
 labels."k8s-pod/app"="job"
 resource.type="k8s_container"
 textPayload =~ "ray_worker_node_id.+Image.+not found$"
 severity=ERROR
 ```
 
-You can narrow down the results by adding extra filters, such as using additional labels. For more GKE query samles, you can read [Kubernetes-related queries](https://cloud.google.com/logging/docs/view/query-library#kubernetes-filters).
+You can narrow down the results by adding extra filters, such as using additional labels. For more GKE query samples, you can read [Kubernetes-related queries](https://cloud.google.com/logging/docs/view/query-library#kubernetes-filters).
 
 ### Log-based Metrics
 
-To gain insight into your workload status, you can also  utilize [log-based metrics](https://cloud.google.com/logging/docs/logs-based-metrics). Several methods exist for their creation. The most straightforward approach involves modifying your log queries to locate the relevant logs. Subsequently, you can generate a custom metric by clicking the `Create metric` link and defining it as per your requirements. For example:
+To gain insight into your workload status, you can also utilize [log-based metrics](https://cloud.google.com/logging/docs/logs-based-metrics). Several methods exist for their creation. The most straightforward approach involves modifying your log queries to locate the relevant logs. Subsequently, you can generate a custom metric by clicking the `Create metric` link and defining it as per your requirements. For example:
 
 ![log-based-metrics](../../../../docs/images/create-log-based-metrics.png)
 
 For this example, the following query is used, utilizing a more specific regular expression to search the error logs. With the log entries found, you can create log-based metrics.
 
-```shell
+```
 labels."k8s-pod/app"="job"
 resource.type="k8s_container"
 textPayload =~ "ray_worker_node_id.+Image.+not found$"
 severity=ERROR
 ```
 
-The following is a definition for a metric such as `No_Image_found_Product`. Notics both the GKE node and Ray worker node id are added as labels.
+The following is a definition for a metric such as `No_Image_found_Product`. Notice both the GKE node and Ray worker node id are added as labels.
 
 ```yaml
 filter: |-
@@ -210,7 +210,7 @@ metricDescriptor:
   metricKind: DELTA
   name: projects/xxxxx/metricDescriptors/logging.googleapis.com/user/No_Image_Found_Product
   type: logging.googleapis.com/user/No_Image_Found_Product
-  unit: '1'
+  unit: "1"
   valueType: INT64
 name: No_Image_Found_Product
 resourceName: projects/xxxxx/metrics/No_Image_Found_Product
@@ -222,7 +222,7 @@ Once the metrics are defined, the next time you run your workloads, you will be 
 
 ### Log Analytics
 
-You can also use [Log Analytics](https://cloud.google.com/logging/docs/analyze/query-and-view) to analyze your logs. After it is enabled, you can run SQL queries to gain insight from the logs. The result can also be charted. For example, the following query extracts the product type from the log text payload and count the numbers of them: 
+You can also use [Log Analytics](https://cloud.google.com/logging/docs/analyze/query-and-view) to analyze your logs. After it is enabled, you can run SQL queries to gain insight from the logs. The result can also be charted. For example, the following query extracts the product type from the log text payload and count the numbers of them:
 
 ```sql
 SELECT
@@ -239,20 +239,18 @@ LIMIT 1000
 
 You should see output like the following:
 
-|clothing_type          |number|
-|-----------------------|------|
-| Skirts                |5     |
-| Shirts, Tops & Tunics |485   |
-| Western Wear          |2     |
-| Fashion Jackets       |3     |
-| Polos & T-Shirts      |12    |
-| Jeans                 |19    |
-| Dresses & Skirts      |361   |
-| Tops                  |38    |
-| Leggings & Jeggings   |22    |
-| Shorts                |1     |
-| Sports Jackets        |1     |
-| Shrugs                |7     |
-| Shirts                |1     |
-
-
+| clothing_type         | number |
+| --------------------- | ------ |
+| Skirts                | 5      |
+| Shirts, Tops & Tunics | 485    |
+| Western Wear          | 2      |
+| Fashion Jackets       | 3      |
+| Polos & T-Shirts      | 12     |
+| Jeans                 | 19     |
+| Dresses & Skirts      | 361    |
+| Tops                  | 38     |
+| Leggings & Jeggings   | 22     |
+| Shorts                | 1      |
+| Sports Jackets        | 1      |
+| Shrugs                | 7      |
+| Shirts                | 1      |
