@@ -1,33 +1,35 @@
+import json
+import logging.config
+import numpy as np
+import os
+import pandas as pd
 import re
 import time
-import os
-import logging.config
-import pandas as pd
-import numpy as np
-import json
 import vertexai
 import vertexai.preview.generative_models as generative_models
 
+from datasets import Dataset, DatasetDict
+from google.api_core.exceptions import ResourceExhausted
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 from vertexai.preview.generative_models import GenerativeModel
-from datasets import DatasetDict
-from datasets import Dataset
 
-PROJECT_ID = os.getenv("PROJECT_ID", "gkebatchexpce3c8dcb")
+
+PROJECT_ID = os.environ.get("PROJECT_ID")
 # The bucket which contains the preprocessed data
-BUCKET = os.getenv("BUCKET", "kh-finetune-ds")
-REGION = os.getenv("REGION", "us-central1")
-DATASET_INPUT = os.getenv("DATASET_INPUT_PATH", "flipkart_preprocessed_dataset")
-DATASET_INPUT_FILE = os.getenv("DATASET_INPUT_FILE", "flipkart.csv")
-DATASET_OUTPUT = os.getenv("DATASET_OUTPUT_PATH", "output")
-MODEL_ID = os.getenv("PROMPT_MODEL_ID", "gemini-1.5-flash-001")
+BUCKET = os.environ.get("BUCKET")
+REGION = os.environ.get("REGION")
+DATASET_INPUT = os.environ.get("DATASET_INPUT_PATH")
+DATASET_INPUT_FILE = os.environ.get("DATASET_INPUT_FILE")
+DATASET_OUTPUT = os.environ.get("DATASET_OUTPUT_PATH")
+MODEL_ID = os.environ.get("PROMPT_MODEL_ID")
 
 generation_config = {"max_output_tokens": 200, "temperature": 0.7}
 
 safety_settings = {
-    generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
     generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
     generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
 }
 
 num_questions = 3
@@ -66,7 +68,6 @@ def filter_low_value_count_rows(df, column_name, min_count=10):
 
 
 def prep_context():
-
     preprocessed = pd.read_csv(f"gs://{BUCKET}/{DATASET_INPUT}/{DATASET_INPUT_FILE}")
     # renaming column name
     preprocessed.rename(
@@ -128,7 +129,8 @@ def prep_context():
 
 
 def extract_product_details(text):
-    output_string = ""  # Initialize empty string
+    # Initialize empty string
+    output_string = ""
 
     # Extract content before "Description:"
     match = re.search(r"(.*?)Description:", text, re.DOTALL)
@@ -159,56 +161,76 @@ def extract_product_details(text):
             for key, value in attributes.items():
                 output_string += f"- {key}: {value}\n"
 
-    return output_string  # Return the final string
+    # Return the final string
+    return output_string
+
+@retry(stop=stop_after_attempt(10), wait=wait_random_exponential(exp_base=3, max=60, multiplier=1))
+def generate_content(context):
+    try:
+        response = model.generate_content(
+            [f"Generate {num_questions} Search Queries in conversational tone and Answers for this product:\n{context}. Return the result without any formatting in a single line as Question : Answer ;"],
+            generation_config=generation_config,
+            safety_settings=safety_settings,
+        )
+        response.text
+    except ResourceExhausted as e:
+        logger.warning(e)
+        raise
+    except ValueError as e:
+        if response.candidates[0].finish_reason == "RECITATION":
+            logger.warning(f"Recitation for: {context}")
+            logger.debug(f"response: {response}")
+            return None
+        elif response.candidates[0].finish_reason == "SAFETY":
+            logger.warning(f"Blocked by safety settings: {context}")
+            logger.debug(f"response: {response}")
+            return None
+        else:
+            logger.error(f"Unhandled ValueError: {e} for: {context}", exc_info=True)
+            raise
+    except Exception as e:
+        logger.error(f"Unhandled exception: {e}", exc_info=True)
+        raise
+
+    return response.text
 
 
 def generate_qa(context, category):
-    prompt = f"Generate {num_questions} Search Queries in conversational tone and Answers for this product:\n{context}. Return the result without any formatting in a single line as Question : Answer ;"
     try:
-        responses = model.generate_content(
-            [prompt],
-            generation_config=generation_config,
-            safety_settings=safety_settings,
-            stream=True,
-        )
-        qa = ""
-        for response in responses:
-            qa += response.text
-        # print (qa)
-
-        # Define the pattern to match questions and answers
-        # pattern = r"Question : (.*?) : Answer : (.*?)(?=\nQuestion :|$)"  # $ for end of string
-
-        # Extract questions and answers
-        # matches = re.findall(pattern, qa, re.DOTALL)
-
-        # Create a DataFrame
-        temp_df = pd.DataFrame(columns=["Question", "Answer", "Context"])
-        qa_list = qa.split(";")
-        # Create a list to hold the data
-        new_data = []
-
-        for qa_item in qa_list:  # Iterate over the QA items
-            q_a = qa_item.split(":")
-            if len(q_a) == 2:
-                ans = q_a[1].strip() + " \n " + extract_product_details(context)
-                new_data.append(
-                    [q_a[0].strip(), ans, f"Online shopping for {category}"]
-                )  # Append as a list
-
-        # Create the DataFrame after collecting all data
-        temp_df = pd.DataFrame(new_data, columns=temp_df.columns)
-        return temp_df
-    except Exception as e:
-        logger.error(e)
+        qa = generate_content(context)
+    except tenacity.RetryError as e:
+        logger.error(f"Exception: {e}, failed to generate content for context: {context}")
         return None
+    except Exception as e:
+        logger.error(f"Unhandled exception: {e}", exc_info=True)
+        raise
+
+    if qa == None:
+        return None
+
+    # Create a DataFrame
+    temp_df = pd.DataFrame(columns=["Question", "Answer", "Context"])
+    qa_list = qa.split(";")
+
+    # Create a list to hold the data
+    new_data = []
+
+    # Iterate over the QA items
+    for qa_item in qa_list:
+        q_a = qa_item.split(":")
+        if len(q_a) == 2:
+            ans = q_a[1].strip() + " \n " + extract_product_details(context)
+            # Append as the list
+            new_data.append([q_a[0].strip(), ans, f"Online shopping for {category}"])
+
+    # Create the DataFrame after collecting all data
+    temp_df = pd.DataFrame(new_data, columns=temp_df.columns)
+
+    return temp_df
 
 
 def generate_prompt(row):
-    context = row["Context"]
-    input_text = row["Question"]
-    output_text = row["Answer"]
-    return f"<start_of_turn>user\n Context:{context}\n{input_text}<end_of_turn> <start_of_turn>model\n{output_text}<end_of_turn>"
+    return f"<start_of_turn>user\nContext:{row["Context"]}\n{row["Question"]}<end_of_turn><start_of_turn>model\n{row["Answer"]}<end_of_turn>"
 
 
 def data_prep(finetune_ds):
@@ -218,9 +240,7 @@ def data_prep(finetune_ds):
             temp_df = generate_qa(context, category)
             if temp_df is not None:
                 result = pd.concat([result, temp_df], ignore_index=True)
-            time.sleep(
-                1
-            )  # Add a 1second delay to avoid API rate limiting (adjust as needed)
+                logger.info(f"Content generated for context: {context}")
     # Now `result` contains all generated questions and answers
     return result
 
