@@ -38,6 +38,7 @@ spec:
         - load_parameters_path=${load_parameters_path_arg}
         - ${metrics_port_arg}
         ports:
+        - containerPort: 8431 # Port to export TPU runtime metrics, if supported.
         - containerPort: 9000
         resources:
           requests:

@@ -137,8 +137,10 @@ For deploying autoscaling components via terraform, a few more variables to be s
 
 ```
 maxengine_deployment_settings = {
-  metrics_port = <same as above>
-  metrics_scrape_interval
+  metrics = {
+    port: <same as above>   # which port will we scrape server metrics from
+    scrape_interval: 5s     # how often do we scrape
+  }
 }
 
 hpa_config = {

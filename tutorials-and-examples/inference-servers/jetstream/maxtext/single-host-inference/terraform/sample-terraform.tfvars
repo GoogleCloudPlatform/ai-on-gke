@@ -1,6 +1,11 @@
 maxengine_deployment_settings = {
-  metrics_port            = 9100
-  metrics_scrape_interval = 10
+  metrics = {
+    server = {
+      port = 9100
+      scrape_interval : 10
+    }
+  }
+
   accelerator_selectors = {
     topology    = "2x4"
     accelerator = "tpu-v5-lite-podslice"
