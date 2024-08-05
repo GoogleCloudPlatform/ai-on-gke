@@ -30,7 +30,7 @@ variable "maxengine_deployment_settings" {
     jetstream_http_server_image = optional(string, "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2")
 
     model_name      = string // Name of your LLM (for example: "gemma-7b")
-    parameters_path = string // Path to the paramters for your model
+    parameters_path = string // Path to the parameters for your model
 
     metrics = optional(object({  // Settings for metrics server
       server = optional(object({ // Settings for Jetstream server metrics
@@ -61,7 +61,7 @@ variable "maxengine_deployment_settings" {
 
   validation {
     condition     = try(var.maxengine_deployment_settings.metrics.system.scrape_interval >= 15, true)
-    error_message = "TPU system metrics scrape interal may not be shorter than 15s"
+    error_message = "TPU system metrics scrape interval may not be shorter than 15s"
   }
 }
 

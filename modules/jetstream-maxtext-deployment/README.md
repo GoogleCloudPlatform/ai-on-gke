@@ -58,13 +58,17 @@ cat ./templates/podmonitoring.yaml.tftpl >> "$PODMONITORING_MANIFEST"
 PODMONITORING_TPU_MANIFEST=$(mktemp)
 cat ./templates/podmonitoring-tpu.yaml.tftpl >> "$PODMONITORING_TPU_MANIFEST"
 
-if [ "$METRICS_PORT" != "" ] && [ "$METRICS_SCRAPE_INTERVAL" != "" ]; then
-    cat $PODMONITORING_MANIFEST \
-    | sed "s/\${metrics_port}/$METRICS_PORT/g" \
-    | sed "s/\${metrics_scrape_interval}/$SERVER_METRICS_SCRAPE_INTERVAL/g" >> "$PODMONITORING_MANIFEST"
+if [ "$METRICS_PORT" != "" ] && ([ "$SERVER_METRICS_SCRAPE_INTERVAL" != "" ] || [ "$SYSTEM_METRICS_SCRAPE_INTERVAL" != "" ]); then
+    if [ "$SERVER_METRICS_SCRAPE_INTERVAL" != "" ]; then
+        cat $PODMONITORING_MANIFEST \
+        | sed "s/\${metrics_port}/$METRICS_PORT/g" \
+        | sed "s/\${metrics_scrape_interval}/$SERVER_METRICS_SCRAPE_INTERVAL/g" >> "$PODMONITORING_MANIFEST"
+    fi
 
-    cat $PODMONITORING_TPU_MANIFEST \
-    | sed "s/\${metrics_scrape_interval}/$SYSTEM_METRICS_SCRAPE_INTERVAL/g" >> "$PODMONITORING_TPU_MANIFEST"
+    if [ "$SYSTEM_METRICS_SCRAPE_INTERVAL" != "" ]; then
+        cat $PODMONITORING_TPU_MANIFEST \
+        | sed "s/\${metrics_scrape_interval}/$SYSTEM_METRICS_SCRAPE_INTERVAL/g" >> "$PODMONITORING_TPU_MANIFEST"
+    fi
 
     cat $JETSTREAM_MANIFEST | sed "s/\${metrics_port_arg}/prometheus_port=$METRICS_PORT/g" >> "$JETSTREAM_MANIFEST"
     
