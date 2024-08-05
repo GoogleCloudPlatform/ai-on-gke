@@ -1,0 +1,14 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: tpu-metrics-exporter
+  namespace: kube-system
+  labels:
+    k8s-app: tpu-device-plugin
+spec:
+  endpoints:
+    - port: 2112
+      interval: ${metrics_scrape_interval}s
+  selector:
+    matchLabels:
+      k8s-app: tpu-device-plugin
