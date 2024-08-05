@@ -1,15 +1,56 @@
 
-## Best Practices for Faster Workload Cold Start
+# Best Practices for Faster Workload Cold Start
 
 This doc  provides best practices to help achieve faster workload cold start on Google Kubernetes Engine (GKE), and discusses factors that determine the workload startup latency.
 
 
-# Introduction
+## Introduction
 
 The cold start problem occurs when workloads are scheduled to nodes that haven't hosted the workloads before. Since the new node has no pre-existing container images, the initial startup time for the workloads can be significantly longer. This extended startup time can lead to latency issues on the overall application performance, especially for handling traffic surge by node autoscaling.
 
 
-# Best Practices
+## Best Practices
+
+#### Use secondary boot disk to accelerate container image loading
+
+With [secondary boot disk](https://cloud.google.com/kubernetes-engine/docs/how-to/data-container-image-preloading#:~:text=GKE%20provisions%20secondary%20boot%20disks,images%20from%20secondary%20boot%20disks.)
+, you can cache container images in an additional disk attached to the GKE
+nodes. This way, during the start-up of the pod, the downloading image step can
+be accelerated.
+
+To use this feature, you need to bake the container images to a disk image, you
+can do this by using this tool [gke-disk-image-builder](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/tools/gke-disk-image-builder)
+.
+
+Then you can create a node pool with secondary boot disk enabled, and use 
+`nodeSelector` to make your workloads scheduled in the node pool.
+
+#### Use Persistent Disk to accelerate model weight loading
+
+Use a Persistent Disk can accelerate the model weight loading a lot. In GKE, a
+Persistend Disk can be mount as readonly on multiple nodes. So our strategy is
+baking a disk image with model weights and then create Persistent Disks for
+readonly use.
+
+The following table is about time (in seconds) of loading a Gemma 7B model,
+the model's data file size is around 25GB:
+
+|                                  | read_ahead_kb=1024 | read_ahead_kb=128(default) |
+|----------------------------------|--------------------|----------------------------|
+| GCSFuse, 100GB pd-balanced cache | Not tested         | 137.06888                  |
+| GCSFuse(1), 1T pd-ssd cache      | 81.59027293795953  | 77.48203204700258          |
+| PV, 0.5T, pd-ssd                 | 112.49156787904212 | 114.35550174105447         |
+| PV, 1T pd-ssd                    | 38.00010781598394  | 84.12003243801882          |
+| PV, 2T pd-ssd                    | 29.2281584230077   | 86.59166808301234          |
+| NFS(2)(3), 2.5T Basic-SSD        | 29.446771587       | 115.49353002902353         |
+| NFS, 1T Zonal                    | 52.83657205896452  | 212.9237892589881          |
+
+-   (1) GCSFuse without Cache: 165.0438082399778
+-   (2) read_ahead_kb was set to 16384, for 1024 read_ahead_kb,
+  the time was 71.699842115
+-   (3) Uses Cloud Filestore for NFS
+
+The conclustion is using a pd-ssd with 2TB size will produce best performance.
 
 
 #### Use ephemeral storage with local SSDs or larger boot disks for Node
