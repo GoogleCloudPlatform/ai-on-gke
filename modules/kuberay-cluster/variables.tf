@@ -65,6 +65,12 @@ variable "autopilot_cluster" {
   type = bool
 }
 
+variable "create_service_account" {
+  type        = bool
+  description = "Creates a google service account & k8s service account & configures workload identity"
+  default     = true
+}
+
 variable "google_service_account" {
   type        = string
   description = "Google service account name"

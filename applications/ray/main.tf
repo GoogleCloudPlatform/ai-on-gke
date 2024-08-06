@@ -142,8 +142,6 @@ module "kuberay-operator" {
   namespace              = local.kubernetes_namespace
   project_id             = var.project_id
   autopilot_cluster      = local.enable_autopilot
-  google_service_account = local.workload_identity_service_account
-  create_service_account = var.create_service_account
 }
 
 module "kuberay-logging" {
@@ -175,21 +173,22 @@ module "gcs" {
 }
 
 module "kuberay-cluster" {
-  count                     = var.create_ray_cluster == true ? 1 : 0
-  source                    = "../../modules/kuberay-cluster"
-  providers                 = { helm = helm.ray, kubernetes = kubernetes.ray }
-  name                      = var.ray_cluster_name
-  namespace                 = local.kubernetes_namespace
-  project_id                = var.project_id
-  enable_tpu                = local.enable_tpu
-  enable_gpu                = var.enable_gpu
-  gcs_bucket                = var.gcs_bucket
-  autopilot_cluster         = local.enable_autopilot
-  google_service_account    = local.workload_identity_service_account
-  grafana_host              = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
-  network_policy_allow_cidr = var.kuberay_network_policy_allow_cidr
-  disable_network_policy    = var.disable_ray_cluster_network_policy
-  additional_labels         = var.additional_labels
+  count                                    = var.create_ray_cluster == true ? 1 : 0
+  source                                   = "../../modules/kuberay-cluster"
+  providers                                = { helm = helm.ray, kubernetes = kubernetes.ray }
+  name                                     = var.ray_cluster_name
+  namespace                                = local.kubernetes_namespace
+  project_id                               = var.project_id
+  enable_tpu                               = local.enable_tpu
+  enable_gpu                               = var.enable_gpu
+  gcs_bucket                               = var.gcs_bucket
+  autopilot_cluster                        = local.enable_autopilot
+  create_workload_identity_service_account = var.create_service_account
+  google_service_account                   = local.workload_identity_service_account
+  grafana_host                             = var.enable_grafana_on_ray_dashboard ? module.kuberay-monitoring[0].grafana_uri : ""
+  network_policy_allow_cidr                = var.kuberay_network_policy_allow_cidr
+  disable_network_policy                   = var.disable_ray_cluster_network_policy
+  additional_labels                        = var.additional_labels
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth

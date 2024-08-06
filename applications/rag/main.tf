@@ -159,8 +159,6 @@ module "kuberay-operator" {
   project_id             = var.project_id
   create_namespace       = true
   namespace              = local.kubernetes_namespace
-  google_service_account = local.ray_service_account
-  create_service_account = var.create_ray_service_account
   autopilot_cluster      = local.enable_autopilot
 }
 
@@ -226,22 +224,23 @@ module "kuberay-logging" {
 }
 
 module "kuberay-cluster" {
-  source                 = "../../modules/kuberay-cluster"
-  providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
-  project_id             = var.project_id
-  namespace              = local.kubernetes_namespace
-  enable_gpu             = true
-  gcs_bucket             = var.gcs_bucket
-  autopilot_cluster      = local.enable_autopilot
-  db_secret_name         = module.cloudsql.db_secret_name
-  cloudsql_instance_name = local.cloudsql_instance
-  db_region              = local.cloudsql_instance_region
-  google_service_account = local.ray_service_account
-  grafana_host           = module.kuberay-monitoring.grafana_uri
-  disable_network_policy = var.disable_ray_cluster_network_policy
-  depends_on             = [module.kuberay-operator]
-  use_custom_image       = true
-  additional_labels      = var.additional_labels
+  source                                   = "../../modules/kuberay-cluster"
+  providers                                = { helm = helm.rag, kubernetes = kubernetes.rag }
+  project_id                               = var.project_id
+  namespace                                = local.kubernetes_namespace
+  enable_gpu                               = true
+  gcs_bucket                               = var.gcs_bucket
+  autopilot_cluster                        = local.enable_autopilot
+  db_secret_name                           = module.cloudsql.db_secret_name
+  cloudsql_instance_name                   = local.cloudsql_instance
+  db_region                                = local.cloudsql_instance_region
+  create_workload_identity_service_account = var.create_ray_service_account
+  workload_identity_service_account                   = local.ray_service_account
+  grafana_host                             = module.kuberay-monitoring.grafana_uri
+  disable_network_policy                   = var.disable_ray_cluster_network_policy
+  depends_on                               = [module.kuberay-operator]
+  use_custom_image                         = true
+  additional_labels                        = var.additional_labels
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth
