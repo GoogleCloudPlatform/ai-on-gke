@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from .huggingface_tgi_helper import post_request
+from .cloud_sql_utils import create_sync_postgres_engine
 
-
-__all__ = ["post_request"]
+__all__ = ["post_request", "create_sync_postgres_engine"]

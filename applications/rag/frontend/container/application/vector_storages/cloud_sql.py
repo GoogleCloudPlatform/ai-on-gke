@@ -78,9 +78,8 @@ class CloudSQLVectorStore(VectorStore):
 
             query_input = query.get("input")
             query_vector = self.embeddings_service.embed_query(query_input)
-            docs = self.vector_store.similarity_search_by_vector(query_vector, k=4)
+            docs = self.vector_store.similarity_search_by_vector(query_vector, k=k)
             return docs
 
         except Exception as err:
             raise Exception(f"General error: {err}")
-

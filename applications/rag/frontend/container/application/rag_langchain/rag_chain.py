@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import logging
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -22,9 +22,8 @@ from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_google_cloud_sql_pg import PostgresChatMessageHistory
 
 
-from application.cloud_sql.cloud_sql import (
-    CHAT_HISTORY_TABLE_NAME,
-    create_sync_postgres_engine,
+from application.utils import (
+    create_sync_postgres_engine
 )
 from application.rag_langchain.huggingface_inference_model import (
     HuggingFaceCustomChatModel,
@@ -35,17 +34,16 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+CHAT_HISTORY_TABLE_NAME = os.environ.get("CHAT_HISTORY_TABLE_NAME", "message_store")
+
 QUESTION = "input"
 HISTORY = "chat_history"
 CONTEXT = "context"
 
 SENTENCE_TRANSFORMER_MODEL = "intfloat/multilingual-e5-small"  # Transformer to use for converting text chunks to vector embeddings
 
-template_str = """Answer the Question given by the user. Keep the answer to no more than 2 sentences. 
-Improve upon your previous answers using History, a list of messages. 
-Messages of type HumanMessage were asked by the user, and messages of type AIMessage were your previous responses.
-Stick to the facts by basing your answers off of the Context provided.
-Be brief in answering.
+template_str = """Answer the question given by the user in no more than 2 sentences. 
+Use the provided context to improve upon your previous answers. Stick to the facts and be brief. Avoid conversational format.
 \n\n
 Context: {context} 
 """
@@ -80,35 +78,42 @@ def clear_chat_history(session_id: str):
 
 
 def create_chain() -> RunnableWithMessageHistory:
-    model = HuggingFaceCustomChatModel()
+    try:
+        model = HuggingFaceCustomChatModel()
 
-    langchain_embed = HuggingFaceEmbeddings(model_name=SENTENCE_TRANSFORMER_MODEL)
-    vector_store = CloudSQLVectorStore(langchain_embed, engine)
+        langchain_embed = HuggingFaceEmbeddings(model_name=SENTENCE_TRANSFORMER_MODEL)
+        vector_store = CloudSQLVectorStore(langchain_embed, engine)
 
-    retriever = vector_store.as_retriever()
+        retriever = vector_store.as_retriever()
 
-    setup_and_retrieval = RunnableParallel(
-        {
-            "context": retriever,
-            QUESTION: RunnableLambda(lambda d: d[QUESTION]),
-            HISTORY: RunnableLambda(lambda d: d[HISTORY]),
-        }
-    )
+        setup_and_retrieval = RunnableParallel(
+            {
+                "context": retriever,
+                QUESTION: RunnableLambda(lambda d: d[QUESTION]),
+                HISTORY: RunnableLambda(lambda d: d[HISTORY]),
+            }
+        )
 
-    chain = setup_and_retrieval | prompt | model
-    chain_with_history = RunnableWithMessageHistory(
-        chain,
-        get_chat_history,
-        input_messages_key=QUESTION,
-        history_messages_key=HISTORY,
-        output_messages_key="output",
-    )
-    return chain_with_history
-
+        chain = setup_and_retrieval | prompt | model
+        chain_with_history = RunnableWithMessageHistory(
+            chain,
+            get_chat_history,
+            input_messages_key=QUESTION,
+            history_messages_key=HISTORY,
+            output_messages_key="output",
+        )
+        return chain_with_history
+    except Exception as e:
+        logging.info(e)
+        raise e
 
 def take_chat_turn(
     chain: RunnableWithMessageHistory, session_id: str, query_text: str
 ) -> str:
-    config = {"configurable": {"session_id": session_id}}
-    result = chain.invoke({"input": query_text}, config=config)
-    return result
+    try:
+        config = {"configurable": {"session_id": session_id}}
+        result = chain.invoke({"input": query_text}, config=config)
+        return result
+    except Exception as e:
+        logging.info(e)
+        raise e
