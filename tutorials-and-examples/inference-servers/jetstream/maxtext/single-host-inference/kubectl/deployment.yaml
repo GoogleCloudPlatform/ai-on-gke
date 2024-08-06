@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maxengine-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: maxengine-server
+  template:
+    metadata:
+      labels:
+        app: maxengine-server
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 2x4
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+      containers:
+      - name: maxengine-server
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/maxengine-server:v0.2.2
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        args:
+        - model_name=gemma-7b
+        - tokenizer_path=assets/tokenizer.gemma
+        - per_device_batch_size=4
+        - max_prefill_predict_length=1024
+        - max_target_length=2048
+        - async_checkpointing=false
+        - ici_fsdp_parallelism=1
+        - ici_autoregressive_parallelism=-1
+        - ici_tensor_parallelism=1
+        - scan_layers=false
+        - weight_dtype=bfloat16
+        - load_parameters_path=gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items
+        - attention=dot_product
+        - prometheus_port=9100
+        ports:
+        - containerPort: 9000
+        resources:
+          requests:
+            google.com/tpu: 8
+          limits:
+            google.com/tpu: 8
+      - name: jetstream-http
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:v0.2.2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jetstream-svc
+spec:
+  selector:
+    app: maxengine-server
+  ports:
+  - protocol: TCP
+    name: jetstream-http
+    port: 8000
+    targetPort: 8000
+  - protocol: TCP
+    name: jetstream-grpc
+    port: 9000
+    targetPort: 9000

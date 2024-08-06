@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maxengine-server
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maxengine-server
+  template:
+    metadata:
+      labels:
+        app: maxengine-server
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: ${tpu-topology}
+        cloud.google.com/gke-tpu-accelerator: ${tpu-type}
+      containers:
+      - name: maxengine-server
+        image: ${maxengine_server_image}
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        args:
+        - model_name=${model_name}
+        - tokenizer_path=${tokenizer}
+        - per_device_batch_size=4
+        - max_prefill_predict_length=1024
+        - max_target_length=2048
+        - async_checkpointing=false
+        - ici_fsdp_parallelism=1
+        - ici_autoregressive_parallelism=-1
+        - ici_tensor_parallelism=1
+        - scan_layers=false
+        - weight_dtype=bfloat16
+        - attention=dot_product
+        - load_parameters_path=${load_parameters_path_arg}
+        - ${metrics_port_arg}
+        ports:
+        - containerPort: 8431 # Port to export TPU runtime metrics, if supported.
+        - containerPort: 9000
+        resources:
+          requests:
+            google.com/tpu: ${tpu-chip-count}
+          limits:
+            google.com/tpu: ${tpu-chip-count}
+      - name: jetstream-http
+        image: ${jetstream_http_server_image}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000

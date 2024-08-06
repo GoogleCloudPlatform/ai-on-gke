@@ -10,6 +10,8 @@ This reference architecture demonstrates how to build a GKE platform that facili
 - Platform admins will create a namespace per application and provide the application team member full access to it.
 - The namespace scoped resources will be created by the Application/ML teams either via [Config Sync][config-sync] or through a deployment tool like [Cloud Deploy][cloud-deploy]
 
+For an outline of products and features used in the platform, see the [Platform Products and Features](/best-practices/ml-platform/docs/platform/products-and-features.md) document.
+
 ## Critical User Journeys (CUJs)
 
 ### Persona : Platform Admin
@@ -54,11 +56,15 @@ This reference architecture demonstrates how to build a GKE platform that facili
 
 ## Deploy the platform
 
-[Sandbox Reference Architecture Guide](examples/platform/sandbox/README.md): Set up an environment to familiarize yourself with the architecture and get an understanding of the concepts.
+[Playground Reference Architecture](examples/platform/playground/README.md): Set up an environment to familiarize yourself with the architecture and get an understanding of the concepts.
 
 ## Use cases
 
 - [Distributed Data Processing with Ray](examples/use-case/ray/dataprocessing/README.md): Run a distributed data processing job using Ray.
+
+## Resources
+
+- [Packaging Jupyter notebooks](docs/notebook/packaging.md): Patterns and tools to get your ipynb's ready for deployment in a container runtime.
 
 [gitops]: https://about.gitlab.com/topics/gitops/
 [repo-sync]: https://cloud.google.com/anthos-config-management/docs/reference/rootsync-reposync-fields

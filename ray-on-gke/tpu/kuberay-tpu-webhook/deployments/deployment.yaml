@@ -1,0 +1,93 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ray-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kuberay-tpu-webhook
+  namespace: ray-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kuberay-tpu-webhook-pod-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kuberay-tpu-webhook-pod-reader
+subjects:
+  - kind: ServiceAccount
+    name: kuberay-tpu-webhook
+    namespace: ray-system
+roleRef:
+  kind: ClusterRole
+  name: kuberay-tpu-webhook-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kuberay-tpu-webhook
+  name: kuberay-tpu-webhook
+  namespace: ray-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuberay-tpu-webhook
+  template:
+    metadata:
+      labels:
+        app: kuberay-tpu-webhook
+    spec:
+      serviceAccountName: kuberay-tpu-webhook
+      containers:
+        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.0-gke.1
+          imagePullPolicy: Always
+          name: kuberay-tpu-webhook
+          args:
+          - --v=0 # change this value to 1 for verbose logging
+          ports:
+          - name: https
+            containerPort: 443
+            protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: https
+              scheme: HTTPS
+          readinessProbe:
+            httpGet:
+              path: /
+              port: https
+              scheme: HTTPS
+          volumeMounts:
+            - name: tls
+              mountPath: "/etc/kuberay-tpu-webhook/tls"
+              readOnly: true
+      volumes:
+        - name: tls
+          secret:
+            secretName: kuberay-tpu-webhook-certs

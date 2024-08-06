@@ -18,8 +18,13 @@ variable "environment_name" {
   type        = string
 }
 
+variable "iap_support_email" {
+  description = "Name of the platform type"
+  type        = string
+}
+
 variable "platform_type" {
-  default     = "sandbox"
+  default     = "playground"
   description = "Name of the platform type"
   type        = string
 }

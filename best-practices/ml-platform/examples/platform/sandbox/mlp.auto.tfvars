@@ -1,5 +1,0 @@
-environment_name       = "dev"
-environment_project_id = "YOUR_PROJECT_ID"
-github_email           = "YOUR_GITHUB_EMAIL"
-github_org             = "YOUR_GITHUB_ORG"
-github_user            = "YOUR_GITHUB_USER"

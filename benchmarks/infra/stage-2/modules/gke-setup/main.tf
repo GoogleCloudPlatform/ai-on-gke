@@ -32,7 +32,7 @@ module "gcs-fuse" {
   project_id             = var.project_id
   bucket_name            = var.bucket_name
   bucket_location        = var.bucket_location
-  google_service_account = var.google_service_account
+  google_service_account = module.workload-identity.0.created_resources.gsa_email
   depends_on             = [module.workload-identity]
 }
 

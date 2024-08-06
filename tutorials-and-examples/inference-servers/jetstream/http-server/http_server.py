@@ -55,7 +55,7 @@ async def generate(request: GenerateRequest):
   try:
     request = jetstream_pb2.DecodeRequest(
         session_cache=request.session_cache,
-        additional_text=request.prompt,
+        text_content=jetstream_pb2.DecodeRequest.TextContent(text=request.prompt),
         priority=request.priority,
         max_tokens=request.max_tokens,
     )
@@ -82,6 +82,6 @@ async def generate_prompt(
     stub = jetstream_pb2_grpc.OrchestratorStub(channel)
     response = stub.Decode(request)
     output = ""
-    async for token_list in response:
-      output += str(token_list.response[0])
+    async for r in response:
+      output += str(r.stream_content.samples[0].text)
     return output

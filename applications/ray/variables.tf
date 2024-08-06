@@ -137,6 +137,7 @@ variable "cpu_pools" {
     autoscaling  = true
     min_count    = 1
     max_count    = 3
+    enable_gcfs  = true
     disk_size_gb = 100
     disk_type    = "pd-standard"
   }]
@@ -171,7 +172,7 @@ variable "gpu_pools" {
     name               = "gpu-pool-l4"
     machine_type       = "g2-standard-24"
     autoscaling        = true
-    min_count          = 1
+    min_count          = 0
     max_count          = 3
     disk_size_gb       = 100
     disk_type          = "pd-balanced"

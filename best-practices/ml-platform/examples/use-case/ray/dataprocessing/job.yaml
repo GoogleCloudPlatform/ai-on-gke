@@ -1,9 +1,10 @@
 apiVersion: batch/v1
-kind: Job 
+kind: Job
 metadata:
-  name: job 
+  name: job
   namespace: ml-team
 spec:
+  backoffLimit: 0
   template:
     metadata:
       labels:
@@ -12,10 +13,17 @@ spec:
       containers:
       - name: job
         image: #IMAGE
+        imagePullPolicy: Always
         env:
         - name: "PROCESSING_BUCKET"
           value: #PROCESSING_BUCKET
         - name: "RAY_CLUSTER_HOST"
-          value: "ray-cluster-kuberay-head-svc.ml-team:10001"
+          value: ray-cluster-kuberay-head-svc.ml-team:10001
+      nodeSelector:
+        resource-type: cpu
       restartPolicy: Never
       serviceAccountName: ray-worker
+      tolerations:
+      - effect: NoSchedule
+        key: on-demand
+        operator: Exists

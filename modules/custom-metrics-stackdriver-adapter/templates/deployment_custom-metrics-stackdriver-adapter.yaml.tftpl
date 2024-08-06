@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-metrics-stackdriver-adapter
+  namespace: custom-metrics
+  labels:
+    run: custom-metrics-stackdriver-adapter
+    k8s-app: custom-metrics-stackdriver-adapter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: custom-metrics-stackdriver-adapter
+      k8s-app: custom-metrics-stackdriver-adapter
+  template:
+    metadata:
+      labels:
+        run: custom-metrics-stackdriver-adapter
+        k8s-app: custom-metrics-stackdriver-adapter
+        kubernetes.io/cluster-service: "true"
+    spec:
+      serviceAccountName: ${cmsa-serviceaccount-name}
+      containers:
+      - image: gcr.io/gke-release/custom-metrics-stackdriver-adapter:v0.14.2-gke.0
+        imagePullPolicy: Always
+        name: pod-custom-metrics-stackdriver-adapter
+        command:
+        - /adapter
+        - --use-new-resource-model=true
+        - --fallback-for-container-metrics=true
+        resources:
+          limits:
+            cpu: 250m
+            memory: 200Mi
+          requests:
+            cpu: 250m
+            memory: 200Mi

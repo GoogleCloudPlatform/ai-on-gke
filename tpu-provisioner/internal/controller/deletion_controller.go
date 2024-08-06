@@ -100,14 +100,16 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// deleting the node pool.
 	jobSetName, exists := node.Labels[cloud.LabelJobSetName]
 	if !exists {
-		lg.V(3).Info("Node missing jobset name label", "node", node.Name)
-		return ctrl.Result{}, nil
-
+		jobSetName, exists = node.Labels[cloud.LabelProvisionerNodepoolID]
+		if !exists {
+			lg.V(3).Info("Node missing jobset name label", "node", node.Name)
+			return ctrl.Result{}, nil
+		}
 	}
 	jobSetNamespace, exists := node.Labels[cloud.LabelJobSetNamespace]
 	if !exists {
-		lg.V(3).Info("Node missing jobset namespace label", "node", node.Name)
-		return ctrl.Result{}, nil
+		lg.V(3).Info("Node missing jobset namespace label, using default", "node", node.Name)
+		jobSetNamespace = "default"
 	}
 	var js jobset.JobSet
 	if err := r.Get(ctx, types.NamespacedName{Name: jobSetName, Namespace: jobSetNamespace}, &js); err != nil {

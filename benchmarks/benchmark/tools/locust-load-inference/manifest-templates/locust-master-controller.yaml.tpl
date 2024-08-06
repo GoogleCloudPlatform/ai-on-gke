@@ -30,7 +30,9 @@ spec:
             - name: STOP_TIMEOUT
               value: ${stop_timeout}
             - name: REQUEST_TYPE
-              value: grpc
+              value: ${request_type}
+            - name: BUCKET
+              value: ${bucket}
           ports:
             - name: loc-master-web
               containerPort: 8089

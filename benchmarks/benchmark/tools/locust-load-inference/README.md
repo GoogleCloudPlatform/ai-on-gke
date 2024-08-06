@@ -37,6 +37,7 @@ The Locust benchmarking tool currently supports these frameworks:
 - tensorrt_llm_triton
 - text generation inference (tgi)
 - vllm
+- jetstream
 
 ## Instructions
 
@@ -49,13 +50,15 @@ This is my first prompt.\n
 This is my second prompt.\n
 ```
 
-Example prompt datasets are available in the "../../dataset" folder with python scripts and instructions on how to make the dataset available for consumption by this benchmark. The dataset used in the `sample-terraform.tfvars` is the "ShareGPT_v3_unflitered_cleaned_split".
+Example prompt datasets are available in the "../../dataset" folder with python scripts and instructions on how to make the dataset available for consumption by this benchmark. The dataset used in the `./sample-tfvars/tgi-sample.tfvars` is the "ShareGPT_v3_unflitered_cleaned_split".
 
 You will set the `gcs_path` in your `terraform.tfvars` to this gcs path containing your prompts.
 
 ### Step 2: create and give service account access to view dataset
 
 The Locust workload requires storage.admin access to view the dataset in the given gcs bucket. If you are running with workload identity, it obtains this access via a kubernetes service account that is backed by a gcloud service account. If you followed steps in `../../infra`, then you already have a kubernetes and gcloud service account created that you can use here.
+
+**Note: If you would like your raw benchmark data as a CSV, add the Locust master serviceAccount as a Storage Admin to the GCS bucket**
 
 To give viewer permissions on the gcs bucket to the gcloud service account, run the following:
 
@@ -100,10 +103,10 @@ gcloud artifacts repositories create ai-benchmark --location=us-central1 --repos
 
 ### Step 6: create and configure terraform.tfvars
 
-Create a `terraform.tfvars` file. `sample-terraform.tfvars` is provided as an example file. You can copy the file as a starting point. Note that at a minimum you will have to change the existing `credentials_config`, `project_id`, and `artifact_registry`.
+Create a `terraform.tfvars` file. `./sample-tfvars/tgi-sample.tfvars` is provided as an example file. You can copy the file as a starting point. Note that at a minimum you will have to change the existing `credentials_config`, `project_id`, and `artifact_registry`.
 
 ```bash
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/tgi-sample.tfvars terraform.tfvars
 ```
 
 Fill out your `terraform.tfvars` with the desired model and server configuration, referring to the list of required and optional variables [here](#variables). The following variables are required:
@@ -265,5 +268,6 @@ To change the benchmark configuration, you will have to rerun terraform destroy 
 | <a name="input_sax_model"></a> [sax\_model](#input\_sax\_model)                                                      | Benchmark server configuration for sax model. Only required if framework is sax.                                            | `string`                                                                                                                                                                                                    | `""`                 |    no    |
 | <a name="input_tokenizer"></a> [tokenizer](#input\_tokenizer)                                                        | Benchmark server configuration for tokenizer.                                                                               | `string`                                                                                                                                                                                                    | `"tiiuae/falcon-7b"` |   yes    |
 | <a name="input_use_beam_search"></a> [use\_beam\_search](#input\_use\_beam\_search)                                  | Benchmark server configuration for use beam search.                                                                         | `bool`                                                                                                                                                                                                      | `false`              |    no    |
-  <a name="huggingface_secret"></a> [huggingface_secret](#input\_huggingface_secret)                                  | Name of the kubectl huggingface secret token                                                                          | `string`                                                                                                                                                                                                      | `huggingface-secret`              |    no   |
+  <a name="huggingface_secret"></a> [huggingface_secret](#input\_huggingface_secret)                                  | Name of the secret holding the huggingface token. Stored in GCP Secrets Manager.                                                                          | `string`                                                                                                                                                                                                      | `huggingface-secret`              |    no   |
+  <a name="k8s_hf_secret"></a> [k8s_hf_secret](#input\_huggingface_secret)                                  | Name of the secret holding the huggingface token. Stored in K8s. Key is expected to be named: `HF_TOKEN`. See [here](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/#use-raw-data) for more.                                                                          | `string`                                                                                                                                                                                                      | `huggingface-secret`              |    no   |
 <!-- END_TF_DOCS -->

@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+echo "starting locust for $LOCUST_MODE"
+
 LOCUST="/usr/local/bin/locust"
 LOCUST_OPTS="-f /locust-tasks/tasks.py "
 LOCUST_MODE=${LOCUST_MODE:-standalone}
@@ -21,7 +23,7 @@ LOCUST_MODE=${LOCUST_MODE:-standalone}
 if [[ "$REQUEST_TYPE" = "grpc" ]]; then 
     LOCUST_OPTS="$LOCUST_OPTS GrpcBenchmarkUser --host=$TARGET_HOST"
 else
-    LOCUST_OPTS="$LOCUST_OPTS BenchmarkUser --host='http://$TARGET_HOST"
+    LOCUST_OPTS="$LOCUST_OPTS BenchmarkUser --host=http://$TARGET_HOST"
 fi
 
 if [[ "$LOCUST_MODE" = "master" ]]; then
@@ -35,7 +37,10 @@ if [[ "$LOCUST_MODE" = "master" ]]; then
         LOCUST_OPTS="$LOCUST_OPTS --stop-timeout $STOP_TIMEOUT"
     fi
 elif [[ "$LOCUST_MODE" = "worker" ]]; then
+
+    echo "login to huggingface"
     huggingface-cli login --token $HUGGINGFACE_TOKEN
+
     FILTER_PROMPTS="python /locust-tasks/load_data.py"
     FILTER_PROMPTS_OPTS="--gcs_path=$GCS_PATH --tokenizer=$TOKENIZER --max_prompt_len=$MAX_PROMPT_LEN --max_num_prompts=$MAX_NUM_PROMPTS"
     echo "$FILTER_PROMPTS $FILTER_PROMPTS_OPTS"

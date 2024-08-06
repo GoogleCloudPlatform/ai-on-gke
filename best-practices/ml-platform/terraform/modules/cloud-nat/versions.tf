@@ -14,21 +14,17 @@
 
 terraform {
   required_providers {
-    github = {
-      source  = "integrations/github"
-      version = "6.0.1"
-    }
     google = {
       source  = "hashicorp/google"
-      version = "5.19.0"
+      version = "5.35.0"
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = "5.19.0"
+      version = "5.35.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.6.0"
+      version = "3.6.2"
     }
   }
 }

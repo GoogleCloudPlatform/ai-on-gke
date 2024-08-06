@@ -23,6 +23,11 @@ data:
     DCGM_FI_DEV_GPU_UTIL, gauge, GPU utilization (in %).
     DCGM_FI_DEV_MEM_COPY_UTIL, gauge, Memory utilization (in %).
 
+    # Temperature and power usage,,
+    DCGM_FI_DEV_GPU_TEMP, gauge, Current temperature readings for the device in degrees C.
+    DCGM_FI_DEV_MEMORY_TEMP, gauge, Memory temperature for the device.
+    DCGM_FI_DEV_POWER_USAGE, gauge, Power usage for the device in Watts.
+
     # Utilization of IP blocks,,
     DCGM_FI_PROF_SM_ACTIVE, gauge, The ratio of cycles an SM has at least 1 warp assigned
     DCGM_FI_PROF_SM_OCCUPANCY, gauge, The fraction of resident warps on a multiprocessor

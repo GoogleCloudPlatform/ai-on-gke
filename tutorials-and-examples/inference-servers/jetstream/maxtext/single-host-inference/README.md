@@ -121,33 +121,40 @@ Completed unscanning checkpoint to gs://BUCKET_NAME/final/unscanned/gemma_7b-it/
 
 ## Deploy Maxengine Server and HTTP Server
 
-In this example, we will deploy a Maxengine server targeting Gemma-7b model. You can use the provided Maxengine server and HTTP server images already in `deployment.yaml` or [build your own](#optionals).
+Next, deploy a Maxengine server hosting the Gemma-7b model. You can use the provided Maxengine server and HTTP server images or [build your own](#build-and-upload-maxengine-server-image). Depending on your needs and constraints you can elect to deploy either via Terraform or via Kubectl.
 
-Add desired overrides to your yaml file by editing the `args` in `deployment.yaml`. You can reference the [MaxText base config file](https://github.com/google/maxtext/blob/main/MaxText/configs/base.yml) on what values can be overridden.
+### Deploy via Kubectl
 
-In the manifest, ensure the value of the BUCKET_NAME is the name of the Cloud Storage bucket that was used when converting your checkpoint.
+See the [Jetstream component README](../../../../../modules/jetstream-maxtext-deployment/README.md#installation-via-bash-and-kubectl) for start to finish instructions on how to deploy jetstream to your cluster, assure the value of the PARAMETERS_PATH is the path where the checkpoint-converter job uploaded the converted checkpoints to, in this case it should be `gs://$BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items` where $BUCKET_NAME is the same as above.
 
-Argument descriptions:
+ This README also includes [instructions for setting up autoscaling](../../../../../modules//jetstream-maxtext-deployment/README.md#optional-autoscaling-components). Follow those instructions to install the required components for autoscaling and configuring your HPAs appropriately.
+
+### Deploy via Terraform
+
+Navigate to the `./terraform` directory and run [`terraform init`](https://developer.hashicorp.com/terraform/cli/commands/init). The deployment requires some inputs, an example `sample-terraform.tfvars` is provided as a starting point, run `cp sample-terraform.tfvars terraform.tfvars` and modify the resulting `terraform.tfvars` as needed. Since we're using gemma-7b the `maxengine_deployment_settings.parameters_path` terraform variable should be set to the following: `gs://BUCKET_NAME/final/unscanned/gemma_7b-it/0/checkpoints/0/items`. Finally run `terraform apply` to apply these resources to your cluster.
+
+For deploying autoscaling components via terraform, a few more variables to be set, doing so and rerunning the [prior step](#deploy-via-terraform) with these set will deploy the components. The following variables should be set:
+
 ```
-tokenizer_path: The file path to your model’s tokenizer
-load_parameters_path: Your checkpoint path (GSBucket)
-per_device_batch_size: Decoding batch size per device (1 TPU chip = 1 device)
-max_prefill_predict_length: Maximum length for the prefill when doing autoregression
-max_target_length: Maximum sequence length
-model_name: Model name
-ici_fsdp_parallelism: The number of shards for FSDP parallelism
-ici_autoregressive_parallelism: The number of shards for autoregressive parallelism
-ici_tensor_parallelism: The number of shards for tensor parallelism
-weight_dtype: Weight data type (e.g. bfloat16)
-scan_layers: Scan layers boolean flag
+maxengine_deployment_settings = {
+  metrics = {
+    port: <same as above>   # which port will we scrape server metrics from
+    scrape_interval: 5s     # how often do we scrape
+  }
+}
+
+hpa_config = {
+  metrics_adapter = <either 'prometheus-adapter` (recommended) or 'custom-metrics-stackdriver-adapter' >
+  max_replicas
+  min_replicas
+  rules = [{
+    target_query = <see [jetstream-maxtext-module README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/modules//jetstream-maxtext-deployment/README.md) for a list of valid values>
+    average_value_target
+  }]
+}
 ```
 
-Deploy the manifest file for the Maxengine server and HTTP server:
-```
-kubectl apply -f deployment.yaml
-```
-
-## Verify the deployment
+### Verify the deployment
 
 Wait for the containers to finish creating:
 ```
@@ -199,7 +206,7 @@ The output should be similar to the following:
 }
 ```
 
-## Optionals
+## Other optional steps
 ### Build and upload Maxengine Server image
 
 Build the Maxengine Server from [here](../maxengine-server) and upload to your project
@@ -223,9 +230,22 @@ docker push gcr.io/${PROJECT_ID}/jetstream/maxtext/jetstream-http:latest
 The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. If you would like to interact directly with the Maxengine server directly for use cases such as [benchmarking](https://github.com/google/JetStream/tree/main/benchmarks), you can do so by following the Jetstream benchmarking setup and applying the `deployment.yaml` manifest file and interacting with the Jetstream gRPC server at port 9000.
 
 ```
-kubectl apply -f deployment.yaml
+kubectl apply -f kubectl/deployment.yaml
 
 kubectl port-forward svc/jetstream-svc 9000:9000
 ```
 
 To run benchmarking, pass in the flag `--server 127.0.0.1` when running the benchmarking script.
+
+### Observe custom metrics
+
+This step assumes you specified a metrics port to your jetstream deployment via `prometheus_port`. If you would like to probe the metrics manually, `cURL` your maxengine-server container on the metrics port you set and you should see something similar to the following:
+
+```
+# HELP jetstream_prefill_backlog_size Size of prefill queue
+# TYPE jetstream_prefill_backlog_size gauge
+jetstream_prefill_backlog_size{id="SOME-HOSTNAME-HERE>"} 0.0
+# HELP jetstream_slots_used_percentage The percentage of decode slots currently being used
+# TYPE jetstream_slots_used_percentage gauge
+jetstream_slots_used_percentage{id="<SOME-HOSTNAME-HERE>",idx="0"} 0.04166666666666663
+```

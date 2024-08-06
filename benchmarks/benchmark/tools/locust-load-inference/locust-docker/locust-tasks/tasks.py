@@ -16,15 +16,13 @@
 
 import json
 import logging
-import os
 import random
-import threading
 import time
 from locust import web  # Import the web module from Locust
 from typing import Callable, List
 from locust import FastHttpUser, task, events, User
 from locust.runners import MasterRunner
-from transformers import AutoTokenizer, PreTrainedTokenizerBase
+from transformers import AutoTokenizer
 
 from locust.exception import LocustError
 from jetstream.core.proto import jetstream_pb2
@@ -35,8 +33,8 @@ import grpc.experimental.gevent as grpc_gevent
 from grpc_interceptor import ClientInterceptor
 
 
-from custom_metric_aggregator import TokenMetricCollector
-local_metric_collector = TokenMetricCollector()
+from custom_metric_aggregator import MetricCollector
+local_metric_collector = MetricCollector()
 
 logging.basicConfig(level=logging.INFO)
 grpc_gevent.init_gevent()
@@ -141,6 +139,18 @@ def get_token_count(prompt, resp):
     return number_of_input_tokens, number_of_output_tokens
 
 
+def get_random_prompt(user):
+    """Get random prompt from test_data or throw if no test_data."""
+    global test_data
+    if not test_data:
+        user.environment.runner.stop()
+        error_message = "No test data configured. Stopping the runner. Check worker logs for more info on loading."
+        logging.error(error_message)
+        raise ValueError(error_message)
+
+    return test_data[random.randrange(0, len(test_data))]
+
+
 class BenchmarkUser(FastHttpUser):
     weight = 1
     # Connection_timeout and network_timeout default is 60s. For inferencing workloads with
@@ -151,30 +161,22 @@ class BenchmarkUser(FastHttpUser):
 
     @task
     def lm_generate(self):
-        global test_data
         global model_params
         global tokenizer
 
-        if not test_data:
-            logging.error("No test data configured.")
-            logging.error("Stopping the runner")
-            self.environment.runner.stop()
-            return
-
-        prompt = test_data[random.randrange(0, len(test_data))]
-
+        prompt = get_random_prompt(self)
         request = generate_request(prompt)
         headers = {"User-Agent": "Benchmark Client", "Connection": "close"}
         logging.info(f"Sending request: {request}")
         test_start_time = time.time()
         with self.client.post("/generate", headers=headers, json=request, catch_response=True) as resp:
             if resp.status_code == 200:
-                self.handle_successful_response(prompt, resp, test_start_time)
+                handle_successful_response(prompt, resp, test_start_time)
             else:
                 if resp.status_code == 0:
                     logging.error(
                         f"Failed request with invalid response code: {resp.status_code}. Due to requests.RequestException thrown by Session, caused by connection errors, timeouts or similar. Try increasing connection_timeout")
-                self.handle_failed_response(request, resp)
+                handle_failed_response(request, resp)
 
 def handle_successful_response(prompt, reponse, start_time):
     global model_params
@@ -195,17 +197,18 @@ def handle_failed_response(request, response):
 
     send_metrics(tokens_sent, tokens_received, test_time, request_successful_bool)
 
-def send_metrics( tokens_sent, tokens_received, test_time, request_successful_bool):
+def send_metrics( tokens_sent, tokens_received, test_time, request_successful_bool, ttft=0):
     local_metric_collector.add_metric(
-        tokens_sent, tokens_received, test_time, request_successful_bool)
+        tokens_sent, tokens_received, test_time, request_successful_bool, ttft)
     logging.info(
-        f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool]}')
+        f'sending to master: metric_update: {[tokens_sent, tokens_received, test_time, request_successful_bool, ttft]}')
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
     """on test stop the locust master resets metric collector"""
     if isinstance(environment.runner, MasterRunner):
         logging.info(f'dumping metrics before clear: {local_metric_collector.json_dump_report()}')
+        local_metric_collector.dump_to_csv()
         logging.info(f'init metric_collector')
         local_metric_collector.__init__()
 
@@ -222,12 +225,14 @@ def on_report_to_master(client_id, data):
     to the dict that is being sent, and then we clear the local stats in the worker, so
     as to avoid sending duplicate data to the master on the next run.
     """
-    tokens_sent, tokens_recieved, test_time, success_count, failure_count = local_metric_collector.share_stats()
+    tokens_sent, tokens_recieved, test_time, success_count, failure_count, ttft, request_metrics = local_metric_collector.share_stats()
     data["tokens-sent"] = tokens_sent
     data["tokens-received"] = tokens_recieved
     data["test-time"] = test_time
     data["success-count"] = success_count
     data["failure-count"] = failure_count
+    data["time_to_first_token"] = ttft
+    data["request-metrics"] = request_metrics
     local_metric_collector.__init__
 
 
@@ -239,7 +244,7 @@ def on_worker_report(client_id, data):
     stats dict.
     """
     local_metric_collector.add_metrics(
-        data["tokens-sent"], data["tokens-received"], data["test-time"], data["success-count"], data["failure-count"])
+        data["tokens-sent"], data["tokens-received"], data["test-time"], data["success-count"], data["failure-count"], data["time_to_first_token"], data["request-metrics"])
 
 
 @events.init_command_line_parser.add_listener
@@ -328,21 +333,24 @@ class GrpcBenchmarkUser(GrpcUser):
 
     @task
     def grpc_infer(self):
-        prompt = test_data[random.randrange(0, len(test_data))]
+        prompt = get_random_prompt(self)
         request = jetstream_pb2.DecodeRequest(
-            additional_text=prompt,
+            text_content=jetstream_pb2.DecodeRequest.TextContent(text=prompt),
             priority=0,
             max_tokens=model_params["max_output_len"],
         )
         logging.info(f"Prompt: {prompt}")
         #return values format is from the interceptor, which makes the actual call
-        output, ttft, response_time = self.stub.Decode(request)
-        logging.info(f"Response: {output}")
+        try:
+            output, ttft, response_time = self.stub.Decode(request)
+            logging.info(f"Response: {output}")
 
-        number_of_input_tokens = len(tokenizer.encode(prompt))
-        number_of_output_tokens = len(tokenizer.encode(output))
-        send_metrics(number_of_input_tokens, number_of_output_tokens, response_time,1)
-
+            number_of_input_tokens = len(tokenizer.encode(prompt))
+            number_of_output_tokens = len(tokenizer.encode(output))
+            send_metrics(number_of_input_tokens, number_of_output_tokens, response_time, 1, ttft)
+        except:
+            # Capture that a test was ran, but the request threw an exception
+            send_metrics(-1,-1,-1,0,-1)
 
 class LocustInterceptor(ClientInterceptor):
     def __init__(self, environment, *args, **kwargs):
@@ -368,11 +376,11 @@ class LocustInterceptor(ClientInterceptor):
         # chunk sent back is used to calculate time to first token(TTFT).
         for response in responses:
             if ttft == 0:
-                ttft = time.perf_counter() - start_perf_counter
+                ttft = (time.perf_counter() - start_perf_counter) * 1000
             output += response.response[0]
             response_length += response.ByteSize()  
         response_time_ms = (time.perf_counter() - start_perf_counter) * 1000
-        logging.info(f"response_time {response_time_ms}; ttft:{ttft * 1000}")
+        logging.info(f"response_time {response_time_ms}; ttft:{ttft}")
         self.env.events.request.fire(
             request_type="grpc",
             name=call_details.method,

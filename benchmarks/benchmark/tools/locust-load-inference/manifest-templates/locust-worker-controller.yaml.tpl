@@ -24,7 +24,7 @@ spec:
             - name: LOCUST_MODE
               value: worker
             - name: REQUEST_TYPE
-              value: grpc
+              value: ${request_type}
             - name: LOCUST_MASTER
               value: locust-master
             - name: TARGET_HOST
@@ -48,6 +48,13 @@ spec:
             - name: USE_BEAM_SEARCH
               value: ${use_beam_search}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
+            - name: HUGGINGFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-key
+                  key: HF_TOKEN
+%{ endfor ~}
+%{ for hf_token in k8s_hf_secret_list ~}
             - name: HUGGINGFACE_TOKEN
               valueFrom:
                 secretKeyRef:

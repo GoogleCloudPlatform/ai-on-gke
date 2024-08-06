@@ -27,10 +27,10 @@ In particular, stage-1 provisions:
 
 ### Step 1: create and configure terraform.tfvars
 
-Create a `terraform.tfvars` file. `sample-terraform.tfvars` is provided as an example file. You can copy the file as a starting point. Note that you will have to change the existing `project_id`.
+Create a `terraform.tfvars` file. `./sample-tfvars/gpu-sample.tfvars` is provided as an example file. You can copy the file as a starting point. Note that you will have to change the existing `project_id`.
 
 ```bash
-cp sample-terraform.tfvars terraform.tfvars
+cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 ```
 
 Fill out your `terraform.tfvars` with the desired project and cluster configuration, referring to the list of required and optional variables [here](#variables). Variables `cluster_name` and `project_id` are required.
@@ -68,27 +68,29 @@ gcloud container fleet memberships get-credentials <cluster-name>
 kubectl get nodes
 ```
 
-<!-- BEGIN TFDOC -->
+<!-- BEGIN_TF_DOCS -->
 ## Variables
 
-| name | description | type | required | default |
-|---|---|:---:|:---:|:---:|
-| [cluster_name](variables.tf#L22) | Name of new or existing cluster. | <code>string</code> | ✓ |  |
-| [project_id](variables.tf#L17) | Project id of existing or created project. | <code>string</code> | ✓ |  |
-| [cluster_options](variables.tf#L59) | Specific cluster configuration options | <code title="object&#40;&#123;&#10;  release_channel                       &#61; optional&#40;string, &#34;REGULAR&#34;&#41;&#10;  enable_backup_agent                   &#61; optional&#40;bool, false&#41;&#10;  enable_gcs_fuse_csi_driver            &#61; optional&#40;bool, false&#41;&#10;  enable_gcp_filestore_csi_driver       &#61; optional&#40;bool, false&#41;&#10;  enable_gce_persistent_disk_csi_driver &#61; optional&#40;bool, false&#41;&#10;&#125;&#41;">object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [enable_private_endpoint](variables.tf#L39) | When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled. | <code>bool</code> |  | <code>true</code> |
-| [filestore_storage](variables.tf#L96) | Filestore storage instances. If GKE deployment is regional, tier should be set to ENTERPRISE | <code title="map&#40;object&#40;&#123;&#10;  name        &#61; string&#10;  tier        &#61; string&#10;  capacity_gb &#61; number&#10;&#125;&#41;&#41;">map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [gke_location](variables.tf#L33) | Region or zone used for cluster. | <code>string</code> |  | <code>&#34;us-central1-a&#34;</code> |
-| [nodepools](variables.tf#L71) | Nodepools for the cluster | <code title="map&#40;object&#40;&#123;&#10;  machine_type   &#61; optional&#40;string, &#34;n2-standard-2&#34;&#41;,&#10;  gke_version    &#61; optional&#40;string&#41;,&#10;  max_node_count &#61; optional&#40;number, 10&#41;,&#10;  min_node_count &#61; optional&#40;number, 1&#41;,&#10;&#10;&#10;  guest_accelerator &#61; optional&#40;object&#40;&#123;&#10;    type  &#61; optional&#40;string&#41;,&#10;    count &#61; optional&#40;number&#41;,&#10;    gpu_driver &#61; optional&#40;object&#40;&#123;&#10;      version                    &#61; optional&#40;string, &#34;LATEST&#34;&#41;,&#10;      partition_size             &#61; optional&#40;string&#41;,&#10;      max_shared_clients_per_gpu &#61; optional&#40;number&#41;&#10;    &#125;&#41;&#41;&#10;  &#125;&#41;&#41;&#10;&#10;&#10;  local_nvme_ssd_block_config &#61; optional&#40;object&#40;&#123;&#10;    local_ssd_count &#61; optional&#40;number&#41;&#10;  &#125;&#41;&#41;&#10;&#125;&#41;&#41;">map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [region](variables.tf#L27) | Region used for network resources. | <code>string</code> |  | <code>&#34;us-central1&#34;</code> |
-| [vpc_create](variables.tf#L45) | Project configuration for newly created VPC. Leave null to use existing VPC, or defaults when project creation is required. | <code title="object&#40;&#123;&#10;  name                     &#61; optional&#40;string&#41;&#10;  subnet_name              &#61; optional&#40;string&#41;&#10;  primary_range_nodes      &#61; optional&#40;string, &#34;10.0.0.0&#47;24&#34;&#41;&#10;  secondary_range_pods     &#61; optional&#40;string, &#34;10.16.0.0&#47;20&#34;&#41;&#10;  secondary_range_services &#61; optional&#40;string, &#34;10.32.0.0&#47;24&#34;&#41;&#10;  enable_cloud_nat         &#61; optional&#40;bool, false&#41;&#10;  proxy_only_subnet        &#61; optional&#40;string&#41;&#10;&#125;&#41;">object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>null</code> |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of new or existing cluster. | `string` | n/a | yes |
+| <a name="input_cluster_options"></a> [cluster\_options](#input\_cluster\_options) | Specific cluster configuration options | <pre>object({<br>    release_channel                       = optional(string, "REGULAR")<br>    enable_backup_agent                   = optional(bool, false)<br>    enable_gcs_fuse_csi_driver            = optional(bool, false)<br>    enable_gcp_filestore_csi_driver       = optional(bool, false)<br>    enable_gce_persistent_disk_csi_driver = optional(bool, false)<br>  })</pre> | `{}` | no |
+| <a name="input_enable_private_endpoint"></a> [enable\_private\_endpoint](#input\_enable\_private\_endpoint) | When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled. | `bool` | `true` | no |
+| <a name="input_filestore_storage"></a> [filestore\_storage](#input\_filestore\_storage) | Filestore storage instances. If GKE deployment is regional, tier should be set to ENTERPRISE | <pre>map(object({<br>    name        = string<br>    tier        = string<br>    capacity_gb = number<br>  }))</pre> | `{}` | no |
+| <a name="input_gke_location"></a> [gke\_location](#input\_gke\_location) | Region or zone used for cluster. | `string` | `"us-central1-a"` | no |
+| <a name="input_nodepools"></a> [nodepools](#input\_nodepools) | Nodepools for the cluster | <pre>map(object({<br>    machine_type   = optional(string, "n2-standard-2"),<br>    gke_version    = optional(string),<br>    max_node_count = optional(number, 10),<br>    min_node_count = optional(number, 1),<br><br>    guest_accelerator = optional(object({<br>      type  = optional(string),<br>      count = optional(number),<br>      gpu_driver = optional(object({<br>        version                    = optional(string, "LATEST"),<br>        partition_size             = optional(string),<br>        max_shared_clients_per_gpu = optional(number)<br>      }))<br>    }))<br><br>    ephemeral_ssd_block_config = optional(object({<br>      ephemeral_ssd_count = optional(number)<br>    }))<br><br>    local_nvme_ssd_block_config = optional(object({<br>      local_ssd_count = optional(number)<br>    }))<br>  }))</pre> | `{}` | no |
+| <a name="input_prefix"></a> [prefix](#input\_prefix) | Prefix used for resource names. | `string` | `"ai-gke-0"` | no |
+| <a name="input_private_cluster_config"></a> [private\_cluster\_config](#input\_private\_cluster\_config) | Private cluster configuration. Default of {} configures a private\_cluster with the values in below object. Set to null to make cluster public, which can be used for simple kubectl access when debugging or learning but should not be used in production.  May need to destroy & recreate to apply public cluster. | <pre>object({<br>    master_global_access = optional(bool, true)<br>  })</pre> | `{}` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project id of existing or created project. | `string` | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | Region used for network resources. | `string` | `"us-central1"` | no |
+| <a name="input_vpc_create"></a> [vpc\_create](#input\_vpc\_create) | Project configuration for newly created VPC. Leave null to use existing VPC, or defaults when project creation is required. | <pre>object({<br>    name                     = optional(string)<br>    subnet_name              = optional(string)<br>    primary_range_nodes      = optional(string, "10.0.0.0/24")<br>    secondary_range_pods     = optional(string, "10.16.0.0/20")<br>    secondary_range_services = optional(string, "10.32.0.0/24")<br>    enable_cloud_nat         = optional(bool, false)<br>    proxy_only_subnet        = optional(string)<br>  })</pre> | `null` | no |
 
 ## Outputs
 
-| name | description | sensitive |
-|---|---|:---:|
-| [created_resources](outputs.tf#L17) | IDs of the resources created, if any. |  |
-| [fleet_host](outputs.tf#L27) | Fleet Connect Gateway host that can be used to configure the GKE provider. |  |
-| [get_credentials](outputs.tf#L32) | Run one of these commands to get cluster credentials. Credentials via fleet allow reaching private clusters without no direct connectivity. |  |
-| [project_id](outputs.tf#L22) | Project ID of where the GKE cluster is hosted |  |
-<!-- END TFDOC -->
+| Name | Description |
+|------|-------------|
+| <a name="output_created_resources"></a> [created\_resources](#output\_created\_resources) | IDs of the resources created, if any. |
+| <a name="output_fleet_host"></a> [fleet\_host](#output\_fleet\_host) | Fleet Connect Gateway host that can be used to configure the GKE provider. |
+| <a name="output_get_credentials"></a> [get\_credentials](#output\_get\_credentials) | Run one of these commands to get cluster credentials. Credentials via fleet allow reaching private clusters without no direct connectivity. |
+| <a name="output_project_id"></a> [project\_id](#output\_project\_id) | Project ID of where the GKE cluster is hosted |
+<!-- END_TF_DOCS -->

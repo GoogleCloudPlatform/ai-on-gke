@@ -84,10 +84,9 @@ module "cluster-standard" {
     master_authorized_ranges = var.cluster_create.master_authorized_ranges
     master_ipv4_cidr_block   = var.cluster_create.master_ipv4_cidr_block
   }
-  private_cluster_config = {
+  private_cluster_config = var.private_cluster_config == null ? null : merge(var.private_cluster_config, {
     enable_private_endpoint = var.enable_private_endpoint
-    master_global_access    = true
-  }
+  })
   labels          = var.cluster_create.labels
   release_channel = var.cluster_create.options.release_channel
   backup_configs = {
@@ -139,10 +138,9 @@ module "cluster-autopilot" {
     master_authorized_ranges = var.cluster_create.master_authorized_ranges
     master_ipv4_cidr_block   = var.cluster_create.master_ipv4_cidr_block
   }
-  private_cluster_config = {
+  private_cluster_config = var.private_cluster_config == null ? null : merge(var.private_cluster_config, {
     enable_private_endpoint = var.enable_private_endpoint
-    master_global_access    = true
-  }
+  })
   labels          = var.cluster_create.labels
   release_channel = var.cluster_create.options.release_channel
   backup_configs = {
@@ -189,6 +187,7 @@ module "cluster-nodepool" {
 
   node_config = {
     machine_type = each.value.machine_type
+    spot         = each.value.spot
     shielded_instance_config = {
       enable_integrity_monitoring = true
       enable_secure_boot          = true

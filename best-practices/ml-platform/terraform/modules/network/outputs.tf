@@ -17,11 +17,6 @@ output "subnet-1" {
   value       = google_compute_subnetwork.subnet-1.id
 }
 
-output "subnet-2" {
-  description = "subnet2."
-  value       = google_compute_subnetwork.subnet-2.id
-}
-
 output "vpc" {
   description = "VPC."
   value       = google_compute_network.vpc-network.id

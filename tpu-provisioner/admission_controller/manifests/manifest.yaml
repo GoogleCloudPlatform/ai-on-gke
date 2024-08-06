@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: admission-controller
+  namespace: tpu-provisioner-system
+spec:
+  selector:
+    app: admission-controller
+  ports:
+  - port: 5000
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: tpu-provisioner-admission-controller
+  annotations:
+    cert-manager.io/inject-ca-from: tpu-provisioner-system/admission-controller
+webhooks:
+- name: admission-controller.tpu-provisioner-system.svc
+  matchPolicy: Equivalent
+  admissionReviewVersions: ["v1"]
+  sideEffects: None
+  rules:
+  - operations: ["CREATE"]
+    apiGroups: ["batch"]
+    apiVersions: ["v1"]
+    resources: ["jobs"]
+    scope: "Namespaced"
+  objectSelector:
+    matchExpressions:
+    # Only mutate Jobs managed by a JobSet
+    - key: jobset.sigs.k8s.io/job-key
+      operator: Exists
+    - key: tpu-provisioner.cloud.google.com/disable-autoprovisioning
+      operator: NotIn
+      values: ["true"]
+  failurePolicy: Fail
+  timeoutSeconds: 20
+  clientConfig:
+    #caBundle: # base64 CA bundle here
+    service:
+      namespace: tpu-provisioner-system
+      name: admission-controller
+      path: /mutate
+      port: 5000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admission-controller
+  namespace: tpu-provisioner-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admission-controller
+  template:
+    metadata:
+      labels:
+        app: admission-controller
+    spec:
+      containers:
+      - name: webhook
+        # build container image, push to repository and add it here
+        image: example.com/tpu-provisioner/admission-controller
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        # Set environment variables for your deployment.
+        - name: RESERVATION_LOCATION_HINT 
+          value: "cell"
+        - name: FORCE_ON_DEMAND
+          value: "false"
+        volumeMounts:
+        - name: certs-volume
+          readOnly: true
+          mountPath: "/certs"
+      volumes:
+      - name: certs-volume
+        secret:
+          secretName: admission-controller-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: admission-controller-issuer
+  namespace: tpu-provisioner-system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: admission-controller
+  namespace: tpu-provisioner-system
+spec:
+  secretName: admission-controller-tls
+  dnsNames:
+  - admission-controller.tpu-provisioner-system.svc
+  issuerRef:
+    name: admission-controller-issuer

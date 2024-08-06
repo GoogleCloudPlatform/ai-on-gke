@@ -55,7 +55,7 @@ locals {
 
 module "custom_metrics_stackdriver_adapter" {
   count  = local.custom_metrics_enabled ? 1 : 0
-  source = "./custom-metrics-stackdriver-adapter"
+  source = "../../../modules/custom-metrics-stackdriver-adapter"
   workload_identity = {
     enabled    = true
     project_id = var.project_id
@@ -69,6 +69,7 @@ resource "kubernetes_manifest" "default" {
     model_id                       = var.model_id
     gpu_count                      = var.gpu_count
     max_concurrent_requests        = var.max_concurrent_requests
+    quantization                   = var.quantization
     ksa                            = var.ksa
     hugging_face_token_secret_list = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
   }))

@@ -23,6 +23,7 @@ deploy/
 
 # IDEs
 .idea/
+.vscode/
 
 # Python
 __pycache__/
@@ -34,3 +35,4 @@ default.tfstate.backup
 terraform.tfstate*
 terraform.tfvars
 tfplan
+.vscode/

@@ -53,14 +53,18 @@ spec:
             - containerPort: 80
           image: "ghcr.io/huggingface/text-generation-inference:1.4.2"
           args: ["--model-id", "${model_id}", "--num-shard", "${gpu_count}", "--max-concurrent-requests", "${max_concurrent_requests}"]
-%{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
           env:
+%{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HUGGING_FACE_HUB_TOKEN # Related token consumption
               valueFrom:
                 secretKeyRef:
                   name: hf-token
                   key: HF_TOKEN
 %{ endfor ~}
+%{ if quantization != "" ~}
+            - name: QUANTIZE
+              value: "${quantization}"
+%{ endif ~}
           resources:
             limits:
               nvidia.com/gpu: ${gpu_count} # number of gpu's allocated to workload
