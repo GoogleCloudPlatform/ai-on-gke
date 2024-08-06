@@ -12,10 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+module "kuberay-workload-identity" {
+  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  version             = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
+  use_existing_gcp_sa = !var.create_workload_identity_service_account
+  name                = var.workload_identity_service_account
+  namespace           = var.namespace
+  project_id          = var.project_id
+  roles               = ["roles/cloudsql.client", "roles/monitoring.viewer"]
+
+  automount_service_account_token = true
+}
+
+resource "kubernetes_secret_v1" "service_account_token" {
+  metadata {
+    name      = "kuberay-sa-token"
+    namespace = var.namespace
+    annotations = {
+      "kubernetes.io/service-account.name" = var.workload_identity_service_account
+    }
+  }
+  type = "kubernetes.io/service-account-token"
+
+  depends_on = [module.kuberay-workload-identity]
+}
+
 resource "google_storage_bucket_iam_member" "gcs-bucket-iam" {
   bucket = var.gcs_bucket
   role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.google_service_account}@${var.project_id}.iam.gserviceaccount.com"
+  member = "serviceAccount:${var.workload_identity_service_account}@${var.project_id}.iam.gserviceaccount.com"
+
+  depends_on = [module.kuberay-workload-identity]
 }
 
 locals {
@@ -38,7 +65,7 @@ resource "helm_release" "ray-cluster" {
   values = [
     templatefile("${path.module}/values.yaml", {
       gcs_bucket                        = var.gcs_bucket
-      k8s_service_account               = var.google_service_account
+      k8s_service_account               = var.workload_identity_service_account
       additional_labels                 = local.additional_labels
       grafana_host                      = var.grafana_host
       security_context                  = local.security_context
@@ -85,6 +112,8 @@ resource "helm_release" "ray-cluster" {
       }
     })
   ]
+
+  depends_on = [module.kuberay-workload-identity]
 }
 
 data "kubernetes_service" "head-svc" {
