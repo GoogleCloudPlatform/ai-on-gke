@@ -43,10 +43,10 @@ The preprocessing.py file does the following:
    gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID} --uniform-bucket-level-access
    ```
 
-1. Download the raw data csv file from above and store into the bucket created in the previous step.
-   The kaggle cli can be installed using the following [instructions](https://github.com/Kaggle/kaggle-api#installation)
-   To use the cli you must create an API token (Kaggle > User Profile > API > Create New Token), the downloaded file should be stored in HOME/.kaggle/kaggle.json.
-   Alternatively, it can be [downloaded](https://www.kaggle.com/datasets/atharvjairath/flipkart-ecommerce-dataset) from the kaggle website
+1. Download the raw data csv file from [Kaggle][kaggle] and store it into the bucket created in the previous step.
+   - You will need kaggle cli to download the file. The kaggle cli can be installed using the following [instructions](https://github.com/Kaggle/kaggle-api#installation).
+   - To use the cli you must create an API token. To create the token, register on kaggle.com if you already don't have an account. Go to kaggle.com/settings > API > Create New Token, the downloaded file should be stored in $HOME/.kaggle/kaggle.json. Note, you will have to create the dir $HOME/.kaggle.
+   - Alternatively, it can be [downloaded](https://www.kaggle.com/datasets/atharvjairath/flipkart-ecommerce-dataset) from the kaggle website.
 
    ```
    kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset && \
@@ -56,7 +56,7 @@ The preprocessing.py file does the following:
    ```
 
 1. Provide respective GCS bucket access rights to GKE Kubernetes Service Accounts.
-   Ray head with access to read the raw source data in the storage bucket
+   Ray head with access to read the raw source data in the storage bucket and
    Ray worker(s) with the access to write data to the storage bucket.
 
    ```
@@ -65,7 +65,7 @@ The preprocessing.py file does the following:
    --role roles/storage.objectViewer
 
    gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-   --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]" \ \
+   --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]" \
    --role roles/storage.objectAdmin
    ```
 
@@ -119,13 +119,13 @@ The preprocessing.py file does the following:
    kubectl apply -f job.yaml
    ```
 
-1. Monitor the execution in Ray Dashboard
+1. Monitor the execution in Ray Dashboard. See how to launch [Ray Dashboard][ray-dashboard]
 
    - Jobs -> Running Job ID
-     - See the Tasks/actors overview for Running jobs
-     - See the Task Table for a detailed view of task and assigned node(s)
+      - See the Tasks/actors overview for Running jobs
+      - See the Task Table for a detailed view of task and assigned node(s)
    - Cluster -> Node List
-     - See the Ray actors running on the worker process
+      - See the Ray actors running on the worker process
 
 1. Once the Job is completed, both the prepared dataset as a CSV and the images are stored in Google Cloud Storage.
 
@@ -254,3 +254,6 @@ You should see output like the following:
 | Sports Jackets        | 1      |
 | Shrugs                | 7      |
 | Shirts                | 1      |
+
+[kaggle]: https://kaggle.com
+[ray-dashboard]: ../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync
