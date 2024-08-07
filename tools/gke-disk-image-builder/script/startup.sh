@@ -19,12 +19,16 @@ sudo apt-get update
 sudo apt install --yes containerd
 # Configure docker.io registry mirror
 sudo mkdir -p /etc/containerd/certs.d/docker.io
-sudo tee /etc/containerd/certs.d/docker.io/hosts.toml <<EOF
+if [ ! -f /etc/containerd/certs.d/docker.io/hosts.toml ]; then
+  sudo tee /etc/containerd/certs.d/docker.io/hosts.toml <<EOF
 server = "https://registry-1.docker.io"
 
 [host."https://mirror.gcr.io"]
   capabilities = ["pull", "resolve"]
 EOF
+else
+  echo "The file /etc/containerd/certs.d/docker.io/hosts.toml already exists. Skipping..."
+fi
 # Start containerd.
 sudo systemctl start containerd
 # Check to see if containerd is up and we can use ctr.
