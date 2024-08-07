@@ -17,7 +17,7 @@ with an inference serving engine.
 PROJECT_ID=<your-project-id>
 PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
 TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
-V_MODEL_BUCKET=<model-artifacts-bucket>
+MODEL_BUCKET=<model-artifacts-bucket>
 CLUSTER_NAME=<your-gke-cluster>
 NAMESPACE=ml-team
 KSA=<k8s-service-account>
@@ -44,7 +44,7 @@ gcloud storage buckets add-iam-policy-binding gs://${TRAINING_DATASET_BUCKET} \
 - Create the bucket for storing the training data set
 
 ```
-gcloud storage buckets create gs://${V_MODEL_BUCKET} \
+gcloud storage buckets create gs://${MODEL_BUCKET} \
     --project ${PROJECT_ID} \
     --location us \
     --uniform-bucket-level-access
@@ -54,7 +54,7 @@ gcloud storage buckets create gs://${V_MODEL_BUCKET} \
 - Setup Workload Identity Federation to access the bucket to write the model weights
 
 ```
-gcloud storage buckets add-iam-policy-binding gs://${V_MODEL_BUCKET} \
+gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
     --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
     --role "roles/storage.objectUser"
 ```
@@ -81,8 +81,11 @@ gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
   Modify cloudbuild.yaml to specify the image url
 
 ```
-sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" cloudbuild.yaml && \
-gcloud builds submit . --project ${PROJECT_ID}
+cd src
+gcloud builds submit --config cloudbuild.yaml \
+--project ${PROJECT_ID} \
+--substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+cd ..
 ```
 
 # Deploy the Job
@@ -114,7 +117,7 @@ kubectl create secret generic hf-secret \
 | MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING | If MLflow is enabled, track system level metrics, CPU/Memory/GPU                                                                  | true/false                                   |
 | TRAINING_DATASET_BUCKET              | The bucket which contains the generated prompts for fine-tuning.                                                                  |                                              |
 | TRAINING_DATASET_PATH                | The path where the generated prompt data is for fine-tuning.                                                                      | dataset/output                               |
-| V_MODEL_BUCKET                       | The bucket which will be the destination of the fine-tuned model.                                                                 |                                              |
+| MODEL_BUCKET                         | The bucket which will be the destination of the fine-tuned model.                                                                 |                                              |
 | MODEL_PATH                           | The output folder path for the fine-tuned model. This location will be used by the inference serving engine and model evaluation. | /model-data/model-gemma2/experiment          |
 | MODEL_NAME                           | The Hugging Face path to the base model for fine-tuning.                                                                          | google/gemma-2-9b-it                         |
 | HF_TOKEN                             | The Hugging Face token used to pull the base model.                                                                               |                                              |
@@ -122,7 +125,10 @@ kubectl create secret generic hf-secret \
 Update variables in the respective job submission manifest to reflect your configuration.
 
 ```
+EXPERIMENT=""
 MLFLOW_ENABLE="false"
+MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING="false"
+MLFLOW_TRACKING_URI=""
 TRAINING_DATASET_PATH="dataset/output"
 MODEL_PATH="/model-data/model-gemma2/experiment"
 MODEL_NAME="google/gemma-2-9b-it"
@@ -143,7 +149,7 @@ sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
    -i -e "s|V_MLFLOW_TRACKING_URI|${MLFLOW_TRACKING_URI}|" \
    -i -e "s|V_TRAINING_DATASET_BUCKET|${TRAINING_DATASET_BUCKET}|" \
    -i -e "s|V_TRAINING_DATASET_PATH|${TRAINING_DATASET_PATH}|" \
-   -i -e "s|V_MODEL_BUCKET|${V_MODEL_BUCKET}|" \
+   -i -e "s|V_MODEL_BUCKET|${MODEL_BUCKET}|" \
    -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
    -i -e "s|V_MODEL_NAME|${MODEL_NAME}|" \
    yaml/fine-tune-${ACCELERATOR}-dws.yaml

@@ -17,15 +17,13 @@ logging.config.fileConfig("logging.conf")
 logger = logging.getLogger("finetune")
 logger.debug(logger)
 
-if "MLFLOW_ENABLE" in os.environ and os.getenv("MLFLOW_ENABLE") == "true":
+if "MLFLOW_ENABLE" in os.environ and os.environ.get("MLFLOW_ENABLE") == "true":
     import mlflow
 
-    remote_server_uri = os.getenv(
-        "MLFLOW_TRACKING_URI", "http://mlflow-tracking-service.ml-tools:5000"
-    )
+    remote_server_uri = os.environ.get("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(remote_server_uri)
 
-    experiment = os.getenv("EXPERIMENT", "/ex-gemma-unsloth")
+    experiment = os.environ.get("EXPERIMENT")
 
     mlflow.set_experiment(experiment)
     mlflow.autolog()
@@ -33,20 +31,18 @@ if "MLFLOW_ENABLE" in os.environ and os.getenv("MLFLOW_ENABLE") == "true":
 accelerator = Accelerator()
 
 # The bucket which contains the training data
-training_data_bucket = os.getenv("TRAINING_DATASET_BUCKET", "kh-finetune-ds")
+training_data_bucket = os.environ.get("TRAINING_DATASET_BUCKET")
 
-training_data_path = os.getenv(
-    "TRAINING_DATASET_PATH", "/new-format/dataset-it/training"
-)
+training_data_path = os.environ.get("TRAINING_DATASET_PATH")
 
 # The model that you want to train from the Hugging Face hub
-model_name = os.getenv("MODEL_NAME", "google/gemma-1.1-7b-it")
+model_name = os.environ.get("MODEL_NAME")
 
 # Fine-tuned model name
-new_model = os.getenv("NEW_MODEL", "gemma-1.1-7b-it-chatbot")
+new_model = os.environ.get("NEW_MODEL")
 
 # The root path of where the fine-tuned model will be saved
-save_model_path = os.getenv("MODEL_PATH", "/model-data/model")
+save_model_path = os.environ.get("MODEL_PATH")
 
 # Load tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -156,7 +152,9 @@ packing = False
 
 # Load base model
 model = AutoModelForCausalLM.from_pretrained(
-    model_name, attn_implementation="flash_attention_2", torch_dtype=torch.bfloat16
+    attn_implementation="eager",
+    pretrained_model_name_or_path=model_name,
+    torch_dtype=torch.bfloat16,
 )
 model.config.use_cache = False
 model.config.pretraining_tp = 1
@@ -183,6 +181,10 @@ peft_config = LoraConfig(
 
 # Set training parameters
 training_arguments = SFTConfig(
+    dataset_kwargs={
+        "add_special_tokens": False,  # We template with special tokens
+        "append_concat_token": False,  # No need to add additional separator token
+    },
     output_dir=save_model_path,
     num_train_epochs=num_train_epochs,
     per_device_train_batch_size=per_device_train_batch_size,
@@ -213,17 +215,13 @@ trainer = SFTTrainer(
     tokenizer=tokenizer,
     peft_config=peft_config,
     data_collator=collator,
-    dataset_kwargs={
-        "add_special_tokens": False,  # We template with special tokens
-        "append_concat_token": False,  # No need to add additional separator token
-    },
 )
 
 logger.info("Fine tuning started")
 trainer.train()
 logger.info("Fine tuning completed")
 
-if "MLFLOW_ENABLE" in os.environ and os.getenv("MLFLOW_ENABLE") == "true":
+if "MLFLOW_ENABLE" in os.environ and os.environ.get("MLFLOW_ENABLE") == "true":
     mv = mlflow.register_model(
         model_uri=f"gs://{training_data_bucket}/{save_model_path}", name=new_model
     )
@@ -236,7 +234,10 @@ trainer.model.save_pretrained(new_model)
 logger.info("Merging the model with base model")
 # Reload model in FP16 and merge it with LoRA weights
 base_model = AutoModelForCausalLM.from_pretrained(
-    model_name, low_cpu_mem_usage=True, return_dict=True, torch_dtype=torch.bfloat16
+    low_cpu_mem_usage=True,
+    pretrained_model_name_or_path=model_name,
+    return_dict=True,
+    torch_dtype=torch.bfloat16,
 )
 model = PeftModel.from_pretrained(base_model, new_model)
 
