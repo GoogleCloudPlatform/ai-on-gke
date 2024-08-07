@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: headless-svc
+  name: headless-svc-a100
 spec:
   clusterIP: None # clusterIP must be None to create a headless service
   selector:
@@ -27,7 +27,7 @@ spec:
         cluster-autoscaler.kubernetes.io/consume-provisioning-request: a100-job
         cluster-autoscaler.kubernetes.io/provisioning-class-name: "queued-provisioning.gke.io"
     spec:
-      subdomain: headless-svc
+      subdomain: headless-svc-a100
       serviceAccountName: KSA
       terminationGracePeriodSeconds: 600
       containers:
@@ -50,7 +50,7 @@ spec:
             accelerate launch \
             --config_file fsdp_config.yaml \
             --debug \
-            --main_process_ip finetune-gemma-a100-0.headless-svc \
+            --main_process_ip finetune-gemma-a100-0.headless-svc-a100 \
             --main_process_port 29500 \
             --machine_rank ${JOB_COMPLETION_INDEX} \
             --num_processes 2 \
@@ -111,3 +111,4 @@ spec:
         value: "true"
         operator: "Equal"
         effect: "NoSchedule"
+  ttlSecondsAfterFinished: 86400

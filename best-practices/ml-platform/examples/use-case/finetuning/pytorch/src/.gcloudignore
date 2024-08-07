@@ -1,0 +1,4 @@
+venv/
+.gcloudignore
+.python-version
+cloudbuild.yaml
