@@ -29,10 +29,10 @@ rules:
       matches: ""
       as: "jetstream_slots_used_percentage"
     metricsQuery: avg(<<.Series>>{<<.LabelMatchers>>,cluster="${cluster_name}"})
-  - seriesQuery: 'kubernetes_io:node_accelerator_memory_used'
+  - seriesQuery: 'memory_used'
     resources:
       template: <<.Resource>>
     name:
       matches: ""
       as: "memory_used_percentage"
-    metricsQuery: avg(kubernetes_io:node_accelerator_memory_used{cluster_name="${cluster_name}"}) / avg(kubernetes_io:node_accelerator_memory_total{cluster_name="${cluster_name}"})
+    metricsQuery: avg(memory_used{cluster="${cluster_name}",exported_namespace="default",container="jetstream-http"}) / avg(memory_total{cluster="${cluster_name}",exported_namespace="default",container="jetstream-http"})
