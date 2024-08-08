@@ -17,6 +17,18 @@ sudo apt-get update
 
 # Install containerd.
 sudo apt install --yes containerd
+# Configure docker.io registry mirror
+sudo mkdir -p /etc/containerd/certs.d/docker.io
+if [ ! -f /etc/containerd/certs.d/docker.io/hosts.toml ]; then
+  sudo tee /etc/containerd/certs.d/docker.io/hosts.toml <<EOF
+server = "https://registry-1.docker.io"
+
+[host."https://mirror.gcr.io"]
+  capabilities = ["pull", "resolve"]
+EOF
+else
+  echo "The file /etc/containerd/certs.d/docker.io/hosts.toml already exists. Skipping..."
+fi
 # Start containerd.
 sudo systemctl start containerd
 # Check to see if containerd is up and we can use ctr.
@@ -72,9 +84,9 @@ function pull_images() {
   for param in "$@"; do
     echo Start pulling $param ...
     if [ "$OAUTH_MECHANISM" == "none" ]; then
-      sudo ctr -n k8s.io image pull $param
+      sudo ctr -n k8s.io image pull --hosts-dir "/etc/containerd/certs.d" $param
     elif [ "$OAUTH_MECHANISM" == "serviceaccounttoken" ]; then
-      sudo ctr -n k8s.io image pull --user "oauth2accesstoken:$ACCESS_TOKEN" $param
+      sudo ctr -n k8s.io image pull --hosts-dir "/etc/containerd/certs.d" --user "oauth2accesstoken:$ACCESS_TOKEN" $param
     else
       echo "Unknown OAuth mechanism, expected 'None' or 'ServiceAccountToken' but got '$OAUTH_MECHANISM'".
       exit 1
@@ -101,7 +113,7 @@ function process_snapshots() {
 
     # Add retry in case `ctr snapshot view` fails silently
     local retries=5
-    while [ ${retries} -ge 1 ]; do 
+    while [ ${retries} -ge 1 ]; do
       ((retries--))
       sudo ctr -n k8s.io snapshot view tmp_$snapshot $snapshot
       # Check if the view was successfully created
@@ -109,7 +121,7 @@ function process_snapshots() {
         echo "Failed to create snapshot view for $snapshot. Will retry. ${retries} retries left."
         continue
       fi
-      
+
       original_path=$(sudo ctr -n k8s.io snapshot mount /tmp_$snapshot tmp_$snapshot | grep -oP '/\S+/snapshots/[0-9]+/fs' | tr ':' '\n' | head -n 1)
       if [[ -n "$original_path" ]]; then
         break
