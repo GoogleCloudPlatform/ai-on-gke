@@ -65,9 +65,15 @@ variable "autopilot_cluster" {
   type = bool
 }
 
-variable "google_service_account" {
+variable "create_workload_identity_service_account" {
+  type        = bool
+  description = "Creates a google service account & k8s service account & configures workload identity"
+  default     = true
+}
+
+variable "workload_identity_service_account" {
   type        = string
-  description = "Google service account name"
+  description = "Workload identity service account name used by ray nodes"
   default     = "kuberay-gcp-sa"
 }
 

@@ -23,33 +23,6 @@ resource "helm_release" "kuberay-operator" {
   create_namespace = var.create_namespace
 }
 
-module "kuberay-workload-identity" {
-  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  version             = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
-  use_existing_gcp_sa = !var.create_service_account
-  name                = var.google_service_account
-  namespace           = var.namespace
-  project_id          = var.project_id
-  roles               = ["roles/cloudsql.client", "roles/monitoring.viewer"]
-
-  automount_service_account_token = true
-
-  depends_on = [helm_release.kuberay-operator]
-}
-
-resource "kubernetes_secret_v1" "service_account_token" {
-  metadata {
-    name      = "kuberay-sa-token"
-    namespace = var.namespace
-    annotations = {
-      "kubernetes.io/service-account.name" = var.google_service_account
-    }
-  }
-  type = "kubernetes.io/service-account-token"
-
-  depends_on = [module.kuberay-workload-identity]
-}
-
 # Grant access to batchv1/Jobs to kuberay-operator since the kuberay-operator role is missing some permissions.
 # See https://github.com/ray-project/kuberay/issues/1706 for more details.
 # TODO: remove this role binding once the kuberay-operator helm chart is upgraded to v1.1
