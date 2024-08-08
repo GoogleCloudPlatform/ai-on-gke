@@ -26,5 +26,6 @@ variable "additional_labels" {
 }
 
 variable "autopilot_cluster" {
-  type = bool
+  type    = bool
+  default = false
 }

@@ -1,0 +1,8 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: OperatorConfig
+metadata:
+  namespace: gmp-public
+  name: config
+features:
+  targetStatus:
+    enabled: true
