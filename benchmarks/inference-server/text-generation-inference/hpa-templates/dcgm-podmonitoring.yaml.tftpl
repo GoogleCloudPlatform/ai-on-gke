@@ -26,7 +26,7 @@ spec:
       app: nvidia-dcgm-exporter
   endpoints:
     - port: metrics
-      interval: 30s
+      interval: 15s
       metricRelabeling:
         # Change the DCGM metric name that we want to use in HPA to lowercase.
         # This is because HPA doesn't work with uppercase external metrics:
