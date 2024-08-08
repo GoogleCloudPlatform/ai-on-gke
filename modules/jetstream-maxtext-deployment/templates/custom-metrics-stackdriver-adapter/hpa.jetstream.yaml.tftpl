@@ -24,7 +24,11 @@ spec:
   - type: External
     external:
       metric:
-        name: kubernetes.io|node|accelerator|${rule.target_query}
+        name: prometheus.googleapis.com|${rule.target_query}|gauge 
+        selector:
+          matchLabels:
+            metric.labels.container: jetstream-http
+            metric.labels.exported_namespace: default
       target:
         type: AverageValue
         averageValue: ${rule.average_value_target}
