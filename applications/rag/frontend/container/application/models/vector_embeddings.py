@@ -12,24 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Flask==3.0.0
-gunicorn==22.0.0
-Werkzeug==3.0.3
-langchain==0.1.9
-sentence-transformers==2.5.1
-google-cloud-dlp==3.12.2
-google-cloud-storage==2.9.0
-google-cloud-pubsub==2.17.0
-google-cloud-datastore==2.15.2
-google-cloud-bigquery==3.11.4
-google-cloud-language==2.12
-google-api-core==2.15
-flask_sqlalchemy==3.1.1
-google==3.0.0
-google-cloud==0.34.0
-google-cloud-logging==3.9.0
-google-api-python-client==2.114.0
-pymysql==1.1.1
-cloud-sql-python-connector[pg8000]==1.7.0
-langchain-google-cloud-sql-pg==0.4.0
-langchain-community==0.0.31
+import os
+
+from sqlalchemy import Column, String, Text
+from sqlalchemy.orm import mapped_column, declarative_base
+from pgvector.sqlalchemy import Vector
+
+Base = declarative_base()
+
+VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
+
+
+class VectorEmbeddings(Base):
+    __tablename__ = VECTOR_EMBEDDINGS_TABLE_NAME
+
+    id = Column(String(255), primary_key=True)
+    text = Column(Text)
+    text_embedding = mapped_column(Vector(384))
