@@ -98,13 +98,13 @@ fp16 = False
 bf16 = False
 
 # Batch size per GPU for training
-per_device_train_batch_size = 1
+per_device_train_batch_size = int(os.getenv("TRAIN_BATCH_SIZE", "1"))
 
 # Batch size per GPU for evaluation
 per_device_eval_batch_size = 1
 
 # Number of update steps to accumulate the gradients for
-gradient_accumulation_steps = 1
+gradient_accumulation_steps = int(os.getenv("GRADIENT_ACCUMLATION_STEPS", "1"))
 
 # Enable gradient checkpointing
 gradient_checkpointing = True
