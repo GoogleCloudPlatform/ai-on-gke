@@ -60,7 +60,7 @@ variable "templates_path" {
 }
 
 variable "artifact_registry" {
-  description = "Artifact registry for storing Locust container."
+  description = "Artifact registry for storing Latency Profile Generator container."
   type        = string
   default     = null
 }

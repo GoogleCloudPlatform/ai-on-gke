@@ -1,26 +1,19 @@
-# AI on GKE Benchmark Locust
+# AI on GKE Benchmark Latency Profile Generator
 
-<!-- BEGIN TOC -->
-- [AI on GKE Benchmark Locust](#ai-on-gke-benchmark-locust)
-  - [Overview](#overview)
-  - [Instructions](#instructions)
-    - [Step 1: prepare benchmark prompts](#step-1-prepare-benchmark-prompts)
-    - [Step 2: create and give service account access to view dataset](#step-2-create-and-give-service-account-access-to-view-dataset)
-    - [Step 3: create output bucket](#step-3-create-output-bucket)
-    - [Step 4: create and give service account access to write to output gcs bucket](#step-4-create-and-give-service-account-access-to-write-to-output-gcs-bucket)
-    - [Step 5: create artifact repository for automated Locust docker build](#step-5-create-artifact-repository-for-automated-locust-docker-build)
-    - [Step 6: create and configure terraform.tfvars](#step-6-create-and-configure-terraformtfvars)
-      - [\[optional\] set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
-      - [\[optional\] set up secret token in Secret Manager](#optional-set-up-secret-token-in-secret-manager)
-    - [Step 7: login to gcloud](#step-7-login-to-gcloud)
-    - [Step 8: terraform initialize, plan and apply](#step-8-terraform-initialize-plan-and-apply)
-    - [Step 9: start an end to end benchmark](#step-9-start-an-end-to-end-benchmark)
-      - [option 1: initiate a single end to end Locust benchmark run via curl command](#option-1-initiate-a-single-end-to-end-locust-benchmark-run-via-curl-command)
-      - [option 2: interactive benchmark with locust web ui](#option-2-interactive-benchmark-with-locust-web-ui)
-    - [Step 10: viewing metrics](#step-10-viewing-metrics)
-    - [Additional Tips](#additional-tips)
-  - [Variables](#variables)
-<!-- END TOC -->
+<!-- TOC -->
+* [AI on GKE Benchmark Latency Profile Generator](#ai-on-gke-benchmark-latency-profile-generator)
+  * [Overview](#overview)
+  * [Instructions](#instructions)
+    * [Step 1: create output bucket](#step-1--create-output-bucket)
+    * [Step 2: create and give service account access to write to output gcs bucket](#step-2--create-and-give-service-account-access-to-write-to-output-gcs-bucket)
+    * [Step 5: create artifact repository for automated Latency Profile Generator docker build](#step-5--create-artifact-repository-for-automated-latency-profile-generator-docker-build)
+    * [Step 6: create and configure terraform.tfvars](#step-6--create-and-configure-terraformtfvars)
+      * [[optional] set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
+      * [[optional] set up secret token in Secret Manager](#optional-set-up-secret-token-in-secret-manager)
+    * [Step 7: login to gcloud](#step-7--login-to-gcloud)
+    * [Step 8: terraform initialize, plan and apply](#step-8--terraform-initialize-plan-and-apply)
+  * [Inputs](#inputs)
+<!-- TOC -->
 
 ## Overview
 
@@ -64,7 +57,7 @@ Your kubernetes service account will inherit the reader permissions.
 You will set the `lantency_profile_kubernetes_service_account` in your
 `terraform.tfvars` to the kubernetes service account name.
 
-### Step 5: create artifact repository for automated Locust docker build
+### Step 5: create artifact repository for automated Latency Profile Generator docker build
 
 The latency profile generator rebuilds the docker file on each terraform apply.
 The containers will be pushed to the given `artifact_registry`. This artifact
@@ -80,19 +73,19 @@ gcloud artifacts repositories create ai-benchmark --location=us-central1 --repos
 
 ### Step 6: create and configure terraform.tfvars
 
-Create a `terraform.tfvars` file. `./sample-tfvars/tgi-sample.tfvars` is
-provided as an example file. You can copy the file as a starting point.
+Create a `terraform.tfvars` file. `./sample-tfvars` is provided as an example
+file. You can copy the file as a starting point.
 Note that at a minimum you will have to change the existing
 `credentials_config`, `project_id`, and `artifact_registry`.
 
 ```bash
-cp ./sample-tfvars/tgi-sample.tfvars terraform.tfvars
+cp ./sample-tfvars terraform.tfvars
 ```
 
 Fill out your `terraform.tfvars` with the desired model and server configuration, referring to the list of required and optional variables [here](#variables). The following variables are required:
-- `credentials_config` - credentials for cluster to deploy Locust benchmark tool on
-- `project_id` - project id for enabling dependent services for building locust artifacts
-- `artifact_registry` - artifact registry to upload locust artifacts to
+- `credentials_config` - credentials for cluster to deploy Latency Profile Generator benchmark tool on
+- `project_id` - project id for enabling dependent services for building Latency Profile Generator artifacts
+- `artifact_registry` - artifact registry to upload Latency Profile Generator artifacts to
 - `inference_server_service` - an accessible service name for inference workload to be benchmarked **(Note: If you are using a non-80 port for your model server service, it should be specified here. Example: `my-service-name:9000`)**
 - `tokenizer` - must match the model running on the inference workload to be benchmarked
 - `inference_server_framework` - the inference workload framework
@@ -181,29 +174,26 @@ variables.
 
 <!-- BEGIN_TF_DOCS -->
 
-## Variables
+## Inputs
 
-| Name                                                                                                                 | Description                                                                                                                 | Type                                                                                                                                                                                                        | Default              | Required |
-| -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | :------: |
-| <a name="input_artifact_registry"></a> [artifact\_registry](#input\_artifact\_registry)                              | Artifact registry for storing Locust container                                                                              | `string`                                                                                                                                                                                                    | `null`               |   yes    |
-| <a name="input_best_of"></a> [best\_of](#input\_best\_of)                                                            | Benchmark server configuration for best of.                                                                                 | `number`                                                                                                                                                                                                    | `1`                  |    no    |
-| <a name="input_credentials_config"></a> [credentials\_config](#input\_credentials\_config)                           | Configure how Terraform authenticates to the cluster.                                                                       | <pre>object({<br>    fleet_host = optional(string)<br>    kubeconfig = optional(object({<br>      context = optional(string)<br>      path    = optional(string, "~/.kube/config")<br>    }))<br>  })</pre> | n/a                  |   yes    |
-| <a name="input_gcs_path"></a> [gcs\_path](#input\_gcs\_path)                                                         | Benchmark server configuration for gcs\_path for downloading prompts.                                                       | `string`                                                                                                                                                                                                    | n/a                  |   yes    |
-| <a name="input_inference_server_framework"></a> [inference\_server\_framework](#input\_inference\_server\_framework) | Benchmark server configuration for inference server framework. Can be one of: vllm, tgi, tensorrt\_llm\_triton, sax, or jetstream  | `string`                                                                                                                                                                                                    | `"tgi"`              |   yes    |
-| <a name="input_request_type"></a> [request\_type](#input\_request\_type) | Protocol to use when making requests to the model server. Can be `grpc` or `http` | `string`                                                                                                                                                                                                    | `"http"`              |   no    |
-| <a name="input_inference_server_ip"></a> [inference\_server\_ip](#input\_inference\_server\_ip)                      | Inference server ip address                                                                                                 | `string`                                                                                                                                                                                                    | n/a                  |   yes    |
-| <a name="input_ksa"></a> [ksa](#input\_ksa)                                                                          | Kubernetes Service Account used for workload.                                                                               | `string`                                                                                                                                                                                                    | `"default"`          |    no    |
-| <a name="lantency_profile_kubernetes_service_account"></a> [locust\_runner\_kubernetes\_service\_account](#locust\_runner\_kubernetes\_service\_account)                                                                          | "Kubernetes Service Account to be used for Locust runner tool. Must have storage.admin access to output_bucket"                                                                              | `string`                                                                                                                                                                                                    | `"sample-runner-ksa"`          |    no    |
-| <a name="input_output_bucket"></a> [output\_bucket](#output\_bucket)                                                                          | "Bucket name for storing results"                                                                              | `string`                                                                                                                                                                                                    | n/a          |    yes    |
-| <a name="input_max_num_prompts"></a> [max\_num\_prompts](#input\_max\_num\_prompts)                                  | Benchmark server configuration for max number of prompts.                                                                   | `number`                                                                                                                                                                                                    | `1000`               |    no    |
-| <a name="input_max_output_len"></a> [max\_output\_len](#input\_max\_output\_len)                                     | Benchmark server configuration for max output length.                                                                       | `number`                                                                                                                                                                                                    | `1024`               |    no    |
-| <a name="input_max_prompt_len"></a> [max\_prompt\_len](#input\_max\_prompt\_len)                                     | Benchmark server configuration for max prompt length.                                                                       | `number`                                                                                                                                                                                                    | `1024`               |    no    |
-| <a name="input_num_locust_workers"></a> [num\_locust\_workers](#input\num\_locust\_workers)                          | Number of locust worker pods to deploy.                                                                                     | `number`                                                                                                                                                                                                    | `1`                  |    no    |
-| <a name="input_namespace"></a> [namespace](#input\_namespace)                                                        | Namespace used for model and benchmarking deployments.                                                                      | `string`                                                                                                                                                                                                    | `"default"`          |    no    |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id)                                                      | Project id of existing or created project.                                           | `string` | n/a                  |   yes    |
-| <a name="input_sax_model"></a> [sax\_model](#input\_sax\_model)                                                      | Benchmark server configuration for sax model. Only required if framework is sax.                                            | `string`                                                                                                                                                                                                    | `""`                 |    no    |
-| <a name="input_tokenizer"></a> [tokenizer](#input\_tokenizer)                                                        | Benchmark server configuration for tokenizer.                                                                               | `string`                                                                                                                                                                                                    | `"tiiuae/falcon-7b"` |   yes    |
-| <a name="input_use_beam_search"></a> [use\_beam\_search](#input\_use\_beam\_search)                                  | Benchmark server configuration for use beam search.                                                                         | `bool`                                                                                                                                                                                                      | `false`              |    no    |
-  <a name="huggingface_secret"></a> [huggingface_secret](#input\_huggingface_secret)                                  | Name of the secret holding the huggingface token. Stored in GCP Secrets Manager.                                                                          | `string`                                                                                                                                                                                                      | `huggingface-secret`              |    no   |
-  <a name="k8s_hf_secret"></a> [k8s_hf_secret](#input\_huggingface_secret)                                  | Name of the secret holding the huggingface token. Stored in K8s. Key is expected to be named: `HF_TOKEN`. See [here](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/#use-raw-data) for more.                                                                          | `string`                                                                                                                                                                                                      | `huggingface-secret`              |    no   |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_artifact_registry"></a> [artifact\_registry](#input\_artifact\_registry) | Artifact registry for storing Latency Profile Generator container. | `string` | `null` | no |
+| <a name="input_credentials_config"></a> [credentials\_config](#input\_credentials\_config) | Configure how Terraform authenticates to the cluster. | <pre>object({<br>    fleet_host = optional(string)<br>    kubeconfig = optional(object({<br>      context = optional(string)<br>      path    = optional(string, "~/.kube/config")<br>    }))<br>  })</pre> | n/a | yes |
+| <a name="input_hugging_face_secret"></a> [hugging\_face\_secret](#input\_hugging\_face\_secret) | name of the kubectl huggingface secret token; stored in Secret Manager. Security considerations: https://kubernetes.io/docs/concepts/security/secrets-good-practices/ | `string` | `null` | no |
+| <a name="input_hugging_face_secret_version"></a> [hugging\_face\_secret\_version](#input\_hugging\_face\_secret\_version) | Secret version in Secret Manager | `string` | `null` | no |
+| <a name="input_inference_server_framework"></a> [inference\_server\_framework](#input\_inference\_server\_framework) | Benchmark server configuration for inference server framework. Can be one of: vllm, tgi, tensorrt\_llm\_triton, sax | `string` | `"tgi"` | no |
+| <a name="input_inference_server_service"></a> [inference\_server\_service](#input\_inference\_server\_service) | Inference server service | `string` | n/a | yes |
+| <a name="input_k8s_hf_secret"></a> [k8s\_hf\_secret](#input\_k8s\_hf\_secret) | Name of secret for huggingface token; stored in k8s | `string` | `null` | no |
+| <a name="input_ksa"></a> [ksa](#input\_ksa) | Kubernetes Service Account used for workload. | `string` | `"default"` | no |
+| <a name="input_latency_profile_kubernetes_service_account"></a> [latency\_profile\_kubernetes\_service\_account](#input\_latency\_profile\_kubernetes\_service\_account) | Kubernetes Service Account to be used for the latency profile generator tool | `string` | `"sample-runner-ksa"` | no |
+| <a name="input_max_num_prompts"></a> [max\_num\_prompts](#input\_max\_num\_prompts) | Benchmark server configuration for max number of prompts. | `number` | `1000` | no |
+| <a name="input_max_output_len"></a> [max\_output\_len](#input\_max\_output\_len) | Benchmark server configuration for max output length. | `number` | `256` | no |
+| <a name="input_max_prompt_len"></a> [max\_prompt\_len](#input\_max\_prompt\_len) | Benchmark server configuration for max prompt length. | `number` | `256` | no |
+| <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace used for model and benchmarking deployments. | `string` | `"default"` | no |
+| <a name="input_output_bucket"></a> [output\_bucket](#input\_output\_bucket) | Bucket name for storing results | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project id of existing or created project. | `string` | n/a | yes |
+| <a name="input_templates_path"></a> [templates\_path](#input\_templates\_path) | Path where manifest templates will be read from. Set to null to use the default manifests | `string` | `null` | no |
+| <a name="input_tokenizer"></a> [tokenizer](#input\_tokenizer) | Benchmark server configuration for tokenizer. | `string` | `"tiiuae/falcon-7b"` | no |
+
 <!-- END_TF_DOCS -->
