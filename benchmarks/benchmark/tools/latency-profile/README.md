@@ -57,7 +57,7 @@ Your kubernetes service account will inherit the reader permissions.
 You will set the `lantency_profile_kubernetes_service_account` in your
 `terraform.tfvars` to the kubernetes service account name.
 
-### Step 5: create artifact repository for automated Latency Profile Generator docker build
+### Step 3: create artifact repository for automated Latency Profile Generator docker build
 
 The latency profile generator rebuilds the docker file on each terraform apply.
 The containers will be pushed to the given `artifact_registry`. This artifact
@@ -71,7 +71,7 @@ gcloud artifacts repositories create ai-benchmark --location=us-central1 --repos
 ```
 
 
-### Step 6: create and configure terraform.tfvars
+### Step 4: create and configure terraform.tfvars
 
 Create a `terraform.tfvars` file. `./sample-tfvars` is provided as an example
 file. You can copy the file as a starting point.
