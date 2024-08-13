@@ -146,7 +146,7 @@ hugging_face_secret = $SECRET_ID
 hugging_face_secret_version =  $SECRET_VERSION
 ```
 
-### Step 7: login to gcloud
+### Step 5: login to gcloud
 
 Run the following gcloud command for authorization:
 
@@ -154,7 +154,7 @@ Run the following gcloud command for authorization:
 gcloud auth application-default login
 ```
 
-### Step 8: terraform initialize, plan and apply
+### Step 6: terraform initialize, plan and apply
 
 Run the following terraform commands:
 
