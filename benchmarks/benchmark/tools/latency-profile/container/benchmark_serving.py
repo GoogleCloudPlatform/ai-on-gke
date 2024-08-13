@@ -376,6 +376,7 @@ if __name__ == "__main__":
           "naive_transformers",
           "tensorrt_llm_triton",
           "sax",
+          "jetstream"
       ],
   )
   parser.add_argument(
