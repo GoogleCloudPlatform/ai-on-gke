@@ -272,7 +272,7 @@ module "kuberay-monitoring" {
 }
 
 module "inference-server" {
-  source            = "../../tutorials-and-examples/hf-tgi"
+  source            = "../../modules/inference-service"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = local.kubernetes_namespace
   additional_labels = var.additional_labels
@@ -310,3 +310,17 @@ module "frontend" {
   members_allowlist        = var.frontend_members_allowlist != "" ? split(",", var.frontend_members_allowlist) : []
   depends_on               = [module.namespace]
 }
+
+resource "helm_release" "gmp-apps" {
+  name      = "gmp-apps"
+  provider  = helm.rag
+  chart     = "../../charts/gmp-engine/"
+  namespace = local.kubernetes_namespace
+  # Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
+  timeout    = 1200
+  depends_on = [module.inference-server, module.frontend]
+  values = [
+    "${file("${path.module}/podmonitoring.yaml")}"
+  ]
+}
+

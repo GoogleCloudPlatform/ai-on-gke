@@ -1,0 +1,9 @@
+podMonitoring:
+- name: ray-monitoring
+  selector:
+    ray.io/is-ray-node: "yes"
+  port: metrics
+  interval: 30s
+
+gmp-frontend:
+  enabled: true

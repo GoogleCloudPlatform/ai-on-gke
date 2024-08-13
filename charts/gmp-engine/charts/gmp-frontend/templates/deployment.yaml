@@ -28,14 +28,14 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
-      serviceAccountName: {{ .Values.serviceAccount }}
+      serviceAccountName: {{ required "serviceAccount is required!" .Values.serviceAccount }}
       containers:
         - name: {{ .Values.name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
           - "--web.listen-address=:9090"
-          - "--query.project-id={{ .Values.projectID }}"
+          - "--query.project-id={{ required "projectID is required!" .Values.projectID }}"
           ports:
           - name: web
             containerPort: 9090
