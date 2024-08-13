@@ -177,6 +177,11 @@ async def send_request(
         "max_tokens": output_len,
         "stream": False,
     }
+  elif backend == "jetstream":
+    pload = {
+        "prompt": prompt,
+        "max_tokens": 1,
+    }
   else:
     raise ValueError(f"Unknown backend: {backend}")
 
@@ -218,6 +223,9 @@ async def send_request(
     total_token_ids = tokenizer(output["text"][0]).input_ids
     new_total_len = len(total_token_ids)
     output_len = new_total_len - prompt_len
+  elif backend == "jetstream":
+    output_token_ids = tokenizer(output["response"]).input_ids
+    output_len = len(output_token_ids)
 
   request_latency = request_end_time - request_start_time
   REQUEST_LATENCY.append((prompt_len, output_len, request_latency))

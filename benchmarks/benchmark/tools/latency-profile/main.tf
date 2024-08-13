@@ -24,11 +24,6 @@ locals {
     ? "${path.module}/manifest-templates"
     : pathexpand(var.templates_path)
   )
-  hugging_face_token_secret = (
-    var.hugging_face_secret == null || var.hugging_face_secret_version == null
-    ? null
-    : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
-  )
 
   all_manifests = flatten([for manifest_file in local.templates :
     [for data in split("---", templatefile(manifest_file, {
@@ -42,7 +37,7 @@ locals {
       max_output_len                             = var.max_output_len
       max_prompt_len                             = var.max_prompt_len
       tokenizer                                  = var.tokenizer
-      hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
+      hugging_face_token_b64                     = var.hugging_face_token_b64
       k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
       output_bucket                              = var.output_bucket
     })) : data]

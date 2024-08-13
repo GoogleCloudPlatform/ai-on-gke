@@ -138,16 +138,8 @@ variable "k8s_hf_secret" {
   default     = null
 }
 
-variable "hugging_face_secret" {
-  description = "name of the kubectl huggingface secret token; stored in Secret Manager. Security considerations: https://kubernetes.io/docs/concepts/security/secrets-good-practices/"
+variable "hugging_face_token_b64" {
+  description = "Base 64 encoded hugging face token; stored in Secret Manager. Security considerations: https://kubernetes.io/docs/concepts/security/secrets-good-practices/"
   type        = string
-  nullable    = true
-  default     = null
-}
-
-variable "hugging_face_secret_version" {
-  description = "Secret version in Secret Manager"
-  type        = string
-  nullable    = true
-  default     = null
+  nullable    = false
 }

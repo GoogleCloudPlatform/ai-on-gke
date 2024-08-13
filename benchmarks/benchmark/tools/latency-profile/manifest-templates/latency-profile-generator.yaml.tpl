@@ -34,10 +34,8 @@ spec:
               value: ${max_output_len}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
-%{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: hf-token
                   key: HF_TOKEN
-%{ endfor ~}
