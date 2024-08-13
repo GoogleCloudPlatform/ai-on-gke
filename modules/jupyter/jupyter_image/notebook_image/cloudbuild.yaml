@@ -15,7 +15,7 @@
 # to build, run `gcloud builds submit --config cloudbuild.yaml .` in directory
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'pull', 'docker.io/jupyter/tensorflow-notebook:python-3.10' ]
+  args: [ 'pull', 'docker.io/jupyter/tensorflow-notebook:python-3.11' ]
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', '<Artiact registry repo>/<image name>', '.' ]
 images:
