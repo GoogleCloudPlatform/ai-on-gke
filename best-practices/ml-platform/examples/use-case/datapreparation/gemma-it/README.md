@@ -23,23 +23,14 @@ the base model.
    ```
    PROJECT_ID=<your_project_id>
    PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-   BUCKET=<your_bucket_name>
+   BUCKET=<preprocessed_dataset_bucket_name>
    NAMESPACE=ml-team
    KSA=<your-k8s-service-account>
    CLUSTER_NAME=<your_cluster_name>
-   CLUSTER_REGION=<cluster-region>
    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0
    VERTEX_REGION=<vertex-region>
    ```
 
-1. Create the bucket for storing the prepared dataset
-
-   ```
-   gcloud storage buckets create gs://${BUCKET} \
-       --project ${PROJECT_ID} \
-       --location us \
-       --uniform-bucket-level-access
-   ```
 
 1. Setup Workload Identity Federation access to read/write to the bucket
 
@@ -105,7 +96,7 @@ the base model.
    ```
    DATASET_INPUT_PATH="flipkart_preprocessed_dataset"
    DATASET_INPUT_FILE="flipkart.csv"
-   DATASET_OUTPUT_PATH="dataset/output/training"
+   DATASET_OUTPUT_PATH="dataset/output/"
    PROMPT_MODEL_ID="gemini-1.5-flash-001"
    ```
 
