@@ -71,10 +71,10 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
 
   ```sh
   gcloud artifacts repositories create llm-finetuning \
-  --repository-format=docker \
-  --location=us \
-  --project=${PROJECT_ID} \
-  --async
+      --repository-format=docker \
+      --location=us \
+      --project=${PROJECT_ID} \
+      --async
   ```
 
 - Enable the Cloud Build APIs
@@ -89,8 +89,8 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   ```sh
   cd src
   gcloud builds submit --config cloudbuild.yaml \
-  --project ${PROJECT_ID} \
-  --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+      --project ${PROJECT_ID} \
+      --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
   cd ..
   ```
 
@@ -108,8 +108,8 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${P
 
   ```sh
   kubectl create secret generic hf-secret \
-    --from-literal=hf_api_token=${HF_TOKEN} \
-    --dry-run=client -o yaml | kubectl apply -n ${NAMESPACE} -f -
+      --from-literal=hf_api_token=${HF_TOKEN} \
+      --dry-run=client -o yaml | kubectl apply -n ${NAMESPACE} -f -
   ```
 
 ### Fine-tuning Job Inputs
@@ -148,17 +148,17 @@ ACCELERATOR="l4"
 
 ```sh
 sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
-   -i -e "s|KSA|${KSA}|" \
-   -i -e "s|V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING|${MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING}|" \
-   -i -e "s|V_MLFLOW_ENABLE|${MLFLOW_ENABLE}|" \
-   -i -e "s|V_EXPERIMENT|${EXPERIMENT}|" \
-   -i -e "s|V_MLFLOW_TRACKING_URI|${MLFLOW_TRACKING_URI}|" \
-   -i -e "s|V_TRAINING_DATASET_BUCKET|${TRAINING_DATASET_BUCKET}|" \
-   -i -e "s|V_TRAINING_DATASET_PATH|${TRAINING_DATASET_PATH}|" \
-   -i -e "s|V_MODEL_BUCKET|${MODEL_BUCKET}|" \
-   -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
-   -i -e "s|V_MODEL_NAME|${MODEL_NAME}|" \
-   yaml/fine-tune-${ACCELERATOR}-dws.yaml
+    -i -e "s|KSA|${KSA}|" \
+    -i -e "s|V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING|${MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING}|" \
+    -i -e "s|V_MLFLOW_ENABLE|${MLFLOW_ENABLE}|" \
+    -i -e "s|V_EXPERIMENT|${EXPERIMENT}|" \
+    -i -e "s|V_MLFLOW_TRACKING_URI|${MLFLOW_TRACKING_URI}|" \
+    -i -e "s|V_TRAINING_DATASET_BUCKET|${TRAINING_DATASET_BUCKET}|" \
+    -i -e "s|V_TRAINING_DATASET_PATH|${TRAINING_DATASET_PATH}|" \
+    -i -e "s|V_MODEL_BUCKET|${MODEL_BUCKET}|" \
+    -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
+    -i -e "s|V_MODEL_NAME|${MODEL_NAME}|" \
+    yaml/fine-tune-${ACCELERATOR}-dws.yaml
 ```
 
 ### Deploy the respective resources for the job and type of resource

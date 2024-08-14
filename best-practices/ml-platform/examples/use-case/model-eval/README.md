@@ -63,10 +63,10 @@ Create Artifact Registry repository for your docker image
 
 ```sh
 gcloud artifacts repositories create llm-finetuning \
---repository-format=docker \
---location=us \
---project=${PROJECT_ID} \
---async
+    --repository-format=docker \
+    --location=us \
+    --project=${PROJECT_ID} \
+    --async
 ```
 
 Enable the Cloud Build APIs
@@ -107,10 +107,10 @@ MODEL="/model-data/model-gemma2-a100/experiment"
 
 ```sh
 sed -i -e "s|IMAGE_URL|${VLLM_IMAGE_URL}|" \
--i -e "s|KSA|${KSA}|" \
--i -e "s|V_BUCKET|${BUCKET}|" \
--i -e "s|V_MODEL_PATH|${MODEL}|" \
-vllm-openai.yaml
+    -i -e "s|KSA|${KSA}|" \
+    -i -e "s|V_BUCKET|${BUCKET}|" \
+    -i -e "s|V_MODEL_PATH|${MODEL}|" \
+    vllm-openai.yaml
 ```
 
 Create the Job in the `ml-team` namespace using kubectl command
@@ -138,12 +138,12 @@ ENDPOINT="http://vllm-openai:8000/v1/chat/completions"
 
 ```sh
 sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
--i -e "s|KSA|${KSA}|" \
--i -e "s|V_BUCKET|${BUCKET}|" \
--i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
--i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
--i -e "s|V_ENDPOINT|${ENDPOINT}|" \
-model-eval.yaml
+    -i -e "s|KSA|${KSA}|" \
+    -i -e "s|V_BUCKET|${BUCKET}|" \
+    -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
+    -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
+    -i -e "s|V_ENDPOINT|${ENDPOINT}|" \
+    model-eval.yaml
 ```
 
 Create the Job in the `ml-team` namespace using kubectl command
