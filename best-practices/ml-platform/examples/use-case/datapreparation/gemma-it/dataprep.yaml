@@ -26,8 +26,8 @@ spec:
           value: "V_PROJECT_ID"
         - name: "PROMPT_MODEL_ID"
           value: "V_PROMPT_MODEL_ID"
-        - name: "VERTEX_REGION"
-          value: "V_VERTEX_REGION"
+        - name: "REGION"
+          value: "V_REGION"
         resources:
           requests:
             cpu: "7"

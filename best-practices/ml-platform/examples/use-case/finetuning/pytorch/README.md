@@ -13,17 +13,23 @@ with an inference serving engine.
 
 - Set Environment variables
 
-```
-PROJECT_ID=<your-project-id>
-PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
-MODEL_BUCKET=<model-artifacts-bucket>
-CLUSTER_NAME=<your-gke-cluster>
-NAMESPACE=ml-team
-KSA=<k8s-service-account>
-HF_TOKEN=<your-Hugging-Face-account-token>
-DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0
-```
+  ```sh
+  PROJECT_ID=<your-project-id>
+  PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
+  TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
+  MODEL_BUCKET=<model-artifacts-bucket>
+  CLUSTER_NAME=<your-gke-cluster>
+  NAMESPACE=ml-team
+  KSA=<k8s-service-account>
+  HF_TOKEN=<your-Hugging-Face-account-token>
+  DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0
+  ```
+
+- Create the Kubernetes Service Account (KSA) [optional if one, does not already exist]
+
+  ```sh
+  kubectl create serviceaccount ${KSA} -n ${NAMESPACE}
+  ```
 
 ## GCS
 
@@ -33,87 +39,87 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
 
 - Setup Workload Identity Federation to access the bucket with the generated prompts
 
-```
-gcloud storage buckets add-iam-policy-binding gs://${TRAINING_DATASET_BUCKET} \
-    --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-    --role "roles/storage.objectUser"
-```
+  ```sh
+  gcloud storage buckets add-iam-policy-binding gs://${TRAINING_DATASET_BUCKET} \
+      --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
+      --role "roles/storage.objectUser"
+  ```
 
 ### Writing fine-tuned model weights
 
 - Create the bucket for storing the training data set
 
-```
-gcloud storage buckets create gs://${MODEL_BUCKET} \
-    --project ${PROJECT_ID} \
-    --location us \
-    --uniform-bucket-level-access
+  ```sh
+  gcloud storage buckets create gs://${MODEL_BUCKET} \
+      --project ${PROJECT_ID} \
+      --location us \
+      --uniform-bucket-level-access
 
-```
+  ```
 
 - Setup Workload Identity Federation to access the bucket to write the model weights
 
-```
-gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
-    --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-    --role "roles/storage.objectUser"
-```
+  ```sh
+  gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
+      --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
+      --role "roles/storage.objectUser"
+  ```
 
 ## Build the image of the source
 
 - Create Artifact Registry repository for your docker image
 
-```
-gcloud artifacts repositories create llm-finetuning \
---repository-format=docker \
---location=us \
---project=${PROJECT_ID} \
---async
-```
+  ```sh
+  gcloud artifacts repositories create llm-finetuning \
+  --repository-format=docker \
+  --location=us \
+  --project=${PROJECT_ID} \
+  --async
+  ```
 
 - Enable the Cloud Build APIs
 
-```
-gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
-```
+  ```sh
+  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
+  ```
 
 - Build container image using Cloud Build and push the image to Artifact Registry
   Modify cloudbuild.yaml to specify the image url
 
-```
-cd src
-gcloud builds submit --config cloudbuild.yaml \
---project ${PROJECT_ID} \
---substitutions _DESTINATION=${DOCKER_IMAGE_URL}
-cd ..
-```
+  ```sh
+  cd src
+  gcloud builds submit --config cloudbuild.yaml \
+  --project ${PROJECT_ID} \
+  --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+  cd ..
+  ```
 
-# Deploy the Job
+## Deploy the Job
 
 Get credentials for the GKE cluster
 
-```
+```sh
 gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
 ```
 
-## Deploy your Hugging Face token in your cluster
+### Deploy your Hugging Face token in your cluster
 
 - Create secret for HF in your namespace
 
-```
-kubectl create secret generic hf-secret \
-  --from-literal=hf_api_token=${HF_TOKEN} \
-  --dry-run=client -o yaml | kubectl apply -n ${NAMESPACE} -f -
-```
+  ```sh
+  kubectl create secret generic hf-secret \
+    --from-literal=hf_api_token=${HF_TOKEN} \
+    --dry-run=client -o yaml | kubectl apply -n ${NAMESPACE} -f -
+  ```
 
-## Fine-tuning Job Inputs
+### Fine-tuning Job Inputs
 
 | Variable                             | Description                                                                                                                       | Example                                      |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | IMAGE_URL                            | The image url for the finetune image                                                                                              |                                              |
 | MLFLOW_ENABLE                        | Enable MLflow, empty will also disable                                                                                            | true/false                                   |
 | EXPERIMENT                           | If MLflow is enabled. experiment ID used in MLflow                                                                                | experiment-                                  |
-| MLFLOW_TRACKING_URI                  | If MLflow is enabled, the tracking server URI                                                                                     | http://mlflow-tracking-service.ml-tools:5000 |
+| MLFLOW_TRACKING_URI                  | If MLflow is enabled, the tracking server URI                                                                                     | <http://mlflow-tracking-service.ml-tools:5000> |
 | MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING | If MLflow is enabled, track system level metrics, CPU/Memory/GPU                                                                  | true/false                                   |
 | TRAINING_DATASET_BUCKET              | The bucket which contains the generated prompts for fine-tuning.                                                                  |                                              |
 | TRAINING_DATASET_PATH                | The path where the generated prompt data is for fine-tuning.                                                                      | dataset/output                               |
@@ -124,7 +130,7 @@ kubectl create secret generic hf-secret \
 
 Update variables in the respective job submission manifest to reflect your configuration.
 
-```
+```sh
 EXPERIMENT=""
 MLFLOW_ENABLE="false"
 MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING="false"
@@ -136,11 +142,11 @@ MODEL_NAME="google/gemma-2-9b-it"
 
 Choose the accelerator (l4 | a100 | h100) as per your configuration
 
-```
+```sh
 ACCELERATOR="l4"
 ```
 
-```
+```sh
 sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
    -i -e "s|KSA|${KSA}|" \
    -i -e "s|V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING|${MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING}|" \
@@ -155,9 +161,9 @@ sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
    yaml/fine-tune-${ACCELERATOR}-dws.yaml
 ```
 
-## Deploy the respective resources for the job and type of resource
+### Deploy the respective resources for the job and type of resource
 
-```
+```sh
 kubectl apply -f yaml/provisioning-request-${ACCELERATOR}.yaml -n ml-team
 kubectl apply -f yaml/fine-tune-${ACCELERATOR}-dws.yaml -n ml-team
 ```
