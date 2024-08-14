@@ -245,7 +245,8 @@ module "kuberay-monitoring" {
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.ray_service_account
-  depends_on                      = [module.namespace, module.kuberay-operator, module.kuberay-workload-identity]
+  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
+  depends_on = [module.namespace, module.kuberay-operator, module.kuberay-workload-identity]
 }
 
 module "kuberay-cluster" {
@@ -280,7 +281,7 @@ module "kuberay-cluster" {
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
   members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
-
+  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
   depends_on = [module.gcs, module.kuberay-operator, module.kuberay-workload-identity]
 }
 
