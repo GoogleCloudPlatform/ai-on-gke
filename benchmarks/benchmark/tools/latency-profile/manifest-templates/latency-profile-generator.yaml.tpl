@@ -20,12 +20,17 @@ spec:
       containers:
         - name: lantency-profile-generator
           image: ${artifact_registry}/latency-profile:latest
+          resources:
+            limits:
+              nvidia.com/gpu: 1
           command: ["bash", "-c", "./latency_throughput_curve.sh"]
           env:
             - name: TOKENIZER
               value: ${tokenizer}
             - name: IP
               value: ${inference_server_service}
+            - name: PORT
+              value: ${inference_server_service_port}
             - name: BACKEND
               value: ${inference_server_framework}
             - name: INPUT_LENGTH
@@ -39,3 +44,6 @@ spec:
                 secretKeyRef:
                   name: hf-token
                   key: HF_TOKEN
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4   # nvidia-h100-80gb, nvidia-l4
+        iam.gke.io/gke-metadata-server-enabled: "true"

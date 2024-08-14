@@ -71,6 +71,12 @@ variable "inference_server_service" {
   nullable    = false
 }
 
+variable "inference_server_service_port" {
+  description = "Inference server service port"
+  type        = number
+  nullable    = false
+}
+
 variable "inference_server_framework" {
   description = "Benchmark server configuration for inference server framework. Can be one of: vllm, tgi, tensorrt_llm_triton, sax"
   type        = string
@@ -128,6 +134,13 @@ variable "latency_profile_kubernetes_service_account" {
   description = "Kubernetes Service Account to be used for the latency profile generator tool"
   type        = string
   default     = "sample-runner-ksa"
+}
+
+variable "google_service_account" {
+  description = "Google Service Account bound to the kubernetes service account"
+  type        = string
+  default     = ""
+  nullable    = false
 }
 
 // TODO: add validation to make k8s_hf_secret & hugging_face_secret mutually exclusive once terraform is updated with: https://discuss.hashicorp.com/t/experiment-feedback-input-variable-validation-can-cross-reference-other-objects/66644

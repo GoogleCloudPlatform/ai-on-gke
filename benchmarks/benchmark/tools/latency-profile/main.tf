@@ -30,9 +30,11 @@ locals {
       artifact_registry                          = var.artifact_registry
       namespace                                  = var.namespace
       inference_server_service                   = var.inference_server_service
+      inference_server_service_port              = var.inference_server_service_port
       inference_server_framework                 = var.inference_server_framework
       ksa                                        = var.ksa
       latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
+      google_service_account                     = var.google_service_account
       max_num_prompts                            = var.max_num_prompts
       max_output_len                             = var.max_output_len
       max_prompt_len                             = var.max_prompt_len

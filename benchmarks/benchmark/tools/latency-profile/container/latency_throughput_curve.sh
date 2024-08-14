@@ -22,10 +22,6 @@ huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
 timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
 output_file="latency-profile-${timestamp}.txt"
 for ((i = 1 ; i <= 2 ; i*=2 )); do
-  python3 benchmark_serving.py   --host="$IP"   --port=80   --dataset=ShareGPT_V3_unfiltered_cleaned_split.json   --tokenizer="$TOKENIZER" --request-rate=$i --backend="$BACKEND" --num-prompts=2 --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH > $output_file
+  python3 benchmark_serving.py   --host="$IP"   --port="$PORT"   --dataset=ShareGPT_V3_unfiltered_cleaned_split.json   --tokenizer="$TOKENIZER" --request-rate=$i --backend="$BACKEND" --num-prompts=2 --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH > $output_file
 done
 
-TOKEN=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token | jq -r .access_token)
-gsutil config -e -o Credentials:gs_oauth2_refresh_token=$TOKEN
-
-gsutil cp $output_file "gs://$OUTPUT_BUCKET/$output_file"
