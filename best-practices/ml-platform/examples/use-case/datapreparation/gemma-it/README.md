@@ -58,10 +58,10 @@ the base model.
 
    ```sh
    gcloud artifacts repositories create llm-finetuning \
-   --repository-format=docker \
-   --location=us \
-   --project=${PROJECT_ID} \
-   --async
+       --repository-format=docker \
+       --location=us \
+       --project=${PROJECT_ID} \
+       --async
    ```
 
 1. Enable the Cloud Build APIs
@@ -109,15 +109,15 @@ the base model.
 
    ```sh
    sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
-      -i -e "s|KSA|${KSA}|" \
-      -i -e "s|V_PROJECT_ID|${PROJECT_ID}|" \
-      -i -e "s|V_BUCKET|${BUCKET}|" \
-      -i -e "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" \
-      -i -e "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" \
-      -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
-      -i -e "s|V_PROMPT_MODEL_ID|${PROMPT_MODEL_ID}|" \
-      -i -e "s|V_REGION|${REGION}|" \
-      dataprep.yaml
+         -i -e "s|KSA|${KSA}|" \
+         -i -e "s|V_PROJECT_ID|${PROJECT_ID}|" \
+         -i -e "s|V_BUCKET|${BUCKET}|" \
+         -i -e "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" \
+         -i -e "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" \
+         -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
+         -i -e "s|V_PROMPT_MODEL_ID|${PROMPT_MODEL_ID}|" \
+         -i -e "s|V_REGION|${REGION}|" \
+         dataprep.yaml
    ```
 
 1. Create the Job in the “ml-team” namespace using kubectl command
