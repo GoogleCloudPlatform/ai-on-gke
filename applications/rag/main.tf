@@ -153,15 +153,13 @@ module "namespace" {
 }
 
 module "kuberay-operator" {
-  source                 = "../../modules/kuberay-operator"
-  providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
-  name                   = "kuberay-operator"
-  project_id             = var.project_id
-  create_namespace       = true
-  namespace              = local.kubernetes_namespace
-  google_service_account = local.ray_service_account
-  create_service_account = var.create_ray_service_account
-  autopilot_cluster      = local.enable_autopilot
+  source            = "../../modules/kuberay-operator"
+  providers         = { helm = helm.rag, kubernetes = kubernetes.rag }
+  name              = "kuberay-operator"
+  project_id        = var.project_id
+  create_namespace  = true
+  namespace         = local.kubernetes_namespace
+  autopilot_cluster = local.enable_autopilot
 }
 
 module "gcs" {
@@ -225,6 +223,32 @@ module "kuberay-logging" {
   depends_on = [module.namespace]
 }
 
+module "kuberay-workload-identity" {
+  providers                       = { kubernetes = kubernetes.rag }
+  source                          = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  version                         = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
+  use_existing_gcp_sa             = !var.create_ray_service_account
+  name                            = local.ray_service_account
+  namespace                       = local.kubernetes_namespace
+  project_id                      = var.project_id
+  roles                           = ["roles/cloudsql.client", "roles/monitoring.viewer"]
+  automount_service_account_token = true
+  depends_on                      = [module.namespace]
+}
+
+module "kuberay-monitoring" {
+  source                          = "../../modules/kuberay-monitoring"
+  providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
+  project_id                      = var.project_id
+  autopilot_cluster               = local.enable_autopilot
+  namespace                       = local.kubernetes_namespace
+  create_namespace                = true
+  enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
+  k8s_service_account             = local.ray_service_account
+  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
+  depends_on = [module.namespace, module.kuberay-operator, module.kuberay-workload-identity]
+}
+
 module "kuberay-cluster" {
   source                 = "../../modules/kuberay-cluster"
   providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
@@ -233,15 +257,16 @@ module "kuberay-cluster" {
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
   autopilot_cluster      = local.enable_autopilot
-  db_secret_name         = module.cloudsql.db_secret_name
   cloudsql_instance_name = local.cloudsql_instance
   db_region              = local.cloudsql_instance_region
   google_service_account = local.ray_service_account
-  grafana_host           = module.kuberay-monitoring.grafana_uri
   disable_network_policy = var.disable_ray_cluster_network_policy
-  depends_on             = [module.kuberay-operator]
   use_custom_image       = true
   additional_labels      = var.additional_labels
+
+  # Implicit dependency
+  db_secret_name = module.cloudsql.db_secret_name
+  grafana_host   = module.kuberay-monitoring.grafana_uri
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth
@@ -256,19 +281,8 @@ module "kuberay-cluster" {
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
   members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
-}
-
-module "kuberay-monitoring" {
-  source                          = "../../modules/kuberay-monitoring"
-  providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
-  project_id                      = var.project_id
-  autopilot_cluster               = local.enable_autopilot
-  namespace                       = local.kubernetes_namespace
-  create_namespace                = true
-  enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
-  k8s_service_account             = local.ray_service_account
-  # TODO(umeshkumhar): remove kuberay-operator depends, figure out service account dependency
-  depends_on = [module.namespace, module.kuberay-operator]
+  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
+  depends_on = [module.gcs, module.kuberay-operator, module.kuberay-workload-identity]
 }
 
 module "inference-server" {
