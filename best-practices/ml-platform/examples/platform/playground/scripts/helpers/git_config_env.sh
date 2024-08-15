@@ -15,24 +15,6 @@
 # limitations under the License.
 set -u
 
-function cleanup() {
-    echo "Removing ${GIT_REPOSITORY_PATH}"
-    rm -rf ${GIT_REPOSITORY_PATH}
-}
-trap cleanup EXIT
-
-source ${SCRIPT_PATH}/helpers/git_config_env.sh
-
-random_suffix=$(echo $RANDOM | md5sum | head -c 20)
-export GIT_REPOSITORY_PATH="/tmp/$(basename ${GIT_REPOSITORY})-${random_suffix}"
-
-git clone https://${GIT_USERNAME}:${GIT_TOKEN}@${GIT_REPOSITORY} ${GIT_REPOSITORY_PATH} || {
-    echo "Failed to clone git repository '${GIT_REPOSITORY}'"
-    exit 1
-}
-cd ${GIT_REPOSITORY_PATH}
-
-git config user.name "${GIT_USERNAME}"
-git config user.email "${GIT_EMAIL}"
-
-cd -
+GIT_EMAIL=$(gcloud secrets versions access latest --project ${PROJECT_ID} --secret ${GIT_CONFIG_SECRET_NAME} | jq --raw-output .user_email)
+GIT_TOKEN=$(gcloud secrets versions access latest --project ${PROJECT_ID} --secret ${GIT_CONFIG_SECRET_NAME} | jq --raw-output .token)
+GIT_USERNAME=$(gcloud secrets versions access latest --project ${PROJECT_ID} --secret ${GIT_CONFIG_SECRET_NAME} | jq --raw-output .user_name)
