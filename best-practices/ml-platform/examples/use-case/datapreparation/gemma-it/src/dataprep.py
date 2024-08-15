@@ -4,6 +4,8 @@ import numpy as np
 import os
 import pandas as pd
 import re
+import signal
+import sys
 import time
 import vertexai
 import vertexai.preview.generative_models as generative_models
@@ -36,11 +38,6 @@ num_questions = 3
 
 vertexai.init(project=PROJECT_ID, location=REGION)
 model = GenerativeModel(MODEL_ID)
-
-logging.config.fileConfig("logging.conf")
-logger = logging.getLogger("processing")
-logger.debug(logger)
-
 
 def filter_low_value_count_rows(df, column_name, min_count=10):
     """
@@ -276,7 +273,24 @@ def train_validate_test_split(df):
     dataset["test"].save_to_disk(f"gs://{BUCKET}/{DATASET_OUTPUT}/test/")
 
 
+def graceful_shutdown(signal_number, stack_frame):
+    signal_name = signal.Signals(signal_number).name
+
+    logger.info(f"Received {signal_name}({signal_number}), shutting down...")
+    #TODO: Add logic to handled checkpointing if required
+    sys.exit(0)
+
 if __name__ == "__main__":
+    # Configure logging
+    logging.config.fileConfig("logging.conf")
+    logger = logging.getLogger("processing")
+
+    if "LOG_LEVEL" in os.environ:
+        logger.setLevel(level=os.environ.get('LOG_LEVEL').upper())
+
+    # Configure signal handlers
+    signal.signal(signal.SIGINT, graceful_shutdown)
+    signal.signal(signal.SIGTERM, graceful_shutdown)
 
     # Prepare context for Gemini Flash's prompt
     df = prep_context()
