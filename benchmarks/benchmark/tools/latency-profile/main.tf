@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+## BEFORE APPLYING TEMPLATES
+
+# 1) Assure that we need to upload the new data point if either there is none of the existing one is unsatisfactory
+# 2) Use the `catalog generate` tool to generate the manifests and pipe them to `kubectl apply -f`, assure kubectl succeeds
 locals {
   templates = [
     for f in fileset(local.templates_path, "*tpl") :
@@ -38,6 +42,7 @@ locals {
       max_num_prompts                            = var.max_num_prompts
       max_output_len                             = var.max_output_len
       max_prompt_len                             = var.max_prompt_len
+      request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
       tokenizer                                  = var.tokenizer
       hugging_face_token_b64                     = var.hugging_face_token_b64
       k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]

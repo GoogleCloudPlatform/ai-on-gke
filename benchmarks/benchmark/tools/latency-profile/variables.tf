@@ -118,6 +118,13 @@ variable "max_prompt_len" {
   }
 }
 
+variable "request_rates" {
+  description = ""
+  type        = list(number)
+  default     = [1, 2]
+  nullable    = false
+}
+
 variable "tokenizer" {
   description = "Benchmark server configuration for tokenizer."
   type        = string
@@ -155,4 +162,55 @@ variable "hugging_face_token_b64" {
   description = "Base 64 encoded hugging face token; stored in Secret Manager. Security considerations: https://kubernetes.io/docs/concepts/security/secrets-good-practices/"
   type        = string
   nullable    = false
+}
+
+variable "pipeline_config" {
+  description = "All combinations of model/model_server/accelerators to benchmark"
+  type = object({
+    valid_models       = list(string)
+    valid_accelerators = list(string)
+    request_rates      = list(number)
+
+    config = list(object({
+      model_server = string # Model server name
+      model_server_configs = list(object({
+        models = list(string) # model name
+        model_configs = list(object({
+          accelerators = list(string) # Accelerator name
+          accelerator_configs = list(object({
+            accelerator_count = number # Number of accelerators
+          }))
+        }))
+      }))
+    }))
+  })
+
+  validation {
+    condition = alltrue([
+      for cfg in var.pipeline_config.config : alltrue([
+        for model_server_config in cfg.model_server_configs : (
+          alltrue([
+            for model_config in model_server_config.model_configs :
+            alltrue([for accelerator in model_config.accelerators :
+            contains(var.pipeline_config.valid_accelerators, accelerator)])
+          ])
+        )
+      ])
+    ])
+    error_message = "Each accelerator must be in the valid_accelerators list."
+  }
+
+  validation {
+    condition = alltrue([
+      for cfg in var.pipeline_config.config : alltrue([
+        for model_server_config in cfg.model_server_configs : (
+          alltrue([
+            for model in model_server_config.models :
+            contains(var.pipeline_config.valid_models, model)
+          ])
+        )
+      ])
+    ])
+    error_message = "Each model must be in the valid_models list."
+  }
 }

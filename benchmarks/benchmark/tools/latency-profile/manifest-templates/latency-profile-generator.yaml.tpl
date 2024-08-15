@@ -37,6 +37,8 @@ spec:
               value: ${max_prompt_len}
             - name: OUTPUT_LENGTH
               value: ${max_output_len}
+            - name: REQUEST_RATES
+              value: ${request_rates}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
             - name: HF_TOKEN
