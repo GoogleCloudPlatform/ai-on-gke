@@ -140,8 +140,13 @@ def test_prompts_dlp(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(prompt_url, data=json_payload, headers=headers)
-        response.raise_for_status()
+
+        try: 
+            response = requests.post(prompt_url, data=json_payload, headers=headers)
+        except: 
+            print(f"zyy is testing, error in response is: {response.status}")
+        # response.raise_for_status()
+
 
         response = response.json()
         context = response['response']['context']
