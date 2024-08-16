@@ -20,6 +20,19 @@
 # 2) Use the `catalog generate` tool to generate the manifests and pipe them to `kubectl apply -f`, assure kubectl succeeds
 
 
+resource "google_project_service" "cloudbuild" {
+  count = var.build_latency_profile_generator_image ? 1 : 0
+  project = var.project_id
+  service = "cloudbuild.googleapis.com"
+
+  timeouts {
+    create = "30m"
+    update = "40m"
+  }
+
+  disable_on_destroy = false
+}
+
 module "latency-profile" {
   source = "../latency-profile"
 
@@ -29,7 +42,7 @@ module "latency-profile" {
   ksa                                        = var.ksa
   templates_path                             = var.templates_path
   artifact_registry                          = var.artifact_registry
-  build_latency_profile_generator_image      = var.build_latency_profile_generator_image
+  build_latency_profile_generator_image      = false
   inference_server_service                   = var.inference_server_service
   inference_server_service_port              = var.inference_server_service_port
   inference_server_framework                 = var.inference_server_framework
