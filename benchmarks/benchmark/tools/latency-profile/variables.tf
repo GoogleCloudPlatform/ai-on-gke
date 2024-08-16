@@ -143,13 +143,6 @@ variable "latency_profile_kubernetes_service_account" {
   default     = "sample-runner-ksa"
 }
 
-variable "google_service_account" {
-  description = "Google Service Account bound to the kubernetes service account"
-  type        = string
-  default     = ""
-  nullable    = false
-}
-
 // TODO: add validation to make k8s_hf_secret & hugging_face_secret mutually exclusive once terraform is updated with: https://discuss.hashicorp.com/t/experiment-feedback-input-variable-validation-can-cross-reference-other-objects/66644
 variable "k8s_hf_secret" {
   description = "Name of secret for huggingface token; stored in k8s "
@@ -158,59 +151,16 @@ variable "k8s_hf_secret" {
   default     = null
 }
 
-variable "hugging_face_token_b64" {
-  description = "Base 64 encoded hugging face token; stored in Secret Manager. Security considerations: https://kubernetes.io/docs/concepts/security/secrets-good-practices/"
+variable "hugging_face_secret" {
+  description = "name of the kubectl huggingface secret token; stored in Secret Manager. Security considerations: https://kubernetes.io/docs/concepts/security/secrets-good-practices/"
   type        = string
-  nullable    = false
+  nullable    = true
+  default     = null
 }
 
-variable "pipeline_config" {
-  description = "All combinations of model/model_server/accelerators to benchmark"
-  type = object({
-    valid_models       = list(string)
-    valid_accelerators = list(string)
-    request_rates      = list(number)
-
-    config = list(object({
-      model_server = string # Model server name
-      model_server_configs = list(object({
-        models = list(string) # model name
-        model_configs = list(object({
-          accelerators = list(string) # Accelerator name
-          accelerator_configs = list(object({
-            accelerator_count = number # Number of accelerators
-          }))
-        }))
-      }))
-    }))
-  })
-
-  validation {
-    condition = alltrue([
-      for cfg in var.pipeline_config.config : alltrue([
-        for model_server_config in cfg.model_server_configs : (
-          alltrue([
-            for model_config in model_server_config.model_configs :
-            alltrue([for accelerator in model_config.accelerators :
-            contains(var.pipeline_config.valid_accelerators, accelerator)])
-          ])
-        )
-      ])
-    ])
-    error_message = "Each accelerator must be in the valid_accelerators list."
-  }
-
-  validation {
-    condition = alltrue([
-      for cfg in var.pipeline_config.config : alltrue([
-        for model_server_config in cfg.model_server_configs : (
-          alltrue([
-            for model in model_server_config.models :
-            contains(var.pipeline_config.valid_models, model)
-          ])
-        )
-      ])
-    ])
-    error_message = "Each model must be in the valid_models list."
-  }
+variable "hugging_face_secret_version" {
+  description = "Secret version in Secret Manager"
+  type        = string
+  nullable    = true
+  default     = null
 }

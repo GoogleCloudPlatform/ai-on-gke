@@ -28,6 +28,11 @@ locals {
     ? "${path.module}/manifest-templates"
     : pathexpand(var.templates_path)
   )
+  hugging_face_token_secret = (
+    var.hugging_face_secret == null || var.hugging_face_secret_version == null
+    ? null
+    : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
+  )
 
   all_manifests = flatten([for manifest_file in local.templates :
     [for data in split("---", templatefile(manifest_file, {
@@ -38,13 +43,12 @@ locals {
       inference_server_framework                 = var.inference_server_framework
       ksa                                        = var.ksa
       latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
-      google_service_account                     = var.google_service_account
       max_num_prompts                            = var.max_num_prompts
       max_output_len                             = var.max_output_len
       max_prompt_len                             = var.max_prompt_len
       request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
       tokenizer                                  = var.tokenizer
-      hugging_face_token_b64                     = var.hugging_face_token_b64
+      hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
       k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
       output_bucket                              = var.output_bucket
     })) : data]
