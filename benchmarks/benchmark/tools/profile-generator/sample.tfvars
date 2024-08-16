@@ -25,6 +25,7 @@ project_id = "tpu-vm-gke-testing"
 
 # Latency profile generator service configuration
 artifact_registry                          = "us-central1-docker.pkg.dev/tpu-vm-gke-testing/ai-benchmark"
+build_latency_profile_generator_image      = false
 inference_server_service                   = "maxengine-server" # inference server service name
 inference_server_service_port              = 8000
 latency_profile_kubernetes_service_account = "prom-frontend-sa"

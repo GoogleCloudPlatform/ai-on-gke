@@ -13,11 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-## BEFORE APPLYING TEMPLATES
-
-# 1) Assure that we need to upload the new data point if either there is none of the existing one is unsatisfactory
-# 2) Use the `catalog generate` tool to generate the manifests and pipe them to `kubectl apply -f`, assure kubectl succeeds
 locals {
   templates = [
     for f in fileset(local.templates_path, "*tpl") :
@@ -56,6 +51,7 @@ locals {
 }
 
 resource "google_project_service" "cloudbuild" {
+  count = var.build_latency_profile_generator_image ? 1 : 0
   project = var.project_id
   service = "cloudbuild.googleapis.com"
 
