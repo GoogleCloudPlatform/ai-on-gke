@@ -17,6 +17,10 @@ terraform {
     google = {
       source = "hashicorp/google"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.14.0"
+    }
     kubernetes = {
       source = "hashicorp/kubernetes"
     }

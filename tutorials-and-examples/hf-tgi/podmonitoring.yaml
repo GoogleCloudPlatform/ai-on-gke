@@ -1,0 +1,6 @@
+podMonitoring:
+- name: mistral-7b-instruct
+  selector:
+    app: mistral-7b-instruct
+  port: metrics
+  interval: 30s

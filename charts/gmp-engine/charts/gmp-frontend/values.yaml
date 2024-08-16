@@ -1,0 +1,17 @@
+# Default values for gmp-frontend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+name: "gmp-frontend"
+projectID: ""
+serviceAccount: ""
+
+image:
+  repository: gke.gcr.io/prometheus-engine/frontend
+  pullPolicy: IfNotPresent
+  tag: "v0.5.0-gke.0"
+
+replicaCount: 2
+
+cpu: "1m"
+memory: "5Mi"

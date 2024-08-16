@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "inference_service_name" {
-  description = "Name of model inference service"
-  value       = module.inference-server.inference_service_name
-}
-
-output "inference_service_namespace" {
-  description = "Namespace of model inference service"
-  value       = module.inference-server.inference_service_namespace
-}
-
-output "inference_service_endpoint" {
-  description = "Endpoint of model inference service"
-  value       = module.inference-server.inference_service_endpoint
+terraform {
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+    }
+    google-beta = {
+      source = "hashicorp/google-beta"
+    }
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+    }
+  }
 }
