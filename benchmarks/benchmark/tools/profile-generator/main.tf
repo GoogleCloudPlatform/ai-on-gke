@@ -21,7 +21,7 @@
 
 
 resource "google_project_service" "cloudbuild" {
-  count = var.build_latency_profile_generator_image ? 1 : 0
+  count   = var.build_latency_profile_generator_image ? 1 : 0
   project = var.project_id
   service = "cloudbuild.googleapis.com"
 

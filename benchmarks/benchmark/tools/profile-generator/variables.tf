@@ -68,8 +68,8 @@ variable "artifact_registry" {
 
 variable "build_latency_profile_generator_image" {
   description = "Whether latency profile generator image will be built or not"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "inference_server_service" {
