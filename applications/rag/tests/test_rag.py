@@ -46,9 +46,9 @@ def test_prompts(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(prompt_url, data=json_payload, headers=headers)
 
         try: 
+            response = requests.post(prompt_url, data=json_payload, headers=headers)
             response.raise_for_status()
 
             response = response.json()
@@ -65,7 +65,12 @@ def test_prompts(prompt_url):
                 assert substring in text, f"substring {substring} not in response:\n {text}"
 
         except Exception as e:
-            print(f"zyy is testing, test_prompts error in response is: {str(e)}")
+            msg = str(e)
+            if  "Max retries exceeded with url" in msg:
+                print(f"hitting rag frontend pod lost connection error, ignoring it: {msg}")
+                continue
+            else: 
+                raise e
 
 
 def test_prompts_nlp(prompt_url):
