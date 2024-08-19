@@ -1,19 +1,37 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import datasets
 import json
-import logging.config
+import logging
 import numpy as np
 import os
 import pandas as pd
 import re
 import signal
 import sys
+import tenacity
 import time
 import vertexai
 import vertexai.preview.generative_models as generative_models
 
 from datasets import Dataset, DatasetDict
-from google.api_core.exceptions import ResourceExhausted
-from tenacity import retry, stop_after_attempt, wait_random_exponential
+from google.api_core.exceptions import InternalServerError, ResourceExhausted
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 from vertexai.preview.generative_models import GenerativeModel
+
+from custom_json_formatter import CustomJSONFormatter
 
 
 PROJECT_ID = os.environ.get("PROJECT_ID")
@@ -28,9 +46,9 @@ MODEL_ID = os.environ.get("PROMPT_MODEL_ID")
 generation_config = {"max_output_tokens": 200, "temperature": 0.7}
 
 safety_settings = {
-    generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
     generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
 }
 
@@ -161,7 +179,14 @@ def extract_product_details(text):
     # Return the final string
     return output_string
 
-@retry(stop=stop_after_attempt(10), wait=wait_random_exponential(exp_base=3, max=60, multiplier=1))
+@retry(
+    retry=(
+        retry_if_exception_type(InternalServerError) | 
+        retry_if_exception_type(ResourceExhausted)
+    ),
+    stop=stop_after_attempt(10), 
+    wait=wait_random_exponential(exp_base=3, max=60, multiplier=1)
+)
 def generate_content(context):
     try:
         response = model.generate_content(
@@ -170,23 +195,25 @@ def generate_content(context):
             safety_settings=safety_settings,
         )
         response.text
+    except InternalServerError as e:
+        logger.warning(f"InternalServerError exception caught: {e}")
+        raise
     except ResourceExhausted as e:
         logger.warning(e)
         raise
     except ValueError as e:
-        if response.candidates[0].finish_reason == "RECITATION":
-            logger.warning(f"Recitation for: {context}")
-            logger.debug(f"response: {response}")
+        logger.debug("ValueError exception caught")
+        if response.candidates[0].finish_reason == generative_models.FinishReason.RECITATION:
+            logger.warning(f"Recitation returned", extra={"context": context, "response": str(response)})
             return None
-        elif response.candidates[0].finish_reason == "SAFETY":
-            logger.warning(f"Blocked by safety settings: {context}")
-            logger.debug(f"response: {response}")
+        elif response.candidates[0].finish_reason == generative_models.FinishReason.SAFETY:
+            logger.warning(f"Blocked by safety settings", extra={"context": context, "response": str(response)})
             return None
         else:
-            logger.error(f"Unhandled ValueError: {e} for: {context}", exc_info=True)
+            logger.error(f"Unhandled ValueError", extra={"context": context}, exc_info=True)
             raise
     except Exception as e:
-        logger.error(f"Unhandled exception: {e}", exc_info=True)
+        logger.error(f"Unhandled exception in generate_content: {type(e).__name__}", exc_info=True)
         raise
 
     return response.text
@@ -199,7 +226,7 @@ def generate_qa(context, category):
         logger.error(f"Exception: {e}, failed to generate content for context: {context}")
         return None
     except Exception as e:
-        logger.error(f"Unhandled exception: {e}", exc_info=True)
+        logger.error(f"Unhandled exception from generate_content: {type(e).__name__}", exc_info=True)
         raise
 
     if qa == None:
@@ -237,29 +264,20 @@ def data_prep(finetune_ds):
             temp_df = generate_qa(context, category)
             if temp_df is not None:
                 result = pd.concat([result, temp_df], ignore_index=True)
-                logger.info(f"Content generated for context: {context}")
+                logger.info(f"Content generated", extra={"context": context})
     # Now `result` contains all generated questions and answers
     return result
 
 
 def train_validate_test_split(df):
-    logger.info("Total Data Size:", len(df))
+    logger.info(f"Total Data Size: {len(df)}")
     train_size = int(0.8 * len(df))
     val_size = int(0.1 * len(df))
     train_df = df.sample(n=train_size, random_state=42)
     remaining_df = df.drop(train_df.index)
     val_df = remaining_df.sample(n=val_size, random_state=42)
     test_df = remaining_df.drop(val_df.index)
-    logger.info(
-        "Training data size:",
-        len(train_df),
-        "\n",
-        "Validation data size:",
-        len(val_df),
-        "\n",
-        "Test data size:",
-        len(test_df),
-    )
+    logger.info(f"Training data size: {len(train_df)}, Validation data size: {len(val_df)}, Test data size: {len(test_df)}")
     # Create DatasetDict with splits
     dataset = DatasetDict(
         {
@@ -282,24 +300,37 @@ def graceful_shutdown(signal_number, stack_frame):
 
 if __name__ == "__main__":
     # Configure logging
-    logging.config.fileConfig("logging.conf")
     logger = logging.getLogger("processing")
 
-    if "LOG_LEVEL" in os.environ:
-        logger.setLevel(level=os.environ.get('LOG_LEVEL').upper())
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
+    print(f"LOG_LEVEL: {LOG_LEVEL}")
+    logger.setLevel(LOG_LEVEL)
 
-    # Configure signal handlers
+    handler = logging.StreamHandler()
+    handler.setFormatter(CustomJSONFormatter())
+    handler.setLevel(LOG_LEVEL)
+    logger.addHandler(handler)
+
+    datasets.disable_progress_bar()
+
+    # For local testing you can enable logging to a file
+    # file_handler = logging.FileHandler('dataprep.log')
+    # file_handler.setFormatter(CustomJSONFormatter())
+    # file_handler.setLevel(LOG_LEVEL)
+    # logger.addHandler(file_handler)
+
+    logger.info("Configure signal handlers")
     signal.signal(signal.SIGINT, graceful_shutdown)
     signal.signal(signal.SIGTERM, graceful_shutdown)
 
-    # Prepare context for Gemini Flash's prompt
+    logger.info("Prepare context for Gemini Flash's prompt")
     df = prep_context()
 
-    # Generate Q & A according
+    logger.info("Generate Q & A according")
     res_df = data_prep(df)
 
-    # Generate Prompts for Gemma IT model
+    logger.info("Generate Prompts for Gemma IT model")
     res_df["prompt"] = res_df.apply(generate_prompt, axis=1)
 
-    # Upload prepared dataset into GCS
+    logger.info("Upload prepared dataset into GCS")
     train_validate_test_split(res_df)
