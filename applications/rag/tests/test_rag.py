@@ -48,8 +48,6 @@ def test_prompts(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
-
-        session = requests.Session()
         # Define a retry strategy
         retry_strategy = Retry(
             total=5,  # Total number of retries
@@ -59,11 +57,12 @@ def test_prompts(prompt_url):
 
         # Mount the retry strategy to the session
         adapter = HTTPAdapter(max_retries=retry_strategy)
+        session = requests.Session()
         session.mount("http://", adapter)
         session.mount("https://", adapter)
 
         try:
-            response = session.get(prompt_url, data=json_payload, headers=headers)
+            response = session.post(prompt_url, data=json_payload, headers=headers)
             response.raise_for_status()
 
             print(response.content)  # Handle the response
