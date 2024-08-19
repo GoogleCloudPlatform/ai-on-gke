@@ -143,7 +143,7 @@ sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
 kubectl apply -f yaml/provisioning-request-${ACCELERATOR}.yaml -n ml-team
 kubectl apply -f yaml/fine-tune-${ACCELERATOR}-dws.yaml -n ml-team
 ```
-### Verify
+### Verify the completion of the fine-tuning job
 
 In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run the following query to see the completion of the job.
 
