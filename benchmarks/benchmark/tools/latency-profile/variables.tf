@@ -74,8 +74,8 @@ variable "build_latency_profile_generator_image" {
 # Inference server configuration
 variable "inference_server" {
   type = object({
-    deploy = optional(bool), # Do you want this module to deploy the model server?
-    name   = string,
+    deploy    = optional(bool), # Do you want this module to deploy the model server?
+    name      = string,
     tokenizer = string,
     service = object({
       name = string,

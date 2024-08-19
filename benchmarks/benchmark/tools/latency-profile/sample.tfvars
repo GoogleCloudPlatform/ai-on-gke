@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 credentials_config = {
   fleet_host = "https://connectgateway.googleapis.com/v1/projects/$PROJECT_NUM/locations/global/gkeMemberships/ai-benchmark"
 }
@@ -33,8 +33,8 @@ gcs_path                                   = "gs://${PROJECT_ID}-ai-gke-benchmar
 
 # Inference server configuration
 inference_server = {
-  deploy = false
-  name = "tgi"
+  deploy    = false
+  name      = "tgi"
   tokenizer = "tiiuae/falcon-7b"
   service = {
     name = "tgi", # inference server service name
@@ -43,4 +43,4 @@ inference_server = {
 }
 
 # Benchmark configuration for Locust Docker accessing inference server
-request_rates              = [5, 10, 15, 20]
+request_rates = [5, 10, 15, 20]

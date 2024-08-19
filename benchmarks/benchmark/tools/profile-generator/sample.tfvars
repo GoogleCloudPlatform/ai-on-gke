@@ -32,8 +32,8 @@ k8s_hf_secret                              = "hf-token"
 
 # Inference server configuration
 inference_server = {
-  deploy = false
-  name = "jetstream"
+  deploy    = false
+  name      = "jetstream"
   tokenizer = "google/gemma-7b"
   service = {
     name = "maxengine-server", # inference server service name
@@ -42,7 +42,7 @@ inference_server = {
 }
 
 # Benchmark configuration for Locust Docker accessing inference server
-request_rates              = [5, 10, 15, 20]
+request_rates = [5, 10, 15, 20]
 
 profiles = {
   valid_models = [

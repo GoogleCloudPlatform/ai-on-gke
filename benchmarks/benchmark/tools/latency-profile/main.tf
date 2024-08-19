@@ -83,7 +83,7 @@ resource "kubernetes_manifest" "deploy_latency_profile_generator" {
 }
 
 resource "null_resource" "cleanup_model_server" {
-  depends_on = [ resource.kubernetes_manifest.deploy_latency_profile_generator ]
+  depends_on = [resource.kubernetes_manifest.deploy_latency_profile_generator]
   provisioner "local-exec" {
     command = "kubectl wait --for=condition=complete job/latency-profile-generator --timeout=-9600s && echo hello"
   }
