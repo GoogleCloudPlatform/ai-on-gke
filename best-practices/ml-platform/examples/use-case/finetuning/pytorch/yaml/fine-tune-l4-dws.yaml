@@ -13,7 +13,7 @@ metadata:
   name: finetune-gemma-l4
   namespace: ml-team  
 spec:
-  backoffLimit: 4
+  backoffLimit: 0
   completions: 2
   parallelism: 2
   completionMode: Indexed
@@ -98,6 +98,7 @@ spec:
           volumeAttributes:
             bucketName: V_MODEL_BUCKET
             mountOptions: "implicit-dirs"
+            gcsfuseLoggingSeverity: warning
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-l4
       restartPolicy: OnFailure
