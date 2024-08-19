@@ -46,7 +46,6 @@ variable "project_id" {
   nullable    = false
 }
 
-
 variable "ksa" {
   description = "Kubernetes Service Account used for workload."
   type        = string
@@ -72,25 +71,20 @@ variable "build_latency_profile_generator_image" {
   default     = true
 }
 
-variable "inference_server_service" {
-  description = "Inference server service"
-  type        = string
-  nullable    = false
-}
+variable "inference_server" {
+  type = object({
+    deploy = optional(bool), # Do you want this module to deploy the model server?
+    name   = string,
+    tokenizer = string, # Benchmark server configuration for tokenizer
+    service = object({
+      name = string,
+      port = number,
+    })
+  })
+  nullable = false
 
-variable "inference_server_service_port" {
-  description = "Inference server service port"
-  type        = number
-  nullable    = false
-}
-
-variable "inference_server_framework" {
-  description = "Benchmark server configuration for inference server framework. Can be one of: vllm, tgi, tensorrt_llm_triton, sax"
-  type        = string
-  nullable    = false
-  default     = "tgi"
   validation {
-    condition     = var.inference_server_framework == "vllm" || var.inference_server_framework == "tgi" || var.inference_server_framework == "tensorrt_llm_triton" || var.inference_server_framework == "sax" || var.inference_server_framework == "jetstream"
+    condition     = var.inference_server.name == "vllm" || var.inference_server.name == "tgi" || var.inference_server.name == "tensorrt_llm_triton" || var.inference_server.name == "sax" || var.inference_server.name == "jetstream"
     error_message = "The inference_server_framework must be one of: vllm, tgi, tensorrt_llm_triton, sax, or jetstream."
   }
 }
@@ -130,13 +124,6 @@ variable "request_rates" {
   type        = list(number)
   default     = [1, 2]
   nullable    = false
-}
-
-variable "tokenizer" {
-  description = "Benchmark server configuration for tokenizer."
-  type        = string
-  nullable    = false
-  default     = "tiiuae/falcon-7b"
 }
 
 variable "output_bucket" {

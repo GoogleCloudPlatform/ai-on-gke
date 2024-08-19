@@ -34,7 +34,7 @@ locals {
     [for data in split("---", templatefile(manifest_file, {
       artifact_registry              = var.artifact_registry
       namespace                      = var.namespace
-      inference_server_service       = var.inference_server_service
+      inference_server_service       = var.inference_server.service
       inference_server_framework     = var.inference_server_framework
       best_of                        = var.best_of
       gcs_path                       = var.gcs_path

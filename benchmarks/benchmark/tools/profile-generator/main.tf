@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-## BEFORE APPLYING TEMPLATES
-
-# 1) Assure that we need to upload the new data point if either there is none of the existing one is unsatisfactory
-# 2) Use the `catalog generate` tool to generate the manifests and pipe them to `kubectl apply -f`, assure kubectl succeeds
 
 
 resource "google_project_service" "cloudbuild" {
@@ -33,6 +29,8 @@ resource "google_project_service" "cloudbuild" {
   disable_on_destroy = false
 }
 
+# CREATE NODEPOOLS
+
 module "latency-profile" {
   source = "../latency-profile"
 
@@ -42,15 +40,12 @@ module "latency-profile" {
   ksa                                        = var.ksa
   templates_path                             = var.templates_path
   artifact_registry                          = var.artifact_registry
-  build_latency_profile_generator_image      = false
-  inference_server_service                   = var.inference_server_service
-  inference_server_service_port              = var.inference_server_service_port
-  inference_server_framework                 = var.inference_server_framework
+  build_latency_profile_generator_image      = false # Dont build image for each profile generator instance, only need to do once.
+  inference_server                           = var.inference_server
   max_num_prompts                            = var.max_num_prompts
   max_output_len                             = var.max_output_len
   max_prompt_len                             = var.max_prompt_len
   request_rates                              = var.request_rates
-  tokenizer                                  = var.tokenizer
   output_bucket                              = var.output_bucket
   latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
   k8s_hf_secret                              = var.k8s_hf_secret

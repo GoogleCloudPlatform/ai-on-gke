@@ -1,15 +1,11 @@
-apiVersion: "apps/v1"
-kind: "Deployment"
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: lantency-profile-generator
+  name: latency-profile-generator
   namespace: ${namespace}
   labels:
-    name: lantency-profile-generator
+    name: latency-profile-generator
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: lantency-profile-generator
   template:
     metadata:
       labels:
@@ -17,8 +13,9 @@ spec:
         examples.ai.gke.io/source: ai-on-gke-benchmarks
     spec:
       serviceAccountName: ${latency_profile_kubernetes_service_account}
+      restartPolicy: Never
       containers:
-        - name: lantency-profile-generator
+        - name: latency-profile-generator
           image: ${artifact_registry}/latency-profile:latest
           resources:
             limits:

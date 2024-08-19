@@ -33,16 +33,16 @@ locals {
     [for data in split("---", templatefile(manifest_file, {
       artifact_registry                          = var.artifact_registry
       namespace                                  = var.namespace
-      inference_server_service                   = var.inference_server_service
-      inference_server_service_port              = var.inference_server_service_port
-      inference_server_framework                 = var.inference_server_framework
+      inference_server_framework                 = var.inference_server.name
+      inference_server_service                   = var.inference_server.service.name
+      inference_server_service_port              = var.inference_server.service.port
+      tokenizer                                  = var.inference_server.tokenizer
       ksa                                        = var.ksa
       latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
       max_num_prompts                            = var.max_num_prompts
       max_output_len                             = var.max_output_len
       max_prompt_len                             = var.max_prompt_len
       request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
-      tokenizer                                  = var.tokenizer
       hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
       k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
       output_bucket                              = var.output_bucket
@@ -63,11 +63,31 @@ resource "google_project_service" "cloudbuild" {
   disable_on_destroy = false
 }
 
-resource "kubernetes_manifest" "default" {
+resource "null_resource" "deploy_model_server" {
+  count = var.inference_server.deploy ? 1 : 0
+  provisioner "local-exec" {
+    command = "echo hello"
+  }
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+}
+
+resource "kubernetes_manifest" "deploy_latency_profile_generator" {
   for_each   = toset(local.all_manifests)
-  depends_on = [resource.null_resource.build_and_push_image]
+  depends_on = [resource.null_resource.build_and_push_image, resource.null_resource.deploy_model_server]
   manifest   = yamldecode(each.value)
   timeouts {
     create = "30m"
+  }
+}
+
+resource "null_resource" "cleanup_model_server" {
+  depends_on = [ resource.kubernetes_manifest.deploy_latency_profile_generator ]
+  provisioner "local-exec" {
+    command = "kubectl wait --for=condition=complete job/lantency-profile-generator-test && echo hello"
+  }
+  triggers = {
+    always_run = "${timestamp()}"
   }
 }
