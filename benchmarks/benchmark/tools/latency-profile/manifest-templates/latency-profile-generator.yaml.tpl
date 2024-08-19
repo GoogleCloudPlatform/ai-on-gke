@@ -7,10 +7,6 @@ metadata:
     name: latency-profile-generator
 spec:
   template:
-    metadata:
-      labels:
-        app: lantency-profile-generator
-        examples.ai.gke.io/source: ai-on-gke-benchmarks
     spec:
       serviceAccountName: ${latency_profile_kubernetes_service_account}
       restartPolicy: Never
