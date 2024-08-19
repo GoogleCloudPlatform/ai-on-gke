@@ -65,7 +65,6 @@ def test_prompts(prompt_url):
             response = session.post(prompt_url, data=json_payload, headers=headers)
             response.raise_for_status()
 
-            print(response.content)  # Handle the response
             response = response.json()
             context = response['response']['context']
             text = response['response']['text']
