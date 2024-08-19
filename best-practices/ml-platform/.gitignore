@@ -1,3 +1,5 @@
+.venv/
+mlruns/
 venv/
 
 .python-version
