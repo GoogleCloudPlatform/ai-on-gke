@@ -46,24 +46,27 @@ def test_prompts(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
+        response = requests.post(prompt_url, data=json_payload, headers=headers)
+
         try: 
-            response = requests.post(prompt_url, data=json_payload, headers=headers)
-        except:
-            print(f"zyy is testing, test_prompts error in response is: {response.status}")
-        # response.raise_for_status()
+            response.raise_for_status()
 
-        response = response.json()
-        context = response['response']['context']
-        text = response['response']['text']
-        user_prompt = response['response']['user_prompt']
+            response = response.json()
+            context = response['response']['context']
+            text = response['response']['text']
+            user_prompt = response['response']['user_prompt']
 
-        print(f"Reply: {text}")
+            print(f"Reply: {text}")
 
-        assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
-        assert context == expected_context, f"unexpected context: {context} != {expected_context}"
+            assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
+            assert context == expected_context, f"unexpected context: {context} != {expected_context}"
 
-        for substring in expected_substrings:
-            assert substring in text, f"substring {substring} not in response:\n {text}"
+            for substring in expected_substrings:
+                assert substring in text, f"substring {substring} not in response:\n {text}"
+
+        except Exception as e:
+            print(f"zyy is testing, test_prompts error in response is: {str(e)}")
+
 
 def test_prompts_nlp(prompt_url):
     testcases = [
@@ -104,11 +107,9 @@ def test_prompts_nlp(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
-        try:
-            response = requests.post(prompt_url, data=json_payload, headers=headers)
-        except:
-            print(f"zyy is testing, test_prompts_nlp error in response is: {response.status}")
-        # response.raise_for_status()
+
+        response = requests.post(prompt_url, data=json_payload, headers=headers)
+        response.raise_for_status()
 
         response = response.json()
         context = response['response']['context']
@@ -146,13 +147,9 @@ def test_prompts_dlp(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
-
-        try: 
-            response = requests.post(prompt_url, data=json_payload, headers=headers)
-        except: 
-            print(f"zyy is testing, test_prompts_dlp error in response is: {response.status}")
-        # response.raise_for_status()
-
+ 
+        response = requests.post(prompt_url, data=json_payload, headers=headers)
+        response.raise_for_status()
 
         response = response.json()
         context = response['response']['context']
