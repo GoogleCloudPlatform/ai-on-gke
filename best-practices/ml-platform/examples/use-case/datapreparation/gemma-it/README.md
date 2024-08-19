@@ -25,17 +25,12 @@ the base model.
    PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
    BUCKET=<preprocessed_dataset_bucket_name>
    NAMESPACE=ml-team
-   KSA=<your-k8s-service-account>
+   KSA="app-sa"
    CLUSTER_NAME=<your_cluster_name>
    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0
    REGION=<vertex-region>
    ```
-
-1. Create the Kubernetes Service Account (KSA) [optional if one, does not already exist]
-
-   ```sh
-   kubectl create serviceaccount ${KSA} -n ${NAMESPACE}
-   ```
+   - BUCKET is the bucket you used in [datapreproceesing][datapreprocessing]
 
 1. Setup Workload Identity Federation access to read/write to the bucket
 
@@ -62,12 +57,6 @@ the base model.
        --location=us \
        --project=${PROJECT_ID} \
        --async
-   ```
-
-1. Enable the Cloud Build APIs
-
-   ```sh
-   gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
    ```
 
 1. Build container image using Cloud Build and push the image to Artifact Registry
@@ -126,8 +115,9 @@ the base model.
    kubectl apply -f dataprep.yaml -n ml-team
    ```
 
-1. Once the Job is completed, both the prepared datasets are stored in Google Cloud Storage.
+1. Once the Job is completed, the prepared datasets are stored in Google Cloud Storage.
 
    ```sh
    gcloud storage ls gs://${BUCKET}/${DATASET_OUTPUT_PATH}
    ```
+[datapreprocessing]: ../../datapreprocessing/ray/README.md#how-to-use-this-repo-

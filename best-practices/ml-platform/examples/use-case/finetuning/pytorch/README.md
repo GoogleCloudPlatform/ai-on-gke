@@ -20,79 +20,52 @@ with an inference serving engine.
   MODEL_BUCKET=<model-artifacts-bucket>
   CLUSTER_NAME=<your-gke-cluster>
   NAMESPACE=ml-team
-  KSA=<k8s-service-account>
+  KSA="app-sa"
   HF_TOKEN=<your-Hugging-Face-account-token>
   DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0
   ```
-
-- Create the Kubernetes Service Account (KSA) [optional if one, does not already exist]
-
-  ```sh
-  kubectl create serviceaccount ${KSA} -n ${NAMESPACE}
-  ```
+  - TRAINING_DATASET_BUCKET is the bucket you used in [datapreparation][datapreparation].
+  - MODEL_BUCKET can be the same bucket TRAINING_DATASET_BUCKET. If you want to use a different bucket, provide it a name.
+  - HF_TOKEN is your huggingface access token. Go to https://huggingface.co/settings/tokens , click `Create new token` , provide a token name, select `Read` in token type and click `Create token`.
 
 ## GCS
 
 The training data set is retrieved from a storage bucket and the fine-tuned model weights are saved onto a locally mounted storage bucket.
 
-### Reading training data set
-
-- Setup Workload Identity Federation to access the bucket with the generated prompts
-
-  ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${TRAINING_DATASET_BUCKET} \
-      --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-      --role "roles/storage.objectUser"
-  ```
-
 ### Writing fine-tuned model weights
 
-- Create the bucket for storing the training data set
+- Skip this step if your MODEL_BUCKET and TRAINING_DATASET_BUCKET are the same bucket.
 
-  ```sh
-  gcloud storage buckets create gs://${MODEL_BUCKET} \
-      --project ${PROJECT_ID} \
-      --location us \
-      --uniform-bucket-level-access
+  - Create the bucket for storing the training data set
 
-  ```
+    ```sh
+    gcloud storage buckets create gs://${MODEL_BUCKET} \
+        --project ${PROJECT_ID} \
+        --location us \
+        --uniform-bucket-level-access
+    
+    ```
 
-- Setup Workload Identity Federation to access the bucket to write the model weights
+  - Setup Workload Identity Federation to access the bucket to write the model weights
 
-  ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
-      --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-      --role "roles/storage.objectUser"
-  ```
+    ```sh
+    gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
+        --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
+        --role "roles/storage.objectUser"
+    ```
 
 ## Build the image of the source
-
-- Create Artifact Registry repository for your docker image
-
-  ```sh
-  gcloud artifacts repositories create llm-finetuning \
-      --repository-format=docker \
-      --location=us \
-      --project=${PROJECT_ID} \
-      --async
-  ```
-
-- Enable the Cloud Build APIs
-
-  ```sh
-  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
-  ```
 
 - Build container image using Cloud Build and push the image to Artifact Registry
   Modify cloudbuild.yaml to specify the image url
 
-  ```sh
-  cd src
-  gcloud builds submit --config cloudbuild.yaml \
-      --project ${PROJECT_ID} \
-      --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
-  cd ..
-  ```
+```
+cd src
+gcloud builds submit --config cloudbuild.yaml \
+--project ${PROJECT_ID} \
+--substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+cd ..
+```
 
 ## Deploy the Job
 
@@ -111,6 +84,9 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${P
       --from-literal=hf_api_token=${HF_TOKEN} \
       --dry-run=client -o yaml | kubectl apply -n ${NAMESPACE} -f -
   ```
+
+### Accept licence on hugging face if you have not done it already
+- Go to https://huggingface.co/google/gemma-2-9b-it and accept the licence
 
 ### Fine-tuning Job Inputs
 
@@ -135,7 +111,7 @@ EXPERIMENT=""
 MLFLOW_ENABLE="false"
 MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING="false"
 MLFLOW_TRACKING_URI=""
-TRAINING_DATASET_PATH="dataset/output"
+TRAINING_DATASET_PATH="dataset/output/"
 MODEL_PATH="/model-data/model-gemma2/experiment"
 MODEL_NAME="google/gemma-2-9b-it"
 ```
@@ -167,3 +143,17 @@ sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
 kubectl apply -f yaml/provisioning-request-${ACCELERATOR}.yaml -n ml-team
 kubectl apply -f yaml/fine-tune-${ACCELERATOR}-dws.yaml -n ml-team
 ```
+### Verify
+
+In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run the following query to see the completion of the job.
+
+```sh
+labels."k8s-pod/app"="finetune-job"
+textPayload: "finetune - INFO - ### Completed ###"
+```
+
+After the fine-tuning job is successful, the model bucket should have a checkooint folder created.
+   ```sh
+   gcloud storage ls gs://${MODEL_BUCKET}/${MODEL_PATH}
+   ```
+[datapreparation]: ../../datapreparation/gemma-it/README.md#steps
