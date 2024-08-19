@@ -3,6 +3,7 @@ kind: Job
 metadata:
   name: dataprep-job
 spec:
+  backoffLimit: 0
   template:
     metadata:
       labels:

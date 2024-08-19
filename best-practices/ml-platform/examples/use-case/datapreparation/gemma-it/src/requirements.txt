@@ -2,10 +2,9 @@ datasets==2.20.0
 gcsfs==2024.5.0
 google-cloud-aiplatform==1.49.0
 google-cloud-storage==2.17.0
-jsonpickle==3.2.1
+jsonpickle==3.2.2
 numpy==1.26.4
 pandas==2.2.2
 protobuf==4.24.4 ## lowered version
-python-json-logger==2.0.7
 tenacity==9.0.0
 vertexai==1.49.0
