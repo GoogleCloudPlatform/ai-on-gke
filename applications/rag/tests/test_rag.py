@@ -55,7 +55,6 @@ def test_prompts(prompt_url):
             total=5,  # Total number of retries
             backoff_factor=1,  # Waits 1 second between retries, then 2s, 4s, 8s...
             status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
-            method_whitelist=["HEAD", "GET", "OPTIONS"]  # Methods to retry
         )
 
         # Mount the retry strategy to the session
