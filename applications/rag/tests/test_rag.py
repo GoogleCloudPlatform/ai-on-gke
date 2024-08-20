@@ -84,11 +84,6 @@ def test_prompts(prompt_url):
             print(f"HTTP error occurred: {e}")
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
-        # except AssertionError as e:
-        #     if context == "":
-        #         print(f"Getting empty context as lost connection to rag frontend pod: {e}")
-        #     else:
-        #         raise e
 
 def test_prompts_nlp(prompt_url):
     testcases = [
@@ -219,7 +214,7 @@ def test_prompts_dlp(prompt_url):
 
             for substring in expected_substrings:
                 assert substring in text, f"substring {substring} not in response:\n {text}"
-                
+
         except requests.exceptions.ConnectionError as e:
             print(f"Error connecting to the server: {e}")
         except requests.exceptions.HTTPError as e:
