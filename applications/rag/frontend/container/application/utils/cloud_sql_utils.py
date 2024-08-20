@@ -38,7 +38,7 @@ GCP_CLOUD_SQL_INSTANCE = os.environ.get("CLOUDSQL_INSTANCE")
 
 DB_NAME = os.environ.get("DB_NAME", "pgvector-database")
 VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
-CHAT_HISTORY_TABLE_NAME = os.environ.get("CHAT_HISTORY_TABLE_NAME", "message_store")
+CHAT_HISTORY_TABLE_NAME = os.environ.get("CHAT_HISTORY_TABLE_NAME", "chat_history_store")
 
 VECTOR_DIMENSION = os.environ.get("VECTOR_DIMENSION", 384)
 

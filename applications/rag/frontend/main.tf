@@ -23,6 +23,14 @@ locals {
   })
 }
 
+resource "random_string" "application_secret_key" {
+  length  = var.project_id
+  lower   = true
+  numeric = true
+  special = false
+  upper   = false
+}
+
 # IAP Section: Creates the GKE components
 module "iap_auth" {
   count  = var.add_auth ? 1 : 0
@@ -161,8 +169,13 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           }
 
           env {
-            name  = "TABLE_NAME"
+            name  = "EMBEDDINGS_TABLE_NAME"
             value = var.dataset_embeddings_table_name
+          }
+
+          env {
+            name  = "APPLICATION_SECRET_KEY"
+            value = random_string.application_secret_key.result
           }
 
           resources {

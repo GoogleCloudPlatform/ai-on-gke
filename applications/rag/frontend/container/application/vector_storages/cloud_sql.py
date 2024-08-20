@@ -36,15 +36,6 @@ logging.basicConfig(
 
 
 class CloudSQLVectorStore(VectorStore):
-    @classmethod
-    def from_texts(
-        cls,
-        texts: List[str],
-        embedding: Embeddings,
-        metadatas: Optional[List[dict]] = None,
-        **kwargs: Any,
-    ):
-        raise NotImplementedError
 
     def __init__(self, embedding_provider, engine):
         self.vector_store = PostgresVectorStore.create_sync(
@@ -57,7 +48,16 @@ class CloudSQLVectorStore(VectorStore):
         )
         self.embeddings_service = embedding_provider
 
-    # TODO implement
+    @classmethod
+    def from_texts(
+        cls,
+        texts: List[str],
+        embedding: Embeddings,
+        metadatas: Optional[List[dict]] = None,
+        **kwargs: Any,
+    ):
+        raise NotImplementedError
+
     def add_texts(
         self, texts: Iterable[str], metadatas: List[dict] | None = None, **kwargs: Any
     ) -> List[str]:
@@ -67,16 +67,12 @@ class CloudSQLVectorStore(VectorStore):
             self.vector_store.add_documents(splits, ids)
         except Exception as e:
             logging.info(f"Error: {e}")
-            raise e
-
-    # TODO implement similarity search with cosine similarity threshold
+            raise Exception(f"Error adding texts: {err}")
 
     def similarity_search(
-        self, query: dict, k: int = 4, **kwargs: Any
+        self, query_input: dict, k: int = 4, **kwargs: Any
     ) -> List[Document]:
         try:
-
-            query_input = query.get("input")
             query_vector = self.embeddings_service.embed_query(query_input)
 <<<<<<< HEAD
             docs = self.vector_store.similarity_search_by_vector(query_vector, k=k)
@@ -86,4 +82,4 @@ class CloudSQLVectorStore(VectorStore):
             return docs
 
         except Exception as err:
-            raise Exception(f"General error: {err}")
+            raise Exception(f"Error on similarity search: {err}")
