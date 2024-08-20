@@ -76,10 +76,15 @@ variable "inference_server" {
   type = object({
     deploy    = optional(bool), # Do you want this module to deploy the model server?
     name      = string,
+    model     = string,
     tokenizer = string,
     service = object({
       name = string,
       port = number,
+    })
+    accelerator_config = object({
+      type = string,
+      count = number,
     })
   })
   nullable = false

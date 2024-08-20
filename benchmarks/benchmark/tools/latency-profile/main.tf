@@ -31,6 +31,7 @@ locals {
 
   all_manifests = flatten([for manifest_file in local.templates :
     [for data in split("---", templatefile(manifest_file, {
+      combo                                      = format("%s-%s-%s-%s", var.inference_server.name, var.inference_server.model, var.inference_server.accelerator_config.type, var.inference_server.accelerator_config.count)
       artifact_registry                          = var.artifact_registry
       namespace                                  = var.namespace
       inference_server_framework                 = var.inference_server.name
@@ -49,6 +50,20 @@ locals {
     })) : data]
   ])
 }
+
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.0"
+    }
+  }
+}
+
+data "google_client_config" "identity" {
+  count = var.credentials_config.fleet_host != null ? 1 : 0
+}
+
 
 resource "google_project_service" "cloudbuild" {
   count   = var.build_latency_profile_generator_image ? 1 : 0

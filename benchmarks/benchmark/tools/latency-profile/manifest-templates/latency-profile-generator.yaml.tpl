@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: latency-profile-generator
+  name: lpg-${combo}
   namespace: ${namespace}
   labels:
     name: latency-profile-generator

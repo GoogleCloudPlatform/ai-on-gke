@@ -22,24 +22,12 @@ credentials_config = {
 
 project_id = "tpu-vm-gke-testing"
 
-
 # Latency profile generator service configuration
 artifact_registry                          = "us-central1-docker.pkg.dev/tpu-vm-gke-testing/ai-benchmark"
 build_latency_profile_generator_image      = false
 latency_profile_kubernetes_service_account = "prom-frontend-sa"
 output_bucket                              = "tpu-vm-gke-testing-benchmark-output-bucket"
 k8s_hf_secret                              = "hf-token"
-
-# Inference server configuration
-inference_server = {
-  deploy    = false
-  name      = "jetstream"
-  tokenizer = "google/gemma-7b"
-  service = {
-    name = "maxengine-server", # inference server service name
-    port = 8000
-  }
-}
 
 # Benchmark configuration for Locust Docker accessing inference server
 request_rates = [5, 10, 15, 20]
@@ -64,14 +52,21 @@ profiles = {
   request_rates = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
   config = [{
-    model_server = "Jetstream"
+    model_server = "jetstream"
     model_server_configs = [{
       models = [
         "gemma2-2b",
         "gemma2-9b",
         "gemma2-27b"
       ]
-      model_configs = []
+      model_configs = [{
+        accelerators = [
+          "tpu-v5-lite-podslice",
+        ]
+        accelerator_configs = [{
+          accelerator_count = 1
+        }]
+      }]
     }]
     }, {
     model_server = "vllm"
