@@ -14,15 +14,15 @@
 
 output "inference_service_name" {
   description = "Name of model inference service"
-  value       = module.inference-server.inference_service_name
+  value       = kubernetes_service.inference_service.metadata[0].name
 }
 
 output "inference_service_namespace" {
   description = "Namespace of model inference service"
-  value       = module.inference-server.inference_service_namespace
+  value       = kubernetes_service.inference_service.metadata[0].namespace
 }
 
 output "inference_service_endpoint" {
   description = "Endpoint of model inference service"
-  value       = module.inference-server.inference_service_endpoint
+  value       = kubernetes_service.inference_service.status != null ? (kubernetes_service.inference_service.status[0].load_balancer != null ? "${kubernetes_service.inference_service.status[0].load_balancer[0].ingress[0].ip}" : "") : ""
 }
