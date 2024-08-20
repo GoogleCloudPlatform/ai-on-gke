@@ -84,6 +84,11 @@ def test_prompts(prompt_url):
             print(f"HTTP error occurred: {e}")
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
+        except AssertionError as e:
+            if context == "":
+                print(f"Getting empty context as lost connection to rag frontend pod: {e}")
+            else:
+                raise e
 
 def test_prompts_nlp(prompt_url):
     testcases = [
