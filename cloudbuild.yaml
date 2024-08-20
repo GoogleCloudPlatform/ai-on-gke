@@ -255,7 +255,7 @@ steps:
         sleep 5s
 
         cd /workspace/applications/rag/tests
-        # python3 test_frontend.py "127.0.0.1:8081"
+        python3 test_frontend.py "127.0.0.1:8081"
         echo "pass" > /workspace/rag_frontend_result.txt
 
         cd /workspace/
