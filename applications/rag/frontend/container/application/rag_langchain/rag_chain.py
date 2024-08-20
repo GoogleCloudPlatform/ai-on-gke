@@ -60,15 +60,18 @@ engine = create_sync_postgres_engine()
 
 
 def get_chat_history(session_id: str) -> PostgresChatMessageHistory:
-    history = PostgresChatMessageHistory.create_sync(
-        engine, session_id=session_id, table_name=CHAT_HISTORY_TABLE_NAME
-    )
+    try:
+        history = PostgresChatMessageHistory.create_sync(
+            engine, session_id=session_id, table_name=CHAT_HISTORY_TABLE_NAME
+        )
 
-    logging.info(
-        f"Retrieving history for session {session_id} with {len(history.messages)}"
-    )
-    return history
-
+        logging.info(
+            f"Retrieving history for session {session_id} with {len(history.messages)}"
+        )
+        return history
+    except Exception as e:
+        logging.error(e)
+        return None
 
 def clear_chat_history(session_id: str):
     history = PostgresChatMessageHistory.create_sync(
@@ -104,7 +107,7 @@ def create_chain() -> RunnableWithMessageHistory:
         )
         return chain_with_history
     except Exception as e:
-        logging.info(e)
+        logging.error(e)
         raise e
 
 def take_chat_turn(
@@ -115,5 +118,5 @@ def take_chat_turn(
         result = chain.invoke({"input": query_text}, config=config)
         return result
     except Exception as e:
-        logging.info(e)
+        logging.error(e)
         raise e
