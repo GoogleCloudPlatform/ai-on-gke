@@ -52,11 +52,18 @@ provider "helm" {
   }
 }
 
+module "namespace" {
+  source           = "../../modules/kubernetes-namespace"
+  create_namespace = true
+  namespace        = var.namespace
+}
+
 module "inference-server" {
   source            = "../../modules/inference-service"
   namespace         = var.namespace
   additional_labels = var.additional_labels
   autopilot_cluster = var.autopilot_cluster
+  depends_on        = [module.namespace]
 }
 
 resource "helm_release" "gmp-engine" {
@@ -68,4 +75,5 @@ resource "helm_release" "gmp-engine" {
   values = [
     "${file("${path.module}/podmonitoring.yaml")}"
   ]
+  depends_on = [module.namespace]
 }
