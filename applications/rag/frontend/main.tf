@@ -123,8 +123,19 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           }
 
           env {
-            name  = "PROJECT_ID"
-            value = "projects/${var.project_id}"
+            name = "PROJECT_ID"
+            #value = "projects/${var.project_id}"
+            value = var.project_id
+          }
+
+          env {
+            name  = "REGION"
+            value = var.region
+          }
+
+          env {
+            name  = "INSTANCE"
+            value = var.cloudsql_instance
           }
 
           env {
