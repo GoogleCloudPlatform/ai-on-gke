@@ -16,7 +16,7 @@ spec:
         imagePullPolicy: Always
         env:
         - name: "BUCKET"
-          value: "V_BUCKET"
+          value: "V_DATA_BUCKET"
         - name: "DATASET_INPUT_PATH"
           value: "V_DATASET_INPUT_PATH"
         - name: "DATASET_INPUT_FILE"

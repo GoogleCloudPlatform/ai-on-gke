@@ -9,10 +9,10 @@ spec:
       labels:
         app: model-eval-job
     spec:
-      serviceAccountName: KSA
+      serviceAccountName: V_KSA
       containers:
       - name: job
-        image: IMAGE_URL
+        image: V_IMAGE_URL
         imagePullPolicy: Always
         command: ["/bin/sh"]
         args:
@@ -22,7 +22,7 @@ spec:
           ACTION=accuracy python validate_fine_tuned_model.py
         env:
         - name: "BUCKET"
-          value: "V_BUCKET"
+          value: "V_DATA_BUCKET"
         - name: "DATASET_OUTPUT_PATH"
           value: "V_DATASET_OUTPUT_PATH"
         - name: "ENDPOINT"

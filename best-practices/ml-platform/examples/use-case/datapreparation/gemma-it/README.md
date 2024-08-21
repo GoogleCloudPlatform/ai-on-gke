@@ -23,19 +23,20 @@ the base model.
    ```sh
    PROJECT_ID=<your_project_id>
    PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-   BUCKET=<preprocessed_dataset_bucket_name>
+   DATA_BUCKET=<preprocessed_dataset_bucket_name>
    NAMESPACE=ml-team
    KSA="app-sa"
    CLUSTER_NAME=<your_cluster_name>
    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0
    REGION=<vertex-region>
    ```
-   - BUCKET is the bucket you used in [datapreproceesing][datapreprocessing]
+
+   - DATA_BUCKET is the bucket you used in [datapreproceesing][datapreprocessing]
 
 1. Setup Workload Identity Federation access to read/write to the bucket
 
    ```sh
-   gcloud storage buckets add-iam-policy-binding gs://${BUCKET} \
+   gcloud storage buckets add-iam-policy-binding gs://${DATA_BUCKET} \
        --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
        --role "roles/storage.objectUser"
    ```
@@ -61,12 +62,13 @@ the base model.
 
 1. Build container image using Cloud Build and push the image to Artifact Registry
 
-   - Modify cloudbuild.yaml to specify the image url
-
-      ```sh
-      sed -i "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" cloudbuild.yaml && \
-      gcloud builds submit . --project ${PROJECT_ID}
-      ```
+   ```
+   cd src
+   gcloud builds submit --config cloudbuild.yaml \
+   --project ${PROJECT_ID} \
+   --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+   cd ..
+   ```
 
 1. Get credentials for the GKE cluster
 
@@ -79,7 +81,7 @@ the base model.
    Data Prepraration Job inputs:
    | Variable | Description | Example |
    | --- | --- | --- |
-   | BUCKET | The bucket used for input and output. | |
+   | DATA_BUCKET | The bucket used for input and output. | |
    | DATASET_INPUT_PATH | The folder path of where the preprocessed flipkart data resides | flipkart_preprocessed_dataset |
    | DATASET_INPUT_FILE | The filename of the preprocessed flipkart data | flipkart.csv |
    | DATASET_OUTPUT_PATH | The folder path of where the generated output data set will reside. This path will be needed for fine-tuning. | dataset/output |
@@ -100,7 +102,7 @@ the base model.
    sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
          -i -e "s|KSA|${KSA}|" \
          -i -e "s|V_PROJECT_ID|${PROJECT_ID}|" \
-         -i -e "s|V_BUCKET|${BUCKET}|" \
+         -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" \
          -i -e "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" \
          -i -e "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" \
          -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
@@ -118,6 +120,7 @@ the base model.
 1. Once the Job is completed, the prepared datasets are stored in Google Cloud Storage.
 
    ```sh
-   gcloud storage ls gs://${BUCKET}/${DATASET_OUTPUT_PATH}
+   gcloud storage ls gs://${DATA_BUCKET}/${DATASET_OUTPUT_PATH}
    ```
+
 [datapreprocessing]: ../../datapreprocessing/ray/README.md#how-to-use-this-repo-
