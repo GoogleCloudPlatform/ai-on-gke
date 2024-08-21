@@ -73,7 +73,11 @@ module "infra" {
   cpu_pools         = var.cpu_pools
   enable_gpu        = var.enable_gpu
   gpu_pools         = var.gpu_pools
-  depends_on        = [module.project-services]
+  ray_addon_enabled = true
+  # TODO(genlu): remove channel and k8s_version after ray addon is in REGULAR channel
+  release_channel    = "RAPID"
+  kubernetes_version = "1.30.3-gke.1969000"
+  depends_on         = [module.project-services]
 }
 
 data "google_container_cluster" "default" {
@@ -147,24 +151,6 @@ module "kuberay-workload-identity" {
   depends_on                      = [module.namespace]
 }
 
-module "kuberay-operator" {
-  source            = "../../modules/kuberay-operator"
-  providers         = { helm = helm.ray, kubernetes = kubernetes.ray }
-  name              = "kuberay-operator"
-  create_namespace  = true
-  namespace         = local.kubernetes_namespace
-  project_id        = var.project_id
-  autopilot_cluster = local.enable_autopilot
-}
-
-module "kuberay-logging" {
-  source    = "../../modules/kuberay-logging"
-  providers = { kubernetes = kubernetes.ray }
-  namespace = local.kubernetes_namespace
-
-  depends_on = [module.namespace]
-}
-
 module "kuberay-monitoring" {
   count                           = var.create_ray_cluster ? 1 : 0
   source                          = "../../modules/kuberay-monitoring"
@@ -175,8 +161,7 @@ module "kuberay-monitoring" {
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.workload_identity_service_account
-  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
-  depends_on = [module.kuberay-workload-identity, module.kuberay-operator]
+  depends_on                      = [module.kuberay-workload-identity]
 }
 
 module "gcs" {
@@ -216,8 +201,7 @@ module "kuberay-cluster" {
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
   members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
-  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
-  depends_on = [module.gcs, module.kuberay-operator, module.kuberay-workload-identity]
+  depends_on               = [module.gcs, module.kuberay-workload-identity]
 }
 
 

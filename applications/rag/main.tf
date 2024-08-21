@@ -78,8 +78,11 @@ module "infra" {
   cpu_pools          = var.cpu_pools
   enable_gpu         = true
   gpu_pools          = var.gpu_pools
-  kubernetes_version = var.kubernetes_version
-  depends_on         = [module.project-services]
+  ray_addon_enabled  = true
+  # TODO(genlu): remove channel and k8s_version after ray addon is in REGULAR channel
+  release_channel = "RAPID"
+  kubernetes_version = "1.30.3-gke.1969000"
+  depends_on      = [module.project-services]
 }
 
 data "google_container_cluster" "default" {
@@ -152,16 +155,6 @@ module "namespace" {
   namespace        = local.kubernetes_namespace
 }
 
-module "kuberay-operator" {
-  source            = "../../modules/kuberay-operator"
-  providers         = { helm = helm.rag, kubernetes = kubernetes.rag }
-  name              = "kuberay-operator"
-  project_id        = var.project_id
-  create_namespace  = true
-  namespace         = local.kubernetes_namespace
-  autopilot_cluster = local.enable_autopilot
-}
-
 module "gcs" {
   source      = "../../modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
@@ -216,13 +209,6 @@ module "jupyterhub" {
   depends_on = [module.namespace, module.gcs]
 }
 
-module "kuberay-logging" {
-  source     = "../../modules/kuberay-logging"
-  providers  = { kubernetes = kubernetes.rag }
-  namespace  = local.kubernetes_namespace
-  depends_on = [module.namespace]
-}
-
 module "kuberay-workload-identity" {
   providers                       = { kubernetes = kubernetes.rag }
   source                          = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
@@ -245,8 +231,7 @@ module "kuberay-monitoring" {
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.ray_service_account
-  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
-  depends_on = [module.namespace, module.kuberay-operator, module.kuberay-workload-identity]
+  depends_on                      = [module.namespace, module.kuberay-workload-identity]
 }
 
 module "kuberay-cluster" {
@@ -281,8 +266,7 @@ module "kuberay-cluster" {
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
   members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
-  //TODO(genlu): remove the module.kuberay-operator after migrated using ray addon.
-  depends_on = [module.gcs, module.kuberay-operator, module.kuberay-workload-identity]
+  depends_on               = [module.gcs, module.kuberay-workload-identity]
 }
 
 module "inference-server" {
