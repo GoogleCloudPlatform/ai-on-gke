@@ -3,8 +3,7 @@ steps:
   args:
   - build
   - -t
-  - IMAGE_URL
+  - ${_DESTINATION}
   - .
-  dir: "src"
 images:
-  - IMAGE_URL
+  - ${_DESTINATION}

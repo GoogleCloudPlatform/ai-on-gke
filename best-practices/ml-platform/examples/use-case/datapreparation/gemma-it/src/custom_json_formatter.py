@@ -17,8 +17,21 @@ import logging
 
 
 class CustomJSONFormatter(logging.Formatter):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        fmt=None,
+        datefmt=None,
+        style="%",
+        validate=True,
+        defaults=None,
+    ):
+        super().__init__(
+            fmt=fmt,
+            datefmt=datefmt,
+            style=style,
+            validate=validate,
+            defaults=defaults,
+        )
 
         self._ignore_keys = {
             "args",

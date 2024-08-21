@@ -12,8 +12,7 @@ COPY requirements.txt /venv/requirements.txt
 
 RUN pip install --no-cache-dir -r /venv/requirements.txt
 
-COPY logging.conf /app/logging.conf
-COPY preprocessing.py /app/preprocessing.py
+COPY custom_json_formatter.py logging.conf preprocessing.py /app/
 
 WORKDIR /app
 
