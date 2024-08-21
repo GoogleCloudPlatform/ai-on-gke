@@ -23,7 +23,6 @@ credentials_config = {
 project_id = "tpu-vm-gke-testing"
 
 # Latency profile generator service configuration
-artifact_registry                          = "us-central1-docker.pkg.dev/tpu-vm-gke-testing/ai-benchmark"
 build_latency_profile_generator_image      = false
 latency_profile_kubernetes_service_account = "prom-frontend-sa"
 output_bucket                              = "tpu-vm-gke-testing-benchmark-output-bucket"
