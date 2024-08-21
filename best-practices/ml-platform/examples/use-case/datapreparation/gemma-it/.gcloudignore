@@ -1,7 +1,0 @@
-src/.venv/
-src/venv/
-src/.python-version
-.gcloudignore
-cloudbuild.yaml
-dataprep.yaml
-README.md

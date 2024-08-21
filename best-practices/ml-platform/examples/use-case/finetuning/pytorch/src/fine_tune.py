@@ -14,19 +14,19 @@
 
 import datasets
 import logging
+import logging.config
 import os
 import signal
 import sys
 import torch
 import transformers
+import yaml
 
 from accelerate import Accelerator
 from datasets import Dataset, load_dataset, load_from_disk
 from peft import LoraConfig, PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
-
-from custom_json_formatter import CustomJSONFormatter
 
 
 def graceful_shutdown(signal_number, stack_frame):
@@ -47,21 +47,17 @@ def formatting_prompts_func(example):
 
 if __name__ == "__main__":
     # Configure logging
+    logging.config.fileConfig("logging.conf")
+
     logger = logging.getLogger("finetune")
-    LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
-    print(f"LOG_LEVEL: {LOG_LEVEL}")
-    logger.setLevel(LOG_LEVEL)
 
-    handler = logging.StreamHandler()
-    handler.setFormatter(CustomJSONFormatter())
-    handler.setLevel(LOG_LEVEL)
-    logger.addHandler(handler)
-
-    # For local testing you can enable logging to a file
-    # file_handler = logging.FileHandler('fine_tuning.log')
-    # file_handler.setFormatter(CustomJSONFormatter())
-    # file_handler.setLevel(LOG_LEVEL)
-    # logger.addHandler(file_handler)
+    if "LOG_LEVEL" in os.environ:
+        new_log_level = os.environ["LOG_LEVEL"].upper()
+        logger.info(
+            f"Log level set to '{new_log_level}' via LOG_LEVEL environment variable"
+        )
+        logging.getLogger().setLevel(new_log_level)
+        logger.setLevel(new_log_level)
 
     datasets.disable_progress_bar()
     transformers.utils.logging.disable_progress_bar()

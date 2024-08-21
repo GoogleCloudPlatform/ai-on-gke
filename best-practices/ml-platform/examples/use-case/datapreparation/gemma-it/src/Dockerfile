@@ -8,7 +8,7 @@ COPY requirements.txt /
 
 RUN pip3 install --no-cache-dir -r /requirements.txt
 
-COPY dataprep.py custom_json_formatter.py /
+COPY custom_json_formatter.py dataprep.py logging.conf  /
 
 ENV PYTHONUNBUFFERED 1
 

@@ -15,6 +15,7 @@
 import datasets
 import json
 import logging
+import logging.config
 import numpy as np
 import os
 import pandas as pd
@@ -300,24 +301,17 @@ def graceful_shutdown(signal_number, stack_frame):
 
 if __name__ == "__main__":
     # Configure logging
+    logging.config.fileConfig("logging.conf")
+
     logger = logging.getLogger("processing")
 
-    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
-    print(f"LOG_LEVEL: {LOG_LEVEL}")
-    logger.setLevel(LOG_LEVEL)
-
-    handler = logging.StreamHandler()
-    handler.setFormatter(CustomJSONFormatter())
-    handler.setLevel(LOG_LEVEL)
-    logger.addHandler(handler)
-
-    datasets.disable_progress_bar()
-
-    # For local testing you can enable logging to a file
-    # file_handler = logging.FileHandler('dataprep.log')
-    # file_handler.setFormatter(CustomJSONFormatter())
-    # file_handler.setLevel(LOG_LEVEL)
-    # logger.addHandler(file_handler)
+    if "LOG_LEVEL" in os.environ:
+        new_log_level = os.environ["LOG_LEVEL"].upper()
+        logger.info(
+            f"Log level set to '{new_log_level}' via LOG_LEVEL environment variable"
+        )
+        logging.getLogger().setLevel(new_log_level)
+        logger.setLevel(new_log_level)
 
     logger.info("Configure signal handlers")
     signal.signal(signal.SIGINT, graceful_shutdown)
