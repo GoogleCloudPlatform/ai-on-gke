@@ -26,7 +26,6 @@ ksa       = "benchmark-ksa"
 k8s_hf_secret = "hf-token"
 
 # Latency profile generator service configuration
-artifact_registry                          = "us-central1-docker.pkg.dev/$PROJECT_ID/ai-benchmark"
 latency_profile_kubernetes_service_account = "sample-runner-ksa"
 output_bucket                              = "${PROJECT_ID}-benchmark-output"
 gcs_path                                   = "gs://${PROJECT_ID}-ai-gke-benchmark-fuse/ShareGPT_V3_unfiltered_cleaned_split_filtered_prompts.txt"
