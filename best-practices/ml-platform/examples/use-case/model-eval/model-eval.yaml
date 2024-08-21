@@ -21,14 +21,16 @@ spec:
           ACTION=predict python validate_fine_tuned_model.py
           ACTION=accuracy python validate_fine_tuned_model.py
         env:
+        - name: "BUCKET"
+          value: "V_BUCKET"
+        - name: "DATASET_OUTPUT_PATH"
+          value: "V_DATASET_OUTPUT_PATH"
         - name: "ENDPOINT"
           value: "V_ENDPOINT"
         - name: "MODEL_PATH"
           value: "V_MODEL_PATH"
-        - name: "DATASET_OUTPUT_PATH"
-          value: "V_DATASET_OUTPUT_PATH"
-        - name: "BUCKET"
-          value: "V_BUCKET"
+        - name: "PREDICTIONS_FILE"
+          value: "predictions.txt"
         resources:
           requests:
             cpu: "2"

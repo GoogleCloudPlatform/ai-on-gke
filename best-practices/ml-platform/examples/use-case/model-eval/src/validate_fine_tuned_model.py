@@ -1,28 +1,30 @@
-import os
-import requests
 import json
+import logging
+import os
 import pandas as pd
-import logging.config
+import requests
+
 from datasets import load_from_disk
 from google.cloud import storage
 
+from custom_json_formatter import CustomJSONFormatter
 
-logging.config.fileConfig("logging.conf")
-logger = logging.getLogger("modeleval")
-logger.debug(logger)
+
+def graceful_shutdown(signal_number, stack_frame):
+    signal_name = signal.Signals(signal_number).name
+
+    logger.info(f"Received {signal_name}({signal_number}), shutting down...")
+    # TODO: Add logic to handled checkpointing if required
+    sys.exit(0)
 
 
 class ModelEvaluation:
     def __init__(self):  # Constructor
-        self.api_endpoint = os.getenv(
-            "ENDPOINT", "http://10.40.0.51:8000/v1/chat/completions"
-        )
-        self.model_name = os.getenv(
-            "MODEL_PATH", "/model-data/gemma2-a100/a100-abctest"
-        )
-        self.output_file = os.getenv("PREDICTIONS_FILE", "predictions.txt")
-        self.gcs_bucket = os.getenv("BUCKET", "kh-finetune-ds")
-        self.dataset_output_path = os.getenv("DATASET_OUTPUT_PATH", "dataset/output")
+        self.api_endpoint = os.environ["ENDPOINT"]
+        self.model_name = os.environ["MODEL_PATH"]
+        self.output_file = os.environ["PREDICTIONS_FILE"]
+        self.gcs_bucket = os.environ["BUCKET"]
+        self.dataset_output_path = os.environ["DATASET_OUTPUT_PATH"]
         training_dataset = load_from_disk(
             f"gs://{self.gcs_bucket}/{self.dataset_output_path}/training"
         )
@@ -168,12 +170,33 @@ class ModelEvaluation:
             )
 
     def evaluate(self):
-        if "ACTION" in os.environ and os.getenv("ACTION") == "predict":
+        if "ACTION" in os.environ and os.environ["ACTION"] == "predict":
             self.predict()
         else:
             self.calculate_accuracy()
 
 
 if __name__ == "__main__":
+    # Configure logging
+    logger = logging.getLogger("model-eval")
+    LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+    print(f"LOG_LEVEL: {LOG_LEVEL}")
+    logger.setLevel(LOG_LEVEL)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(CustomJSONFormatter())
+    handler.setLevel(LOG_LEVEL)
+    logger.addHandler(handler)
+
+    # For local testing you can enable logging to a file
+    # file_handler = logging.FileHandler('model-eval.log')
+    # file_handler.setFormatter(CustomJSONFormatter())
+    # file_handler.setLevel(LOG_LEVEL)
+    # logger.addHandler(file_handler)
+
+    logger.info("Configure signal handlers")
+    signal.signal(signal.SIGINT, graceful_shutdown)
+    signal.signal(signal.SIGTERM, graceful_shutdown)
+
     model_eval = ModelEvaluation()
     model_eval.evaluate()
