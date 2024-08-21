@@ -6,12 +6,12 @@
   * [Instructions](#instructions)
     * [Step 1: create output bucket](#step-1--create-output-bucket)
     * [Step 2: create and give service account access to write to output gcs bucket](#step-2--create-and-give-service-account-access-to-write-to-output-gcs-bucket)
-    * [Step 5: create artifact repository for automated Latency Profile Generator docker build](#step-5--create-artifact-repository-for-automated-latency-profile-generator-docker-build)
-    * [Step 6: create and configure terraform.tfvars](#step-6--create-and-configure-terraformtfvars)
+    * [Step 3: create artifact repository for automated Latency Profile Generator docker build](#step-3--create-artifact-repository-for-automated-latency-profile-generator-docker-build)
+    * [Step 4: create and configure terraform.tfvars](#step-4--create-and-configure-terraformtfvars)
       * [[optional] set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
       * [[optional] set up secret token in Secret Manager](#optional-set-up-secret-token-in-secret-manager)
-    * [Step 7: login to gcloud](#step-7--login-to-gcloud)
-    * [Step 8: terraform initialize, plan and apply](#step-8--terraform-initialize-plan-and-apply)
+    * [Step 5: login to gcloud](#step-5--login-to-gcloud)
+    * [Step 6: terraform initialize, plan and apply](#step-6--terraform-initialize-plan-and-apply)
   * [Inputs](#inputs)
 <!-- TOC -->
 
