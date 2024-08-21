@@ -25,7 +25,7 @@ The preprocessing.py file does the following:
 
    ```
    git clone https://github.com/GoogleCloudPlatform/ai-on-gke && \
-   cd ai-on-gke/best-practices/ml-platform/examples/use-case/ray/dataprocessing
+   cd ai-on-gke/best-practices/ml-platform/examples/use-case/dataprocessing/ray
    ```
 
 1. Set environment variables
@@ -33,17 +33,18 @@ The preprocessing.py file does the following:
    ```
    CLUSTER_NAME=<your_cluster_name>
    PROJECT_ID=<your_project_id>
-   PROCESSING_BUCKET=<your_bucket_name>
+   DATA_BUCKET=<your_bucket_name>
    DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/dataprocessing/dp:v0.0.1
    ```
 
 1. Create a Cloud Storage bucket to store raw data
 
    ```
-   gcloud storage buckets create gs://${PROCESSING_BUCKET} --project ${PROJECT_ID} --uniform-bucket-level-access
+   gcloud storage buckets create gs://${DATA_BUCKET} --project ${PROJECT_ID} --uniform-bucket-level-access
    ```
 
 1. Download the raw data csv file from [Kaggle][kaggle] and store it into the bucket created in the previous step.
+
    - You will need kaggle cli to download the file. The kaggle cli can be installed using the following [instructions](https://github.com/Kaggle/kaggle-api#installation).
    - To use the cli you must create an API token. To create the token, register on kaggle.com if you already don't have an account. Go to kaggle.com/settings > API > Create New Token, the downloaded file should be stored in $HOME/.kaggle/kaggle.json. Note, you will have to create the dir $HOME/.kaggle.
    - Alternatively, it can be [downloaded](https://www.kaggle.com/datasets/atharvjairath/flipkart-ecommerce-dataset) from the kaggle website.
@@ -51,7 +52,7 @@ The preprocessing.py file does the following:
    ```
    kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset && \
    gcloud storage cp flipkart_com-ecommerce_sample.csv \
-   gs://${PROCESSING_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
+   gs://${DATA_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
    rm flipkart_com-ecommerce_sample.csv
    ```
 
@@ -88,11 +89,10 @@ The preprocessing.py file does the following:
 1. Build container image using Cloud Build and push the image to Artifact Registry
 
    ```
-   cd src && \
-   gcloud builds submit \
+   cd src
+   gcloud builds submit --config cloudbuild.yaml \
    --project ${PROJECT_ID} \
-   --tag ${DOCKER_IMAGE_URL} \
-   . && \
+   --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
    cd ..
    ```
 
@@ -104,7 +104,7 @@ The preprocessing.py file does the following:
 
    ```
    sed -i "s|#IMAGE|${DOCKER_IMAGE_URL}|" job.yaml && \
-   sed -i "s|#PROCESSING_BUCKET|${PROCESSING_BUCKET}|" job.yaml
+   sed -i "s|#DATA_BUCKET|${DATA_BUCKET}|" job.yaml
    ```
 
 1. Get credentials for the GKE cluster
@@ -122,16 +122,16 @@ The preprocessing.py file does the following:
 1. Monitor the execution in Ray Dashboard. See how to launch [Ray Dashboard][ray-dashboard]
 
    - Jobs -> Running Job ID
-      - See the Tasks/actors overview for Running jobs
-      - See the Task Table for a detailed view of task and assigned node(s)
+     - See the Tasks/actors overview for Running jobs
+     - See the Task Table for a detailed view of task and assigned node(s)
    - Cluster -> Node List
-      - See the Ray actors running on the worker process
+     - See the Ray actors running on the worker process
 
 1. Once the Job is completed, both the prepared dataset as a CSV and the images are stored in Google Cloud Storage.
 
    ```
-   gcloud storage ls gs://${PROCESSING_BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
-   gcloud storage ls gs://${PROCESSING_BUCKET}/flipkart_images
+   gcloud storage ls gs://${DATA_BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
+   gcloud storage ls gs://${DATA_BUCKET}/flipkart_images
    ```
 
 > For additional information about developing using this codebase see the [Developer Guide](DEVELOPER.md)
@@ -205,8 +205,8 @@ labelExtractors:
   ray_woker_node_id: REGEXP_EXTRACT(textPayload, "ray_worker_node_id:(.+) Image")
 metricDescriptor:
   labels:
-  - key: gke_node
-  - key: ray_woker_node_id
+    - key: gke_node
+    - key: ray_woker_node_id
   metricKind: DELTA
   name: projects/xxxxx/metricDescriptors/logging.googleapis.com/user/No_Image_Found_Product
   type: logging.googleapis.com/user/No_Image_Found_Product

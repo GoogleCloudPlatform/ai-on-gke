@@ -66,7 +66,7 @@ spec:
         - name: "MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"
           value: "V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"
         - name: "TRAINING_DATASET_BUCKET"
-          value: "V_TRAINING_DATASET_BUCKET"
+          value: "V_DATA_BUCKET"
         - name: "TRAINING_DATASET_PATH"
           value: "V_TRAINING_DATASET_PATH"
         - name: MODEL_NAME

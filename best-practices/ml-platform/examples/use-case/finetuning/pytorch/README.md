@@ -11,12 +11,19 @@ with an inference serving engine.
 
 ## Preparation
 
+- Clone the repository and change directory to the guide directory
+
+  ```
+  git clone https://github.com/GoogleCloudPlatform/ai-on-gke && \
+  cd ai-on-gke/best-practices/ml-platform/examples/use-case/finetuning/pytorch
+  ```
+
 - Set Environment variables
 
   ```sh
   PROJECT_ID=<your-project-id>
   PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-  TRAINING_DATASET_BUCKET=<training-dataset-bucket-name>
+  DATA_BUCKET=<training-dataset-bucket-name>
   MODEL_BUCKET=<model-artifacts-bucket>
   CLUSTER_NAME=<your-gke-cluster>
   NAMESPACE=ml-team
@@ -24,8 +31,9 @@ with an inference serving engine.
   HF_TOKEN=<your-Hugging-Face-account-token>
   DOCKER_IMAGE_URL=us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0
   ```
-  - TRAINING_DATASET_BUCKET is the bucket you used in [datapreparation][datapreparation].
-  - MODEL_BUCKET can be the same bucket TRAINING_DATASET_BUCKET. If you want to use a different bucket, provide it a name.
+
+  - DATA_BUCKET is the bucket you used in [datapreparation][datapreparation].
+  - MODEL_BUCKET can be the same bucket DATA_BUCKET. If you want to use a different bucket, provide it a name.
   - HF_TOKEN is your huggingface access token. Go to https://huggingface.co/settings/tokens , click `Create new token` , provide a token name, select `Read` in token type and click `Create token`.
 
 ## GCS
@@ -34,7 +42,7 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
 
 ### Writing fine-tuned model weights
 
-- Skip this step if your MODEL_BUCKET and TRAINING_DATASET_BUCKET are the same bucket.
+- Skip this step if your MODEL_BUCKET and DATA_BUCKET are the same bucket.
 
   - Create the bucket for storing the training data set
 
@@ -43,7 +51,7 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
         --project ${PROJECT_ID} \
         --location us \
         --uniform-bucket-level-access
-    
+
     ```
 
   - Setup Workload Identity Federation to access the bucket to write the model weights
@@ -57,15 +65,14 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
 ## Build the image of the source
 
 - Build container image using Cloud Build and push the image to Artifact Registry
-  Modify cloudbuild.yaml to specify the image url
 
-```
-cd src
-gcloud builds submit --config cloudbuild.yaml \
---project ${PROJECT_ID} \
---substitutions _DESTINATION=${DOCKER_IMAGE_URL}
-cd ..
-```
+  ```
+  cd src
+  gcloud builds submit --config cloudbuild.yaml \
+  --project ${PROJECT_ID} \
+  --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+  cd ..
+  ```
 
 ## Deploy the Job
 
@@ -86,23 +93,24 @@ gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${P
   ```
 
 ### Accept licence on hugging face if you have not done it already
+
 - Go to https://huggingface.co/google/gemma-2-9b-it and accept the licence
 
 ### Fine-tuning Job Inputs
 
-| Variable                             | Description                                                                                                                       | Example                                      |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| IMAGE_URL                            | The image url for the finetune image                                                                                              |                                              |
-| MLFLOW_ENABLE                        | Enable MLflow, empty will also disable                                                                                            | true/false                                   |
-| EXPERIMENT                           | If MLflow is enabled. experiment ID used in MLflow                                                                                | experiment-                                  |
+| Variable                             | Description                                                                                                                       | Example                                        |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| IMAGE_URL                            | The image url for the finetune image                                                                                              |                                                |
+| MLFLOW_ENABLE                        | Enable MLflow, empty will also disable                                                                                            | true/false                                     |
+| EXPERIMENT                           | If MLflow is enabled. experiment ID used in MLflow                                                                                | experiment-                                    |
 | MLFLOW_TRACKING_URI                  | If MLflow is enabled, the tracking server URI                                                                                     | <http://mlflow-tracking-service.ml-tools:5000> |
-| MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING | If MLflow is enabled, track system level metrics, CPU/Memory/GPU                                                                  | true/false                                   |
-| TRAINING_DATASET_BUCKET              | The bucket which contains the generated prompts for fine-tuning.                                                                  |                                              |
-| TRAINING_DATASET_PATH                | The path where the generated prompt data is for fine-tuning.                                                                      | dataset/output                               |
-| MODEL_BUCKET                         | The bucket which will be the destination of the fine-tuned model.                                                                 |                                              |
-| MODEL_PATH                           | The output folder path for the fine-tuned model. This location will be used by the inference serving engine and model evaluation. | /model-data/model-gemma2/experiment          |
-| MODEL_NAME                           | The Hugging Face path to the base model for fine-tuning.                                                                          | google/gemma-2-9b-it                         |
-| HF_TOKEN                             | The Hugging Face token used to pull the base model.                                                                               |                                              |
+| MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING | If MLflow is enabled, track system level metrics, CPU/Memory/GPU                                                                  | true/false                                     |
+| DATA_BUCKET                          | The bucket which contains the generated prompts for fine-tuning.                                                                  |                                                |
+| TRAINING_DATASET_PATH                | The path where the generated prompt data is for fine-tuning.                                                                      | dataset/output                                 |
+| MODEL_BUCKET                         | The bucket which will be the destination of the fine-tuned model.                                                                 |                                                |
+| MODEL_PATH                           | The output folder path for the fine-tuned model. This location will be used by the inference serving engine and model evaluation. | /model-data/model-gemma2/experiment            |
+| MODEL_NAME                           | The Hugging Face path to the base model for fine-tuning.                                                                          | google/gemma-2-9b-it                           |
+| HF_TOKEN                             | The Hugging Face token used to pull the base model.                                                                               |                                                |
 
 Update variables in the respective job submission manifest to reflect your configuration.
 
@@ -129,7 +137,7 @@ sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
     -i -e "s|V_MLFLOW_ENABLE|${MLFLOW_ENABLE}|" \
     -i -e "s|V_EXPERIMENT|${EXPERIMENT}|" \
     -i -e "s|V_MLFLOW_TRACKING_URI|${MLFLOW_TRACKING_URI}|" \
-    -i -e "s|V_TRAINING_DATASET_BUCKET|${TRAINING_DATASET_BUCKET}|" \
+    -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" \
     -i -e "s|V_TRAINING_DATASET_PATH|${TRAINING_DATASET_PATH}|" \
     -i -e "s|V_MODEL_BUCKET|${MODEL_BUCKET}|" \
     -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
@@ -143,6 +151,7 @@ sed -i -e "s|IMAGE_URL|${DOCKER_IMAGE_URL}|" \
 kubectl apply -f yaml/provisioning-request-${ACCELERATOR}.yaml -n ml-team
 kubectl apply -f yaml/fine-tune-${ACCELERATOR}-dws.yaml -n ml-team
 ```
+
 ### Verify the completion of the fine-tuning job
 
 In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run the following query to see the completion of the job.
@@ -153,7 +162,9 @@ textPayload: "finetune - INFO - ### Completed ###"
 ```
 
 After the fine-tuning job is successful, the model bucket should have a checkooint folder created.
-   ```sh
-   gcloud storage ls gs://${MODEL_BUCKET}/${MODEL_PATH}
-   ```
+
+```sh
+gcloud storage ls gs://${MODEL_BUCKET}/${MODEL_PATH}
+```
+
 [datapreparation]: ../../datapreparation/gemma-it/README.md#steps

@@ -14,10 +14,10 @@ spec:
       annotations:
         gke-gcsfuse/volumes: "true"
     spec:
-      serviceAccountName: KSA
+      serviceAccountName: V_KSA
       containers:
       - name: inference-server
-        image: IMAGE_URL
+        image: V_IMAGE_URL
         resources:
           requests:
             cpu: "2"
@@ -51,7 +51,7 @@ spec:
         csi:
           driver: gcsfuse.csi.storage.gke.io
           volumeAttributes:
-            bucketName: V_BUCKET
+            bucketName: V_MODEL_BUCKET
             mountOptions: "implicit-dirs"
             fileCacheCapacity: "20Gi"
       nodeSelector:

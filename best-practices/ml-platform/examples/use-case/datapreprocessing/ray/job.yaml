@@ -16,7 +16,7 @@ spec:
         imagePullPolicy: Always
         env:
         - name: "PROCESSING_BUCKET"
-          value: #PROCESSING_BUCKET
+          value: #DATA_BUCKET
         - name: "RAY_CLUSTER_HOST"
           value: ray-cluster-kuberay-head-svc.ml-team:10001
       nodeSelector:
