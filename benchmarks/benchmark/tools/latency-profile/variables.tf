@@ -83,7 +83,7 @@ variable "inference_server" {
       port = number,
     })
     accelerator_config = object({
-      type = string,
+      type  = string,
       count = number,
     })
   })
