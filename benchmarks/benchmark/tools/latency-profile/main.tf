@@ -80,7 +80,6 @@ resource "google_project_service" "cloudbuild" {
 
 resource "kubernetes_manifest" "deploy_latency_profile_generator" {
   for_each   = toset(local.all_manifests)
-  depends_on = [resource.null_resource.build_and_push_image, resource.null_resource.deploy_model_server]
   manifest   = yamldecode(each.value)
   timeouts {
     create = "30m"
