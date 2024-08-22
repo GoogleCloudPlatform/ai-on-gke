@@ -60,7 +60,7 @@ For an outline of products and features used in the platform, see the [Platform 
 
 ## Use cases
 
-- [Distributed Data Processing with Ray](examples/use-case/ray/dataprocessing/README.md): Run a distributed data processing job using Ray.
+- [Distributed Data Processing with Ray](examples/use-case/data-processing/ray/README.md): Run a distributed data processing job using Ray.
 
 ## Resources
 
