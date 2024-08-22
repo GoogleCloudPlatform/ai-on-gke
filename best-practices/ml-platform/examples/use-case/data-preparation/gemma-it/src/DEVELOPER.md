@@ -18,7 +18,7 @@
 - Change directory to the `src` directory
 
   ```
-  cd best-practices/ml-platform/examples/use-case/datapreparation/gemma-it/src
+  cd best-practices/ml-platform/examples/use-case/data-preparation/gemma-it/src
   ```
 
 - Set the local `python` version

@@ -38,7 +38,7 @@ The `preprocessing.py` file does the following:
   CLUSTER_NAME=
   ```
 
-- Set `PROJECT_ID` to the project ID of the project where your GKE cluster exists
+- Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
 
   ```
   PROJECT_ID=
@@ -53,7 +53,7 @@ The `preprocessing.py` file does the following:
 - Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
 
   ```
-  DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/data-processing/dp:v0.0.1"
+  DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/data-processing/dp:v1.0.0"
   ```
 
 - Create a Cloud Storage bucket to store the data
@@ -124,8 +124,9 @@ The `preprocessing.py` file does the following:
   - Ray Cluster Host - if used in this example, it should not need to be changed, but if your Ray cluster service is named differently or in a different namespace, update accordingly.
 
   ```
-  sed -i "s|V_IMAGE|${DOCKER_IMAGE_URL}|" job.yaml && \
-  sed -i "s|V_DATA_BUCKET|${DATA_BUCKET}|" job.yaml
+  sed \
+  -i -e "s|V_IMAGE|${DOCKER_IMAGE_URL}|" manifests/job.yaml \
+  -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" manifests/job.yaml
   ```
 
 - Get credentials for the GKE cluster
@@ -137,7 +138,7 @@ The `preprocessing.py` file does the following:
 - Create the Job in the “ml-team” namespace using kubectl command
 
   ```
-  kubectl --namespace ml-team apply -f job.yaml
+  kubectl --namespace ml-team apply -f manifests/job.yaml
   ```
 
 - Monitor the execution in Ray Dashboard. See how to launch [Ray Dashboard][ray-dashboard]
