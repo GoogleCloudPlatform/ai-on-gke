@@ -50,7 +50,7 @@ resource "google_project_service" "cloudbuild" {
 
 #  ----- Manual Benchmarking -----
 
-module "latency-profile" {
+module "profile-generator" {
   count = var.targets.manual != null ? 1 : 0
   source = "../latency-profile"
 
@@ -65,8 +65,8 @@ module "latency-profile" {
     name      = var.targets.manual.name
     tokenizer = var.targets.manual.tokenizer
     service = {
-      name = var.manual.targets.service_name
-      port = var.manual.targets.service_port
+      name = var.targets.manual.targets.service_name
+      port = var.targets.manual.targets.service_port
     }
 }
   max_num_prompts                            = var.max_num_prompts
