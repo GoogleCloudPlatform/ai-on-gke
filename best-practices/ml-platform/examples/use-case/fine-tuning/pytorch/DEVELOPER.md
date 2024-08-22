@@ -18,7 +18,7 @@
 - Change directory to the `src` directory
 
   ```
-  cd best-practices/ml-platform/examples/use-case/finetuning/pytorch/src
+  cd best-practices/ml-platform/examples/use-case/fine-tuning/pytorch/src
   ```
 
 - Set the local `python` version

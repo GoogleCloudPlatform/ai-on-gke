@@ -11,7 +11,6 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: finetune-gemma-l4
-  namespace: ml-team  
 spec:
   backoffLimit: 0
   completions: 2
@@ -25,15 +24,12 @@ spec:
         gke-gcsfuse/volumes: "true"
         gke-gcsfuse/memory-limit: "35Gi"
         cluster-autoscaler.kubernetes.io/consume-provisioning-request: l4-job
-        cluster-autoscaler.kubernetes.io/provisioning-class-name: "queued-provisioning.gke.io"        
+        cluster-autoscaler.kubernetes.io/provisioning-class-name: "queued-provisioning.gke.io"
     spec:
-      subdomain: headless-svc-l4
-      serviceAccountName: KSA
-      terminationGracePeriodSeconds: 600
       containers:
       - name: gpu-job
         imagePullPolicy: Always 
-        image: IMAGE_URL
+        image: V_IMAGE_URL
         ports:
         - containerPort: 29500
         securityContext:
@@ -88,6 +84,20 @@ spec:
         - name: gcs-fuse-csi-ephemeral
           mountPath: /model-data
           readOnly: false
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      restartPolicy: OnFailure
+      serviceAccountName: V_KSA
+      subdomain: headless-svc-l4
+      terminationGracePeriodSeconds: 600
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "on-demand"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"
       volumes:
       - name: dshm
         emptyDir:
@@ -99,15 +109,4 @@ spec:
             bucketName: V_MODEL_BUCKET
             mountOptions: "implicit-dirs"
             gcsfuseLoggingSeverity: warning
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-l4
-      restartPolicy: OnFailure
-      tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Exists"
-        effect: "NoSchedule"
-      - key: "on-demand"
-        value: "true"
-        operator: "Equal"
-        effect: "NoSchedule"
   ttlSecondsAfterFinished: 86400

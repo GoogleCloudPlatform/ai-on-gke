@@ -30,11 +30,11 @@ spec:
           value: "V_REGION"
         resources:
           requests:
-            cpu: 7
-            memory: 25Gi
+            cpu: 100m
+            memory: 512Mi
           limits:
-            cpu: 7
-            memory: 25Gi
+            cpu: 250m,
+            memory: 1Gi
       nodeSelector:
         resource-type: "cpu"
       restartPolicy: Never

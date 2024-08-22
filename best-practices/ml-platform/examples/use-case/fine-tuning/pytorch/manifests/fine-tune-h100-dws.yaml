@@ -11,7 +11,6 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: finetune-gemma-h100
-  namespace: ml-team
 spec:
   backoffLimit: 0
   completions: 1
@@ -27,13 +26,10 @@ spec:
         cluster-autoscaler.kubernetes.io/consume-provisioning-request: h100-job
         cluster-autoscaler.kubernetes.io/provisioning-class-name: "queued-provisioning.gke.io"
     spec:
-      subdomain: headless-svc-h100
-      serviceAccountName: KSA
-      terminationGracePeriodSeconds: 600
       containers:
       - name: gpu-job
         imagePullPolicy: Always 
-        image: IMAGE_URL
+        image: V_IMAGE_URL
         ports:
         - containerPort: 29500
         securityContext:
@@ -90,6 +86,21 @@ spec:
         - name: gcs-fuse-csi-ephemeral
           mountPath: /model-data
           readOnly: false
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-h100-80gb
+        resource-model: h100
+      restartPolicy: OnFailure
+      serviceAccountName: V_KSA
+      subdomain: headless-svc-h100
+      terminationGracePeriodSeconds: 600
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "on-demand"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"  
       volumes:
       - name: dshm
         emptyDir:
@@ -100,17 +111,5 @@ spec:
           volumeAttributes:
             bucketName: V_MODEL_BUCKET
             mountOptions: "implicit-dirs"
-            gcsfuseLoggingSeverity: warning
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-h100-80gb
-        resource-model: h100
-      restartPolicy: OnFailure
-      tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Exists"
-        effect: "NoSchedule"
-      - key: "on-demand"
-        value: "true"
-        operator: "Equal"
-        effect: "NoSchedule"        
+            gcsfuseLoggingSeverity: warning      
   ttlSecondsAfterFinished: 86400
