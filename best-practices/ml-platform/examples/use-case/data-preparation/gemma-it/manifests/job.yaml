@@ -1,18 +1,17 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: dataprep-job
+  name: data-prep
 spec:
   backoffLimit: 0
   template:
     metadata:
       labels:
-        app: dataprep-job
+        app: data-prep
     spec:
-      serviceAccountName: KSA
       containers:
       - name: job
-        image: IMAGE_URL
+        image: V_IMAGE_URL
         imagePullPolicy: Always
         env:
         - name: "BUCKET"
@@ -31,9 +30,16 @@ spec:
           value: "V_REGION"
         resources:
           requests:
-            cpu: "7"
-            memory: "25Gi"
+            cpu: 7
+            memory: 25Gi
           limits:
-            cpu: "7"
-            memory: "25Gi"
+            cpu: 7
+            memory: 25Gi
+      nodeSelector:
+        resource-type: "cpu"
       restartPolicy: Never
+      serviceAccountName: V_KSA
+      tolerations:
+      - key: "on-demand"
+        operator: "Exists"
+        effect: "NoSchedule"

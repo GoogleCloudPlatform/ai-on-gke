@@ -11,11 +11,11 @@ spec:
     spec:
       containers:
       - name: job
-        image: V_IMAGE
+        image: us-docker.pkg.dev/gkebatchexpce3c8dcb/data-processing/dp:v0.0.1
         imagePullPolicy: Always
         env:
         - name: "PROCESSING_BUCKET"
-          value: V_DATA_BUCKET
+          value: gkebatchexpce3c8dcb-rueth-gpu-flipkart-data
         - name: "RAY_CLUSTER_HOST"
           value: ray-cluster-kuberay-head-svc.ml-team:10001
       nodeSelector:
