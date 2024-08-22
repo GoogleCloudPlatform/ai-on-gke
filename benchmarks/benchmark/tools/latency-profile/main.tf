@@ -28,10 +28,11 @@ locals {
     ? null
     : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
   )
+  id = substr(uuid(), 0, 8)
 
   all_manifests = flatten([for manifest_file in local.templates :
     [for data in split("---", templatefile(manifest_file, {
-      combo                                      = format("%s-%s-%s-%s", var.inference_server.name, var.inference_server.model, var.inference_server.accelerator_config.type, var.inference_server.accelerator_config.count)
+      id                                         = local.id
       artifact_registry                          = var.artifact_registry
       namespace                                  = var.namespace
       inference_server_framework                 = var.inference_server.name
@@ -64,7 +65,6 @@ data "google_client_config" "identity" {
   count = var.credentials_config.fleet_host != null ? 1 : 0
 }
 
-
 resource "google_project_service" "cloudbuild" {
   count   = var.build_latency_profile_generator_image ? 1 : 0
   project = var.project_id
@@ -78,31 +78,11 @@ resource "google_project_service" "cloudbuild" {
   disable_on_destroy = false
 }
 
-resource "null_resource" "deploy_model_server" {
-  count = var.inference_server.deploy ? 1 : 0
-  provisioner "local-exec" {
-    command = "echo hello"
-  }
-  triggers = {
-    always_run = "${timestamp()}"
-  }
-}
-
 resource "kubernetes_manifest" "deploy_latency_profile_generator" {
   for_each   = toset(local.all_manifests)
   depends_on = [resource.null_resource.build_and_push_image, resource.null_resource.deploy_model_server]
   manifest   = yamldecode(each.value)
   timeouts {
     create = "30m"
-  }
-}
-
-resource "null_resource" "cleanup_model_server" {
-  depends_on = [resource.kubernetes_manifest.deploy_latency_profile_generator]
-  provisioner "local-exec" {
-    command = "kubectl wait --for=condition=complete job/latency-profile-generator --timeout=-9600s && echo hello"
-  }
-  triggers = {
-    always_run = "${timestamp()}"
   }
 }

@@ -35,8 +35,6 @@ data "google_client_config" "identity" {
   count = var.credentials_config.fleet_host != null ? 1 : 0
 }
 
-
-
 resource "google_project_service" "cloudbuild" {
   count   = var.build_latency_profile_generator_image ? 1 : 0
   project = var.project_id
@@ -50,25 +48,10 @@ resource "google_project_service" "cloudbuild" {
   disable_on_destroy = false
 }
 
-# CREATE NODEPOOLS
+#  ----- Manual Benchmarking -----
 
 module "latency-profile" {
-  for_each = toset(
-    flatten([
-      for config in toset(var.profiles.config): toset([
-        for model_server_config in toset(config.model_server_configs): toset([
-          for model in toset(model_server_config.models): toset([
-            for model_config in toset(model_server_config.model_configs): toset([
-              for accelerator in toset(model_config.accelerators): toset([
-                for accelerator_config in toset(model_config.accelerator_configs): 
-                  join(" ", [model, config.model_server, accelerator, accelerator_config.accelerator_count])
-              ])
-            ])
-          ])
-        ])
-      ])
-    ])
-  )
+  count = var.targets.manual != null ? 1 : 0
   source = "../latency-profile"
 
   credentials_config                         = var.credentials_config
@@ -79,17 +62,11 @@ module "latency-profile" {
   artifact_registry                          = var.artifact_registry
   build_latency_profile_generator_image      = false # Dont build image for each profile generator instance, only need to do once.
   inference_server                           = {
-    deploy    = true
-    name      = split(" ", each.value)[1]
-    model     = split(" ", each.value)[0]
-    tokenizer = "google/gemma-7b"
+    name      = var.targets.manual.name
+    tokenizer = var.targets.manual.tokenizer
     service = {
-      name = "maxengine-server", # inference server service name
-      port = 8000
-    }
-    accelerator_config = {
-      type  = split(" ", each.value)[2]
-      count = split(" ", each.value)[3]
+      name = var.manual.targets.service_name
+      port = var.manual.targets.service_port
     }
 }
   max_num_prompts                            = var.max_num_prompts

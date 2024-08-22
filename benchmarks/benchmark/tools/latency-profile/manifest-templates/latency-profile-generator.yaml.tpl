@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: lpg-${combo}
+  name: latency-profile-generator-${id}
   namespace: ${namespace}
   labels:
-    name: latency-profile-generator
+    name: latency-profile-generator-${id}
 spec:
   template:
     spec:
@@ -49,5 +49,5 @@ spec:
                   key: HF_TOKEN
 %{ endfor ~}
       nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-l4   # nvidia-h100-80gb, nvidia-l4
+        cloud.google.com/gke-accelerator: nvidia-l4
         iam.gke.io/gke-metadata-server-enabled: "true"

@@ -141,53 +141,14 @@ variable "hugging_face_secret_version" {
   default     = null
 }
 
-variable "profiles" {
+variable "targets" {
   description = "Model servers to benchmark"
   type = object({
-    valid_models       = list(string)
-    valid_accelerators = list(string)
-    request_rates      = list(number)
-
-    config = list(object({
-      model_server = string # Model server name
-      model_server_configs = list(object({
-        models = list(string) # model name
-        model_configs = list(object({
-          accelerators = list(string) # Accelerator name
-          accelerator_configs = list(object({
-            accelerator_count = number # Number of accelerators
-          }))
-        }))
-      }))
+    manual = optional(object({
+      name = string
+      service_name = string
+      service_port = number
+      tokenizer = string
     }))
   })
-
-  validation {
-    condition = alltrue([
-      for cfg in var.profiles.config : alltrue([
-        for model_server_config in cfg.model_server_configs : (
-          alltrue([
-            for model_config in model_server_config.model_configs :
-            alltrue([for accelerator in model_config.accelerators :
-            contains(var.profiles.valid_accelerators, accelerator)])
-          ])
-        )
-      ])
-    ])
-    error_message = "Each accelerator must be in the valid_accelerators list."
-  }
-
-  validation {
-    condition = alltrue([
-      for cfg in var.profiles.config : alltrue([
-        for model_server_config in cfg.model_server_configs : (
-          alltrue([
-            for model in model_server_config.models :
-            contains(var.profiles.valid_models, model)
-          ])
-        )
-      ])
-    ])
-    error_message = "Each model must be in the valid_models list."
-  }
 }

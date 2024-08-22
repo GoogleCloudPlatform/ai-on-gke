@@ -31,77 +31,11 @@ k8s_hf_secret                              = "hf-token"
 # Benchmark configuration for Locust Docker accessing inference server
 request_rates = [5, 10, 15, 20]
 
-profiles = {
-  valid_models = [
-    "gemma2-2b",
-    "gemma2-9b",
-    "gemma2-27b",
-    "llama3-8b",
-    "llama3-70b",
-    "llama3-405b"
-  ]
-  valid_accelerators = [
-    "tpu-v4-podslice",
-    "tpu-v5-lite-podslice",
-    "tpu-v5p-slice",
-    "nvidia-a100-80gb",
-    "nvidia-h100-80gb",
-    "nvidia-l4"
-  ]
-  request_rates = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-
-  config = [{
-    model_server = "jetstream"
-    model_server_configs = [{
-      models = [
-        "gemma2-2b",
-        "gemma2-9b",
-        "gemma2-27b"
-      ]
-      model_configs = [{
-        accelerators = [
-          "tpu-v5-lite-podslice",
-        ]
-        accelerator_configs = [{
-          accelerator_count = 1
-        }]
-      }]
-    }]
-    }, {
-    model_server = "vllm"
-    model_server_configs = [{
-      models = [
-        "gemma2-2b",
-        "gemma2-9b",
-        "gemma2-27b",
-        "llama3-8b",
-        "llama3-70b",
-        "llama3-405b"
-      ]
-      model_configs = []
-    }]
-    }, {
-    model_server = "tgi"
-    model_server_configs = [{
-      models = [
-        "gemma2-2b",
-        "gemma2-9b",
-        "gemma2-27b",
-        "llama3-8b",
-        "llama3-70b",
-        "llama3-405b"
-      ]
-      model_configs = []
-    }]
-    }, {
-    model_server = "tensorrt-llm"
-    model_server_configs = [{
-      models = [
-        "llama3-8b",
-        "llama3-70b",
-        "llama3-405b"
-      ]
-      model_configs = []
-    }]
-  }]
+targets = {
+  manual = {
+    name = 'your-model-server-name'
+    service_name = 'your-model-server-service-name'
+    service_port = 'your-model-service-service-port'
+    tokenizer = 'your-tokenizer'
+  }
 }
