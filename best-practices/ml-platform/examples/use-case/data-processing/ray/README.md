@@ -23,6 +23,8 @@ The `preprocessing.py` file does the following:
 - Extract image urls, validate and download the images into cloud storage
 - Cleanup & extract attributes as key-value pairs
 
+The data processing step takes approximately 18-20 minutes.
+
 ## How to use this repo
 
 - Clone the repository and change directory to the guide directory
