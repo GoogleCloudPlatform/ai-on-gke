@@ -121,7 +121,7 @@ the base model.
   ```sh
   DATASET_INPUT_PATH="flipkart_preprocessed_dataset"
   DATASET_INPUT_FILE="flipkart.csv"
-  DATASET_OUTPUT_PATH="dataset/output/"
+  DATASET_OUTPUT_PATH="dataset/output"
   PROMPT_MODEL_ID="gemini-1.5-flash-001"
   ```
 

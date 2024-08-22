@@ -18,6 +18,13 @@ spec:
           value: gkebatchexpce3c8dcb-rueth-gpu-flipkart-data
         - name: "RAY_CLUSTER_HOST"
           value: ray-cluster-kuberay-head-svc.ml-team:10001
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 250,
+            memory: 512Mi
       nodeSelector:
         resource-type: cpu
       restartPolicy: Never

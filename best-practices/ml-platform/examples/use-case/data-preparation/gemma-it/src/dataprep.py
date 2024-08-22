@@ -313,6 +313,8 @@ if __name__ == "__main__":
         logging.getLogger().setLevel(new_log_level)
         logger.setLevel(new_log_level)
 
+    datasets.disable_progress_bar()
+
     logger.info("Configure signal handlers")
     signal.signal(signal.SIGINT, graceful_shutdown)
     signal.signal(signal.SIGTERM, graceful_shutdown)
