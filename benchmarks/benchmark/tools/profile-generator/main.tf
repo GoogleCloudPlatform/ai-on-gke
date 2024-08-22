@@ -65,8 +65,8 @@ module "profile-generator" {
     name      = var.targets.manual.name
     tokenizer = var.targets.manual.tokenizer
     service = {
-      name = var.targets.manual.targets.service_name
-      port = var.targets.manual.targets.service_port
+      name = var.targets.manual.service_name
+      port = var.targets.manual.service_port
     }
 }
   max_num_prompts                            = var.max_num_prompts

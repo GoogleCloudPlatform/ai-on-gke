@@ -144,11 +144,11 @@ variable "hugging_face_secret_version" {
 variable "targets" {
   description = "Model server to benchmark"
   type = object({
-    manual = optional(object({
+    manual = object({
       name = string
       service_name = string
       service_port = number
       tokenizer = string
-    }))
+    })
   })
 }
