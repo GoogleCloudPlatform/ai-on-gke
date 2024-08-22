@@ -1,22 +1,21 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: job
-  namespace: ml-team
+  name: data-processing
 spec:
   backoffLimit: 0
   template:
     metadata:
       labels:
-        app: job
+        app: data-processing
     spec:
       containers:
       - name: job
-        image: #IMAGE
+        image: V_IMAGE
         imagePullPolicy: Always
         env:
         - name: "PROCESSING_BUCKET"
-          value: #DATA_BUCKET
+          value: V_DATA_BUCKET
         - name: "RAY_CLUSTER_HOST"
           value: ray-cluster-kuberay-head-svc.ml-team:10001
       nodeSelector:

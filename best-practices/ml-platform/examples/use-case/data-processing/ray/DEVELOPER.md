@@ -18,7 +18,7 @@
 - Change directory to the `src` directory
 
   ```
-  cd best-practices/ml-platform/examples/use-case/ray/dataprocessing/src
+  cd best-practices/ml-platform/examples/use-case/data-processing/ray/src
   ```
 
 - Set the local `python` version

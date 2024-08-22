@@ -7,7 +7,7 @@ the base model.
 ## Prerequisites
 
 - The [ML Platform Playground](../../../platform/playground) must be deployed
-- Data output from the [Data Preprocessing example](../../datapreprocessing)
+- Data output from the [Data Processing example](../../data-processing)
 
 ## Steps
 
@@ -31,7 +31,7 @@ the base model.
    REGION=<vertex-region>
    ```
 
-   - DATA_BUCKET is the bucket you used in [datapreproceesing][datapreprocessing]
+   - DATA_BUCKET is the bucket you used in [data-processing][data-processing]
 
 1. Setup Workload Identity Federation access to read/write to the bucket
 
@@ -123,4 +123,4 @@ the base model.
    gcloud storage ls gs://${DATA_BUCKET}/${DATASET_OUTPUT_PATH}
    ```
 
-[datapreprocessing]: ../../datapreprocessing/ray/README.md#how-to-use-this-repo-
+[data-processing]: ../../data-processing/ray/README.md#how-to-use-this-repo-
