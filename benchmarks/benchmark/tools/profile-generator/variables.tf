@@ -142,7 +142,7 @@ variable "hugging_face_secret_version" {
 }
 
 variable "targets" {
-  description = "Model servers to benchmark"
+  description = "Model server to benchmark"
   type = object({
     manual = optional(object({
       name = string
