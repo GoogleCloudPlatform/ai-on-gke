@@ -24,7 +24,8 @@ locals {
 ###############################################################################
 resource "null_resource" "template_manifests" {
   depends_on = [
-    google_gke_hub_feature_membership.cluster_configmanagement
+    google_gke_hub_feature_membership.cluster_configmanagement,
+    google_secret_manager_secret_version.git_config,
   ]
 
   provisioner "local-exec" {
@@ -49,7 +50,8 @@ resource "null_resource" "template_manifests" {
 resource "null_resource" "cluster_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.template_manifests
+    google_secret_manager_secret_version.git_config,
+    null_resource.template_manifests,
   ]
 
   provisioner "local-exec" {
@@ -76,7 +78,8 @@ resource "null_resource" "cluster_manifests" {
 resource "null_resource" "git_cred_secret_cms" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.connect_gateway_kubeconfig
+    google_secret_manager_secret_version.git_config,
+    null_resource.connect_gateway_kubeconfig,
   ]
 
   provisioner "local-exec" {
@@ -103,7 +106,8 @@ resource "null_resource" "git_cred_secret_cms" {
 resource "null_resource" "kueue" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.cluster_manifests
+    google_secret_manager_secret_version.git_config,
+    null_resource.cluster_manifests,
   ]
 
   provisioner "local-exec" {
@@ -128,7 +132,8 @@ resource "null_resource" "kueue" {
 # resource "null_resource" "nvidia_dcgm" {
 #   depends_on = [
 #     google_gke_hub_feature_membership.cluster_configmanagement,
-#     null_resource.kueue
+#     google_secret_manager_secret_version.git_config,
+#     null_resource.kueue,
 #   ]
 
 #   provisioner "local-exec" {
@@ -153,7 +158,8 @@ resource "null_resource" "kueue" {
 resource "null_resource" "kuberay_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.kueue
+    google_secret_manager_secret_version.git_config,
+    null_resource.kueue,
     #null_resource.nvidia_dcgm,
   ]
 
@@ -179,8 +185,9 @@ resource "null_resource" "kuberay_manifests" {
 resource "null_resource" "namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
+    google_secret_manager_secret_version.git_config,
     null_resource.connect_gateway_kubeconfig,
-    null_resource.kuberay_manifests
+    null_resource.kuberay_manifests,
   ]
 
   provisioner "local-exec" {
@@ -234,7 +241,8 @@ resource "null_resource" "namespace_manifests" {
 resource "null_resource" "git_cred_secret_ns" {
   depends_on = [
     null_resource.connect_gateway_kubeconfig,
-    null_resource.namespace_manifests
+    google_secret_manager_secret_version.git_config,
+    null_resource.namespace_manifests,
   ]
 
   provisioner "local-exec" {
@@ -260,7 +268,8 @@ resource "null_resource" "git_cred_secret_ns" {
 resource "null_resource" "kuberay_watch_namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.namespace_manifests
+    google_secret_manager_secret_version.git_config,
+    null_resource.namespace_manifests,
   ]
 
   provisioner "local-exec" {
@@ -285,7 +294,8 @@ resource "null_resource" "kuberay_watch_namespace_manifests" {
 resource "null_resource" "ray_cluster_namespace_manifests" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.kuberay_watch_namespace_manifests
+    google_secret_manager_secret_version.git_config,
+    null_resource.kuberay_watch_namespace_manifests,
   ]
 
   provisioner "local-exec" {
@@ -354,8 +364,9 @@ resource "null_resource" "gateway_manifests" {
     google_compute_managed_ssl_certificate.external_gateway,
     google_endpoints_service.ray_dashboard_https,
     google_gke_hub_feature_membership.cluster_configmanagement,
+    google_secret_manager_secret_version.git_config,
     kubernetes_secret_v1.ray_head_client,
-    null_resource.ray_cluster_namespace_manifests
+    null_resource.ray_cluster_namespace_manifests,
   ]
 
   provisioner "local-exec" {
@@ -421,7 +432,8 @@ resource "null_resource" "gateway_manifests" {
 resource "null_resource" "wait_for_configsync" {
   depends_on = [
     google_gke_hub_feature_membership.cluster_configmanagement,
-    null_resource.gateway_manifests
+    google_secret_manager_secret_version.git_config,
+    null_resource.gateway_manifests,
   ]
 
   provisioner "local-exec" {
