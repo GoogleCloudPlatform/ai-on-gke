@@ -18,6 +18,8 @@ with an inference serving engine.
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/fine-tuning/pytorch
   ```
 
+### Project variables
+
 - Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
 
   ```
@@ -30,11 +32,21 @@ with an inference serving engine.
   PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
   ```
 
+### GCS bucket variables
+
 - Set `DATA_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data from [Data Processing](../../data-processing/ray) and [Data Preparation](../../data-preparation/gemma-it) is stored
 
   ```
   DATA_BUCKET=
   ```
+
+- Set `MODEL_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the models will be stored
+
+  ```
+  MODEL_BUCKET=
+  ```
+
+### Kubernetes variables
 
 - Set `NAMESPACE` to the Kubernetes namespace to be used
 
@@ -54,17 +66,15 @@ with an inference serving engine.
   CLUSTER_NAME=
   ```
 
+### Container image variables
+
 - Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
 
   ```
   DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0"
   ```
 
-- Set `MODEL_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the models will be stored
-
-  ```
-  MODEL_BUCKET=
-  ```
+### Access token variables
 
 - Set `HF_TOKEN` to your HuggingFace access token. Go to https://huggingface.co/settings/tokens , click `Create new token` , provide a token name, select `Read` in token type and click `Create token`.
 
@@ -72,11 +82,15 @@ with an inference serving engine.
   HF_TOKEN=
   ```
 
-## GCS
+## Configuration
 
-The training data set is retrieved from a storage bucket and the fine-tuned model weights are saved onto a locally mounted storage bucket.
+- Setup Workload Identity Federation to access the bucket
 
-### Writing fine-tuned model weights
+  ```sh
+  gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
+  --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
+  --role "roles/storage.objectUser"
+  ```
 
 - Create the bucket for storing the models
 
@@ -87,17 +101,15 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   --uniform-bucket-level-access
   ```
 
-- Setup Workload Identity Federation to access the bucket to write the model weights
+## Build the container image
+
+- Enable the Cloud Build APIs
 
   ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
-  --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-  --role "roles/storage.objectUser"
+  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
   ```
 
-## Build the image of the source
-
-- Build container image using Cloud Build and push the image to Artifact Registry
+- Build the container image using Cloud Build and push the image to Artifact Registry
 
   ```
   cd src
@@ -107,7 +119,7 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   cd ..
   ```
 
-## Deploy the Job
+## Run the job
 
 - Get credentials for the GKE cluster
 
@@ -115,9 +127,7 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
   ```
 
-### Deploy your Hugging Face token in your cluster
-
-- Create secret for HF in your namespace
+- Create a Kubernetes secret with your HuggingFace token
 
   ```sh
   kubectl create secret generic hf-secret \
@@ -125,13 +135,11 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   --dry-run=client -o yaml | kubectl apply -n ${NAMESPACE} -f -
   ```
 
-### Accept license on hugging face if you have not done it already
+- Accept the license HuggingFace license for the model
 
-- Go to https://huggingface.co/google/gemma-2-9b-it and accept the license
+  - Go to https://huggingface.co/google/gemma-2-9b-it and accept the license
 
-### Fine-tuning Job
-
-- Configure the fine-tuning job
+- Configure the job
 
   | Variable                             | Description                                                                                                                       | Example                                        |
   | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
@@ -171,26 +179,24 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   manifests/fine-tune-${ACCELERATOR}-dws.yaml
   ```
 
-### Deploy the respective resources for the job and type of resource
+- Create the provisioning request and job
 
 ```sh
 kubectl --namespace ${NAMESPACE} apply -f manifests/provisioning-request-${ACCELERATOR}.yaml
 kubectl --namespace ${NAMESPACE} apply -f manifests/fine-tune-${ACCELERATOR}-dws.yaml
 ```
 
-### Verify the completion of the fine-tuning job
+- Verify the completion of the job
 
-In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run the following query to see the completion of the job.
+  In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run the following query to see the completion of the job.
 
-```sh
-labels."k8s-pod/app"="finetune-job"
-textPayload: "finetune - INFO - ### Completed ###"
-```
+  ```sh
+  labels."k8s-pod/app"="finetune-job"
+  textPayload: "finetune - INFO - ### Completed ###"
+  ```
 
-After the fine-tuning job is successful, the model bucket should have a checkpoint folder created.
+- After the fine-tuning job is successful, the model bucket should have a checkpoint folder created.
 
-```sh
-gcloud storage ls gs://${MODEL_BUCKET}/${MODEL_PATH}
-```
-
-[data-preparation]: ../../data-preparation/gemma-it/README.md#steps
+  ```sh
+  gcloud storage ls gs://${MODEL_BUCKET}/${MODEL_PATH}
+  ```
