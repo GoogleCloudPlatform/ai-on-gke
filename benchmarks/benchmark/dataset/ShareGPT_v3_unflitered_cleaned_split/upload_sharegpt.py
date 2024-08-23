@@ -95,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument('--overwrite', default=False,
                         action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
-    gcs_uri_pattern = "^gs:\/\/[a-z0-9.\-_]{3,63}\/(.+\/)*(.+)$"
+    gcs_uri_pattern = "^gs:\\/\\/[a-z0-9.\\-_]{3,63}\\/(.+\\/)*(.+)$"
     if not re.match(gcs_uri_pattern, args.gcs_path):
         raise ValueError(
             f"Invalid GCS path: {args.gcs_path}, expecting format \"gs://$BUCKET/$FILENAME\"")
