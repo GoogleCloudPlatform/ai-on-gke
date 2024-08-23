@@ -44,6 +44,7 @@ data "google_client_config" "identity" {
   count = var.credentials_config.fleet_host != null ? 1 : 0
 }
 
+
 resource "kubernetes_manifest" "latency-profile-generator" {
   manifest = yamldecode(templatefile(local.latency-profile-generator-template, {
     namespace                                  = var.namespace
