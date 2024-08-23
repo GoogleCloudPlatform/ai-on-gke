@@ -9,7 +9,7 @@ the base model.
 - This guide was developed to be run on the [playground machine learning platform](/best-practices/ml-platform/examples/platform/playground/README.md). If you are using a different environment the scripts and manifest will need to be modified for that environment.
 - A bucket containing the processed data from the [Data Processing example](../../data-processing/ray)
 
-## Steps
+## Preparation
 
 - Clone the repository and change directory to the guide directory
 
@@ -17,6 +17,8 @@ the base model.
   git clone https://github.com/GoogleCloudPlatform/ai-on-gke && \
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/data-preparation/gemma-it
   ```
+
+### Project variables
 
 - Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
 
@@ -30,11 +32,15 @@ the base model.
   PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
   ```
 
+### GCS bucket variables
+
 - Set `DATA_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data from [Data Processing](../../data-processing/ray) is stored
 
   ```
   DATA_BUCKET=
   ```
+
+### Kubernetes variables
 
 - Set `NAMESPACE` to the Kubernetes namespace to be used
 
@@ -54,11 +60,15 @@ the base model.
   CLUSTER_NAME=
   ```
 
+### Container image variables
+
 - Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
 
   ```
   DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0"
   ```
+
+### Vertex AI variables
 
 - Set `REGION` to Google Cloud region to use for the Vertex AI API calls
 
@@ -66,7 +76,9 @@ the base model.
   REGION=us-central1
   ```
 
-- Setup Workload Identity Federation access to read/write to the bucket
+## Configuration
+
+- Setup Workload Identity Federation to access the bucket
 
   ```sh
   gcloud storage buckets add-iam-policy-binding gs://${DATA_BUCKET} \
@@ -74,7 +86,7 @@ the base model.
   --role "roles/storage.objectUser"
   ```
 
-- The Kubernetes Service Account user will need access to Vertex AI
+- Setup Workload Identity Federation to access to Vertex AI
 
   ```sh
   gcloud projects add-iam-policy-binding projects/${PROJECT_ID} \
@@ -83,7 +95,9 @@ the base model.
   --role=roles/aiplatform.user
   ```
 
-- Create Artifact Registry repository for your docker image
+## Build the container image
+
+- Create the Artifact Registry repository for your container image
 
   ```sh
   gcloud artifacts repositories create llm-finetuning \
@@ -93,7 +107,13 @@ the base model.
   --async
   ```
 
-- Build container image using Cloud Build and push the image to Artifact Registry
+- Enable the Cloud Build APIs
+
+  ```sh
+  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
+  ```
+
+- Build the container image using Cloud Build and push the image to Artifact Registry
 
   ```
   cd src
@@ -103,13 +123,15 @@ the base model.
   cd ..
   ```
 
+## Run the job
+
 - Get credentials for the GKE cluster
 
   ```sh
   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
   ```
 
-- Configure the data preparation job
+- Configure the job
 
   | Variable            | Description                                                                                                   | Example                       |
   | ------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------- |
@@ -139,14 +161,14 @@ the base model.
   manifests/job.yaml
   ```
 
-1. Create the job in the “ml-team” namespace
+- Create the job
 
-   ```sh
-   kubectl --namespace ${NAMESPACE} apply -f manifests/job.yaml
-   ```
+  ```sh
+  kubectl --namespace ${NAMESPACE} apply -f manifests/job.yaml
+  ```
 
-1. Once the Job is completed, the prepared datasets are stored in Google Cloud Storage.
+- Once the Job is completed, the prepared datasets are stored in Google Cloud Storage.
 
-   ```sh
-   gcloud storage ls gs://${DATA_BUCKET}/${DATASET_OUTPUT_PATH}
-   ```
+  ```sh
+  gcloud storage ls gs://${DATA_BUCKET}/${DATASET_OUTPUT_PATH}
+  ```

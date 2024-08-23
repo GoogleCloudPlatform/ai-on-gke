@@ -8,10 +8,6 @@
 
 ![data-processing](/best-practices/ml-platform/docs/images/data-processing-ray-workflow.png)
 
-## Prerequisites
-
-- This guide was developed to be run on the [playground machine learning platform](/best-practices/ml-platform/examples/platform/playground/README.md). If you are using a different environment the scripts and manifest will need to be modified for that environment.
-
 ## Data processing steps
 
 The dataset has product information such as id, name, brand, description, image urls, product specifications.
@@ -25,7 +21,11 @@ The `preprocessing.py` file does the following:
 
 The data processing step takes approximately 18-20 minutes.
 
-## How to use this repo
+## Prerequisites
+
+- This guide was developed to be run on the [playground machine learning platform](/best-practices/ml-platform/examples/platform/playground/README.md). If you are using a different environment the scripts and manifest will need to be modified for that environment.
+
+## Preparation
 
 - Clone the repository and change directory to the guide directory
 
@@ -34,11 +34,7 @@ The data processing step takes approximately 18-20 minutes.
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/data-processing/ray
   ```
 
-- Set `CLUSTER_NAME` to the name of your GKE cluster
-
-  ```
-  CLUSTER_NAME=
-  ```
+### Project variables
 
 - Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
 
@@ -46,11 +42,23 @@ The data processing step takes approximately 18-20 minutes.
   PROJECT_ID=
   ```
 
+### GCS bucket variables
+
 - Set `DATA_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data will be stored
 
   ```
   DATA_BUCKET=
   ```
+
+### Kubernetes variables
+
+- Set `CLUSTER_NAME` to the name of your GKE cluster
+
+  ```
+  CLUSTER_NAME=
+  ```
+
+### Container image variables
 
 - Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
 
@@ -58,13 +66,15 @@ The data processing step takes approximately 18-20 minutes.
   DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/data-processing/dp:v1.0.0"
   ```
 
+## Configuration
+
 - Create a Cloud Storage bucket to store the data
 
   ```
   gcloud storage buckets create gs://${DATA_BUCKET} --project ${PROJECT_ID} --uniform-bucket-level-access
   ```
 
-- Download the raw data csv file from [Kaggle][kaggle] and store it into the bucket created in the previous step.
+- Download the raw data csv file from [Kaggle](https://kaggle.com) and store it into the bucket created in the previous step.
 
   - You will need kaggle cli to download the file. The kaggle cli can be installed using the following [instructions](https://github.com/Kaggle/kaggle-api#installation).
   - To use the cli you must create an API token. To create the token, register on kaggle.com if you already don't have an account. Go to kaggle.com/settings > API > Create New Token, the downloaded file should be stored in $HOME/.kaggle/kaggle.json. Note, you will have to create the dir $HOME/.kaggle.
@@ -93,6 +103,8 @@ The data processing step takes approximately 18-20 minutes.
   --role roles/storage.objectAdmin
   ```
 
+## Build the container image
+
 - Create Artifact Registry repository for your docker image
 
   ```
@@ -119,17 +131,7 @@ The data processing step takes approximately 18-20 minutes.
   cd ..
   ```
 
-- Update respective variables in the Job submission manifest to reflect your configuration.
-
-  - Image is the docker image that was built in the previous step
-  - Processing bucket is the location of the GCS bucket where the source data and results will be stored
-  - Ray Cluster Host - if used in this example, it should not need to be changed, but if your Ray cluster service is named differently or in a different namespace, update accordingly.
-
-  ```
-  sed \
-  -i -e "s|V_IMAGE|${DOCKER_IMAGE_URL}|" manifests/job.yaml \
-  -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" manifests/job.yaml
-  ```
+## Run the job
 
 - Get credentials for the GKE cluster
 
@@ -137,13 +139,21 @@ The data processing step takes approximately 18-20 minutes.
   gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
   ```
 
-- Create the Job in the “ml-team” namespace using kubectl command
+- Configure the job
+
+  ```
+  sed \
+  -i -e "s|V_IMAGE|${DOCKER_IMAGE_URL}|" manifests/job.yaml \
+  -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" manifests/job.yaml
+  ```
+
+- Create the job
 
   ```
   kubectl --namespace ml-team apply -f manifests/job.yaml
   ```
 
-- Monitor the execution in Ray Dashboard. See how to launch [Ray Dashboard][ray-dashboard]
+- Monitor the execution in Ray Dashboard. See how to launch [Ray Dashboard](../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync)
 
   - Jobs -> Running Job ID
     - See the Tasks/actors overview for Running jobs
@@ -280,5 +290,4 @@ You should see output like the following:
 | Shrugs                | 7      |
 | Shirts                | 1      |
 
-[kaggle]: https://kaggle.com
 [ray-dashboard]: ../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync

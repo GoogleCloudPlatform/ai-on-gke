@@ -67,7 +67,7 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
   CLUSTER_NAME=
   ```
 
-### Image variables
+### Container image variables
 
 - Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
 
@@ -75,11 +75,9 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
   DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/validate:v1.0.0"
   ```
 
-### GCS
+## Configuration
 
-The training data set is retrieved from a storage bucket and the fine-tuned model weights are saved onto a locally mounted storage bucket.
-
-- Setup Workload Identity Federation access to read/write to the bucket for the training data set.
+- Setup Workload Identity Federation access the buckets
 
   ```sh
   gcloud storage buckets add-iam-policy-binding gs://${DATA_BUCKET} \
@@ -93,15 +91,13 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   --role "roles/storage.legacyBucketWriter"
   ```
 
-- Setup Workload Identity Federation access to read from the bucket for the model weights, for vLLM
-
   ```sh
   gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
   --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
   --role "roles/storage.objectUser"
   ```
 
-## Build the image of the source
+## Build the container image
 
 - Create Artifact Registry repository for your docker image
 
@@ -129,6 +125,8 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   cd ..
   ```
 
+## Run the job
+
 - Get credentials for the GKE cluster
 
   ```sh
@@ -140,8 +138,6 @@ The training data set is retrieved from a storage bucket and the fine-tuned mode
   ```sh
   kubectl create serviceaccount ${KSA} -n ${NAMESPACE}
   ```
-
-## Model evaluation inputs
 
 - Configure the deployment
 
