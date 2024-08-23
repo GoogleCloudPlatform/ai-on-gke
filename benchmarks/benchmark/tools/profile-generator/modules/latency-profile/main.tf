@@ -46,19 +46,19 @@ data "google_client_config" "identity" {
 
 resource "kubernetes_manifest" "latency-profile-generator" {
   manifest = yamldecode(templatefile(local.latency-profile-generator-template, {
-      namespace                                  = var.namespace
-      artifact_registry                          = var.artifact_registry
-      inference_server_framework                 = var.inference_server.name
-      inference_server_service                   = var.inference_server.service.name
-      inference_server_service_port              = var.inference_server.service.port
-      tokenizer                                  = var.inference_server.tokenizer
-      latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
-      max_num_prompts                            = var.max_num_prompts
-      max_output_len                             = var.max_output_len
-      max_prompt_len                             = var.max_prompt_len
-      request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
-      hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
-      k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
-      output_bucket                              = var.output_bucket
+    namespace                                  = var.namespace
+    artifact_registry                          = var.artifact_registry
+    inference_server_framework                 = var.inference_server.name
+    inference_server_service                   = var.inference_server.service.name
+    inference_server_service_port              = var.inference_server.service.port
+    tokenizer                                  = var.inference_server.tokenizer
+    latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
+    max_num_prompts                            = var.max_num_prompts
+    max_output_len                             = var.max_output_len
+    max_prompt_len                             = var.max_prompt_len
+    request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
+    hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
+    k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
+    output_bucket                              = var.output_bucket
   }))
 }
