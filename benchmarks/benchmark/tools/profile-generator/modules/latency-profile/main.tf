@@ -44,19 +44,6 @@ data "google_client_config" "identity" {
   count = var.credentials_config.fleet_host != null ? 1 : 0
 }
 
-resource "google_project_service" "cloudbuild" {
-  count   = var.build_latency_profile_generator_image ? 1 : 0
-  project = var.project_id
-  service = "cloudbuild.googleapis.com"
-
-  timeouts {
-    create = "30m"
-    update = "40m"
-  }
-
-  disable_on_destroy = false
-}
-
 resource "kubernetes_manifest" "latency-profile-generator" {
   manifest = yamldecode(templatefile(local.latency-profile-generator-template, {
       namespace                                  = var.namespace

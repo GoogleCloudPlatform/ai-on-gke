@@ -52,14 +52,13 @@ resource "google_project_service" "cloudbuild" {
 
 module "latency-profile" {
   count  = var.targets.manual != null ? 1 : 0
-  source = "../latency-profile"
+  source = "./modules/latency-profile"
 
-  credentials_config                    = var.credentials_config
-  namespace                             = var.namespace
-  project_id                            = var.project_id
-  templates_path                        = var.templates_path
-  artifact_registry                     = var.artifact_registry
-  build_latency_profile_generator_image = false # Dont build image for each profile generator instance, only need to do once.
+  credentials_config = var.credentials_config
+  namespace          = var.namespace
+  project_id         = var.project_id
+  templates_path     = var.templates_path
+  artifact_registry  = var.artifact_registry
   inference_server = {
     name      = var.targets.manual.name
     tokenizer = var.targets.manual.tokenizer
