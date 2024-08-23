@@ -3,7 +3,7 @@ kind: Job
 metadata:
   name: model-eval
 spec:
-  backoffLimit: 10
+  backoffLimit: 0
   template:
     metadata:
       labels:
@@ -37,8 +37,6 @@ spec:
           limits:
             cpu: "2"
             memory: "5Gi"
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-l4
       restartPolicy: Never
       serviceAccountName: V_KSA
       tolerations:

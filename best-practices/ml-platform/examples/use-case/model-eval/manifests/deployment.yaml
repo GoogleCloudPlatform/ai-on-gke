@@ -16,7 +16,25 @@ spec:
     spec:
       containers:
       - name: inference-server
+        args:
+        - --model=$(MODEL)
+        - --tensor-parallel-size=2
+        env:
+        - name: MODEL
+          value: V_MODEL_PATH
+        - name: VLLM_ATTENTION_BACKEND
+          value: FLASHINFER
         image: V_IMAGE_URL
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 240
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
         resources:
           requests:
             cpu: "2"
@@ -28,14 +46,6 @@ spec:
             memory: "25Gi"
             ephemeral-storage: "25Gi"
             nvidia.com/gpu: "2"
-        args:
-        - --model=$(MODEL)
-        - --tensor-parallel-size=2
-        env:
-        - name: MODEL
-          value: V_MODEL_PATH
-        - name: VLLM_ATTENTION_BACKEND
-          value: FLASHINFER
         volumeMounts:
         - mountPath: /dev/shm
           name: dshm

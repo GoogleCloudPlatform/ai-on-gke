@@ -13,6 +13,7 @@
 # limitations under the License.
 
 locals {
+  cluster_name = "${var.cluster_name_prefix}-${var.environment_name}"
   # Minimal roles for nodepool SA https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
   cluster_sa_roles = [
     "roles/monitoring.viewer",
@@ -28,9 +29,9 @@ locals {
 # Create dedicated service account for node pools
 resource "google_service_account" "cluster" {
   project      = data.google_project.environment.project_id
-  account_id   = "vm-${var.cluster_name}-${var.environment_name}"
-  display_name = "${var.cluster_name}-${var.environment_name} Service Account"
-  description  = "Terraform-managed service account for cluster ${var.cluster_name}-${var.environment_name}"
+  account_id   = "vm-${local.cluster_name}"
+  display_name = "${local.cluster_name} Service Account"
+  description  = "Terraform-managed service account for cluster ${local.cluster_name}"
 }
 
 # Bind minimum role list + additional roles to nodepool SA on project
@@ -48,7 +49,7 @@ resource "google_container_cluster" "mlp" {
   deletion_protection      = false
   enable_shielded_nodes    = true
   location                 = var.subnet_01_region
-  name                     = "${var.cluster_name}-${var.environment_name}"
+  name                     = local.cluster_name
   network                  = module.create-vpc.vpc
   project                  = data.google_project.environment.project_id
   remove_default_node_pool = false
