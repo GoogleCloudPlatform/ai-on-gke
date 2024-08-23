@@ -109,4 +109,3 @@ spec:
             bucketName: V_MODEL_BUCKET
             mountOptions: "implicit-dirs"
             gcsfuseLoggingSeverity: warning
-  ttlSecondsAfterFinished: 86400
