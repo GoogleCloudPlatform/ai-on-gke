@@ -46,13 +46,6 @@ variable "project_id" {
   nullable    = false
 }
 
-variable "ksa" {
-  description = "Kubernetes Service Account used for workload."
-  type        = string
-  nullable    = false
-  default     = "default"
-}
-
 variable "templates_path" {
   description = "Path where manifest templates will be read from. Set to null to use the default manifests"
   type        = string
@@ -142,13 +135,13 @@ variable "hugging_face_secret_version" {
 }
 
 variable "targets" {
-  description = "Model server to benchmark"
+  description = "Model server(s) targeted for benchmarking, use 'manual' for already installed model servers"
   type = object({
     manual = object({
-      name = string
+      name         = string
       service_name = string
       service_port = number
-      tokenizer = string
+      tokenizer    = string
     })
   })
 }

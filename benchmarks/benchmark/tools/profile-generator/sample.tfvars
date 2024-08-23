@@ -20,12 +20,12 @@ credentials_config = {
   }
 }
 
-project_id = "tpu-vm-gke-testing"
+project_id = "your_project_id"
 
 # Latency profile generator service configuration
 build_latency_profile_generator_image      = false
 latency_profile_kubernetes_service_account = "prom-frontend-sa"
-output_bucket                              = "tpu-vm-gke-testing-benchmark-output-bucket"
+output_bucket                              = "your_project_id-benchmark-output-bucket"
 k8s_hf_secret                              = "hf-token"
 
 # Benchmark configuration for Locust Docker accessing inference server
@@ -33,9 +33,9 @@ request_rates = [5, 10, 15, 20]
 
 targets = {
   manual = {
-    name = 'your-model-server-name'
-    service_name = 'your-model-server-service-name'
-    service_port = 'your-model-service-service-port'
-    tokenizer = 'your-tokenizer'
+    name         = "your_model_server_name"
+    service_name = "your_model_server_service_name"
+    service_port = "your_model_service_service_port"
+    tokenizer    = "your_tokenizer"
   }
 }

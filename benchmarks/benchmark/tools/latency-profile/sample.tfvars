@@ -21,7 +21,6 @@ credentials_config = {
 project_id = "$PROJECT_ID"
 
 namespace = "benchmark"
-ksa       = "benchmark-ksa"
 
 k8s_hf_secret = "hf-token"
 

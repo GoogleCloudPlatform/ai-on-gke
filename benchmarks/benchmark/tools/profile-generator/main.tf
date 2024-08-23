@@ -50,25 +50,24 @@ resource "google_project_service" "cloudbuild" {
 
 #  ----- Manual Benchmarking -----
 
-module "profile-generator" {
-  count = var.targets.manual != null ? 1 : 0
+module "latency-profile" {
+  count  = var.targets.manual != null ? 1 : 0
   source = "../latency-profile"
 
-  credentials_config                         = var.credentials_config
-  namespace                                  = var.namespace
-  project_id                                 = var.project_id
-  ksa                                        = var.ksa
-  templates_path                             = var.templates_path
-  artifact_registry                          = var.artifact_registry
-  build_latency_profile_generator_image      = false # Dont build image for each profile generator instance, only need to do once.
-  inference_server                           = {
+  credentials_config                    = var.credentials_config
+  namespace                             = var.namespace
+  project_id                            = var.project_id
+  templates_path                        = var.templates_path
+  artifact_registry                     = var.artifact_registry
+  build_latency_profile_generator_image = false # Dont build image for each profile generator instance, only need to do once.
+  inference_server = {
     name      = var.targets.manual.name
     tokenizer = var.targets.manual.tokenizer
     service = {
       name = var.targets.manual.service_name
       port = var.targets.manual.service_port
     }
-}
+  }
   max_num_prompts                            = var.max_num_prompts
   max_output_len                             = var.max_output_len
   max_prompt_len                             = var.max_prompt_len

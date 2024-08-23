@@ -23,33 +23,12 @@ locals {
     ? "${path.module}/manifest-templates"
     : pathexpand(var.templates_path)
   )
+  latency-profile-generator-template = "${path.module}/manifest-templates/latency-profile-generator.yaml.tpl"
   hugging_face_token_secret = (
     var.hugging_face_secret == null || var.hugging_face_secret_version == null
     ? null
     : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
   )
-  id = substr(uuid(), 0, 8)
-
-  all_manifests = flatten([for manifest_file in local.templates :
-    [for data in split("---", templatefile(manifest_file, {
-      id                                         = local.id
-      artifact_registry                          = var.artifact_registry
-      namespace                                  = var.namespace
-      inference_server_framework                 = var.inference_server.name
-      inference_server_service                   = var.inference_server.service.name
-      inference_server_service_port              = var.inference_server.service.port
-      tokenizer                                  = var.inference_server.tokenizer
-      ksa                                        = var.ksa
-      latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
-      max_num_prompts                            = var.max_num_prompts
-      max_output_len                             = var.max_output_len
-      max_prompt_len                             = var.max_prompt_len
-      request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
-      hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
-      k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
-      output_bucket                              = var.output_bucket
-    })) : data]
-  ])
 }
 
 terraform {
@@ -78,10 +57,21 @@ resource "google_project_service" "cloudbuild" {
   disable_on_destroy = false
 }
 
-resource "kubernetes_manifest" "deploy_latency_profile_generator" {
-  for_each   = toset(local.all_manifests)
-  manifest   = yamldecode(each.value)
-  timeouts {
-    create = "30m"
-  }
+resource "kubernetes_manifest" "latency-profile-generator" {
+  manifest = yamldecode(templatefile(local.latency-profile-generator-template, {
+      namespace                                  = var.namespace
+      artifact_registry                          = var.artifact_registry
+      inference_server_framework                 = var.inference_server.name
+      inference_server_service                   = var.inference_server.service.name
+      inference_server_service_port              = var.inference_server.service.port
+      tokenizer                                  = var.inference_server.tokenizer
+      latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
+      max_num_prompts                            = var.max_num_prompts
+      max_output_len                             = var.max_output_len
+      max_prompt_len                             = var.max_prompt_len
+      request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
+      hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
+      k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
+      output_bucket                              = var.output_bucket
+  }))
 }

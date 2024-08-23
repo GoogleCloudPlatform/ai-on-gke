@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: latency-profile-generator-${id}
+  name: latency-profile-generator
   namespace: ${namespace}
   labels:
-    name: latency-profile-generator-${id}
+    name: latency-profile-generator
 spec:
   template:
     spec:

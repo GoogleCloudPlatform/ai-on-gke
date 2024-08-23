@@ -46,13 +46,6 @@ variable "project_id" {
   nullable    = false
 }
 
-variable "ksa" {
-  description = "Kubernetes Service Account used for workload."
-  type        = string
-  nullable    = false
-  default     = "default"
-}
-
 variable "templates_path" {
   description = "Path where manifest templates will be read from. Set to null to use the default manifests"
   type        = string
