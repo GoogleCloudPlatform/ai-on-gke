@@ -174,5 +174,7 @@ terraform plan
 terraform apply
 ```
 
-A results file will appear in GCS bucket specified as `output_bucket` in input
-variables.
+The results can be viewed via running the following:
+```
+kubectl logs job/latency-profile-generator
+```
