@@ -24,6 +24,7 @@ It currently supports the following frameworks:
 - text generation inference (tgi)
 - vllm
 - sax
+-jetstream
 
 ## Instructions
 
@@ -91,7 +92,7 @@ Fill out your `terraform.tfvars` with the desired model and server configuration
 - `project_id` - project id for enabling dependent services for building Latency Profile Generator artifacts
 - `artifact_registry` - artifact registry to upload Latency Profile Generator artifacts to
 - `build_latency_profile_generator_image` - Whether latency profile generator image will be built or not
-- `targets` - Which model servers are we targeting for benchmarking? Set `manual` if intending to benchmark a model server already in the cluster.
+- `targets` - Which model servers are we targeting for benchmarking? Set  the fields on `manual` if intending to benchmark a model server already in the cluster.
 - `output_bucket` - gcs bucket to write benchmarking metrics to.
 - `latency_profile_kubernetes_service_account` - service account giving access to latency profile generator to write to `output_bucket`
 - `k8s_hf_secret` - Name of secret for huggingface token stored in k8s
