@@ -14,7 +14,6 @@ spec:
       annotations:
         gke-gcsfuse/volumes: "true"
     spec:
-      serviceAccountName: V_KSA
       containers:
       - name: inference-server
         image: V_IMAGE_URL
@@ -43,6 +42,17 @@ spec:
         - name: gcs-fuse-csi-ephemeral
           mountPath: /model-data
           readOnly: true
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-tesla-a100
+      serviceAccountName: V_KSA
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "on-demand"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule" 
       volumes:
       - name: dshm
         emptyDir:
@@ -51,19 +61,9 @@ spec:
         csi:
           driver: gcsfuse.csi.storage.gke.io
           volumeAttributes:
-            bucketName: V_MODEL_BUCKET
+            bucketName: V_BUCKET
             mountOptions: "implicit-dirs"
             fileCacheCapacity: "20Gi"
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-tesla-a100
-      tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Exists"
-        effect: "NoSchedule"
-      - key: "on-demand"
-        value: "true"
-        operator: "Equal"
-        effect: "NoSchedule"          
 ---
 apiVersion: v1
 kind: Service

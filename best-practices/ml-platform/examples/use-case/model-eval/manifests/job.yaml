@@ -7,9 +7,8 @@ spec:
   template:
     metadata:
       labels:
-        app: model-eval-job
+        app: model-eval
     spec:
-      serviceAccountName: V_KSA
       containers:
       - name: job
         image: V_IMAGE_URL
@@ -30,7 +29,7 @@ spec:
         - name: "MODEL_PATH"
           value: "V_MODEL_PATH"
         - name: "PREDICTIONS_FILE"
-          value: "predictions.txt"
+          value: "V_PREDICTIONS_FILE"
         resources:
           requests:
             cpu: "2"
@@ -38,4 +37,12 @@ spec:
           limits:
             cpu: "2"
             memory: "5Gi"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
       restartPolicy: Never
+      serviceAccountName: V_KSA
+      tolerations:
+      - key: "on-demand"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"
