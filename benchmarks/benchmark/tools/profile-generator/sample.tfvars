@@ -31,6 +31,7 @@ k8s_hf_secret                              = "hf-token"
 # Benchmark configuration for Locust Docker accessing inference server
 request_rates = [5, 10, 15, 20]
 
+# Model server configuration information
 targets = {
   manual = {
     name         = "your_model_server_name"
