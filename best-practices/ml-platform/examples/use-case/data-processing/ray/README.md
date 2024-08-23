@@ -34,45 +34,16 @@ The data processing step takes approximately 18-20 minutes.
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/data-processing/ray
   ```
 
-### Project variables
-
-- Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
+- Ensure that your `MLP_ENVIRONMENT_FILE` is configured
 
   ```
-  PROJECT_ID=
+  cat ${MLP_ENVIRONMENT_FILE} && \
+  source ${MLP_ENVIRONMENT_FILE}
   ```
 
-### GCS bucket variables
-
-- Set `DATA_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data will be stored
-
-  ```
-  DATA_BUCKET=
-  ```
-
-### Kubernetes variables
-
-- Set `CLUSTER_NAME` to the name of your GKE cluster
-
-  ```
-  CLUSTER_NAME=
-  ```
-
-### Container image variables
-
-- Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
-
-  ```
-  DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/data-processing/dp:v1.0.0"
-  ```
+  > You should see the various variables populated with the information specific to your environment.
 
 ## Configuration
-
-- Create a Cloud Storage bucket to store the data
-
-  ```
-  gcloud storage buckets create gs://${DATA_BUCKET} --project ${PROJECT_ID} --uniform-bucket-level-access
-  ```
 
 - Download the raw data csv file from [Kaggle](https://kaggle.com) and store it into the bucket created in the previous step.
 
@@ -83,51 +54,19 @@ The data processing step takes approximately 18-20 minutes.
   ```
   kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset && \
   gcloud storage cp flipkart_com-ecommerce_sample.csv \
-  gs://${DATA_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
+  gs://${MLP_DATA_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
   rm flipkart_com-ecommerce_sample.csv
   ```
 
-- Provide respective GCS bucket access rights to GKE Kubernetes Service Accounts.
-  Ray head with access to read the raw source data in the storage bucket and
-  Ray worker(s) with the access to write data to the storage bucket.
-
-  ```
-  gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --condition None \
-  --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-head]" \
-  --role roles/storage.objectViewer
-
-  gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --condition None \
-  --member "serviceAccount:${PROJECT_ID}.svc.id.goog[ml-team/ray-worker]" \
-  --role roles/storage.objectAdmin
-  ```
-
 ## Build the container image
-
-- Create Artifact Registry repository for your docker image
-
-  ```
-  gcloud artifacts repositories create data-processing \
-  --repository-format=docker \
-  --location=us \
-  --project=${PROJECT_ID} \
-  --async
-  ```
-
-- Enable the Cloud Build APIs
-
-  ```
-  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
-  ```
 
 - Build container image using Cloud Build and push the image to Artifact Registry
 
   ```
   cd src
   gcloud builds submit --config cloudbuild.yaml \
-  --project ${PROJECT_ID} \
-  --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+  --project ${MLP_PROJECT_ID} \
+  --substitutions _DESTINATION=${MLP_DATA_PROCESSING_IMAGE}
   cd ..
   ```
 
@@ -136,21 +75,23 @@ The data processing step takes approximately 18-20 minutes.
 - Get credentials for the GKE cluster
 
   ```
-  gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
+  gcloud container fleet memberships get-credentials ${MLP_CLUSTER_NAME} --project ${MLP_PROJECT_ID}
   ```
 
 - Configure the job
 
   ```
   sed \
-  -i -e "s|V_IMAGE|${DOCKER_IMAGE_URL}|" manifests/job.yaml \
-  -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" manifests/job.yaml
+  -i -e "s|V_DATA_BUCKET|${MLP_DATA_BUCKET}|" \
+  -i -e "s|V_IMAGE_URL|${MLP_DATA_PROCESSING_IMAGE}|" \
+  -i -e "s|V_KSA|${MLP_DATA_PROCESSING_KSA}|" \
+  manifests/job.yaml
   ```
 
 - Create the job
 
   ```
-  kubectl --namespace ml-team apply -f manifests/job.yaml
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/job.yaml
   ```
 
 - Monitor the execution in Ray Dashboard. See how to launch [Ray Dashboard](../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync)
@@ -164,8 +105,8 @@ The data processing step takes approximately 18-20 minutes.
 - Once the Job is completed, both the prepared dataset as a CSV and the images are stored in Google Cloud Storage.
 
   ```
-  gcloud storage ls gs://${DATA_BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
-  gcloud storage ls gs://${DATA_BUCKET}/flipkart_images
+  gcloud storage ls gs://${MLP_DATA_BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
+  gcloud storage ls gs://${MLP_DATA_BUCKET}/flipkart_images
   ```
 
 > For additional information about developing using this codebase see the [Developer Guide](DEVELOPER.md)
@@ -184,7 +125,7 @@ Specifically for the data processing use case described in this example, you can
 
 In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run your queries.
 
-- Find when the data preparation job started and finished:
+- Find when the data processing job started and finished:
 
   ```
   labels."k8s-pod/app"="data-processing"

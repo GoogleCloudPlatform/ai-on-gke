@@ -18,55 +18,14 @@ the base model.
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/data-preparation/gemma-it
   ```
 
-### Project variables
-
-- Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
+- Ensure that your `MLP_ENVIRONMENT_FILE` is configured
 
   ```
-  PROJECT_ID=
+  cat ${MLP_ENVIRONMENT_FILE} && \
+  source ${MLP_ENVIRONMENT_FILE}
   ```
 
-- Populate `PROJECT_NUMBER` based on the `PROJECT_ID` environment variable
-
-  ```
-  PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-  ```
-
-### GCS bucket variables
-
-- Set `DATA_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data from [Data Processing](../../data-processing/ray) is stored
-
-  ```
-  DATA_BUCKET=
-  ```
-
-### Kubernetes variables
-
-- Set `NAMESPACE` to the Kubernetes namespace to be used
-
-  ```
-  NAMESPACE="ml-team"
-  ```
-
-- Set `KSA` to the Kubernetes service account to be used
-
-  ```
-  KSA="app-sa"
-  ```
-
-- Set `CLUSTER_NAME` to the name of your GKE cluster
-
-  ```
-  CLUSTER_NAME=
-  ```
-
-### Container image variables
-
-- Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
-
-  ```
-  DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/dataprep:v1.0.0"
-  ```
+  > You should see the various variables populated with the information specific to your environment.
 
 ### Vertex AI variables
 
@@ -76,50 +35,15 @@ the base model.
   REGION=us-central1
   ```
 
-## Configuration
-
-- Setup Workload Identity Federation to access the bucket
-
-  ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${DATA_BUCKET} \
-  --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-  --role "roles/storage.objectUser"
-  ```
-
-- Setup Workload Identity Federation to access to Vertex AI
-
-  ```sh
-  gcloud projects add-iam-policy-binding projects/${PROJECT_ID} \
-  --condition=None \
-  --member=principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA} \
-  --role=roles/aiplatform.user
-  ```
-
 ## Build the container image
-
-- Create the Artifact Registry repository for your container image
-
-  ```sh
-  gcloud artifacts repositories create llm-finetuning \
-  --repository-format=docker \
-  --location=us \
-  --project=${PROJECT_ID} \
-  --async
-  ```
-
-- Enable the Cloud Build APIs
-
-  ```sh
-  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
-  ```
 
 - Build the container image using Cloud Build and push the image to Artifact Registry
 
   ```
   cd src
   gcloud builds submit --config cloudbuild.yaml \
-  --project ${PROJECT_ID} \
-  --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+  --project ${MLP_PROJECT_ID} \
+  --substitutions _DESTINATION=${MLP_DATA_PREPARATION_IMAGE}
   cd ..
   ```
 
@@ -128,7 +52,7 @@ the base model.
 - Get credentials for the GKE cluster
 
   ```sh
-  gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
+  gcloud container fleet memberships get-credentials ${MLP_CLUSTER_NAME} --project ${MLP_PROJECT_ID}
   ```
 
 - Configure the job
@@ -149,10 +73,10 @@ the base model.
 
   ```sh
   sed \
-  -i -e "s|V_IMAGE_URL|${DOCKER_IMAGE_URL}|" \
-  -i -e "s|V_KSA|${KSA}|" \
-  -i -e "s|V_PROJECT_ID|${PROJECT_ID}|" \
-  -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" \
+  -i -e "s|V_IMAGE_URL|${MLP_DATA_PREPARATION_IMAGE}|" \
+  -i -e "s|V_KSA|${MLP_DATA_PREPARATION_KSA}|" \
+  -i -e "s|V_PROJECT_ID|${MLP_PROJECT_ID}|" \
+  -i -e "s|V_DATA_BUCKET|${MLP_DATA_BUCKET}|" \
   -i -e "s|V_DATASET_INPUT_PATH|${DATASET_INPUT_PATH}|" \
   -i -e "s|V_DATASET_INPUT_FILE|${DATASET_INPUT_FILE}|" \
   -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
@@ -164,11 +88,11 @@ the base model.
 - Create the job
 
   ```sh
-  kubectl --namespace ${NAMESPACE} apply -f manifests/job.yaml
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/job.yaml
   ```
 
 - Once the Job is completed, the prepared datasets are stored in Google Cloud Storage.
 
   ```sh
-  gcloud storage ls gs://${DATA_BUCKET}/${DATASET_OUTPUT_PATH}
+  gcloud storage ls gs://${MLP_DATA_BUCKET}/${DATASET_OUTPUT_PATH}
   ```

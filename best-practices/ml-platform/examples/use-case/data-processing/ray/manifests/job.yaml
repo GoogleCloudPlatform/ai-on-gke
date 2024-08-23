@@ -11,11 +11,11 @@ spec:
     spec:
       containers:
       - name: job
-        image: us-docker.pkg.dev/gkebatchexpce3c8dcb/data-processing/dp:v0.0.1
+        image: V_IMAGE_URL
         imagePullPolicy: Always
         env:
         - name: "PROCESSING_BUCKET"
-          value: gkebatchexpce3c8dcb-rueth-gpu-flipkart-data
+          value: V_DATA_BUCKET
         - name: "RAY_CLUSTER_HOST"
           value: ray-cluster-kuberay-head-svc.ml-team:10001
         resources:
@@ -23,12 +23,12 @@ spec:
             cpu: 100m
             memory: 256Mi
           limits:
-            cpu: 250,
+            cpu: 250m
             memory: 512Mi
       nodeSelector:
         resource-type: cpu
       restartPolicy: Never
-      serviceAccountName: ray-worker
+      serviceAccountName: V_KSA
       tolerations:
       - effect: NoSchedule
         key: on-demand

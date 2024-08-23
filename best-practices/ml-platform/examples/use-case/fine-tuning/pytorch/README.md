@@ -18,61 +18,14 @@ with an inference serving engine.
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/fine-tuning/pytorch
   ```
 
-### Project variables
-
-- Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
+- Ensure that your `MLP_ENVIRONMENT_FILE` is configured
 
   ```
-  PROJECT_ID=
+  cat ${MLP_ENVIRONMENT_FILE} && \
+  source ${MLP_ENVIRONMENT_FILE}
   ```
 
-- Populate `PROJECT_NUMBER` based on the `PROJECT_ID` environment variable
-
-  ```
-  PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-  ```
-
-### GCS bucket variables
-
-- Set `DATA_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data from [Data Processing](../../data-processing/ray) and [Data Preparation](../../data-preparation/gemma-it) is stored
-
-  ```
-  DATA_BUCKET=
-  ```
-
-- Set `MODEL_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the models will be stored
-
-  ```
-  MODEL_BUCKET=
-  ```
-
-### Kubernetes variables
-
-- Set `NAMESPACE` to the Kubernetes namespace to be used
-
-  ```
-  NAMESPACE="ml-team"
-  ```
-
-- Set `KSA` to the Kubernetes service account to be used
-
-  ```
-  KSA="app-sa"
-  ```
-
-- Set `CLUSTER_NAME` to the name of your GKE cluster
-
-  ```
-  CLUSTER_NAME=
-  ```
-
-### Container image variables
-
-- Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
-
-  ```
-  DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/finetune:v1.0.0"
-  ```
+  > You should see the various variables populated with the information specific to your environment.
 
 ### Access token variables
 
@@ -82,40 +35,15 @@ with an inference serving engine.
   HF_TOKEN=
   ```
 
-## Configuration
-
-- Setup Workload Identity Federation to access the bucket
-
-  ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
-  --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-  --role "roles/storage.objectUser"
-  ```
-
-- Create the bucket for storing the models
-
-  ```sh
-  gcloud storage buckets create gs://${MODEL_BUCKET} \
-  --project ${PROJECT_ID} \
-  --location us \
-  --uniform-bucket-level-access
-  ```
-
 ## Build the container image
-
-- Enable the Cloud Build APIs
-
-  ```sh
-  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
-  ```
 
 - Build the container image using Cloud Build and push the image to Artifact Registry
 
   ```
   cd src
   gcloud builds submit --config cloudbuild.yaml \
-  --project ${PROJECT_ID} \
-  --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+  --project ${MLP_PROJECT_ID} \
+  --substitutions _DESTINATION=${MLP_FINE_TUNING_IMAGE}
   cd ..
   ```
 
@@ -124,7 +52,7 @@ with an inference serving engine.
 - Get credentials for the GKE cluster
 
   ```sh
-  gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
+  gcloud container fleet memberships get-credentials ${MLP_CLUSTER_NAME} --project ${MLP_PROJECT_ID}
   ```
 
 - Create a Kubernetes secret with your HuggingFace token
@@ -132,7 +60,7 @@ with an inference serving engine.
   ```sh
   kubectl create secret generic hf-secret \
   --from-literal=hf_api_token=${HF_TOKEN} \
-  --dry-run=client -o yaml | kubectl apply -n ${NAMESPACE} -f -
+  --dry-run=client -o yaml | kubectl apply -n ${MLP_KUBERNETES_NAMESPACE} -f -
   ```
 
 - Accept the license HuggingFace license for the model
@@ -165,15 +93,15 @@ with an inference serving engine.
 
   ```sh
   sed \
-  -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" \
+  -i -e "s|V_DATA_BUCKET|${MLP_DATA_BUCKET}|" \
   -i -e "s|V_EXPERIMENT|${EXPERIMENT}|" \
   -i -e "s|V_MODEL_NAME|${HF_BASE_MODEL_NAME}|" \
-  -i -e "s|V_IMAGE_URL|${DOCKER_IMAGE_URL}|" \
-  -i -e "s|V_KSA|${KSA}|" \
+  -i -e "s|V_IMAGE_URL|${MLP_FINE_TUNING_IMAGE}|" \
+  -i -e "s|V_KSA|${MLP_FINE_TUNING_KSA}|" \
   -i -e "s|V_MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING|${MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING}|" \
   -i -e "s|V_MLFLOW_ENABLE|${MLFLOW_ENABLE}|" \
   -i -e "s|V_MLFLOW_TRACKING_URI|${MLFLOW_TRACKING_URI}|" \
-  -i -e "s|V_MODEL_BUCKET|${MODEL_BUCKET}|" \
+  -i -e "s|V_MODEL_BUCKET|${MLP_MODEL_BUCKET}|" \
   -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
   -i -e "s|V_TRAINING_DATASET_PATH|${DATA_BUCKET_DATASET_PATH}|" \
   manifests/fine-tune-${ACCELERATOR}-dws.yaml
@@ -181,10 +109,10 @@ with an inference serving engine.
 
 - Create the provisioning request and job
 
-```sh
-kubectl --namespace ${NAMESPACE} apply -f manifests/provisioning-request-${ACCELERATOR}.yaml
-kubectl --namespace ${NAMESPACE} apply -f manifests/fine-tune-${ACCELERATOR}-dws.yaml
-```
+  ```sh
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/provisioning-request-${ACCELERATOR}.yaml
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/fine-tune-${ACCELERATOR}-dws.yaml
+  ```
 
 - Verify the completion of the job
 
@@ -198,5 +126,5 @@ kubectl --namespace ${NAMESPACE} apply -f manifests/fine-tune-${ACCELERATOR}-dws
 - After the fine-tuning job is successful, the model bucket should have a checkpoint folder created.
 
   ```sh
-  gcloud storage ls gs://${MODEL_BUCKET}/${MODEL_PATH}
+  gcloud storage ls gs://${MLP_MODEL_BUCKET}/${MODEL_PATH}
   ```

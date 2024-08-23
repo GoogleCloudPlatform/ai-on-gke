@@ -19,109 +19,24 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/model-eval
   ```
 
-### Project variables
-
-- Set `PROJECT_ID` to the project ID of the project where your GKE cluster and other resources will reside
+- Ensure that your `MLP_ENVIRONMENT_FILE` is configured
 
   ```
-  PROJECT_ID=
+  cat ${MLP_ENVIRONMENT_FILE} && \
+  source ${MLP_ENVIRONMENT_FILE}
   ```
 
-- Populate `PROJECT_NUMBER` based on the `PROJECT_ID` environment variable
-
-  ```
-  PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-  ```
-
-### GCS bucket variables
-
-- Set `DATA_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data from [Data Preparation](../../data-processing/ray) and [Data Preparation](../../data-preparation/gemma-it) is stored
-
-  ```
-  DATA_BUCKET=
-  ```
-
-- Set `MODEL_BUCKET` to the name of your Google Cloud Storage (GCS) bucket where the data from [Fine tuning](../../fine-tuning/pytorch) model is stored
-
-  ```
-  MODEL_BUCKET=
-  ```
-
-### Kubernetes variables
-
-- Set `NAMESPACE` to the Kubernetes namespace to be used
-
-  ```
-  NAMESPACE="ml-team"
-  ```
-
-- Set `KSA` to the Kubernetes service account to be used
-
-  ```
-  KSA="app-sa"
-  ```
-
-- Set `CLUSTER_NAME` to the name of your GKE cluster
-
-  ```
-  CLUSTER_NAME=
-  ```
-
-### Container image variables
-
-- Set `DOCKER_IMAGE_URL` to the URL for the container image that will be created
-
-  ```
-  DOCKER_IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/llm-finetuning/validate:v1.0.0"
-  ```
-
-## Configuration
-
-- Setup Workload Identity Federation access the buckets
-
-  ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${DATA_BUCKET} \
-  --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-  --role "roles/storage.objectUser"
-  ```
-
-  ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${DATA_BUCKET} \
-  --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-  --role "roles/storage.legacyBucketWriter"
-  ```
-
-  ```sh
-  gcloud storage buckets add-iam-policy-binding gs://${MODEL_BUCKET} \
-  --member "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA}" \
-  --role "roles/storage.objectUser"
-  ```
+  > You should see the various variables populated with the information specific to your environment.
 
 ## Build the container image
-
-- Create Artifact Registry repository for your docker image
-
-  ```sh
-  gcloud artifacts repositories create llm-finetuning \
-  --repository-format=docker \
-  --location=us \
-  --project=${PROJECT_ID} \
-  --async
-  ```
-
-- Enable the Cloud Build APIs
-
-  ```sh
-  gcloud services enable cloudbuild.googleapis.com --project ${PROJECT_ID}
-  ```
 
 - Build container image using Cloud Build and push the image to Artifact Registry
 
   ```
   cd src
   gcloud builds submit --config cloudbuild.yaml \
-  --project ${PROJECT_ID} \
-  --substitutions _DESTINATION=${DOCKER_IMAGE_URL}
+  --project ${MLP_PROJECT_ID} \
+  --substitutions _DESTINATION=${MLP_MODEL_EVALUATION_IMAGE}
   cd ..
   ```
 
@@ -130,13 +45,7 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 - Get credentials for the GKE cluster
 
   ```sh
-  gcloud container fleet memberships get-credentials ${CLUSTER_NAME} --project ${PROJECT_ID}
-  ```
-
-- Create the Kubernetes Service Account (KSA) [optional if one, does not already exist]
-
-  ```sh
-  kubectl create serviceaccount ${KSA} -n ${NAMESPACE}
+  gcloud container fleet memberships get-credentials ${MLP_CLUSTER_NAME} --project ${MLP_PROJECT_ID}
   ```
 
 - Configure the deployment
@@ -154,8 +63,8 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
   ```sh
   sed \
   -i -e "s|V_IMAGE_URL|${VLLM_IMAGE_URL}|" \
-  -i -e "s|V_KSA|${KSA}|" \
-  -i -e "s|V_BUCKET|${MODEL_BUCKET}|" \
+  -i -e "s|V_KSA|${MLP_MODEL_EVALUATION_KSA}|" \
+  -i -e "s|V_BUCKET|${MLP_MODEL_BUCKET}|" \
   -i -e "s|V_MODEL_PATH|${MODEL}|" \
   manifests/deployment.yaml
   ```
@@ -163,10 +72,20 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 - Create the deployment
 
   ```sh
-  kubectl --namespace ${NAMESPACE} apply -f manifests/deployment.yaml
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/deployment.yaml
   ```
 
 - Wait for the deployment to be ready
+
+  ```
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} wait --for=condition=ready --timeout=900s pod -l app=vllm-openai
+  ```
+
+  When they deployment is ready your should see output similar to:
+
+  ```output
+  pod/vllm-openai-XXXXXXXXXX-XXXXX condition met
+  ```
 
 - Configure the job
 
@@ -186,11 +105,11 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 
   ```sh
   sed \
-  -i -e "s|V_DATA_BUCKET|${DATA_BUCKET}|" \
+  -i -e "s|V_DATA_BUCKET|${MLP_DATA_BUCKET}|" \
   -i -e "s|V_DATASET_OUTPUT_PATH|${DATASET_OUTPUT_PATH}|" \
   -i -e "s|V_ENDPOINT|${ENDPOINT}|" \
-  -i -e "s|V_IMAGE_URL|${DOCKER_IMAGE_URL}|" \
-  -i -e "s|V_KSA|${KSA}|" \
+  -i -e "s|V_IMAGE_URL|${MLP_MODEL_EVALUATION_IMAGE}|" \
+  -i -e "s|V_KSA|${MLP_MODEL_EVALUATION_KSA}|" \
   -i -e "s|V_MODEL_PATH|${MODEL_PATH}|" \
   -i -e "s|V_PREDICTIONS_FILE|${PREDICTIONS_FILE}|" \
   manifests/job.yaml
@@ -199,5 +118,5 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 - Create the job
 
   ```sh
-  kubectl --namespace ${NAMESPACE} apply -f manifests/job.yaml
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/job.yaml
   ```

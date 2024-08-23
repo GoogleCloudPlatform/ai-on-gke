@@ -169,6 +169,7 @@ resource "null_resource" "kuberay_manifests" {
       GIT_CONFIG_SECRET_NAME = local.git_config_secret_name
       GIT_REPOSITORY         = local.git_repository
       K8S_NAMESPACE          = var.namespace
+      PROJECT_ID             = data.google_project.environment.project_id
     }
   }
 

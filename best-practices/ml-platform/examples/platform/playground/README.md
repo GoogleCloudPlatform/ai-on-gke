@@ -49,13 +49,13 @@ The default quota given to a project should be sufficient for this guide.
 
   ```
   export MLP_BASE_DIR=$(pwd) && \
-  echo "export MLP_BASE_DIR=${MLP_BASE_DIR}" >> ${HOME}/.bashrc
+  sed -n -i -e '/^export MLP_BASE_DIR=/!p' -i -e '$aexport MLP_BASE_DIR="'"${MLP_BASE_DIR}"'"' ${HOME}/.bashrc
   ```
 
   ```
   cd examples/platform/playground && \
   export MLP_TYPE_BASE_DIR=$(pwd) && \
-  echo "export MLP_TYPE_BASE_DIR=${MLP_TYPE_BASE_DIR}" >> ${HOME}/.bashrc
+  sed -n -i -e '/^export MLP_TYPE_BASE_DIR=/!p' -i -e '$aexport MLP_TYPE_BASE_DIR="'"${MLP_TYPE_BASE_DIR}"'"' ${HOME}/.bashrc
   ```
 
 ## GitHub Configuration
@@ -115,7 +115,6 @@ The default quota given to a project should be sufficient for this guide.
   export MLP_GIT_NAMESPACE="<GIT_NAMESPACE>"
   export MLP_GIT_USER_EMAIL="<GIT_USER_EMAIL>"
   export MLP_GIT_USER_NAME="<GIT_USER_NAME>"
-
   ```
 
 - Set the configuration variables
@@ -303,6 +302,15 @@ Before running Terraform, make sure that the Service Usage API is enable.
 
   See [Create resources errors](#create-resources-errors) in the Troubleshooting section if the apply does not complete successfully.
 
+- Create your environment configuration file
+
+  ```
+  export MLP_ENVIRONMENT_FILE="${HOME}/mlp-${MLP_PROJECT_ID}-${MLP_ENVIRONMENT_NAME}.env" && \
+  sed -n -i -e '/^export MLP_ENVIRONMENT_FILE=/!p' -i -e '$aexport MLP_ENVIRONMENT_FILE="'"${MLP_ENVIRONMENT_FILE}"'"' ${HOME}/.bashrc && \
+  terraform output -raw environment_configuration > ${MLP_ENVIRONMENT_FILE} && \
+  source ${MLP_ENVIRONMENT_FILE}
+  ```
+
 ## Review the resources
 
 ### GKE clusters and ConfigSync
@@ -317,14 +325,10 @@ Before running Terraform, make sure that the Service Usage API is enable.
 
 Open Cloud Shell to execute the following commands:
 
-- Store your GKE cluster name in env variable:
-
-  `export GKE_CLUSTER=<GKE_CLUSTER_NAME>`
-
 - Get cluster credentials:
 
   ```
-  gcloud container fleet memberships get-credentials ${GKE_CLUSTER}
+  gcloud container fleet memberships get-credentials ${MLP_CLUSTER_NAME}
   ```
 
   The output will be similar to the following:
@@ -362,28 +366,29 @@ Open Cloud Shell to execute the following commands:
   kuberay-operator-56b8d98766-2nvht   1/1     Running   0          6m26s
   ```
 
-- Check the namespace `ml-team` created:
+- Check the namespace created:
 
   ```
-  kubectl get ns | grep ml-team
+  kubectl get ns ${MLP_KUBERNETES_NAMESPACE}
   ```
 
   The output will be similar to the following:
 
   ```
-  ml-team                        Active   21m
+  NAME      STATUS   AGE
+  ml-team   Active   ##m
   ```
 
-- Check the RepoSync object created `ml-team` namespace:
+- Check the RepoSync object created for the namespace:
 
   ```
-  kubectl get reposync -n ml-team
+  kubectl get reposync -n ${MLP_KUBERNETES_NAMESPACE}
   ```
 
-- Check the `raycluster` in `ml-team` namespace
+- Check the `raycluster` in the namespace
 
   ```
-  kubectl get raycluster -n ml-team
+  kubectl get raycluster -n ${MLP_KUBERNETES_NAMESPACE}
   ```
 
   The output will be similar to the following:
@@ -393,10 +398,10 @@ Open Cloud Shell to execute the following commands:
   ray-cluster-kuberay   1                 1                   ready    29m
   ```
 
-- Check the head and worker pods of kuberay in `ml-team` namespace
+- Check the head and worker pods of kuberay in the namespace
 
   ```
-  kubectl get pods -n ml-team
+  kubectl get pods -n ${MLP_KUBERNETES_NAMESPACE}
   ```
 
   The output will be similar to the following:
@@ -407,12 +412,10 @@ Open Cloud Shell to execute the following commands:
   ray-cluster-kuberay-worker-workergroup-rzpjw   2/2     Running   0          3m21s
   ```
 
-- Open the `ml-team` Ray dashboard
+- Open the namespace's Ray dashboard
 
   ```
-  MLP_ENVIRONMENT_NAME=$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-  MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
-  echo -e "\nml-team Ray dashboard: https://ray-dashboard.ml-team.mlp-${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog\n"
+  echo -e "\n${MLP_KUBERNETES_NAMESPACE} Ray dashboard: ${MLP_RAY_DASHBOARD_NAMESPACE_ENDPOINT}\n"
   ```
 
   > If you get `ERR_CONNECTION_CLOSED` or `ERR_CONNECTION_RESET` when trying to go to the Ray dashboard, the [Gateway](https://console.cloud.google.com/kubernetes/gateways) is still being provisioned. Retry in a couple of minutes.

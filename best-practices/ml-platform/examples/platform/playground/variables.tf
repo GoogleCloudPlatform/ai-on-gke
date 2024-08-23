@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "cluster_name" {
+variable "cluster_name_prefix" {
   default     = "mlp"
-  description = "Name of the GKE cluster"
+  description = "GKE cluster name prefix"
   type        = string
 }
 
