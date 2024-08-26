@@ -24,7 +24,7 @@ locals {
 }
 
 resource "random_string" "application_secret_key" {
-  length  = var.project_id
+  length  = 8
   lower   = true
   numeric = true
   special = false
