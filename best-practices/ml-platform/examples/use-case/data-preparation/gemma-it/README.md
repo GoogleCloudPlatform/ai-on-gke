@@ -4,6 +4,8 @@ A processed flipkart product catalog data is used as input data to generate prom
 The prompts are generated using Vertex AI's Gemini Flash model. The output is a data set that can be used for fine-tuning
 the base model.
 
+Depending on the infrastructure you provisioned, the data preparation step takes approximately 1 hour and 40 minutes.
+
 ## Prerequisites
 
 - This guide was developed to be run on the [playground machine learning platform](/best-practices/ml-platform/examples/platform/playground/README.md). If you are using a different environment the scripts and manifest will need to be modified for that environment.
