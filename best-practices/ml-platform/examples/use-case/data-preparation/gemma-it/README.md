@@ -96,3 +96,40 @@ the base model.
   ```sh
   gcloud storage ls gs://${MLP_DATA_BUCKET}/${DATASET_OUTPUT_PATH}
   ```
+## Observability
+
+By default, both GKE and the workloads you run expose metrics and logs in Google Cloud's Observability suite. You can view this information either from the Cloud Observability console or the GKE Observability page.
+
+For more information about infrastructure and application metrics, see [View observability metrics](https://cloud.google.com/kubernetes-engine/docs/how-to/view-observability-metrics).
+
+Specifically for the data preparation use case described in this example, you may want to perform the following tasks.
+
+### Monitor the job
+
+In the Google Cloud console, go to the [Kubernetes Engine](https://console.cloud.google.com/kubernetes) page. Under the `Resource Management` menu on the left side, click `Workloads`. From there, you can filter the workloads by cluster name and namespaces. The `Observability` tab provides system level metric views such as `Overview`, `CPU`, and `Memory`. If you click the job name like `data-prep`, you can see the job details like the following page:
+
+![monitor-job](../../../../docs/images/monitor-job.png)
+
+At the bottom of the page, you can see the status of the managed pods by the job. If your job has troubles running, the `EVENTS` and `LOGS` tabs will provide more insight. You can also adjust the time windows or open the `Container logs` and `Audit logs` for additional information.
+
+### View the logs
+
+To gain insight into your workload quickly, you may want to filter and tweak the log queries to view only the relevant logs. You can do so in the `Logs Explorer`. One fast way to open the Logs Explorer and have the query pre-populated is to click the `View in Logs Explorer` button on the right side of the `LOGS` tab once you are in the `Job details` page.
+
+When the link is opened, you should see something like the following:
+
+![log-explorer-query](../../../../docs/images/log-explorer-query.png)
+
+The Logs Explorer provides many nice features besides tweaking your log query in the `Query` field. For example, if you want to know how many prompts are generated in a specific time window, you can do something like the following:
+
+1. From the code, look for the log entries that associate with the prompt generation. In this example, the `Content generated` log entry is produce each time a prompt is generated.
+
+2. You can click the `Similar entries`, which automatically updates the log query for you and list all `Content generated` entries. 
+
+3. Adjust the timeline in the middle of the page and zoom in/out. You will see during a specific time window, such as 30 seconds, how many log entries are ingested. That number should be the same as the number of prompts generated in the code.
+
+### Log Analytics
+
+You can also use [Log Analytics](https://cloud.google.com/logging/docs/analyze/query-and-view) to analyze your logs. After it is enabled, you can run SQL queries to gain insight from the logs. The result can also be charted. For example, you can click the `Analyze results` link on the Logs Explorer page and open the Log Analytics page with a converted SQL query. The chart and table you view can also be added to a dashboard.
+
+![log-analytics](../../../../docs/images/log-analytics.png)
