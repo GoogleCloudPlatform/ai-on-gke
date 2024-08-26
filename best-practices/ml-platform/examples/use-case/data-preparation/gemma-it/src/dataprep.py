@@ -315,6 +315,8 @@ if __name__ == "__main__":
 
     datasets.disable_progress_bar()
 
+    logger.info("***Job Start***")
+
     logger.info("Configure signal handlers")
     signal.signal(signal.SIGINT, graceful_shutdown)
     signal.signal(signal.SIGTERM, graceful_shutdown)
@@ -330,3 +332,5 @@ if __name__ == "__main__":
 
     logger.info("Upload prepared dataset into GCS")
     train_validate_test_split(res_df)
+
+    logger.info("***Job End***")
