@@ -7,7 +7,9 @@ project_id = "$PROJECT_ID"
 namespace = "benchmark"
 ksa       = "benchmark-ksa"
 
-k8s_hf_secret = "hf-token"
+
+# This is needed for loading the gated models on HF
+# k8s_hf_secret = "hf-token"
 
 # Locust service configuration 
 artifact_registry                        = "us-central1-docker.pkg.dev/$PROJECT_ID/ai-benchmark"
