@@ -23,10 +23,10 @@ setuptools.setup(
     long_description="long description here",
     long_description_content_type="text/markdown",
     url="https://github.com/chiayi/ai-on-gke/tree/main/ray-on-gke/user/jupyterhub/auth",
-    packages=['gcpiapjwtauthenticator'],
+    packages=setuptools.find_packages(),
     license='Apache 2.0',
     install_requires=[
-        "jupyterhub>=4.1.0",
+        "jupyterhub",
         "tornado>=6.3.3",
         'oauthenticator>=0.9.0',
         'pyjwt>=2.7.0',
