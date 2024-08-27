@@ -60,6 +60,10 @@ resource "google_artifact_registry_repository" "container_images" {
 # GCS
 ###############################################################################
 resource "google_storage_bucket" "data" {
+  depends_on = [
+    google_container_cluster.mlp
+  ]
+
   force_destroy               = true
   location                    = var.subnet_01_region
   name                        = local.bucket_data_name
@@ -68,6 +72,10 @@ resource "google_storage_bucket" "data" {
 }
 
 resource "google_storage_bucket" "model" {
+  depends_on = [
+    google_container_cluster.mlp
+  ]
+
   force_destroy               = true
   location                    = var.subnet_01_region
   name                        = local.bucket_model_name
@@ -152,6 +160,10 @@ resource "google_storage_bucket_iam_member" "data_bucket_data_preparation_storag
 }
 
 resource "google_project_iam_member" "data_preparation_aiplatform_user" {
+  depends_on = [
+    google_container_cluster.mlp
+  ]
+
   project = data.google_project.environment.project_id
   member  = "${local.wi_member_principal_prefix}/${local.data_preparation_ksa}"
   role    = "roles/aiplatform.user"
