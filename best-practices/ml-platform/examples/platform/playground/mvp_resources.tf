@@ -60,7 +60,7 @@ resource "google_artifact_registry_repository" "container_images" {
 # GCS
 ###############################################################################
 resource "google_storage_bucket" "data" {
-  force_destroy               = false
+  force_destroy               = true
   location                    = var.subnet_01_region
   name                        = local.bucket_data_name
   project                     = data.google_project.environment.project_id
@@ -68,7 +68,7 @@ resource "google_storage_bucket" "data" {
 }
 
 resource "google_storage_bucket" "model" {
-  force_destroy               = false
+  force_destroy               = true
   location                    = var.subnet_01_region
   name                        = local.bucket_model_name
   project                     = data.google_project.environment.project_id
