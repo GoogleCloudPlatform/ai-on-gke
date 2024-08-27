@@ -17,7 +17,7 @@ locals {
 }
 
 resource "google_secret_manager_secret" "git_config" {
-  project   = data.google_project.environment.project_id
+  project   = google_project_service.secretmanager_googleapis_com.project
   secret_id = local.git_config_secret_name
 
   replication {

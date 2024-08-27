@@ -461,7 +461,7 @@ You only need to complete the section for the option that you have selected.
   gsutil -m rm -rf gs://${TERRAFORM_BUCKET_NAME}/* && \
   terraform init && \
   terraform destroy -auto-approve  && \
-  rm -rf .terraform .terraform.lock.hcl
+  rm -rf .terraform .terraform.lock.hcl state/
   ```
 
 ### Code Repository
