@@ -262,6 +262,13 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		LabelJobSetNamespace: p.Namespace,
 	}
 
+	// Copy configured labels from the Pod to the Node.
+	for _, key := range g.ClusterContext.PodToNodeLabels {
+		if val, ok := p.Labels[key]; ok {
+			labels[key] = val
+		}
+	}
+
 	for labelKey, labelValue := range p.Spec.NodeSelector {
 		switch labelKey {
 		case ICIResiliencyLabel:
