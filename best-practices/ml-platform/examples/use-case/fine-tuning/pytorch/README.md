@@ -41,7 +41,8 @@ with an inference serving engine.
 
   ```
   cd src
-  gcloud builds submit --config cloudbuild.yaml \
+  sed -i -e "s|^serviceAccount:.*|serviceAccount: projects/${MLP_PROJECT_ID}/serviceAccounts/${MLP_BUILD_GSA}|" cloudbuild.yaml
+  gcloud beta builds submit --config cloudbuild.yaml \
   --project ${MLP_PROJECT_ID} \
   --substitutions _DESTINATION=${MLP_FINE_TUNING_IMAGE}
   cd ..

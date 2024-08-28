@@ -34,7 +34,8 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 
   ```
   cd src
-  gcloud builds submit --config cloudbuild.yaml \
+  sed -i -e "s|^serviceAccount:.*|serviceAccount: projects/${MLP_PROJECT_ID}/serviceAccounts/${MLP_BUILD_GSA}|" cloudbuild.yaml
+  gcloud beta builds submit --config cloudbuild.yaml \
   --project ${MLP_PROJECT_ID} \
   --substitutions _DESTINATION=${MLP_MODEL_EVALUATION_IMAGE}
   cd ..
