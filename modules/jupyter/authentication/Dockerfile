@@ -7,3 +7,5 @@ RUN chmod -R u+w ./authenticator
 
 RUN pip3 install notebook
 RUN pip3 install ./authenticator
+
+USER jovyan
