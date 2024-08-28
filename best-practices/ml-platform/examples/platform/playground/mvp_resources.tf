@@ -238,6 +238,8 @@ output "environment_configuration" {
   value = <<EOT
 MLP_AR_REPO_URL="${local.repo_container_images_url}"
 MLP_BUILD_GSA="${local.gsa_build_email}"
+MLP_CLUSTER_KUBERNETES_HOST="${local.connect_gateway_host_url}"
+MLP_CLUSTER_LOCATION="${google_container_cluster.mlp.location}"
 MLP_CLUSTER_NAME="${local.cluster_name}"
 MLP_DATA_BUCKET="${local.bucket_data_name}"
 MLP_DATA_PREPARATION_IMAGE="${local.repo_container_images_url}/data-preparation:1.0.0"
