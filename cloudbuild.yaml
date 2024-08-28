@@ -102,9 +102,11 @@ steps:
 
         # Make sure pods are running
         kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID-ray --for=condition=Ready --timeout=1200s
+        # Wait for pods to be stable
+        sleep 5s
         kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-ray service/ray-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
-        sleep 5s
+        sleep 10s
 
         ray job submit \
         --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
