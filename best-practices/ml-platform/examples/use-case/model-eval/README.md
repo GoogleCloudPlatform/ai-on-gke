@@ -53,10 +53,12 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 
   | Variable       | Description                                     | Example                                  |
   | -------------- | ----------------------------------------------- | ---------------------------------------- |
+  | ACCELERATOR    | Type of GPU accelerator to use (l4, a100)       | l4                                       |
   | VLLM_IMAGE_URL | The image url for the vllm image                | vllm/vllm-openai:v0.5.3.post1            |
   | MODEL          | The output folder path for the fine-tuned model | /model-data/model-gemma2-a100/experiment |
 
   ```sh
+  ACCELERATOR="l4"
   VLLM_IMAGE_URL="vllm/vllm-openai:v0.5.3.post1"
   MODEL="/model-data/model-gemma2/experiment"
   ```
@@ -67,13 +69,13 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
   -i -e "s|V_KSA|${MLP_MODEL_EVALUATION_KSA}|" \
   -i -e "s|V_BUCKET|${MLP_MODEL_BUCKET}|" \
   -i -e "s|V_MODEL_PATH|${MODEL}|" \
-  manifests/deployment.yaml
+  manifests/deployment-${ACCELERATOR}.yaml
   ```
 
 - Create the deployment
 
   ```sh
-  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/deployment.yaml
+  kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/deployment-${ACCELERATOR}.yaml
   ```
 
 - Wait for the deployment to be ready
@@ -90,16 +92,16 @@ for this activity, the first is to send prompts to the fine-tuned model, the sec
 
 - Configure the job
 
-  | Variable            | Description                                                                                               | Example                                     |
-  | ------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-  | DATASET_OUTPUT_PATH | The folder path of the generated output data set.                                                         | dataset/output                              |
-  | ENDPOINT            | This is the endpoint URL of the inference server                                                          | http://vllm-openai:8000/v1/chat/completions |
-  | MODEL_PATH          | The output folder path for the fine-tuned model. This is used by model evaluation to generate the prompt. | /model-data/model-gemma2/experiment         |
-  | PREDICTIONS_FILE    | The predictions file                                                                                      | predictions.txt                             |
+  | Variable            | Description                                                                                               | Example                                        |
+  | ------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+  | DATASET_OUTPUT_PATH | The folder path of the generated output data set.                                                         | dataset/output                                 |
+  | ENDPOINT            | This is the endpoint URL of the inference server                                                          | http://vllm-openai-l4:8000/v1/chat/completions |
+  | MODEL_PATH          | The output folder path for the fine-tuned model. This is used by model evaluation to generate the prompt. | /model-data/model-gemma2/experiment            |
+  | PREDICTIONS_FILE    | The predictions file                                                                                      | predictions.txt                                |
 
   ```sh
   DATASET_OUTPUT_PATH="dataset/output"
-  ENDPOINT="http://vllm-openai:8000/v1/chat/completions"
+  ENDPOINT="http://vllm-openai-${ACCELERATOR}:8000/v1/chat/completions"
   MODEL_PATH="/model-data/model-gemma2/experiment"
   PREDICTIONS_FILE="predictions.txt"
   ```
