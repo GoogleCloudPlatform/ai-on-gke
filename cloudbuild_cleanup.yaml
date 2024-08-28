@@ -1,0 +1,104 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+- id: 'clean vpcs'
+  name: gcr.io/cloud-builders/gcloud
+  script: |
+    #!/usr/bin/env bash
+
+    # Disable screen reader accessibility to list output in table format
+    gcloud config set accessibility/screen_reader false
+
+    echo "Hello $_USER"
+
+    # Fetch all VPCs
+    gcloud compute networks list --filter="creationTimestamp<=-p4h00m" \
+        --project=gke-ai-eco-dev --format="table(name)" | while IFS= read -r i; do
+        echo "#########################"
+        echo "WIP Network === ${i}"
+
+        if [[ $i == 'default' ]]; then
+            echo "Ignore default VPC"
+            continue
+        fi
+
+        if [[  $i == 'NAME' ]]; then
+            echo "Ignore Table Header"
+            continue
+        fi
+
+        # Ingore VPC's not using ml-xxxx-true, ml-xxxx-false format.
+        if ! [[ "$i" =~ ^.*ml-.*-true$ ]] && ! [[ "$i" =~ ^.*ml-.*-false$ ]]; then
+            echo "Ignore VPC === $i!"
+            continue
+        fi
+
+        gcloud compute networks subnets list --project=gke-ai-eco-dev --filter="network:$i" --format="table(name, region)" | while IFS= read -r j; do
+            if [[ $j =~ ^NAME[[:space:]]+REGION[[:space:]]*$ ]]; then
+                echo "Ignore Subnet === $j!"
+                continue
+            fi
+
+            IFS=' ' read -r name region <<< "$j"
+            gcloud compute networks subnets delete --project=gke-ai-eco-dev --region=$region $name --quiet
+            echo "Deleted network subnet === $region/$name"
+        done
+
+        gcloud compute networks peerings list --network=$i --flatten=peerings[] --format="table(peerings.name)" | while IFS= read -r j; do
+            if [[ $j == 'NAME' ]]; then
+                echo "Ignore peering === $j!"
+                continue
+            fi
+
+            gcloud compute networks peerings delete --project=gke-ai-eco-dev "$j" --network=$i --quiet
+            echo "Deleted peering === $j"
+        done
+
+        gcloud compute addresses list --filter=network:$i --format="table(name)" | while IFS= read -r j; do
+            if [[ $j == 'NAME' ]]; then
+                echo "Ignore address === $j!"
+                continue
+            fi
+
+            gcloud compute addresses delete --project=gke-ai-eco-dev "$j" --global --quiet
+            echo "Deleted address === $j"
+        done
+
+        gcloud compute routes list --filter=network:$i --format="table(name)" | while IFS= read -r j; do
+            if [[ $j == 'NAME' ]]; then
+                echo "Ignore route === $j!"
+                continue
+            fi
+
+            gcloud compute routes delete --project=gke-ai-eco-dev "$j" --quiet
+            echo "Deleted route === $j"
+        done
+
+        gcloud compute networks get-effective-firewalls "$i" --project=gke-ai-eco-dev --format="table(name)" | while IFS= read -r j; do
+            if [[ $j == 'default' || $j == 'NAME' ]]; then
+                echo "Ignore FW Rules === $j!"
+                continue
+            fi
+
+            gcloud compute firewall-rules delete --project=gke-ai-eco-dev "${j}" --quiet
+            echo "Deleted network attached firewall rules === ${j}"
+        done
+
+        gcloud compute networks delete $i --project=gke-ai-eco-dev --quiet
+        echo "Deleted network === $i"
+    done
+
+
+
