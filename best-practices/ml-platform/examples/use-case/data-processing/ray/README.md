@@ -6,7 +6,7 @@
 
 ## Architecture
 
-![data-processing](/best-practices/ml-platform/docs/images/data-processing-ray-workflow.png)
+![data-processing](/best-practices/ml-platform/docs/images/use-case/data-processing-ray-workflow.png)
 
 ## Data processing steps
 
