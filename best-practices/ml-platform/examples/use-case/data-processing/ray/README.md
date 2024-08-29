@@ -206,7 +206,7 @@ Once the metrics are defined, the next time you run your workloads, you will be 
 
 ### Log Analytics
 
-You can also use [Log Analytics](https://cloud.google.com/logging/docs/log-analytics#analytics) to [analyze your logs]((https://cloud.google.com/logging/docs/analyze/query-and-view)). If your log buckets are not upgraded for Log Analytics, you need to upgrade them first. After the log buckets are upgraded, you can run SQL queries to gain insight from the newly ingested logs. The query results can also be charted. For example, the following query extracts the product type from the log text payload and count the numbers of them:
+You can also use [Log Analytics](https://cloud.google.com/logging/docs/log-analytics#analytics) to [analyze your logs]((https://cloud.google.com/logging/docs/analyze/query-and-view)). If your log buckets are not upgraded for Log Analytics, you need to upgrade them first. After the log buckets are upgraded, you can run SQL queries to gain insight from the newly ingested logs. The query results can also be charted. For example, the following query returns the `Image not found` error and chart the result:
 
 ```sql
 WITH
