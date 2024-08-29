@@ -102,8 +102,8 @@ steps:
 
         # Make sure pods are running
         kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID-ray --for=condition=Ready --timeout=1200s
-        # Wait for pods to be stable
-        sleep 5s
+        # Ray head's readinessProbe is not probing the head service today. Therefore the wait for ready above is not reliable.
+        sleep 45s
         kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-ray service/ray-cluster-kuberay-head-svc 8265:8265 &
         # Wait port-forwarding to take its place
         sleep 10s
@@ -231,6 +231,8 @@ steps:
 
         # Validate Ray: Make sure pods are running
         kubectl wait --for=condition=Ready pods -n rag-$SHORT_SHA-$_BUILD_ID -l 'component!=continuous-image-puller' --timeout=1200s
+        # Ray head's readinessProbe is not probing the head service today. Therefore the wait for ready above is not reliable.
+        sleep 45s
         kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8262:8265 &
         # Wait port-forwarding to take its place
         sleep 5s
