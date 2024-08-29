@@ -464,6 +464,20 @@ You only need to complete the section for the option that you have selected.
   rm -rf .terraform .terraform.lock.hcl state/
   ```
 
+### Environment configuration
+
+- Delete the environment configuration file
+
+  ```
+  rm -f ${MLP_ENVIRONMENT_FILE}
+  ```
+
+- Remove the environment configuration environment variable
+
+  ```
+  sed -i -e '/^export MLP_ENVIRONMENT_FILE=/d' ${HOME}/.bashrc
+  ```
+
 ### Code Repository
 
 - Restore modified files
@@ -489,6 +503,15 @@ You only need to complete the section for the option that you have selected.
   terraform/features/initialize/.terraform.lock.hcl \
   terraform/features/initialize/backend.tf.local \
   terraform/features/initialize/state
+  ```
+
+- Remove the environment variables
+
+  ```
+  sed \
+  -i -e '/^export MLP_BASE_DIR=/d' \
+  -i -e '/^export MLP_TYPE_BASE_DIR=/d' \
+  ${HOME}/.bashrc
   ```
 
 ## Troubleshooting
