@@ -64,25 +64,25 @@ module "infra" {
   source = "../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
-  project_id         = var.project_id
-  cluster_name       = local.cluster_name
-  cluster_location   = var.cluster_location
-  region             = local.cluster_location_region
-  autopilot_cluster  = var.autopilot_cluster
-  private_cluster    = var.private_cluster
-  create_network     = var.create_network
-  network_name       = local.network_name
-  subnetwork_name    = local.network_name
-  subnetwork_cidr    = var.subnetwork_cidr
-  subnetwork_region  = local.cluster_location_region
-  cpu_pools          = var.cpu_pools
-  enable_gpu         = true
-  gpu_pools          = var.gpu_pools
-  ray_addon_enabled  = true
+  project_id        = var.project_id
+  cluster_name      = local.cluster_name
+  cluster_location  = var.cluster_location
+  region            = local.cluster_location_region
+  autopilot_cluster = var.autopilot_cluster
+  private_cluster   = var.private_cluster
+  create_network    = var.create_network
+  network_name      = local.network_name
+  subnetwork_name   = local.network_name
+  subnetwork_cidr   = var.subnetwork_cidr
+  subnetwork_region = local.cluster_location_region
+  cpu_pools         = var.cpu_pools
+  enable_gpu        = true
+  gpu_pools         = var.gpu_pools
+  ray_addon_enabled = true
   # TODO(genlu): remove channel and k8s_version after ray addon is in REGULAR channel
-  release_channel = "RAPID"
+  release_channel    = "RAPID"
   kubernetes_version = "1.30.3-gke.1969000"
-  depends_on      = [module.project-services]
+  depends_on         = [module.project-services]
 }
 
 data "google_container_cluster" "default" {
