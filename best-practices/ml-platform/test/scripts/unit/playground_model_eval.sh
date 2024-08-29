@@ -23,9 +23,13 @@ SCRIPTS_DIR=$(realpath ${SCRIPT_PATH}/..)
 export MLP_TYPE="playground"
 source ${SCRIPTS_DIR}/helpers/include.sh
 
+echo_title "Loading the environment configuration"
+
+source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
+
 echo_title "Preparing the environment"
 
-source ${SCRIPTS_DIR}/helpers/dataprocessing_env.sh
-source ${SCRIPTS_DIR}/helpers/dataprocessing_cleanup.sh
+source ${SCRIPTS_DIR}/helpers/model_eval_env.sh
 
+source ${SCRIPTS_DIR}/helpers/model_eval.sh
 check_local_error_and_exit

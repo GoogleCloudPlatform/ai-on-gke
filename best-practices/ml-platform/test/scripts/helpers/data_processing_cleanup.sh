@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo_title "Checking GitLab required configuration"
+echo_title "Deleting GCS data buckets content"
 
-export GIT_TOKEN_FILE=${GIT_TOKEN_FILE:-${HOME}/secrets/mlp-gitlab-token}
+print_and_execute_no_check "gsutil -m -q rm -rf gs://${MLP_DATA_BUCKET}/*"
 
-source ${SCRIPTS_DIR}/helpers/git_env.sh
+echo_title "Cleaning up local repository changes"
+cd ${MLP_BASE_DIR} &&
+    git restore ${MLP_USE_CASE_BASE_DIR}/job.yaml

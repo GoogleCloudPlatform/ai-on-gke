@@ -14,8 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo_title "Checking GitLab required configuration"
+echo_title "Checking model-eval required configuration"
 
-export GIT_TOKEN_FILE=${GIT_TOKEN_FILE:-${HOME}/secrets/mlp-gitlab-token}
+echo_title "Applying model-eval configuration"
 
-source ${SCRIPTS_DIR}/helpers/git_env.sh
+export ACCELERATOR="l4"
+export VLLM_IMAGE_URL="vllm/vllm-openai:v0.5.3.post1"
+export MODEL="/model-data/model-gemma2/experiment"
+
+export DATASET_OUTPUT_PATH="dataset/output"
+export NDPOINT="http://vllm-openai-${ACCELERATOR}:8000/v1/chat/completions"
+export MODEL_PATH="/model-data/model-gemma2/experiment"
+export PREDICTIONS_FILE="predictions.txt"

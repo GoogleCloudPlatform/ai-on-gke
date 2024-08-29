@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo_title "Checking GitLab required configuration"
+echo_title "Checking data-processing required configuration"
+source ${SCRIPTS_DIR}/helpers/kaggle.sh "datasets files atharvjairath/flipkart-ecommerce-dataset"
+check_local_error_exit_on_error
 
-export GIT_TOKEN_FILE=${GIT_TOKEN_FILE:-${HOME}/secrets/mlp-gitlab-token}
-
-source ${SCRIPTS_DIR}/helpers/git_env.sh
+echo_title "Applying data-processing configuration"

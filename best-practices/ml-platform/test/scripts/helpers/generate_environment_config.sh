@@ -14,18 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_PATH="$(
-    cd "$(dirname "$0")" >/dev/null 2>&1
-    pwd -P
-)"
-SCRIPTS_DIR=$(realpath ${SCRIPT_PATH}/..)
+echo_title "Generating environment configuration file"
 
-export MLP_TYPE="playground"
-source ${SCRIPTS_DIR}/helpers/include.sh
-
-echo_title "Preparing the environment"
-
-source ${SCRIPTS_DIR}/helpers/dataprocessing_env.sh
-
-source ${SCRIPTS_DIR}/helpers/dataprocessing.sh
-check_local_error_and_exit
+print_and_execute "cd ${MLP_TYPE_BASE_DIR} &&
+terraform output -raw environment_configuration >${MLP_ENVIRONMENT_FILE} &&
+source ${MLP_ENVIRONMENT_FILE}"
