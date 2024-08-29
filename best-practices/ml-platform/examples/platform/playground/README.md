@@ -139,7 +139,7 @@ You only need to complete the section for the option that you have selected (eit
 
   ```
   export MLP_PROJECT_ID="<PROJECT_ID>"
-  export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-tf-state"
+  export MLP_STATE_BUCKET="${MLP_PROJECT_ID}-terraform"
   ```
 
 - Set the default `gcloud` project

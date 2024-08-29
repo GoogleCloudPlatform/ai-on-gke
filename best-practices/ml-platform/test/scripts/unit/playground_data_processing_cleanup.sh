@@ -14,17 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo_title "Deleting data processing Artifact Registry repository"
+SCRIPT_PATH="$(
+    cd "$(dirname "$0")" >/dev/null 2>&1
+    pwd -P
+)"
+SCRIPTS_DIR=$(realpath ${SCRIPT_PATH}/..)
 
-gcloud artifacts repositories delete ${MLP_ENVIRONMENT_NAME}-dataprocessing \
-    --location=us \
-    --project=${MLP_PROJECT_ID} \
-    --quiet
+export MLP_TYPE="playground"
+source ${SCRIPTS_DIR}/helpers/include.sh
+source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
 
-echo_title "Deleting dataprocessing GCS buckets"
+echo_title "Preparing the environment"
 
-gsutil -m -q rm -rf gs://${PROCESSING_BUCKET}/*
-gcloud storage buckets delete gs://${PROCESSING_BUCKET} --project ${MLP_PROJECT_ID}
+source ${SCRIPTS_DIR}/helpers/data_processing_env.sh
+source ${SCRIPTS_DIR}/helpers/data_processing_cleanup.sh
 
-gsutil -m -q rm -rf gs://${MLP_PROJECT_ID}_cloudbuild/*
-gcloud storage buckets delete gs://${MLP_PROJECT_ID}_cloudbuild --project ${MLP_PROJECT_ID}
+check_local_error_and_exit

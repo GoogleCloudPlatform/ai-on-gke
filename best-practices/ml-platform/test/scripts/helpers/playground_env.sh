@@ -14,19 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo_title "Applying terraform configuration"
+export MLP_ENVIRONMENT_NAME=${MLP_ENVIRONMENT_NAME:-$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)}
 
-sed -i "s/^\([[:blank:]]*bucket[[:blank:]]*=\).*$/\1 \"${MLP_STATE_BUCKET}\"/" ${MLP_TYPE_BASE_DIR}/backend.tf
-sed -i "s/^\([[:blank:]]*environment_name[[:blank:]]*=\).*$/\1 \"${MLP_ENVIRONMENT_NAME}\"/" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-sed -i "s/^\([[:blank:]]*environment_project_id[[:blank:]]*=\).*$/\1 \"${MLP_PROJECT_ID}\"/" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+export MLP_UNIQUE_IDENTIFIER="${MLP_PROJECT_ID}-${MLP_ENVIRONMENT_NAME}"
 
-echo_title "Creating GCS bucket"
-gcloud storage buckets create gs://${MLP_STATE_BUCKET} --project ${MLP_PROJECT_ID}
+export MLP_STATE_BUCKET="${MLP_UNIQUE_IDENTIFIER}-terraform"
+export TF_DATA_DIR=".terraform-${MLP_UNIQUE_IDENTIFIER}"
 
-echo_title "Checking MLP_IAP_DOMAIN"
-MLP_IAP_DOMAIN=${MLP_IAP_DOMAIN:-$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | awk -F@ '{print $2}')}
-echo "MLP_IAP_DOMAIN=${MLP_IAP_DOMAIN}"
-sed -i '/^iap_domain[[:blank:]]*=/{h;s/=.*/= "'"${MLP_IAP_DOMAIN}"'"/};${x;/^$/{s//iap_domain             = "'"${MLP_IAP_DOMAIN}"'"/;H};x}' ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+export MLP_ENVIRONMENT_FILE="${SCRIPTS_DIR}/environment_files/playground-${MLP_UNIQUE_IDENTIFIER}.env"
 
-echo_title "Checking ray-dashboard endpoint"
-gcloud endpoints services undelete ray-dashboard.ml-team.mlp-${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
+if [ -f ${MLP_ENVIRONMENT_FILE} ]; then
+    cat ${MLP_ENVIRONMENT_FILE}
+    source ${MLP_ENVIRONMENT_FILE}
+fi

@@ -23,17 +23,13 @@ SCRIPTS_DIR=$(realpath ${SCRIPT_PATH}/..)
 export MLP_TYPE="playground"
 source ${SCRIPTS_DIR}/helpers/include.sh
 
-echo_title "Preparing the environment"
-source ${SCRIPTS_DIR}/helpers/byop_env.sh
-source ${SCRIPTS_DIR}/helpers/gh_env.sh
+echo_title "Loading the environment configuration"
+
 source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
-source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_config.sh
 
-# terraform apply
-###############################################################################
-export TF_VAR_git_token=$(tr --delete '\n' <${GIT_TOKEN_FILE})
-source ${SCRIPTS_DIR}/helpers/terraform_apply.sh
+echo_title "Preparing the environment"
 
-source ${SCRIPTS_DIR}/helpers/generate_environment_config.sh
+source ${SCRIPTS_DIR}/helpers/data_preparation_env.sh
 
+source ${SCRIPTS_DIR}/helpers/data_preparation.sh
 check_local_error_and_exit
