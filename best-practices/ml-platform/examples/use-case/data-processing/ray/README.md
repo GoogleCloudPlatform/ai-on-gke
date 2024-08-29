@@ -29,14 +29,14 @@ The data processing step takes approximately 18-20 minutes.
 
 - Clone the repository and change directory to the guide directory
 
-  ```
+  ```shell
   git clone https://github.com/GoogleCloudPlatform/ai-on-gke && \
   cd ai-on-gke/best-practices/ml-platform/examples/use-case/data-processing/ray
   ```
 
 - Ensure that your `MLP_ENVIRONMENT_FILE` is configured
 
-  ```
+  ```shell
   cat ${MLP_ENVIRONMENT_FILE} && \
   source ${MLP_ENVIRONMENT_FILE}
   ```
@@ -47,22 +47,25 @@ The data processing step takes approximately 18-20 minutes.
 
 - Download the raw data csv file from [Kaggle](https://kaggle.com) and store it into the bucket created in the previous step.
 
-  - You will need kaggle cli to download the file. The kaggle cli can be installed using the following [instructions](https://github.com/Kaggle/kaggle-api#installation).
-  - To use the cli you must create an API token. To create the token, register on kaggle.com if you already don't have an account. Go to kaggle.com/settings > API > Create New Token, the downloaded file should be stored in $HOME/.kaggle/kaggle.json. Note, you will have to create the dir $HOME/.kaggle.
-  - Alternatively, it can be [downloaded](https://www.kaggle.com/datasets/atharvjairath/flipkart-ecommerce-dataset) from the kaggle website.
-
-  ```
-  kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset && \
-  gcloud storage cp flipkart_com-ecommerce_sample.csv \
-  gs://${MLP_DATA_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
-  rm flipkart_com-ecommerce_sample.csv
-  ```
+  - You will need kaggle cli to download the file. The kaggle cli can be installed using the following command in Cloud Shell:
+      ```shell
+      pip3 install --user kaggle
+      ```
+      For more details, you can read those [instructions](https://github.com/Kaggle/kaggle-api#installation).
+  - To use the cli you must create an API token. To create the token, register on [kaggle.com](https://kaggle.com) if you already don't have an account. Go to `kaggle.com/settings > API > Create New Token`, the downloaded file should be stored in `$HOME/.kaggle/kaggle.json`. Note, you will have to create the dir `$HOME/.kaggle`. After the configuration is done, you can run the following command to download the dataset and copy it to the GCS bucket:
+      ```shell
+      kaggle datasets download --unzip atharvjairath/flipkart-ecommerce-dataset && \
+      gcloud storage cp flipkart_com-ecommerce_sample.csv \
+      gs://${MLP_DATA_BUCKET}/flipkart_raw_dataset/flipkart_com-ecommerce_sample.csv && \
+      rm flipkart_com-ecommerce_sample.csv
+      ```
+   - Alternatively, you can [downloaded the dataset](https://www.kaggle.com/datasets/atharvjairath/flipkart-ecommerce-dataset) directly from the kaggle website and copy it to the bucket.
 
 ## Build the container image
 
 - Build container image using Cloud Build and push the image to Artifact Registry
 
-  ```
+  ```shell
   cd src
   sed -i -e "s|^serviceAccount:.*|serviceAccount: projects/${MLP_PROJECT_ID}/serviceAccounts/${MLP_BUILD_GSA}|" cloudbuild.yaml
   gcloud beta builds submit --config cloudbuild.yaml \
@@ -75,13 +78,13 @@ The data processing step takes approximately 18-20 minutes.
 
 - Get credentials for the GKE cluster
 
-  ```
+  ```shell
   gcloud container fleet memberships get-credentials ${MLP_CLUSTER_NAME} --project ${MLP_PROJECT_ID}
   ```
 
 - Configure the job
 
-  ```
+  ```shell
   sed \
   -i -e "s|V_DATA_BUCKET|${MLP_DATA_BUCKET}|" \
   -i -e "s|V_IMAGE_URL|${MLP_DATA_PROCESSING_IMAGE}|" \
@@ -91,21 +94,25 @@ The data processing step takes approximately 18-20 minutes.
 
 - Create the job
 
-  ```
+  ```shell
   kubectl --namespace ${MLP_KUBERNETES_NAMESPACE} apply -f manifests/job.yaml
   ```
 
-- Monitor the execution in Ray Dashboard. See how to launch [Ray Dashboard](../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync)
-
+- Monitor the execution in Ray Dashboard. You can run the following command to get the dashboard endpoint:
+    ```shell
+    echo -e "\n${MLP_KUBERNETES_NAMESPACE} Ray dashboard: ${MLP_RAY_DASHBOARD_NAMESPACE_ENDPOINT}\n"
+    ```
+    Read [the section about KubeRay](../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync) for more info.
+- From the Ray Dashboard, view the following about the jobs:
   - Jobs -> Running Job ID
     - See the Tasks/actors overview for Running jobs
     - See the Task Table for a detailed view of task and assigned node(s)
   - Cluster -> Node List
     - See the Ray actors running on the worker process
 
-- Once the Job is completed, both the prepared dataset as a CSV and the images are stored in Google Cloud Storage.
+- You can check the job status from the GKE console or [query the logs](#log-query-sample) in the [Logs Explorer](https://console.cloud.google.com/logs). Once the Job is completed, both the prepared dataset as a CSV and the images are stored in Google Cloud Storage.
 
-  ```
+  ```shell
   gcloud storage ls gs://${MLP_DATA_BUCKET}/flipkart_preprocessed_dataset/flipkart.csv
   gcloud storage ls gs://${MLP_DATA_BUCKET}/flipkart_images
   ```
@@ -126,7 +133,7 @@ Specifically for the data processing use case described in this example, you can
 
 In the Google Cloud console, go to the [Logs Explorer](https://console.cloud.google.com/logs) page to run your queries.
 
-- Find when the data processing job started and finished:
+- Find when the data processing job started and finished. You may need to adjust the time window in the UI or use [timestamp](https://cloud.google.com/logging/docs/view/logging-query-language) in the query:
 
   ```
   labels."k8s-pod/app"="data-processing"
@@ -199,37 +206,35 @@ Once the metrics are defined, the next time you run your workloads, you will be 
 
 ### Log Analytics
 
-You can also use [Log Analytics](https://cloud.google.com/logging/docs/analyze/query-and-view) to analyze your logs. After it is enabled, you can run SQL queries to gain insight from the logs. The result can also be charted. For example, the following query extracts the product type from the log text payload and count the numbers of them:
+You can also use [Log Analytics](https://cloud.google.com/logging/docs/log-analytics#analytics) to [analyze your logs]((https://cloud.google.com/logging/docs/analyze/query-and-view)). If your log buckets are not upgraded for Log Analytics, you need to upgrade them first. After the log buckets are upgraded, you can run SQL queries to gain insight from the newly ingested logs. The query results can also be charted. For example, the following query extracts the product type from the log text payload and count the numbers of them:
 
 ```sql
+WITH
+  logs AS (
+  SELECT
+    *
+  FROM
+    `[Your Project Id].global._Default._AllLogs` )
 SELECT
- ARRAY_REVERSE(SPLIT(text_payload, '>>'))[2] AS clothing_type,
- COUNT(*) AS number
+  timestamp,
+  severity,
+  text_payload,
+  proto_payload,
+  json_payload
 FROM
- `gkebatchexpce3c8dcb.global._Default._Default`
+  logs
 WHERE
- text_payload LIKE '%Clothing >> Women\'s Clothing >> Western Wear%'
-GROUP BY
- clothing_type
-LIMIT 1000
+  SAFE.STRING(logs.labels["k8s-pod/app"]) = "data-processing"
+  AND logs.resource.type= "k8s_container"
+  AND logs.text_payload IS NOT NULL
+  AND REGEXP_CONTAINS(logs.text_payload, "ray_worker_node_id.+Image.+not found$")
+  AND logs.severity = "ERROR"
+ORDER BY
+  timestamp DESC,
+  insert_id DESC
+LIMIT
+  10000
 ```
 
 You should see output like the following:
-
-| clothing_type         | number |
-| --------------------- | ------ |
-| Skirts                | 5      |
-| Shirts, Tops & Tunics | 485    |
-| Western Wear          | 2      |
-| Fashion Jackets       | 3      |
-| Polos & T-Shirts      | 12     |
-| Jeans                 | 19     |
-| Dresses & Skirts      | 361    |
-| Tops                  | 38     |
-| Leggings & Jeggings   | 22     |
-| Shorts                | 1      |
-| Sports Jackets        | 1      |
-| Shrugs                | 7      |
-| Shirts                | 1      |
-
-[ray-dashboard]: ../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync
+![use-log-based-metrics](../../../../docs/images/log-analytics-data-processing.png)
