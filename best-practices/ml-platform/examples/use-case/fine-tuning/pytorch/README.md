@@ -78,17 +78,17 @@ with an inference serving engine.
   | HF_BASE_MODEL_NAME                   | The Hugging Face path to the base model for fine-tuning.                                                                          | google/gemma-2-9b-it                           |
   | MLFLOW_ENABLE                        | Enable MLflow, empty will also disable                                                                                            | true/false                                     |
   | MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING | If MLflow is enabled, track system level metrics, CPU/Memory/GPU                                                                  | true/false                                     |
-  | MLFLOW_TRACKING_URI                  | If MLflow is enabled, the tracking server URI                                                                                     | <http://mlflow-tracking-service.ml-tools:5000> |
+  | MLFLOW_TRACKING_URI                  | If MLflow is enabled, the tracking server URI                                                                                     | <http://mlflow-tracking-service.ml-team:5000> |
   | MODEL_PATH                           | The output folder path for the fine-tuned model. This location will be used by the inference serving engine and model evaluation. | /model-data/model-gemma2/experiment            |
 
   ```sh
   ACCELERATOR="l4"
   DATA_BUCKET_DATASET_PATH="dataset/output/training"
-  EXPERIMENT=""
+  EXPERIMENT="finetune-experiment"
   HF_BASE_MODEL_NAME="google/gemma-2-9b-it"
-  MLFLOW_ENABLE="false"
-  MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING="false"
-  MLFLOW_TRACKING_URI=""
+  MLFLOW_ENABLE="true"
+  MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING="true"
+  MLFLOW_TRACKING_URI="http://mlflow-tracking-svc:5000"
   MODEL_PATH="/model-data/model-gemma2/experiment"
   ```
 
@@ -129,3 +129,21 @@ with an inference serving engine.
   ```sh
   gcloud storage ls gs://${MLP_MODEL_BUCKET}/${MODEL_PATH}
   ```
+
+## Observability
+
+Besides the logs and metrics provided by Google Cloud Observability, it's also important to track the fine-tuning job and its results.
+
+There are many existing options for this. As an example, we choose to use [MLflow Tracking](https://mlflow.org/docs/latest/tracking.html) to keep track of running the ML workloads. The MLflow Tracking is an API and UI for logging parameters, code versions, metrics, and output files when running your machine learning code and for later visualizing the results.
+
+When you use the [playgroud configuration](../../../platform/playground/README.md), MLflow Tracking has been installed for you.
+
+You can run the following command to get the URL:
+
+ ```sh
+  echo -e "\n${MLP_KUBERNETES_NAMESPACE} MLFlow Tracking URL: ${MLP_MLFLOW_TRACKING_NAMESPACE_ENDPOINT}\n"
+ ```
+Read [this playground README section](../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync) for more info.
+
+You can set the variable `MLFLOW_ENABLE` to "false" or leave it empty to disable MLflow Tracking.
+

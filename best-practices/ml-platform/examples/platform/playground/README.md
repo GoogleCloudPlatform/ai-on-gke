@@ -282,12 +282,13 @@ Before running Terraform, make sure that the Service Usage API is enable.
 
   `gcloud services enable serviceusage.googleapis.com`
 
-- Ensure the endpoint is not in a deleted state
+- Ensure the endpoints are not in a deleted state
 
   ```
   MLP_ENVIRONMENT_NAME=$(grep environment_name ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
   MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
   gcloud endpoints services undelete ray-dashboard.ml-team.mlp-${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
+  gcloud endpoints services undelete mlflow-tracking.ml-team.mlp-${MLP_ENVIRONMENT_NAME}.endpoints.${MLP_PROJECT_ID}.cloud.goog --quiet 2>/dev/null
   ```
 
 - Create the resources
@@ -323,7 +324,9 @@ Before running Terraform, make sure that the Service Usage API is enable.
 
 ### Software installed via RepoSync and RootSync
 
-Open Cloud Shell to execute the following commands:
+For the playground configuration, [Ray](https://docs.ray.io/en/latest/cluster/kubernetes/index.html) and [MLflow](https://mlflow.org/) are installed by default.
+
+You can check the installation by executing the following commands in  Cloud Shell:
 
 - Get cluster credentials:
 
@@ -410,6 +413,7 @@ Open Cloud Shell to execute the following commands:
   NAME                                           READY   STATUS    RESTARTS   AGE
   ray-cluster-kuberay-head-sp6dg                 2/2     Running   0          3m21s
   ray-cluster-kuberay-worker-workergroup-rzpjw   2/2     Running   0          3m21s
+  mlflow-tracking-6f9bb844f9-4749n               2/2     Running   0          3m13s
   ```
 
 - Open the namespace's Ray dashboard
@@ -418,9 +422,15 @@ Open Cloud Shell to execute the following commands:
   echo -e "\n${MLP_KUBERNETES_NAMESPACE} Ray dashboard: ${MLP_RAY_DASHBOARD_NAMESPACE_ENDPOINT}\n"
   ```
 
-  > If you get `ERR_CONNECTION_CLOSED` or `ERR_CONNECTION_RESET` when trying to go to the Ray dashboard, the [Gateway](https://console.cloud.google.com/kubernetes/gateways) is still being provisioned. Retry in a couple of minutes.
+- Open the namespace's MLFlow Tracking server
 
-  > If you get `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` when trying to go to the Ray dashboard, the [SSL certificate](https://console.cloud.google.com/security/ccm/list/lbCertificates) is still being provisioned. Retry in a couple of minutes.
+  ```
+  echo -e "\n${MLP_KUBERNETES_NAMESPACE} MLFlow Tracking URL: ${MLP_MLFLOW_TRACKING_NAMESPACE_ENDPOINT}\n"
+  ```
+
+  > If you get `ERR_CONNECTION_CLOSED` or `ERR_CONNECTION_RESET` when trying to go to the links, the [Gateway](https://console.cloud.google.com/kubernetes/gateways) is still being provisioned. Retry in a couple of minutes.
+
+  > If you get `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` when trying to go to the links, the [SSL certificate](https://console.cloud.google.com/security/ccm/list/lbCertificates) is still being provisioned. Retry in a couple of minutes. 
 
 ## Cleanup
 
