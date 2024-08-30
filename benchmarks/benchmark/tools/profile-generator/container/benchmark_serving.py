@@ -271,7 +271,13 @@ def main(args: argparse.Namespace):
   random.seed(args.seed)
   np.random.seed(args.seed)
 
-  api_url = f"http://{args.host}:{args.port}/{args.endpoint}"
+  endpoint = (
+    "v1/completions"
+    if args.backend == "vllm"
+    else args.endpoint
+)
+
+  api_url = f"http://{args.host}:{args.port}/{endpoint}"
   tokenizer = AutoTokenizer.from_pretrained(
       args.tokenizer, trust_remote_code=args.trust_remote_code
   )
