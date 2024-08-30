@@ -27,3 +27,7 @@ output "iap_domain" {
 output "ray_dashboard_url_https" {
   value = "https://${local.ray_dashboard_endpoint}"
 }
+
+output "mlflow_url_https" {
+  value = "https://${local.mlflow_tracking_endpoint}"
+}

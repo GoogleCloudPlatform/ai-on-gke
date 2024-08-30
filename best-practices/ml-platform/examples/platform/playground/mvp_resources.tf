@@ -182,6 +182,12 @@ resource "google_storage_bucket_iam_member" "data_bucket_ray_worker_storage_obje
   role   = "roles/storage.objectAdmin"
 }
 
+resource "google_storage_bucket_iam_member" "data_bucket_mlflow_storage_object_admin" {
+  bucket = google_storage_bucket.data.name
+  member = "${local.wi_member_principal_prefix}/${local.mlflow_kubernetes_service_account}"
+  role   = "roles/storage.objectAdmin"
+}
+
 resource "google_storage_bucket_iam_member" "data_bucket_data_processing_ksa_storage_object_user" {
   bucket = google_storage_bucket.data.name
   member = "${local.wi_member_principal_prefix}/${local.data_processing_ksa}"
@@ -256,5 +262,6 @@ MLP_MODEL_EVALUATION_KSA="${local.model_evaluation_ksa}"
 MLP_PROJECT_ID="${data.google_project.environment.project_id}"
 MLP_PROJECT_NUMBER="${data.google_project.environment.number}"
 MLP_RAY_DASHBOARD_NAMESPACE_ENDPOINT="https://${local.ray_dashboard_endpoint}"
+MLP_MLFLOW_TRACKING_NAMESPACE_ENDPOINT="https://${local.mlflow_tracking_endpoint}"
 EOT
 }
