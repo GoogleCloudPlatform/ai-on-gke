@@ -19,7 +19,7 @@ Within each topic, we will share methodologies, frameworks, tools, and lessons l
 ## Process Flow for Implementing the ML Usecase End to End
 
 
-![][image1]
+![MLOps workflow](/best-practices/ml-platform/docs/images/use-case/MLOps_e2e.png)
 
 
 ## Data Preprocessing
@@ -29,7 +29,8 @@ The data preprocessing phase in MLOps is foundational. It directly impacts the q
 ### Dataset
 
 We are leveraging a [pre-crawled public dataset](https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-products), taken as a subset (20000) of a bigger dataset (more than 5.8 million products) that was created by extracting data from [Flipkart](https://www.flipkart.com/), a leading Indian eCommerce store.  
-![][image2]
+
+![Dataset Snapshot](/best-practices/ml-platform/docs/images/use-case/dataset_info.png)
 
 ### Data Preprocessing Steps
 
@@ -163,11 +164,11 @@ mlflow.autolog()
 
 This will allow MLflow to track fine-tuning parameters, results, and system-level metrics like CPU, memory, and GPU utilization. This added layer of monitoring provides a comprehensive view of batch fine-tuning jobs, making it easier to compare different configurations and results.
 
-![][image3]
+![epoch_vs_loss](/best-practices/ml-platform/docs/images/use-case/mlflow_epoch_loss.png)
 
-![][image4]
+![ml_flow_](/best-practices/ml-platform/docs/images/use-case/MLFlow_experiment_tracking.png)
 
-![][image5]
+
 
 Alternative solutions, such as MLflow and Weights & Biases, offer additional capabilities. While MLflow provides comprehensive pipeline features, our immediate requirements are satisfied by its core tracking functionality.
 
