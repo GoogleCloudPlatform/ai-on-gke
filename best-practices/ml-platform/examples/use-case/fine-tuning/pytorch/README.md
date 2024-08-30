@@ -140,10 +140,17 @@ When you use the [playgroud configuration](../../../platform/playground/README.m
 
 You can run the following command to get the URL:
 
- ```sh
-  echo -e "\n${MLP_KUBERNETES_NAMESPACE} MLFlow Tracking URL: ${MLP_MLFLOW_TRACKING_NAMESPACE_ENDPOINT}\n"
- ```
+```sh
+echo -e "\n${MLP_KUBERNETES_NAMESPACE} MLFlow Tracking URL: ${MLP_MLFLOW_TRACKING_NAMESPACE_ENDPOINT}\n"
+```
 Read [this playground README section](../../../platform/playground/README.md#software-installed-via-reposync-and-rootsync) for more info.
 
-You can set the variable `MLFLOW_ENABLE` to "false" or leave it empty to disable MLflow Tracking.
+__Note:__ You can set the variable `MLFLOW_ENABLE` to `false` or leave it empty to disable MLflow Tracking.
 
+MLflow Tracking is protected by IAP. After you log in, you should see a page similar to the following.
+
+![mlflow-home](../../../../docs/images/mlflow-home.png)
+
+All successful experiments should appear. If you click into a completed run, you can see an overview page with metric tabs.
+
+![mlflow-model-experiment](../../../../docs/images/mlflow-model-experiment.png)
