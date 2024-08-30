@@ -49,7 +49,7 @@ Now, consider the scenario where a preprocessing task involves extracting multip
 
 To tackle this scalability issue, we turn to parallelism. By breaking the dataset into smaller chunks and distributing the processing across multiple threads or processes, we can drastically reduce the overall execution time.
 
-For implementaion steps, please check this document [Distributed Data Preprocessing with Ray](best-practices/ml-platform/examples/use-case/data-processing/ray/README.md) 
+For implementaion steps, please check this document [Distributed Data Preprocessing with Ray](/best-practices/ml-platform/examples/use-case/data-processing/ray/README.md) 
 
 
 ## Data Preparation
@@ -93,7 +93,7 @@ The ‘End Of Sequence’ token was appended to each prompt.
 
 EOS\_TOKEN \= '\<eos\>'
 
-For implementaion steps, please check this document [Data preparation for fine tuning Gemma IT model](best-practices/ml-platform/examples/use-case/data-preparation/gemma-it/README.md) 
+For implementaion steps, please check this document [Data preparation for fine tuning Gemma IT model](/best-practices/ml-platform/examples/use-case/data-preparation/gemma-it/README.md) 
 
 
 ## Fine-tuning
@@ -223,4 +223,4 @@ Above evaluation provides a granular understanding of the model's performance. B
 * Ensure the test dataset accurately reflects the real-world data distribution the model will encounter in production.  
 * Consider the size of the test dataset to assess the statistical significance of the results.
 
-For implementaion steps, please check this document [Fine tuning Gemma IT model](best-practices/ml-platform/examples/use-case/fine-tuning/pytorch/README.md) 
+For implementaion steps, please check this document [Fine tuning Gemma IT model](/best-practices/ml-platform/examples/use-case/fine-tuning/pytorch/README.md) 
