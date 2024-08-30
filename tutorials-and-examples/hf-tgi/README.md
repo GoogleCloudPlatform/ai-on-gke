@@ -25,7 +25,7 @@ gcloud container node-pools create g2-standard-24 --cluster l4-demo \
  --num-nodes=1 --min-nodes=1 --max-nodes=2 \
  --node-locations $REGION-a,$REGION-b --region $REGION
  ```
-4. Provision the job and enable gathering metrics: `terrafrom apply`
+4. Set the project_id in workloads.tfvars and create the application: `terrafrom apply -var-file=workloads.tfvars` 
 5. Make sure app started ok: `kubectl logs -l app=mistral-7b-instruct`
 6. Set up port forward
 ```
