@@ -114,11 +114,6 @@ head:
   securityContext:
     ${indent(4, chomp(yamlencode(security_context)))}
   volumes:
-    - name: ray-logs
-      emptyDir: {}
-    - name: fluentbit-config
-      configMap:
-        name: fluentbit-config
     - name: gcs-fuse-csi-ephemeral
       csi:
         driver: gcsfuse.csi.storage.gke.io
@@ -132,33 +127,11 @@ head:
         optional: true
   # Ray writes logs to /tmp/ray/session_latests/logs
   volumeMounts:
-    - mountPath: /tmp/ray
-      name: ray-logs
     - name: gcs-fuse-csi-ephemeral
       mountPath: /data
     - name: secret-volume
       mountPath: /etc/secret-volume
       readOnly: true
-  # sidecarContainers specifies additional containers to attach to the Ray pod.
-  # Follows standard K8s container spec.
-  sidecarContainers:
-    - name: fluentbit
-      image: fluent/fluent-bit:1.9.6
-      # These resource requests for Fluent Bit should be sufficient in production.
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-          ephemeral-storage: 2Gi
-        limits:
-          cpu: 100m
-          memory: 128Mi
-          ephemeral-storage: 2Gi
-      volumeMounts:
-      - mountPath: /tmp/ray
-        name: ray-logs
-      - mountPath: /fluent-bit/etc/
-        name: fluentbit-config
 
 worker:
   # If you want to disable the default workergroup
@@ -211,11 +184,6 @@ worker:
   securityContext:
     ${indent(4, chomp(yamlencode(security_context)))}
   volumes:
-    - name: ray-logs
-      emptyDir: {}
-    - name: fluentbit-config
-      configMap:
-        name: fluentbit-config
     - name: gcs-fuse-csi-ephemeral
       csi:
         driver: gcsfuse.csi.storage.gke.io
@@ -229,33 +197,11 @@ worker:
         optional: true
   # Ray writes logs to /tmp/ray/session_latests/logs
   volumeMounts:
-    - mountPath: /tmp/ray
-      name: ray-logs
     - name: gcs-fuse-csi-ephemeral
       mountPath: /data
     - name: secret-volume
       mountPath: /etc/secret-volume
       readOnly: true
-  # sidecarContainers specifies additional containers to attach to the Ray pod.
-  # Follows standard K8s container spec.
-  sidecarContainers:
-    - name: fluentbit
-      image: fluent/fluent-bit:1.9.6
-      # These resource requests for Fluent Bit should be sufficient in production.
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-          ephemeral-storage: 2Gi
-        limits:
-          cpu: 100m
-          memory: 128Mi
-          ephemeral-storage: 4Gi
-      volumeMounts:
-        - mountPath: /tmp/ray
-          name: ray-logs
-        - mountPath: /fluent-bit/etc/
-          name: fluentbit-config
 
 # The map's key is used as the groupName.
 # For example, key:small-group in the map below

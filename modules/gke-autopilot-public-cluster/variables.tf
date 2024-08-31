@@ -79,3 +79,9 @@ variable "deletion_protection" {
   type    = bool
   default = false
 }
+
+variable "ray_addon_enabled" {
+  description = "Enable ray addon by default"
+  type        = bool
+  default     = true
+}
