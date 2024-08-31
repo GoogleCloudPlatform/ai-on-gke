@@ -84,3 +84,9 @@ variable "master_ipv4_cidr_block" {
   type    = string
   default = ""
 }
+
+variable "ray_addon_enabled" {
+  description = "Enable ray addon by default"
+  type        = bool
+  default     = true
+}

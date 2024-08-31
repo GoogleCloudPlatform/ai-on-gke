@@ -116,6 +116,7 @@ module "public-gke-standard-cluster" {
   all_node_pools_labels       = var.all_node_pools_labels
   all_node_pools_metadata     = var.all_node_pools_metadata
   all_node_pools_tags         = var.all_node_pools_tags
+  ray_addon_enabled           = var.ray_addon_enabled
   depends_on                  = [module.custom-network]
 }
 
@@ -141,8 +142,8 @@ module "public-gke-autopilot-cluster" {
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
   deletion_protection        = var.deletion_protection
+  ray_addon_enabled          = var.ray_addon_enabled
   depends_on                 = [module.custom-network]
-
 }
 
 ## create private GKE standard
@@ -170,6 +171,7 @@ module "private-gke-standard-cluster" {
   deletion_protection                  = var.deletion_protection
   master_authorized_networks           = length(var.master_authorized_networks) == 0 ? [{ cidr_block = "${local.subnetwork_cidr}", display_name = "${local.subnetwork_name}" }] : var.master_authorized_networks
   master_ipv4_cidr_block               = var.master_ipv4_cidr_block
+  ray_addon_enabled                    = var.ray_addon_enabled
 
   ## pools config variables
   cpu_pools                   = var.cpu_pools
@@ -207,7 +209,9 @@ module "private-gke-autopilot-cluster" {
   master_authorized_networks = length(var.master_authorized_networks) == 0 ? [{ cidr_block = "${local.subnetwork_cidr}", display_name = "${local.subnetwork_name}" }] : var.master_authorized_networks
   master_ipv4_cidr_block     = var.master_ipv4_cidr_block
   deletion_protection        = var.deletion_protection
-  depends_on                 = [module.custom-network]
+  ray_addon_enabled          = var.ray_addon_enabled
+
+  depends_on = [module.custom-network]
 }
 
 
