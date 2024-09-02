@@ -128,3 +128,9 @@ variable "datapath_provider" {
   type        = string
   default     = "ADVANCED_DATAPATH"
 }
+
+variable "ray_addon_enabled" {
+  description = "Enable ray addon by default"
+  type        = bool
+  default     = true
+}
