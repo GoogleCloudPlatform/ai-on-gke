@@ -114,6 +114,7 @@ async def send_request(
     top_k: int,
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
+    model: str,
 ) -> None:
   """Sends request to server."""
   request_start_time = time.time()
@@ -121,6 +122,7 @@ async def send_request(
   headers = {"User-Agent": "Benchmark Client"}
   if backend == "vllm":
     pload = {
+        "model": model,
         "prompt": prompt,
         "n": 1,
         "best_of": best_of,
@@ -179,7 +181,7 @@ async def send_request(
   elif backend == "jetstream":
     pload = {
         "prompt": prompt,
-        "max_tokens": 1,
+        "max_tokens": output_len,
     }
   else:
     raise ValueError(f"Unknown backend: {backend}")
@@ -219,9 +221,8 @@ async def send_request(
     output_token_ids = tokenizer(output["generated_text"]).input_ids
     output_len = len(output_token_ids)
   elif backend == "vllm":
-    total_token_ids = tokenizer(output["text"][0]).input_ids
-    new_total_len = len(total_token_ids)
-    output_len = new_total_len - prompt_len
+    output_token_ids = tokenizer(output["choices"][0]["text"]).input_ids
+    output_len = len(output_token_ids)
   elif backend == "jetstream":
     output_token_ids = tokenizer(output["response"]).input_ids
     output_len = len(output_token_ids)
@@ -240,6 +241,7 @@ async def benchmark(
     top_k: int,
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
+    model: str,
 ) -> None:
   """Runs benchmark with asynchronous requests."""
   tasks: List[asyncio.Task] = []
@@ -257,6 +259,7 @@ async def benchmark(
             top_k,
             tokenizer,
             sax_model,
+            model,
         )
     )
     tasks.append(task)
@@ -268,7 +271,13 @@ def main(args: argparse.Namespace):
   random.seed(args.seed)
   np.random.seed(args.seed)
 
-  api_url = f"http://{args.host}:{args.port}/{args.endpoint}"
+  endpoint = (
+    "v1/completions"
+    if args.backend == "vllm"
+    else args.endpoint
+)
+
+  api_url = f"http://{args.host}:{args.port}/{endpoint}"
   tokenizer = AutoTokenizer.from_pretrained(
       args.tokenizer, trust_remote_code=args.trust_remote_code
   )
@@ -293,6 +302,7 @@ def main(args: argparse.Namespace):
           args.top_k,
           tokenizer,
           args.sax_model,
+          args.model,
       )
   )
   benchmark_end_time = time.time()
@@ -388,6 +398,11 @@ if __name__ == "__main__":
   parser.add_argument("--host", type=str, default="localhost")
   parser.add_argument("--port", type=int, default=7080)
   parser.add_argument("--dataset", type=str, help="Path to the dataset.")
+  parser.add_argument(
+    "--model",
+    type=str,
+    help="Name of the model.",
+  )
   parser.add_argument(
       "--tokenizer",
       type=str,
