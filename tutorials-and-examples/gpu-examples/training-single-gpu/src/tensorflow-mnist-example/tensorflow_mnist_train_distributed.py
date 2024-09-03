@@ -16,6 +16,8 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow_datasets as tfds
 import tensorflow as tf
+import keras
+import glob
 
 datasets, info = tfds.load(name='mnist', with_info=True, as_supervised=True)
 
@@ -45,16 +47,17 @@ train_dataset = mnist_train.map(scale).cache().shuffle(BUFFER_SIZE).batch(BATCH_
 eval_dataset = mnist_test.map(scale).batch(BATCH_SIZE)
 
 with strategy.scope():
-    model = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(64, activation='relu'),
-        tf.keras.layers.Dense(10)
+    model = keras.Sequential([
+        keras.Input(shape=(28, 28, 1)),
+        keras.layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+        keras.layers.MaxPooling2D(),
+        keras.layers.Flatten(),
+        keras.layers.Dense(64, activation='relu'),
+        keras.layers.Dense(10)
     ])
 
-    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                    optimizer=tf.keras.optimizers.Adam(),
+    model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                    optimizer=keras.optimizers.Adam(),
                     metrics=['accuracy'])
 
 # Define the checkpoint directory to store the checkpoints.
@@ -71,7 +74,7 @@ def decay(epoch):
         return 1e-5
 
 # Define a callback for printing the learning rate at the end of each epoch.
-class PrintLR(tf.keras.callbacks.Callback):
+class PrintLR(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         print('\nLearning rate for epoch {} is {}'.format(epoch + 1,
                                                         model.optimizer.learning_rate.numpy()))
@@ -87,15 +90,25 @@ callbacks = [
 EPOCHS = 12
 
 model.fit(train_dataset, epochs=EPOCHS, callbacks=callbacks)
-model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
+
+# Function to find the latest .h5 file
+def find_latest_h5_checkpoint(checkpoint_dir):
+    list_of_files = glob.glob(f'{checkpoint_dir}/*.h5')
+    if list_of_files:
+        latest_file = max(list_of_files, key=os.path.getctime)
+        return latest_file
+    else:
+        return None
+
+model.load_weights(find_latest_h5_checkpoint(checkpoint_dir))
 
 eval_loss, eval_acc = model.evaluate(eval_dataset)
 
 print('Eval loss: {}, Eval accuracy: {}'.format(eval_loss, eval_acc))
 
-path = '/data/mnist_saved_model/'
+path = '/data/mnist_saved_model/mnist.keras'
 
-model.save(path, save_format='tf')
+model.save(path)
 
 print('Training finished. Model saved')
 
