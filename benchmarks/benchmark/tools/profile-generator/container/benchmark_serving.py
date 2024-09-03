@@ -181,7 +181,7 @@ async def send_request(
   elif backend == "jetstream":
     pload = {
         "prompt": prompt,
-        "max_tokens": 1,
+        "max_tokens": output_len,
     }
   else:
     raise ValueError(f"Unknown backend: {backend}")
