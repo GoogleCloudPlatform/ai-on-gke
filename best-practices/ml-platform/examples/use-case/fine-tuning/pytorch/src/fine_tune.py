@@ -73,7 +73,10 @@ if __name__ == "__main__":
         mlflow.set_tracking_uri(remote_server_uri)
 
         experiment = os.environ["EXPERIMENT"]
-        mlflow.set_experiment(experiment)
+        try:
+            mlflow.set_experiment(experiment)
+        except Exception as ex:
+            logger.error(f"MLflow set experiment exception: {ex}")
         mlflow.autolog()
 
     accelerator = Accelerator()
