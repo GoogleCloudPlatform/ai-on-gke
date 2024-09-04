@@ -43,7 +43,7 @@ locals {
     ? null
     : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
   )
-  vllm_podmonitoring          = "${path.module}/monitoring-templates/vllm-podmonitoring.yaml.tftpl"
+  vllm_podmonitoring = "${path.module}/monitoring-templates/vllm-podmonitoring.yaml.tftpl"
 }
 
 resource "kubernetes_manifest" "default" {
