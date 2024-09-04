@@ -23,6 +23,6 @@ export VLLM_IMAGE_URL="vllm/vllm-openai:v0.5.3.post1"
 export MODEL="/model-data/model-gemma2/experiment"
 
 export DATASET_OUTPUT_PATH="dataset/output"
-export NDPOINT="http://vllm-openai-${ACCELERATOR}:8000/v1/chat/completions"
+export ENDPOINT="http://vllm-openai-${ACCELERATOR}:8000/v1/chat/completions"
 export MODEL_PATH="/model-data/model-gemma2/experiment"
 export PREDICTIONS_FILE="predictions.txt"
