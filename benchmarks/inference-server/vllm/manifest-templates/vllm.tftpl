@@ -55,7 +55,7 @@ spec:
           command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
           args: ["--model", "${model_id}", "--tensor-parallel-size", "${gpu_count}", "--port", "80", "--swap-space", "${swap_space}", "--disable-log-requests"]
           env:
-            - name: PORT
+            - name: VLLM_PORT
               value: 80
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HUGGING_FACE_HUB_TOKEN # Related token consumption
