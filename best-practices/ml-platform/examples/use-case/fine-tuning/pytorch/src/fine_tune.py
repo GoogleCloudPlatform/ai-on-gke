@@ -21,6 +21,8 @@ import sys
 import torch
 import transformers
 import yaml
+import time
+import random
 
 from accelerate import Accelerator
 from datasets import Dataset, load_dataset, load_from_disk
@@ -73,10 +75,18 @@ if __name__ == "__main__":
         mlflow.set_tracking_uri(remote_server_uri)
 
         experiment = os.environ["EXPERIMENT"]
-        try:
-            mlflow.set_experiment(experiment)
-        except Exception as ex:
-            logger.error(f"MLflow set experiment exception: {ex}")
+        max_retries = 5
+        retry_delay = 1  # Initial delay in seconds
+        # There could be a race condition to set the experiment
+        for attempt in range(max_retries):
+            try:
+                mlflow.set_experiment(experiment)
+            except Exception as ex:
+                logger.error(f"Set experiment failed: {ex}\nSleep {retry_delay} seconds and retry")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Double the delay for the next attempt
+                retry_delay += random.uniform(0, 1)  # Add jitter
+
         mlflow.autolog()
 
     accelerator = Accelerator()
