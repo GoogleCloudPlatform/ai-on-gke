@@ -51,8 +51,9 @@ resource "google_project_service" "cloudbuild" {
 #  ----- Manual Benchmarking -----
 
 module "latency-profile" {
-  count  = var.targets.manual != null ? 1 : 0
-  source = "./modules/latency-profile"
+  depends_on = [resource.null_resource.build_and_push_image]
+  count      = var.targets.manual != null ? 1 : 0
+  source     = "./modules/latency-profile"
 
   credentials_config = var.credentials_config
   namespace          = var.namespace

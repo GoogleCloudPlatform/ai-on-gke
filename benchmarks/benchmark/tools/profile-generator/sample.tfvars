@@ -22,8 +22,11 @@ credentials_config = {
 
 project_id = "your_project_id"
 
+namespace = "benchmark"
+
 # Latency profile generator service configuration
-build_latency_profile_generator_image      = false
+# set build_latency_profile_generator_image to false to save 20 min build if no rebuild needed, eg.
+# build_latency_profile_generator_image      = false
 latency_profile_kubernetes_service_account = "prom-frontend-sa"
 output_bucket                              = "your_project_id-benchmark-output-bucket"
 k8s_hf_secret                              = "hf-token"
