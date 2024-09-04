@@ -255,7 +255,7 @@ def generate_qa(context, category):
 
 
 def generate_prompt(row):
-    return f"<start_of_turn>user\nContext:{row["Context"]}\n{row["Question"]}<end_of_turn><start_of_turn>model\n{row["Answer"]}<end_of_turn>"
+    return f"<start_of_turn>user\nContext:{row['Context']}\n{row['Question']}<end_of_turn><start_of_turn>model\n{row['Answer']}<end_of_turn>"
 
 
 def data_prep(finetune_ds):

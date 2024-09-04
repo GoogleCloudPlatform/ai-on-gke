@@ -82,7 +82,9 @@ if __name__ == "__main__":
             try:
                 mlflow.set_experiment(experiment)
             except Exception as ex:
-                logger.error(f"Set experiment failed: {ex}\nSleep {retry_delay} seconds and retry")
+                logger.error(
+                    f"Set experiment failed: {ex}, sleep {retry_delay} seconds and retry"
+                )
                 time.sleep(retry_delay)
                 retry_delay *= 2  # Double the delay for the next attempt
                 retry_delay += random.uniform(0, 1)  # Add jitter
