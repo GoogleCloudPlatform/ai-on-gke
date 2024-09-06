@@ -1,6 +1,8 @@
 import json
 import sys
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 def test_prompts(prompt_url):
     testcases = [
@@ -46,21 +48,42 @@ def test_prompts(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(prompt_url, data=json_payload, headers=headers)
-        response.raise_for_status()
+        # Define a retry strategy
+        retry_strategy = Retry(
+            total=5,  # Total number of retries
+            backoff_factor=1,  # Waits 1 second between retries, then 2s, 4s, 8s...
+            status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
+        )
 
-        response = response.json()
-        context = response['response']['context']
-        text = response['response']['text']
-        user_prompt = response['response']['user_prompt']
+        # Mount the retry strategy to the session
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session = requests.Session()
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
 
-        print(f"Reply: {text}")
+        try:
+            response = session.post(prompt_url, data=json_payload, headers=headers)
+            response.raise_for_status()
 
-        assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
-        assert context == expected_context, f"unexpected context: {context} != {expected_context}"
+            response = response.json()
+            context = response['response']['context']
+            text = response['response']['text']
+            user_prompt = response['response']['user_prompt']
 
-        for substring in expected_substrings:
-            assert substring in text, f"substring {substring} not in response:\n {text}"
+            print(f"Reply: {text}")
+
+            assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
+            assert context == expected_context, f"unexpected context: {context} != {expected_context}"
+
+            for substring in expected_substrings:
+                assert substring in text, f"substring {substring} not in response:\n {text}"
+
+        except requests.exceptions.ConnectionError as e:
+            print(f"Error connecting to the server: {e}")
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP error occurred: {e}")
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
 
 def test_prompts_nlp(prompt_url):
     testcases = [
@@ -101,21 +124,42 @@ def test_prompts_nlp(prompt_url):
         json_payload = json.dumps(data)
 
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(prompt_url, data=json_payload, headers=headers)
-        response.raise_for_status()
+        # Define a retry strategy
+        retry_strategy = Retry(
+            total=5,  # Total number of retries
+            backoff_factor=1,  # Waits 1 second between retries, then 2s, 4s, 8s...
+            status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
+        )
 
-        response = response.json()
-        context = response['response']['context']
-        text = response['response']['text']
-        user_prompt = response['response']['user_prompt']
+        # Mount the retry strategy to the session
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session = requests.Session()
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
 
-        print(f"Reply: {text}")
+        try:
+            response = session.post(prompt_url, data=json_payload, headers=headers)
+            response.raise_for_status()
 
-        assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
-        assert context == expected_context, f"unexpected context: {context} != {expected_context}"
+            response = response.json()
+            context = response['response']['context']
+            text = response['response']['text']
+            user_prompt = response['response']['user_prompt']
 
-        for substring in expected_substrings:
-            assert substring in text, f"substring {substring} not in response:\n {text}"
+            print(f"Reply: {text}")
+
+            assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
+            assert context == expected_context, f"unexpected context: {context} != {expected_context}"
+
+            for substring in expected_substrings:
+                assert substring in text, f"substring {substring} not in response:\n {text}"
+
+        except requests.exceptions.ConnectionError as e:
+            print(f"Error connecting to the server: {e}")
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP error occurred: {e}")
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
 
 def test_prompts_dlp(prompt_url):
     testcases = [
@@ -139,22 +183,44 @@ def test_prompts_dlp(prompt_url):
         data = {"prompt": prompt, "inspectTemplate": inspectTemplate, "deidentifyTemplate": deidentifyTemplate}
         json_payload = json.dumps(data)
 
+        # Define a retry strategy
+        retry_strategy = Retry(
+            total=5,  # Total number of retries
+            backoff_factor=1,  # Waits 1 second between retries, then 2s, 4s, 8s...
+            status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
+        )
+
+        # Mount the retry strategy to the session
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session = requests.Session()
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(prompt_url, data=json_payload, headers=headers)
-        response.raise_for_status()
+ 
+        try:
+            response = session.post(prompt_url, data=json_payload, headers=headers)
+            response.raise_for_status()
 
-        response = response.json()
-        context = response['response']['context']
-        text = response['response']['text']
-        user_prompt = response['response']['user_prompt']
+            response = response.json()
+            context = response['response']['context']
+            text = response['response']['text']
+            user_prompt = response['response']['user_prompt']
 
-        print(f"Reply: {text}")
+            print(f"Reply: {text}")
 
-        assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
-        assert context == expected_context, f"unexpected context: {context} != {expected_context}"
+            assert user_prompt == prompt, f"unexpected user prompt: {user_prompt} != {prompt}"
+            assert context == expected_context, f"unexpected context: {context} != {expected_context}"
 
-        for substring in expected_substrings:
-            assert substring in text, f"substring {substring} not in response:\n {text}"
+            for substring in expected_substrings:
+                assert substring in text, f"substring {substring} not in response:\n {text}"
+
+        except requests.exceptions.ConnectionError as e:
+            print(f"Error connecting to the server: {e}")
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP error occurred: {e}")
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
 
 prompt_url = sys.argv[1]
 test_prompts(prompt_url)
