@@ -353,20 +353,20 @@ def main(args: argparse.Namespace):
                                 REQUEST_LATENCY])
   output_tokens_per_min = 60 * total_output_tokens / benchmark_time
   print(f"Output_tokens/min: {output_tokens_per_min:.2f}")
-  benchmark_result['total_output_token'] = total_output_tokens
+  benchmark_result['total_output_token'] = int(total_output_tokens)
   benchmark_result['output_tokens_per_min'] = output_tokens_per_min
 
   total_input_tokens = np.sum([prompt_len for prompt_len, _, _ in
                                REQUEST_LATENCY])
   input_tokens_per_min = 60 * total_input_tokens / benchmark_time
   print(f"Input_tokens/min: {input_tokens_per_min:.2f}")
-  benchmark_result['total_input_tokens'] = total_input_tokens
+  benchmark_result['total_input_tokens'] = int(total_input_tokens)
   benchmark_result['input_tokens_per_min'] = input_tokens_per_min
 
   total_tokens = total_input_tokens + total_output_tokens
   tokens_per_min = 60 * total_tokens / benchmark_time
   print(f"Tokens/min: {tokens_per_min:.2f}")
-  benchmark_result['total_tokens'] = total_tokens
+  benchmark_result['total_tokens'] = int(total_tokens)
   benchmark_result['tokens_per_min'] = tokens_per_min
 
   if args.machine_cost:
