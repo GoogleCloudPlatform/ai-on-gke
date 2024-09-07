@@ -7,6 +7,7 @@ It currently supports TGI, vLLM, Triton TensorRT-LLM and Saxml.
 
 import argparse
 import asyncio
+from datetime import datetime
 import json
 import random
 import time
@@ -420,7 +421,7 @@ def main(args: argparse.Namespace):
   benchmark_result['avg_output_len'] = avg_output_len
 
   if args.save_json_results:
-    save_json_results()
+    save_json_results(args, benchmark_result)
 
 
 if __name__ == "__main__":
@@ -533,8 +534,7 @@ if __name__ == "__main__":
   )
   parser.add_argument(
       "--save-json-results",
-      type=bool,
-      default=False,
+      action="store_true",
       help="Whether to save benchmark results to a json file.",
   )
   parser.add_argument(
