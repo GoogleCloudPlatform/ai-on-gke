@@ -129,7 +129,7 @@ def test_prompts_dlp(prompt_url):
             print(err)
             raise err
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     prompt_url = sys.argv[1]
     test_prompts(prompt_url)
     test_prompts_nlp(prompt_url)
