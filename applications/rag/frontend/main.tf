@@ -117,7 +117,8 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
       spec {
         service_account_name = var.google_service_account
         container {
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
+          # image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
+          image = "us-docker.pkg.dev/globant-gke-ai-resources/gke-ai-text-to-text/gke-rag-frontend@sha256:e56c59747b1ecc192458a3fdd6c74ad6a2099eeabb61e3fd1eb5fc30a147ba1d"
           # Built from local code. Revert before submitting.
           # image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:108bb16ee2278255c80524fce125ef349c494cb5bc4ca77dbde5048b8f9448c1"
           name = "rag-frontend"
@@ -133,28 +134,18 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           }
 
           env {
-            name = "PROJECT_ID"
+            name = "GCP_PROJECT_ID"
             #value = "projects/${var.project_id}"
             value = var.project_id
           }
 
           env {
-            name  = "REGION"
+            name  = "CLOUDSQL_INSTANCE_REGION"
             value = var.region
           }
 
           env {
-            name  = "INSTANCE"
-            value = var.cloudsql_instance
-          }
-
-          env {
-            name  = "REGION"
-            value = var.region
-          }
-
-          env {
-            name  = "INSTANCE"
+            name  = "CLOUDSQL_INSTANCE"
             value = var.cloudsql_instance
           }
 
