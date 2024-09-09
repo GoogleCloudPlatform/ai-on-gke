@@ -7,6 +7,7 @@ It currently supports TGI, vLLM, Triton TensorRT-LLM and Saxml.
 
 import argparse
 import asyncio
+from datetime import datetime
 import json
 import random
 import time
@@ -114,6 +115,7 @@ async def send_request(
     top_k: int,
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
+    model: str,
 ) -> None:
   """Sends request to server."""
   request_start_time = time.time()
@@ -121,6 +123,7 @@ async def send_request(
   headers = {"User-Agent": "Benchmark Client"}
   if backend == "vllm":
     pload = {
+        "model": model,
         "prompt": prompt,
         "n": 1,
         "best_of": best_of,
@@ -179,7 +182,7 @@ async def send_request(
   elif backend == "jetstream":
     pload = {
         "prompt": prompt,
-        "max_tokens": 1,
+        "max_tokens": output_len,
     }
   else:
     raise ValueError(f"Unknown backend: {backend}")
@@ -219,9 +222,8 @@ async def send_request(
     output_token_ids = tokenizer(output["generated_text"]).input_ids
     output_len = len(output_token_ids)
   elif backend == "vllm":
-    total_token_ids = tokenizer(output["text"][0]).input_ids
-    new_total_len = len(total_token_ids)
-    output_len = new_total_len - prompt_len
+    output_token_ids = tokenizer(output["choices"][0]["text"]).input_ids
+    output_len = len(output_token_ids)
   elif backend == "jetstream":
     output_token_ids = tokenizer(output["response"]).input_ids
     output_len = len(output_token_ids)
@@ -240,6 +242,7 @@ async def benchmark(
     top_k: int,
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
+    model: str,
 ) -> None:
   """Runs benchmark with asynchronous requests."""
   tasks: List[asyncio.Task] = []
@@ -257,10 +260,47 @@ async def benchmark(
             top_k,
             tokenizer,
             sax_model,
+            model,
         )
     )
     tasks.append(task)
   await asyncio.gather(*tasks)
+
+
+def save_json_results(args: argparse.Namespace, benchmark_result):
+  # dimensions values are strings
+  dimensions_json = {}
+  # metrics values are numerical
+  metrics_json = {}
+
+  # Setup
+  current_dt = datetime.now().strftime("%Y%m%d-%H%M%S")
+  dimensions_json["date"] = current_dt
+  dimensions_json["backend"] = args.backend
+  dimensions_json["model_id"] = args.model
+  dimensions_json["tokenizer_id"] = args.tokenizer
+  if args.additional_metadata_metrics_to_save is not None:
+    dimensions_json = {
+        **dimensions_json,
+        **json.loads(args.additional_metadata_metrics_to_save),
+    }
+  metrics_json["num_prompts"] = args.num_prompts
+
+  # Traffic
+  metrics_json["request_rate"] = args.request_rate
+  metrics_json = {**metrics_json, **benchmark_result}
+
+  final_json = {}
+  final_json["metrics"] = metrics_json
+  final_json["dimensions"] = dimensions_json
+
+  # Save to file
+  base_model_id = args.model.split("/")[-1]
+  file_name = (
+      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{current_dt}.json"
+  )
+  with open(file_name, "w", encoding="utf-8") as outfile:
+    json.dump(final_json, outfile)
 
 
 def main(args: argparse.Namespace):
@@ -268,7 +308,13 @@ def main(args: argparse.Namespace):
   random.seed(args.seed)
   np.random.seed(args.seed)
 
-  api_url = f"http://{args.host}:{args.port}/{args.endpoint}"
+  endpoint = (
+    "v1/completions"
+    if args.backend == "vllm"
+    else args.endpoint
+)
+
+  api_url = f"http://{args.host}:{args.port}/{endpoint}"
   tokenizer = AutoTokenizer.from_pretrained(
       args.tokenizer, trust_remote_code=args.trust_remote_code
   )
@@ -293,26 +339,35 @@ def main(args: argparse.Namespace):
           args.top_k,
           tokenizer,
           args.sax_model,
+          args.model,
       )
   )
+  benchmark_result = {}
   benchmark_end_time = time.time()
   benchmark_time = benchmark_end_time - benchmark_start_time
   print(f"Total time: {benchmark_time:.2f} s")
   print(f"Requests/min: {60 * args.num_prompts / benchmark_time:.2f}")
+  benchmark_result['benchmark_time'] = benchmark_time
 
   total_output_tokens = np.sum([output_len for _, output_len, _ in
                                 REQUEST_LATENCY])
   output_tokens_per_min = 60 * total_output_tokens / benchmark_time
   print(f"Output_tokens/min: {output_tokens_per_min:.2f}")
+  benchmark_result['total_output_token'] = int(total_output_tokens)
+  benchmark_result['output_tokens_per_min'] = output_tokens_per_min
 
   total_input_tokens = np.sum([prompt_len for prompt_len, _, _ in
                                REQUEST_LATENCY])
   input_tokens_per_min = 60 * total_input_tokens / benchmark_time
   print(f"Input_tokens/min: {input_tokens_per_min:.2f}")
+  benchmark_result['total_input_tokens'] = int(total_input_tokens)
+  benchmark_result['input_tokens_per_min'] = input_tokens_per_min
 
   total_tokens = total_input_tokens + total_output_tokens
   tokens_per_min = 60 * total_tokens / benchmark_time
   print(f"Tokens/min: {tokens_per_min:.2f}")
+  benchmark_result['total_tokens'] = int(total_tokens)
+  benchmark_result['tokens_per_min'] = tokens_per_min
 
   if args.machine_cost:
     print(
@@ -326,6 +381,7 @@ def main(args: argparse.Namespace):
       "Average seconds/request (includes waiting time on server):"
       f" {avg_latency:.2f}"
   )
+  benchmark_result['avg_latency'] = avg_latency
 
   avg_per_token_latency = np.mean([
       latency / (prompt_len + output_len)
@@ -335,6 +391,7 @@ def main(args: argparse.Namespace):
       "Average milliseconds/token (includes waiting time on server):"
       f" {1000 * avg_per_token_latency:.2f}"
   )
+  benchmark_result['avg_per_token_latency'] = avg_per_token_latency
 
   avg_per_output_token_latency = np.mean(
       [latency / output_len for _, output_len, latency in REQUEST_LATENCY]
@@ -343,6 +400,7 @@ def main(args: argparse.Namespace):
       "Average milliseconds/output_token (includes waiting time on server):"
       f" {1000 * avg_per_output_token_latency:.2f}"
   )
+  benchmark_result['avg_per_output_token_latency'] = avg_per_output_token_latency
 
   avg_input_len = np.mean(
       [prompt_len for prompt_len, _, _ in REQUEST_LATENCY]
@@ -351,6 +409,7 @@ def main(args: argparse.Namespace):
       "Average input length:"
       f" {avg_input_len:.2f}"
   )
+  benchmark_result['avg_input_len'] = avg_input_len
 
   avg_output_len = np.mean(
       [output_len for _, output_len, _ in REQUEST_LATENCY]
@@ -359,6 +418,10 @@ def main(args: argparse.Namespace):
       "Average output length:"
       f" {avg_output_len:.2f}"
   )
+  benchmark_result['avg_output_len'] = avg_output_len
+
+  if args.save_json_results:
+    save_json_results(args, benchmark_result)
 
 
 if __name__ == "__main__":
@@ -388,6 +451,11 @@ if __name__ == "__main__":
   parser.add_argument("--host", type=str, default="localhost")
   parser.add_argument("--port", type=int, default=7080)
   parser.add_argument("--dataset", type=str, help="Path to the dataset.")
+  parser.add_argument(
+    "--model",
+    type=str,
+    help="Name of the model.",
+  )
   parser.add_argument(
       "--tokenizer",
       type=str,
@@ -464,6 +532,18 @@ if __name__ == "__main__":
           " and max_output_length."
       ),
   )
+  parser.add_argument(
+      "--save-json-results",
+      action="store_true",
+      help="Whether to save benchmark results to a json file.",
+  )
+  parser.add_argument(
+      "--additional-metadata-metrics-to-save",
+      type=str,
+      help=(
+          "Additional metadata about the workload. Should be a dictionary in"
+          " the form of a string."
+      ),
+  )
   cmd_args = parser.parse_args()
   main(cmd_args)
-	
