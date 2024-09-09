@@ -269,6 +269,17 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		}
 	}
 
+	// Copy labels specified by annotation to the Node.
+	for _, key := range strings.Split(getAnnotation(p, AnnotationCopyLabels), ",") {
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		if val, ok := p.Labels[key]; ok {
+			labels[key] = val
+		}
+	}
+
 	for labelKey, labelValue := range p.Spec.NodeSelector {
 		switch labelKey {
 		case ICIResiliencyLabel:
@@ -491,4 +502,11 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func getAnnotation(p *corev1.Pod, key string) string {
+	if p.Annotations == nil {
+		return ""
+	}
+	return p.Annotations[key]
 }
