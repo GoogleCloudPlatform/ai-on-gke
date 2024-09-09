@@ -388,6 +388,7 @@ substitutions:
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
+logsBucket: gs://ai-on-gke-build-logs
 options:
   substitutionOption: 'ALLOW_LOOSE'
   machineType: 'E2_HIGHCPU_8'

@@ -43,6 +43,7 @@ locals {
     ? null
     : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
   )
+  vllm_podmonitoring = "${path.module}/monitoring-templates/vllm-podmonitoring.yaml.tftpl"
 }
 
 resource "kubernetes_manifest" "default" {
@@ -58,4 +59,10 @@ resource "kubernetes_manifest" "default" {
   timeouts {
     create = "60m"
   }
+}
+
+resource "kubernetes_manifest" "vllm-pod-monitoring" {
+  manifest = yamldecode(templatefile(local.vllm_podmonitoring, {
+    namespace = var.namespace
+  }))
 }
