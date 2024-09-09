@@ -22,13 +22,18 @@
 import os
 import logging
 
+import google.cloud.logging as gcloud_logging
+
 from google.cloud.sql.connector import IPTypes
 
-from langchain_google_cloud_sql_pg import PostgresEngine, PostgresVectorStore
+from langchain_google_cloud_sql_pg import PostgresEngine
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+gcloud_logging_client = gcloud_logging.Client()
+gcloud_logging_client.setup_logging()
+
 
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
@@ -38,7 +43,7 @@ GCP_CLOUD_SQL_INSTANCE = os.environ.get("CLOUDSQL_INSTANCE")
 
 DB_NAME = os.environ.get("DB_NAME", "pgvector-database")
 VECTOR_EMBEDDINGS_TABLE_NAME = os.environ.get("EMBEDDINGS_TABLE_NAME", "")
-CHAT_HISTORY_TABLE_NAME = os.environ.get("CHAT_HISTORY_TABLE_NAME", "chat_history_store")
+CHAT_HISTORY_TABLE_NAME = os.environ.get("CHAT_HISTORY_TABLE_NAME", "message_store")
 
 VECTOR_DIMENSION = os.environ.get("VECTOR_DIMENSION", 384)
 
@@ -66,13 +71,17 @@ def create_sync_postgres_engine():
         ip_type=IPTypes.PUBLIC if ENVIRONMENT == "development" else IPTypes.PRIVATE,
     )
     try:
-        engine.init_chat_history_table(table_name=CHAT_HISTORY_TABLE_NAME)
         engine.init_vectorstore_table(
             VECTOR_EMBEDDINGS_TABLE_NAME,
             vector_size=VECTOR_DIMENSION,
             overwrite_existing=False,
         )
-    except Exception as e:
-        logging.info(f"Error: {e}")
+    except Exception as err:
+        logging.error(f"Error: {err}")
 
+    try:
+        engine.init_chat_history_table(table_name=CHAT_HISTORY_TABLE_NAME)
+
+    except Exception as err:
+        logging.error(f"Error: {err}")
     return engine

@@ -65,8 +65,8 @@ class CloudSQLVectorStore(VectorStore):
             splits = self.splitter.split_documents(texts)
             ids = [str(uuid.uuid4()) for _ in range(len(splits))]
             self.vector_store.add_documents(splits, ids)
-        except Exception as e:
-            logging.info(f"Error: {e}")
+        except Exception as err:
+            logging.error(f"Error: {err}")
             raise Exception(f"Error adding texts: {err}")
 
     def similarity_search(
@@ -79,4 +79,5 @@ class CloudSQLVectorStore(VectorStore):
             return docs
 
         except Exception as err:
+            logging.error(f"Something happened: {err}")
             raise Exception(f"Error on similarity search: {err}")
