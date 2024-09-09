@@ -44,7 +44,7 @@ def test_prompts(prompt_url):
 
             assert response != None, f"Not response found: {response}"
             assert text != None, f"Not text"
-        except Exception as err:
+    except Exception as err:
             print(err)
             raise err
 
