@@ -1,3 +1,3 @@
-output "inference-url" {
+output "inference_url" {
   value = ""
 }

@@ -1,5 +1,5 @@
 provider "google" {
-  project = var.google-project
+  project = var.google_project
 }
 
 provider "kubernetes" {

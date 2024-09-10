@@ -1,6 +1,6 @@
-data "google_container_cluster" "nim-llm" {
-  name     = var.cluster-name
-  location = var.cluster-location
+data "google_container_cluster" "nim_llm" {
+  name     = var.cluster_name
+  location = var.cluster_location
 }
 
 data "google_client_config" "current" {
@@ -9,11 +9,11 @@ data "google_client_config" "current" {
 
 resource "kubernetes_namespace" "nim" {
   metadata {
-    name = var.kubernetes-namespace
+    name = var.kubernetes_namespace
   }
 }
 
-resource "kubernetes_secret" "ngc-secret" {
+resource "kubernetes_secret" "ngc_secret" {
   metadata {
     name      = "ngc-secret"
     namespace = kubernetes_namespace.nim.metadata.0.name
@@ -26,8 +26,8 @@ resource "kubernetes_secret" "ngc-secret" {
       "auths" = {
         "nvcr.io" = {
           "username" = "$oauthtoken"
-          "password" = var.ngc-api-key
-          "auth"     = base64encode("$oauthtoken:${var.ngc-api-key}")
+          "password" = var.ngc_api_key
+          "auth"     = base64encode("$oauthtoken:${var.ngc_api_key}")
         }
       }
     })
@@ -36,7 +36,7 @@ resource "kubernetes_secret" "ngc-secret" {
   depends_on = [kubernetes_namespace.nim]
 }
 
-resource "kubernetes_secret" "ngc-api" {
+resource "kubernetes_secret" "ngc_api" {
   metadata {
     name      = "ngc-api"
     namespace = kubernetes_namespace.nim.metadata.0.name
@@ -45,7 +45,7 @@ resource "kubernetes_secret" "ngc-api" {
   type = "Opaque"
 
   data = {
-    NGC_API_KEY = var.ngc-api-key
+    NGC_API_KEY = var.ngc_api_key
   }
 
   depends_on = [kubernetes_namespace.nim]
@@ -84,26 +84,26 @@ resource "kubernetes_persistent_volume_claim" "name" {
   wait_until_bound = false
 }
 
-resource "helm_release" "nim-release" {
+resource "helm_release" "nim_release" {
   name                = "nim"
   namespace           = kubernetes_namespace.nim.metadata.0.name
-  chart               = "https://helm.ngc.nvidia.com/nim/charts/nim-llm-${var.chart-version}.tgz"
+  chart               = "https://helm.ngc.nvidia.com/nim/charts/nim-llm-${var.chart_version}.tgz"
   repository_username = "$oauthtoken"
-  repository_password = var.ngc-api-key
+  repository_password = var.ngc_api_key
 
   set {
     name  = "image.repository"
-    value = "nvcr.io/nim/${var.image-name}"
+    value = "nvcr.io/nim/${var.image_name}"
   }
 
   set {
     name  = "image.tag"
-    value = var.image-tag
+    value = var.image_tag
   }
 
   set {
     name  = "model.name"
-    value = var.image-name
+    value = var.image_name
   }
 
   set {
@@ -113,7 +113,7 @@ resource "helm_release" "nim-release" {
 
   set {
     name  = "resources.limits.nvidia\\.com/gpu"
-    value = var.gpu-limits
+    value = var.gpu_limits
   }
 
   set {
