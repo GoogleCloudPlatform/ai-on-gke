@@ -537,26 +537,32 @@ func TestNodePoolForPod(t *testing.T) {
 			for k, v := range tc.additionalLabels {
 				labels[k] = v
 			}
+
+			annotations := map[string]string{
+				"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
+				"batch.kubernetes.io/job-completion-index":    "0",
+				"jobset.sigs.k8s.io/job-index":                "0",
+				"jobset.sigs.k8s.io/job-key":                  "random-key",
+				"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
+				"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
+				"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
+				"jobset.sigs.k8s.io/restart-attempt":          "0",
+			}
+			for k, v := range tc.additionalAnnotations {
+				annotations[k] = v
+			}
+
 			pod := &v1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Pod",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
-						"batch.kubernetes.io/job-completion-index":    "0",
-						"jobset.sigs.k8s.io/job-index":                "0",
-						"jobset.sigs.k8s.io/job-key":                  "random-key",
-						"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
-						"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
-						"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
-						"jobset.sigs.k8s.io/restart-attempt":          "0",
-					},
-					Labels:     labels,
-					Finalizers: []string{"batch.kubernetes.io/job-tracking"},
-					Name:       "job-test-6gfwq",
-					Namespace:  "default",
+					Annotations: annotations,
+					Labels:      labels,
+					Finalizers:  []string{"batch.kubernetes.io/job-tracking"},
+					Name:        "job-test-6gfwq",
+					Namespace:   "default",
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							APIVersion:         "batch/v1",
