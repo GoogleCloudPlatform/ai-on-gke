@@ -61,5 +61,6 @@ resource "kubernetes_manifest" "latency-profile-generator" {
     hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
     k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
     output_bucket                              = var.output_bucket
+    scrape_server_metrics                      = var.scrape_server_metrics
   }))
 }
