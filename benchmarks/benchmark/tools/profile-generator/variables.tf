@@ -145,3 +145,9 @@ variable "targets" {
     })
   })
 }
+
+variable "scrape_server_metrics" {
+  description = "Whether to scrape server metrics."
+  type        = bool
+  default     = false
+}

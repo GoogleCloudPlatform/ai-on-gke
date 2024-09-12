@@ -77,4 +77,5 @@ module "latency-profile" {
   k8s_hf_secret                              = var.k8s_hf_secret
   hugging_face_secret                        = var.hugging_face_secret
   hugging_face_secret_version                = var.hugging_face_secret_version
+  scrape_server_metrics                      = var.scrape_server_metrics
 }
