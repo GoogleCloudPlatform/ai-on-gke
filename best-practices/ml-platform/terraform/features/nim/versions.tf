@@ -12,6 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "inference_url" {
-  value = data.kubernetes_service.nim_svc.status.0.load_balancer.0.ingress[0].ip
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "6.2.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.32.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "2.15.0"
+    }
+  }
 }

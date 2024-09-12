@@ -1,3 +1,17 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 data "google_container_cluster" "nim_llm" {
   name     = var.cluster_name
   location = var.cluster_location
@@ -5,6 +19,12 @@ data "google_container_cluster" "nim_llm" {
 
 data "google_client_config" "current" {
 
+}
+
+data "kubernetes_service" "nim_svc" {
+  metadata {
+    name = "nim-nim-llm"
+  }
 }
 
 resource "kubernetes_namespace" "nim" {
@@ -51,30 +71,14 @@ resource "kubernetes_secret" "ngc_api" {
   depends_on = [kubernetes_namespace.nim]
 }
 
-resource "kubernetes_storage_class" "name" {
-  metadata {
-    name = "hyperdisk-ml"
-  }
-
-  parameters = {
-    type = "hyperdisk-ml"
-  }
-
-  storage_provisioner    = "pd.csi.storage.gke.io"
-  allow_volume_expansion = false
-  reclaim_policy         = "Delete"
-  volume_binding_mode    = "WaitForFirstConsumer"
-}
-
-resource "kubernetes_persistent_volume_claim" "name" {
+resource "kubernetes_persistent_volume_claim" "pvc_nim" {
   metadata {
     generate_name = "pvc-nim-"
     namespace     = kubernetes_namespace.nim.metadata.0.name
   }
 
   spec {
-    access_modes       = ["ReadWriteOnce"]
-    storage_class_name = kubernetes_storage_class.name.metadata.0.name
+    access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
         storage = "100Gi"
@@ -123,7 +127,7 @@ resource "helm_release" "nim_release" {
 
   set {
     name  = "persistence.existingClaim"
-    value = kubernetes_persistent_volume_claim.name.metadata.0.name
+    value = kubernetes_persistent_volume_claim.pvc_nim.metadata.0.name
   }
 
   depends_on = [kubernetes_namespace.nim]
