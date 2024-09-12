@@ -34,3 +34,5 @@ for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
   sleep 5 # wait 5 seconds before next run
 done
 
+export LPG_FINISHED="true"
+sleep infinity
