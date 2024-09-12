@@ -314,7 +314,7 @@ def metrics_to_scrape(backend: str) -> List[str]:
   else:
     return []
 
-def print_metrics(metrics: List[str], duration: str, backend: str) -> None:
+def print_metrics(metrics: List[str], duration: float, backend: str):
   # Creates a credentials object from the default service account file
   # Assumes that script has appropriate default credentials set up, ref:
   # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
@@ -322,18 +322,20 @@ def print_metrics(metrics: List[str], duration: str, backend: str) -> None:
   # Prepare an authentication request - helps format the request auth token
   auth_req = google.auth.transport.requests.Request()
 
+  all_metric_results = {}
+
   for metric in metrics:
     print("Metric Name: %s" % (metric))
-
+    metric_results = {}
     # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
     # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
     queries = {
-      "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%ss])" % (metric, backend, duration),
-      "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%ss])" % (metric, backend, duration),
-      "Min": "min_over_time(%s{job='%s-podmonitoring'}[%ss])" % (metric, backend, duration),
-      "Max": "max_over_time(%s{job='%s-podmonitoring'}[%ss])" % (metric, backend, duration),
-      "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%ss])" % (metric, backend, duration),
-      "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%ss])" % (metric, backend, duration),
+      "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
     }
     for query_name, query in queries.items():
       # Request refresh tokens
@@ -343,16 +345,20 @@ def print_metrics(metrics: List[str], duration: str, backend: str) -> None:
       url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/query' % (project_id)
       headers_api = {'Authorization': 'Bearer ' + credentials.token}
       params = {'query': query}
-      response = requests.get(url=url, headers=headers_api, params=params)
+      request_post = requests.get(url=url, headers=headers_api, params=params)
+      response = request_post.json()
 
       # handle response
-      if response.ok:
+      if request_post.ok:
         if response["status"] == "success":
+          metric_results[query_name] = response["data"]["result"][0]["value"][1]
           print("%s: %s" % (query_name, response["data"]["result"][0]["value"][1]))
         else:
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
-        print("HTTP Error: %s" % (response.text))
+        print("HTTP Error: %s" % (response))
+    all_metric_results[metric] = metric_results
+  return all_metric_results
 
 
 def main(args: argparse.Namespace):
@@ -472,14 +478,9 @@ def main(args: argparse.Namespace):
   )
   benchmark_result['avg_output_len'] = avg_output_len
 
-  '''
-  TODO: Add flag for enabling model server scraping
-  Scrape and print model server metrics
-  1. map model server to metrics list
-  2. loop through metrics list, call the same promql queries on each metric, print out the data received
-  '''
-  metrics = metrics_to_scrape(args.backend)
-  print_metrics(metrics, benchmark_time, args.backend)
+  if args.scrape_server_metrics:
+    server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
+    benchmark_result['server_metrics'] = server_metrics
 
   if args.save_json_results:
     save_json_results(args, benchmark_result)
@@ -605,6 +606,12 @@ if __name__ == "__main__":
           "Additional metadata about the workload. Should be a dictionary in"
           " the form of a string."
       ),
+  )
+  parser.add_argument(
+      "--scrape-server-metrics",
+      type=bool,
+      default=False,
+      help="Whether to scrape server metrics.",
   )
   cmd_args = parser.parse_args()
   main(cmd_args)

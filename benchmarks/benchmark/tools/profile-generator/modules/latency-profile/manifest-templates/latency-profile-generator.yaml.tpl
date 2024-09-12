@@ -34,6 +34,8 @@ spec:
               value: ${request_rates}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
+            - name: SCRAPE_SERVER_METRICS
+              value: ${scrape_server_metrics}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:
