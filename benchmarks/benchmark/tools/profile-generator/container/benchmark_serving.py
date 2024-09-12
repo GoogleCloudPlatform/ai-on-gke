@@ -609,8 +609,7 @@ if __name__ == "__main__":
   )
   parser.add_argument(
       "--scrape-server-metrics",
-      type=bool,
-      default=False,
+      action="store_true",
       help="Whether to scrape server metrics.",
   )
   cmd_args = parser.parse_args()
