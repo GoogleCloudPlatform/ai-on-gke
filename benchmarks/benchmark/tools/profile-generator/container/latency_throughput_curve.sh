@@ -19,11 +19,17 @@ export IP=$IP
 
 huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
 
+PYTHON="python3"
+PYTHON_OPTS="benchmark_serving.py "
 for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
   # TODO: Check if profile already exists, if so then skip
   timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
   output_file="latency-profile-${timestamp}.txt"
-  python3 benchmark_serving.py   --host="$IP"   --port="$PORT"   --model="$TOKENIZER" --dataset=ShareGPT_V3_unfiltered_cleaned_split.json   --tokenizer="$TOKENIZER" --request-rate=$request_rate --backend="$BACKEND" --num-prompts=$((request_rate * 30)) --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH > $output_file
+  PYTHON_OPTS="$PYTHON_OPTS --host=$IP   --port=$PORT   --model=$TOKENIZER --dataset=ShareGPT_V3_unfiltered_cleaned_split.json --tokenizer=$TOKENIZER --request-rate=$request_rate --backend=$BACKEND --num-prompts=$((request_rate * 30)) --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH"
+  if [[ "$SCRAPE_SERVER_METRICS" = "true" ]]; then
+    PYTHON_OPTS="$PYTHON_OPTS --scrape-server-metrics"
+  fi
+  $PYTHON $PYTHON_OPTS > $output_file
   cat $output_file
   sleep 5 # wait 5 seconds before next run
 done

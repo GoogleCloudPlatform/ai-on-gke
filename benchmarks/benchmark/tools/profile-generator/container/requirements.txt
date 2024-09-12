@@ -35,3 +35,4 @@ aioprometheus[starlette]
 pynvml == 11.5.0
 accelerate
 aiohttp
+google-auth

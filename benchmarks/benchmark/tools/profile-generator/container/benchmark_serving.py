@@ -10,8 +10,12 @@ import asyncio
 from datetime import datetime
 import json
 import random
+import requests
 import time
 from typing import AsyncGenerator, List, Tuple
+
+import google.auth
+import google.auth.transport.requests
 
 import aiohttp
 import numpy as np
@@ -302,6 +306,60 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
 
+def metrics_to_scrape(backend: str) -> List[str]:
+  if backend == "vllm":
+    return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
+  elif backend == "jetstream":
+    return ["jetstream_slots_used_percentage", "jetstream_prefill_backlog_size"]
+  else:
+    return []
+
+def print_metrics(metrics: List[str], duration: float, backend: str):
+  # Creates a credentials object from the default service account file
+  # Assumes that script has appropriate default credentials set up, ref:
+  # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
+  credentials, project_id = google.auth.default()
+  # Prepare an authentication request - helps format the request auth token
+  auth_req = google.auth.transport.requests.Request()
+
+  all_metric_results = {}
+
+  for metric in metrics:
+    print("Metric Name: %s" % (metric))
+    metric_results = {}
+    # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
+    # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
+    queries = {
+      "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+    }
+    for query_name, query in queries.items():
+      # Request refresh tokens
+      credentials.refresh(auth_req)
+
+      # Configure respective query
+      url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/query' % (project_id)
+      headers_api = {'Authorization': 'Bearer ' + credentials.token}
+      params = {'query': query}
+      request_post = requests.get(url=url, headers=headers_api, params=params)
+      response = request_post.json()
+
+      # handle response
+      if request_post.ok:
+        if response["status"] == "success":
+          metric_results[query_name] = response["data"]["result"][0]["value"][1]
+          print("%s: %s" % (query_name, response["data"]["result"][0]["value"][1]))
+        else:
+          print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
+      else:
+        print("HTTP Error: %s" % (response))
+    all_metric_results[metric] = metric_results
+  return all_metric_results
+
 
 def main(args: argparse.Namespace):
   print(args)
@@ -419,6 +477,10 @@ def main(args: argparse.Namespace):
       f" {avg_output_len:.2f}"
   )
   benchmark_result['avg_output_len'] = avg_output_len
+
+  if args.scrape_server_metrics:
+    server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
+    benchmark_result['server_metrics'] = server_metrics
 
   if args.save_json_results:
     save_json_results(args, benchmark_result)
@@ -544,6 +606,11 @@ if __name__ == "__main__":
           "Additional metadata about the workload. Should be a dictionary in"
           " the form of a string."
       ),
+  )
+  parser.add_argument(
+      "--scrape-server-metrics",
+      action="store_true",
+      help="Whether to scrape server metrics.",
   )
   cmd_args = parser.parse_args()
   main(cmd_args)
