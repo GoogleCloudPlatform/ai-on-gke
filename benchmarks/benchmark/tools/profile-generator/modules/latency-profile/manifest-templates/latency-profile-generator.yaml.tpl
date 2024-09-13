@@ -1,15 +1,20 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: latency-profile-generator
   namespace: ${namespace}
   labels:
     name: latency-profile-generator
 spec:
+  selector:
+    matchLabels:
+      name: latency-profile-generator
   template:
+    metadata:
+      labels:
+        name: latency-profile-generator
     spec:
       serviceAccountName: ${latency_profile_kubernetes_service_account}
-      restartPolicy: Never
       containers:
         - name: latency-profile-generator
           image: ${artifact_registry}/latency-profile:latest
