@@ -20,15 +20,15 @@ import signal
 import sys
 import torch
 import transformers
-import yaml
-import time
 import random
+import datetime
 
 from accelerate import Accelerator
 from datasets import Dataset, load_dataset, load_from_disk
 from peft import LoraConfig, PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
+import torch.distributed as dist
 
 
 def graceful_shutdown(signal_number, stack_frame):
@@ -45,6 +45,28 @@ def formatting_prompts_func(example):
         text = f"""{example["prompt"][i]}\n{EOS_TOKEN}"""
         output_texts.append(text)
     return {"prompts": output_texts}
+
+
+def get_current_node_id_and_rank():
+    if dist.is_initialized():
+        logger.info("Distributed training enabled.")
+        logger.info("Calculating node id")
+        global_rank = dist.get_rank()  # Get the process's rank
+        logger.info(f"global_rank: {global_rank}")
+        # gpu_per_node = int(os.getenv("GPU_PER_NODE", "2"))
+        gpu_per_node = torch.cuda.device_count()
+        logger.info(f"gpu_per_node: {gpu_per_node}")
+        total_gpus = accelerator.state.num_processes
+        logger.info(f"total_gpus: {total_gpus}")
+        total_nodes = int(total_gpus / gpu_per_node)
+        logger.info(f"total_nodes: {total_nodes}")
+        node_id = global_rank // total_nodes
+    else:
+        logger.info("Distributed training enabled.")
+        node_id = 0
+        global_rank = 0
+    logger.info(f"node_id: {node_id}")
+    return (node_id, global_rank, gpu_per_node)
 
 
 if __name__ == "__main__":
@@ -68,30 +90,76 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, graceful_shutdown)
     signal.signal(signal.SIGTERM, graceful_shutdown)
 
+    accelerator = Accelerator()
+    # has_active_ml_flow_run = False
+
     if "MLFLOW_ENABLE" in os.environ and os.environ["MLFLOW_ENABLE"] == "true":
         import mlflow
 
         remote_server_uri = os.environ["MLFLOW_TRACKING_URI"]
         mlflow.set_tracking_uri(remote_server_uri)
 
-        experiment = os.environ["EXPERIMENT"]
-        max_retries = 5
-        retry_delay = 1  # Initial delay in seconds
-        # There could be a race condition to set the experiment
-        for attempt in range(max_retries):
-            try:
-                mlflow.set_experiment(experiment)
-            except Exception as ex:
-                logger.error(
-                    f"Set experiment failed: {ex}, sleep {retry_delay} seconds and retry"
+        experiment_name = os.environ["EXPERIMENT"]
+        # now = datetime.datetime.now()
+        # timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
+        # base_experiment_name = os.environ["EXPERIMENT"]
+        # experiment_name = f"{base_experiment_name}-{timestamp}"
+
+        if accelerator.is_main_process:  # Only the main process sets the experiment
+            # Check if the experiment already exists
+            experiment = mlflow.get_experiment_by_name(experiment_name)
+            if experiment is None:
+                # Experiment doesn't exist, create it
+                try:
+                    experiment_id = mlflow.create_experiment(experiment_name)
+                    experiment = mlflow.get_experiment(experiment_id)
+                    print(
+                        f"Created new experiment: {experiment.name} (ID: {experiment.experiment_id})"
+                    )
+                except Exception as ex:
+                    logger.error(f"Create experiment failed: {ex}")
+            else:
+                # Experiment already exists, use it
+                logger.info(
+                    f"Using existing experiment: {experiment.name} (ID: {experiment.experiment_id})"
                 )
-                time.sleep(retry_delay)
-                retry_delay *= 2  # Double the delay for the next attempt
-                retry_delay += random.uniform(0, 1)  # Add jitter
 
+        # Barrier to ensure all processes wait until the experiment is created
+        accelerator.wait_for_everyone()
+        experiment = mlflow.get_experiment_by_name(experiment_name)
+
+        # Get the node ID
+        node, rank, gpu_per_node = get_current_node_id_and_rank()
+        node_id = "node_" + str(node)
+        logger.info(f"Training at: {node_id} process: {rank}")
+        process_id = "process_" + str(rank)
+
+        # Set MLflow experiment and node ID (within the appropriate run context)
+        mlflow.set_experiment(experiment_name)
+        mlflow.set_system_metrics_node_id(node_id)
+
+        # Check and create/reuse runs
+        # Only one process per node creates a run to capture system metrics
+        if (rank % gpu_per_node) == 0:
+            existing_run = mlflow.search_runs(
+                experiment_ids=[experiment.experiment_id],
+                filter_string=f"tags.mlflow.runName = '{process_id}'",
+            )
+            # No existing run with this name
+            if len(existing_run) == 0:
+                run = mlflow.start_run(
+                    run_name=node_id,
+                    experiment_id=experiment.experiment_id,
+                )
+                has_active_ml_flow_run = True
+            else:
+                logger.info(f"Run with name '{process_id}' already exists")
+                client = mlflow.MlflowClient()
+                data = client.get_run(mlflow.active_run().info.run_id).data
+                logger.info(f"Active run details: '{data}'")
+
+        # logging of model parameters, metrics, and artifacts
         mlflow.autolog()
-
-    accelerator = Accelerator()
 
     # The bucket which contains the training data
     training_data_bucket = os.environ["TRAINING_DATASET_BUCKET"]
@@ -196,7 +264,7 @@ if __name__ == "__main__":
     save_steps = 0
 
     # Log every X updates steps
-    logging_steps = 50
+    logging_steps = 10
 
     ################################################################################
     # SFT parameters
@@ -218,8 +286,6 @@ if __name__ == "__main__":
     model.config.use_cache = False
     model.config.pretraining_tp = 1
     logger.info("Loading base model completed")
-
-    # optimizer = torch.optim.AdamW(model.parameters(), lr=2e-4)
 
     logger.info("Configuring fine tuning started")
     # Load LoRA configuration
@@ -288,12 +354,13 @@ if __name__ == "__main__":
     logger.info("Fine tuning completed")
 
     if "MLFLOW_ENABLE" in os.environ and os.environ["MLFLOW_ENABLE"] == "true":
-        mv = mlflow.register_model(
-            model_uri=f"gs://{training_data_bucket}/{save_model_path}",
-            name=new_model,
-        )
-        logger.info(f"Name: {mv.name}")
-        logger.info(f"Version: {mv.version}")
+        if accelerator.is_main_process:  # register the model only at main process
+            mv = mlflow.register_model(
+                model_uri=f"gs://{training_data_bucket}/{save_model_path}",
+                name=new_model,
+            )
+            logger.info(f"Name: {mv.name}")
+            logger.info(f"Version: {mv.version}")
 
     logger.info("Saving new model started")
     trainer.model.save_pretrained(new_model)
@@ -330,5 +397,8 @@ if __name__ == "__main__":
     if accelerator.is_main_process:
         tokenizer.save_pretrained(save_model_path)
     logger.info("Save new tokenizer completed")
+
+    # Barrier to ensure all processes wait until 'unwrapped model save' is completed
+    accelerator.wait_for_everyone()
 
     logger.info("Script completed")
