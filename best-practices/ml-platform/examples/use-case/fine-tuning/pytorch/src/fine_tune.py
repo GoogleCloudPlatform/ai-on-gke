@@ -21,7 +21,6 @@ import sys
 import torch
 import transformers
 import random
-import datetime
 
 from accelerate import Accelerator
 from datasets import Dataset, load_dataset, load_from_disk
@@ -53,7 +52,6 @@ def get_current_node_id_and_rank():
         logger.info("Calculating node id")
         global_rank = dist.get_rank()  # Get the process's rank
         logger.info(f"global_rank: {global_rank}")
-        # gpu_per_node = int(os.getenv("GPU_PER_NODE", "2"))
         gpu_per_node = torch.cuda.device_count()
         logger.info(f"gpu_per_node: {gpu_per_node}")
         total_gpus = accelerator.state.num_processes
@@ -91,7 +89,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, graceful_shutdown)
 
     accelerator = Accelerator()
-    # has_active_ml_flow_run = False
 
     if "MLFLOW_ENABLE" in os.environ and os.environ["MLFLOW_ENABLE"] == "true":
         import mlflow
@@ -100,11 +97,6 @@ if __name__ == "__main__":
         mlflow.set_tracking_uri(remote_server_uri)
 
         experiment_name = os.environ["EXPERIMENT"]
-        # now = datetime.datetime.now()
-        # timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
-        # base_experiment_name = os.environ["EXPERIMENT"]
-        # experiment_name = f"{base_experiment_name}-{timestamp}"
-
         if accelerator.is_main_process:  # Only the main process sets the experiment
             # Check if the experiment already exists
             experiment = mlflow.get_experiment_by_name(experiment_name)
@@ -264,7 +256,7 @@ if __name__ == "__main__":
     save_steps = 0
 
     # Log every X updates steps
-    logging_steps = 10
+    logging_steps = 50
 
     ################################################################################
     # SFT parameters
