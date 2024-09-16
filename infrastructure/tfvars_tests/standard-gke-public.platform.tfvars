@@ -37,9 +37,6 @@ cluster_name        = "test-cluster"
 cluster_location    = "us-east4"
 gcs_fuse_csi_driver = true
 ray_addon_enabled   = true
-# TODO(genlu): remove release_channel and kubernetes_version after 1.30.3-gke.1969000 is in REGULAR channel
-release_channel    = "RAPID"
-kubernetes_version = "1.30.3-gke.1969000"
 
 cpu_pools = [{
   name         = "cpu-pool"
