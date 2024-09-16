@@ -20,7 +20,7 @@ terraform {
     google-beta = {
       source = "hashicorp/google-beta"
       # Creating Autopilot using GKE submodule is broken in v6.2.0.
-      version = ">= 5.40.0, !=6.2.0"
+      version = ">= 5.40.0, <= 6.1.0"
     }
     helm = {
       source  = "hashicorp/helm"
