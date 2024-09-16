@@ -15,15 +15,15 @@
 locals {
   bucket_data_name     = "${data.google_project.environment.project_id}-${var.environment_name}-data"
   bucket_model_name    = "${data.google_project.environment.project_id}-${var.environment_name}-model"
-  data_preparation_ksa = "data-preparation"
-  data_processing_ksa  = "data-processing"
-  fine_tuning_ksa      = "fine-tuning"
+  data_preparation_ksa = "${var.environment_name}-${var.namespace}-data-preparation"
+  data_processing_ksa  = "${var.environment_name}-${var.namespace}-data-processing"
+  fine_tuning_ksa      = "${var.environment_name}-${var.namespace}-fine-tuning"
   gsa_build_account_id = "${var.environment_name}-${var.namespace}-build"
   gsa_build_email      = google_service_account.build.email
   gsa_build_roles = [
     "roles/logging.logWriter",
   ]
-  model_evaluation_ksa       = "model-evaluation"
+  model_evaluation_ksa       = "${var.environment_name}-${var.namespace}-model-evaluation"
   repo_container_images_id   = var.environment_name
   repo_container_images_url  = "${google_artifact_registry_repository.container_images.location}-docker.pkg.dev/${google_artifact_registry_repository.container_images.project}/${local.repo_container_images_id}"
   wi_member_principal_prefix = "principal://iam.googleapis.com/projects/${data.google_project.environment.number}/locations/global/workloadIdentityPools/${data.google_project.environment.project_id}.svc.id.goog/subject/ns/${var.namespace}/sa"
