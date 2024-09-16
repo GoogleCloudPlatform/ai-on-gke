@@ -47,7 +47,7 @@ gcloud --project="${PROJECT_ID}" services enable \
  cloudresourcemanager.googleapis.com && \
 
 echo -e "\e[95mAssigning Cloudbuild Service Account roles/owner in ${PROJECT_ID}\e[0m" && \
-gcloud projects add-iam-policy-binding "${PROJECT_ID}" --member serviceAccount:"${TF_CLOUDBUILD_SA}" --role roles/owner && \
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" --member serviceAccount:"${TF_CLOUDBUILD_SA}" --role roles/owner --condition=None && \
 
 echo -e "\e[95mStarting Cloudbuild to create infrastructure...\e[0m" && \
 
@@ -56,7 +56,7 @@ if ! gcloud --quiet --no-user-output-enabled artifacts repositories describe tut
 fi
 
 gcloud builds submit --config cloudbuild-create.yaml \
-  --substitutions _REGION=${REGION},_ZONE=${ZONE} \
+  --substitutions _REGION=${REGION},_ZONE=${ZONE},HOME="/home/user/",_MLP_BASE_DIR="/ai-on-gke/best-practices/ml-platform",_MLP_TYPE_BASE_DIR="/ai-on-gke/best-practices/ml-platform/examples/cluster" \
   --async && \
 
 echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds?project=${PROJECT_ID}\e[0m"

@@ -124,10 +124,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
    <img src="./images/kueue_dash_1.png" width="800">
   
-5. Deploying Low Priority workloads: Switch to the `03_low_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+5. Deploying Low Priority workloads: Switch to the `low_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/03_low_priority && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/low_priority && \
    ./create_workloads.sh
    ```
 
@@ -266,10 +266,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
    <img src="./images/04_low_priority_spot.svg" width="800">
    
 
-5. **Deploying High Priority workloads:** Switch to the `04_high_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+5. **Deploying High Priority workloads:** Switch to the `high_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/04_high_priority && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/high_priority && \
    ./create_workloads.sh
    ```
 
@@ -375,10 +375,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
    <img src="./images/kueue_dash_2.png" width="800">
 
-6. **Deploying compact placement workloads:** Switch to the `05_compact_placement` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
+6. **Deploying compact placement workloads:** Switch to the `compact_placement` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/05_compact_placement && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/compact_placement && \
    ./create_workloads.sh
    ```
 
@@ -418,7 +418,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    
    <img src="./images/07_compact_placement.svg" width="800">
    
-   c. Return to the terminal tab watching the cluster nodes, after a short while you should see nodes being created in auto-provisioned Spot node pools to accommodate the compactly placed Jobs that could not find A100 GPUs in the node pools present on the cluster.
+   c. Return to the terminal tab watching the cluster nodes, after a short while you should see nodes being created in auto-provisioned Spot node pools to accommodate the compactly placed Jobs that could not find any A100 GPUs in the node pools present on the cluster.
 
    Expected output:
 
@@ -450,10 +450,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
    gke-gke-batch-refarch-reserved-np-866c1d22-r6rt       Ready    <none>   12h     v1.28.3-gke.1203001
    ```
 
-7. **Deploying JobSet workloads:** Switch to the `06_jobset` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
+7. **Deploying JobSet workloads:** Switch to the `jobset` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/06_jobset && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/jobset && \
    ./create_workloads.sh
    ```
 
@@ -472,6 +472,46 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```
 
    a. Return to the terminal tab watching the `clusterqueues`, you should see submitted JobSet workloads being pending and admitted to the low priority clusterqueues for all four teams.
+
+   Expected output:
+
+   ```bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   2                   1
+   cq-team-a-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-a-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-b-compact   team-a-b   StrictFIFO   2                   0
+   cq-team-b-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-c-compact   team-c-d   StrictFIFO   0                   1
+   cq-team-c-hp        team-c-d   StrictFIFO   0                   1
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   4
+   cq-team-d-compact   team-c-d   StrictFIFO   2                   1
+   cq-team-d-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   4
+   ```
+
+
+8. **Deploying workloads to DWS:** Switch to the `dws` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one model training job from each team seeking resources from Dynamic Workload Scheduler ([blog](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler), [docs](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest)).
+
+   ```bash
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/dws && \
+   ./create_workloads.sh
+   ```
+
+   Expected output:
+
+   ```bash
+   service/team-a-dws-svc-0 created
+   configmap/team-a-dws-config-0 created
+   job.batch/team-a-dws-job-0 created
+   ...
+   service/team-d-dws-svc-0 created
+   configmap/team-d-dws-config-0 created
+   job.batch/team-d-dws-job-0 created
+   ```
+
+   a. Return to the terminal tab watching the `clusterqueues`, you should see submitted DWS workloads being pending and admitted to the DWS clusterqueues for all four teams.
 
    Expected output:
 

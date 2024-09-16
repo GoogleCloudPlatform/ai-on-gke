@@ -21,6 +21,7 @@ steps:
       - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer
       - --cache=true
       - --cache-ttl=12h
+# TODO: move this bucket creation into terraform initialize
   - name: "gcr.io/cloud-builders/gcloud"
     id: "Setup Terraform state Cloud Storage bucket"
     waitFor: ["-"]
@@ -61,9 +62,10 @@ steps:
           docker build -t ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1 . && \
           docker push ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1
         fi
+#TODO: Don't clone from git, run the cloud build submit from best-practices, so that we can directly reference the ml-platform/examples/cluster.
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Setup GKE"
-    dir: "01_gke"
+    dir: "gke"
     entrypoint: "ash"
     waitFor:
       ["Build Installer Image", "Setup Terraform state Cloud Storage bucket"]
@@ -71,8 +73,35 @@ steps:
       - "-xe"
       - "-c"
       - |
-        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform plan -out terraform.tfplan -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        git clone -b batch-ref-arch https://github.com/GoogleCloudPlatform/ai-on-gke && \
+        cd ai-on-gke/best-practices/ml-platform && \
+        export MLP_BASE_DIR=$(pwd) && \
+        echo "export MLP_BASE_DIR=${_MLP_BASE_DIR}" >> ${_HOME}/.bashrc && \
+        cd examples/cluster && \
+        export MLP_TYPE_BASE_DIR=$(pwd) && \
+        echo "export MLP_TYPE_BASE_DIR=${_MLP_TYPE_BASE_DIR}" >> ${_HOME}/.bashrc && \
+        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/initialize && \
+        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/networking && \
+        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/container_cluster && \
+        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/workloads && \
+        cd ${_MLP_TYPE_BASE_DIR}/initialize && \
+        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
+        rm terraform.tfplan && \
+        cd ${_MLP_TYPE_BASE_DIR}/networking && \
+        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
+        rm terraform.tfplan && \
+        cd ${_MLP_TYPE_BASE_DIR}/container_cluster && \
+        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
+        rm terraform.tfplan && \
+        cd ${_MLP_TYPE_BASE_DIR}/workloads && \
+        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        tterraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
         terraform apply -input=false -lock=false terraform.tfplan -no-color && \
         rm terraform.tfplan
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"

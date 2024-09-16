@@ -25,7 +25,7 @@ python3 \
 unzip \
 wget
 
-ENV TERRAFORM_VERSION=1.7.3
+ENV TERRAFORM_VERSION=1.9.5
 
 # Install terraform
 RUN echo "INSTALL TERRAFORM v${TERRAFORM_VERSION}" \
