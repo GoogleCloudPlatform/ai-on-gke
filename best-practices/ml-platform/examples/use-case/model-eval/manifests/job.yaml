@@ -8,6 +8,7 @@ spec:
     metadata:
       labels:
         app: model-eval
+        ml-platform: model-eval
     spec:
       containers:
       - name: job
