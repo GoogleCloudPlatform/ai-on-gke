@@ -60,7 +60,9 @@ For an outline of products and features used in the platform, see the [Platform 
 
 ## Use cases
 
-- [Distributed Data Processing with Ray](examples/use-case/ray/dataprocessing/README.md): Run a distributed data processing job using Ray.
+- [Distributed Data Processing with Ray](examples/use-case/data-processing/ray/README.md): Run a distributed data processing job using Ray.
+- [Dataset Prepartion for Fine Tuning Gemma IT With Gemini Flash](examples/use-case/data-preparation/gemma-it/README.md): Generate prompts for fine tuning Gemma Instruction Tuned model with Vertex AI Gemini Flash
+- [Fine Tuning Gemma2 9B IT model With FSDP](examples/use-case/fine-tuning/pytorch/README.md): Fine tune Gemma2 9B IT model with PyTorch FSDP
 
 ## Resources
 

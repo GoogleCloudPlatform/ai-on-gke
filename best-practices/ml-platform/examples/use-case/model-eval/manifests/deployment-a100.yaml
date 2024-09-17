@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-openai-a100
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-openai-a100
+  template:
+    metadata:
+      labels:
+        app: vllm-openai-a100
+      annotations:
+        gke-gcsfuse/volumes: "true"
+    spec:
+      containers:
+      - name: inference-server
+        args:
+        - --model=$(MODEL)
+        - --tensor-parallel-size=2
+        env:
+        - name: MODEL
+          value: V_MODEL_PATH
+        - name: VLLM_ATTENTION_BACKEND
+          value: FLASHINFER
+        image: V_IMAGE_URL
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 240
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: "2"
+            memory: "25Gi"
+            ephemeral-storage: "25Gi"
+            nvidia.com/gpu: "2"
+          limits:
+            cpu: "2"
+            memory: "25Gi"
+            ephemeral-storage: "25Gi"
+            nvidia.com/gpu: "2"
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /model-data
+          readOnly: true
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-tesla-a100
+      serviceAccountName: V_KSA
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "on-demand"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule" 
+      volumes:
+      - name: dshm
+        emptyDir:
+            medium: Memory
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: V_BUCKET
+            mountOptions: "implicit-dirs"
+            fileCacheCapacity: "20Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-openai-a100
+spec:
+  selector:
+    app: vllm-openai-a100
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

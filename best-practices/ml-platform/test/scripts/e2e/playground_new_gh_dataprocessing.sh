@@ -39,7 +39,7 @@ fi
 
 export MLP_PROJECT_ID=$(grep environment_project_id ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars | awk -F"=" '{print $2}' | xargs)
 
-source ${SCRIPTS_DIR}/helpers/dataprocessing_env.sh
+source ${SCRIPTS_DIR}/helpers/data_processing_env.sh
 
 # terraform apply
 ###############################################################################
@@ -53,13 +53,13 @@ else
     lock_set "terraform_apply"
 fi
 
-# dataprocessing
+# data-processing
 ###############################################################################
-if lock_is_set "dataprocessing"; then
-    echo_bold "Dataprocessing previously completed successfully"
+if lock_is_set "data_processing"; then
+    echo_bold "Data-processing previously completed successfully"
 else
-    source ${SCRIPTS_DIR}/helpers/dataprocessing.sh
-    lock_set "dataprocessing"
+    source ${SCRIPTS_DIR}/helpers/data_processing.sh
+    lock_set "data_processing"
 fi
 
 # terraform destroy
@@ -93,7 +93,7 @@ total_runtime "script"
 
 check_local_error_exit_on_error
 
-lock_unset "dataprocessing"
+lock_unset "data_processing"
 lock_unset "features_initialize_apply"
 lock_unset "features_initialize_destroy"
 lock_unset "terraform_apply"

@@ -26,6 +26,8 @@ source ${SCRIPTS_DIR}/helpers/include.sh
 echo_title "Preparing the environment"
 source ${SCRIPTS_DIR}/helpers/byop_env.sh
 source ${SCRIPTS_DIR}/helpers/gh_env.sh
+source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_env.sh
+source ${SCRIPTS_DIR}/helpers/${MLP_TYPE}_config.sh
 
 # terraform destroy
 ###############################################################################
