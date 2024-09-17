@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+venv/
+
+.gcloudignore
+.python-version
+cloudbuild.yaml

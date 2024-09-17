@@ -18,27 +18,4 @@ echo_title "Checking GitHub required configuration"
 
 export GIT_TOKEN_FILE=${GIT_TOKEN_FILE:-${HOME}/secrets/mlp-github-token}
 
-if [ ! -f ${GIT_TOKEN_FILE} ]; then
-    echo "Git token missing at '${GIT_TOKEN_FILE}'!"
-    exit 3
-fi
-
-if [ -z "${MLP_GIT_NAMESPACE}" ]; then
-    echo "MLP_GIT_NAMESPACE is not set!"
-    exit 4
-fi
-
-if [ -z "${MLP_GIT_USER_NAME}" ]; then
-    echo "MLP_GIT_USER_NAME is not set!"
-    exit 5
-fi
-
-if [ -z "${MLP_GIT_USER_EMAIL}" ]; then
-    echo "MLP_GIT_USER_EMAIL is not set!"
-    exit 6
-fi
-
-echo_title "Applying Git configuration"
-sed -i "s/YOUR_GIT_NAMESPACE/${MLP_GIT_NAMESPACE}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-sed -i "s/YOUR_GIT_USER_EMAIL/${MLP_GIT_USER_EMAIL}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
-sed -i "s/YOUR_GIT_USER_NAME/${MLP_GIT_USER_NAME}/g" ${MLP_TYPE_BASE_DIR}/mlp.auto.tfvars
+source ${SCRIPTS_DIR}/helpers/git_env.sh

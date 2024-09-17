@@ -24,4 +24,4 @@ while [[ ${last_synced_commit} != ${LAST_COMMIT} ]]; do
     last_synced_commit=$(kubectl get rootsync ${ROOT_SYNC_NAME} -n config-management-system --output go-template='{{.status.lastSyncedCommit}}')
 done
 
-echo "rootsync '${ROOT_SYNC_NAME}' has synchronize"
+echo "rootsync '${ROOT_SYNC_NAME}' has synchronized"

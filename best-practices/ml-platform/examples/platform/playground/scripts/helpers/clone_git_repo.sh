@@ -21,6 +21,8 @@ function cleanup() {
 }
 trap cleanup EXIT
 
+source ${SCRIPT_PATH}/helpers/git_config_env.sh
+
 random_suffix=$(echo $RANDOM | md5sum | head -c 20)
 export GIT_REPOSITORY_PATH="/tmp/$(basename ${GIT_REPOSITORY})-${random_suffix}"
 

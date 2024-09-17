@@ -16,7 +16,7 @@
 # Available zones: https://cloud.google.com/compute/docs/regions-zones#available
 ###############################################################################
 resource "google_container_node_pool" "cpu_n4s8" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_gke_hub_membership.cluster]
 
   # Variables
   cluster            = google_container_cluster.mlp.name
@@ -89,7 +89,7 @@ resource "google_container_node_pool" "cpu_n4s8" {
 # Available zones: https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-table
 ###############################################################################
 resource "google_container_node_pool" "gpu_a100x2_a2h2" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_gke_hub_membership.cluster]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -176,7 +176,7 @@ resource "google_container_node_pool" "gpu_a100x2_a2h2" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_a100x2_a2h2_dws" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_gke_hub_membership.cluster]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -267,7 +267,7 @@ resource "google_container_node_pool" "gpu_a100x2_a2h2_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_gke_hub_membership.cluster]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -360,7 +360,7 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_gke_hub_membership.cluster]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -445,7 +445,7 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_gke_hub_membership.cluster]
 
   # Variables
   cluster  = google_container_cluster.mlp.name
@@ -534,7 +534,7 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24_spot" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_gke_hub_membership.cluster]
 
   # Variables
   cluster  = google_container_cluster.mlp.name

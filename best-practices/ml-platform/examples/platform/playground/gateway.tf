@@ -13,14 +13,17 @@
 # limitations under the License.
 
 locals {
-  hostname_suffix             = "endpoints.${data.google_project.environment.project_id}.cloud.goog"
-  gateway_manifests_directory = "${path.module}/manifests/${var.environment_name}/${var.namespace}/gateway"
-  gateway_name                = "external-https"
-  iap_domain                  = var.iap_domain != null ? var.iap_domain : split("@", trimspace(data.google_client_openid_userinfo.identity.email))[1]
-  iap_oath_brand              = "projects/${data.google_project.environment.number}/brands/${data.google_project.environment.number}"
-  ray_head_service_name       = "ray-cluster-kuberay-head-svc"
-  ray_dashboard_endpoint      = "ray-dashboard.${data.kubernetes_namespace_v1.team.metadata[0].name}.mlp-${var.environment_name}.${local.hostname_suffix}"
-  ray_dashboard_port          = 8265
+  hostname_suffix              = "endpoints.${data.google_project.environment.project_id}.cloud.goog"
+  gateway_manifests_directory  = "${path.module}/manifests/${var.environment_name}/${var.namespace}/gateway"
+  gateway_name                 = "external-https"
+  iap_domain                   = var.iap_domain != null ? var.iap_domain : split("@", trimspace(data.google_client_openid_userinfo.identity.email))[1]
+  iap_oath_brand               = "projects/${data.google_project.environment.number}/brands/${data.google_project.environment.number}"
+  ray_head_service_name        = "ray-cluster-kuberay-head-svc"
+  ray_dashboard_endpoint       = "ray-dashboard.${data.kubernetes_namespace_v1.team.metadata[0].name}.mlp-${var.environment_name}.${local.hostname_suffix}"
+  ray_dashboard_port           = 8265
+  mlflow_tracking_endpoint     = "mlflow-tracking.${data.kubernetes_namespace_v1.team.metadata[0].name}.mlp-${var.environment_name}.${local.hostname_suffix}"
+  mlflow_tracking_service_name = "mlflow-tracking-svc"
+  mlflow_tracking_port         = 5000
 }
 
 ###############################################################################
@@ -42,7 +45,7 @@ resource "google_compute_managed_ssl_certificate" "external_gateway" {
   project = data.google_project.environment.project_id
 
   managed {
-    domains = [local.ray_dashboard_endpoint]
+    domains = [local.ray_dashboard_endpoint, local.mlflow_tracking_endpoint]
   }
 }
 
@@ -65,6 +68,18 @@ resource "google_endpoints_service" "ray_dashboard_https" {
   )
   project      = data.google_project.environment.project_id
   service_name = local.ray_dashboard_endpoint
+}
+
+resource "google_endpoints_service" "mlflow_tracking_https" {
+  openapi_config = templatefile(
+    "${path.module}/templates/openapi/endpoint.tftpl.yaml",
+    {
+      endpoint   = local.mlflow_tracking_endpoint,
+      ip_address = google_compute_global_address.external_gateway_https.address
+    }
+  )
+  project      = data.google_project.environment.project_id
+  service_name = local.mlflow_tracking_endpoint
 }
 
 resource "local_file" "gateway_external_https_yaml" {
@@ -91,6 +106,20 @@ resource "local_file" "route_ray_dashboard_https_yaml" {
     }
   )
   filename = "${local.gateway_manifests_directory}/route-ray-dashboard-https.yaml"
+}
+
+resource "local_file" "route_mlflow_tracking_https_yaml" {
+  content = templatefile(
+    "${path.module}/templates/gateway/http-route-service.tftpl.yaml",
+    {
+      gateway_name    = local.gateway_name,
+      http_route_name = "mlflow-tracking-https",
+      hostname        = local.mlflow_tracking_endpoint
+      service_name    = local.mlflow_tracking_service_name
+      service_port    = local.mlflow_tracking_port
+    }
+  )
+  filename = "${local.gateway_manifests_directory}/route-mlflow-tracking-https.yaml"
 }
 
 ###############################################################################

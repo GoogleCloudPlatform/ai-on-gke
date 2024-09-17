@@ -2,7 +2,9 @@
 
 This document outlines the products and features that are used in the platform.
 
-##  Cloud Logging
+![Playground Architecture](/best-practices/ml-platform/docs/images/platform/playground/mlp_playground_architecture_full.svg)
+
+## Cloud Logging
 
 Cloud Logging is a real-time log-management system with storage, search, analysis, and monitoring support. Cloud Logging automatically collects logs from Google Cloud resources. You can also collect logs from your applications, on-premise resources, and resources from other cloud providers. You can also configure alerting policies so that Cloud Monitoring notifies you if certain kinds of events are reported in your logs. For regulatory or security reasons, you can determine where your log data is stored.
 
@@ -89,11 +91,11 @@ GKE Dataplane V2 observability offers the following troubleshooting tools:
 
 For more information see the [Dataplane V2 observability documentation](https://cloud.google.com/kubernetes-engine/docs/concepts/about-dpv2-observability)
 
-### Filestore CSI driver 
+### Filestore CSI driver
 
 The Filestore CSI driver is the primary way to use Filestore instances with GKE. The CSI driver provides a fully-managed experience powered by the open source Google Cloud Filestore CSI driver.
 
-The  CSI driver version is tied to Kubernetes minor version numbers and is typically the latest driver available at the time that the Kubernetes minor version is released. The drivers update automatically when the cluster is upgraded to the latest GKE patch.
+The CSI driver version is tied to Kubernetes minor version numbers and is typically the latest driver available at the time that the Kubernetes minor version is released. The drivers update automatically when the cluster is upgraded to the latest GKE patch.
 
 For more information see the [Filestore CSI driver](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/filestore-csi-driver)
 
