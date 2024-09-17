@@ -26,7 +26,7 @@ source ${SCRIPTS_DIR}/helpers/include.sh
 echo_title "Preparing the environment"
 source ${SCRIPTS_DIR}/helpers/byop_env.sh
 source ${SCRIPTS_DIR}/helpers/gh_env.sh
-source ${SCRIPTS_DIR}/helpers/dataprocessing_env.sh
+source ${SCRIPTS_DIR}/helpers/data_processing_env.sh
 
 # terraform apply
 ###############################################################################
@@ -39,13 +39,13 @@ else
     lock_set "terraform_apply"
 fi
 
-# dataprocessing
+# data-processing
 ###############################################################################
-if lock_is_set "dataprocessing"; then
-    echo_bold "Dataprocessing previously completed successfully"
+if lock_is_set "data_processing"; then
+    echo_bold "Data-processing previously completed successfully"
 else
-    source ${SCRIPTS_DIR}/helpers/dataprocessing.sh
-    lock_set "dataprocessing"
+    source ${SCRIPTS_DIR}/helpers/data_processing.sh
+    lock_set "data_processing"
 fi
 
 # terraform destroy
@@ -62,14 +62,14 @@ fi
 ###############################################################################
 echo_title "Cleaning up the environment"
 
-source ${SCRIPTS_DIR}/helpers/dataprocessing_cleanup.sh
+source ${SCRIPTS_DIR}/helpers/data_processing_cleanup.sh
 source ${SCRIPTS_DIR}/helpers/byop_playground_cleanup.sh
 
 total_runtime "script"
 
 check_local_error_exit_on_error
 
-lock_unset "dataprocessing"
+lock_unset "data_processing"
 lock_unset "terraform_apply"
 lock_unset "terraform_destroy"
 

@@ -20,6 +20,8 @@ SCRIPT_PATH="$(
   pwd -P
 )"
 
+source ${SCRIPT_PATH}/helpers/git_config_env.sh
+
 echo "Waiting for namespace '${K8S_NAMESPACE}' to be created..."
 while ! kubectl get ns ${K8S_NAMESPACE} >/dev/null 2>&1; do
   sleep 2

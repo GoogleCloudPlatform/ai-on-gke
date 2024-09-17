@@ -1,0 +1,4 @@
+pandas==2.2.2
+gcsfs==2024.5.0
+datasets==2.20.0
+google-cloud-storage==2.17.0

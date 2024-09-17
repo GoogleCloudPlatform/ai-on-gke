@@ -79,10 +79,7 @@ module "infra" {
   enable_gpu        = true
   gpu_pools         = var.gpu_pools
   ray_addon_enabled = true
-  # TODO(genlu): remove channel and k8s_version after ray addon is in REGULAR channel
-  release_channel    = "RAPID"
-  kubernetes_version = "1.30.3-gke.1969000"
-  depends_on         = [module.project-services]
+  depends_on        = [module.project-services]
 }
 
 data "google_container_cluster" "default" {
