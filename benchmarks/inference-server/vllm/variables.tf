@@ -107,15 +107,13 @@ variable "project_id" {
   type        = string
 }
 
-
-
 variable "hpa_type" {
-  description = "How the TGI workload should be scaled."
+  description = "How the vllm workload should be scaled."
   type        = string
   default     = null
   nullable    = true
   validation {
-    condition     = var.hpa_type == null ? true : length(regexall("cpu|vllm.*|DCGM_.*", var.hpa_type)) > 0
+    condition     = var.hpa_type == null ? true : length(regexall("vllm.*", var.hpa_type)) > 0
     error_message = "Allows values for hpa_type are {null, or vLLM metrics (e.g., \"vllm:num_requests_waiting\", \"vllm:gpu_cache_usage_perc\")}"
   }
 }
