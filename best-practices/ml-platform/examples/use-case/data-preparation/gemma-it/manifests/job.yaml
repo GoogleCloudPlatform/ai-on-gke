@@ -8,6 +8,7 @@ spec:
     metadata:
       labels:
         app: data-prep
+        ml-platform: data-prep
     spec:
       containers:
       - name: job
