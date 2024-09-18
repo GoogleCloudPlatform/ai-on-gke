@@ -17,7 +17,7 @@
 locals {
 
   hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.vllm.custom_metric.yaml.tftpl"
-  use_vllm_metrics_for_hpa    = var.hpa_type == null ? false : length(regexall("vllm.*", var.hpa_type)) > 0
+  use_vllm_metrics_for_hpa   = var.hpa_type == null ? false : length(regexall("vllm.*", var.hpa_type)) > 0
   custom_metrics_enabled     = local.use_vllm_metrics_for_hpa
 
 
