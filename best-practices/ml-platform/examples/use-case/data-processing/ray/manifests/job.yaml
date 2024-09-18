@@ -8,6 +8,7 @@ spec:
     metadata:
       labels:
         app: data-processing
+        ml-platform: data-processing
     spec:
       containers:
       - name: job

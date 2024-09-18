@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: vllm-openai-a100
+        ml-platform: vllm-openai
       annotations:
         gke-gcsfuse/volumes: "true"
     spec:
