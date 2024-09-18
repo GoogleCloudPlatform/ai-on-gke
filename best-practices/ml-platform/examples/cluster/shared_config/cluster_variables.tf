@@ -13,9 +13,10 @@
 # limitations under the License.
 
 locals {
-  cluster_name         = "${var.cluster_name_prefix}-${var.environment_name}"
-  kubeconfig_directory = abspath("${path.module}/../kubeconfig")
-  kubeconfig_file      = abspath("${local.kubeconfig_directory}/${local.cluster_name}")
+  cluster_name          = "${var.cluster_name_prefix}-${var.environment_name}"
+  kubeconfig_directory  = abspath("${path.module}/../kubeconfig")
+  kubeconfig_file       = abspath("${local.kubeconfig_directory}/${local.cluster_name}")
+  terraform_bucket_name = "${data.google_project.environment.project_id}-batch-${var.environment_name}-terraform"
 }
 
 variable "cluster_name_prefix" {

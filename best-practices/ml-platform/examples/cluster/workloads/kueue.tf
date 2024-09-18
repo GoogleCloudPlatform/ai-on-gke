@@ -41,7 +41,7 @@ resource "null_resource" "kueue_manifests_apply" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl delete -f ${self.triggers.manifests_dir}/manifests.yaml"
+    command = "kubectl delete -f ${self.triggers.manifests_dir}/manifests.yaml; exit 0"
     environment = {
       KUBECONFIG = self.triggers.kubeconfig_file
     }

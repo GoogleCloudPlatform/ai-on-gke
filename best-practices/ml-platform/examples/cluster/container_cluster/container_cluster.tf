@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "google_container_cluster" "mlp" {
+resource "google_container_cluster" "cluster" {
   provider = google-beta
 
   datapath_provider        = "ADVANCED_DATAPATH"

@@ -3,8 +3,8 @@ data "google_project" "environment" {
 }
 
 resource "google_project_service" "compute_googleapis_com" {
-  disable_dependent_services = true
-  disable_on_destroy         = true
+  disable_dependent_services = false
+  disable_on_destroy         = false
   project                    = data.google_project.environment.project_id
   service                    = "compute.googleapis.com"
 }

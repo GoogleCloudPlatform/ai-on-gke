@@ -16,10 +16,10 @@
 # Available zones: https://cloud.google.com/compute/docs/regions-zones#available
 ###############################################################################
 resource "google_container_node_pool" "cpu_n4s8" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_container_cluster.cluster]
 
   # Variables
-  cluster            = google_container_cluster.mlp.name
+  cluster            = google_container_cluster.cluster.name
   initial_node_count = 1
   location           = var.region
   name               = "cpu-n4s8"
@@ -90,10 +90,10 @@ resource "google_container_node_pool" "cpu_n4s8" {
 # gcloud: gcloud compute accelerator-types list
 ###############################################################################
 resource "google_container_node_pool" "gpu_a100x2_a2h2" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_container_cluster.cluster]
 
   # Variables
-  cluster  = google_container_cluster.mlp.name
+  cluster  = google_container_cluster.cluster.name
   location = var.region
   name     = "gpu-a100x2-a2h2"
   node_locations = [
@@ -177,10 +177,10 @@ resource "google_container_node_pool" "gpu_a100x2_a2h2" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_a100x2_a2h2_dws" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_container_cluster.cluster]
 
   # Variables
-  cluster  = google_container_cluster.mlp.name
+  cluster  = google_container_cluster.cluster.name
   location = var.region
   name     = "gpu-a100x2-a2h2-dws"
   node_locations = [
@@ -268,10 +268,10 @@ resource "google_container_node_pool" "gpu_a100x2_a2h2_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_container_cluster.cluster]
 
   # Variables
-  cluster  = google_container_cluster.mlp.name
+  cluster  = google_container_cluster.cluster.name
   location = var.region
   name     = "gpu-h100x8-a3h8-dws"
   node_locations = [
@@ -361,10 +361,10 @@ resource "google_container_node_pool" "gpu_h100x8_a3h8_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_container_cluster.cluster]
 
   # Variables
-  cluster  = google_container_cluster.mlp.name
+  cluster  = google_container_cluster.cluster.name
   location = var.region
   name     = "gpu-l4x2-g2s24"
   node_locations = [
@@ -446,10 +446,10 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_container_cluster.cluster]
 
   # Variables
-  cluster  = google_container_cluster.mlp.name
+  cluster  = google_container_cluster.cluster.name
   location = var.region
   name     = "gpu-l4x2-g2s24-dws"
   node_locations = [
@@ -535,10 +535,10 @@ resource "google_container_node_pool" "gpu_l4x2_g2s24_dws" {
 ###############################################################################
 
 resource "google_container_node_pool" "gpu_l4x2_g2s24_spot" {
-  depends_on = [google_container_cluster.mlp]
+  depends_on = [google_container_cluster.cluster]
 
   # Variables
-  cluster  = google_container_cluster.mlp.name
+  cluster  = google_container_cluster.cluster.name
   location = var.region
   name     = "gpu-l4x2-g2s24-spot"
   node_locations = [

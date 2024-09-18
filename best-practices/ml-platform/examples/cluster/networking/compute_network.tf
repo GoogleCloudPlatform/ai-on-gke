@@ -36,7 +36,7 @@ data "google_compute_subnetwork" "region" {
 
 resource "google_compute_router" "router" {
   name    = "router"
-  network = local.network_name
+  network = data.google_compute_network.vpc.name
   project = data.google_project.environment.project_id
   region  = var.region
 }

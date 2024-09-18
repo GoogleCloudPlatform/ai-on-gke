@@ -11,5 +11,5 @@ data "google_compute_subnetwork" "region" {
 
 #TODO: Add Firewall rule for API Server Access
 output "external_endpoint" {
-  value = google_container_cluster.mlp.endpoint
+  value = google_container_cluster.cluster.endpoint
 }
