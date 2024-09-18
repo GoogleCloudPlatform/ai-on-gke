@@ -266,7 +266,7 @@ steps:
         # Wait for jupyterhub to trigger notebook pod startup
         sleep 5s
         kubectl wait --for=condition=Ready pod/jupyter-admin -n rag-$SHORT_SHA-$_BUILD_ID --timeout=500s
-        kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- jupyter nbconvert --to script /data/rag-data-ingest-with-kubernetes-docs.ipynb
+        kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- jupyter nbconvert --to python /data/rag-data-ingest-with-kubernetes-docs.ipynb
         kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- ipython /data/rag-data-ingest-with-kubernetes-docs.py
 
         python3 ./applications/rag/tests/test_rag.py "http://127.0.0.1:8081/prompt"
