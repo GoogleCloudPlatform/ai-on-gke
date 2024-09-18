@@ -1,5 +1,7 @@
 # Image URL to use all building/pushing image targets  
-IMG ?= us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/kuberay-tpu-webhook:v1.1
+IMG ?= us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.0-gke.1
+
+# For europe, use europe-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.0-gke.1
   
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)  
 ifeq (,$(shell go env GOBIN))  

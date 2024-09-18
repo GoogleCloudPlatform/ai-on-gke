@@ -14,7 +14,7 @@
 
 module "gke" {
   source                     = "terraform-google-modules/kubernetes-engine/google//modules/beta-autopilot-public-cluster"
-  version                    = "29.0.0"
+  version                    = "33.0.0"
   project_id                 = var.project_id
   regional                   = var.cluster_regional
   name                       = var.cluster_name
@@ -29,4 +29,10 @@ module "gke" {
   ip_range_services          = var.ip_range_services
   master_authorized_networks = var.master_authorized_networks
   deletion_protection        = var.deletion_protection
+
+  ray_operator_config = {
+    enabled            = var.ray_addon_enabled
+    logging_enabled    = var.ray_addon_enabled
+    monitoring_enabled = var.ray_addon_enabled
+  }
 }

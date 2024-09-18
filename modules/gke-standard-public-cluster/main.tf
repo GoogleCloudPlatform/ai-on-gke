@@ -18,7 +18,7 @@ locals {
 
 module "gke" {
   source                               = "terraform-google-modules/kubernetes-engine/google"
-  version                              = "29.0.0"
+  version                              = "33.0.0"
   project_id                           = var.project_id
   regional                             = var.cluster_regional
   name                                 = var.cluster_name
@@ -39,6 +39,12 @@ module "gke" {
   monitoring_enabled_components        = ["SYSTEM_COMPONENTS"]
   monitoring_enable_managed_prometheus = var.monitoring_enable_managed_prometheus
   master_authorized_networks           = var.master_authorized_networks
+
+  ray_operator_config = {
+    enabled            = var.ray_addon_enabled
+    logging_enabled    = var.ray_addon_enabled
+    monitoring_enabled = var.ray_addon_enabled
+  }
 
   node_pools = local.node_pools
 

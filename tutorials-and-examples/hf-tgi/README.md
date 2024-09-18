@@ -25,18 +25,13 @@ gcloud container node-pools create g2-standard-24 --cluster l4-demo \
  --num-nodes=1 --min-nodes=1 --max-nodes=2 \
  --node-locations $REGION-a,$REGION-b --region $REGION
  ```
-4. Apply job yaml: `kubectl apply -f mistral-deploy.yaml`
+4. Set the project_id in workloads.tfvars and create the application: `terrafrom apply -var-file=workloads.tfvars` 
 5. Make sure app started ok: `kubectl logs -l app=mistral-7b-instruct`
-6. Set up managed metrics collection to monarch `kubectl apply -f podmonitoring.yaml`
-7. \[optional\] set up target status so that kubectl can display pod monitoring objects (kubectl describe PodMonitoring [object name]). 
-```
-kubectl apply -f targetstatus.yaml
-```
-8. Set up port forward
+6. Set up port forward
 ```
 kubectl port-forward deployment/mistral-7b-instruct 8080:8080 &
 ```
-9. Try a few prompts:
+7. Try a few prompts:
 ```
 export USER_PROMPT="How to deploy a container on K8s?"
 ```
@@ -50,4 +45,9 @@ curl 127.0.0.1:8080/generate -X POST \
 }
 EOF
 ```
-10. Look at `/metrics` endpoint of the service. Go to cloud monitoring and search for one of those metrics. For example, `tgi_request_count` or `tgi_batch_inference_count`. Those metrics should show up if you search for them in PromQL. 
+8. Look at `/metrics` endpoint of the service. Go to cloud monitoring and search for one of those metrics. For example, `tgi_request_count` or `tgi_batch_inference_count`. Those metrics should show up if you search for them in PromQL. 
+
+9. Clean up the cluster
+```
+gcloud container clusters delete l4-demo --location ${REGION} 
+```

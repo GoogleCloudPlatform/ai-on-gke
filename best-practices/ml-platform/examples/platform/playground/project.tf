@@ -93,6 +93,13 @@ resource "google_project_service" "iam_googleapis_com" {
   service                    = "iam.googleapis.com"
 }
 
+resource "google_project_service" "secretmanager_googleapis_com" {
+  disable_dependent_services = false
+  disable_on_destroy         = false
+  project                    = data.google_project.environment.project_id
+  service                    = "secretmanager.googleapis.com"
+}
+
 resource "google_project_service" "serviceusage_googleapis_com" {
   disable_dependent_services = false
   disable_on_destroy         = false

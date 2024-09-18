@@ -54,7 +54,7 @@ spec:
           image: nvcr.io/nvidia/k8s/dcgm-exporter:3.1.8-3.1.5-ubuntu20.04
           command: ["/bin/bash", "-c"]
           args:
-            - hostname $NODE_NAME; dcgm-exporter --remote-hostengine-info $(NODE_IP) --collectors /etc/dcgm-exporter/counters.csv
+            - hostname $NODE_NAME; dcgm-exporter --remote-hostengine-info $(NODE_IP) --collect-interval 5000 --collectors /etc/dcgm-exporter/counters.csv
           ports:
             - name: metrics
               containerPort: 9400

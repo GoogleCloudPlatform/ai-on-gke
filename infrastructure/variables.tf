@@ -95,7 +95,7 @@ variable "cluster_labels" {
 
 variable "kubernetes_version" {
   type    = string
-  default = "1.28"
+  default = "1.30"
 }
 
 variable "release_channel" {
@@ -127,6 +127,13 @@ variable "deletion_protection" {
   type    = bool
   default = false
 }
+
+variable "ray_addon_enabled" {
+  type        = bool
+  description = "Set to true to enable ray addon"
+  default     = true
+}
+
 variable "master_authorized_networks" {
   type = list(object({
     cidr_block   = string
@@ -173,6 +180,7 @@ variable "enable_tpu" {
   description = "Set to true to create TPU node pool"
   default     = false
 }
+
 variable "enable_gpu" {
   type        = bool
   description = "Set to true to create GPU node pool"

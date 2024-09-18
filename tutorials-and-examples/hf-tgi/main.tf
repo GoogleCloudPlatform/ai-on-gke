@@ -12,176 +12,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+provider "google" {
+  project = var.project_id
+}
+
+provider "google-beta" {
+  project = var.project_id
+}
+
+data "google_client_config" "default" {}
+
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+data "google_container_cluster" "my_cluster" {
+  name     = var.cluster_name
+  location = var.location
+  project  = var.project_id
+}
+
 locals {
-  additional_labels = tomap({
-    for item in split(",", var.additional_labels) :
-    split("=", item)[0] => split("=", item)[1]
-  })
+  ca_certificate = base64decode(
+    data.google_container_cluster.my_cluster.master_auth[0].cluster_ca_certificate,
+  )
+  host = "https://${data.google_container_cluster.my_cluster.endpoint}"
+}
+provider "kubernetes" {
+  host                   = local.host
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = local.ca_certificate
 }
 
-resource "kubernetes_service" "inference_service" {
-  metadata {
-    name = "mistral-7b-instruct-service"
-    labels = {
-      app = "mistral-7b-instruct"
-    }
-    namespace = var.namespace
-    annotations = {
-      "cloud.google.com/load-balancer-type" = "Internal"
-      "cloud.google.com/neg"                = "{\"ingress\":true}"
-    }
-  }
-  spec {
-    selector = {
-      app = "mistral-7b-instruct"
-    }
-    session_affinity = "ClientIP"
-    port {
-      protocol    = "TCP"
-      port        = 80
-      target_port = 8080
-    }
-
-    type = "LoadBalancer"
+provider "helm" {
+  kubernetes {
+    host                   = local.host
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = local.ca_certificate
   }
 }
 
-resource "kubernetes_deployment" "inference_deployment" {
-  timeouts {
-    create = "30m"
-  }
-  metadata {
-    name      = "mistral-7b-instruct"
-    namespace = var.namespace
-    labels = merge({
-      app = "mistral-7b-instruct"
-    }, local.additional_labels)
-  }
+module "namespace" {
+  source           = "../../modules/kubernetes-namespace"
+  create_namespace = true
+  namespace        = var.namespace
+}
 
-  spec {
-    # It takes more than 10m for the deployment to be ready on Autopilot cluster
-    # Set the progress deadline to 30m to avoid the deployment controller
-    # considering the deployment to be failed
-    progress_deadline_seconds = 1800
-    replicas                  = 1
+module "inference-server" {
+  source            = "../../modules/inference-service"
+  namespace         = var.namespace
+  additional_labels = var.additional_labels
+  autopilot_cluster = var.autopilot_cluster
+  depends_on        = [module.namespace]
+}
 
-    selector {
-      match_labels = merge({
-        app = "mistral-7b-instruct"
-      }, local.additional_labels)
-    }
-
-    template {
-      metadata {
-        labels = merge({
-          app = "mistral-7b-instruct"
-        }, local.additional_labels)
-      }
-
-      spec {
-        init_container {
-          name    = "download-model"
-          image   = "google/cloud-sdk:473.0.0-alpine"
-          command = ["gsutil", "cp", "-r", "gs://vertex-model-garden-public-us/mistralai/Mistral-7B-Instruct-v0.1/", "/model-data/"]
-          volume_mount {
-            mount_path = "/model-data"
-            name       = "model-storage"
-          }
-        }
-        container {
-          image = "ghcr.io/huggingface/text-generation-inference:1.1.0"
-          name  = "mistral-7b-instruct"
-
-          port {
-            name           = "metrics"
-            container_port = 8080
-            protocol       = "TCP"
-          }
-
-          args = ["--model-id", "$(MODEL_ID)"]
-
-          env {
-            name  = "MODEL_ID"
-            value = "/model/Mistral-7B-Instruct-v0.1"
-          }
-
-          env {
-            name  = "NUM_SHARD"
-            value = "2"
-          }
-
-          env {
-            name  = "PORT"
-            value = "8080"
-          }
-
-          resources {
-            limits = {
-              "nvidia.com/gpu" = "2"
-            }
-            requests = {
-              # Sufficient storage to fit the Mistral-7B-Instruct-v0.1 model
-              "ephemeral-storage" = "20Gi"
-              "nvidia.com/gpu"    = "2"
-            }
-          }
-
-          volume_mount {
-            mount_path = "/dev/shm"
-            name       = "dshm"
-          }
-
-          volume_mount {
-            mount_path = "/data"
-            name       = "data"
-          }
-
-          volume_mount {
-            mount_path = "/model"
-            name       = "model-storage"
-            read_only  = "true"
-          }
-
-          #liveness_probe {
-          #http_get {
-          #path = "/"
-          #port = 8080
-
-          #http_header {
-          #name  = "X-Custom-Header"
-          #value = "Awesome"
-          #}
-          #}
-
-          #initial_delay_seconds = 3
-          #period_seconds        = 3
-          #}
-        }
-
-        volume {
-          name = "dshm"
-          empty_dir {
-            medium = "Memory"
-          }
-        }
-
-        volume {
-          name = "data"
-          empty_dir {}
-        }
-
-        volume {
-          name = "model-storage"
-          empty_dir {}
-        }
-
-        node_selector = merge({
-          "cloud.google.com/gke-accelerator" = "nvidia-l4"
-          }, var.autopilot_cluster ? {
-          "cloud.google.com/gke-ephemeral-storage-local-ssd" = "true"
-          "cloud.google.com/compute-class"                   = "Accelerator"
-        } : {})
-      }
-    }
-  }
+resource "helm_release" "gmp-engine" {
+  name      = "gmp-engine"
+  chart     = "${path.module}/../../charts/gmp-engine/"
+  namespace = var.namespace
+  # Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
+  timeout = 1200
+  values = [
+    "${file("${path.module}/podmonitoring.yaml")}"
+  ]
+  depends_on = [module.namespace]
 }

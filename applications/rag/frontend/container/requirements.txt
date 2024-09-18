@@ -14,7 +14,7 @@
 
 Flask==3.0.0
 gunicorn==22.0.0
-Werkzeug==3.0.1
+Werkzeug==3.0.3
 langchain==0.1.9
 sentence-transformers==2.5.1
 text_generation==0.6.1
@@ -30,5 +30,5 @@ google==3.0.0
 google-cloud==0.34.0
 google-cloud-logging==3.9.0
 google-api-python-client==2.114.0
-pymysql==1.1.0
+pymysql==1.1.1
 cloud-sql-python-connector[pg8000]==1.7.0

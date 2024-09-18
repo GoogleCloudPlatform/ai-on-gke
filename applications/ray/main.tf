@@ -73,6 +73,7 @@ module "infra" {
   cpu_pools         = var.cpu_pools
   enable_gpu        = var.enable_gpu
   gpu_pools         = var.gpu_pools
+  ray_addon_enabled = true
   depends_on        = [module.project-services]
 }
 
@@ -134,24 +135,17 @@ module "namespace" {
   namespace        = local.kubernetes_namespace
 }
 
-module "kuberay-operator" {
-  source                 = "../../modules/kuberay-operator"
-  providers              = { helm = helm.ray, kubernetes = kubernetes.ray }
-  name                   = "kuberay-operator"
-  create_namespace       = true
-  namespace              = local.kubernetes_namespace
-  project_id             = var.project_id
-  autopilot_cluster      = local.enable_autopilot
-  google_service_account = local.workload_identity_service_account
-  create_service_account = var.create_service_account
-}
-
-module "kuberay-logging" {
-  source    = "../../modules/kuberay-logging"
-  providers = { kubernetes = kubernetes.ray }
-  namespace = local.kubernetes_namespace
-
-  depends_on = [module.namespace]
+module "kuberay-workload-identity" {
+  providers                       = { kubernetes = kubernetes.ray }
+  source                          = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  version                         = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
+  use_existing_gcp_sa             = !var.create_service_account
+  name                            = local.workload_identity_service_account
+  namespace                       = local.kubernetes_namespace
+  project_id                      = var.project_id
+  roles                           = ["roles/cloudsql.client", "roles/monitoring.viewer"]
+  automount_service_account_token = true
+  depends_on                      = [module.namespace]
 }
 
 module "kuberay-monitoring" {
@@ -164,7 +158,7 @@ module "kuberay-monitoring" {
   create_namespace                = true
   enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
   k8s_service_account             = local.workload_identity_service_account
-  depends_on                      = [module.kuberay-operator]
+  depends_on                      = [module.kuberay-workload-identity]
 }
 
 module "gcs" {
@@ -204,7 +198,7 @@ module "kuberay-cluster" {
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
   members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
-  depends_on               = [module.gcs, module.kuberay-operator]
+  depends_on               = [module.gcs, module.kuberay-workload-identity]
 }
 
 

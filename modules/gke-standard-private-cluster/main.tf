@@ -18,7 +18,7 @@ locals {
 
 module "gke" {
   source                               = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version                              = "29.0.0"
+  version                              = "33.0.0"
   project_id                           = var.project_id
   regional                             = var.cluster_regional
   name                                 = var.cluster_name
@@ -44,6 +44,12 @@ module "gke" {
   enable_private_nodes       = true
   master_authorized_networks = var.master_authorized_networks
   master_ipv4_cidr_block     = var.master_ipv4_cidr_block
+
+  ray_operator_config = {
+    enabled            = var.ray_addon_enabled
+    logging_enabled    = var.ray_addon_enabled
+    monitoring_enabled = var.ray_addon_enabled
+  }
 
   node_pools = local.node_pools
 

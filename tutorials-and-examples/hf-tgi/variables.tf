@@ -12,6 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+variable "project_id" {
+  type        = string
+  description = "GCP project ID"
+}
+
+variable "cluster_name" {
+  type        = string
+  description = "GKE cluster name"
+  default     = "l4-demo"
+}
+
+variable "location" {
+  type        = string
+  description = "Location of GKE cluster"
+  default     = "us-central1"
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
@@ -26,5 +43,6 @@ variable "additional_labels" {
 }
 
 variable "autopilot_cluster" {
-  type = bool
+  type    = bool
+  default = false
 }

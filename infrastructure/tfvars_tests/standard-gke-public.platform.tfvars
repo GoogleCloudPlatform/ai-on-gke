@@ -36,6 +36,7 @@ autopilot_cluster   = false # false = standard cluster, true = autopilot cluster
 cluster_name        = "test-cluster"
 cluster_location    = "us-east4"
 gcs_fuse_csi_driver = true
+ray_addon_enabled   = true
 
 cpu_pools = [{
   name         = "cpu-pool"

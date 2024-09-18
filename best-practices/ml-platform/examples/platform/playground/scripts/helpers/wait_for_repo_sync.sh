@@ -24,4 +24,4 @@ while [[ ${last_synced_commit} != ${LAST_COMMIT} ]]; do
     last_synced_commit=$(kubectl get reposync ${REPO_SYNC_NAME} -n ${REPO_SYNC_NAMESPACE} --output go-template='{{.status.lastSyncedCommit}}')
 done
 
-echo "reposync '${REPO_SYNC_NAME}' has synchronize"
+echo "reposync '${REPO_SYNC_NAME}' has synchronized"

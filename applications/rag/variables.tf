@@ -33,7 +33,7 @@ variable "cluster_location" {
 
 variable "kubernetes_version" {
   type    = string
-  default = "1.28"
+  default = "1.30"
 }
 
 variable "kubernetes_namespace" {

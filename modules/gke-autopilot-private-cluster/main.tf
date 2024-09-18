@@ -14,7 +14,7 @@
 
 module "gke" {
   source                  = "terraform-google-modules/kubernetes-engine/google//modules/beta-autopilot-private-cluster"
-  version                 = "29.0.0"
+  version                 = "33.0.0"
   project_id              = var.project_id
   regional                = var.cluster_regional
   name                    = var.cluster_name
@@ -35,7 +35,11 @@ module "gke" {
   master_authorized_networks = var.master_authorized_networks
   master_ipv4_cidr_block     = var.master_ipv4_cidr_block
   deletion_protection        = var.deletion_protection
-
+  ray_operator_config = {
+    enabled            = var.ray_addon_enabled
+    logging_enabled    = var.ray_addon_enabled
+    monitoring_enabled = var.ray_addon_enabled
+  }
 }
 
 # GKE cluster fleet registration

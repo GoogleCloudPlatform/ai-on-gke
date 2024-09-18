@@ -64,22 +64,22 @@ module "infra" {
   source = "../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
-  project_id         = var.project_id
-  cluster_name       = local.cluster_name
-  cluster_location   = var.cluster_location
-  region             = local.cluster_location_region
-  autopilot_cluster  = var.autopilot_cluster
-  private_cluster    = var.private_cluster
-  create_network     = var.create_network
-  network_name       = local.network_name
-  subnetwork_name    = local.network_name
-  subnetwork_cidr    = var.subnetwork_cidr
-  subnetwork_region  = local.cluster_location_region
-  cpu_pools          = var.cpu_pools
-  enable_gpu         = true
-  gpu_pools          = var.gpu_pools
-  kubernetes_version = var.kubernetes_version
-  depends_on         = [module.project-services]
+  project_id        = var.project_id
+  cluster_name      = local.cluster_name
+  cluster_location  = var.cluster_location
+  region            = local.cluster_location_region
+  autopilot_cluster = var.autopilot_cluster
+  private_cluster   = var.private_cluster
+  create_network    = var.create_network
+  network_name      = local.network_name
+  subnetwork_name   = local.network_name
+  subnetwork_cidr   = var.subnetwork_cidr
+  subnetwork_region = local.cluster_location_region
+  cpu_pools         = var.cpu_pools
+  enable_gpu        = true
+  gpu_pools         = var.gpu_pools
+  ray_addon_enabled = true
+  depends_on        = [module.project-services]
 }
 
 data "google_container_cluster" "default" {
@@ -152,18 +152,6 @@ module "namespace" {
   namespace        = local.kubernetes_namespace
 }
 
-module "kuberay-operator" {
-  source                 = "../../modules/kuberay-operator"
-  providers              = { helm = helm.rag, kubernetes = kubernetes.rag }
-  name                   = "kuberay-operator"
-  project_id             = var.project_id
-  create_namespace       = true
-  namespace              = local.kubernetes_namespace
-  google_service_account = local.ray_service_account
-  create_service_account = var.create_ray_service_account
-  autopilot_cluster      = local.enable_autopilot
-}
-
 module "gcs" {
   source      = "../../modules/gcs"
   count       = var.create_gcs_bucket ? 1 : 0
@@ -218,11 +206,29 @@ module "jupyterhub" {
   depends_on = [module.namespace, module.gcs]
 }
 
-module "kuberay-logging" {
-  source     = "../../modules/kuberay-logging"
-  providers  = { kubernetes = kubernetes.rag }
-  namespace  = local.kubernetes_namespace
-  depends_on = [module.namespace]
+module "kuberay-workload-identity" {
+  providers                       = { kubernetes = kubernetes.rag }
+  source                          = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  version                         = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
+  use_existing_gcp_sa             = !var.create_ray_service_account
+  name                            = local.ray_service_account
+  namespace                       = local.kubernetes_namespace
+  project_id                      = var.project_id
+  roles                           = ["roles/cloudsql.client", "roles/monitoring.viewer"]
+  automount_service_account_token = true
+  depends_on                      = [module.namespace]
+}
+
+module "kuberay-monitoring" {
+  source                          = "../../modules/kuberay-monitoring"
+  providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
+  project_id                      = var.project_id
+  autopilot_cluster               = local.enable_autopilot
+  namespace                       = local.kubernetes_namespace
+  create_namespace                = true
+  enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
+  k8s_service_account             = local.ray_service_account
+  depends_on                      = [module.namespace, module.kuberay-workload-identity]
 }
 
 module "kuberay-cluster" {
@@ -233,15 +239,16 @@ module "kuberay-cluster" {
   enable_gpu             = true
   gcs_bucket             = var.gcs_bucket
   autopilot_cluster      = local.enable_autopilot
-  db_secret_name         = module.cloudsql.db_secret_name
   cloudsql_instance_name = local.cloudsql_instance
   db_region              = local.cloudsql_instance_region
   google_service_account = local.ray_service_account
-  grafana_host           = module.kuberay-monitoring.grafana_uri
   disable_network_policy = var.disable_ray_cluster_network_policy
-  depends_on             = [module.kuberay-operator]
   use_custom_image       = true
   additional_labels      = var.additional_labels
+
+  # Implicit dependency
+  db_secret_name = module.cloudsql.db_secret_name
+  grafana_host   = module.kuberay-monitoring.grafana_uri
 
   # IAP Auth parameters
   add_auth                 = var.ray_dashboard_add_auth
@@ -256,23 +263,11 @@ module "kuberay-cluster" {
   k8s_backend_service_port = var.ray_dashboard_k8s_backend_service_port
   domain                   = var.ray_dashboard_domain
   members_allowlist        = var.ray_dashboard_members_allowlist != "" ? split(",", var.ray_dashboard_members_allowlist) : []
-}
-
-module "kuberay-monitoring" {
-  source                          = "../../modules/kuberay-monitoring"
-  providers                       = { helm = helm.rag, kubernetes = kubernetes.rag }
-  project_id                      = var.project_id
-  autopilot_cluster               = local.enable_autopilot
-  namespace                       = local.kubernetes_namespace
-  create_namespace                = true
-  enable_grafana_on_ray_dashboard = var.enable_grafana_on_ray_dashboard
-  k8s_service_account             = local.ray_service_account
-  # TODO(umeshkumhar): remove kuberay-operator depends, figure out service account dependency
-  depends_on = [module.namespace, module.kuberay-operator]
+  depends_on               = [module.gcs, module.kuberay-workload-identity]
 }
 
 module "inference-server" {
-  source            = "../../tutorials-and-examples/hf-tgi"
+  source            = "../../modules/inference-service"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = local.kubernetes_namespace
   additional_labels = var.additional_labels
@@ -310,3 +305,17 @@ module "frontend" {
   members_allowlist        = var.frontend_members_allowlist != "" ? split(",", var.frontend_members_allowlist) : []
   depends_on               = [module.namespace]
 }
+
+resource "helm_release" "gmp-apps" {
+  name      = "gmp-apps"
+  provider  = helm.rag
+  chart     = "../../charts/gmp-engine/"
+  namespace = local.kubernetes_namespace
+  # Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
+  timeout    = 1200
+  depends_on = [module.inference-server, module.frontend]
+  values = [
+    "${file("${path.module}/podmonitoring.yaml")}"
+  ]
+}
+
