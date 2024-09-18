@@ -1,0 +1,30 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: vllm
+  namespace: ${namespace}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: vllm
+  minReplicas: ${hpa_min_replicas}
+  maxReplicas: ${hpa_max_replicas}
+  metrics:
+%{ if length(regexall("DCGM_.*", custom_metric_name)) > 0 }
+  - type: External
+    external:
+      metric:
+        name: prometheus.googleapis.com|${lower(custom_metric_name)}|unknown
+      target:
+        type: AverageValue
+        averageValue: ${hpa_averagevalue_target}
+%{ else }
+  - type: Pods
+    pods:
+      metric:
+        name: prometheus.googleapis.com|${custom_metric_name}|gauge
+      target:
+        type: AverageValue
+        averageValue: ${hpa_averagevalue_target}
+%{ endif }

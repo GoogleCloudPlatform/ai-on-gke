@@ -106,3 +106,39 @@ variable "project_id" {
   description = "Project id of existing or created project."
   type        = string
 }
+
+
+
+variable "hpa_type" {
+  description = "How the TGI workload should be scaled."
+  type        = string
+  default     = null
+  nullable    = true
+  validation {
+    condition     = var.hpa_type == null ? true : length(regexall("cpu|vllm.*|DCGM_.*", var.hpa_type)) > 0
+    error_message = "Allows values for hpa_type are {null, or vLLM metrics (e.g., \"vllm:num_requests_waiting\", \"vllm:gpu_cache_usage_perc\")}"
+  }
+}
+
+variable "hpa_min_replicas" {
+  description = "Minimum number of HPA replicas."
+  type        = number
+  default     = 1
+  nullable    = false
+}
+
+variable "hpa_max_replicas" {
+  description = "Maximum number of HPA replicas."
+  type        = number
+  default     = 5
+  nullable    = false
+}
+
+# TODO: combine hpa variables into a single object (so that they can be
+# validated together)
+variable "hpa_averagevalue_target" {
+  description = "AverageValue target for the `hpa_type` metric. Must be set if `hpa_type` is not null."
+  type        = number
+  default     = null
+  nullable    = true
+}
