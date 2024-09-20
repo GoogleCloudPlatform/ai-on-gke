@@ -1,7 +1,0 @@
-.venv/
-mlruns/
-venv/
-
-.python-version
-test/log/*.log
-test/scripts/locks/*.lock
