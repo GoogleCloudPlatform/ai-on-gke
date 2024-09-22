@@ -16,6 +16,11 @@
 
 locals {
 
+  hpa_custom_metric_template = "${path.module}/hpa-templates/hpa.vllm.custom_metric.yaml.tftpl"
+  use_vllm_metrics_for_hpa   = var.hpa_type == null ? false : length(regexall("vllm.*", var.hpa_type)) > 0
+  custom_metrics_enabled     = local.use_vllm_metrics_for_hpa
+
+
   all_templates = concat(local.wl_templates, local.secret_templates)
 
   wl_templates = [
@@ -43,6 +48,7 @@ locals {
     ? null
     : "${var.hugging_face_secret}/versions/${var.hugging_face_secret_version}"
   )
+  vllm_podmonitoring = "${path.module}/monitoring-templates/vllm-podmonitoring.yaml.tftpl"
 }
 
 resource "kubernetes_manifest" "default" {
@@ -58,4 +64,30 @@ resource "kubernetes_manifest" "default" {
   timeouts {
     create = "60m"
   }
+}
+
+resource "kubernetes_manifest" "vllm-pod-monitoring" {
+  manifest = yamldecode(templatefile(local.vllm_podmonitoring, {
+    namespace = var.namespace
+  }))
+}
+
+module "custom_metrics_stackdriver_adapter" {
+  count  = local.custom_metrics_enabled ? 1 : 0
+  source = "../../../modules/custom-metrics-stackdriver-adapter"
+  workload_identity = {
+    enabled    = true
+    project_id = var.project_id
+  }
+}
+
+resource "kubernetes_manifest" "hpa_custom_metric" {
+  count = local.custom_metrics_enabled ? 1 : 0
+  manifest = yamldecode(templatefile(local.hpa_custom_metric_template, {
+    namespace               = var.namespace
+    custom_metric_name      = var.hpa_type
+    hpa_averagevalue_target = var.hpa_averagevalue_target
+    hpa_min_replicas        = var.hpa_min_replicas
+    hpa_max_replicas        = var.hpa_max_replicas
+  }))
 }

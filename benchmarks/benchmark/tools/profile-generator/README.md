@@ -1,17 +1,18 @@
 # AI on GKE Benchmark Latency Profile Generator
 
 <!-- TOC -->
-* [AI on GKE Benchmark Latency Profile Generator](#ai-on-gke-benchmark-latency-profile-generator)
-  * [Overview](#overview)
-  * [Instructions](#instructions)
-    * [Step 1: create output bucket](#step-1--create-output-bucket)
-    * [Step 2: create and give service account access to write to output gcs bucket](#step-2--create-and-give-service-account-access-to-write-to-output-gcs-bucket)
-    * [Step 3: create artifact repository for automated Latency Profile Generator docker build](#step-3--create-artifact-repository-for-automated-latency-profile-generator-docker-build)
-    * [Step 4: create and configure terraform.tfvars](#step-4--create-and-configure-terraformtfvars)
-      * [[optional] set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
-      * [[optional] set up secret token in Secret Manager](#optional-set-up-secret-token-in-secret-manager)
-    * [Step 6: terraform initialize, plan and apply](#step-6--terraform-initialize-plan-and-apply)
-  * [Inputs](#inputs)
+- [AI on GKE Benchmark Latency Profile Generator](#ai-on-gke-benchmark-latency-profile-generator)
+  - [Overview](#overview)
+  - [Instructions](#instructions)
+    - [Step 1: create output bucket](#step-1-create-output-bucket)
+    - [Step 2: create and give service account access to write to output gcs bucket](#step-2-create-and-give-service-account-access-to-write-to-output-gcs-bucket)
+      - [\[optional\] give service account access to read Cloud Monitoring metrics](#optional-give-service-account-access-to-read-cloud-monitoring-metrics)
+    - [Step 3: create artifact repository for automated Latency Profile Generator docker build](#step-3-create-artifact-repository-for-automated-latency-profile-generator-docker-build)
+    - [Step 4: create and configure terraform.tfvars](#step-4-create-and-configure-terraformtfvars)
+      - [\[optional\] set-up credentials config with kubeconfig](#optional-set-up-credentials-config-with-kubeconfig)
+      - [\[optional\] set up secret token in Secret Manager](#optional-set-up-secret-token-in-secret-manager)
+    - [Step 5: login to gcloud](#step-5-login-to-gcloud)
+    - [Step 6: terraform initialize, plan and apply](#step-6-terraform-initialize-plan-and-apply)
 <!-- TOC -->
 
 ## Overview
@@ -61,6 +62,15 @@ Your kubernetes service account will inherit the reader permissions.
 
 You will set the `latency_profile_kubernetes_service_account` in your
 `terraform.tfvars` to the kubernetes service account name.
+
+#### [optional] give service account access to read Cloud Monitoring metrics
+
+If `scrape-server-metrics` is set to True, you will need to give the service account access to read
+the Cloud Monitoring metrics. You can do so with the following command:
+
+```
+gcloud projects add-iam-policy-binding $PROJECT_ID   --member=serviceAccount:$GOOGLE_SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com   --role=roles/monitoring.viewer
+```
 
 ### Step 3: create artifact repository for automated Latency Profile Generator docker build
 

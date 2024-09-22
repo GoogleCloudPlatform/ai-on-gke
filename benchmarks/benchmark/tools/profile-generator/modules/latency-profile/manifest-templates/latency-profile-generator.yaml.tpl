@@ -1,15 +1,20 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: latency-profile-generator
   namespace: ${namespace}
   labels:
     name: latency-profile-generator
 spec:
+  selector:
+    matchLabels:
+      name: latency-profile-generator
   template:
+    metadata:
+      labels:
+        name: latency-profile-generator
     spec:
       serviceAccountName: ${latency_profile_kubernetes_service_account}
-      restartPolicy: Never
       containers:
         - name: latency-profile-generator
           image: ${artifact_registry}/latency-profile:latest
@@ -34,6 +39,8 @@ spec:
               value: ${request_rates}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
+            - name: SCRAPE_SERVER_METRICS
+              value: ${scrape_server_metrics}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:
