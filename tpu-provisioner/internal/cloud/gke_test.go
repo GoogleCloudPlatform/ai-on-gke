@@ -220,10 +220,12 @@ func TestPodToNodePoolName(t *testing.T) {
 func TestNodePoolForPod(t *testing.T) {
 	trueVar := true
 	tests := []struct {
-		desc       string
-		gkeContext GKEContext
-		selector   map[string]string
-		want       *containerv1beta1.NodePool
+		desc                  string
+		gkeContext            GKEContext
+		additionalLabels      map[string]string
+		additionalAnnotations map[string]string
+		selector              map[string]string
+		want                  *containerv1beta1.NodePool
 	}{
 		{
 			desc: "simple case",
@@ -449,43 +451,118 @@ func TestNodePoolForPod(t *testing.T) {
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
 		},
+		{
+			desc: "labels to copy from pod to node",
+			gkeContext: GKEContext{
+				PodToNodeLabels: []string{"should-be-copied"},
+			},
+			additionalLabels: map[string]string{
+				"should-be-copied":     "val-a",
+				"should-not-be-copied": "val-b",
+			},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+						"should-be-copied":                            "val-a",
+					},
+					MachineType:            "ct5p-hightpu-4t",
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
+		{
+			desc: "labels to copy from pod to node by annotation",
+			additionalLabels: map[string]string{
+				"copy-me":      "val-x",
+				"dont-copy-me": "val-y",
+			},
+			additionalAnnotations: map[string]string{
+				"tpu-provisioner.cloud.google.com/copy-labels": "copy-me",
+			},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+						"copy-me": "val-x",
+					},
+					MachineType:            "ct5p-hightpu-4t",
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
 			gke := &GKE{
 				ClusterContext: tc.gkeContext,
 			}
+
+			labels := map[string]string{
+				"batch.kubernetes.io/controller-uid":        "8484279a-de52-4ca1-b01e-130fbded30fb",
+				"batch.kubernetes.io/job-name":              "jobset-test-job-1-0",
+				"controller-uid":                            "8484279a-de52-4ca1-b01e-130fbded30fb",
+				"job-name":                                  "jobset-test-job-1-0",
+				"jobset.sigs.k8s.io/job-index":              "0",
+				"jobset.sigs.k8s.io/job-key":                "random-key",
+				"jobset.sigs.k8s.io/jobset-name":            "jobset-test",
+				"jobset.sigs.k8s.io/replicatedjob-name":     "job-1",
+				"jobset.sigs.k8s.io/replicatedjob-replicas": "1",
+				"jobset.sigs.k8s.io/restart-attempt":        "0",
+			}
+			for k, v := range tc.additionalLabels {
+				labels[k] = v
+			}
+
+			annotations := map[string]string{
+				"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
+				"batch.kubernetes.io/job-completion-index":    "0",
+				"jobset.sigs.k8s.io/job-index":                "0",
+				"jobset.sigs.k8s.io/job-key":                  "random-key",
+				"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
+				"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
+				"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
+				"jobset.sigs.k8s.io/restart-attempt":          "0",
+			}
+			for k, v := range tc.additionalAnnotations {
+				annotations[k] = v
+			}
+
 			pod := &v1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Pod",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
-						"batch.kubernetes.io/job-completion-index":    "0",
-						"jobset.sigs.k8s.io/job-index":                "0",
-						"jobset.sigs.k8s.io/job-key":                  "random-key",
-						"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
-						"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
-						"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
-						"jobset.sigs.k8s.io/restart-attempt":          "0",
-					},
-					Finalizers: []string{"batch.kubernetes.io/job-tracking"},
-					Labels: map[string]string{
-						"batch.kubernetes.io/controller-uid":        "8484279a-de52-4ca1-b01e-130fbded30fb",
-						"batch.kubernetes.io/job-name":              "jobset-test-job-1-0",
-						"controller-uid":                            "8484279a-de52-4ca1-b01e-130fbded30fb",
-						"job-name":                                  "jobset-test-job-1-0",
-						"jobset.sigs.k8s.io/job-index":              "0",
-						"jobset.sigs.k8s.io/job-key":                "random-key",
-						"jobset.sigs.k8s.io/jobset-name":            "jobset-test",
-						"jobset.sigs.k8s.io/replicatedjob-name":     "job-1",
-						"jobset.sigs.k8s.io/replicatedjob-replicas": "1",
-						"jobset.sigs.k8s.io/restart-attempt":        "0",
-					},
-					Name:      "job-test-6gfwq",
-					Namespace: "default",
+					Annotations: annotations,
+					Labels:      labels,
+					Finalizers:  []string{"batch.kubernetes.io/job-tracking"},
+					Name:        "job-test-6gfwq",
+					Namespace:   "default",
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							APIVersion:         "batch/v1",
