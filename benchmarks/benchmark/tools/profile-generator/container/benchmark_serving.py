@@ -334,7 +334,7 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
 
   all_metric_results = {}
 
-  for new_metric, metric in metrics.items():
+  for metric_alias, metric in metrics.items():
     print("Metric Name: %s" % (metric))
     # Request refresh tokens
     credentials.refresh(auth_req)
@@ -349,7 +349,7 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
       if response["status"] == "success":
         metric_type = response['data'][metric]
         if response['data'][metric] is None:
-          print("No metric found for: %s" % new_metric)
+          print("No metric found for: %s" % metric_alias)
           return
         metric_type = metric_type[0]['type']
       else:
@@ -373,7 +373,6 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
       "histogram": {
         "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
         "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "Std": "stddev_over_time(%s_sum{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
         "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
         "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
         "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
@@ -400,7 +399,7 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
         print("HTTP Error: %s" % (response))
-    all_metric_results[new_metric] = metric_results
+    all_metric_results[metric_alias] = metric_results
   return all_metric_results
 
 
