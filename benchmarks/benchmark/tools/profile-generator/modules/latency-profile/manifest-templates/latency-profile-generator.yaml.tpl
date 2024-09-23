@@ -18,9 +18,6 @@ spec:
       containers:
         - name: latency-profile-generator
           image: ${artifact_registry}/latency-profile:latest
-          resources:
-            limits:
-              nvidia.com/gpu: 1
           command: ["bash", "-c", "./latency_throughput_curve.sh"]
           env:
             - name: TOKENIZER
@@ -55,6 +52,3 @@ spec:
                   name: hf-token
                   key: HF_TOKEN
 %{ endfor ~}
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-l4
-        iam.gke.io/gke-metadata-server-enabled: "true"
