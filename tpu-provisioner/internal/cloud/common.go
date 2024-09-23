@@ -24,6 +24,9 @@ const (
 
 	LabelProvisionerNodepoolID = "provisioner-nodepool-id"
 
+	// AnnotationCopyLabels is a comma-separated list of labels to copy from the Pod to the node pool config (Nodes).
+	AnnotationCopyLabels = "tpu-provisioner.cloud.google.com/copy-labels"
+
 	EventNodePoolCreationStarted   = "NodePoolCreationStarted"
 	EventNodePoolCreationSucceeded = "NodePoolCreationSucceeded"
 	EventNodePoolCreationFailed    = "NodePoolCreationFailed"
