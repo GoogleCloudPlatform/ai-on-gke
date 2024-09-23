@@ -12,7 +12,7 @@ import json
 import random
 import requests
 import time
-from typing import AsyncGenerator, List, Tuple
+from typing import AsyncGenerator, List, Tuple, Dict
 
 import google.auth
 import google.auth.transport.requests
@@ -306,15 +306,25 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
 
-def metrics_to_scrape(backend: str) -> List[str]:
-  if backend == "vllm":
-    return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
-  elif backend == "jetstream":
-    return ["jetstream_slots_used_percentage", "jetstream_prefill_backlog_size"]
-  else:
-    return []
+def metrics_to_scrape(backend: str) -> Dict[str, str]:
+    if backend == "vllm":
+        return {
+            "gpu_cache_usage": "vllm:gpu_cache_usage_perc",
+            "requests_waiting": "vllm:num_requests_waiting"
+        }
+    elif backend == "jetstream":
+        return {
+            "slots_used_percentage": "jetstream_slots_used_percentage",
+            "prefill_backlog_size": "jetstream_prefill_backlog_size",
+            "ttft": "jetstream_time_to_first_token",
+            "tpot": "jetstream_time_per_output_token",
+            "request_latency": "jetstream_time_per_request"
+        }
+    else:
+        return {}
 
-def print_metrics(metrics: List[str], duration: float, backend: str):
+
+def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
   # Creates a credentials object from the default service account file
   # Assumes that script has appropriate default credentials set up, ref:
   # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
@@ -324,7 +334,7 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
 
   all_metric_results = {}
 
-  for metric in metrics:
+  for key, metric in metrics:
     print("Metric Name: %s" % (metric))
     metric_results = {}
     # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
@@ -332,6 +342,7 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
     queries = {
       "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
       "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "Std": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
       "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
       "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
       "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
@@ -357,7 +368,7 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
         print("HTTP Error: %s" % (response))
-    all_metric_results[metric] = metric_results
+    all_metric_results[key] = metric_results
   return all_metric_results
 
 
