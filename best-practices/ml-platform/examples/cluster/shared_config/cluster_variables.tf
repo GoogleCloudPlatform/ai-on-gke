@@ -25,6 +25,12 @@ variable "cluster_name_prefix" {
   type        = string
 }
 
+variable "create_terraform_bucket" {
+  default     = true
+  description = "Create the Google Cloud Storage Terraform bucket"
+  type        = string
+}
+
 variable "enable_private_endpoint" {
   default     = true
   description = "When true, the cluster's private endpoint is used as the cluster endpoint and access through the public endpoint is disabled. When false, either endpoint can be used. This field only applies to private clusters, when enable_private_nodes is true."

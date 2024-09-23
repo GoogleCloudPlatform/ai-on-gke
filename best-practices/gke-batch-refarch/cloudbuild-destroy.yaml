@@ -15,22 +15,66 @@
 timeout: 3600s
 steps:
   - name: "gcr.io/kaniko-project/executor:v1.20.1-slim"
+    dir: "gke-batch-refarch"
     id: "Build Installer Image"
+    waitFor: 
+    - "-"
     args:
       - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer
       - --cache=true
       - --cache-ttl=12h
+
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Destroy GKE batch platform"
-    dir: "01_gke"
+    dir: "ml-platform/examples/cluster"
     entrypoint: "ash"
-    waitFor: ["Build Installer Image"]
+    waitFor: 
+    - "Build Installer Image"
     args:
       - "-xe"
       - "-c"
       - |
-        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform destroy -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -auto-approve -no-color
+        TF_VAR_cluster_name_prefix="${_CLUSTER_NAME_PREFIX:-batch}"
+        TF_VAR_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINTS:-false}"
+        TF_VAR_environment_name="${_ENVIRONMENT_NAME:-dev}"
+        TF_VAR_environment_project_id="${PROJECT_ID}"
+        TF_VAR_region="${_REGION}"
+        #TF_VAR_zone="${_ZONE}"
+
+        tf_variables="-var cluster_name_prefix=${TF_VAR_cluster_name_prefix} -var enable_private_endpoint=${TF_VAR_enable_private_endpoint} -var environment_name=${TF_VAR_environment_name} -var environment_project_id=${TF_VAR_environment_project_id} -var region=${TF_VAR_region}"
+
+        export TF_VAR_create_terraform_bucket="false"
+
+        cd initialize && \
+        terraform init -no-color && \
+        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
+        terraform apply -input=false -no-color tfplan && \
+        cp backend.tf backend.tf.local && \
+        cp backend.tf.bucket backend.tf && \
+        rm tfplan || exit 1
+        cd ..
+
+        cd workloads && \
+        terraform init -no-color && \
+        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
+        cd ..
+
+        cd container_cluster && \
+        terraform init -no-color && \
+        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
+        cd ..
+
+        cd networking && \
+        terraform init -no-color && \
+        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
+        cd ..
+
+        cd initialize && \
+        terraform_bucket_name=$(grep bucket backend.tf | awk -F"=" '{print $2}' | xargs) && \
+        cp backend.tf.local backend.tf && \
+        terraform init -force-copy -lock=false -migrate-state -no-color && \
+        gsutil -m rm -rf gs://${terraform_bucket_name}/* && \
+        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
 
 options:
   logging: CLOUD_LOGGING_ONLY

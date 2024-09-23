@@ -27,6 +27,8 @@ data "google_project" "environment" {
 }
 
 resource "google_storage_bucket" "terraform" {
+  for_each = toset(var.create_terraform_bucket ? ["create"] : [])
+
   force_destroy               = false
   location                    = var.region
   name                        = local.terraform_bucket_name
@@ -36,6 +38,13 @@ resource "google_storage_bucket" "terraform" {
   versioning {
     enabled = true
   }
+}
+
+data "google_storage_bucket" "terraform" {
+  depends_on = [google_storage_bucket.terraform]
+
+  name    = local.terraform_bucket_name
+  project = data.google_project.environment.project_id
 }
 
 resource "null_resource" "configure_nodepools_for_region" {
@@ -54,7 +63,7 @@ resource "null_resource" "write_storage_bucket" {
   provisioner "local-exec" {
     command     = <<EOT
 echo "Writing 'bucket' changes to '${self.triggers.backend_file}'" && \
-sed -i 's/^\([[:blank:]]*bucket[[:blank:]]*=\).*$/\1 ${jsonencode(google_storage_bucket.terraform.name)}/' ${self.triggers.backend_file}
+sed -i 's/^\([[:blank:]]*bucket[[:blank:]]*=\).*$/\1 ${jsonencode(data.google_storage_bucket.terraform.name)}/' ${self.triggers.backend_file}
     EOT
     interpreter = ["bash", "-c"]
     working_dir = path.module
@@ -72,6 +81,6 @@ sed -i 's/^\([[:blank:]]*bucket[[:blank:]]*=\).*$/\1 ""/' ${self.triggers.backen
 
   triggers = {
     backend_file = each.value
-    md5          = google_storage_bucket.terraform.name
+    md5          = data.google_storage_bucket.terraform.name
   }
 }

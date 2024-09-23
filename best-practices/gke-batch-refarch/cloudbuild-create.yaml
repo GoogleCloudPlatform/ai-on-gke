@@ -15,29 +15,22 @@
 timeout: 3600s
 steps:
   - name: "gcr.io/kaniko-project/executor:v1.20.1-slim"
+    dir: "gke-batch-refarch"
     id: "Build Installer Image"
-    waitFor: ["-"]
+    waitFor: 
+    - "-"
     args:
       - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer
       - --cache=true
       - --cache-ttl=12h
-# TODO: move this bucket creation into terraform initialize
-  - name: "gcr.io/cloud-builders/gcloud"
-    id: "Setup Terraform state Cloud Storage bucket"
-    waitFor: ["-"]
-    entrypoint: "bash"
-    args:
-      - "-xe"
-      - "-c"
-      - |
-        [[ $(gsutil ls | grep "gs://${PROJECT_ID}-tutorial-tfstate/") ]] || \
-        gsutil mb -p ${PROJECT_ID} gs://${PROJECT_ID}-tutorial-tfstate && \
-        [[ $(gsutil versioning get gs://${PROJECT_ID}-tutorial-tfstate | grep Enabled) ]] || \
-        gsutil versioning set on gs://${PROJECT_ID}-tutorial-tfstate
+
+  # TODO: Would be better to do this with crane
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Push workload image to Artifact Registry: pytorch-gpu"
+    dir: "gke-batch-refarch"
     entrypoint: "ash"
-    waitFor: ["Build Installer Image"]
+    waitFor: 
+    - "Build Installer Image"
     args:
       - "-xe"
       - "-c"
@@ -48,11 +41,13 @@ steps:
           docker tag gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m109 ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1 && \
           docker push ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1
         fi
+  
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Push workload image to Artifact Registry: pytorch-mnist"
-    dir: "06_jobset"
+    dir: "gke-batch-refarch/jobset"
     entrypoint: "ash"
-    waitFor: ["Build Installer Image"]
+    waitFor: 
+    - "Build Installer Image"
     args:
       - "-xe"
       - "-c"
@@ -62,67 +57,81 @@ steps:
           docker build -t ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1 . && \
           docker push ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1
         fi
-#TODO: Don't clone from git, run the cloud build submit from best-practices, so that we can directly reference the ml-platform/examples/cluster.
+
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Setup GKE"
-    dir: "gke"
+    dir: "ml-platform/examples/cluster"
     entrypoint: "ash"
     waitFor:
-      ["Build Installer Image", "Setup Terraform state Cloud Storage bucket"]
+    - "Build Installer Image"
     args:
       - "-xe"
       - "-c"
       - |
-        git clone -b batch-ref-arch https://github.com/GoogleCloudPlatform/ai-on-gke && \
-        cd ai-on-gke/best-practices/ml-platform && \
-        export MLP_BASE_DIR=$(pwd) && \
-        echo "export MLP_BASE_DIR=${_MLP_BASE_DIR}" >> ${_HOME}/.bashrc && \
-        cd examples/cluster && \
-        export MLP_TYPE_BASE_DIR=$(pwd) && \
-        echo "export MLP_TYPE_BASE_DIR=${_MLP_TYPE_BASE_DIR}" >> ${_HOME}/.bashrc && \
-        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/initialize && \
-        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/networking && \
-        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/container_cluster && \
-        cp ../../../gke-batch-refarch/gke/backend.tf ${_MLP_TYPE_BASE_DIR}/workloads && \
-        cd ${_MLP_TYPE_BASE_DIR}/initialize && \
-        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
-        rm terraform.tfplan && \
-        cd ${_MLP_TYPE_BASE_DIR}/networking && \
-        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
-        rm terraform.tfplan && \
-        cd ${_MLP_TYPE_BASE_DIR}/container_cluster && \
-        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
-        rm terraform.tfplan && \
-        cd ${_MLP_TYPE_BASE_DIR}/workloads && \
-        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        tterraform plan -out terraform.tfplan -var="environment_project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
-        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
-        rm terraform.tfplan
-  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
-    id: "Install GPU drivers"
-    entrypoint: "ash"
-    waitFor: ["Setup GKE"]
-    args:
-      - "-xe"
-      - "-c"
-      - |
-        gcloud container clusters get-credentials gke-batch-refarch --region=${_REGION} --project=${PROJECT_ID} && \
-        kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded-latest.yaml
+        TF_VAR_cluster_name_prefix="${_CLUSTER_NAME_PREFIX:-batch}"
+        TF_VAR_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINTS:-false}"
+        TF_VAR_environment_name="${_ENVIRONMENT_NAME:-dev}"
+        TF_VAR_environment_project_id="${PROJECT_ID}"
+        TF_VAR_region="${_REGION}"
+        #TF_VAR_zone="${_ZONE}"
+
+        tf_variables="-var cluster_name_prefix=${TF_VAR_cluster_name_prefix} -var enable_private_endpoint=${TF_VAR_enable_private_endpoint} -var environment_name=${TF_VAR_environment_name} -var environment_project_id=${TF_VAR_environment_project_id} -var region=${TF_VAR_region}"
+
+        if gcloud storage buckets describe gs://${TF_VAR_environment_project_id}-batch-${TF_VAR_environment_name}-terraform &> /dev/null; then
+          export TF_VAR_create_terraform_bucket="false"
+        fi
+
+        # Initialize
+        cd initialize && \
+        terraform init -no-color && \
+        terraform apply -auto-approve -input=false -no-color ${tf_variables} && \
+        rm tfplan && \
+        cp backend.tf backend.tf.local && \
+        cp backend.tf.bucket backend.tf && \
+
+        if [ ${TF_VAR_create_terraform_bucket} != "false" ]; then
+          terraform init -force-copy -migrate-state -no-color && \
+          rm -rf state || exit 1
+        fi
+
+        cd ..
+        
+        # Networking
+        cd networking && \
+        terraform init -no-color && \
+        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
+        terraform apply -input=false -no-color tfplan && \
+        rm tfplan || exit 1
+        cd ..
+
+        # Container cluster
+        cd container_cluster && \
+        terraform init -no-color && \
+        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
+        terraform apply -input=false -no-color tfplan && \
+        rm tfplan  || exit 1
+        cd ..
+
+        # Workloads
+        cd workloads && \
+        terraform init -no-color && \
+        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
+        terraform apply -input=false -no-color tfplan && \
+        rm tfplan  || exit 1
+        cd ..
+
+        # Get cluster credentials
+        gcloud container clusters get-credentials ${TF_VAR_cluster_name_prefix}-${TF_VAR_environment_name} --region=${_REGION} --project=${PROJECT_ID}
+
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Install Kueue and JobSet"
     entrypoint: "ash"
-    waitFor: ["Setup GKE"]
+    waitFor: 
+    - "Setup GKE"
     args:
       - "-xe"
       - "-c"
       - |
-        gcloud container clusters get-credentials gke-batch-refarch --region=${_REGION} --project=${PROJECT_ID} && \
         kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.2.3/manifests.yaml && \
         kubectl -n jobset-system wait --for condition=established --timeout=120s customresourcedefinition.apiextensions.k8s.io/jobsets.jobset.x-k8s.io && \
         kubectl apply --server-side -f "https://github.com/kubernetes-sigs/kueue/releases/download/v0.5.1/manifests.yaml" && \
@@ -130,21 +139,19 @@ steps:
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/localqueues.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/resourceflavors.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/workloads.kueue.x-k8s.io
+
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Deploy platform config: Priority Classes, teams, Kueue and monitoring configuration"
-    dir: "02_platform"
+    dir: "gke-batch-refarch/platform"
     entrypoint: "ash"
     waitFor:
-      [
-        "Install Kueue and JobSet",
-        "Push workload image to Artifact Registry: pytorch-gpu",
-        "Push workload image to Artifact Registry: pytorch-mnist",
-      ]
+    - "Install Kueue and JobSet"
+    - "Push workload image to Artifact Registry: pytorch-gpu"
+    - "Push workload image to Artifact Registry: pytorch-mnist"
     args:
       - "-xe"
       - "-c"
       - |
-        gcloud container clusters get-credentials gke-batch-refarch --region=${_REGION} --project=${PROJECT_ID} && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/clusterqueues.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/localqueues.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/resourceflavors.kueue.x-k8s.io && \
@@ -155,6 +162,7 @@ steps:
         export PROJECT_ID=${PROJECT_ID} && \
         export REGION=${_REGION} && \
         ./monitoring/install-prometheus.sh
+
 ##########################################################################################
 options:
   logging: CLOUD_LOGGING_ONLY
