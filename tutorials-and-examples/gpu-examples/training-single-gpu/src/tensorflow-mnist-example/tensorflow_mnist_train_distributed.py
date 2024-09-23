@@ -106,9 +106,11 @@ eval_loss, eval_acc = model.evaluate(eval_dataset)
 
 print('Eval loss: {}, Eval accuracy: {}'.format(eval_loss, eval_acc))
 
-path = '/data/mnist_saved_model/mnist.keras'
+path = '/data/mnist_saved_model'
+os.makedirs(path, exist_ok=True)
 
-model.save(path)
+model_file = '/data/mnist_saved_model/mnist.keras'
+model.save(model_file)
 
 print('Training finished. Model saved')
 
