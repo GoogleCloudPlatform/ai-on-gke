@@ -399,6 +399,7 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
         print("HTTP Error: %s" % (response))
+    all_metric_results[metric] = metric_results # TODO: remove once internal dependencies dont rely on this key
     all_metric_results[metric_alias] = metric_results
   return all_metric_results
 
