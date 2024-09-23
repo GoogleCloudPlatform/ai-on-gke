@@ -334,21 +334,53 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
 
   all_metric_results = {}
 
-  for key, metric in metrics.items():
+  for new_metric, metric in metrics.items():
     print("Metric Name: %s" % (metric))
+    # Request refresh tokens
+    credentials.refresh(auth_req)
+    url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
+    headers_api = {'Authorization': 'Bearer ' + credentials.token}
+    request_post = requests.get(url=url, headers=headers_api)
+    response = request_post.json()
+
+    # handle response
+    metric_type = ""
+    if request_post.ok:
+      if response["status"] == "success":
+        metric_type = response['data'][metric]
+        if response['data'][metric] is None:
+          print("No metric found for: %s" % new_metric)
+          return
+        metric_type = metric_type[0]['type']
+      else:
+        print("Metadata error response: %s" % response["error"])
+    else:
+      print("HTTP Error: %s" % (response))
+
     metric_results = {}
     # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
     # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
     queries = {
-      "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Std": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "gauge": {
+        "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Std": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+    },
+      "histogram": {
+        "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
+        "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Std": "stddev_over_time(%s_sum{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
     }
-    for query_name, query in queries.items():
+  }
+    for query_name, query in queries[metric_type].items():
       # Request refresh tokens
       credentials.refresh(auth_req)
 
@@ -368,7 +400,7 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
         print("HTTP Error: %s" % (response))
-    all_metric_results[key] = metric_results
+    all_metric_results[new_metric] = metric_results
   return all_metric_results
 
 
