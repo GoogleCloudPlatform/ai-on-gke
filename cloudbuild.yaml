@@ -382,12 +382,6 @@ steps:
     fi
   waitFor: ['cleanup gke cluster']
 
-        if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
-          echo "rag prompt test failed"
-          exit 1
-        fi
-    waitFor: ['cleanup gke cluster']
-        
 substitutions:
   _REGION: us-east4
   _USER_NAME: github
@@ -395,8 +389,8 @@ substitutions:
   _BUILD_ID: ${BUILD_ID:0:8}
 logsBucket: gs://ai-on-gke-build-logs
 options:
-  substitutionOption: 'ALLOW_LOOSE'
-  machineType: 'E2_HIGHCPU_8'
+  substitutionOption: "ALLOW_LOOSE"
+  machineType: "E2_HIGHCPU_8"
 timeout: 5400s
 availableSecrets:
   secretManager:
