@@ -334,7 +334,7 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
 
   all_metric_results = {}
 
-  for key, metric in metrics:
+  for key, metric in metrics.items():
     print("Metric Name: %s" % (metric))
     metric_results = {}
     # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
