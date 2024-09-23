@@ -17,7 +17,7 @@ spec:
       serviceAccountName: ${latency_profile_kubernetes_service_account}
       containers:
         - name: latency-profile-generator
-          image: ${artifact_registry}/latency-profile:v9
+          image: ${artifact_registry}/latency-profile:latest
           command: ["bash", "-c", "./latency_throughput_curve.sh"]
           env:
             - name: TOKENIZER
