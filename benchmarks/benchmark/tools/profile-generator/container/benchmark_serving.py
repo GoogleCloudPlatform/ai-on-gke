@@ -12,7 +12,7 @@ import json
 import random
 import requests
 import time
-from typing import AsyncGenerator, List, Tuple, Dict
+from typing import AsyncGenerator, List, Optional, Tuple, Dict
 
 import google.auth
 import google.auth.transport.requests
@@ -285,9 +285,10 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
       # Traffic
       "num_prompts": args.num_prompts,
       "request_rate": args.request_rate,
-      **benchmark_result
+      'server_metrics': {
+        **benchmark_result["metric_names"]
+      }
     },
-    "summary"
     # dimensions values are strings
     "dimensions": {
       "date": current_dt.strftime('%Y%m%d-%H%M%S'),
@@ -301,6 +302,11 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
       "model_server": args.backend,
       "start_time": current_dt_proto.ToJsonString(),
     },
+    "summary": {
+      "stats": {
+        **benchmark_result["metric_aliases"]
+      }
+    }
   }
   
   # Save to file
@@ -311,25 +317,25 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
 
-def metrics_to_scrape(backend: str) -> Dict[str, str]:
+def metrics_to_scrape(backend: str) -> Dict[str, Optional[str]]:
     if backend == "vllm":
         return {
-            "gpu_cache_usage": "vllm:gpu_cache_usage_perc",
-            "requests_waiting": "vllm:num_requests_waiting"
+            "vllm:gpu_cache_usage_perc": None,
+            "vllm:num_requests_waiting": None
         }
     elif backend == "jetstream":
         return {
-            "slots_used_percentage": "jetstream_slots_used_percentage",
-            "prefill_backlog_size": "jetstream_prefill_backlog_size",
-            "ttft": "jetstream_time_to_first_token",
-            "tpot": "jetstream_time_per_output_token",
-            "request_latency": "jetstream_time_per_request"
+            "jetstream_slots_used_percentage": None,
+            "jetstream_prefill_backlog_size": None,
+            "jetstream_time_to_first_token": "ttft",
+            "jetstream_time_per_output_token": "tpot",
+            "jetstream_time_per_request": "request_latency"
         }
     else:
         return {}
 
 
-def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
+def print_metrics(metrics: Dict[str, Optional[str]], duration: float, backend: str):
   # Creates a credentials object from the default service account file
   # Assumes that script has appropriate default credentials set up, ref:
   # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
@@ -337,30 +343,31 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
   # Prepare an authentication request - helps format the request auth token
   auth_req = google.auth.transport.requests.Request()
 
-  all_metric_results = {}
+  all_metric_results = {
+    "metric_names" : {},
+    "metric_aliases": {},
+  }
 
-  for metric_alias, metric in metrics.items():
+  # Request refresh tokens
+  credentials.refresh(auth_req)
+  url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
+  headers_api = {'Authorization': 'Bearer ' + credentials.token}
+  request_post = requests.get(url=url, headers=headers_api)
+  metrics_metadata = request_post.json()
+  if request_post.ok is not True:
+    print("HTTP Error: %s" % (metrics_metadata))
+  if metrics_metadata["status"] != "success":
+    print("Metadata error response: %s" % metrics_metadata["error"])
+
+  for metric, metric_alias in metrics.items():
     print("Metric Name: %s" % (metric))
-    # Request refresh tokens
-    credentials.refresh(auth_req)
-    url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
-    headers_api = {'Authorization': 'Bearer ' + credentials.token}
-    request_post = requests.get(url=url, headers=headers_api)
-    response = request_post.json()
 
-    # handle response
-    metric_type = ""
-    if request_post.ok:
-      if response["status"] == "success":
-        metric_type = response['data'][metric]
-        if response['data'][metric] is None:
-          print("No metric found for: %s" % metric_alias)
-          return
-        metric_type = metric_type[0]['type']
-      else:
-        print("Metadata error response: %s" % response["error"])
-    else:
-      print("HTTP Error: %s" % (response))
+    # Find metric type
+    metric_type = metrics_metadata['data'][metric]
+    if metrics_metadata['data'][metric] is None:
+      print("No metric found for: %s" % metric)
+      return
+    metric_type = metric_type[0]['type']
 
     metric_results = {}
     # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
@@ -404,8 +411,9 @@ def print_metrics(metrics: Dict[str, str], duration: float, backend: str):
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
         print("HTTP Error: %s" % (response))
-    all_metric_results[metric] = metric_results # TODO: remove once internal dependencies dont rely on this key
-    all_metric_results[metric_alias] = metric_results
+    all_metric_results["metric_names"][metric] = metric_results # TODO: remove once internal dependencies dont rely on this key
+    if metric_alias is not None:
+      all_metric_results["metric_aliases"][metric_alias] = metric_results
   return all_metric_results
 
 
@@ -528,7 +536,11 @@ def main(args: argparse.Namespace):
 
   if args.scrape_server_metrics:
     server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
-    benchmark_result['server_metrics'] = server_metrics
+    if server_metrics is not None:
+      benchmark_result = {
+        **benchmark_result,
+        **server_metrics,
+      }
 
   if args.save_json_results:
     save_json_results(args, benchmark_result)
