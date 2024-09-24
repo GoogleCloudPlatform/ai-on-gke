@@ -275,9 +275,8 @@ async def benchmark(
 
 def save_json_results(args: argparse.Namespace, benchmark_result):
   # Setup
-  current_dt = datetime.now()
-  current_dt_proto = Timestamp()
-  current_dt_proto.FromDatetime(current_dt)
+  start_dt_proto = Timestamp()
+  start_dt_proto.FromDatetime(args.start_datetime)
 
   final_json = {
     # metrics values are numerical
@@ -286,12 +285,12 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
       "num_prompts": args.num_prompts,
       "request_rate": args.request_rate,
       'server_metrics': {
-        **benchmark_result["metric_names"]
+        **benchmark_result.get("metric_names", {})
       }
     },
     # dimensions values are strings
     "dimensions": {
-      "date": current_dt.strftime('%Y%m%d-%H%M%S'),
+      "date": args.start_datetime.strftime('%Y%m%d-%H%M%S'),
       "backend": args.backend,
       "model_id": args.model,
       "tokenizer_id": args.tokenizer,
@@ -300,11 +299,11 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
     "config": {
       "model": args.model,
       "model_server": args.backend,
-      "start_time": current_dt_proto.ToJsonString(),
+      "start_time": start_dt_proto.ToJsonString(),
     },
     "summary_stats": {
       "stats": {
-        **benchmark_result["metric_aliases"]
+        **benchmark_result.get("metric_aliases", {})
       }
     }
   }
@@ -312,7 +311,7 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
   # Save to file
   base_model_id = args.model.split("/")[-1]
   file_name = (
-      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{current_dt.strftime('%Y%m%d-%H%M%S')}.json"
+      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{args.start_datetime.strftime('%Y%m%d-%H%M%S')}.json"
   )
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
@@ -441,6 +440,8 @@ def main(args: argparse.Namespace):
   )
 
   benchmark_start_time = time.time()
+  args.start_datetime = datetime.fromtimestamp(benchmark_start_time)
+
   asyncio.run(
       benchmark(
           args.backend,
