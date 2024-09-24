@@ -302,7 +302,7 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
       "model_server": args.backend,
       "start_time": current_dt_proto.ToJsonString(),
     },
-    "summary": {
+    "summary_stats": {
       "stats": {
         **benchmark_result["metric_aliases"]
       }
@@ -318,6 +318,9 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
     json.dump(final_json, outfile)
 
 def metrics_to_scrape(backend: str) -> Dict[str, Optional[str]]:
+    # Each key in the map is a metric, it has a corresponding 'stats' object
+    # It must be populated on the 'metrics' field as 'key':'stats'
+    # If a value is specified for a given key, it will be populated on `summary_stats.stats` as 'value':'stats' as well.
     if backend == "vllm":
         return {
             "vllm:gpu_cache_usage_perc": None,
