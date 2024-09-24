@@ -319,8 +319,8 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
 
 def metrics_to_scrape(backend: str) -> Dict[str, Optional[str]]:
     # Each key in the map is a metric, it has a corresponding 'stats' object
-    # It must be populated on the 'metrics' field as 'key':'stats'
-    # If a value is specified for a given key, it will be populated on `summary_stats.stats` as 'value':'stats' as well.
+    # It must be populated on the outputs 'metrics' field as 'key':'stats'
+    # If a value is specified for a given key, it will be populated on the outputs `summary_stats.stats` as 'value':'stats' as well.
     if backend == "vllm":
         return {
             "vllm:gpu_cache_usage_perc": None,
