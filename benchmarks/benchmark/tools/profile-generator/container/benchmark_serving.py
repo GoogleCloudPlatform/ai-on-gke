@@ -334,7 +334,6 @@ def metrics_to_scrape(backend: str) -> Dict[str, Optional[str]]:
     else:
         return {}
 
-
 def print_metrics(metrics: Dict[str, Optional[str]], duration: float, backend: str):
   # Creates a credentials object from the default service account file
   # Assumes that script has appropriate default credentials set up, ref:
@@ -533,11 +532,10 @@ def main(args: argparse.Namespace):
 
   if args.scrape_server_metrics:
     server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
-    if server_metrics is not None:
-      benchmark_result = {
-        **benchmark_result,
-        **server_metrics,
-      }
+    benchmark_result = {
+      **benchmark_result,
+      **(server_metrics if server_metrics else {}),
+    }
 
   if args.save_json_results:
     save_json_results(args, benchmark_result)
