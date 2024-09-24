@@ -22,6 +22,8 @@ import numpy as np
 from transformers import AutoTokenizer
 from transformers import PreTrainedTokenizerBase
 
+from google.protobuf.timestamp_pb2 import Timestamp
+
 
 # (prompt len, output len, latency)
 REQUEST_LATENCY: List[Tuple[int, int, float]] = []
@@ -272,36 +274,39 @@ async def benchmark(
 
 
 def save_json_results(args: argparse.Namespace, benchmark_result):
-  # dimensions values are strings
-  dimensions_json = {}
-  # metrics values are numerical
-  metrics_json = {}
-
   # Setup
-  current_dt = datetime.now().strftime("%Y%m%d-%H%M%S")
-  dimensions_json["date"] = current_dt
-  dimensions_json["backend"] = args.backend
-  dimensions_json["model_id"] = args.model
-  dimensions_json["tokenizer_id"] = args.tokenizer
-  if args.additional_metadata_metrics_to_save is not None:
-    dimensions_json = {
-        **dimensions_json,
-        **json.loads(args.additional_metadata_metrics_to_save),
-    }
-  metrics_json["num_prompts"] = args.num_prompts
+  current_dt = datetime.now()
+  current_dt_proto = Timestamp()
+  current_dt_proto.FromDatetime(current_dt)
 
-  # Traffic
-  metrics_json["request_rate"] = args.request_rate
-  metrics_json = {**metrics_json, **benchmark_result}
-
-  final_json = {}
-  final_json["metrics"] = metrics_json
-  final_json["dimensions"] = dimensions_json
-
+  final_json = {
+    # metrics values are numerical
+    "metrics" : {
+      # Traffic
+      "num_prompts": args.num_prompts,
+      "request_rate": args.request_rate,
+      **benchmark_result
+    },
+    "summary"
+    # dimensions values are strings
+    "dimensions": {
+      "date": current_dt.strftime('%Y%m%d-%H%M%S'),
+      "backend": args.backend,
+      "model_id": args.model,
+      "tokenizer_id": args.tokenizer,
+      **(json.loads(args.additional_metadata_metrics_to_save) if args.additional_metadata_metrics_to_save else {})
+    },
+    "config": {
+      "model": args.model,
+      "model_server": args.backend,
+      "start_time": current_dt_proto.ToJsonString(),
+    },
+  }
+  
   # Save to file
   base_model_id = args.model.split("/")[-1]
   file_name = (
-      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{current_dt}.json"
+      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{current_dt.strftime('%Y%m%d-%H%M%S')}.json"
   )
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
