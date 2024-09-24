@@ -353,18 +353,18 @@ def print_metrics(metrics: Dict[str, Optional[str]], duration: float, backend: s
   url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
   headers_api = {'Authorization': 'Bearer ' + credentials.token}
   request_post = requests.get(url=url, headers=headers_api)
-  metrics_metadata = request_post.json()
+  all_metrics_metadata = request_post.json()
   if request_post.ok is not True:
-    print("HTTP Error: %s" % (metrics_metadata))
-  if metrics_metadata["status"] != "success":
-    print("Metadata error response: %s" % metrics_metadata["error"])
+    print("HTTP Error: %s" % (all_metrics_metadata))
+  if all_metrics_metadata["status"] != "success":
+    print("Metadata error response: %s" % all_metrics_metadata["error"])
 
   for metric, metric_alias in metrics.items():
     print("Metric Name: %s" % (metric))
 
     # Find metric type
-    metric_type = metrics_metadata['data'][metric]
-    if metrics_metadata['data'][metric] is None:
+    metric_type = all_metrics_metadata['data'][metric]
+    if all_metrics_metadata['data'][metric] is None:
       print("No metric found for: %s" % metric)
       return
     metric_type = metric_type[0]['type']
@@ -392,9 +392,6 @@ def print_metrics(metrics: Dict[str, Optional[str]], duration: float, backend: s
     }
   }
     for query_name, query in queries[metric_type].items():
-      # Request refresh tokens
-      credentials.refresh(auth_req)
-
       # Configure respective query
       url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/query' % (project_id)
       headers_api = {'Authorization': 'Bearer ' + credentials.token}
