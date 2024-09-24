@@ -12,7 +12,7 @@ import json
 import random
 import requests
 import time
-from typing import AsyncGenerator, List, Tuple
+from typing import AsyncGenerator, List, Optional, Tuple, Dict
 
 import google.auth
 import google.auth.transport.requests
@@ -21,6 +21,8 @@ import aiohttp
 import numpy as np
 from transformers import AutoTokenizer
 from transformers import PreTrainedTokenizerBase
+
+from google.protobuf.timestamp_pb2 import Timestamp
 
 
 # (prompt len, output len, latency)
@@ -272,49 +274,69 @@ async def benchmark(
 
 
 def save_json_results(args: argparse.Namespace, benchmark_result):
-  # dimensions values are strings
-  dimensions_json = {}
-  # metrics values are numerical
-  metrics_json = {}
-
   # Setup
-  current_dt = datetime.now().strftime("%Y%m%d-%H%M%S")
-  dimensions_json["date"] = current_dt
-  dimensions_json["backend"] = args.backend
-  dimensions_json["model_id"] = args.model
-  dimensions_json["tokenizer_id"] = args.tokenizer
-  if args.additional_metadata_metrics_to_save is not None:
-    dimensions_json = {
-        **dimensions_json,
-        **json.loads(args.additional_metadata_metrics_to_save),
+  start_dt_proto = Timestamp()
+  start_dt_proto.FromDatetime(args.start_datetime)
+
+  final_json = {
+    # metrics values are numerical
+    "metrics" : {
+      # Traffic
+      "num_prompts": args.num_prompts,
+      "request_rate": args.request_rate,
+      'server_metrics': {
+        **benchmark_result.get("metric_names", {})
+      }
+    },
+    # dimensions values are strings
+    "dimensions": {
+      "date": args.start_datetime.strftime('%Y%m%d-%H%M%S'),
+      "backend": args.backend,
+      "model_id": args.model,
+      "tokenizer_id": args.tokenizer,
+      **(json.loads(args.additional_metadata_metrics_to_save) if args.additional_metadata_metrics_to_save else {})
+    },
+    "config": {
+      "model": args.model,
+      "model_server": args.backend,
+      "start_time": start_dt_proto.ToJsonString(),
+    },
+    "summary_stats": {
+      "stats": {
+        **benchmark_result.get("metric_aliases", {})
+      }
     }
-  metrics_json["num_prompts"] = args.num_prompts
-
-  # Traffic
-  metrics_json["request_rate"] = args.request_rate
-  metrics_json = {**metrics_json, **benchmark_result}
-
-  final_json = {}
-  final_json["metrics"] = metrics_json
-  final_json["dimensions"] = dimensions_json
-
+  }
+  
   # Save to file
   base_model_id = args.model.split("/")[-1]
   file_name = (
-      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{current_dt}.json"
+      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{args.start_datetime.strftime('%Y%m%d-%H%M%S')}.json"
   )
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
 
-def metrics_to_scrape(backend: str) -> List[str]:
-  if backend == "vllm":
-    return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
-  elif backend == "jetstream":
-    return ["jetstream_slots_used_percentage", "jetstream_prefill_backlog_size"]
-  else:
-    return []
+def metrics_to_scrape(backend: str) -> Dict[str, Optional[str]]:
+    # Each key in the map is a metric, it has a corresponding 'stats' object
+    # It must be populated on the outputs 'metrics' field as 'key':'stats'
+    # If a value is specified for a given key, it will be populated on the outputs `summary_stats.stats` field as 'value':'stats' as well.
+    if backend == "vllm":
+        return {
+            "vllm:gpu_cache_usage_perc": None,
+            "vllm:num_requests_waiting": None
+        }
+    elif backend == "jetstream":
+        return {
+            "jetstream_slots_used_percentage": None,
+            "jetstream_prefill_backlog_size": None,
+            "jetstream_time_to_first_token": "ttft",
+            "jetstream_time_per_output_token": "tpot",
+            "jetstream_time_per_request": "request_latency"
+        }
+    else:
+        return {}
 
-def print_metrics(metrics: List[str], duration: float, backend: str):
+def print_metrics(metrics: Dict[str, Optional[str]], duration: float, backend: str):
   # Creates a credentials object from the default service account file
   # Assumes that script has appropriate default credentials set up, ref:
   # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
@@ -322,25 +344,55 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
   # Prepare an authentication request - helps format the request auth token
   auth_req = google.auth.transport.requests.Request()
 
-  all_metric_results = {}
+  all_metric_results = {
+    "metric_names" : {},
+    "metric_aliases": {},
+  }
 
-  for metric in metrics:
+  # Request refresh tokens
+  credentials.refresh(auth_req)
+  url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
+  headers_api = {'Authorization': 'Bearer ' + credentials.token}
+  request_post = requests.get(url=url, headers=headers_api)
+  all_metrics_metadata = request_post.json()
+  if request_post.ok is not True:
+    print("HTTP Error: %s" % (all_metrics_metadata))
+  if all_metrics_metadata["status"] != "success":
+    print("Metadata error response: %s" % all_metrics_metadata["error"])
+
+  for metric, metric_alias in metrics.items():
     print("Metric Name: %s" % (metric))
+
+    # Find metric type
+    metric_type = all_metrics_metadata['data'][metric]
+    if all_metrics_metadata['data'][metric] is None:
+      print("No metric found for: %s" % metric)
+      return
+    metric_type = metric_type[0]['type']
+
     metric_results = {}
     # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
     # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
     queries = {
-      "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "gauge": {
+        "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Std": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+    },
+      "histogram": {
+        "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
+        "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
     }
-    for query_name, query in queries.items():
-      # Request refresh tokens
-      credentials.refresh(auth_req)
-
+  }
+    for query_name, query in queries[metric_type].items():
       # Configure respective query
       url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/query' % (project_id)
       headers_api = {'Authorization': 'Bearer ' + credentials.token}
@@ -357,7 +409,9 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
         print("HTTP Error: %s" % (response))
-    all_metric_results[metric] = metric_results
+    all_metric_results["metric_names"][metric] = metric_results
+    if metric_alias is not None:
+      all_metric_results["metric_aliases"][metric_alias] = metric_results
   return all_metric_results
 
 
@@ -386,6 +440,8 @@ def main(args: argparse.Namespace):
   )
 
   benchmark_start_time = time.time()
+  args.start_datetime = datetime.fromtimestamp(benchmark_start_time)
+
   asyncio.run(
       benchmark(
           args.backend,
@@ -480,7 +536,10 @@ def main(args: argparse.Namespace):
 
   if args.scrape_server_metrics:
     server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
-    benchmark_result['server_metrics'] = server_metrics
+    benchmark_result = {
+      **benchmark_result,
+      **(server_metrics if server_metrics else {}),
+    }
 
   if args.save_json_results:
     save_json_results(args, benchmark_result)
