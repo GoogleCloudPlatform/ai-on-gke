@@ -90,8 +90,8 @@ def test_prompts_dlp(prompt_url):
         testcases = [
             {
                 "prompt":  "What's kubernetes?",
-                "inspectTemplate": "projects/globant-gke-ai-resources/locations/us-central1/inspectTemplates/gke-rag-application-inspect-template", #"projects/gke-ai-eco-dev/locations/global/inspectTemplates/DO-NOT-DELETE-e2e-test-inspect-template",
-                "deidentifyTemplate": "projects/globant-gke-ai-resources/locations/us-central1/deidentifyTemplates/gke-rag-application-deidentify-template" #"projects/gke-ai-eco-dev/locations/global/deidentifyTemplates/DO-NOT-DELETE-e2e-test-de-identify-template",
+                "inspectTemplate": "projects/gke-ai-eco-dev/locations/global/inspectTemplates/DO-NOT-DELETE-e2e-test-inspect-template",
+                "deidentifyTemplate": "projects/gke-ai-eco-dev/locations/global/deidentifyTemplates/DO-NOT-DELETE-e2e-test-de-identify-template",
             },
         ]
 
