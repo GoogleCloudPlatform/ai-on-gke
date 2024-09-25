@@ -40,5 +40,6 @@ inference_server = {
   }
 }
 
-# Benchmark configuration for Locust Docker accessing inference server
+# Benchmark configuration for Latency Profile Generator container accessing inference server
 request_rates = [5, 10, 15, 20]
+benchmark_time_seconds = 120
