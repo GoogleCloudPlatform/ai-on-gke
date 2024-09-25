@@ -1,9 +1,8 @@
-FROM nvidia/cuda:12.1.0-devel-ubuntu22.04 AS dev
+FROM python:3.9.20-slim-bookworm as dev
 
 RUN apt-get update -y \
     && apt-get install -y python3-pip git vim curl wget
 RUN pip3 install --upgrade pip
-RUN pip install packaging torch transformers
 WORKDIR /workspace
 
 # install build and runtime dependencies
