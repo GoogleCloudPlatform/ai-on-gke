@@ -72,6 +72,7 @@ module "latency-profile" {
   max_output_len                             = var.max_output_len
   max_prompt_len                             = var.max_prompt_len
   request_rates                              = var.request_rates
+  benchmark_time_seconds                     = var.benchmark_time_seconds
   output_bucket                              = var.output_bucket
   latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
   k8s_hf_secret                              = var.k8s_hf_secret

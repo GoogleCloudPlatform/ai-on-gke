@@ -159,3 +159,10 @@ variable "scrape_server_metrics" {
   type        = bool
   default     = false
 }
+
+variable "benchmark_time_seconds" {
+  description = "The amount of time (in seconds) the benchmark should be run at each request rate"
+  type        = number
+  default     = 120
+  nullable    = false
+}
