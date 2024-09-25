@@ -273,7 +273,7 @@ async def benchmark(
   await asyncio.gather(*tasks)
 
 
-def save_json_results(args: argparse.Namespace, benchmark_result):
+def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics):
   # Setup
   start_dt_proto = Timestamp()
   start_dt_proto.FromDatetime(args.start_datetime)
@@ -285,8 +285,9 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
       "num_prompts": args.num_prompts,
       "request_rate": args.request_rate,
       'server_metrics': {
-        **benchmark_result.get("metric_names", {})
-      }
+        **server_metrics.get("metric_names", {})
+      },
+      **benchmark_result
     },
     # dimensions values are strings
     "dimensions": {
@@ -303,7 +304,7 @@ def save_json_results(args: argparse.Namespace, benchmark_result):
     },
     "summary_stats": {
       "stats": {
-        **benchmark_result.get("metric_aliases", {})
+        **server_metrics.get("metric_aliases", {})
       }
     }
   }
@@ -534,15 +535,12 @@ def main(args: argparse.Namespace):
   )
   benchmark_result['avg_output_len'] = avg_output_len
 
+  server_metrics = {}
   if args.scrape_server_metrics:
     server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
-    benchmark_result = {
-      **benchmark_result,
-      **(server_metrics if server_metrics else {}),
-    }
-
+  print(benchmark_result)
   if args.save_json_results:
-    save_json_results(args, benchmark_result)
+    save_json_results(args, benchmark_result, server_metrics)
 
 
 if __name__ == "__main__":
