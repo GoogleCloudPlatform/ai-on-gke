@@ -31,9 +31,10 @@ latency_profile_kubernetes_service_account = "prom-frontend-sa"
 output_bucket                              = "your_project_id-benchmark-output-bucket"
 k8s_hf_secret                              = "hf-token"
 
-# Benchmark configuration for Locust Docker accessing inference server
-request_rates     = [5, 10, 15, 20]
-artifact_registry = "your_project_artifact_registry"
+# Benchmark configuration for Latency Profile Generator accessing inference server
+request_rates          = [5, 10, 15, 20]
+benchmark_time_seconds = 120
+artifact_registry      = "your_project_artifact_registry"
 
 # Model server configuration information
 targets = {
