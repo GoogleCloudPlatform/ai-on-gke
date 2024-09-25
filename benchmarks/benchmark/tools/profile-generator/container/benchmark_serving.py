@@ -538,7 +538,6 @@ def main(args: argparse.Namespace):
   server_metrics = {}
   if args.scrape_server_metrics:
     server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
-  print(benchmark_result)
   if args.save_json_results:
     save_json_results(args, benchmark_result, server_metrics)
 
