@@ -300,7 +300,10 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
     "config": {
       "model": args.model,
       "model_server": args.backend,
-      # "start_time": start_dt_proto.ToJsonString(), TODO: Marshall this such that the unmarshaller doesnt error
+      "start_time": {
+        "seconds" : start_dt_proto.seconds,
+        "nanos" : start_dt_proto.nanos
+      }
     },
     "summary_stats": {
       "stats": [{
