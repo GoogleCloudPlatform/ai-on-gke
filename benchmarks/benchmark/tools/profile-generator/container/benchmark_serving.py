@@ -457,12 +457,6 @@ def get_stats_for_set(name, description, points):
   p99 = np.percentile(points, 99)
 
   print(f"Average {description}:" f" {avg:.2f}")
-  print(f"Median {description}:" f" {median:.2f}")
-  print(f"Standard deviation of {description}:" f" {sd:.2f}")
-  print(f"Minimum {description}:" f" {min:.2f}")
-  print(f"Maximum {description}:" f" {max:.2f}")
-  print(f"90th Percentile {description}:" f" {p90:.2f}")
-  print(f"99th Percentile {description}:" f" {p99:.2f}")
 
   return {
     f'avg_{name}':  avg,
