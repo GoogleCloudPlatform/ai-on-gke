@@ -165,3 +165,23 @@ Test that you can apply a TPU Job.
 ```bash
 kubectl apply -f ./examples/v4-2x2x4/
 ```
+
+## Testing
+
+### Unit / Integration Tests
+
+Run unit and integration tests.
+
+```bash
+make test
+```
+
+### End-to-End Tests
+
+Set environment variables (see example here: `./test/e2e/env/example.sh`).
+
+Run end-to-end tests.
+
+```bash
+make test-e2e
+```
