@@ -283,7 +283,7 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
     "metrics" : {
       # Traffic
       "num_prompts": args.num_prompts,
-      "request_rate": args.request_rate,
+      "request_rate": int(args.request_rate),
       'server_metrics': {
         **server_metrics
       },
@@ -307,7 +307,7 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
     },
     "summary_stats": {
       "stats": [{
-        "request_rate": args.request_rate,
+        "request_rate": int(args.request_rate),
         "request_latency": {
           "mean": benchmark_result["avg_latency"],
           "median": benchmark_result["median_latency"],
