@@ -518,11 +518,14 @@ def main(args: argparse.Namespace):
   print(f"Total time: {benchmark_time:.2f} s")
   print(f"Requests/min: {60 * args.num_prompts / benchmark_time:.2f}")
   benchmark_result['benchmark_time'] = benchmark_time
-  benchmark_result['throughput'] = (args.num_prompts / benchmark_time)
+  benchmark_result['throughput_rps'] = (args.num_prompts / benchmark_time)
 
   total_output_tokens = np.sum([output_len for _, output_len, _ in
                                 REQUEST_LATENCY])
-  output_tokens_per_min = 60 * total_output_tokens / benchmark_time
+  output_tokens_per_second = total_output_tokens / benchmark_time
+  benchmark_result['throughput'] = output_tokens_per_second
+
+  output_tokens_per_min = 60 * output_tokens_per_second
   print(f"Output_tokens/min: {output_tokens_per_min:.2f}")
   benchmark_result['total_output_token'] = int(total_output_tokens)
   benchmark_result['output_tokens_per_min'] = output_tokens_per_min
