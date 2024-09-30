@@ -57,6 +57,7 @@ resource "kubernetes_manifest" "latency-profile-generator" {
     max_num_prompts                            = var.max_num_prompts
     max_output_len                             = var.max_output_len
     max_prompt_len                             = var.max_prompt_len
+    benchmark_time_seconds                     = var.benchmark_time_seconds
     request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
     hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
     k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]

@@ -34,6 +34,8 @@ spec:
               value: ${max_output_len}
             - name: REQUEST_RATES
               value: ${request_rates}
+            - name: BENCHMARK_TIME_SECONDS
+              value: ${benchmark_time_seconds}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
             - name: SCRAPE_SERVER_METRICS
