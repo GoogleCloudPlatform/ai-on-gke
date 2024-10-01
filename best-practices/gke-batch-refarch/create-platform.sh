@@ -59,7 +59,7 @@ gcloud builds submit \
   --config gke-batch-refarch/cloudbuild-create.yaml \
   --ignore-file gke-batch-refarch/cloudbuild-ignore \
   --project="${PROJECT_ID}" \
-  --substitutions _REGION=${REGION},_ZONE=${ZONE} &&
+  --substitutions _REGION=${REGION},_ZONE=${ZONE},_ENVIRONMENT_NAME=${ENVIRONMENT_NAME} &&
   echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds;region=global?project=${PROJECT_ID}\e[0m"
 
 cd -

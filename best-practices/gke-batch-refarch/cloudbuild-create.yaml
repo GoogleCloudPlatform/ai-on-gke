@@ -132,9 +132,9 @@ steps:
       - "-xe"
       - "-c"
       - |
-        kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.2.3/manifests.yaml && \
+        kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.6.0/manifests.yaml && \
         kubectl -n jobset-system wait --for condition=established --timeout=120s customresourcedefinition.apiextensions.k8s.io/jobsets.jobset.x-k8s.io && \
-        kubectl apply --server-side -f "https://github.com/kubernetes-sigs/kueue/releases/download/v0.5.1/manifests.yaml" && \
+        kubectl apply --server-side -f "https://github.com/kubernetes-sigs/kueue/releases/download/v0.8.1/manifests.yaml" && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/clusterqueues.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/localqueues.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/resourceflavors.kueue.x-k8s.io && \

@@ -1,8 +1,8 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: 2xa100-label
-  namespace: default
+  name: finetune-gemma-8xh100
+  namespace: team-b
   labels:
     kueue.x-k8s.io/queue-name: dws-local-queue
 spec:
@@ -14,7 +14,7 @@ spec:
         kubectl.kubernetes.io/default-container: finetuner
     spec:
       nodeSelector:
-        cloud.google.com/accelerator-type: nvidia-tesla-a100
+        resource-model: h100
       tolerations:
       - key: "nvidia.com/gpu"
         operator: "Exists"
@@ -29,15 +29,15 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: finetuner
-        image: us-docker.pkg.dev/gkebatchexpce3c8dcb/gemma/finetune-gemma-gpu:1.0.0
+        image: us-docker.pkg.dev/$PROJECT_ID/gemma/finetune-gemma-gpu:1.0.0
         resources:
           limits:
-            nvidia.com/gpu: 2
+            nvidia.com/gpu: 8
         env:
         - name: MODEL_NAME
-          value: "google/gemma-2b"
+          value: "google/gemma-7b"
         - name: NEW_MODEL
-          value: "gemma-2b-sql-container-day-live"
+          value: "gemma-7b-sql-team-b"
         - name: LORA_R
           value: "8"
         - name: LORA_ALPHA

@@ -1,7 +1,7 @@
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: ResourceFlavor
 metadata:
-  name: "default-flavor"
+  name: dws-flavor
 ---
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: AdmissionCheck
@@ -30,23 +30,27 @@ metadata:
 spec:
   namespaceSelector: {} 
   resourceGroups:
-  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+  - coveredResources: ["nvidia.com/gpu"]
     flavors:
-    - name: "default-flavor"
+    - name: "dws-flavor"
       resources:
-      - name: "cpu"
-        nominalQuota: 10000  # Infinite quota.
-      - name: "memory"
-        nominalQuota: 10000Gi # Infinite quota.
       - name: "nvidia.com/gpu"
-        nominalQuota: 10000  # Infinite quota.
+        nominalQuota: 20
   admissionChecks:
   - dws-prov
 ---
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: LocalQueue
 metadata:
-  namespace: "default"
+  namespace: "team-a"
+  name: "dws-local-queue"
+spec:
+  clusterQueue: "dws-cluster-queue"
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "team-b"
   name: "dws-local-queue"
 spec:
   clusterQueue: "dws-cluster-queue"
