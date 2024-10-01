@@ -124,7 +124,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
    <img src="./images/kueue_dash_1.png" width="800">
   
-5. Deploying Low Priority workloads: Switch to the `low_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+5. Deploying Low Priority workloads: Switch to the `low_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/low_priority && \
@@ -266,7 +266,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    <img src="./images/04_low_priority_spot.svg" width="800">
    
 
-5. **Deploying High Priority workloads:** Switch to the `high_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+5. **Deploying High Priority workloads:** Switch to the `high_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/high_priority && \
@@ -375,7 +375,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
    <img src="./images/kueue_dash_2.png" width="800">
 
-6. **Deploying compact placement workloads:** Switch to the `compact_placement` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
+6. **Deploying compact placement workloads:** Switch to the `compact_placement` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/compact_placement && \
@@ -450,7 +450,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    gke-gke-batch-refarch-reserved-np-866c1d22-r6rt       Ready    <none>   12h     v1.28.3-gke.1203001
    ```
 
-7. **Deploying JobSet workloads:** Switch to the `jobset` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
+7. **Deploying JobSet workloads:** Switch to the `jobset` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/jobset && \
@@ -492,7 +492,27 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```
 
 
-8. **Deploying workloads to DWS:** Switch to the `dws` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one model training job from each team seeking resources from Dynamic Workload Scheduler ([blog](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler), [docs](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest)).
+8. **Deploying workloads to DWS:** This section of the reference architecture will introduce you to Dynamic Workload Scheduler ([blog](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler), [docs](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest)). DWS supports all-or-nothing scheduling, allowing you to procure all the accelerators needed for your workload all at once instead of acquiring partial resources and waiting to get the full set.
+
+   The examples shown will deploy one model training job for `team-a` seeking A100 GPUs to fine-tune the Gemma 2B model and one job from `team-b` seeking H100 GPUs to fine-tune the Gemma 7B model, in both cases the model is fine-tuned to output SQL when asked a question in natural language.
+
+   The model weights are download from and uploaded to Hugging Face. In order to access these weights, you will need your Hugging Face token which can be generated [here](https://huggingface.co/settings/tokens). Once you have the token, export it as an environment variable by replacing `YOUR_HUGGING_FACE_TOKEN` with your token and create the Kubernetes Secrets for team-a and team-b for their respective workloads to be able to access Hugging Face.  
+
+
+   ```bash
+   export HF_TOKEN=YOUR_HUGGING_FACE_TOKEN && \
+   
+   kubectl create secret generic hf-secret \
+   --from-literal=hf_api_token=${HF_TOKEN} \
+   --dry-run=client -o yaml | kubectl -n team-a apply -f - && \
+   
+   kubectl create secret generic hf-secret \
+   --from-literal=hf_api_token=${HF_TOKEN} \
+   --dry-run=client -o yaml | kubectl -n team-b apply -f -
+   ```
+
+
+   To deploy the workloads, switch to the `dws` directory and run the `create_workloads.sh` script. 
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/dws && \
@@ -502,16 +522,12 @@ This reference architecture illustrates an example of a batch platform on GKE th
    Expected output:
 
    ```bash
-   service/team-a-dws-svc-0 created
-   configmap/team-a-dws-config-0 created
-   job.batch/team-a-dws-job-0 created
+   job.batch/finetune-gemma-2xa100 created
    ...
-   service/team-d-dws-svc-0 created
-   configmap/team-d-dws-config-0 created
-   job.batch/team-d-dws-job-0 created
+   job.batch/finetune-gemma-8xh100 created
    ```
 
-   a. Return to the terminal tab watching the `clusterqueues`, you should see submitted DWS workloads being pending and admitted to the DWS clusterqueues for all four teams.
+   a. Return to the terminal tab watching the `clusterqueues`, you should see submitted DWS workloads being pending and after a while admitted to the DWS clusterqueue for both team-a and team-b.
 
    Expected output:
 
@@ -529,6 +545,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    cq-team-d-compact   team-c-d   StrictFIFO   2                   1
    cq-team-d-hp        team-c-d   StrictFIFO   0                   0
    cq-team-d-lp        team-c-d   StrictFIFO   0                   4
+   dws-cluster-queue          BestEffortFIFO   0                   2
    ```
 
    b. At this time all the workloads have been submitted to the batch platform, and will continue to process in the order decided by Kueue.
@@ -552,6 +569,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
    ```bash
    NAMESPACE   NAME                         COMPLETIONS   DURATION   AGE
+   team-a      finetune-gemma-2xa100        1/1           8m17s      15m
    team-a      team-a-compact-job-0         2/2           7m22s      42m
    team-a      team-a-compact-job-1         2/2           11m        42m
    team-a      team-a-compact-job-2         2/2           7m52s      42m
@@ -568,6 +586,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    team-a      team-a-low-priority-job-1    2/2           11m        58m
    team-a      team-a-low-priority-job-2    2/2           10m        58m
    team-a      team-a-low-priority-job-3    2/2           10m        57m
+   team-b      finetune-gemma-8xh100        1/1           10m8s      15m
    team-b      team-b-compact-job-0         2/2           8m56s      42m
    team-b      team-b-compact-job-1         2/2           7m28s      42m
    team-b      team-b-compact-job-2         2/2           7m16s      42m
@@ -636,6 +655,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    cq-team-d-compact   team-c-d   StrictFIFO   0                   0
    cq-team-d-hp        team-c-d   StrictFIFO   0                   0
    cq-team-d-lp        team-c-d   StrictFIFO   0                   0
+   dws-cluster-queue          BestEffortFIFO   0                   0
    ```
 
    f. Return to the terminal tab watching the nodes, you should see GKE shrink the cluster back down to the initial state of ten nodes, six in the default node pool and four in the reserved node pool.
