@@ -68,9 +68,9 @@ steps:
       - "-xe"
       - "-c"
       - |
-        TF_VAR_cluster_name_prefix="${_CLUSTER_NAME_PREFIX:-batch}"
-        TF_VAR_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINTS:-false}"
-        TF_VAR_environment_name="${_ENVIRONMENT_NAME:-dev}"
+        TF_VAR_cluster_name_prefix="${_CLUSTER_NAME_PREFIX}"
+        TF_VAR_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINTS}"
+        TF_VAR_environment_name="${_ENVIRONMENT_NAME}"
         TF_VAR_environment_project_id="${PROJECT_ID}"
         TF_VAR_region="${_REGION}"
         #TF_VAR_zone="${_ZONE}"
@@ -166,3 +166,8 @@ steps:
 ##########################################################################################
 options:
   logging: CLOUD_LOGGING_ONLY
+substitutions:
+  # default values
+  _CLUSTER_NAME_PREFIX: "batch"
+  _ENABLE_PRIVATE_ENDPOINTS: "false"
+  _ENVIRONMENT_NAME: "dev"
