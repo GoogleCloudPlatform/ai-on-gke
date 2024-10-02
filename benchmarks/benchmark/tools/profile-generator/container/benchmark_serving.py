@@ -370,9 +370,6 @@ def metrics_to_scrape(backend: str) -> List[str]:
     return [
       "jetstream_slots_used_percentage",
       "jetstream_prefill_backlog_size",
-      "jetstream_time_to_first_token",
-      "jetstream_time_per_output_token",
-      "jetstream_time_per_request",
     ]
   else:
     return []
