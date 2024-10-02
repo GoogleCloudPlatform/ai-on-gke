@@ -18,7 +18,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_google_cloud_sql_pg import PostgresChatMessageHistory
 
 
@@ -42,10 +42,11 @@ CONTEXT = "context"
 
 SENTENCE_TRANSFORMER_MODEL = "intfloat/multilingual-e5-small"  # Transformer to use for converting text chunks to vector embeddings
 
-template_str = """Answer the question given by the user in no more than 2 sentences. 
-Use the provided context to improve upon your previous answers. Stick to the facts and be brief. Avoid conversational format.
-\n\n
-Context: {context} 
+template_str = """Provide a concise answer to the user's question in 1-2 sentences, 
+focusing strictly on factual information from the given context.
+Prioritize accuracy, avoid unnecessary details, and eliminate conversational language. 
+Stick to the content of the context for your response.\n
+Context: {context}
 """
 
 prompt = ChatPromptTemplate.from_messages(
