@@ -118,9 +118,8 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
         service_account_name = var.google_service_account
         container {
           # image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
-          image = "us-docker.pkg.dev/globant-gke-ai-resources/gke-ai-text-to-text/gke-rag-frontend@sha256:e56c59747b1ecc192458a3fdd6c74ad6a2099eeabb61e3fd1eb5fc30a147ba1d"
-          # Built from local code. Revert before submitting.
-          # image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:108bb16ee2278255c80524fce125ef349c494cb5bc4ca77dbde5048b8f9448c1"
+          image = "us-docker.pkg.dev/globant-gke-ai-resources/gke-ai-text-to-text/gke-rag-frontend@sha256:6dfc6612ad43d0d5f26e83b1c7c3fc6d8fafe869c21e031c971284cecd9a6bda"
+
           name = "rag-frontend"
 
           port {
