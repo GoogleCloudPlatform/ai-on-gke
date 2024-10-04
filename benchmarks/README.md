@@ -191,14 +191,14 @@ kubectl get service -n benchmark locust-runner-api
 curl -XGET http://$RUNNER_ENDPOINT_IP:8000/run
 ```
 
-A results file will appear in the GCS bucket specified as output_bucket in input variables once the benchmark is completed. Metrics and Locust statistics are visible under the [Cloud Monitoring metrics explorer](http://pantheon.corp.google.com/monitoring/metrics-explorer). In the ai-on-gke/benchmarks/benchmark/tools/locust-load-inference, run the following command to create a sample custom dashboard for the above related example:
+A results file will appear in the GCS bucket specified as output_bucket in input variables once the benchmark is completed. Metrics and Locust statistics are visible under the [Cloud Monitoring metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer). In the ai-on-gke/benchmarks/benchmark/tools/locust-load-inference, run the following command to create a sample custom dashboard for the above related example:
 
 ```sh
 # apply the sample dashboard to easily view and explore metrics
 gcloud monitoring dashboards create   --config-from-file ./sample-dashboards/tgi-dashboard.yaml
 ```
 
-View the results in the [Cloud Monitoring Dashboards](https://pantheon.corp.google.com/monitoring/dashboards) underneath "Benchmark".
+View the results in the [Cloud Monitoring Dashboards](https://console.cloud.google.com/monitoring/dashboards) underneath "Benchmark".
 
 For more ways to interact with the locust benchmarking tooling, see the instructions in the [locust-load-inference README.md here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/benchmarks/benchmark/tools/locust-load-inference/README.md#step-9-start-an-end-to-end-benchmark).
 

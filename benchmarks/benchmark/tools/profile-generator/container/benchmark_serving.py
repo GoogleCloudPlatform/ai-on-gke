@@ -12,7 +12,7 @@ import json
 import random
 import requests
 import time
-from typing import AsyncGenerator, List, Tuple
+from typing import AsyncGenerator, List, Optional, Tuple, Dict
 
 import google.auth
 import google.auth.transport.requests
@@ -21,6 +21,8 @@ import aiohttp
 import numpy as np
 from transformers import AutoTokenizer
 from transformers import PreTrainedTokenizerBase
+
+from google.protobuf.timestamp_pb2 import Timestamp
 
 
 # (prompt len, output len, latency)
@@ -271,46 +273,104 @@ async def benchmark(
   await asyncio.gather(*tasks)
 
 
-def save_json_results(args: argparse.Namespace, benchmark_result):
-  # dimensions values are strings
-  dimensions_json = {}
-  # metrics values are numerical
-  metrics_json = {}
-
+def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics):
   # Setup
-  current_dt = datetime.now().strftime("%Y%m%d-%H%M%S")
-  dimensions_json["date"] = current_dt
-  dimensions_json["backend"] = args.backend
-  dimensions_json["model_id"] = args.model
-  dimensions_json["tokenizer_id"] = args.tokenizer
-  if args.additional_metadata_metrics_to_save is not None:
-    dimensions_json = {
-        **dimensions_json,
-        **json.loads(args.additional_metadata_metrics_to_save),
+  start_dt_proto = Timestamp()
+  start_dt_proto.FromDatetime(args.start_datetime)
+
+  final_json = {
+    # metrics values are numerical
+    "metrics" : {
+      # Traffic
+      "num_prompts": args.num_prompts,
+      "request_rate": args.request_rate,
+      'server_metrics': {
+        **server_metrics
+      },
+      **benchmark_result
+    },
+    # dimensions values are strings
+    "dimensions": {
+      "date": args.start_datetime.strftime('%Y%m%d-%H%M%S'),
+      "backend": args.backend,
+      "model_id": args.model,
+      "tokenizer_id": args.tokenizer,
+      **(json.loads(args.additional_metadata_metrics_to_save) if args.additional_metadata_metrics_to_save else {})
+    },
+    "config": {
+      "model": args.model,
+      "model_server": args.backend,
+      "start_time": {
+        "seconds" : start_dt_proto.seconds,
+        "nanos" : start_dt_proto.nanos
+      }
+    },
+    "summary_stats": {
+      "stats": [{
+        "request_rate": args.request_rate,
+        "request_latency": {
+          "mean": benchmark_result["avg_latency"],
+          "median": benchmark_result["median_latency"],
+          "sd": benchmark_result["sd_latency"],
+          "min": benchmark_result["min_latency"],
+          "max": benchmark_result["max_latency"],
+          "p90": benchmark_result["p90_latency"],
+          "p99": benchmark_result["p99_latency"],
+        },
+        "throughput": {
+          "mean": benchmark_result['throughput']
+        },
+        "input_length": {
+          "mean": benchmark_result["avg_input_len"],
+          "median": benchmark_result["median_input_len"],
+          "sd": benchmark_result["sd_input_len"],
+          "min": benchmark_result["min_input_len"],
+          "max": benchmark_result["max_input_len"],
+          "p90": benchmark_result["p90_input_len"],
+          "p99": benchmark_result["p99_input_len"],
+        },
+        "output_length": {
+          "mean": benchmark_result["avg_output_len"],
+          "median": benchmark_result["median_output_len"],
+          "sd": benchmark_result["sd_output_len"],
+          "min": benchmark_result["min_output_len"],
+          "max": benchmark_result["max_output_len"],
+          "p90": benchmark_result["p90_output_len"],
+          "p99": benchmark_result["p99_output_len"],
+        },
+        "tpot": {
+          "mean": benchmark_result["avg_per_output_token_latency"],
+          "median": benchmark_result["median_per_output_token_latency"],
+          "sd": benchmark_result["sd_per_output_token_latency"],
+          "min": benchmark_result["min_per_output_token_latency"],
+          "max": benchmark_result["max_per_output_token_latency"],
+          "p90": benchmark_result["p90_per_output_token_latency"],
+          "p99": benchmark_result["p99_per_output_token_latency"],
+        },
+        "model_server_metrics" : [{"Name": name, **metrics} for name, metrics in server_metrics.items()]
+      }]
     }
-  metrics_json["num_prompts"] = args.num_prompts
-
-  # Traffic
-  metrics_json["request_rate"] = args.request_rate
-  metrics_json = {**metrics_json, **benchmark_result}
-
-  final_json = {}
-  final_json["metrics"] = metrics_json
-  final_json["dimensions"] = dimensions_json
-
+  }
+  
   # Save to file
   base_model_id = args.model.split("/")[-1]
   file_name = (
-      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{current_dt}.json"
+      f"{args.backend}-{args.request_rate}qps-{base_model_id}-{args.start_datetime.strftime('%Y%m%d-%H%M%S')}.json"
   )
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
 
 def metrics_to_scrape(backend: str) -> List[str]:
+  # Each key in the map is a metric, it has a corresponding 'stats' object
+  # It must be populated on the outputs 'metrics' field as 'key':'stats'
+  # If a value is specified for a given key, it will be populated on the outputs `summary_stats.stats` field as 'value':'stats' as well.
   if backend == "vllm":
     return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
   elif backend == "jetstream":
-    return ["jetstream_slots_used_percentage", "jetstream_prefill_backlog_size"]
+    return [
+      "jetstream_slots_used_percentage",
+      "jetstream_prefill_backlog_size",
+    ]
   else:
     return []
 
@@ -322,25 +382,52 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
   # Prepare an authentication request - helps format the request auth token
   auth_req = google.auth.transport.requests.Request()
 
-  all_metric_results = {}
+  server_metrics = {}
+
+  # Request refresh tokens
+  credentials.refresh(auth_req)
+  url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
+  headers_api = {'Authorization': 'Bearer ' + credentials.token}
+  request_post = requests.get(url=url, headers=headers_api)
+  all_metrics_metadata = request_post.json()
+  if request_post.ok is not True:
+    print("HTTP Error: %s" % (all_metrics_metadata))
+  if all_metrics_metadata["status"] != "success":
+    print("Metadata error response: %s" % all_metrics_metadata["error"])
 
   for metric in metrics:
     print("Metric Name: %s" % (metric))
+
+    # Find metric type
+    metric_type = all_metrics_metadata['data'][metric]
+    if all_metrics_metadata['data'][metric] is None:
+      print("No metric found for: %s" % metric)
+      return
+    metric_type = metric_type[0]['type']
+
     metric_results = {}
     # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
     # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
     queries = {
-      "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-      "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+      "gauge": {
+        "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Sd": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+    },
+      "histogram": {
+        "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
+        "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
     }
-    for query_name, query in queries.items():
-      # Request refresh tokens
-      credentials.refresh(auth_req)
-
+  }
+    for query_name, query in queries[metric_type].items():
       # Configure respective query
       url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/query' % (project_id)
       headers_api = {'Authorization': 'Bearer ' + credentials.token}
@@ -351,15 +438,35 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
       # handle response
       if request_post.ok:
         if response["status"] == "success":
-          metric_results[query_name] = response["data"]["result"][0]["value"][1]
+          metric_results[query_name] = float(response["data"]["result"][0]["value"][1])
           print("%s: %s" % (query_name, response["data"]["result"][0]["value"][1]))
         else:
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
         print("HTTP Error: %s" % (response))
-    all_metric_results[metric] = metric_results
-  return all_metric_results
+    server_metrics[metric] = metric_results
+  return server_metrics
 
+def get_stats_for_set(name, description, points):
+  avg = np.mean(points)
+  median = np.median(points)
+  sd = np.std(points)
+  min = np.min(points)
+  max = np.max(points)
+  p90 = np.percentile(points, 90)
+  p99 = np.percentile(points, 99)
+
+  print(f"Average {description}:" f" {avg:.2f}")
+
+  return {
+    f'avg_{name}':  avg,
+    f'median_{name}': median,
+    f'sd_{name}': sd,
+    f'min_{name}': min,
+    f'max_{name}': max,
+    f'p90_{name}': p90,
+    f'p99_{name}': p99,
+  }
 
 def main(args: argparse.Namespace):
   print(args)
@@ -386,6 +493,8 @@ def main(args: argparse.Namespace):
   )
 
   benchmark_start_time = time.time()
+  args.start_datetime = datetime.fromtimestamp(benchmark_start_time)
+
   asyncio.run(
       benchmark(
           args.backend,
@@ -406,10 +515,14 @@ def main(args: argparse.Namespace):
   print(f"Total time: {benchmark_time:.2f} s")
   print(f"Requests/min: {60 * args.num_prompts / benchmark_time:.2f}")
   benchmark_result['benchmark_time'] = benchmark_time
+  benchmark_result['throughput_rps'] = (args.num_prompts / benchmark_time)
 
   total_output_tokens = np.sum([output_len for _, output_len, _ in
                                 REQUEST_LATENCY])
-  output_tokens_per_min = 60 * total_output_tokens / benchmark_time
+  output_tokens_per_second = total_output_tokens / benchmark_time
+  benchmark_result['throughput'] = output_tokens_per_second
+
+  output_tokens_per_min = 60 * output_tokens_per_second
   print(f"Output_tokens/min: {output_tokens_per_min:.2f}")
   benchmark_result['total_output_token'] = int(total_output_tokens)
   benchmark_result['output_tokens_per_min'] = output_tokens_per_min
@@ -432,58 +545,27 @@ def main(args: argparse.Namespace):
         "Cost $/1k tokens:"
         f" {args.machine_cost * 1000 / (60 * output_tokens_per_min)}"
     )
-  # NOTE: The latency below includes requests awaiting time on server side.
-  # It's not comparable with the model inference latency for batch size 1.
-  avg_latency = np.mean([latency for _, _, latency in REQUEST_LATENCY])
-  print(
-      "Average seconds/request (includes waiting time on server):"
-      f" {avg_latency:.2f}"
-  )
-  benchmark_result['avg_latency'] = avg_latency
 
-  avg_per_token_latency = np.mean([
+  benchmark_result = {
+    **benchmark_result,
+    **(get_stats_for_set("per_token_latency", "seconds/token (includes waiting time on server)", [
       latency / (prompt_len + output_len)
       for prompt_len, output_len, latency in REQUEST_LATENCY
-  ])
-  print(
-      "Average milliseconds/token (includes waiting time on server):"
-      f" {1000 * avg_per_token_latency:.2f}"
-  )
-  benchmark_result['avg_per_token_latency'] = avg_per_token_latency
+    ])),
 
-  avg_per_output_token_latency = np.mean(
-      [latency / output_len for _, output_len, latency in REQUEST_LATENCY]
-  )
-  print(
-      "Average milliseconds/output_token (includes waiting time on server):"
-      f" {1000 * avg_per_output_token_latency:.2f}"
-  )
-  benchmark_result['avg_per_output_token_latency'] = avg_per_output_token_latency
+    # NOTE: The latency below includes requests awaiting time on server side.
+    # It's not comparable with the model inference latency for batch size 1.
+    **(get_stats_for_set("latency", "Average milliseconds/request (includes waiting time on server)" ,[1000 * latency for _, _, latency in REQUEST_LATENCY])),
+    **(get_stats_for_set("per_output_token_latency", "Average milliseconds/output_token (includes waiting time on server)", [1000 * latency / output_len for _, output_len, latency in REQUEST_LATENCY])),
+    **(get_stats_for_set("input_len", "input length", [float(prompt_len) for prompt_len, _, _ in REQUEST_LATENCY])),
+    **(get_stats_for_set("output_len", "output length", [float(output_len) for _, output_len, _ in REQUEST_LATENCY]))
+  }
 
-  avg_input_len = np.mean(
-      [prompt_len for prompt_len, _, _ in REQUEST_LATENCY]
-  )
-  print(
-      "Average input length:"
-      f" {avg_input_len:.2f}"
-  )
-  benchmark_result['avg_input_len'] = avg_input_len
-
-  avg_output_len = np.mean(
-      [output_len for _, output_len, _ in REQUEST_LATENCY]
-  )
-  print(
-      "Average output length:"
-      f" {avg_output_len:.2f}"
-  )
-  benchmark_result['avg_output_len'] = avg_output_len
-
+  server_metrics = {}
   if args.scrape_server_metrics:
     server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_time, args.backend)
-    benchmark_result['server_metrics'] = server_metrics
-
   if args.save_json_results:
-    save_json_results(args, benchmark_result)
+    save_json_results(args, benchmark_result, server_metrics)
 
 
 if __name__ == "__main__":
