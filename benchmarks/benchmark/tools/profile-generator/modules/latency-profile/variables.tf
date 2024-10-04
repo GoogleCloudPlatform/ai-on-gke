@@ -77,6 +77,12 @@ variable "inference_server" {
   }
 }
 
+variable "prompt_dataset" {
+  description = "Prompt dataset URL"
+  type        = string
+  nullable    = false
+}
+
 variable "max_num_prompts" {
   description = "Benchmark server configuration for max number of prompts."
   type        = number

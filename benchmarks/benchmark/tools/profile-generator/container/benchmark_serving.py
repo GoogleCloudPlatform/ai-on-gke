@@ -9,6 +9,7 @@ import argparse
 import asyncio
 from datetime import datetime
 import json
+import os
 import random
 import requests
 import time
@@ -32,6 +33,14 @@ MIN_SEQ_LEN = 4
 CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 
+def save_dataset(dataset_url) -> str:
+  file_name = os.path.basename(dataset_url)
+  response = requests.get(dataset_url)
+  print(f"downloading {dataset_url}")
+  with open(file_name, "wb") as file:
+    file.write(response.content)
+  print(f"downloaded {dataset_url}")
+  return file_name
 
 def sample_requests(
     dataset_path: str,
@@ -91,7 +100,6 @@ def sample_requests(
   sampled_requests = random.sample(filtered_dataset, num_requests)
   return sampled_requests
 
-
 async def get_request(
     input_requests: List[Tuple[str, int, int]],
     request_rate: float,
@@ -108,7 +116,6 @@ async def get_request(
     interval = np.random.exponential(1.0 / request_rate)
     # The next request will be sent after the interval.
     await asyncio.sleep(interval)
-
 
 async def send_request(
     backend: str,
@@ -237,7 +244,6 @@ async def send_request(
   request_latency = request_end_time - request_start_time
   REQUEST_LATENCY.append((prompt_len, output_len, request_latency))
 
-
 async def benchmark(
     backend: str,
     api_url: str,
@@ -271,7 +277,6 @@ async def benchmark(
     )
     tasks.append(task)
   await asyncio.gather(*tasks)
-
 
 def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics):
   # Setup
@@ -486,8 +491,10 @@ def main(args: argparse.Namespace):
   tokenizer = AutoTokenizer.from_pretrained(
       args.tokenizer, trust_remote_code=args.trust_remote_code
   )
+
+  dataset_filename = save_dataset(args.dataset)
   input_requests = sample_requests(
-      args.dataset,
+      dataset_filename,
       args.num_prompts,
       args.max_input_length,
       args.max_output_length,
@@ -567,7 +574,6 @@ def main(args: argparse.Namespace):
   if args.save_json_results:
     save_json_results(args, benchmark_result, server_metrics)
 
-
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(
       description="Benchmark the online serving throughput."
@@ -594,7 +600,12 @@ if __name__ == "__main__":
   parser.add_argument("--endpoint", type=str, default="generate")
   parser.add_argument("--host", type=str, default="localhost")
   parser.add_argument("--port", type=int, default=7080)
-  parser.add_argument("--dataset", type=str, help="Path to the dataset.")
+  parser.add_argument(
+    "--dataset", 
+    type=str, 
+    required=True,
+    help="Dataset url"
+  )
   parser.add_argument(
     "--model",
     type=str,

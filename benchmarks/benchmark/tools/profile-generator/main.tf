@@ -68,6 +68,7 @@ module "latency-profile" {
       port = var.targets.manual.service_port
     }
   }
+  prompt_dataset                             = var.prompt_dataset
   max_num_prompts                            = var.max_num_prompts
   max_output_len                             = var.max_output_len
   max_prompt_len                             = var.max_prompt_len

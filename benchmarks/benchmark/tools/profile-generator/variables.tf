@@ -64,6 +64,13 @@ variable "build_latency_profile_generator_image" {
   default     = true
 }
 
+variable "prompt_dataset" {
+  description = "Prompt dataset URL"
+  type        = string
+  nullable    = false
+  default     = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
+}
+
 variable "max_num_prompts" {
   description = "Benchmark server configuration for max number of prompts."
   type        = number
