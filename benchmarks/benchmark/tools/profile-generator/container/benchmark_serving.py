@@ -594,7 +594,7 @@ if __name__ == "__main__":
   parser.add_argument("--endpoint", type=str, default="generate")
   parser.add_argument("--host", type=str, default="localhost")
   parser.add_argument("--port", type=int, default=7080)
-parser.add_argument("--dataset", type=str, help="Path to the dataset.")
+  parser.add_argument("--dataset", type=str, help="Path to the dataset.")
   parser.add_argument(
     "--model",
     type=str,
