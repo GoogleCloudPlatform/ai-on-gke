@@ -77,6 +77,17 @@ variable "inference_server" {
   }
 }
 
+variable "prompt_dataset" {
+  description = "Prompt dataset URL"
+  type        = string
+  nullable    = false
+  default     = "sharegpt"
+  validation {
+    condition     = contains(["sharegpt"], var.prompt_dataset)
+    error_message = "prompt_dataset must be one of the following: 'sharegpt'"
+  }
+}
+
 variable "max_num_prompts" {
   description = "Benchmark server configuration for max number of prompts."
   type        = number

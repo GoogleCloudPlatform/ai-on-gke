@@ -54,6 +54,7 @@ resource "kubernetes_manifest" "latency-profile-generator" {
     inference_server_service_port              = var.inference_server.service.port
     tokenizer                                  = var.inference_server.tokenizer
     latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
+    prompt_dataset                             = var.prompt_dataset
     max_num_prompts                            = var.max_num_prompts
     max_output_len                             = var.max_output_len
     max_prompt_len                             = var.max_prompt_len
