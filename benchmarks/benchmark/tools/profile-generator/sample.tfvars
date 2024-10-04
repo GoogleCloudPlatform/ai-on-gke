@@ -30,7 +30,6 @@ namespace = "benchmark"
 latency_profile_kubernetes_service_account = "prom-frontend-sa"
 output_bucket                              = "your_project_id-benchmark-output-bucket"
 k8s_hf_secret                              = "hf-token"
-prompt_dataset                             = "your_prompt_dataset"
 
 # Benchmark configuration for Latency Profile Generator accessing inference server
 request_rates          = [5, 10, 15, 20]

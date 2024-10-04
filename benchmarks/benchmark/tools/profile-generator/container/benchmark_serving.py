@@ -33,15 +33,6 @@ MIN_SEQ_LEN = 4
 CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 
-def save_dataset(dataset_url) -> str:
-  file_name = os.path.basename(dataset_url)
-  response = requests.get(dataset_url)
-  print(f"downloading {dataset_url}")
-  with open(file_name, "wb") as file:
-    file.write(response.content)
-  print(f"downloaded {dataset_url}")
-  return file_name
-
 def sample_requests(
     dataset_path: str,
     num_requests: int,
@@ -492,9 +483,8 @@ def main(args: argparse.Namespace):
       args.tokenizer, trust_remote_code=args.trust_remote_code
   )
 
-  dataset_filename = save_dataset(args.dataset)
   input_requests = sample_requests(
-      dataset_filename,
+      args.dataset,
       args.num_prompts,
       args.max_input_length,
       args.max_output_length,

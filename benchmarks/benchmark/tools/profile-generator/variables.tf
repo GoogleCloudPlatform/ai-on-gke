@@ -68,7 +68,11 @@ variable "prompt_dataset" {
   description = "Prompt dataset URL"
   type        = string
   nullable    = false
-  default     = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
+  default     = "sharegpt"
+  validation {
+    condition = contains(["sharegpt"], var.prompt_dataset)
+    error_message = "prompt_dataset must be one of the following: 'sharegpt'"
+  }
 }
 
 variable "max_num_prompts" {
