@@ -70,7 +70,7 @@ variable "prompt_dataset" {
   nullable    = false
   default     = "sharegpt"
   validation {
-    condition = contains(["sharegpt"], var.prompt_dataset)
+    condition     = contains(["sharegpt"], var.prompt_dataset)
     error_message = "prompt_dataset must be one of the following: 'sharegpt'"
   }
 }
