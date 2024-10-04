@@ -11,7 +11,7 @@ RUN pip install -r requirements.txt
 
 RUN pip install -U "huggingface_hub[cli]"
 
-RUN wget "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
+RUN wget https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json
 
 COPY benchmark_serving.py benchmark_serving.py
 COPY latency_throughput_curve.sh latency_throughput_curve.sh
