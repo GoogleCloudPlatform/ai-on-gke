@@ -196,7 +196,6 @@ steps:
 - id: 'test rag'
   name: 'gcr.io/$PROJECT_ID/terraform'
   entrypoint: 'sh'
-  secretEnv: ['KAGGLE_USERNAME', 'KAGGLE_KEY']
   args:
   - '-c'
   - |
@@ -262,8 +261,6 @@ steps:
     echo "pass" > /workspace/rag_frontend_result.txt
 
     cd /workspace/
-    sed -i "s/<username>/$$KAGGLE_USERNAME/g" ./applications/rag/example_notebooks/rag-data-ingest-with-kubernetes-docs.ipynb
-    sed -i "s/<token>/$$KAGGLE_KEY/g" ./applications/rag/example_notebooks/rag-data-ingest-with-kubernetes-docs.ipynb
     gsutil cp ./applications/rag/example_notebooks/rag-data-ingest-with-kubernetes-docs.ipynb gs://gke-aieco-rag-$SHORT_SHA-$_BUILD_ID/
     kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID $(kubectl get pod -l app=jupyterhub,component=hub -n rag-$SHORT_SHA-$_BUILD_ID -o jsonpath="{.items[0].metadata.name}") -- jupyterhub token admin --log-level=CRITICAL | xargs python3 ./applications/rag/notebook_starter.py
     # Wait for jupyterhub to trigger notebook pod startup
@@ -392,9 +389,3 @@ options:
   substitutionOption: "ALLOW_LOOSE"
   machineType: "E2_HIGHCPU_8"
 timeout: 5400s
-availableSecrets:
-  secretManager:
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-username/versions/latest
-    env: "KAGGLE_USERNAME"
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-key/versions/latest
-    env: "KAGGLE_KEY"
