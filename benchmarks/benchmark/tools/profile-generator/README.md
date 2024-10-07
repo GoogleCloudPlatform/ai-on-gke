@@ -25,7 +25,7 @@ It currently supports the following frameworks:
 - text generation inference (tgi)
 - vllm
 - sax
--jetstream
+- jetstream
 
 ## Instructions
 
@@ -48,6 +48,12 @@ not logged into gcloud, run the following:
 
 ```bash
 gcloud auth application-default login
+```
+
+If you do not already have an output bucket, create one by running:
+
+```
+gcloud storage buckets create gs://OUTPUT_BUCKET
 ```
 
 To give viewer permissions on the gcs bucket to the gcloud service account,
@@ -88,13 +94,13 @@ gcloud artifacts repositories create ai-benchmark --location=us-central1 --repos
 
 ### Step 4: create and configure terraform.tfvars
 
-Create a `terraform.tfvars` file. `./sample-tfvars` is provided as an example
+Create a `terraform.tfvars` file. `./sample.tfvars` is provided as an example
 file. You can copy the file as a starting point.
 Note that at a minimum you will have to change the existing
 `credentials_config`, `project_id`, and `artifact_registry`.
 
 ```bash
-cp ./sample-tfvars terraform.tfvars
+cp ./sample.tfvars terraform.tfvars
 ```
 
 Fill out your `terraform.tfvars` with the desired model and server configuration, referring to the list of required and optional variables [here](#variables). The following variables are required:
