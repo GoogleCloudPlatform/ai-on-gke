@@ -28,6 +28,8 @@ spec:
               value: ${inference_server_service_port}
             - name: BACKEND
               value: ${inference_server_framework}
+            - name: PROMPT_DATASET
+              value: ${prompt_dataset}
             - name: INPUT_LENGTH
               value: ${max_prompt_len}
             - name: OUTPUT_LENGTH
