@@ -114,7 +114,7 @@ convert_maxtext_checkpoint() {
     git checkout ${VERSION}
     python3 -m pip install -r requirements.txt
 
-    if [ $VERSION == "jetstream-v0.2.2" || $VERSION == "jetstream-v0.2.1" || $VERSION == "jetstream-v0.2.0" ]; then
+    if [[ $VERSION == "jetstream-v0.2.2" || $VERSION == "jetstream-v0.2.1" || $VERSION == "jetstream-v0.2.0" ]]; then
         pip3 install orbax-checkpoint==0.5.20
     else
         pip3 install orbax-checkpoint==0.6.0
