@@ -42,6 +42,8 @@ spec:
               value: ${output_bucket}
             - name: SCRAPE_SERVER_METRICS
               value: ${scrape_server_metrics}
+            - name: MAX_NUM_PROMPTS
+              value: ${max_num_prompts}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:
