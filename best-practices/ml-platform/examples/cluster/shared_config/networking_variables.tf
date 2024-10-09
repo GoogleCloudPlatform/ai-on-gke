@@ -1,5 +1,5 @@
 locals {
-  network_name    = var.network_name != null ? var.network_name : "ml-vpc-${var.environment_name}"
+  network_name    = var.network_name != null ? var.network_name : "${var.cluster_name_prefix}-vpc-${var.environment_name}"
   subnetwork_name = var.subnetwork_name != null ? var.subnetwork_name : var.region
 }
 

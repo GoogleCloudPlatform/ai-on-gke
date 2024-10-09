@@ -53,13 +53,19 @@ gcloud config set core/project ${PROJECT_ID} &&
     gcloud artifacts repositories create tutorial-installer --repository-format=docker --location=${REGION} --description="Repo for platform installer container images built by Cloud Build."
   fi
 
+BUILD_SUBSTITUTIONS="_REGION=${REGION},_ZONE=${ZONE}"
+
+if [[ -v ENVIRONMENT_NAME ]] && [[ ! -z "${ENVIRONMENT_NAME}" ]]; then
+  BUILD_SUBSTITUTIONS+=",_ENVIRONMENT_NAME=${ENVIRONMENT_NAME}"
+fi
+
 cd "${SCRIPT_PATH}/.."
 gcloud builds submit \
   --async \
   --config gke-batch-refarch/cloudbuild-create.yaml \
   --ignore-file gke-batch-refarch/cloudbuild-ignore \
   --project="${PROJECT_ID}" \
-  --substitutions _REGION=${REGION},_ZONE=${ZONE},_ENVIRONMENT_NAME=${ENVIRONMENT_NAME} &&
+  --substitutions ${BUILD_SUBSTITUTIONS} &&
   echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds;region=global?project=${PROJECT_ID}\e[0m"
 
 cd -
