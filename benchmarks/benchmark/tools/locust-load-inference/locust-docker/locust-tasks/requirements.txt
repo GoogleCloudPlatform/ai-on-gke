@@ -28,7 +28,7 @@ transformers==4.39.3
 typing_extensions==4.1.1
 urllib3==1.26.18
 Werkzeug==3.0.3
-zipp==3.8.0
+zipp==3.19.1
 zope.event==4.5.0
 zope.interface==5.4.0
 TensorFlow >= 2.0
