@@ -8,7 +8,7 @@ Learn how to serve the Mistral 7B instruct v0.1 chat model on GKE using just 1 x
 *   GPU Quota: Confirm you have the quota for at least one L4 GPU in your Google Cloud account.
 *   Model Access: Secure access to the Mistral 7B model by agreeing to the terms on Hugging Face, which typically involves creating an account and accepting the model's use conditions.
 *   Ensure you currently have installed a stable version of Transformers, 4.34.0 or newer.
-*  (OPTIONAL) If you intend to utlize the HPA, (horizontal pod autoscaler) in order to scale for incoming requests please make sure that the 'maxReplicas' assignment in your mistral-7b.yaml HorizontalPodAutoscaler section is configured to equal or be less than the number of GPUs you have available for the deployment. Additionally, ensure that you have a DCGM (Data Center GPU Manager) NVIDIA pod configured within your Kubernetes cluster to collect GPU metrics. Look at DCGM documentation for guidance on setting up and configuring this pod properly. This is essential for the Horizontal Pod Autoscaler (HPA) to accurately scale based on GPU utilization. Without proper GPU metrics, the autoscaler won't be able to make informed scaling decisions, potentially leading to under or over-provisioning of resources. Integrate the DCGM pod within your cluster's monitoring system to provide real-time GPU performance data to the HPA.+
+*  (OPTIONAL) If you intend to utilize the HPA, (horizontal pod autoscaler) in order to scale for incoming requests please make sure that the 'maxReplicas' assignment in your mistral-7b.yaml HorizontalPodAutoscaler section is configured to equal or be less than the number of GPUs you have available for the deployment. Additionally, ensure that you have a DCGM (Data Center GPU Manager) NVIDIA pod configured within your Kubernetes cluster to collect GPU metrics. Look at DCGM documentation for guidance on setting up and configuring this pod properly. This is essential for the Horizontal Pod Autoscaler (HPA) to accurately scale based on GPU utilization. Without proper GPU metrics, the autoscaler won't be able to make informed scaling decisions, potentially leading to under or over-provisioning of resources. Integrate the DCGM pod within your cluster's monitoring system to provide real-time GPU performance data to the HPA.+
 
 
 ### GPU-Memory Allocation 
@@ -104,7 +104,7 @@ Pod Template:
   Labels:  app=mistral-7b
   Containers:
    mistral-7b:
-    Image:      ghcr.io/huggingface/text-generation-inference:1.1.1
+    Image:      us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
     Port:       8080/TCP
     Host Port:  0/TCP
     Limits:

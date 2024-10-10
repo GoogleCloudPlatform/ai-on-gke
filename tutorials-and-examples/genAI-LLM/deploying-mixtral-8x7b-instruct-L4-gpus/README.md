@@ -10,7 +10,7 @@ This guide walks you through the process of serving the Mixtral 8x7 model on Goo
 Transformers Library: Ensure you have installed a stable version of the Transformers library, version 4.34.0 or newer.
 *   HPA (Optional): If you plan to use the Horizontal Pod Autoscaler (HPA) to scale for incoming requests, ensure the 'maxReplicas' assignment in your mixtral-8x7.yaml HorizontalPodAutoscaler section is set to equal or be less than the number of GPUs available for deployment.
 
-### GPU-Memory Allication and Quantization Strategy
+### GPU-Memory Allocation and Quantization Strategy
 GPU-Memory Allocation and Quantization Strategy
 When deploying the Mixtral 8x7 model, it's crucial to assess both the memory requirements and the computational efficiency, especially when leveraging Nvidia L4 GPUs, each with 24 GB of GPU memory. A key factor in this consideration is the use of quantization techniques to optimize model performance and memory usage.
 
@@ -127,7 +127,7 @@ Pod Template:
   Labels:  app=mixtral8x7b
   Containers:
    mixtral8x7b:
-    Image:      ghcr.io/huggingface/text-generation-inference:1.4.3
+    Image:      us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
     Port:       8080/TCP
     Host Port:  0/TCP
     Limits:
