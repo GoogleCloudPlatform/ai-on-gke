@@ -51,6 +51,7 @@ spec:
         - name: vllm
           ports:
             - containerPort: 80
+              name: metrics
           image: "vllm/vllm-openai:v0.5.5"
           command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
           args: ["--model", "${model_id}", "--tensor-parallel-size", "${gpu_count}", "--port", "80", "--swap-space", "${swap_space}", "--disable-log-requests"]
