@@ -42,6 +42,7 @@ const (
 	V4PodSliceAccelerator  = "tpu-v4-podslice"
 	V5ePodSliceAccelerator = "tpu-v5-lite-podslice"
 	V5pPodSliceAccelerator = "tpu-v5p-slice"
+	V6eSliceAccelerator    = "tpu-v6e-slice"
 
 	// Resource type labels
 	GoogleTPUResource = "google.com/tpu"
@@ -438,7 +439,7 @@ func tpuTopologyToNodeCount(accelerator, topo string) (int, error) {
 	switch accelerator {
 	case V4PodSliceAccelerator, V5pPodSliceAccelerator:
 		expectedDims = 3
-	case V5ePodSliceAccelerator:
+	case V5ePodSliceAccelerator, V6eSliceAccelerator:
 		expectedDims = 2
 	default:
 		return 0, fmt.Errorf("invalid accelerator: %v", accelerator)
@@ -475,6 +476,8 @@ func tpuMachineType(accel string, tpuRequest int) (string, error) {
 		return fmt.Sprintf("ct5lp-hightpu-%vt", tpuRequest), nil
 	case V5pPodSliceAccelerator: // v5p
 		return fmt.Sprintf("ct5p-hightpu-%vt", tpuRequest), nil
+	case V6eSliceAccelerator: // v6e
+		return fmt.Sprintf("ct6e-standard-%vt", tpuRequest), nil
 	}
 
 	return "", fmt.Errorf("invalid accelerator: %v", accel)
