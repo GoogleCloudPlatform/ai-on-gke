@@ -132,6 +132,13 @@ variable "tokenizer" {
   default     = "tiiuae/falcon-7b"
 }
 
+variable "models" {
+  description = "A list of comma separated models to benchmark."
+  type        = string
+  nullable    = false
+  default     = "tiiuae/falcon-7b"
+}
+
 variable "output_bucket" {
   description = "Bucket name for storing results"
   type        = string
@@ -176,4 +183,17 @@ variable "benchmark_time_seconds" {
   type        = number
   default     = 120
   nullable    = false
+}
+
+variable "file_prefix" {
+  description = "A prefix to the saved json file, useful to add additional context to the benchmark."
+  type        = string
+  nullable    = false
+  default     = "benchmark"
+}
+
+variable "save_aggregated_result" {
+  description = "Whether to save aggregated result, useful when benchmarking multiple models."
+  type        = bool
+  default     = false
 }
