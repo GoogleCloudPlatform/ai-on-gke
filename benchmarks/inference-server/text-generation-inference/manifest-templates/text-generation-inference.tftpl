@@ -51,7 +51,7 @@ spec:
         - name: text-generation-inference
           ports:
             - containerPort: 80
-          image: "ghcr.io/huggingface/text-generation-inference:1.4.2"
+          image: "ghcr.io/huggingface/text-generation-inference:1.4.2"  # TODO(annapendleton,alvarobartt): update to Hugging Face DLC once verified
           args: ["--model-id", "${model_id}", "--num-shard", "${gpu_count}", "--max-concurrent-requests", "${max_concurrent_requests}"]
           env:
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}

@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: mistral-7b
-        image: ghcr.io/huggingface/text-generation-inference:1.1.1
+        image: us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
         resources:
           limits:
             nvidia.com/gpu: 1
