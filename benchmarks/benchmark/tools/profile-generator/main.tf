@@ -80,4 +80,7 @@ module "latency-profile" {
   hugging_face_secret                        = var.hugging_face_secret
   hugging_face_secret_version                = var.hugging_face_secret_version
   scrape_server_metrics                      = var.scrape_server_metrics
+  file_prefix                                = var.file_prefix
+  save_aggregated_result                     = var.save_aggregated_result
+  models                                     = var.models
 }
