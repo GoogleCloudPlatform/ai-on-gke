@@ -30,7 +30,7 @@ spec:
         cloud.google.com/gke-accelerator: "nvidia-l4"
       containers:
       - name: mixtral8x7b
-        image: ghcr.io/huggingface/text-generation-inference:1.4.3
+        image: us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
         ports:
         - name: server-port
           containerPort: 8080
