@@ -111,7 +111,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
     - Click [File] -> [Open From URL] and paste: `https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-data-ingest-with-kubernetes-docs.ipynb`
 
 
-4. Generate vector embeddings: Run all the cells in the notebook to generate vector embeddings for the [Kubernetes documentation](https://github.com/dohsimpson/kubernetes-doc-pdf) and store them in the `pgvector` CloudSQL instance.
+3. Generate vector embeddings: Run all the cells in the notebook to generate vector embeddings for the [Kubernetes documentation](https://github.com/dohsimpson/kubernetes-doc-pdf) and store them in the `pgvector` CloudSQL instance using a Ray Job.
 
 # Launch the frontend chat interface
 
