@@ -26,19 +26,23 @@ fi
 PYTHON="python3"
 PYTHON_OPTS="benchmark_serving.py "
 for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
+  echo "Benchmaking request rate: ${request_rate}"
   # TODO: Check if profile already exists, if so then skip
   timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
   output_file="latency-profile-${timestamp}.txt"
   if [ ${request_rate} == 0 ]; then
     request_rate="inf"
-    NUM_PROMPTS=$MAX_NUM_PROMPTS
+    num_prompts=$MAX_NUM_PROMPTS
   else
-    NUM_PROMPTS=$((${request_rate} * $BENCHMARK_TIME_SECONDS))
+    num_prompts=$(awk "BEGIN {print int($request_rate * $BENCHMARK_TIME_SECONDS)}")
   fi
-    
-  PYTHON_OPTS="$PYTHON_OPTS --save-json-results --host=$IP   --port=$PORT   --model=$TOKENIZER --dataset=$PROMPT_DATASET_FILE --tokenizer=$TOKENIZER --request-rate=$request_rate --backend=$BACKEND --num-prompts=$NUM_PROMPTS --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH"
+  echo "TOTAL prompts: $num_prompts"  # Output: 8
+  PYTHON_OPTS="$PYTHON_OPTS --save-json-results --host=$IP   --port=$PORT --dataset=$PROMPT_DATASET_FILE --tokenizer=$TOKENIZER --request-rate=$request_rate --backend=$BACKEND --num-prompts=$num_prompts --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH --file-prefix=$FILE_PREFIX --models=$MODELS"
   if [[ "$SCRAPE_SERVER_METRICS" = "true" ]]; then
     PYTHON_OPTS="$PYTHON_OPTS --scrape-server-metrics"
+  fi
+  if [[ "$SAVE_AGGREGATED_RESULT" = "true" ]]; then
+    PYTHON_OPTS="$PYTHON_OPTS --save-aggregated-result"
   fi
   $PYTHON $PYTHON_OPTS > $output_file
   cat $output_file
