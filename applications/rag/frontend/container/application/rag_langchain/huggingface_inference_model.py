@@ -67,7 +67,7 @@ class HuggingFaceCustomChatModel(LLM):
             raise ValueError("stop kwargs are not permitted.")
 
         api_endpoint = f"http://{INFERENCE_ENDPOINT}/generate"
-        body = {"inputs": prompt}
+        body = {"inputs": prompt,  "parameters":{ "max_new_tokens": 2048 }}
         headers = {"Content-Type": "application/json"}
         generated_output = post_request(api_endpoint, body, headers)
         generated_text = generated_output.get("generated_text", "")
