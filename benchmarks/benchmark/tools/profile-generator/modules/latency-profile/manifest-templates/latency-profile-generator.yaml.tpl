@@ -20,6 +20,8 @@ spec:
           image: ${artifact_registry}/latency-profile:latest
           command: ["bash", "-c", "./latency_throughput_curve.sh"]
           env:
+            - name: MODELS
+              value: ${models}
             - name: TOKENIZER
               value: ${tokenizer}
             - name: IP
@@ -28,6 +30,8 @@ spec:
               value: ${inference_server_service_port}
             - name: BACKEND
               value: ${inference_server_framework}
+            - name: PROMPT_DATASET
+              value: ${prompt_dataset}
             - name: INPUT_LENGTH
               value: ${max_prompt_len}
             - name: OUTPUT_LENGTH
@@ -40,6 +44,12 @@ spec:
               value: ${output_bucket}
             - name: SCRAPE_SERVER_METRICS
               value: ${scrape_server_metrics}
+            - name: MAX_NUM_PROMPTS
+              value: ${max_num_prompts}
+            - name: FILE_PREFIX
+              value: ${file_prefix}
+            - name: SAVE_AGGREGATED_RESULT
+              value: ${save_aggregated_result}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:

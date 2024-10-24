@@ -68,6 +68,7 @@ module "latency-profile" {
       port = var.targets.manual.service_port
     }
   }
+  prompt_dataset                             = var.prompt_dataset
   max_num_prompts                            = var.max_num_prompts
   max_output_len                             = var.max_output_len
   max_prompt_len                             = var.max_prompt_len
@@ -79,4 +80,7 @@ module "latency-profile" {
   hugging_face_secret                        = var.hugging_face_secret
   hugging_face_secret_version                = var.hugging_face_secret_version
   scrape_server_metrics                      = var.scrape_server_metrics
+  file_prefix                                = var.file_prefix
+  save_aggregated_result                     = var.save_aggregated_result
+  models                                     = var.models
 }

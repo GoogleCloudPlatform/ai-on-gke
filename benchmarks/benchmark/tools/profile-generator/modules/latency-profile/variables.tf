@@ -77,6 +77,17 @@ variable "inference_server" {
   }
 }
 
+variable "prompt_dataset" {
+  description = "Prompt dataset URL"
+  type        = string
+  nullable    = false
+  default     = "sharegpt"
+  validation {
+    condition     = contains(["sharegpt"], var.prompt_dataset)
+    error_message = "prompt_dataset must be one of the following: 'sharegpt'"
+  }
+}
+
 variable "max_num_prompts" {
   description = "Benchmark server configuration for max number of prompts."
   type        = number
@@ -116,6 +127,13 @@ variable "request_rates" {
 
 variable "tokenizer" {
   description = "Benchmark server configuration for tokenizer."
+  type        = string
+  nullable    = false
+  default     = "tiiuae/falcon-7b"
+}
+
+variable "models" {
+  description = "A list of comma separated models to benchmark."
   type        = string
   nullable    = false
   default     = "tiiuae/falcon-7b"
@@ -165,4 +183,17 @@ variable "benchmark_time_seconds" {
   type        = number
   default     = 120
   nullable    = false
+}
+
+variable "file_prefix" {
+  description = "A prefix to the saved json file, useful to add additional context to the benchmark."
+  type        = string
+  nullable    = false
+  default     = "benchmark"
+}
+
+variable "save_aggregated_result" {
+  description = "Whether to save aggregated result, useful when benchmarking multiple models."
+  type        = bool
+  default     = false
 }
