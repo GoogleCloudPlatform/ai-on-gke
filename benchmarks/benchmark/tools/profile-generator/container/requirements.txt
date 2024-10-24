@@ -35,3 +35,4 @@ pynvml == 11.5.0
 accelerate
 aiohttp
 google-auth
+prometheus_client >= 0.21.0
