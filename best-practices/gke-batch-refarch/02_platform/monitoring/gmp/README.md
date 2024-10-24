@@ -4,7 +4,7 @@ This document describes how to monitor Kueue metrics using Google Managed Promet
 
 ## Overview
 
-Kueue metrics are automatically collected by Google Managed Prometheus using managed collection. This means Prometheus-based collectors run as a Daemonset, ensuring scalability by only scraping targets on colocated nodes. The collected metrics are then exported and made available in Google Cloud's Monitoring service.
+You can configure Google Managed Prometheus to automatically collect Kueue metrics. The collected metrics are then exported and made available in Google Cloud's Monitoring service.
 
 ## Viewing the Dashboard
 
@@ -15,7 +15,7 @@ The Kueue dashboard is available in Google Cloud Monitoring. This dashboard prov
 
 ## Configuring Managed Collection and Creating the Dashboard
 
-The following command will configure Managed Collection for Kueue and Create the Dashboard in Cloud Monitoring. 
+Run the following command to configure Managed Collection for Kueue and Create the Dashboard in Cloud Monitoring. 
 
 ```bash
 ./install-gmp.sh
