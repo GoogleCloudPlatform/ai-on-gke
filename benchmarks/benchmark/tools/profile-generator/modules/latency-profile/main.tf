@@ -23,8 +23,8 @@ locals {
     ? "${path.module}/manifest-templates"
     : pathexpand(var.templates_path)
   )
-  latency-profile-generator-template                = "${path.module}/manifest-templates/latency-profile-generator.yaml.tpl"
-  latency-profile-generator-podmonitoring-template  = "${path.module}/manifest-templates/latency-profile-generator-podmonitoring.yaml.tpl"
+  latency-profile-generator-template               = "${path.module}/manifest-templates/latency-profile-generator.yaml.tpl"
+  latency-profile-generator-podmonitoring-template = "${path.module}/manifest-templates/latency-profile-generator-podmonitoring.yaml.tpl"
   hugging_face_token_secret = (
     var.hugging_face_secret == null || var.hugging_face_secret_version == null
     ? null
@@ -72,7 +72,7 @@ resource "kubernetes_manifest" "latency-profile-generator" {
 }
 
 resource "kubernetes_manifest" "latency-profile-generator-podmonitoring" {
-   manifest = yamldecode(templatefile(local.latency-profile-generator-podmonitoring-template, {
-     namespace = var.namespace
-   }))
+  manifest = yamldecode(templatefile(local.latency-profile-generator-podmonitoring-template, {
+    namespace = var.namespace
+  }))
 }
