@@ -64,3 +64,15 @@ spec:
                   name: hf-token
                   key: HF_TOKEN
 %{ endfor ~}
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: "lpg-driver-podmonitoring"
+spec:
+  selector:
+    matchLabels:
+      name: latency-profile-generator
+  endpoints:
+  - port: 9090
+    interval: 15s
