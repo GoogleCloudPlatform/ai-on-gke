@@ -1,6 +1,6 @@
 ## Populate a Hyperdisk ML Disk from Google Cloud Storage
 
-### This guide uses the Google Cloud API to create a Hyperdisk ML disk and then use it in a GKE cluster. Refer to [this documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/hyperdisk-ml) for instructions all in the GKE API
+### This guide uses the Google Cloud API to create a Hyperdisk ML disk from data in Cloud Storage and then use it in a GKE cluster. Refer to [this documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/hyperdisk-ml) for instructions all in the GKE API
 
 1. Create a new GCE instance that you will use to hydrate the new Hyperdisk ML disk with data.
 
