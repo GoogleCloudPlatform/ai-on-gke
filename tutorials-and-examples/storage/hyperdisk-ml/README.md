@@ -2,13 +2,16 @@
 
 1. Create a new GCE instance that you will use to hydrate the new Hyperdisk ML with data
 
-
 ```sh
 VM_NAME=hydrator
 MACHINE_TYPE=c3-standard-4
 IMAGE_FAMILY=debian-11
 IMAGE_PROJECT=debian-cloud
 ZONE=us-central1-a
+SNAP_SHOT_NAME=hdmlsnapshot
+PROJECT_ID=myproject
+
+DISK_NAME=model1
 
 gcloud compute instances create $VM_NAME \
     --image-family=$IMAGE_FAMILY \
@@ -28,10 +31,8 @@ gcloud compute ssh $VM_NAME
 2. Create and attach the disk to the new GCE VM
 
 ```sh
-DISK_NAME=model1
 SIZE=140
 THROUGHPUT=12000
-ZONE=us-central1-a
 
 gcloud compute disks create $DISK_NAME --type=hyperdisk-ml \
  --size=$SIZE --provisioned-throughput=$THROUGHPUT  \
@@ -51,9 +52,7 @@ DEVICE=nvme0n2
 GCS_DIR=gs://vertex-model-garden-public-us-central1/llama2/llama2-70b-hf 
 % sudo /sbin/mkfs -t ext4 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/$DEVICE
 % sudo mount $DEVICE /mnt
-
 % gcloud storage cp -r $GCS_DIR /mnt
-
 % sudo umount /mnt
 ```
 
@@ -63,16 +62,46 @@ gcloud compute instances detach-disk $VM_NAME --disk=$DISK_NAME --zone=$ZONE
 gcloud compute disks update $DISK_NAME --access-mode=READ_ONLY_MANY  --zone=$ZONE
 ```
 
-5. You now have a hyperdisk ML volume populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance
+5. Create a snapshot from the disk to use as a template
+
+```sh
+gcloud compute snapshots create $SNAP_SHOT_NAME \
+    --source-disk-zone=$ZONE \
+    --source-disk=$DISK_NAME \
+    --project=$PROJECT_ID
+```
+
+
+6. You now have a hyperdisk ML volume populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance
 
 ```sh
 gcloud compute instances delete $VM_NAME \
 --zone=$ZONE
 ```
 
-6. To use this new Hyperdisk ML volume you first create your Hypedisk ML Storage Class
+7. To use this new Hyperdisk ML volume you first create your Hypedisk ML multi zone and standard Storage Classes. Hyperdisk ML disks are zonal and the Hyperdisk-ml-multi-zone storage class automatically provisions disks in zones where the pods using them are. 
+Replace the zones in this class with the zones you want to allow the Hyperdisk ML snapshot to create disks in. 
 
 ```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hyperdisk-ml-multi-zone
+parameters:
+  type: hyperdisk-ml
+  provisioned-throughput-on-create: "2400Mi"
+  enable-multi-zone-provisioning: "true"
+provisioner: pd.csi.storage.gke.io
+allowVolumeExpansion: false
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.gke.io/zone
+    values:
+    - us-central1-a
+    - us-central1-c
+--- 
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -85,68 +114,95 @@ reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 ```
 
-7. You can then reference this volume to your PVC spec replacing the spec.csi.volumeHandle with the patch to your DISK_NAME
+7. You will then need to create a volumeSnapshotClass and VolumeSnapshotContent config to use your snapshot. Replace the VolumeSnapshotContent.spec.source.snapshotHandle with the path to your snapshot. 
 
 ```yaml
-apiVersion: v1
-kind: PersistentVolume
+
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
 metadata:
-  name: hdml-static-pv
-spec:
-  storageClassName: "hyperdisk-ml"
-  capacity:
-    storage: 300Gi
-  accessModes:
-    - ReadOnlyMany
-  claimRef:
-    namespace: default
-    name: hdml-static-pvc
-  csi:
-    driver: pd.csi.storage.gke.io
-    volumeHandle: projects/PROJECT/zones/ZONE/disks/DISK_NAME
-    fsType: ext4
-    readOnly: true
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: topology.gke.io/zone
-          operator: In
-          values:
-          - ZONE
+  name: my-snapshotclass
+driver: pd.csi.storage.gke.io
+deletionPolicy: Delete
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
 metadata:
-  namespace: default
-  name: hdml-static-pvc
+  name: restored-snapshot
 spec:
-  storageClassName: "hyperdisk-ml"
-  volumeName: hdml-static-pv
+  volumeSnapshotClassName: my-snapshotclass
+  source:
+    volumeSnapshotContentName: restored-snapshot-content
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotContent
+metadata:
+  name: restored-snapshot-content
+spec:
+  deletionPolicy: Retain
+  driver: pd.csi.storage.gke.io
+  source:
+    snapshotHandle: projects/[project_ID]/global/snapshots/[snapshotname]
+  volumeSnapshotRef:
+    kind: VolumeSnapshot
+    name: restored-snapshot
+    namespace: default
+
+```
+
+8. Reference your snapshot in the following persistent volume claim. Be sure to adjust the spec.dataSource.name to your snapshot name
+
+```yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: hdml-consumer-pvc
+spec:
+  dataSource:
+    name: restored-snapshot
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
   accessModes:
   - ReadOnlyMany
+  storageClassName: hyperdisk-ml-multi-zone
   resources:
     requests:
-      storage: 300Gi
+      storage: 140Gi
 ```
-8. You then add a reference to this PVC in your Deployment Spec
- Example:
+
+8. You then add a reference to this PVC in your deployment spec.template.spec.volume.persistentVolumeClaim.claimName parameter. 
 
 ```yaml
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vllm-gemma-deployment
+  name: ubuntu
+  labels:
+    app: ubuntu
 spec:
-  ...
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu
+  strategy:
+    type: Recreate
   template:
-    ...
+    metadata:
+      labels:
+        app: ubuntu
     spec:
-      ...
       containers:
-      ...
+      - image: bkauf/storage:latest
+        name: ubuntu
+        command:
+          - "sleep"
+          - "604800"
+        volumeMounts:
+        - name: ubuntu-persistent-storage
+          mountPath: /var/www/html
       volumes:
-      - name: gemma-7b
+      - name: ubuntu-persistent-storage
         persistentVolumeClaim:
-          claimName: CLAIM_NAME
+          claimName: hdml-consumer-pvc
 ```
