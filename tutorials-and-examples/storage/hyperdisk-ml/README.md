@@ -70,7 +70,22 @@ gcloud compute instances delete $VM_NAME \
 --zone=$ZONE
 ```
 
-6. You can then attach this volume to your PVC spec replacing the spec.csi.volumeHandle with the patch to your DISK_NAME
+6. To use this new Hyperdisk ML volume you first create your Hypedisk ML Storage Class
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+    name: hyperdisk-ml
+parameters:
+    type: hyperdisk-ml
+provisioner: pd.csi.storage.gke.io
+allowVolumeExpansion: false
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+```
+
+7. You can then attach this volume to your PVC spec replacing the spec.csi.volumeHandle with the patch to your DISK_NAME
 
 ```yaml
 apiVersion: v1
