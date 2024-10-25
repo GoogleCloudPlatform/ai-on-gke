@@ -25,7 +25,7 @@ gcloud compute ssh $VM_NAME
 
 ```
 
-1. Create and attach the disk to the new GCE VM
+2. Create and attach the disk to the new GCE VM
 
 ```sh
 DISK_NAME=model1
@@ -40,7 +40,7 @@ gcloud compute disks create $DISK_NAME --type=hyperdisk-ml \
 gcloud compute instances attach-disk $VM_NAME --disk=$DISK_NAME --zone=$ZONE 
 ```
 
-1. Log into the hydrator, format the volume, initiate transfer, and dismount the volume
+3. Log into the hydrator, format the volume, initiate transfer, and dismount the volume
 
 ```sh
 gcloud compute ssh $VM_NAME
@@ -57,18 +57,60 @@ GCS_DIR=gs://vertex-model-garden-public-us-central1/llama2/llama2-70b-hf
 % sudo umount /mnt
 ```
 
-1. Detach disk from the hydrator and switch to READ_ONLY_MANY access mode
+4. Detach disk from the hydrator and switch to READ_ONLY_MANY access mode
 ```sh
 gcloud compute instances detach-disk $VM_NAME --disk=$DISK_NAME --zone=$ZONE
 gcloud compute disks update $DISK_NAME --access-mode=READ_ONLY_MANY  --zone=$ZONE
 ```
 
-1. You now have a hyperdisk ML volume populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance
+5. You now have a hyperdisk ML volume populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance
 
 ```sh
 gcloud compute instances delete $VM_NAME \
 --zone=$ZONE
 ```
 
-1. You can then attach this volume to your PVC spec
+6. You can then attach this volume to your PVC spec replacing the spec.csi.volumeHandle with the patch to your DISK_NAME
 
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hdml-static-pv
+spec:
+  storageClassName: "hyperdisk-ml"
+  capacity:
+    storage: 300Gi
+  accessModes:
+    - ReadOnlyMany
+  claimRef:
+    namespace: default
+    name: hdml-static-pvc
+  csi:
+    driver: pd.csi.storage.gke.io
+    volumeHandle: projects/PROJECT/zones/ZONE/disks/DISK_NAME
+    fsType: ext4
+    readOnly: true
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.gke.io/zone
+          operator: In
+          values:
+          - ZONE
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: default
+  name: hdml-static-pvc
+spec:
+  storageClassName: "hyperdisk-ml"
+  volumeName: hdml-static-pv
+  accessModes:
+  - ReadOnlyMany
+  resources:
+    requests:
+      storage: 300Gi
+```
