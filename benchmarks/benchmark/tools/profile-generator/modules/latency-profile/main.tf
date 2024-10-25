@@ -64,5 +64,8 @@ resource "kubernetes_manifest" "latency-profile-generator" {
     k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
     output_bucket                              = var.output_bucket
     scrape_server_metrics                      = var.scrape_server_metrics
+    file_prefix                                = var.file_prefix
+    save_aggregated_result                     = var.save_aggregated_result
+    models                                     = var.models
   }))
 }
