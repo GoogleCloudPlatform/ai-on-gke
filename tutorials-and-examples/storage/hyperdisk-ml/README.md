@@ -85,7 +85,7 @@ reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 ```
 
-7. You can then attach this volume to your PVC spec replacing the spec.csi.volumeHandle with the patch to your DISK_NAME
+7. You can then reference this volume to your PVC spec replacing the spec.csi.volumeHandle with the patch to your DISK_NAME
 
 ```yaml
 apiVersion: v1
@@ -128,4 +128,25 @@ spec:
   resources:
     requests:
       storage: 300Gi
+```
+8. You then add a reference to this PVC in your Deployment Spec
+ Example:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-gemma-deployment
+spec:
+  ...
+  template:
+    ...
+    spec:
+      ...
+      containers:
+      ...
+      volumes:
+      - name: gemma-7b
+        persistentVolumeClaim:
+          claimName: CLAIM_NAME
 ```
