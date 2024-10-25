@@ -134,6 +134,88 @@ def init_errors_map() -> Dict[str, int]:
   }
   return errors
 
+async def send_stream_request(
+    backend: str,
+    api_url: str,
+    prompt: str,
+    prompt_len: int,
+    output_len: int,
+    best_of: int,
+    use_beam_search: bool,
+    top_k: int,
+    tokenizer: PreTrainedTokenizerBase,
+    sax_model: str,
+    model: str,
+) -> Tuple[Tuple[int, int, float], Dict[str, int]]:
+  """Sends stream request to server"""
+  request_start_time = time.time()
+  errors = init_errors_map()
+
+  headers = {"User-Agent": "Benchmark Client"}
+  # Doesn't work with if model weights are stored in PD on the model server side
+  if backend == "vllm":
+    pload = {
+        "model": model,
+        "prompt": prompt,
+        "n": 1,
+        "best_of": best_of,
+        "use_beam_search": use_beam_search,
+        "temperature": 0.0 if use_beam_search else 1.0,
+        "top_p": 1.0,
+        "max_tokens": output_len,
+        "ignore_eos": True,
+        "stream": True,
+    }
+
+  ttft = 0.0
+  st = time.perf_counter()
+  timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+  async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
+    while True:
+      try:
+        async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
+          async for chunk_bytes in response.content.iter_chunks():
+            chunk_bytes = chunk_bytes[0].strip()
+            if not chunk_bytes:
+                continue
+            timestamp = time.perf_counter()
+            # First token
+            if ttft == 0.0:
+              ttft = timestamp - st
+            print(chunk_bytes.decode("utf-8")[6:])
+            if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
+                if backend == "vllm":
+                  output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+      except aiohttp.client_exceptions.ClientConnectorError as client_err:
+        errors["ClientConnectorError"] += 1
+        print(f"ClientConnectorError: {client_err}")
+        return None, errors
+      except asyncio.TimeoutError as timeout_err:
+        errors["TimeoutError"] += 1
+        print(f"TimeoutError: {timeout_err}")
+        return None, errors
+      except aiohttp.client_exceptions.ClientOSError as e:
+        errors["ClientOSError"] += 1
+        print(f"ClientOSError: {e}")
+        return None, errors
+      except aiohttp.client_exceptions.ContentTypeError as e:
+        print(f"ContentTypeError: {e}, response: {response}")
+        errors["ContentTypeError"] += 1
+        return None, errors
+      except aiohttp.client_exceptions.ServerDisconnectedError as e:
+        errors["ServerDisconnectedError"] += 1
+        print(f"ServerDisconnectedError: {e}")
+        return None, errors
+      except Exception as e: 
+        print(f"Unknown error {e}")
+        errors["unknown_error"] += 1
+        return None, errors
+  request_end_time = time.time()
+  output_token_ids = tokenizer(output).input_ids
+  output_len = len(output_token_ids)
+  request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
+  return request_latency, None
+
 async def send_request(
     backend: str,
     api_url: str,
@@ -308,7 +390,23 @@ async def benchmark(
   async for request in get_request(input_requests, args.request_rate):
     prompt, prompt_len, output_len = request
     task = asyncio.create_task(
-        send_request(
+      send_request(
+          args.backend,
+          api_url,
+          prompt,
+          prompt_len,
+          output_len,
+          args.best_of,
+          args.use_beam_search,
+          args.top_k,
+          tokenizer,
+          args.sax_model,
+          model,
+      )
+    )
+    if args.stream_request:
+      task = asyncio.create_task(
+        send_stream_request(
             args.backend,
             api_url,
             prompt,
@@ -321,7 +419,7 @@ async def benchmark(
             args.sax_model,
             model,
         )
-    )
+      )
     tasks.append(task)
   results = await asyncio.gather(*tasks)
   combined_latencies = []
@@ -677,6 +775,12 @@ if __name__ == "__main__":
     "--models",
     type=str,
     help="Comma separated list of models to benchmark.",
+  )
+  parser.add_argument(
+    "--stream-request", 
+    type=bool, 
+    default=False,
+    help="Whether to stream the request. Needed for TTFT metric",
   )
   parser.add_argument(
       "--tokenizer",

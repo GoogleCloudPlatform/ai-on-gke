@@ -17,7 +17,7 @@ spec:
       serviceAccountName: ${latency_profile_kubernetes_service_account}
       containers:
         - name: latency-profile-generator
-          image: ${artifact_registry}/latency-profile:latest
+          image: ${artifact_registry}/latency-profile:stream-test-v1
           command: ["bash", "-c", "./latency_throughput_curve.sh"]
           env:
             - name: MODELS
@@ -50,6 +50,8 @@ spec:
               value: ${file_prefix}
             - name: SAVE_AGGREGATED_RESULT
               value: ${save_aggregated_result}
+            - name: STREAM_REQUEST
+              value: ${stream_request}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:
