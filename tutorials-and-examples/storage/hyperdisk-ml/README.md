@@ -2,7 +2,7 @@
 
 ### This guide uses the Google Cloud API to create a Hyperdisk ML disk and then use it in a GKE cluster. Refer to [this documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/hyperdisk-ml) for instructions all in the GKE API
 
-1. Create a new GCE instance that you will use to hydrate the new Hyperdisk ML with data
+1. Create a new GCE instance that you will use to hydrate the new Hyperdisk ML disk with data.
 
 ```sh
 VM_NAME=hydrator
@@ -29,7 +29,7 @@ gcloud compute ssh $VM_NAME
 
 ```
 
-2. Create and attach the disk to the new GCE VM
+2. Create and attach the disk to the new GCE VM.
 
 ```sh
 SIZE=140
@@ -42,7 +42,7 @@ gcloud compute disks create $DISK_NAME --type=hyperdisk-ml \
 gcloud compute instances attach-disk $VM_NAME --disk=$DISK_NAME --zone=$ZONE 
 ```
 
-3. Log into the hydrator, format the volume, initiate transfer, and dismount the volume
+3. Log into the hydrator VM, format the volume, initiate transfer, and dismount the volume.
 
 ```sh
 gcloud compute ssh $VM_NAME
@@ -57,13 +57,13 @@ GCS_DIR=gs://vertex-model-garden-public-us-central1/llama2/llama2-70b-hf
 % sudo umount /mnt
 ```
 
-4. Detach disk from the hydrator and switch to READ_ONLY_MANY access mode
+4. Detach disk from the hydrator and switch to READ_ONLY_MANY access mode.
 ```sh
 gcloud compute instances detach-disk $VM_NAME --disk=$DISK_NAME --zone=$ZONE
 gcloud compute disks update $DISK_NAME --access-mode=READ_ONLY_MANY  --zone=$ZONE
 ```
 
-5. Create a snapshot from the disk to use as a template
+5. Create a snapshot from the disk to use as a template.
 
 ```sh
 gcloud compute snapshots create $SNAP_SHOT_NAME \
@@ -72,7 +72,7 @@ gcloud compute snapshots create $SNAP_SHOT_NAME \
     --project=$PROJECT_ID
 ```
 
-6. You now have a hyperdisk ML volume populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance and the disk
+6. You now have a hyperdisk ML snapshot populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance and the original disk.
 
 ```sh
 gcloud compute instances delete $VM_NAME --zone=$ZONE
