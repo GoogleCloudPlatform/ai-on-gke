@@ -10,7 +10,6 @@ IMAGE_PROJECT=debian-cloud
 ZONE=us-central1-a
 SNAP_SHOT_NAME=hdmlsnapshot
 PROJECT_ID=myproject
-
 DISK_NAME=model1
 
 gcloud compute instances create $VM_NAME \
@@ -71,15 +70,14 @@ gcloud compute snapshots create $SNAP_SHOT_NAME \
     --project=$PROJECT_ID
 ```
 
-
-6. You now have a hyperdisk ML volume populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance
+6. You now have a hyperdisk ML volume populated with your data from Google Cloud Storage. You can delete the hydrator GCE instance and the disk
 
 ```sh
-gcloud compute instances delete $VM_NAME \
---zone=$ZONE
+gcloud compute instances delete $VM_NAME --zone=$ZONE
+gcloud compute disks delete $DISK_NAME --project $PROJECT_ID --zone $ZONE
 ```
 
-7. To use this new Hyperdisk ML volume you first create your Hypedisk ML multi zone and standard Storage Classes. Hyperdisk ML disks are zonal and the Hyperdisk-ml-multi-zone storage class automatically provisions disks in zones where the pods using them are. 
+7. In your GKE cluster create your Hypedisk ML multi zone and standard Storage Classes. Hyperdisk ML disks are zonal and the Hyperdisk-ml-multi-zone storage class automatically provisions disks in zones where the pods using them are. 
 Replace the zones in this class with the zones you want to allow the Hyperdisk ML snapshot to create disks in. 
 
 ```yaml
@@ -114,10 +112,9 @@ reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 ```
 
-7. You will then need to create a volumeSnapshotClass and VolumeSnapshotContent config to use your snapshot. Replace the VolumeSnapshotContent.spec.source.snapshotHandle with the path to your snapshot. 
+7. Create a volumeSnapshotClass and VolumeSnapshotContent config to use your snapshot. Replace the VolumeSnapshotContent.spec.source.snapshotHandle with the path to your snapshot. 
 
 ```yaml
-
 apiVersion: snapshot.storage.k8s.io/v1
 kind: VolumeSnapshotClass
 metadata:
@@ -150,7 +147,7 @@ spec:
 
 ```
 
-8. Reference your snapshot in the following persistent volume claim. Be sure to adjust the spec.dataSource.name to your snapshot name
+8. Reference your snapshot in the persistent volume claim. Be sure to adjust the spec.dataSource.name to your snapshot name
 
 ```yaml
 kind: PersistentVolumeClaim
@@ -170,7 +167,7 @@ spec:
       storage: 140Gi
 ```
 
-8. You then add a reference to this PVC in your deployment spec.template.spec.volume.persistentVolumeClaim.claimName parameter. 
+8. Add a reference to this PVC in your deployment spec.template.spec.volume.persistentVolumeClaim.claimName parameter. 
 
 ```yaml
 ---
