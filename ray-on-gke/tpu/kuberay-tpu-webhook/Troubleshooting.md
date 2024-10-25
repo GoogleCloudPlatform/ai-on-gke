@@ -2,6 +2,14 @@
 Common issues and their solutions when deploying Ray TPU worker groups with the webhook.
 Solutions will be added as new issues are encountered.
 
+## `TPU_WORKER_ID` assigned to multiple TPU workers in slice
+
+### Symptoms
+The webhook outputs the error message `Identical TPU_WORKER_ID assigned to multiple TPU workers in slice`.
+
+### Solution #1
+The Ray TPU webhook relies on a PodInformer cache to retrieve the current state of TPU worker Pods in a RayCluster and assign `TPU_WORKER_ID`s. This informer is synced prior to each Pod mutation. However, when quickly deleting and and re-creating RayClusters (especially for larger worker groups), it's possible for the PodLister to retrieve stale information and incorrectly assign `TPU_WORKER_ID`s. This issue is more likely to occur with a large number of worker nodes. The easiest solution in this case is to just delete the Ray custom resource and create it again with `kubectl apply`.
+
 ## `TPU_WORKER_HOSTNAMES` aren't injected into the Pod environment
 
 ### Symptoms
@@ -55,8 +63,3 @@ workerGroupSpecs:
           requests:
             google.com/tpu: "{$TPU_CHIPS_PER_WORKER}"
 ```
-
-## `TPU_WORKER_ID`s incorrectly assigned when re-creating a RayCluster of the same name
-
-### Solution #1
-A limitation of the webhook is that it relies on RayCluster and Pod creation/deletion requests to be intercepted in-order, which isn't necessarily true when deleting a RayCluster and re-creating it too quickly. It's possible for the second creation request to be intercepted before the deletion request, causing the webhook to incorrectly assign `TPU_WORKER_ID`s for the new Pods. A solution for this issue is to wait a few seconds before creating a RayCluster of the same name, or to change the name of the RayCluster before re-creating it.

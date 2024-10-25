@@ -455,6 +455,7 @@ func Test_GetNextWorkerID(t *testing.T) {
 		sliceToWorkerIDs    map[slice][]int
 		podSlice            slice
 		replicaIndex        int
+		expectedError       error
 		expectedTPUWorkerID int
 	}{
 		"nil sliceToWorkerIDs": {
@@ -499,6 +500,16 @@ func Test_GetNextWorkerID(t *testing.T) {
 			replicaIndex:        1,
 			expectedTPUWorkerID: 3,
 		},
+		"multi-host worker group with incorrectly assigned worker IDs": {
+			// should error since two or more Pods in a slice have identical TPU_WORKER_IDs
+			sliceToWorkerIDs: map[slice][]int{
+				slice{"test-cluster", "test-group", "test-namespace", 0, int32(4)}: []int{0, 1, 2, 3},
+				slice{"test-cluster", "test-group", "test-namespace", 1, int32(4)}: []int{0, 1, 1},
+			},
+			podSlice:      slice{"test-cluster", "test-group", "test-namespace", 1, int32(4)},
+			replicaIndex:  1,
+			expectedError: errors.New("Identical TPU_WORKER_ID assigned to multiple TPU workers in slice"),
+		},
 		"multi-slice worker group with all workers created": {
 			// should always assign Pod to TPU_WORKER_ID=0 in a new slice
 			sliceToWorkerIDs: map[slice][]int{
@@ -515,7 +526,10 @@ func Test_GetNextWorkerID(t *testing.T) {
 	// validate getNextWorkerID() returns the expected TPU_WORKER ID for different sliceToWorkerIDs
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			workerID := getNextWorkerID(tc.sliceToWorkerIDs, tc.podSlice, "test-namespace", tc.replicaIndex)
+			workerID, err := getNextWorkerID(tc.sliceToWorkerIDs, tc.podSlice, "test-namespace", tc.replicaIndex)
+			if err != nil {
+				assert.Equal(t, tc.expectedError, err)
+			}
 			assert.Equal(t, tc.expectedTPUWorkerID, workerID)
 		})
 	}
@@ -1162,6 +1176,10 @@ func Test_GetEnvironmentVariable(t *testing.T) {
 func Test_GetSliceToWorkerIDs(t *testing.T) {
 	testCPUWorker := getTestCPUWorker("test-cluster", "test-group", "test-namespace")
 	testTPUWorker := getTestTPUWorker("test-cluster", "test-group", "test-namespace", "tpu-v4-podslice", "2x2x2", "4")
+	expectedIds := make([]int, 64)
+	for i := 0; i < 64; i++ {
+		expectedIds[i] = i
+	}
 
 	tests := map[string]struct {
 		numOfHosts               int32
@@ -1184,12 +1202,12 @@ func Test_GetSliceToWorkerIDs(t *testing.T) {
 		},
 		"getSliceToWorkerIDs for with TPU pod list": {
 			// sliceToWorkerIDs should be populated with TPU worker IDs
-			numOfHosts:  int32(2),
+			numOfHosts:  int32(64),
 			numReplicas: 2,
-			podsInGroup: getTestInterceptedTPUPods(testTPUWorker, 4, 2, 2),
+			podsInGroup: getTestInterceptedTPUPods(testTPUWorker, 128, 2, 64),
 			expectedSliceToWorkerIDs: map[slice][]int{
-				slice{"test-cluster", "test-group", "test-namespace", 0, int32(2)}: []int{0, 1},
-				slice{"test-cluster", "test-group", "test-namespace", 1, int32(2)}: []int{0, 1},
+				slice{"test-cluster", "test-group", "test-namespace", 0, int32(64)}: expectedIds,
+				slice{"test-cluster", "test-group", "test-namespace", 1, int32(64)}: expectedIds,
 			},
 		},
 	}
