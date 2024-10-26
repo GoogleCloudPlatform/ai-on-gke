@@ -16,10 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
-	listersv1 "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/pointer"
 )
 
@@ -358,8 +355,8 @@ func getTestRayCluster(clusterName string, groupName string, namespace string, n
 	return rayCluster
 }
 
-// setupInformer creates a PodInformer, waits for cache to sync, and returns the Informer PodLister
-func setupInformer(pods []*corev1.Pod) listersv1.PodLister {
+// setupClient creates a PodInformer, waits for cache to sync, and returns the Informer PodLister
+func setupClient(pods []*corev1.Pod) *fake.Clientset {
 	// initialize fake Clientset with pod objects
 	tpuObjects := make([]runtime.Object, len(pods))
 	for i, pod := range pods {
@@ -367,23 +364,7 @@ func setupInformer(pods []*corev1.Pod) listersv1.PodLister {
 	}
 	fakeClientSet := fake.NewSimpleClientset(tpuObjects...)
 
-	// initialize podLister using the fake client for testing
-	factory := informers.NewSharedInformerFactory(fakeClientSet, 0)
-	podInformer := factory.Core().V1().Pods().Informer()
-
-	stopCh := make(chan struct{})
-	defer close(stopCh)
-
-	factory.Start(stopCh)
-	factory.WaitForCacheSync(stopCh)
-
-	// wait for cache to sync before creating the Lister
-	if !cache.WaitForCacheSync(stopCh, podInformer.HasSynced) {
-		fmt.Printf("Timed out waiting for fake client to sync")
-		return nil
-	}
-
-	return factory.Core().V1().Pods().Lister()
+	return fakeClientSet
 }
 
 func Test_GetReplicaIndex(t *testing.T) {
@@ -1214,16 +1195,20 @@ func Test_GetSliceToWorkerIDs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			sliceToWorkerIDs, err := getSliceToWorkerIDs(tc.podsInGroup, "test-cluster", "test-group", "test-namespace", tc.numOfHosts)
+			testClient := setupClient(tc.podsInGroup)
+			// set up TPUWebhookServer
+			tpuWebhookServer := NewTPUWebhookServer(testClient)
+
+			sliceToWorkerIDs, err := getSliceToWorkerIDs(tpuWebhookServer, "test-cluster", "test-group", "test-namespace", tc.numOfHosts)
 
 			// sliceToWorkerIDs should be populated with slices and unique TPU_WORKER_IDs for each Pod
 			assert.Equal(t, err, nil)
-			for slice, workerIDs := range tc.expectedSliceToWorkerIDs {
-				assert.Contains(t, sliceToWorkerIDs, slice)
-				assert.Equal(t, len(workerIDs), len(sliceToWorkerIDs[slice]))
+			for slice, workerIDs := range sliceToWorkerIDs {
+				assert.Contains(t, tc.expectedSliceToWorkerIDs, slice)
+				assert.Equal(t, len(tc.expectedSliceToWorkerIDs[slice]), len(workerIDs))
 				sort.Ints(workerIDs)
 				for index, value := range workerIDs {
-					assert.Equal(t, sliceToWorkerIDs[slice][index], value)
+					assert.Equal(t, tc.expectedSliceToWorkerIDs[slice][index], value)
 				}
 			}
 		})
@@ -1364,10 +1349,10 @@ func Test_MutatePod(t *testing.T) {
 
 			// generate Pod list and create Pod Lister
 			testTPUPods := getTestInterceptedTPUPods(tc.testPod, tc.existingPods, tc.existingReplicas, tc.numOfHosts)
-			testPodLister := setupInformer(testTPUPods)
+			testClient := setupClient(testTPUPods)
 
 			// set up TPUWebhookServer
-			tpuWebhookServer := NewTPUWebhookServer(testPodLister)
+			tpuWebhookServer := NewTPUWebhookServer(testClient)
 
 			admissionResponse, err := tpuWebhookServer.mutatePod(admissionReview)
 			if err != nil {
