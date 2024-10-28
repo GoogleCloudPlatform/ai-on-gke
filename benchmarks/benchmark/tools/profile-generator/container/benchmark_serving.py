@@ -20,6 +20,8 @@ import google.auth.transport.requests
 
 import aiohttp
 import numpy as np
+from sympy import symbols
+from sympy.parsing.sympy_parser import parse_expr
 from transformers import AutoTokenizer
 from transformers import PreTrainedTokenizerBase
 
@@ -96,18 +98,24 @@ def sample_requests(
 
 async def get_request(
     input_requests: List[Tuple[str, int, int]],
-    request_rate: float,
+    request_rate_expr: str,
+    start_time: float,
 ) -> AsyncGenerator[Tuple[str, int, int], None]:
   """Gets request async."""
-  input_requests = iter(input_requests)
   for request in input_requests:
     yield request
 
-    if request_rate == float("inf"):
+    if request_rate_expr == float("inf"):
       # If the request rate is infinity, then we don't need to wait.
       continue
+
+    # Evaluate the reqest rate at this point in time
+    t = symbols('t')
+    expr_parsed = parse_expr(request_rate_expr, transformations="all", local_dict={"t": t})
+    request_rate_at_t = expr_parsed.subs(t, ((time.time_ns() - start_time) / 1000000000))
+
     # Sample the request interval from the exponential distribution.
-    interval = np.random.exponential(1.0 / request_rate)
+    interval = np.random.exponential(1.0 / request_rate_at_t)
     # The next request will be sent after the interval.
     await asyncio.sleep(interval)
 
@@ -134,7 +142,7 @@ async def send_request(
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
     model: str,
-) -> Tuple[Tuple[int, int, float], Dict[str, int]]:
+) -> Tuple[Optional[Tuple[int, int, float]], Optional[Dict[str, int]]]:
   """Sends request to server."""
   request_start_time = time.time()
   errors = init_errors_map()
@@ -291,9 +299,9 @@ async def benchmark(
       tokenizer,
       args.use_dummy_text,
   )
-  benchmark_start_time = time.time()
+  benchmark_start_time = time.time_ns()
   tasks: List[asyncio.Task] = []
-  async for request in get_request(input_requests, args.request_rate):
+  async for request in get_request(input_requests, args.request_rate, benchmark_start_time):
     prompt, prompt_len, output_len = request
     task = asyncio.create_task(
         send_request(
@@ -321,7 +329,7 @@ async def benchmark(
       for err, count in errors.items():
         combined_errors[err] = combined_errors[err] + count
   
-  benchmark_duration = time.time() - benchmark_start_time
+  benchmark_duration = (time.time_ns() - benchmark_start_time) / 1000000000
   print_and_save_result(args, benchmark_duration, len(input_requests), model, combined_latencies, combined_errors)
   return combined_latencies, combined_errors
 
@@ -599,6 +607,22 @@ async def main(args: argparse.Namespace):
     else args.endpoint
 )
 
+  # Input assertions
+  def is_expression_of_t(expression):
+    # Check if expression uses variables other than 't'
+    try:
+        # Attempt to evaluate with only 't' defined
+        t = symbols('t')
+        expr_parsed = parse_expr(expression, transformations="all", local_dict={"t": t})
+        expr_parsed.subs(t, 1)
+        return True
+    except KeyError as e:
+        # If another variable is required, it will throw a KeyError
+        return False
+  if not is_expression_of_t(args.request_rate):
+      raise ValueError(f"Request rate {args.request_rate}, must be an expression of `t`")
+
+
   print(f"Starting Prometheus Server on port {PROMETHEUS_PORT}")
   start_http_server(PROMETHEUS_PORT)
 
@@ -607,8 +631,8 @@ async def main(args: argparse.Namespace):
       args.tokenizer, trust_remote_code=args.trust_remote_code
   )
 
-  benchmark_start_time = time.time()
-  args.start_datetime = datetime.fromtimestamp(benchmark_start_time)
+  benchmark_start_time = time.time_ns()
+  args.start_datetime = datetime.fromtimestamp(benchmark_start_time / 1000000000)
   
   results = await asyncio.gather(
             *[benchmark(args, api_url, tokenizer, model) for model in models]
@@ -629,7 +653,7 @@ async def main(args: argparse.Namespace):
     for k, v in errors.items():
       combined_errors[k] = combined_errors[k] + v
   
-  benchmark_duration_all_models = time.time() - benchmark_start_time
+  benchmark_duration_all_models = (time.time_ns() - benchmark_start_time) / 1000000000
   if args.save_aggregated_result:
     print_and_save_result(args, benchmark_duration_all_models, len(models)*args.num_prompts, f"ALL-{len(models)}-MODELS", combined_latencies, combined_errors)
 
@@ -713,8 +737,8 @@ if __name__ == "__main__":
   )
   parser.add_argument(
       "--request-rate",
-      type=float,
-      default=float("inf"),
+      type=str,
+      default="inf",
       help=(
           "Number of requests per second. If this is inf, "
           "then all the requests are sent at time 0. "
