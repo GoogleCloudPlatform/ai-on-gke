@@ -146,7 +146,7 @@ async def send_stream_request(
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
     model: str,
-) -> Tuple[Tuple[int, int, float], Dict[str, int]]:
+) -> Tuple[Tuple[int, int, float], float, Dict[str, int]]:
   """Sends stream request to server"""
   request_start_time = time.time()
   errors = init_errors_map()
@@ -166,9 +166,12 @@ async def send_stream_request(
         "ignore_eos": True,
         "stream": True,
     }
+  else: 
+    raise ValueError(f"Unknown backend: {backend}")
 
   ttft = 0.0
   st = time.perf_counter()
+  output = ""
   timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
     while True:
@@ -214,7 +217,7 @@ async def send_stream_request(
   output_token_ids = tokenizer(output).input_ids
   output_len = len(output_token_ids)
   request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
-  return request_latency, None
+  return request_latency, ttft, None
 
 async def send_request(
     backend: str,
@@ -228,7 +231,7 @@ async def send_request(
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
     model: str,
-) -> Tuple[Tuple[int, int, float], Dict[str, int]]:
+) -> Tuple[Tuple[int, int, float], float, Dict[str, int]]:
   """Sends request to server."""
   request_start_time = time.time()
   errors = init_errors_map()
@@ -334,7 +337,7 @@ async def send_request(
       except Exception as e: 
         print(f"Unknown error {e}")
         errors["unknown_error"] += 1
-        return None, errors
+        return None, None,errors
 
   request_end_time = time.time()
   # Naive HF transformers generation and TensorRT-LLM generation stops at EOS
@@ -368,14 +371,14 @@ async def send_request(
   prompt_length_metric.observe(prompt_len)
   response_length_metric.observe(output_len)
 
-  return request_latency, None
+  return request_latency, None, None
 
 async def benchmark(
     args: argparse.Namespace, 
     api_url: str,
     tokenizer: PreTrainedTokenizerBase,
     model: str,
-) -> Tuple[List[Tuple[int, int, float]], Dict[str, int]]:
+) -> Tuple[List[Tuple[int, int, float]], List[float], Dict[str, int]]:
   """Runs benchmark with asynchronous requests."""
   input_requests = sample_requests(
       args.dataset,
@@ -423,17 +426,20 @@ async def benchmark(
     tasks.append(task)
   results = await asyncio.gather(*tasks)
   combined_latencies = []
+  combined_ttfts = []
   combined_errors = init_errors_map()
-  for latency, errors in results:
+  for latency, ttft, errors in results:
     if latency:
       combined_latencies.append(latency)
     if errors:
       for err, count in errors.items():
         combined_errors[err] = combined_errors[err] + count
+    if ttft:
+      combined_ttfts.append(ttft)
   
   benchmark_duration = time.time() - benchmark_start_time
-  print_and_save_result(args, benchmark_duration, len(input_requests), model, combined_latencies, combined_errors)
-  return combined_latencies, combined_errors
+  print_and_save_result(args, benchmark_duration, len(input_requests), model, combined_latencies, combined_ttfts, combined_errors)
+  return combined_latencies, combined_ttfts, combined_errors
 
 
 def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics, model, errors):
@@ -634,7 +640,7 @@ def get_stats_for_set(name, description, points):
     f'p99_{name}': p99,
   }
 
-def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_requests, model, request_latencies, errors):
+def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_requests, model, request_latencies, ttfts,errors):
   benchmark_result = {}
 
   print(f"====Result for Model: {model}====")
@@ -669,6 +675,10 @@ def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_re
   print(f"Tokens/min: {tokens_per_min:.2f}")
   benchmark_result['total_tokens'] = int(total_tokens)
   benchmark_result['tokens_per_min'] = tokens_per_min
+
+  if args.stream_request:
+    mean_ttft=np.mean(ttfts or 0) if ttfts else None,
+    print(f"Mean TTFT: {mean_ttft:.2f}")
 
   if args.machine_cost:
     print(
@@ -726,6 +736,7 @@ async def main(args: argparse.Namespace):
   
   # Summarize results
   combined_latencies = []
+  combined_ttfts = []
   combined_errors = {
     "ClientConnectorError": 0,
     "TimeoutError": 0,
@@ -734,14 +745,15 @@ async def main(args: argparse.Namespace):
     "unknown_error": 0,
     "ServerDisconnectedError": 0,
   }
-  for latencies, errors in results:
+  for latencies, ttfts, errors in results:
     combined_latencies.extend(latencies)
+    combined_ttfts.extend(ttfts)
     for k, v in errors.items():
       combined_errors[k] = combined_errors[k] + v
   
   benchmark_duration_all_models = time.time() - benchmark_start_time
   if args.save_aggregated_result:
-    print_and_save_result(args, benchmark_duration_all_models, len(models)*args.num_prompts, f"ALL-{len(models)}-MODELS", combined_latencies, combined_errors)
+    print_and_save_result(args, benchmark_duration_all_models, len(models)*args.num_prompts, f"ALL-{len(models)}-MODELS", combined_latencies, combined_ttfts,combined_errors)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(
