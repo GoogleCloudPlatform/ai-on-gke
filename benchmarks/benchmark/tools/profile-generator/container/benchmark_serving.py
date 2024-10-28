@@ -619,7 +619,10 @@ async def main(args: argparse.Namespace):
     except KeyError as e:
         # If another variable is required, it will throw a KeyError
         return False
-  if not is_expression_of_t(args.request_rate):
+
+  if args.request_rate == "inf":
+    args.request_rate = "oo"
+  if and not is_expression_of_t(args.request_rate):
       raise ValueError(f"Request rate {args.request_rate}, must be an expression of `t`")
 
 
