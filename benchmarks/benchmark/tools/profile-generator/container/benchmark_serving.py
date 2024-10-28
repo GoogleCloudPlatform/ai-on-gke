@@ -106,7 +106,7 @@ async def get_request(
   for request in input_requests:
     yield request
 
-    if request_rate_expr == float("inf"):
+    if request_rate_expr == "oo":
       # If the request rate is infinity, then we don't need to wait.
       continue
 
@@ -622,9 +622,8 @@ async def main(args: argparse.Namespace):
 
   if args.request_rate == "inf":
     args.request_rate = "oo"
-  if and not is_expression_of_t(args.request_rate):
+  if not is_expression_of_t(args.request_rate):
       raise ValueError(f"Request rate {args.request_rate}, must be an expression of `t`")
-
 
   print(f"Starting Prometheus Server on port {PROMETHEUS_PORT}")
   start_http_server(PROMETHEUS_PORT)
