@@ -609,9 +609,8 @@ async def main(args: argparse.Namespace):
 
   # Input assertions
   def is_expression_of_t(expression):
-    # Check if expression uses variables other than 't'
+    # Check if expression uses variables other than 't' by attempting to evaluate with only 't' defined
     try:
-        # Attempt to evaluate with only 't' defined
         t = symbols('t')
         expr_parsed = parse_expr(expression, transformations="all", local_dict={"t": t})
         expr_parsed.subs(t, 1)
