@@ -31,6 +31,7 @@ MIN_SEQ_LEN = 4
 CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 PROMETHEUS_PORT = 9090
+NS_IN_SEC = 1000 * 1000 * 1000
 
 # Prometheus Metrics
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
@@ -329,7 +330,7 @@ async def benchmark(
       for err, count in errors.items():
         combined_errors[err] = combined_errors[err] + count
   
-  benchmark_duration = (time.time_ns() - benchmark_start_time) / 1000000000
+  benchmark_duration = (time.time_ns() - benchmark_start_time) / NS_IN_SEC
   print_and_save_result(args, benchmark_duration, len(input_requests), model, combined_latencies, combined_errors)
   return combined_latencies, combined_errors
 
@@ -631,7 +632,7 @@ async def main(args: argparse.Namespace):
   )
 
   benchmark_start_time = time.time_ns()
-  args.start_datetime = datetime.fromtimestamp(benchmark_start_time / 1000000000)
+  args.start_datetime = datetime.fromtimestamp(benchmark_start_time / NS_IN_SEC)
   
   results = await asyncio.gather(
             *[benchmark(args, api_url, tokenizer, model) for model in models]
@@ -652,7 +653,7 @@ async def main(args: argparse.Namespace):
     for k, v in errors.items():
       combined_errors[k] = combined_errors[k] + v
   
-  benchmark_duration_all_models = (time.time_ns() - benchmark_start_time) / 1000000000
+  benchmark_duration_all_models = (time.time_ns() - benchmark_start_time) / NS_IN_SEC
   if args.save_aggregated_result:
     print_and_save_result(args, benchmark_duration_all_models, len(models)*args.num_prompts, f"ALL-{len(models)}-MODELS", combined_latencies, combined_errors)
 
