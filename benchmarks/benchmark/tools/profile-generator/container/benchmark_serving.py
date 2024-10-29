@@ -13,7 +13,7 @@ import random
 import requests
 import time
 from typing import AsyncGenerator, List, Optional, Tuple, Dict
-from prometheus_client import start_http_server, Histogram
+from prometheus_client import start_http_server, Histogram, Gauge
 
 import google.auth
 import google.auth.transport.requests
@@ -34,6 +34,7 @@ PROMETHEUS_PORT = 9090
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
 response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
+active_requests_metric = Gauge('LatencyProfileGenerator:active_requests', 'How many requests actively being processed')
 
 def sample_requests(
     dataset_path: str,
@@ -211,8 +212,11 @@ async def send_request(
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
     while True:
       try:
+        active_requests_metric.inc()
         async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
+          
           output = await response.json()
+          active_requests_metric.dec()
 
         # Re-send the request if it failed.
         if "error" not in output:
