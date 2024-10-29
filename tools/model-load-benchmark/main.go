@@ -1,71 +1,127 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"flag"
 	"fmt"
-	"log"
-	gcpClient "tool/gcp-client"
-	gcsFuse "tool/gcs-fuse"
-	k8sclient "tool/k8s-client"
+	"os"
+	"path/filepath"
+	"runtime"
+	"tool/runner"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"gopkg.in/ini.v1"
 )
 
-func main() {
-	ctx := context.Background()
-	// Define command-line flags
-	clusterName := flag.String("cluster-name", "gpu-dev-cluster", "The name of the GKE cluster")
-	region := flag.String("region", "us-west4", "The region of the GKE cluster")
-	gcsBucket := flag.String("gcs-bucket", "gs://vertex-model-garden-public-us/llama3.2/Llama-3.2-1B", "The GCS bucket URI for the model weights")
+var (
+	rootCmd = &cobra.Command{
+		Use:   "benchmarker",
+		Short: "A benchmarking tool",
+		Long:  `A tool for running benchmarks.`,
+	}
+	configCmd = &cobra.Command{
+		Use:   "config",
+		Short: "Manage configuration",
+		Long:  `Commands for managing the configuration.`,
+	}
+	configFile string
+	setCmd     = &cobra.Command{
+		Use:   "set",
+		Short: "Set the configuration file",
+		Long:  `Set the configuration file for the application.`,
+		Run:   setConfig,
+	}
+	runCmd = &cobra.Command{
+		Use:   "run",
+		Short: "Run the benchmarks",
+		Long:  `Run the benchmarks using the configured settings.`,
+		Run:   run}
+)
 
-	// Parse the command-line flags
-	flag.Parse()
-
-	// Validate input
-	if *clusterName == "" || *region == "" || *gcsBucket == "" {
-		log.Fatalf("all flags (cluster-name, location, gcs-bucket) are required")
-	}
-
-	// Initialize GCP Client
-	client, err := gcpClient.NewGCPClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to create GCP client: %v", err)
-	}
-	// Print the Project ID
-	log.Printf("Project ID: %s\n", client.GetCreds().ProjectID)
-	k8sClient, err := k8sclient.NewClient("gke_kunjanp-gke-dev-2_us-west4_gpu-dev-cluster")
-	if err != nil {
-		log.Fatalf("Failed to create k8s client: %v", err)
-	}
-	nodes, err := k8sClient.GetNodes()
-	if err != nil {
-		log.Fatalf("Failed to get k8s nodes: %v", err)
-	}
-	log.Printf("Nodes %v", nodes)
-	mountOptions := &gcsFuse.MountOptions{
-		FileCacheOptions: &gcsFuse.FileCacheOptions{
-			EnableParallelDownloads:  true,
-			ParallelDownloadsPerFile: 4,
-			MaxParallelDownloads:     -1,
-			DownloadChunkSizeMB:      3,
+func initLogger() *logrus.Logger {
+	logger := logrus.New()
+	logger.SetOutput(os.Stderr)
+	logger.SetLevel(logrus.InfoLevel)
+	logger.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2024-09-24T15:04:05.000Z07:00",
+		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
+			return "", fmt.Sprintf("%s:%d", filepath.Base(f.File), f.Line)
 		},
+		DisableLevelTruncation: true, // Prevent level truncation
+	})
+	logger.SetReportCaller(true)
+	return logger
+}
+
+var logger = initLogger()
+
+func initCobra() {
+	setCmd.Flags().StringVarP(&configFile, "file", "f", "", "Path to the configuration file")
+	_ = setCmd.MarkFlagRequired("file")
+	configCmd.AddCommand(setCmd)
+	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(runCmd)
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+// ... (other variables and functions)
+
+func setConfig(cmd *cobra.Command, args []string) {
+	// Get the config file path from the flag
+	configFile, _ := cmd.Flags().GetString("file")
+
+	// Create the .config directory if it doesn't exist
+
+	// Load or create the .ini file
+	configFilePath := "benchmarker.ini"
+	cfg, err := ini.Load(configFilePath)
+	if err != nil {
+		// Create a new .ini file if it doesn't exist
+		cfg = ini.Empty()
+		cfg.NewSection("default") // Create a default section
 	}
 
-	perfOptions := &gcsFuse.PerfOptions{
-		MountOptions: mountOptions,
-		VolumeAttributes: &gcsFuse.VolumeAttributes{
-			FileCacheCapacity: "-1"}, // Initialize with default or appropriate values
-	}
-	opt := &gcsFuse.Options{
-		PerfOptions: perfOptions,
-	}
-	prettyJSON, err := json.MarshalIndent(opt.ToMap(), "", "  ")
+	// Set the config_path value
+	cfg.Section("default").Key("MODEL_LOAD_BENCHMARK_CONFIG").SetValue(configFile)
+
+	// Save the .ini file
+	err = cfg.SaveTo(configFilePath)
 	if err != nil {
-		fmt.Println("Failed to generate JSON:", err)
+		logger.Errorf("Failed to save config file: %v", err)
 		return
 	}
-	fmt.Println(string(prettyJSON))
-	if err := k8sClient.DeployMeta(opt); err != nil {
-		log.Fatalf("Failed to deploy pod %q", err)
+
+	logger.Infof("Config file set to: %s", configFile)
+}
+
+func run(cmd *cobra.Command, args []string) {
+	configFilePath := "benchmarker.ini"
+
+	// Load the .ini file
+	cfg, err := ini.Load(configFilePath)
+	if err != nil {
+		logger.Error("Config file not found. Use 'config set' command first.")
+		return
 	}
+
+	// Get the config_path value
+	configFile := cfg.Section("default").Key("MODEL_LOAD_BENCHMARK_CONFIG").String()
+	if configFile == "" {
+		logger.Error("Config file path not found in config file.")
+		return
+	}
+
+	runner, err := runner.InitRunner(configFile)
+	if err != nil {
+		logger.Errorf("Failed to initialize runner: %v", err)
+		return
+	}
+	runner.Run()
+}
+
+func main() {
+	initCobra()
 }

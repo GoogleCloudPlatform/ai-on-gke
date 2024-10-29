@@ -2,128 +2,219 @@ package suitegenerator
 
 import (
 	"fmt"
-	"math"
-	gcsfuse "tool/gcs-fuse"
+	"reflect"
+	"tool/config"
 )
 
+var RequestLimitMap = map[string]string{
+	"CPURequest":              "CPULimit",
+	"MemoryRequest":           "MemoryLimit",
+	"EphemeralStorageRequest": "EphemeralStorageLimit",
+}
+
 type Suite struct {
-	name       string
-	totalSize  float32
-	numFiles   int
-	fileSize   *distribution // size in bytes
-	bucketName int
-	vcpu       float32 //in millicores e.g 103670m
-	memory     float32 // in Kib
-	storage    float32 // in bytes
+	BaseCase config.Config
+	Cases    []config.Config
 }
 
-type distribution struct {
-	percentile25 float32
-	percentile75 float32
-	median       float32
+// GenerateCases creates test cases
+func GenerateCases(base config.Config) *Suite {
+	suite := Suite{BaseCase: deepCopyConfig(base)}
+	suite.Cases = generateSideCarAndVolumeCases(base)
+	return &suite
 }
 
-func (suite *Suite) generate() []*gcsfuse.Options {
+func generateSideCarAndVolumeCases(base config.Config) []config.Config {
+	sideCarCases := []config.Config{deepCopyConfig(base)}
+	if base.SideCarResources != nil {
+		sideCarCases = generateResourceCasesForStruct(base, "SideCarResources", reflect.ValueOf(base.SideCarResources))
+	}
+	fmt.Printf("Number of sidecarresource combinations generated %v \n", len(sideCarCases))
 
-	return nil
-}
+	var volumeCases []config.Config
+	for _, sideCarCase := range sideCarCases {
+		if sideCarCase.VolumeAttributes != nil {
+			generatedVolumeCases := generateResourceCasesForStruct(sideCarCase, "VolumeAttributes", reflect.ValueOf(sideCarCase.VolumeAttributes))
+			volumeCases = append(volumeCases, generatedVolumeCases...)
+		} else {
+			volumeCases = append(volumeCases, sideCarCase)
+		}
+	}
+	fmt.Printf("Number of sidecarresource and volume case combinations generated %v\n", len(volumeCases))
 
-func (suite *Suite) fileCacheOptionsGenerator() []*gcsfuse.FileCacheOptions {
-	return nil
-}
+	var finalCases []config.Config
+	for _, volumeCase := range volumeCases {
+		if volumeCase.VolumeAttributes != nil {
+			generatedBoolCases := generateBoolCasesForStruct(volumeCase)
+			finalCases = append(finalCases, generatedBoolCases...)
+		} else {
+			finalCases = append(finalCases, volumeCase)
+		}
+	}
+	fmt.Printf("Number of all combinations generated %v \n", len(finalCases))
 
-// SideCarOptionsGenerator generates SideCarOptions based on the Suite properties.
-func (suite *Suite) SideCarOptionsGenerator() []*gcsfuse.SideCarOptions {
-	const maxMemoryPercentage = 0.1 // 10% of total memory
-	const maxVCPUPercentage = 0.1   // 10% of total vCPU
-	const maxMemoryForSidecar = 0.2 // 20% of total size in memory
-
-	// Define minimum resource requirements
-	const minCPUMin = 250.0                              // Minimum CPU request in millicores
-	const minMemoryMin = 256.0                           // Minimum memory request in MiB
-	const minEphemeralStorage = 5.0 * 1024 * 1024 * 1024 // 5 GiB in bytes
-
-	// Calculate the total memory available for the sidecar
-	maxMemory := float64(suite.memory * maxMemoryPercentage)
-	maxVCPU := float32(math.Ceil(float64(suite.vcpu) * maxVCPUPercentage))
-
-	// Calculate ephemeral storage request
-	ephemeralStorageRequest := math.Max(float64(suite.totalSize), float64(suite.storage)*0.1)
-
-	// Ensure that the ephemeral storage request meets the minimum requirement
-	ephemeralStorageRequest = math.Max(ephemeralStorageRequest, minEphemeralStorage)
-
-	// Percentiles to consider
-	percentiles := []float32{
-		suite.fileSize.percentile25,
-		suite.fileSize.median,
-		suite.fileSize.percentile75,
+	if len(finalCases) == 0 {
+		finalCases = append(finalCases, deepCopyConfig(base))
 	}
 
-	var sideCarOptionsList []*gcsfuse.SideCarOptions
-
-	for _, fileSize := range percentiles {
-		// Calculate number of vCPUs based on file size
-		if fileSize <= 0 {
-			fileSize = 1 // Avoid division by zero
-		}
-		requiredVCPUs := float32(suite.totalSize / fileSize)
-
-		// Ensure sidecar vCPU does not exceed limits
-		if requiredVCPUs > maxVCPU {
-			requiredVCPUs = maxVCPU
-		}
-
-		// Calculate memory for sidecar based on total size
-		sidecarMemory := math.Min(maxMemory, float64(suite.totalSize)*maxMemoryForSidecar)
-
-		// Ensure the sidecar memory meets minimum requirements
-		if sidecarMemory < minMemoryMin {
-			sidecarMemory = minMemoryMin
-		}
-
-		// Create SideCarOptions
-		sideCarOptions := &gcsfuse.SideCarOptions{
-			CPULimit:                fmt.Sprintf("%.0f", requiredVCPUs),                                     // Total CPUs needed
-			MemoryLimit:             fmt.Sprintf("%.0fGi", sidecarMemory/(1024*1024)),                       // Convert KiB to GiB
-			EphemeralStorageLimit:   "1Ti",                                                                  // Example static value
-			CPURequest:              fmt.Sprintf("%.0fm", math.Max(float64(requiredVCPUs)*1000, minCPUMin)), // Convert to millicores, ensure min
-			MemoryRequest:           fmt.Sprintf("%.0fGi", sidecarMemory/(1024*1024)),                       // Convert KiB to GiB
-			EphemeralStorageRequest: fmt.Sprintf("%.0fGi", ephemeralStorageRequest/(1024*1024*1024)),        // Request based on max of total size or 10% of storage
-		}
-
-		// Append the generated SideCarOptions to the list
-		sideCarOptionsList = append(sideCarOptionsList, sideCarOptions)
-	}
-
-	return sideCarOptionsList
+	return finalCases
 }
 
-func (suite *Suite) fileCacheDownloadChunkSizeMb() []int {
-	// Helper to calculate chunk size for each percentile
-	calculateChunkSize := func(fileSizeInBytes float32) int {
-		// Convert file size from bytes to MiB (1 MiB = 1024 * 1024 bytes)
-		fileSizeInMiB := fileSizeInBytes / (1024 * 1024)
+func generateBoolCasesForStruct(base config.Config) []config.Config {
+	var cases []config.Config
 
-		// Divide file size by vCPU (in cores, hence divide by 1000) to get chunk size in MiB
-		vCPUInCores := suite.vcpu / 1000
-		chunkSize := int(math.Ceil(float64(fileSizeInMiB) / float64(vCPUInCores)))
-
-		// Calculate the memory limit per vCPU in MiB
-		// Convert memory from KiB to MiB (1 MiB = 1024 KiB)
-		maxMemoryLimit := int(math.Ceil(float64(suite.memory) / 1024 / float64(vCPUInCores*2)))
-
-		if chunkSize > maxMemoryLimit {
-			return maxMemoryLimit // Choose minimum if chunk size exceeds memory constraints
-		}
-		return chunkSize
+	combinations := []struct {
+		EnableParallelDownloads bool
+		FileCacheForRangeRead   bool
+	}{
+		{true, true},
+		{true, false},
+		{false, true},
+		{false, false},
 	}
 
-	// Calculate chunk sizes for each percentile in MiB
-	chunkSize25th := calculateChunkSize(suite.fileSize.percentile25)
-	chunkSize75th := calculateChunkSize(suite.fileSize.percentile75)
-	chunkSizeMedian := calculateChunkSize(suite.fileSize.median)
+	for _, combo := range combinations {
+		newCase := deepCopyConfig(base)
 
-	// Return the chunk sizes for 25th, median, and 75th percentiles
-	return []int{chunkSize25th, chunkSizeMedian, chunkSize75th}
+		if newCase.VolumeAttributes != nil {
+			newCase.VolumeAttributes.MountOptions.FileCache.EnableParallelDownloads = combo.EnableParallelDownloads
+
+			if !combo.EnableParallelDownloads {
+				newCase.VolumeAttributes.MountOptions.FileCache.ParallelDownloadsPerFile.Base = 0
+				newCase.VolumeAttributes.MountOptions.FileCache.MaxParallelDownloads.Base = 0
+			}
+		}
+
+		if newCase.VolumeAttributes != nil {
+			newCase.VolumeAttributes.FileCacheForRangeRead = combo.FileCacheForRangeRead
+		}
+
+		cases = append(cases, newCase)
+	}
+
+	return cases
+}
+
+func generateResourceCasesForStruct(base config.Config, structName string, structVal reflect.Value) []config.Config {
+	var cases []config.Config
+
+	for i := 0; i < structVal.Elem().NumField(); i++ {
+		field := structVal.Elem().Field(i)
+		fieldType := structVal.Elem().Type().Field(i)
+
+		if field.Type() == reflect.TypeOf(config.Resource{}) {
+			resource := field.Interface().(config.Resource)
+			if resource.Step > 0 && resource.Max > resource.Base {
+				// Check if the field is a request that has a limit
+				limitFieldName, isRequest := RequestLimitMap[fieldType.Name]
+				limitField := structVal.Elem().FieldByName(limitFieldName)
+				limitExceeded := false
+				var limitResource config.Resource
+				var normalizedLimit int
+				if limitField.IsValid() {
+					limitResource = limitField.Interface().(config.Resource)
+					var e error
+					normalizedLimit, e = normalizeToBaseUnit(limitResource.Base, limitResource.Unit)
+					if e != nil {
+						fmt.Printf("Error normalizing limit: %v\n", e)
+						continue
+					}
+				}
+				// request should be less than limit
+				if isRequest {
+					if limitField.IsValid() {
+						// Normalize both resources to the same unit for comparison
+						normalizedRequest, err := normalizeToBaseUnit(resource.Base, resource.Unit)
+						if err != nil {
+							fmt.Printf("Error normalizing request: %v\n", err)
+							continue
+						}
+						// Compare the normalized values
+						if normalizedRequest > normalizedLimit {
+							limitExceeded = true
+						}
+					}
+				}
+
+				// Create cases if limits aren't exceeded
+				if !limitExceeded {
+					for val := resource.Base; val <= resource.Max; val += resource.Step {
+						if val > resource.Max {
+							break
+						}
+
+						newCase := deepCopyConfig(base)
+						updatedResource := config.Resource{Base: val, Unit: resource.Unit, Step: resource.Step, Max: resource.Max}
+						// request should be less than limit
+						if isRequest {
+							if limitField.IsValid() {
+								// Normalize both resources to the same unit for comparison
+								normalizedRequest, err := normalizeToBaseUnit(updatedResource.Base, updatedResource.Unit)
+								if err != nil {
+									fmt.Printf("Error normalizing request: %v\n", err)
+									continue
+								}
+
+								// Compare the normalized values
+								if normalizedRequest > normalizedLimit {
+									continue
+								}
+							}
+						}
+
+						if structName == "SideCarResources" {
+							newCase.SideCarResources = setNestedResourceField(newCase.SideCarResources, fieldType.Name, updatedResource).(*config.SideCarResources)
+						} else if structName == "VolumeAttributes" {
+							newCase.VolumeAttributes = setNestedResourceField(newCase.VolumeAttributes, fieldType.Name, updatedResource).(*config.VolumeAttributes)
+						}
+						cases = append(cases, newCase)
+					}
+				}
+			}
+		}
+	}
+	return cases
+}
+
+func deepCopyConfig(base config.Config) config.Config {
+	copy := base
+	if base.SideCarResources != nil {
+		sideCarCopy := *base.SideCarResources
+		copy.SideCarResources = &sideCarCopy
+	}
+	if base.VolumeAttributes != nil {
+		volumeCopy := *base.VolumeAttributes
+		copy.VolumeAttributes = &volumeCopy
+		if base.VolumeAttributes.MountOptions.FileCache != (config.FileCache{}) {
+			fileCacheCopy := base.VolumeAttributes.MountOptions.FileCache
+			copy.VolumeAttributes.MountOptions.FileCache = fileCacheCopy
+		}
+	}
+	return copy
+}
+
+func normalizeToBaseUnit(value int, unit string) (int, error) {
+	switch unit {
+	case "Mi":
+		return value * 1_024, nil
+	case "Gi":
+		return value * 1_024 * 1_024, nil
+	case "Ti":
+		return value * 1_024 * 1_024 * 1_024, nil
+	case "":
+		return value * 1_000, nil // Convert cores to milli-cores
+	case "m":
+		return value, nil
+	default:
+		return value, nil
+	}
+}
+
+func setNestedResourceField(nested interface{}, fieldName string, value config.Resource) interface{} {
+	v := reflect.ValueOf(nested).Elem()
+	field := v.FieldByName(fieldName)
+	if field.IsValid() && field.CanSet() {
+		field.Set(reflect.ValueOf(value))
+	}
+	return v.Addr().Interface()
 }
