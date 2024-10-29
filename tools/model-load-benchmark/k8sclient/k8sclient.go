@@ -132,23 +132,16 @@ func (k *Client) GetPodNode(pod *v1.Pod) error {
 	startTime := time.Now()
 
 	for {
-		// Refresh the pod status to check its current node assignment
 		updatedPod, err := k.client.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to get pod status: %v", err)
 		}
-
-		// Check if the pod has been scheduled to a node
 		if updatedPod.Spec.NodeName != "" {
 			return nil
 		}
-
-		// Check if timeout has been reached
 		if time.Since(startTime) >= timeout {
-			return fmt.Errorf("timeout reached: pod %s in namespace %s is still not scheduled to any node", pod.Name, pod.Namespace)
+			return fmt.Errorf("90s timeout reached: pod %s in namespace %s is still not scheduled to any node", pod.Name, pod.Namespace)
 		}
-
-		// Wait for the next interval
 		time.Sleep(interval)
 	}
 }
