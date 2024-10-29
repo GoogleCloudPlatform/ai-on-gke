@@ -1,0 +1,8 @@
+volumeAttributes:
+  bucketName: BUCKET_NAME
+  mountOptions: "implicit-dirs,file-cache:enable-parallel-downloads:true,file-cache:parallel-downloads-per-file:4,file-cache:max-parallel-downloads:-1,file-cache:download-chunk-size-mb:3"
+  fileCacheCapacity: "-1"
+  fileCacheForRangeRead: "true"
+  metadataStatCacheCapacity: "-1"
+  metadataTypeCacheCapacity: "-1"
+  metadataCacheTTLSeconds: "600"
