@@ -2,6 +2,7 @@
 This tool is to help user iterate over different configurations for GCSFuse and benchmark the data downloading time. [More details on available options for gcsfuse mount options in GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver#mounting-flags)
 
 ## Table of Contents
+- [Architecture](#architecture)
 - [Installation](#installation)
   - [From Source](#from-source)
   - [As a Go Package](#as-a-go-package)
@@ -9,6 +10,8 @@ This tool is to help user iterate over different configurations for GCSFuse and 
   - [Commands](#commands)
 - [Examples](#examples)
 
+## Architecture
+The tool generates variety of GCSFuse mount configurations based on a configuration. The configuration parameters can contains base values, step size and max. This is used in generating all valid configurations( requested resource is less than resource limit). It also takes in pod specification, mutates it with gcsfuse configuration by configuring and mounting the csi volume. Then it deploys the pod and profiles the time  till all containers in the pod are ready. This along with the configuration is outputted to results directory. There is a [matplotlib script](plot.py) which can be triggered to  generate scatterplots for loading times against specific configuration parameter's value
 ## Installation
 
 ### From Source
