@@ -1195,19 +1195,21 @@ func Test_GetSliceToWorkerIDs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			testClient := setupClient(tc.podsInGroup)
-			// set up TPUWebhookServer
-			tpuWebhookServer := NewTPUWebhookServer(testClient)
-
-			sliceToWorkerIDs, err := getSliceToWorkerIDs(tpuWebhookServer, "test-cluster", "test-group", "test-namespace", tc.numOfHosts)
+			podLister := setupInformer(tc.podsInGroup)
+			tpuWebhook := NewTPUWebhookServer(podLister)
+			sliceToWorkerIDs, err := tpuWebhook.getSliceToWorkerIDs("test-cluster", "test-group", "test-namespace", tc.numOfHosts)
 
 			// sliceToWorkerIDs should be populated with slices and unique TPU_WORKER_IDs for each Pod
 			assert.Equal(t, err, nil)
 			for slice, workerIDs := range sliceToWorkerIDs {
 				assert.Contains(t, tc.expectedSliceToWorkerIDs, slice)
 				assert.Equal(t, len(tc.expectedSliceToWorkerIDs[slice]), len(workerIDs))
+			for slice, workerIDs := range sliceToWorkerIDs {
+				assert.Contains(t, tc.expectedSliceToWorkerIDs, slice)
+				assert.Equal(t, len(tc.expectedSliceToWorkerIDs[slice]), len(workerIDs))
 				sort.Ints(workerIDs)
 				for index, value := range workerIDs {
+					assert.Equal(t, tc.expectedSliceToWorkerIDs[slice][index], value)
 					assert.Equal(t, tc.expectedSliceToWorkerIDs[slice][index], value)
 				}
 			}

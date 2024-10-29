@@ -17,7 +17,6 @@
 package main
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -31,13 +30,18 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 )
@@ -53,9 +57,11 @@ type slice struct {
 
 // TPUWebhookServer is a KubeRay TPU webhook server instance.
 type TPUWebhookServer struct {
-	// client is used to query the API server for Pods.
-	client     kubernetes.Interface
+	// podLister is used to query Pods from an informer cache.
+	podLister  listersv1.PodLister
 	cacheMutex sync.Mutex
+	wg         sync.WaitGroup
+	waiting    int
 }
 
 // patch is a JSON patch describing mutate operation(s) for an incoming object.
@@ -77,9 +83,9 @@ var (
 	ServerKey      string
 )
 
-func NewTPUWebhookServer(client kubernetes.Interface) *TPUWebhookServer {
+func NewTPUWebhookServer(podLister listersv1.PodLister) *TPUWebhookServer {
 	return &TPUWebhookServer{
-		client: client,
+		podLister: podLister,
 	}
 }
 
@@ -479,10 +485,10 @@ func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace
 }
 
 // getSliceToWorkerIDs returns a mapping representing the current RayCluster state of TPU pods using a PodLister
-func getSliceToWorkerIDs(t *TPUWebhookServer, clusterName string, groupName string, namespace string, numOfHosts int32) (map[slice][]int, error) {
+func (t *TPUWebhookServer) getSliceToWorkerIDs(clusterName string, groupName string, namespace string, numOfHosts int32) (map[slice][]int, error) {
 	sliceToWorkerIDs := make(map[slice][]int)
 
-	podsInGroup, err := t.client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("ray.io/group=%s", groupName)})
+	podsInGroup, err := t.podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
 	if err != nil {
 		return nil, err
 	}
@@ -491,10 +497,9 @@ func getSliceToWorkerIDs(t *TPUWebhookServer, clusterName string, groupName stri
 		// return an empty mapping if no Pods with 'ray.io/group' label found
 		return sliceToWorkerIDs, nil
 	}
-	klog.V(1).InfoS("getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "# Pods in Group", len(podsInGroup.Items))
-	for _, existingPod := range podsInGroup.Items {
+	klog.V(1).InfoS("getSliceToWorkerIDs", "RayCluster", namespace+"/"+clusterName, "# Pods in Group", len(podsInGroup))
+	for _, existingPod := range podsInGroup {
 		if existingPod.DeletionTimestamp != nil {
-			// skip terminating Pods
 			continue
 		}
 		existingClusterName := existingPod.Labels["ray.io/cluster"]
@@ -565,6 +570,21 @@ func extractPod(admissionReview *admissionv1.AdmissionReview) (*corev1.Pod, erro
 	return &pod, nil
 }
 
+// waitTimeout helper function to sync.WaitGroup Wait() or timeout
+func waitTimeout(wait *sync.WaitGroup, timeout time.Duration) bool {
+	waitChan := make(chan struct{})
+	go func() {
+		defer close(waitChan)
+		wait.Wait()
+	}()
+	select {
+	case <-waitChan:
+		return true // Wait() returned
+	case <-time.After(timeout):
+		return false // Request timed out
+	}
+}
+
 // mutatePod returns an Admission Response after injecting TPU related fields to a given Pod
 func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionReview) (*admissionv1.AdmissionResponse, error) {
 	pod, err := extractPod(admissionReview)
@@ -606,8 +626,19 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 	chipsPerHost := getNumTPUChipsRequested(containers...)
 	numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, chipsPerHost) // ignore error here because topology may not be set yet
 
+	// Wait for PodInformer cache to update from previous requests or timeout
+	waitTimeout(&t.wg, time.Second*1)
+	if waitTimeout(&t.wg, time.Second*1) {
+		klog.V(1).Info("MutatePod", "PodInformer AddFunc called for prior admission request")
+	} else {
+		klog.V(1).Info("MutatePod", "Timed out waiting for PodInformer AddFunc")
+	}
+	// Add 1 to the WaitGroup to represent the pending Pod to the cache
+	defer t.wg.Add(1)
+	t.waiting += 1
+
 	// query k8s client to populate sliceToWorkerIDs to then calculate the next TPU_WORKER_ID and replicaIndex
-	sliceToWorkerIDs, err := getSliceToWorkerIDs(t, clusterName, groupName, namespace, numOfHosts)
+	sliceToWorkerIDs, err := t.getSliceToWorkerIDs(clusterName, groupName, namespace, numOfHosts)
 	if err != nil {
 		return nil, err
 	}
@@ -721,6 +752,19 @@ func init() {
 	klog.InitFlags(nil)
 }
 
+// addPod allows next goroutine to start once the webhook PodInformer cache updates
+func (t *TPUWebhookServer) addPod(obj interface{}) {
+	// It's not guaranteed the webhook replica that admitted the Pod for this event is the same as the current caller (i.e. wg could be 0).
+	// It's sufficient to wait until the cache has updated once to unblock the next Mutate call.
+	if t.waiting > 0 {
+		defer t.wg.Done()
+	}
+
+	// Log the Pod being admitted
+	pod := obj.(*corev1.Pod)
+	klog.V(1).InfoS("addPod", "Pod", pod.Namespace+"/"+pod.Name, "Time", time.Now())
+}
+
 func main() {
 	flag.Parse()
 
@@ -740,7 +784,39 @@ func main() {
 		client = kubernetes.NewForConfigOrDie(config)
 	}
 
-	tpuWebhookServer := NewTPUWebhookServer(client)
+	// instantiate PodInformer for Ray worker pods in the GKE cluster
+	tweakListOptionsFunc := func(options *metav1.ListOptions) {
+		options.LabelSelector = "ray.io/node-type=worker,app.kubernetes.io/created-by=kuberay-operator"
+	}
+	factory := informers.NewFilteredSharedInformerFactory(client, 1*time.Minute, metav1.NamespaceAll, tweakListOptionsFunc)
+	podInformer := factory.Core().V1().Pods().Informer()
+
+	// start the PodInformer and wait for cache sync
+	stopCh := make(chan struct{})
+	factory.Start(stopCh)
+	factory.WaitForCacheSync(stopCh)
+
+	if !cache.WaitForCacheSync(stopCh, podInformer.HasSynced) {
+		klog.Fatal("Timed out waiting for PodInformer to sync")
+	}
+
+	podLister := factory.Core().V1().Pods().Lister()
+
+	if podLister == nil {
+		klog.Fatal("Failed to initialize Pod Lister")
+	}
+
+	// close the PodInformer on exit
+	defer close(stopCh)
+
+	tpuWebhookServer := NewTPUWebhookServer(podLister)
+
+	// Add custom event handler for Pod creation
+	podInformer.AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: tpuWebhookServer.addPod,
+		},
+	)
 
 	mux := http.NewServeMux()
 
