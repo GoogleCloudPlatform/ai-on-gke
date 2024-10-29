@@ -742,11 +742,12 @@ if __name__ == "__main__":
       type=str,
       default="inf",
       help=(
-          "Number of requests per second. If this is inf, "
-          "then all the requests are sent at time 0. "
-          "Otherwise, we use Poisson process to synthesize "
-          "the request arrival times."
-      ),
+          "Specifies the request rate as a function of time, f(t)."
+          " Example format: '1+1.05*t', where 't' represents seconds."
+          " If set to 'inf', all requests are sent at time 0. Otherwise,"
+          " the function is interpreted to generate a Poisson process"
+          " for request arrival times based on the provided rate expression."
+    ),
   )
   parser.add_argument("--seed", type=int, default=int(time.time()))
   parser.add_argument(
