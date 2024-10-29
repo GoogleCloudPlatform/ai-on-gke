@@ -1,10 +1,5 @@
-Here’s an expanded README with a section detailing how to install the Go package as a CLI:
-
----
-
 # Benchmarker CLI
-
-A CLI tool for configuring and running benchmarks on various configurations.
+This tool is to help user iterate over different configurations for GCSFuse and benchmark the data downloading time. [More details on available options for gcsfuse mount options in GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver#mounting-flags)
 
 ## Table of Contents
 - [Installation](#installation)
@@ -64,13 +59,17 @@ make sure to configure Readiness probes to ensure that data expected is loaded b
 Also add necessary node selectors to ensure benchmarking pods are run on preferred nodes.
 [Example pod spec](example-pod.yaml)
 
-### Set a Configuration File
+### Set a Configuration File 
 To set a configuration file named `config.yaml`, use:
 ```bash
 benchmarker config set -f config.yaml
 ```
 [Example config](base-config.yaml). Set limits higher than base, 
-ensure the units are consistent in base and max value. Cases with Bool fields set to false and true are both generated. When file cache is not enabled, other settings are not applied. Some cases may result in failure, due to pod scheduling.
+ensure the units are consistent in base and max value. Cases with Bool fields set to false and true are both generated. When file cache is not enabled, other settings are not applied. Some cases may result in failure, due to pod scheduling. Required field in configuration
+- `basePodSpec`
+- `volumeAttributes.bucketName`
+- `volumeAttributes.mountOptions.only-dir`
+Available [SidecarResource](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver#sidecar-container-resources) and [VolumeAttribute configuration fields](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver#mounting-flags)
 
 
 
