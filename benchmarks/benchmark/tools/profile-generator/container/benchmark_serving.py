@@ -31,7 +31,7 @@ MIN_SEQ_LEN = 4
 CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 PROMETHEUS_PORT = 9090
-NS_IN_SEC = 1000 * 1000 * 1000
+NS_IN_SEC = 1_000_000_000
 
 # Prometheus Metrics
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
@@ -113,7 +113,7 @@ async def get_request(
     # Evaluate the reqest rate at this point in time
     t = symbols('t')
     expr_parsed = parse_expr(request_rate_expr, transformations="all", local_dict={"t": t})
-    request_rate_at_t = expr_parsed.subs(t, ((time.time_ns() - start_time) / 1000000000))
+    request_rate_at_t = expr_parsed.subs(t, ((time.time_ns() - start_time) / NS_IN_SEC))
 
     # Sample the request interval from the exponential distribution.
     interval = np.random.exponential(1.0 / request_rate_at_t)
