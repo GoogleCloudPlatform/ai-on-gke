@@ -110,7 +110,7 @@ async def get_request(
       # If the request rate is infinity, then we don't need to wait.
       continue
 
-    # Evaluate the reqest rate at this point in time
+    # Evaluate the request rate at this point in time
     t = symbols('t')
     expr_parsed = parse_expr(request_rate_expr, transformations="all", local_dict={"t": t})
     request_rate_at_t = expr_parsed.subs(t, ((time.time_ns() - start_time) / NS_IN_SEC))
