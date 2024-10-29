@@ -1,0 +1,254 @@
+elapsedTime: 1m55.295953366s
+config:
+  basePodSpec: example-pod.yaml
+  sideCarResources:
+    cpu-limit:
+      base: 20
+      step: 5
+      max: 20
+    memory-limit:
+      base: 2
+      step: 20
+      max: 2
+      unit: Gi
+    ephemeral-storage-limit:
+      base: 50
+      step: 20
+      max: 50
+      unit: Gi
+    cpu-request:
+      base: 250
+      step: 50
+      max: 250
+      unit: m
+    memory-request:
+      base: 1
+      step: 2
+      max: 3
+      unit: Gi
+    ephemeral-storage-request:
+      base: 40
+      step: 10
+      max: 40
+      unit: Gi
+  volumeAttributes:
+    bucketName: vertex-model-garden-public-us
+    mountOptions:
+      implicit-dirs: true
+      only-dir: codegemma/codegemma-2b
+      file-cache:
+        enable-parallel-downloads: false
+        parallel-downloads-per-file:
+          base: 0
+          step: 5
+          max: 5
+        max-parallel-downloads:
+          base: 0
+          step: 2
+          max: 5
+        download-chunk-size-mb:
+          base: 3
+          step: 3
+          max: 6
+    fileCacheCapacity:
+      base: 10
+      step: 2
+      max: 10
+      unit: Gi
+    fileCacheForRangeRead: false
+    metadataStatCacheCapacity:
+      base: 500
+      step: 20
+      max: 500
+      unit: Mi
+    metadataTypeCacheCapacity:
+      base: 500
+      step: 20
+      max: 500
+      unit: Mi
+    metadataCacheTTLSeconds:
+      base: 620
+      step: 20
+      max: 620
+spec:
+  typemeta:
+    kind: Pod
+    apiversion: v1
+  objectmeta:
+    name: gcs-fuse-csi-file-cache-example
+    generatename: ""
+    namespace: default
+    selflink: ""
+    uid: ""
+    resourceversion: ""
+    generation: 0
+    creationtimestamp: "0001-01-01T00:00:00Z"
+    deletiontimestamp: null
+    deletiongraceperiodseconds: null
+    labels: {}
+    annotations:
+      app: Kunjan
+      gke-gcsfuse/cpu-limit: "20"
+      gke-gcsfuse/cpu-request: 250m
+      gke-gcsfuse/ephemeral-storage-limit: 50Gi
+      gke-gcsfuse/ephemeral-storage-request: 40Gi
+      gke-gcsfuse/memory-limit: 2Gi
+      gke-gcsfuse/memory-request: 1Gi
+      gke-gcsfuse/volumes: "true"
+    ownerreferences: []
+    finalizers: []
+    managedfields: []
+  spec:
+    volumes:
+    - name: gcs-fuse-csi-ephemeral
+      volumesource:
+        hostpath: null
+        emptydir: null
+        gcepersistentdisk: null
+        awselasticblockstore: null
+        gitrepo: null
+        secret: null
+        nfs: null
+        iscsi: null
+        glusterfs: null
+        persistentvolumeclaim: null
+        rbd: null
+        flexvolume: null
+        cinder: null
+        cephfs: null
+        flocker: null
+        downwardapi: null
+        fc: null
+        azurefile: null
+        configmap: null
+        vspherevolume: null
+        quobyte: null
+        azuredisk: null
+        photonpersistentdisk: null
+        projected: null
+        portworxvolume: null
+        scaleio: null
+        storageos: null
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          readonly: true
+          fstype: null
+          volumeattributes:
+            bucketName: vertex-model-garden-public-us
+            fileCacheCapacity: 10Gi
+            fileCacheForRangeRead: "false"
+            metadataCacheTTLSeconds: "620"
+            metadataStatCacheCapacity: 500Mi
+            metadataTypeCacheCapacity: 500Mi
+            mountOptions: implicit-dirs,only-dir=codegemma/codegemma-2b,file-cache:enable-parallel-downloads:false,file-cache:download-chunk-size-mb:3
+          nodepublishsecretref: null
+        ephemeral: null
+        image: null
+    initcontainers: []
+    containers:
+    - name: data-validator
+      image: busybox
+      command:
+      - sh
+      - -c
+      - while true; do sleep 3600; done
+      args: []
+      workingdir: ""
+      ports: []
+      envfrom: []
+      env: []
+      resources:
+        limits: {}
+        requests: {}
+        claims: []
+      resizepolicy: []
+      restartpolicy: null
+      volumemounts:
+      - name: gcs-fuse-csi-ephemeral
+        readonly: false
+        recursivereadonly: null
+        mountpath: /data
+        subpath: ""
+        mountpropagation: null
+        subpathexpr: ""
+      volumedevices: []
+      livenessprobe: null
+      readinessprobe:
+        probehandler:
+          exec:
+            command:
+            - sh
+            - -c
+            - cat /data/* > /dev/null
+          httpget: null
+          tcpsocket: null
+          grpc: null
+        initialdelayseconds: 10
+        timeoutseconds: 60
+        periodseconds: 45
+        successthreshold: 0
+        failurethreshold: 3
+        terminationgraceperiodseconds: null
+      startupprobe: null
+      lifecycle: null
+      terminationmessagepath: ""
+      terminationmessagepolicy: ""
+      imagepullpolicy: ""
+      securitycontext: null
+      stdin: false
+      stdinonce: false
+      tty: false
+    ephemeralcontainers: []
+    restartpolicy: Never
+    terminationgraceperiodseconds: null
+    activedeadlineseconds: null
+    dnspolicy: ""
+    nodeselector: {}
+    serviceaccountname: ""
+    deprecatedserviceaccount: ""
+    automountserviceaccounttoken: null
+    nodename: ""
+    hostnetwork: false
+    hostpid: false
+    hostipc: false
+    shareprocessnamespace: null
+    securitycontext: null
+    imagepullsecrets: []
+    hostname: ""
+    subdomain: ""
+    affinity: null
+    schedulername: ""
+    tolerations: []
+    hostaliases: []
+    priorityclassname: ""
+    priority: null
+    dnsconfig: null
+    readinessgates: []
+    runtimeclassname: null
+    enableservicelinks: null
+    preemptionpolicy: null
+    overhead: {}
+    topologyspreadconstraints: []
+    sethostnameasfqdn: null
+    os: null
+    hostusers: null
+    schedulinggates: []
+    resourceclaims: []
+  status:
+    phase: ""
+    conditions: []
+    message: ""
+    reason: ""
+    nominatednodename: ""
+    hostip: ""
+    hostips: []
+    podip: ""
+    podips: []
+    starttime: null
+    initcontainerstatuses: []
+    containerstatuses: []
+    qosclass: ""
+    ephemeralcontainerstatuses: []
+    resize: ""
+    resourceclaimstatuses: []
+
