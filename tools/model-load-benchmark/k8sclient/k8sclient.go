@@ -125,6 +125,34 @@ func (k *Client) DeletePod(pod *v1.Pod) error {
 	}
 }
 
+// GetPodNode waits until the pod is scheduled to a node or till a timeout.
+func (k *Client) GetPodNode(pod *v1.Pod) error {
+	timeout := 90 * time.Second
+	interval := 5 * time.Second
+	startTime := time.Now()
+
+	for {
+		// Refresh the pod status to check its current node assignment
+		updatedPod, err := k.client.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get pod status: %v", err)
+		}
+
+		// Check if the pod has been scheduled to a node
+		if updatedPod.Spec.NodeName != "" {
+			return nil
+		}
+
+		// Check if timeout has been reached
+		if time.Since(startTime) >= timeout {
+			return fmt.Errorf("timeout reached: pod %s in namespace %s is still not scheduled to any node", pod.Name, pod.Namespace)
+		}
+
+		// Wait for the next interval
+		time.Sleep(interval)
+	}
+}
+
 // DeployAndMonitorPod deploys the pod and waits till all pod and its containers are ready
 func (k *Client) DeployAndMonitorPod(pod *v1.Pod) (time.Duration, error) {
 	maxPeriodSeconds := int32(5)
@@ -149,6 +177,11 @@ func (k *Client) DeployAndMonitorPod(pod *v1.Pod) (time.Duration, error) {
 	pod, err = k.client.CoreV1().Pods(namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 	if err != nil {
 		return -1, fmt.Errorf("failed to create pod: %v", err)
+	}
+	// wait for pod to be placed on node
+	err = k.GetPodNode(pod)
+	if err != nil {
+		return -1, fmt.Errorf("failed to deploy pod: %v", err)
 	}
 	startTime := time.Now()
 	defer k.DeletePod(pod)
