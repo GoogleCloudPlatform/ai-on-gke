@@ -161,7 +161,7 @@ func (r *Runner) saveCaseResultToYAML(result CaseResult) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal CaseResult to YAML: %v", err)
 	}
-
+	yamlData = append(yamlData, '\n')
 	// Write the YAML data to the file
 	err = os.WriteFile(filename, yamlData, 0644)
 	if err != nil {
