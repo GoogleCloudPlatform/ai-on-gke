@@ -617,7 +617,7 @@ async def main(args: argparse.Namespace):
         expr_parsed.subs(t, 1)
         return True
     except KeyError as e:
-        # If another variable is required, it will throw a KeyError
+        # If another variable is required, throw a KeyError
         return False
 
   if args.request_rate == "inf":
