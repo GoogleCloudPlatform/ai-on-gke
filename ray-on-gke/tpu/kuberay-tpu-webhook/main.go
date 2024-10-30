@@ -627,7 +627,6 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 	numOfHosts, _ := getNumTPUHostsFromTopology(clusterName, groupName, namespace, topology, chipsPerHost) // ignore error here because topology may not be set yet
 
 	// Wait for PodInformer cache to update from previous requests or timeout
-	waitTimeout(&t.wg, time.Second*1)
 	if waitTimeout(&t.wg, time.Second*1) {
 		klog.V(1).Info("MutatePod", "PodInformer AddFunc called for prior admission request")
 	} else {
