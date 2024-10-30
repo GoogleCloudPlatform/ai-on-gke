@@ -754,14 +754,27 @@ func init() {
 // addPod allows next goroutine to start once the webhook PodInformer cache updates
 func (t *TPUWebhookServer) addPod(obj interface{}) {
 	// It's not guaranteed the webhook replica that admitted the Pod for this event is the same as the current caller (i.e. wg could be 0).
-	// It's sufficient to wait until the cache has updated once to unblock the next Mutate call.
-	if t.waiting > 0 {
-		defer t.wg.Done()
-	}
-
-	// Log the Pod being admitted
+	// It's sufficient to wait until the cache has updated once with a TPU pod to unblock the next Mutate call.
 	pod := obj.(*corev1.Pod)
 	klog.V(1).InfoS("addPod", "Pod", pod.Namespace+"/"+pod.Name, "Time", time.Now())
+
+	if t.waiting == 0 || pod.Spec.Containers == nil || !containerRequestingTPUs(pod.Spec.Containers...) {
+		return
+	}
+	for _, container := range pod.Spec.Containers {
+		if !containerRequestingTPUs(container) {
+			// Skip to the next container
+			continue
+		}
+		if getEnvironmentVariable("TPU_WORKER_ID", container) == "" {
+			// This TPU pod was not intercepted by the webhook
+			return
+		}
+		// Added a TPU worker Pod to the cache, unblock the next Mutate call
+		t.wg.Done()
+		t.waiting -= 1
+		return
+	}
 }
 
 func main() {
