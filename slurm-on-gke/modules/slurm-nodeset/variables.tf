@@ -86,6 +86,5 @@ variable "accelerator_types" {
       count = 8
     }
   }
-
-
 }
+

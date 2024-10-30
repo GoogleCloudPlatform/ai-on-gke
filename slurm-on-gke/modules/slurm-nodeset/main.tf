@@ -56,3 +56,4 @@ resource "kubernetes_manifest" "default" {
     force_conflicts = true
   }
 }
+
