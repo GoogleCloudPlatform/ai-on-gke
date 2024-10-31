@@ -173,7 +173,6 @@ async def send_stream_request(
   st = time.perf_counter()
   output = ""
   timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
-  print("right before sending request")
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
     try:
       async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
@@ -394,7 +393,6 @@ async def benchmark(
   async for request in get_request(input_requests, args.request_rate):
     prompt, prompt_len, output_len = request
     if args.stream_request:
-      print("streaming request")
       task = asyncio.create_task(
         send_stream_request(
             args.backend,
@@ -428,7 +426,6 @@ async def benchmark(
       )
     tasks.append(task)
   results = await asyncio.gather(*tasks)
-  print("done waiting")
   combined_latencies = []
   combined_ttfts = []
   combined_errors = init_errors_map()
@@ -682,7 +679,14 @@ def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_re
 
   if args.stream_request:
     mean_ttft=np.mean(ttfts)
-    print(f"Mean TTFT (ms): {mean_ttft:.2f}")
+    median_ttft=np.median(ttfts)
+    p99_ttft=np.percentile(ttfts, 99)
+    print(f"Mean TTFT (s): {mean_ttft:.2f}")
+    print(f"Median TTFT (s): {median_ttft:.2f}")
+    print(f"P99 TTFT (s): {p99_ttft:.2f}")
+    benchmark_result['mean_ttft'] = mean_ttft
+    benchmark_result['median_ttft'] = median_ttft
+    benchmark_result['p99_ttft'] = p99_ttft
 
   if args.machine_cost:
     print(
