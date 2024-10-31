@@ -191,23 +191,23 @@ async def send_stream_request(
     except aiohttp.client_exceptions.ClientConnectorError as client_err:
       errors["ClientConnectorError"] += 1
       print(f"ClientConnectorError: {client_err}")
-      return None, None,errors
+      return None, None, errors
     except asyncio.TimeoutError as timeout_err:
       errors["TimeoutError"] += 1
       print(f"TimeoutError: {timeout_err}")
-      return None, None,errors
+      return None, None, errors
     except aiohttp.client_exceptions.ClientOSError as e:
       errors["ClientOSError"] += 1
       print(f"ClientOSError: {e}")
-      return None, None,errors
+      return None, None, errors
     except aiohttp.client_exceptions.ContentTypeError as e:
       print(f"ContentTypeError: {e}, response: {response}")
       errors["ContentTypeError"] += 1
-      return None, None,errors
+      return None, None, errors
     except aiohttp.client_exceptions.ServerDisconnectedError as e:
       errors["ServerDisconnectedError"] += 1
       print(f"ServerDisconnectedError: {e}")
-      return None, None,errors
+      return None, None, errors
     except Exception as e: 
       print(f"Unknown error {e}")
       errors["unknown_error"] += 1
@@ -316,7 +316,7 @@ async def send_request(
       except aiohttp.client_exceptions.ClientConnectorError as client_err:
         errors["ClientConnectorError"] += 1
         print(f"ClientConnectorError: {client_err}")
-        return None, None,errors
+        return None, None, errors
       except asyncio.TimeoutError as timeout_err:
         errors["TimeoutError"] += 1
         print(f"TimeoutError: {timeout_err}")
@@ -328,15 +328,15 @@ async def send_request(
       except aiohttp.client_exceptions.ContentTypeError as e:
         print(f"ContentTypeError: {e}, response: {response}")
         errors["ContentTypeError"] += 1
-        return None, None,errors
+        return None, None, errors
       except aiohttp.client_exceptions.ServerDisconnectedError as e:
         errors["ServerDisconnectedError"] += 1
         print(f"ServerDisconnectedError: {e}")
-        return None, None,errors
+        return None, None, errors
       except Exception as e: 
         print(f"Unknown error {e}")
         errors["unknown_error"] += 1
-        return None, None,errors
+        return None, None, errors
 
   request_end_time = time.time()
   # Naive HF transformers generation and TensorRT-LLM generation stops at EOS
@@ -389,7 +389,6 @@ async def benchmark(
   )
   benchmark_start_time = time.time()
   tasks: List[asyncio.Task] = []
-  num_request = 0
   async for request in get_request(input_requests, args.request_rate):
     prompt, prompt_len, output_len = request
     if args.stream_request:
@@ -641,7 +640,7 @@ def get_stats_for_set(name, description, points):
     f'p99_{name}': p99,
   }
 
-def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_requests, model, request_latencies, ttfts,errors):
+def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_requests, model, request_latencies, ttfts, errors):
   benchmark_result = {}
 
   print(f"====Result for Model: {model}====")
@@ -761,7 +760,7 @@ async def main(args: argparse.Namespace):
   
   benchmark_duration_all_models = time.time() - benchmark_start_time
   if args.save_aggregated_result:
-    print_and_save_result(args, benchmark_duration_all_models, len(models)*args.num_prompts, f"ALL-{len(models)}-MODELS", combined_latencies, combined_ttfts,combined_errors)
+    print_and_save_result(args, benchmark_duration_all_models, len(models)*args.num_prompts, f"ALL-{len(models)}-MODELS", combined_latencies, combined_ttfts, combined_errors)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(

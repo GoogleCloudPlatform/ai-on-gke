@@ -200,6 +200,6 @@ variable "save_aggregated_result" {
 
 variable "stream_request" {
   description = "Whether to stream the request. Needed for TTFT metric"
-  type = bool
-  default = false
+  type        = bool
+  default     = false
 }
