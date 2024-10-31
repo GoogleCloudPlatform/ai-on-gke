@@ -59,6 +59,23 @@ steps:
         fi
 
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Push workload image to Artifact Registry: finetune-gemma-gpu"
+    dir: "gke-batch-refarch"
+    entrypoint: "ash"
+    waitFor: 
+    - "Build Installer Image"
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        echo y | gcloud auth configure-docker ${_REGION}-docker.pkg.dev && \
+        if ! gcloud artifacts docker images describe us-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0 &> /dev/null; then
+          git clone https://github.com/GoogleCloudPlatform/kubernetes-engine-samples && \
+          cd kubernetes-engine-samples/ai-ml/llm-finetuning-gemma && \
+          gcloud builds submit .
+        fi
+  
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Setup GKE"
     dir: "ml-platform/examples/cluster"
     entrypoint: "ash"
@@ -124,10 +141,25 @@ steps:
         gcloud container clusters get-credentials ${TF_VAR_cluster_name_prefix}-${TF_VAR_environment_name} --region=${_REGION} --project=${PROJECT_ID}
 
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Configure GKE for Batch Reference Architecture"
+    dir: "gke-batch-refarch/gke"
+    entrypoint: "ash"
+    waitFor:
+      ["Build Installer Image", "Setup GKE"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        terraform init -backend-config="bucket=${PROJECT_ID}-batch-dev-terraform" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform plan -out terraform.tfplan -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform apply -input=false -lock=false terraform.tfplan -no-color && \
+        rm terraform.tfplan
+
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Install Kueue and JobSet"
     entrypoint: "ash"
     waitFor: 
-    - "Setup GKE"
+      ["Setup GKE", "Configure GKE for Batch Reference Architecture"]
     args:
       - "-xe"
       - "-c"
@@ -145,6 +177,8 @@ steps:
     dir: "gke-batch-refarch/platform"
     entrypoint: "ash"
     waitFor:
+    - "Setup GKE"
+    - "Configure GKE for Batch Reference Architecture"
     - "Install Kueue and JobSet"
     - "Push workload image to Artifact Registry: pytorch-gpu"
     - "Push workload image to Artifact Registry: pytorch-mnist"

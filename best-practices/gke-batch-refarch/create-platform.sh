@@ -52,6 +52,9 @@ gcloud config set core/project ${PROJECT_ID} &&
   if ! gcloud --quiet --no-user-output-enabled artifacts repositories describe tutorial-installer --location=${REGION} &>/dev/null; then
     gcloud artifacts repositories create tutorial-installer --repository-format=docker --location=${REGION} --description="Repo for platform installer container images built by Cloud Build."
   fi
+  if ! gcloud --quiet --no-user-output-enabled artifacts repositories describe gemma --location=us &>/dev/null; then
+    gcloud artifacts repositories create gemma --repository-format=docker --location=us --description="Gemma Repo"
+  fi
 
 BUILD_SUBSTITUTIONS="_REGION=${REGION},_ZONE=${ZONE}"
 

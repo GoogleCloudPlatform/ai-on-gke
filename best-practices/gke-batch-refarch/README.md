@@ -101,7 +101,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    a. Open a new terminal on your local machine and get the cluster credentials using the following command: 
 
    ```bash
-   gcloud container clusters get-credentials gke-batch-refarch --region $REGION --project $PROJECT_ID
+   gcloud container clusters get-credentials batch-dev --region $REGION --project $PROJECT_ID
    ```
 
    b. Next, create a port-forward to the `grafana` service running in the cluster so you can use your web browser to access the Grafana UI. Keep this terminal open for the rest of this guide. 
@@ -124,7 +124,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
    <img src="./images/kueue_dash_1.png" width="800">
   
-5. Deploying Low Priority workloads: Switch to the `low_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+5. **Deploying Low Priority workloads:** Switch to the `low_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/low_priority && \
@@ -266,7 +266,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    <img src="./images/04_low_priority_spot.svg" width="800">
    
 
-5. **Deploying High Priority workloads:** Switch to the `high_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+6. **Deploying High Priority workloads:** Switch to the `high_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/high_priority && \
@@ -375,7 +375,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
    <img src="./images/kueue_dash_2.png" width="800">
 
-6. **Deploying compact placement workloads:** Switch to the `compact_placement` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
+7. **Deploying compact placement workloads:** Switch to the `compact_placement` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/compact_placement && \
@@ -450,7 +450,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    gke-gke-batch-refarch-reserved-np-866c1d22-r6rt       Ready    <none>   12h     v1.28.3-gke.1203001
    ```
 
-7. **Deploying JobSet workloads:** Switch to the `jobset` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
+8. **Deploying JobSet workloads:** Switch to the `jobset` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/jobset && \
@@ -492,9 +492,9 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```
 
 
-8. **Deploying workloads to DWS:** This section of the reference architecture will introduce you to Dynamic Workload Scheduler ([blog](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler), [docs](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest)). DWS supports all-or-nothing scheduling, allowing you to procure all the accelerators needed for your workload all at once instead of acquiring partial resources and waiting to get the full set.
+9. **Deploying workloads to DWS:** This section of the reference architecture will introduce you to Dynamic Workload Scheduler ([blog](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler), [docs](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest)). DWS supports all-or-nothing scheduling, allowing you to procure all the accelerators needed for your workload all at once instead of acquiring partial resources and waiting to get the full set before running the workload.
 
-   The examples shown will deploy one model training job for `team-a` seeking A100 GPUs to fine-tune the Gemma 2B model and one job from `team-b` seeking H100 GPUs to fine-tune the Gemma 7B model, in both cases the model is fine-tuned to output SQL when asked a question in natural language.
+   The examples shown will deploy one model training job for `team-a` seeking A100 GPUs to fine-tune the Gemma 2B model and one job from `team-b` seeking H100 GPUs to fine-tune the Gemma 7B model, in both cases the model is fine-tuned to output SQL when asked a question in natural language. These example workloads are adapted from the example published [here](https://cloud.google.com/kubernetes-engine/docs/tutorials/finetune-gemma-gpu).
 
    The model weights are download from and uploaded to Hugging Face. In order to access these weights, you will need your Hugging Face token which can be generated [here](https://huggingface.co/settings/tokens). Once you have the token, export it as an environment variable by replacing `YOUR_HUGGING_FACE_TOKEN` with your token and create the Kubernetes Secrets for team-a and team-b for their respective workloads to be able to access Hugging Face.  
 
@@ -512,18 +512,19 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```
 
 
-   To deploy the workloads, switch to the `dws` directory and run the `create_workloads.sh` script. 
+   Next, configure Kueue to use DWS and deploy the workloads by switching to the `dws` directory, applying the `kueue-dws-config.yaml` and running the `create_workloads.sh` script: 
 
    ```bash
    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/dws && \
+   kubectl apply -f kueue-dws-config.yaml && \
    ./create_workloads.sh
    ```
 
    Expected output:
 
    ```bash
-   job.batch/finetune-gemma-2xa100 created
    ...
+   job.batch/finetune-gemma-2xa100 created
    job.batch/finetune-gemma-8xh100 created
    ```
 

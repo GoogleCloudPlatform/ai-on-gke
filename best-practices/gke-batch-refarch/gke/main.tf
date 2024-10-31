@@ -21,119 +21,13 @@ locals {
 
 data "google_client_config" "default" {}
 
-provider "kubernetes" {
-  host                   = "https://${resource.google_container_cluster.gke_batch.endpoint}"
-  token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(google_container_cluster.gke_batch.ca_certificate)
+data "google_container_cluster" "gke_cluster" {
+  name     = "batch-dev"
+  location = var.region
 }
 
 data "google_project" "project" {
   project_id = var.project_id
-}
-
-resource "google_container_cluster" "gke_batch" {
-  deletion_protection = false
-  provider            = google-beta
-  name                = "gke-batch-refarch"
-  project             = var.project_id
-  location            = var.region
-  node_locations      = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
-  initial_node_count  = 2
-  private_cluster_config {
-    enable_private_nodes    = true
-    enable_private_endpoint = false
-    master_ipv4_cidr_block  = "172.16.0.32/28"
-  }
-  ip_allocation_policy {}
-  workload_identity_config {
-    workload_pool = "${var.project_id}.svc.id.goog"
-  }
-  # Adding gcfs_config to enable image streaming on the cluster.
-  node_pool_defaults {
-    node_config_defaults {
-      gcfs_config {
-        enabled = true
-      }
-    }
-  }
-
-  addons_config {
-    gcp_filestore_csi_driver_config {
-      enabled = true
-    }
-    gcs_fuse_csi_driver_config {
-      enabled = true
-    }
-    gce_persistent_disk_csi_driver_config {
-      enabled = true
-    }
-  }
-  cluster_autoscaling {
-    enabled             = true
-    autoscaling_profile = "OPTIMIZE_UTILIZATION"
-    resource_limits {
-      resource_type = "cpu"
-      minimum       = 4
-      maximum       = 1000
-    }
-    resource_limits {
-      resource_type = "memory"
-      minimum       = 16
-      maximum       = 4000
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-t4"
-      maximum       = 300
-    }
-    resource_limits {
-      resource_type = "nvidia-l4"
-      maximum       = 300
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-a100"
-      maximum       = 100
-    }
-    resource_limits {
-      resource_type = "nvidia-a100-80gb"
-      maximum       = 100
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-v100"
-      maximum       = 100
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-p100"
-      maximum       = 100
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-p4"
-      maximum       = 100
-    }
-    resource_limits {
-      resource_type = "nvidia-tesla-k80"
-      maximum       = 100
-    }
-    auto_provisioning_defaults {
-      management {
-        auto_repair  = true
-        auto_upgrade = true
-      }
-
-      upgrade_settings {
-        strategy        = "SURGE"
-        max_surge       = 0
-        max_unavailable = 1
-      }
-
-      oauth_scopes = [
-        "https://www.googleapis.com/auth/cloud-platform"
-      ]
-    }
-  }
-  release_channel {
-    channel = "RAPID"
-  }
-
 }
 
 # Reservation for instances with GPUs
@@ -158,10 +52,10 @@ resource "google_compute_reservation" "machine_reservation" {
 resource "google_container_node_pool" "reserved_np" {
   project        = var.project_id
   name           = "reserved-np"
-  cluster        = resource.google_container_cluster.gke_batch.name
+  cluster        = data.google_container_cluster.gke_cluster.name
   node_count     = var.machine_reservation_count
   node_locations = ["${var.zone}"]
-  location       = resource.google_container_cluster.gke_batch.location
+  location       = var.region
   node_config {
     machine_type = var.machine_type
     dynamic "taint" {
@@ -207,11 +101,11 @@ resource "google_container_node_pool" "reserved_np" {
 
 # Nodepool to spill over high priority workloads from reserved to on-demand instances with GPUs
 resource "google_container_node_pool" "ondemand_np" {
-  depends_on = [google_container_node_pool.reserved_np]
   name       = "ondemand-np"
   project    = var.project_id
-  cluster    = resource.google_container_cluster.gke_batch.name
+  cluster    = data.google_container_cluster.gke_cluster.name
   location   = var.region
+  node_locations = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
   node_config {
     machine_type = var.machine_type
     dynamic "taint" {
@@ -257,11 +151,11 @@ resource "google_container_node_pool" "ondemand_np" {
 
 # Nodepool to spill over low priority workloads from reserved to Spot instances with GPUs
 resource "google_container_node_pool" "spot_np" {
-  depends_on = [google_container_node_pool.ondemand_np]
   name       = "spot-np"
   project    = var.project_id
-  cluster    = resource.google_container_cluster.gke_batch.name
+  cluster    = data.google_container_cluster.gke_cluster.name
   location   = var.region
+  node_locations = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
   node_config {
     machine_type = var.machine_type
     spot         = true
@@ -304,27 +198,6 @@ resource "google_container_node_pool" "spot_np" {
   }
 }
 
-# Cloud Router and NAT for private nodes to communicate externally
-resource "google_compute_router" "router" {
-  name    = "router"
-  network = "default"
-  region  = var.region
-}
-
-resource "google_compute_router_nat" "nat_gateway" {
-  name                               = "nat-gateway"
-  router                             = google_compute_router.router.name
-  region                             = var.region
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-
-  log_config {
-    enable = true
-    filter = "ERRORS_ONLY"
-  }
-}
-
-
 # Workload Identity for team-a
 resource "google_service_account" "wi_team_a" {
   account_id   = "wi-team-a"
@@ -350,7 +223,6 @@ resource "google_project_iam_member" "wi_team_a_storage_admin" {
 }
 
 resource "google_service_account_iam_binding" "wi_team_a_iam_wi_user" {
-  depends_on = [google_container_cluster.gke_batch]
 
   service_account_id = google_service_account.wi_team_a.name
   role               = "roles/iam.workloadIdentityUser"
@@ -384,7 +256,7 @@ resource "google_project_iam_member" "wi_team_b_storage_admin" {
 }
 
 resource "google_service_account_iam_binding" "wi_team_b_iam_wi_user" {
-  depends_on = [google_container_cluster.gke_batch]
+
 
   service_account_id = google_service_account.wi_team_b.name
   role               = "roles/iam.workloadIdentityUser"
@@ -418,7 +290,6 @@ resource "google_project_iam_member" "wi_team_c_storage_admin" {
 }
 
 resource "google_service_account_iam_binding" "wi_team_c_iam_wi_user" {
-  depends_on = [google_container_cluster.gke_batch]
 
   service_account_id = google_service_account.wi_team_c.name
   role               = "roles/iam.workloadIdentityUser"
@@ -451,7 +322,6 @@ resource "google_project_iam_member" "wi_team_d_storage_admin" {
 }
 
 resource "google_service_account_iam_binding" "wi_team_d_iam_wi_user" {
-  depends_on = [google_container_cluster.gke_batch]
 
   service_account_id = google_service_account.wi_team_d.name
   role               = "roles/iam.workloadIdentityUser"

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  backend "gcs" {
-    prefix = "gke-batch-ref"
-  }
+output "reserved_node_count" {
+  value = google_container_node_pool.reserved_np.node_count
 }

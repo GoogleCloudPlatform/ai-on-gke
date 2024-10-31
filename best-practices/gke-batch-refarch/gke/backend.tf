@@ -14,6 +14,6 @@
 
 terraform {
   backend "gcs" {
-    prefix = "gke-batch-ref"
+    prefix = "terraform/batch-ref"
   }
 }

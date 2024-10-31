@@ -1,1 +1,0 @@
-regions/us-central1/container_node_pool.tf

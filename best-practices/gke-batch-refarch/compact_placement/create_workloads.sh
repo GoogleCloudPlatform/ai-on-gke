@@ -18,7 +18,7 @@ echo -e "\e[95mPROJECT_ID is set to ${PROJECT_ID}\e[0m"
 [[ ! "${REGION}" ]] && echo -e "Please export REGION variable (\e[95mexport REGION=<YOUR REGION, eg: us-central1>\e[0m)\nExiting." && exit 0
 echo -e "\e[95mREGION is set to ${REGION}\e[0m"
 
-gcloud container clusters get-credentials gke-batch-refarch --region ${REGION} --project ${PROJECT_ID} && \
+gcloud container clusters get-credentials batch-dev --region ${REGION} --project ${PROJECT_ID} && \
 
 # Jobs with compact placement
 for job_id in 0 1 2 3; do

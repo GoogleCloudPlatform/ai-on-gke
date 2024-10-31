@@ -25,11 +25,23 @@ steps:
       - --cache-ttl=12h
 
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
-    id: "Destroy GKE batch platform"
+    id: "Destroy GKE Batch Reference Architecture"
+    dir: "gke-batch-refarch/gke"
+    entrypoint: "ash"
+    waitFor: ["Build Installer Image"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        terraform init -backend-config="bucket=${PROJECT_ID}-batch-dev-terraform" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform destroy -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -auto-approve -no-color
+
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Destroy Infrastructure"
     dir: "ml-platform/examples/cluster"
     entrypoint: "ash"
     waitFor: 
-    - "Build Installer Image"
+      ["Build Installer Image", "Destroy GKE Batch Reference Architecture"]
     args:
       - "-xe"
       - "-c"
