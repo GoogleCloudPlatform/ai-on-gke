@@ -1,5 +1,5 @@
 locals {
-  manifests_directory  = abspath("${path.module}/../manifests")
+  manifests_directory = abspath("${path.module}/../manifests")
 }
 
 variable "enable_kueue" {

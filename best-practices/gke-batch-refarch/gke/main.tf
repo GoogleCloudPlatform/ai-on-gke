@@ -101,10 +101,10 @@ resource "google_container_node_pool" "reserved_np" {
 
 # Nodepool to spill over high priority workloads from reserved to on-demand instances with GPUs
 resource "google_container_node_pool" "ondemand_np" {
-  name       = "ondemand-np"
-  project    = var.project_id
-  cluster    = data.google_container_cluster.gke_cluster.name
-  location   = var.region
+  name           = "ondemand-np"
+  project        = var.project_id
+  cluster        = data.google_container_cluster.gke_cluster.name
+  location       = var.region
   node_locations = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
   node_config {
     machine_type = var.machine_type
@@ -151,10 +151,10 @@ resource "google_container_node_pool" "ondemand_np" {
 
 # Nodepool to spill over low priority workloads from reserved to Spot instances with GPUs
 resource "google_container_node_pool" "spot_np" {
-  name       = "spot-np"
-  project    = var.project_id
-  cluster    = data.google_container_cluster.gke_cluster.name
-  location   = var.region
+  name           = "spot-np"
+  project        = var.project_id
+  cluster        = data.google_container_cluster.gke_cluster.name
+  location       = var.region
   node_locations = ["${var.region}-a", "${var.region}-b", "${var.region}-c"]
   node_config {
     machine_type = var.machine_type
