@@ -173,46 +173,46 @@ async def send_stream_request(
   st = time.perf_counter()
   output = ""
   timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+  print("right before sending request")
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
-    while True:
-      try:
-        async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
-          async for chunk_bytes in response.content.iter_chunks():
-            chunk_bytes = chunk_bytes[0].strip()
-            if not chunk_bytes:
-                continue
-            timestamp = time.perf_counter()
-            # First token
-            if ttft == 0.0:
-              ttft = timestamp - st
-            print(chunk_bytes.decode("utf-8")[6:])
-            if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
-                if backend == "vllm":
-                  output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
-      except aiohttp.client_exceptions.ClientConnectorError as client_err:
-        errors["ClientConnectorError"] += 1
-        print(f"ClientConnectorError: {client_err}")
-        return None, errors
-      except asyncio.TimeoutError as timeout_err:
-        errors["TimeoutError"] += 1
-        print(f"TimeoutError: {timeout_err}")
-        return None, errors
-      except aiohttp.client_exceptions.ClientOSError as e:
-        errors["ClientOSError"] += 1
-        print(f"ClientOSError: {e}")
-        return None, errors
-      except aiohttp.client_exceptions.ContentTypeError as e:
-        print(f"ContentTypeError: {e}, response: {response}")
-        errors["ContentTypeError"] += 1
-        return None, errors
-      except aiohttp.client_exceptions.ServerDisconnectedError as e:
-        errors["ServerDisconnectedError"] += 1
-        print(f"ServerDisconnectedError: {e}")
-        return None, errors
-      except Exception as e: 
-        print(f"Unknown error {e}")
-        errors["unknown_error"] += 1
-        return None, errors
+    try:
+      async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
+        async for chunk_bytes in response.content.iter_chunks():
+          chunk_bytes = chunk_bytes[0].strip()
+          if not chunk_bytes:
+              continue
+          timestamp = time.perf_counter()
+          # First token
+          if ttft == 0.0:
+            ttft = timestamp - st
+          
+          if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
+              if backend == "vllm":
+                output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+    except aiohttp.client_exceptions.ClientConnectorError as client_err:
+      errors["ClientConnectorError"] += 1
+      print(f"ClientConnectorError: {client_err}")
+      return None, None,errors
+    except asyncio.TimeoutError as timeout_err:
+      errors["TimeoutError"] += 1
+      print(f"TimeoutError: {timeout_err}")
+      return None, None,errors
+    except aiohttp.client_exceptions.ClientOSError as e:
+      errors["ClientOSError"] += 1
+      print(f"ClientOSError: {e}")
+      return None, None,errors
+    except aiohttp.client_exceptions.ContentTypeError as e:
+      print(f"ContentTypeError: {e}, response: {response}")
+      errors["ContentTypeError"] += 1
+      return None, None,errors
+    except aiohttp.client_exceptions.ServerDisconnectedError as e:
+      errors["ServerDisconnectedError"] += 1
+      print(f"ServerDisconnectedError: {e}")
+      return None, None,errors
+    except Exception as e: 
+      print(f"Unknown error {e}")
+      errors["unknown_error"] += 1
+      return None, None,errors
   request_end_time = time.time()
   output_token_ids = tokenizer(output).input_ids
   output_len = len(output_token_ids)
@@ -317,23 +317,23 @@ async def send_request(
       except aiohttp.client_exceptions.ClientConnectorError as client_err:
         errors["ClientConnectorError"] += 1
         print(f"ClientConnectorError: {client_err}")
-        return None, errors
+        return None, None,errors
       except asyncio.TimeoutError as timeout_err:
         errors["TimeoutError"] += 1
         print(f"TimeoutError: {timeout_err}")
-        return None, errors
+        return None, None, errors
       except aiohttp.client_exceptions.ClientOSError as e:
         errors["ClientOSError"] += 1
         print(f"ClientOSError: {e}")
-        return None, errors
+        return None, None, errors
       except aiohttp.client_exceptions.ContentTypeError as e:
         print(f"ContentTypeError: {e}, response: {response}")
         errors["ContentTypeError"] += 1
-        return None, errors
+        return None, None,errors
       except aiohttp.client_exceptions.ServerDisconnectedError as e:
         errors["ServerDisconnectedError"] += 1
         print(f"ServerDisconnectedError: {e}")
-        return None, errors
+        return None, None,errors
       except Exception as e: 
         print(f"Unknown error {e}")
         errors["unknown_error"] += 1
@@ -390,24 +390,11 @@ async def benchmark(
   )
   benchmark_start_time = time.time()
   tasks: List[asyncio.Task] = []
+  num_request = 0
   async for request in get_request(input_requests, args.request_rate):
     prompt, prompt_len, output_len = request
-    task = asyncio.create_task(
-      send_request(
-          args.backend,
-          api_url,
-          prompt,
-          prompt_len,
-          output_len,
-          args.best_of,
-          args.use_beam_search,
-          args.top_k,
-          tokenizer,
-          args.sax_model,
-          model,
-      )
-    )
     if args.stream_request:
+      print("streaming request")
       task = asyncio.create_task(
         send_stream_request(
             args.backend,
@@ -423,8 +410,25 @@ async def benchmark(
             model,
         )
       )
+    else: 
+      task = asyncio.create_task(
+      send_request(
+          args.backend,
+          api_url,
+          prompt,
+          prompt_len,
+          output_len,
+          args.best_of,
+          args.use_beam_search,
+          args.top_k,
+          tokenizer,
+          args.sax_model,
+          model,
+        )
+      )
     tasks.append(task)
   results = await asyncio.gather(*tasks)
+  print("done waiting")
   combined_latencies = []
   combined_ttfts = []
   combined_errors = init_errors_map()
@@ -677,8 +681,8 @@ def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_re
   benchmark_result['tokens_per_min'] = tokens_per_min
 
   if args.stream_request:
-    mean_ttft=np.mean(ttfts or 0) if ttfts else None,
-    print(f"Mean TTFT: {mean_ttft:.2f}")
+    mean_ttft=np.mean(ttfts)
+    print(f"Mean TTFT (ms): {mean_ttft:.2f}")
 
   if args.machine_cost:
     print(
@@ -790,8 +794,7 @@ if __name__ == "__main__":
   )
   parser.add_argument(
     "--stream-request", 
-    type=bool, 
-    default=False,
+    action="store_true",
     help="Whether to stream the request. Needed for TTFT metric",
   )
   parser.add_argument(
