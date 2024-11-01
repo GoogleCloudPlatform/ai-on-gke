@@ -22,10 +22,14 @@ gcloud compute instances create $VM_NAME \
 
 gcloud compute ssh $VM_NAME
 
-% sudo apt-get update
-% sudo apt-get install google-cloud-cli
-% gcloud init
-% gcloud auth login
+```
+Update and authenticate the instance
+
+```sh
+sudo apt-get update
+sudo apt-get install google-cloud-cli
+gcloud init
+gcloud auth login
 
 ```
 
@@ -36,7 +40,7 @@ SIZE=140
 THROUGHPUT=12000
 
 gcloud compute disks create $DISK_NAME --type=hyperdisk-ml \
- --size=$SIZE --provisioned-throughput=$THROUGHPUT  \
+--size=$SIZE --provisioned-throughput=$THROUGHPUT  \
 --zone $ZONE
 
 gcloud compute instances attach-disk $VM_NAME --disk=$DISK_NAME --zone=$ZONE 
@@ -192,11 +196,11 @@ spec:
         app: ubuntu
     spec:
       containers:
-      - image: bkauf/storage:latest
+      - image: busybox:latest
         name: ubuntu
         command:
           - "sleep"
-          - "604800"
+          - "infinity"
         volumeMounts:
         - name: ubuntu-persistent-storage
           mountPath: /var/www/html
