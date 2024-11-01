@@ -117,6 +117,12 @@ variable "output_bucket" {
   type        = string
 }
 
+variable "output_bucket_filepath" {
+  description = "Where in bucket to store results, will upload to root of bucket if not specified"
+  type        = string
+  nullable    = true
+}
+
 variable "latency_profile_kubernetes_service_account" {
   description = "Kubernetes Service Account to be used for the latency profile generator tool"
   type        = string

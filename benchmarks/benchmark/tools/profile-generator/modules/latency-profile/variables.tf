@@ -139,9 +139,13 @@ variable "models" {
   default     = "tiiuae/falcon-7b"
 }
 
-variable "output_bucket" {
-  description = "Bucket name for storing results"
-  type        = string
+variable "gcs_output" {
+  description = "Bucket name and filepath for storing results, if filepath not specified, results uploaded to root of bucket"
+  type = object({
+    bucket   = string
+    filepath = optional(string)
+  })
+  nullable = true
 }
 
 variable "latency_profile_kubernetes_service_account" {

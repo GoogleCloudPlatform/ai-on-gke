@@ -42,6 +42,8 @@ spec:
               value: ${benchmark_time_seconds}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
+            - name: OUTPUT_BUCKET_FILEPATH
+              value: ${output_bucket_filepath}
             - name: SCRAPE_SERVER_METRICS
               value: ${scrape_server_metrics}
             - name: MAX_NUM_PROMPTS
