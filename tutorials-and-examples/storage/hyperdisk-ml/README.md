@@ -57,7 +57,7 @@ Mount and load the data from GCS
 lsblk
 ```
 
-Save device name given by lsblk
+Save device name given by lsblk(example nvme0n2)
 ```sh
 DEVICE=nvme0n2
 ```
