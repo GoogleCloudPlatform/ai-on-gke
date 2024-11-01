@@ -48,7 +48,7 @@ trace_config = aiohttp.TraceConfig()
 trace_config.on_request_start.append(on_request_start)
 trace_config.on_request_end.append(on_request_end)
 
-# Google Cloud Storage Bucket Client
+# Google Cloud Storage Client
 gcs_client = storage.Client()
 gcs_bucket = None
 
@@ -618,7 +618,7 @@ async def main(args: argparse.Namespace):
     else args.endpoint
 )
   
-  # Create GCS bucket client before benchmarking
+  # Create GCS client before benchmarking
   # Should fail fast if client is misconfigured or missing permissions
   if args.output_bucket is not None:
     global gcs_bucket
