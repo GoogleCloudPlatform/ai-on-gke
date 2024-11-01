@@ -432,8 +432,8 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
   if gcs_bucket is not None:
-    gcs_bucket.blob(file_name).upload_from_filename(file_name)
-    print(f"File {file_name} uploaded to {args.output_bucket}")
+    gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
+    print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
 
 def metrics_to_scrape(backend: str) -> List[str]:
   # Each key in the map is a metric, it has a corresponding 'stats' object
@@ -626,6 +626,11 @@ async def main(args: argparse.Namespace):
     global gcs_bucket
     gcs_bucket = gcs_client.bucket(args.output_bucket)
 
+    if args.output_bucket_filepath:
+      blob = gcs_bucket.blob(args.output_bucket_filepath)
+      if not blob.exists():
+        blob.upload_from_string('')
+
   print(f"Starting Prometheus Server on port {PROMETHEUS_PORT}")
   start_http_server(PROMETHEUS_PORT)
 
@@ -779,8 +784,19 @@ if __name__ == "__main__":
     type=str,
     default=None,
     help=(
-      "If specified, results in json format will be uploaded to the Google"
-      " Cloud Storage bucket specified here"
+      "Specifies the Google Cloud Storage bucket to which JSON-format results"
+      " will be uploaded. If not provided, no upload will occur."
+    )
+  )
+  parser.add_argument(
+    "--output-bucket-filepath",
+    type=str,
+    default=None,
+    help=(
+      "Specifies the destination path within the bucket provided by"
+      " --output-bucket for uploading the JSON results. This argument requires"
+      " --output-bucket to be set. If not specified, results will be uploaded "
+      " to the root of the bucket."
     )
   )
   parser.add_argument(
