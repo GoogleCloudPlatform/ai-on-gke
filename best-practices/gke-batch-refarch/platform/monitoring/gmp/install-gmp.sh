@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[[ ! "${PROJECT_ID}" ]] && echo -e "Please export PROJECT_ID variable (\e[95mexport PROJECT_ID=<YOUR POROJECT ID>\e[0m)\nExiting." && exit 0
-echo -e "\e[95mPROJECT_ID is set to ${PROJECT_ID}\e[0m"
+[[ ! "${PROJECT_ID}" ]] && echo -e "Please export PROJECT_ID variable (export PROJECT_ID=<YOUR POROJECT ID>)\nExiting." && exit 0
+echo -e "PROJECT_ID is set to ${PROJECT_ID}"
 
-[[ ! "${REGION}" ]] && echo -e "Please export REGION variable (\e[95mexport REGION=<YOUR REGION, eg: us-central1>\e[0m)\nExiting." && exit 0
-echo -e "\e[95mREGION is set to ${REGION}\e[0m"
+[[ ! "${REGION}" ]] && echo -e "Please export REGION variable (export REGION=<YOUR REGION, eg: us-central1>)\nExiting." && exit 0
+echo -e "REGION is set to ${REGION}"
 
-
-gcloud container clusters get-credentials batch-dev --region ${REGION} --project ${PROJECT_ID} && \
 kubectl apply -f gmp-kueue-monitoring.yaml && \
-gcloud monitoring dashboards create --project=$PROJECT_ID --config-from-file=kueue-dashboard.json
+gcloud monitoring dashboards create --project=${PROJECT_ID} --config-from-file=kueue-dashboard.json

@@ -24,7 +24,6 @@ steps:
       - --cache=true
       - --cache-ttl=12h
 
-  # TODO: Would be better to do this with crane
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Push workload image to Artifact Registry: pytorch-gpu"
     dir: "gke-batch-refarch"
@@ -35,11 +34,9 @@ steps:
       - "-xe"
       - "-c"
       - |
-        echo y | gcloud auth configure-docker ${_REGION}-docker.pkg.dev && \
+        gcloud auth configure-docker ${_REGION}-docker.pkg.dev --quiet && \
         if ! gcloud artifacts docker images describe ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1 &> /dev/null; then
-          docker pull gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m109 && \
-          docker tag gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m109 ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1 && \
-          docker push ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1
+          crane copy gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m109 ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-gpu.1-12:v1
         fi
   
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
@@ -52,7 +49,7 @@ steps:
       - "-xe"
       - "-c"
       - |
-        echo y | gcloud auth configure-docker ${_REGION}-docker.pkg.dev && \
+        gcloud auth configure-docker ${_REGION}-docker.pkg.dev --quiet && \
         if ! gcloud artifacts docker images describe ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1 &> /dev/null; then
           docker build -t ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1 . && \
           docker push ${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/pytorch-mnist:v1
@@ -68,7 +65,7 @@ steps:
       - "-xe"
       - "-c"
       - |
-        echo y | gcloud auth configure-docker ${_REGION}-docker.pkg.dev && \
+        gcloud auth configure-docker ${_REGION}-docker.pkg.dev --quiet && \
         if ! gcloud artifacts docker images describe us-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0 &> /dev/null; then
           git clone https://github.com/GoogleCloudPlatform/kubernetes-engine-samples && \
           cd kubernetes-engine-samples/ai-ml/llm-finetuning-gemma && \
@@ -77,7 +74,7 @@ steps:
   
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Setup GKE"
-    dir: "ml-platform/examples/cluster"
+    dir: "accelerated-platforms/platforms/gke/base/core"
     entrypoint: "ash"
     waitFor:
     - "Build Installer Image"
@@ -85,60 +82,76 @@ steps:
       - "-xe"
       - "-c"
       - |
-        TF_VAR_cluster_name_prefix="${_CLUSTER_NAME_PREFIX}"
-        TF_VAR_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINTS}"
-        TF_VAR_environment_name="${_ENVIRONMENT_NAME}"
-        TF_VAR_environment_project_id="${PROJECT_ID}"
-        TF_VAR_region="${_REGION}"
-        #TF_VAR_zone="${_ZONE}"
+        export ACP_REPO_DIR=/workspace/accelerated-platforms
+        export ACP_PLATFORM_BASE_DIR=/workspace/accelerated-platforms/platforms/gke/base
+        export ACP_PLATFORM_CORE_DIR=/workspace/accelerated-platforms/platforms/gke/base/core
 
-        tf_variables="-var cluster_name_prefix=${TF_VAR_cluster_name_prefix} -var enable_private_endpoint=${TF_VAR_enable_private_endpoint} -var environment_name=${TF_VAR_environment_name} -var environment_project_id=${TF_VAR_environment_project_id} -var region=${TF_VAR_region}"
+        export TF_CLI_ARGS="-no-color"
+        export TF_IN_AUTOMATION="1"
 
-        if gcloud storage buckets describe gs://${TF_VAR_environment_project_id}-batch-${TF_VAR_environment_name}-terraform &> /dev/null; then
-          export TF_VAR_create_terraform_bucket="false"
+        export TF_VAR_cluster_project_id="${PROJECT_ID}"
+        export TF_VAR_terraform_project_id="${PROJECT_ID}"
+  
+        export TF_VAR_cluster_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINT}"
+        export TF_VAR_cluster_region="${_REGION}"
+        export TF_VAR_cluster_use_connect_gateway="false"
+        export TF_VAR_platform_name="${_PLATFORM_NAME}"
+        export TF_VAR_resource_name_prefix="${_RESOURCE_NAME_PREFIX}"
+
+        source $${ACP_PLATFORM_BASE_DIR}/_shared_config/scripts/set_environment_variables.sh $${ACP_PLATFORM_BASE_DIR}/_shared_config
+
+        cd $${ACP_PLATFORM_CORE_DIR}/initialize &&
+          echo "Current directory: $$(pwd)" &&
+          export STATE_MIGRATED="false" &&
+          if gcloud storage ls gs://$${ACP_TERRAFORM_BUCKET_NAME}/terraform/initialize/default.tfstate &>/dev/null; then
+              sed -i "s/^\([[:blank:]]*bucket[[:blank:]]*=\).*$/\1 \"$${ACP_TERRAFORM_BUCKET_NAME}\"/" $${ACP_PLATFORM_CORE_DIR}/initialize/backend.tf.bucket &&
+                  cp backend.tf.bucket backend.tf &&
+                  export STATE_MIGRATED="true"
+          fi
+
+        cd $${ACP_PLATFORM_CORE_DIR}/initialize &&
+            terraform init &&
+            terraform plan -input=false -out=tfplan &&
+            terraform apply -input=false tfplan || exit 1
+        rm tfplan
+
+        if [ $${STATE_MIGRATED} == "false" ]; then
+            echo "Migrating the state backend"
+            cp backend.tf.bucket backend.tf &&
+                terraform init -force-copy -migrate-state || exit 1
+            rm -rf state
         fi
 
-        # Initialize
-        cd initialize && \
-        terraform init -no-color && \
-        terraform apply -auto-approve -input=false -no-color ${tf_variables} && \
-        rm tfplan && \
-        cp backend.tf backend.tf.local && \
-        cp backend.tf.bucket backend.tf && \
+        cd $${ACP_PLATFORM_CORE_DIR}/networking &&
+          echo "Current directory: $(pwd)" &&
+          terraform init &&
+          terraform plan -input=false -out=tfplan &&
+          terraform apply -input=false tfplan || exit 1
+        rm tfplan
 
-        if [ ${TF_VAR_create_terraform_bucket} != "false" ]; then
-          terraform init -force-copy -migrate-state -no-color && \
-          rm -rf state || exit 1
-        fi
+        cd $${ACP_PLATFORM_CORE_DIR}/container_cluster &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform plan -input=false -out=tfplan &&
+            terraform apply -input=false tfplan || exit 1
+        rm tfplan
 
-        cd ..
-        
-        # Networking
-        cd networking && \
-        terraform init -no-color && \
-        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
-        terraform apply -input=false -no-color tfplan && \
-        rm tfplan || exit 1
-        cd ..
+        cd $${ACP_PLATFORM_CORE_DIR}/container_node_pool &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform plan -input=false -out=tfplan &&
+            terraform apply -input=false tfplan || exit 1
+        rm tfplan
 
-        # Container cluster
-        cd container_cluster && \
-        terraform init -no-color && \
-        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
-        terraform apply -input=false -no-color tfplan && \
-        rm tfplan  || exit 1
-        cd ..
-
-        # Workloads
-        cd workloads && \
-        terraform init -no-color && \
-        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
-        terraform apply -input=false -no-color tfplan && \
-        rm tfplan  || exit 1
-        cd ..
+        cd $${ACP_PLATFORM_CORE_DIR}/workloads/kueue &&
+          echo "Current directory: $(pwd)" &&
+          terraform init &&
+          terraform plan -input=false -out=tfplan &&
+          terraform apply -input=false tfplan || exit 1
+        rm tfplan
 
         # Get cluster credentials
-        gcloud container clusters get-credentials ${TF_VAR_cluster_name_prefix}-${TF_VAR_environment_name} --region=${_REGION} --project=${PROJECT_ID}
+        gcloud container clusters get-credentials $${cluster_name} --region=$${cluster_region} --project=$${cluster_project_id}
 
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Configure GKE for Batch Reference Architecture"
@@ -156,7 +169,7 @@ steps:
         rm terraform.tfplan
 
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
-    id: "Install Kueue and JobSet"
+    id: "Install JobSet and wait for Kueue to install"
     entrypoint: "ash"
     waitFor: 
       ["Setup GKE", "Configure GKE for Batch Reference Architecture"]
@@ -166,7 +179,6 @@ steps:
       - |
         kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.6.0/manifests.yaml && \
         kubectl -n jobset-system wait --for condition=established --timeout=120s customresourcedefinition.apiextensions.k8s.io/jobsets.jobset.x-k8s.io && \
-        kubectl apply --server-side -f "https://github.com/kubernetes-sigs/kueue/releases/download/v0.8.1/manifests.yaml" && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/clusterqueues.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/localqueues.kueue.x-k8s.io && \
         kubectl -n kueue-system wait --for condition=established --timeout=120s crd/resourceflavors.kueue.x-k8s.io && \
@@ -179,7 +191,7 @@ steps:
     waitFor:
     - "Setup GKE"
     - "Configure GKE for Batch Reference Architecture"
-    - "Install Kueue and JobSet"
+    - "Install JobSet and wait for Kueue to install"
     - "Push workload image to Artifact Registry: pytorch-gpu"
     - "Push workload image to Artifact Registry: pytorch-mnist"
     args:
@@ -196,13 +208,14 @@ steps:
         export PROJECT_ID=${PROJECT_ID} && \
         export REGION=${_REGION} && \
         ./monitoring/install-prometheus.sh && \
-        ./monitoring/gmp/install-gmp.sh
+        cd monitoring/gmp
+        ./install-gmp.sh
 
 ##########################################################################################
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
   # default values
-  _CLUSTER_NAME_PREFIX: "batch"
-  _ENABLE_PRIVATE_ENDPOINTS: "false"
-  _ENVIRONMENT_NAME: "dev"
+  _ENABLE_PRIVATE_ENDPOINT: "false"
+  _PLATFORM_NAME: "dev"
+  _RESOURCE_NAME_PREFIX: "batch"

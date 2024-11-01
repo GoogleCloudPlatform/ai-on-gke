@@ -29,9 +29,6 @@ echo -e "\e[95mREGION is set to ${REGION}\e[0m"
 echo -e "\e[95mZONE is set to ${ZONE}\e[0m"
 
 gcloud config set core/project ${PROJECT_ID} &&
-  export PROJECT_NUM=$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)') &&
-  export TF_CLOUDBUILD_SA="${PROJECT_NUM}@cloudbuild.gserviceaccount.com" &&
-  echo -e "$TF_CLOUDBUILD_SA" &&
   echo -e "\e[95mEnabling required APIs in ${PROJECT_ID}\e[0m" &&
   gcloud --project="${PROJECT_ID}" services enable \
     cloudapis.googleapis.com \
@@ -46,7 +43,13 @@ gcloud config set core/project ${PROJECT_ID} &&
     logging.googleapis.com \
     storage.googleapis.com \
     cloudresourcemanager.googleapis.com &&
-  echo -e "\e[95mAssigning Cloudbuild Service Account roles/owner in ${PROJECT_ID}\e[0m" &&
+  export TF_CLOUDBUILD_SA_NAME="tutorial-builder" &&
+  export TF_CLOUDBUILD_SA="${TF_CLOUDBUILD_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" &&
+  echo -e "\e[95mCreating ${TF_CLOUDBUILD_SA} Service Account for the build\e[0m" &&
+  if ! gcloud iam service-accounts describe ${TF_CLOUDBUILD_SA} &>/dev/null; then
+     gcloud iam service-accounts create ${TF_CLOUDBUILD_SA_NAME}
+  fi
+  echo -e "\e[95mAssigning ${TF_CLOUDBUILD_SA} Service Account roles/owner in ${PROJECT_ID}\e[0m" &&
   gcloud projects add-iam-policy-binding "${PROJECT_ID}" --member serviceAccount:"${TF_CLOUDBUILD_SA}" --role roles/owner --condition=None &&
   echo -e "\e[95mStarting Cloudbuild to create infrastructure...\e[0m" &&
   if ! gcloud --quiet --no-user-output-enabled artifacts repositories describe tutorial-installer --location=${REGION} &>/dev/null; then
@@ -58,8 +61,8 @@ gcloud config set core/project ${PROJECT_ID} &&
 
 BUILD_SUBSTITUTIONS="_REGION=${REGION},_ZONE=${ZONE}"
 
-if [[ -v ENVIRONMENT_NAME ]] && [[ ! -z "${ENVIRONMENT_NAME}" ]]; then
-  BUILD_SUBSTITUTIONS+=",_ENVIRONMENT_NAME=${ENVIRONMENT_NAME}"
+if [[ -v ENVIRONMENT_NAME ]] && [[ ! -z "${PLATFORM_NAME}" ]]; then
+  BUILD_SUBSTITUTIONS+=",_PLATFORM_NAME=${PLATFORM_NAME}"
 fi
 
 cd "${SCRIPT_PATH}/.."
@@ -67,8 +70,8 @@ gcloud builds submit \
   --async \
   --config gke-batch-refarch/cloudbuild-create.yaml \
   --ignore-file gke-batch-refarch/cloudbuild-ignore \
-  --project="${PROJECT_ID}" \
+  --project "${PROJECT_ID}" \
+  --service-account "projects/${PROJECT_ID}/serviceAccounts/${TF_CLOUDBUILD_SA}" \
   --substitutions ${BUILD_SUBSTITUTIONS} &&
   echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds;region=global?project=${PROJECT_ID}\e[0m"
-
 cd -

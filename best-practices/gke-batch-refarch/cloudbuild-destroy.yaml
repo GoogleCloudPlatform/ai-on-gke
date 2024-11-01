@@ -38,7 +38,7 @@ steps:
 
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
     id: "Destroy Infrastructure"
-    dir: "ml-platform/examples/cluster"
+    dir: "accelerated-platforms/platforms/gke/base/core"
     entrypoint: "ash"
     waitFor: 
       ["Build Installer Image", "Destroy GKE Batch Reference Architecture"]
@@ -46,52 +46,69 @@ steps:
       - "-xe"
       - "-c"
       - |
-        TF_VAR_cluster_name_prefix="${_CLUSTER_NAME_PREFIX}"
-        TF_VAR_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINTS}"
-        TF_VAR_environment_name="${_ENVIRONMENT_NAME}"
-        TF_VAR_environment_project_id="${PROJECT_ID}"
-        TF_VAR_region="${_REGION}"
-        #TF_VAR_zone="${_ZONE}"
+        export ACP_REPO_DIR=/workspace/accelerated-platforms
+        export ACP_PLATFORM_BASE_DIR=/workspace/accelerated-platforms/platforms/gke/base
+        export ACP_PLATFORM_CORE_DIR=/workspace/accelerated-platforms/platforms/gke/base/core
 
-        tf_variables="-var cluster_name_prefix=${TF_VAR_cluster_name_prefix} -var enable_private_endpoint=${TF_VAR_enable_private_endpoint} -var environment_name=${TF_VAR_environment_name} -var environment_project_id=${TF_VAR_environment_project_id} -var region=${TF_VAR_region}"
+        export TF_CLI_ARGS="-no-color"
+        export TF_IN_AUTOMATION="1"
 
-        export TF_VAR_create_terraform_bucket="false"
+        export TF_VAR_cluster_project_id="${PROJECT_ID}"
+        export TF_VAR_terraform_project_id="${PROJECT_ID}"
+  
+        export TF_VAR_cluster_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINT}"
+        export TF_VAR_cluster_region="${_REGION}"
+        export TF_VAR_cluster_use_connect_gateway="false"
+        export TF_VAR_platform_name="${_PLATFORM_NAME}"
+        export TF_VAR_resource_name_prefix="${_RESOURCE_NAME_PREFIX}"
 
-        cd initialize && \
-        terraform init -no-color && \
-        terraform plan -input=false -no-color -out=tfplan ${tf_variables} && \
-        terraform apply -input=false -no-color tfplan && \
-        cp backend.tf backend.tf.local && \
-        cp backend.tf.bucket backend.tf && \
-        rm tfplan || exit 1
-        cd ..
+        source $${ACP_PLATFORM_BASE_DIR}/_shared_config/scripts/set_environment_variables.sh $${ACP_PLATFORM_BASE_DIR}/_shared_config
 
-        cd workloads && \
-        terraform init -no-color && \
-        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
-        cd ..
+        cd $${ACP_PLATFORM_CORE_DIR}/initialize &&
+          echo "Current directory: $(pwd)" &&
+          sed -i "s/^\([[:blank:]]*bucket[[:blank:]]*=\).*$/\1 \"$${ACP_TERRAFORM_BUCKET_NAME}\"/" $${ACP_PLATFORM_CORE_DIR}/initialize/backend.tf.bucket &&
+          cp backend.tf.bucket backend.tf &&
+          terraform init &&
+          terraform plan -input=false -out=tfplan &&
+          terraform apply -input=false tfplan || exit 1
+        rm tfplan
 
-        cd container_cluster && \
-        terraform init -no-color && \
-        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
-        cd ..
+        cd $${ACP_PLATFORM_CORE_DIR}/workloads/kueue &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
 
-        cd networking && \
-        terraform init -no-color && \
-        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
-        cd ..
+        cd $${ACP_PLATFORM_CORE_DIR}/container_node_pool &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
 
-        cd initialize && \
-        terraform_bucket_name=$(grep bucket backend.tf | awk -F"=" '{print $2}' | xargs) && \
-        cp backend.tf.local backend.tf && \
-        terraform init -force-copy -lock=false -migrate-state -no-color && \
-        gsutil -m rm -rf gs://${terraform_bucket_name}/* && \
-        terraform destroy -auto-approve -no-color ${tf_variables} || exit 1
+        cd $${ACP_PLATFORM_CORE_DIR}/container_cluster &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
+
+        cd $${ACP_PLATFORM_CORE_DIR}/networking &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
+
+        cd $${ACP_PLATFORM_CORE_DIR}/initialize &&
+            echo "Current directory: $(pwd)" &&
+            cp backend.tf.local backend.tf &&
+            terraform init -force-copy -lock=false -migrate-state || exit 1
+        gcloud storage rm -r gs://$${ACP_TERRAFORM_BUCKET_NAME}/* &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl state/
 
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
   # default values
-  _CLUSTER_NAME_PREFIX: "batch"
-  _ENABLE_PRIVATE_ENDPOINTS: "false"
-  _ENVIRONMENT_NAME: "dev"
+  _ENABLE_PRIVATE_ENDPOINT: "false"
+  _PLATFORM_NAME: "dev"
+  _RESOURCE_NAME_PREFIX: "batch"
