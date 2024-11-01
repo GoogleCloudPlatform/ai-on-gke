@@ -189,32 +189,32 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ubuntu
+  name: busybox
   labels:
-    app: ubuntu
+    app: busybox
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ubuntu
+      app: busybox
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: ubuntu
+        app: busybox
     spec:
       containers:
       - image: busybox:latest
-        name: ubuntu
+        name: busybox
         command:
           - "sleep"
           - "infinity"
         volumeMounts:
-        - name: ubuntu-persistent-storage
+        - name: busybox-persistent-storage
           mountPath: /var/www/html
       volumes:
-      - name: ubuntu-persistent-storage
+      - name: busybox-persistent-storage
         persistentVolumeClaim:
           claimName: hdml-consumer-pvc
 ```
