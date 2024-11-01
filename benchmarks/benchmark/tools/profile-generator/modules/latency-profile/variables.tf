@@ -140,7 +140,7 @@ variable "models" {
 }
 
 variable "gcs_output" {
-  description = "Bucket name and filepath for storing results, if filepath not specified, results uploaded to root of bucket"
+  description = "Bucket name and filepath for storing json results, if filepath not specified, results uploaded to root of bucket"
   type = object({
     bucket   = string
     filepath = optional(string)

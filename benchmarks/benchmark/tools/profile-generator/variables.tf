@@ -118,7 +118,7 @@ variable "output_bucket" {
 }
 
 variable "output_bucket_filepath" {
-  description = "Where in bucket to store results, will upload to root of bucket if not specified"
+  description = "Where in bucket to store json results, will upload to root of bucket if not specified"
   type        = string
   nullable    = true
 }
