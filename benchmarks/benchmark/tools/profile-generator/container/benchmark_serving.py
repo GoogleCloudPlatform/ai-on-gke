@@ -49,7 +49,7 @@ trace_config.on_request_start.append(on_request_start)
 trace_config.on_request_end.append(on_request_end)
 
 # Google Cloud Storage Client
-gcs_client = storage.Client()
+gcs_client = None
 gcs_bucket = None
 
 def sample_requests(
@@ -621,6 +621,8 @@ async def main(args: argparse.Namespace):
   # Create GCS client before benchmarking
   # Should fail fast if client is misconfigured or missing permissions
   if args.output_bucket is not None:
+    global gcs_client
+    gcs_client = storage.Client()
     global gcs_bucket
     gcs_bucket = gcs_client.bucket(args.output_bucket)
 
