@@ -152,7 +152,6 @@ async def send_stream_request(
   errors = init_errors_map()
 
   headers = {"User-Agent": "Benchmark Client"}
-  # Doesn't work with if model weights are stored in PD on the model server side
   if backend == "vllm":
     pload = {
         "model": model,
@@ -211,7 +210,7 @@ async def send_stream_request(
     except Exception as e: 
       print(f"Unknown error {e}")
       errors["unknown_error"] += 1
-      return None, None,errors
+      return None, None, errors
   request_end_time = time.time()
   output_token_ids = tokenizer(output).input_ids
   output_len = len(output_token_ids)
@@ -675,18 +674,9 @@ def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_re
   print(f"Tokens/min: {tokens_per_min:.2f}")
   benchmark_result['total_tokens'] = int(total_tokens)
   benchmark_result['tokens_per_min'] = tokens_per_min
-
+  ttft_stats = {}
   if args.stream_request:
-    mean_ttft=np.mean(ttfts)
-    median_ttft=np.median(ttfts)
-    p99_ttft=np.percentile(ttfts, 99)
-    print(f"Mean TTFT (s): {mean_ttft:.2f}")
-    print(f"Median TTFT (s): {median_ttft:.2f}")
-    print(f"P99 TTFT (s): {p99_ttft:.2f}")
-    benchmark_result['mean_ttft'] = mean_ttft
-    benchmark_result['median_ttft'] = median_ttft
-    benchmark_result['p99_ttft'] = p99_ttft
-
+    ttft_stats = get_stats_for_set("TTFT", "Time to First Token (s)", ttfts)
   if args.machine_cost:
     print(
         "Cost $/1k tokens:"
@@ -699,7 +689,7 @@ def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_re
       latency / (prompt_len + output_len)
       for prompt_len, output_len, latency in request_latencies
     ])),
-
+    **ttft_stats,
     # NOTE: The latency below includes requests awaiting time on server side.
     # It's not comparable with the model inference latency for batch size 1.
     **(get_stats_for_set("latency", "milliseconds/request (includes waiting time on server)" ,[1000 * latency for _, _, latency in request_latencies])),
