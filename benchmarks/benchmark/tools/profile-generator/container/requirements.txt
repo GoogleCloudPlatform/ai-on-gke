@@ -35,4 +35,5 @@ pynvml == 11.5.0
 accelerate
 aiohttp
 google-auth
+google-cloud-storage >= 2.18.2
 prometheus_client >= 0.21.0
