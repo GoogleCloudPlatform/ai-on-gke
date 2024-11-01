@@ -48,7 +48,7 @@ trace_config = aiohttp.TraceConfig()
 trace_config.on_request_start.append(on_request_start)
 trace_config.on_request_end.append(on_request_end)
 
-# Google Cloud Storage Bucket Clients
+# Google Cloud Storage Bucket Client
 gcs_client = storage.Client()
 gcs_bucket = None
 
@@ -776,7 +776,10 @@ if __name__ == "__main__":
     "--output-bucket",
     type=str,
     default=None,
-    help="If specified, results json will be uploaded to this Google Cloud Storage bucket",
+    help=(
+      "If specified, results in json format will be uploaded to the Google"
+      " Cloud Storage bucket specified here"
+    )
   )
   parser.add_argument(
     "--save-aggregated-result",
