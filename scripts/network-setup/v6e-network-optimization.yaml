@@ -34,139 +34,25 @@ spec:
         effect: "NoSchedule"
       initContainers:
       - name: "tpu-network-optimization"
-        image: "ubuntu:latest"
+        image: "gke.gcr.io/tpu_network_optimizer@sha256:e5aba9c51fc0750863187bb22767b12890a16fd98dd74fd012f3510d38874dde"
         securityContext:
           privileged: true
         command:
-        - bash
-        - -c
-        - |
-          #!/bin/bash
-
-          # returns 0 (success) if it's running on a v6e VM.
-          is_v6etpu_platform() {
-            local machine_type
-            machine_type=$(curl -H "Metadata-Flavor: Google" \
-              http://169.254.169.254/computeMetadata/v1/instance/machine-type)
-
-            echo "machine_type: $machine_type"
-            # Non-v6 TPUs are exempt
-            [[ "$machine_type" == *"ct6e"* ]] || return 1
-
-            return 0
-          }
-
-          if ! is_v6etpu_platform; then
-            echo "Not a v6e TPU platform"
-            exit 0
-          fi
-
-          echo "Running on a v6e TPU platform"
-          # This must be a v6e platform. Continue with v6e-specific network tunings.
-
-          # PART 1: IRQ SPREADING. If this VM has multiple vnics, we need to make sure
-          # they're using different sets of cores for interrupt handling.
-
-          # Used to wrap around to the first core if we run out of cores. We limit
-          # ourselves to node 0, and avoid hyperbuddies.
-          node0_cores=$(echo /sys/devices/system/node/node0/cpu[0-9]* | wc -w)
-          ht_buddies=$(cat /sys/devices/system/cpu/cpu0/topology/core_cpus_list | tr ',' ' ' | wc -w)
-          total_schedulable_cores=$((node0_cores / ht_buddies))
-
-          core=0
-          for nic in $(ls -1 /sys/class/net);
-          do
-            echo "Updating interrupt cores for $nic"
-            if [[ -d "/sys/class/net/$nic/device" ]]; then
-              # ASSUMPTION: There are an equal number of TX and RX queues.
-              NUM_QUEUES=$(echo /sys/class/net/"$nic"/queues/tx* | wc -w)
-              # Helpers to figure out where to write the soft IRQ affinities. See functions
-              # gve_tx_idx_to_ntfy and gve_rx_idx_to_ntfy. Notify blocks are allocated here:
-              # https://github.com/GoogleCloudPlatform/compute-virtual-ethernet-linux/blob/1b4fe3f70e982b49507bc6fad865c23c9d22cc30/google/gve/gve_main.c#L394
-              # The bash here counts how many notify blocks there are, then identifies the
-              # base block for TX and RX in identical fashion to the GVE functions.
-              # TODO: Consider the case of if IRQ entries are not contiguous.
-              base_ntfy_block=$(ls -1 /sys/class/net/"${nic}"/device/msi_irqs | sort -n | head -n 1)
-              num_ntfy_blocks=$(ls /sys/class/net/"${nic}"/device/msi_irqs/ | wc -w)
-              tx_irq_base_directory=$((base_ntfy_block))
-              rx_irq_base_directory=$((base_ntfy_block + (num_ntfy_blocks / 2)))
-
-              for ((queue = 0; queue < $NUM_QUEUES; queue++)); do
-                echo $core > /proc/irq/$((tx_irq_base_directory + $queue))/smp_affinity_list
-                echo $core > /proc/irq/$((rx_irq_base_directory + $queue))/smp_affinity_list
-                # Also set XPS affinity for the TX queue to the same core.
-                cp /proc/irq/$((tx_irq_base_directory + $queue))/smp_affinity /sys/class/net/"$nic"/queues/tx-"$queue"/xps_cpus
-                core=$((core + 1))
-                # Wrap around to the first core if we run out of cores.
-                if [[ $core -ge $total_schedulable_cores ]]; then
-                  core=0
-                fi
-              done
-              echo "$nic cores:"
-              for ((queue = 0; queue < $NUM_QUEUES; queue++)); do
-                echo "queue $queue"
-                irq=$((tx_irq_base_directory + $queue))
-                cat /proc/irq/$irq/smp_affinity_list
-                irq=$((rx_irq_base_directory + $queue))
-                cat /proc/irq/$irq/smp_affinity_list
-              done
-              fi
-          done
-
-          # PART 2: TCP tunings.
-
-          # Disable metrics cache
-          sysctl -w net.ipv4.tcp_no_metrics_save=1
-
-          # Disable slow start after idle
-          sysctl -w net.ipv4.tcp_slow_start_after_idle=0
-
-          # Set rto_min 5ms and enable quickack
-          sysctl_rto_min_exists=$(sudo sysctl -a | grep tcp_rto_min_us)
-          if [[ -z "$sysctl_rto_min_exists" ]]; then
-            ip route show | while IFS= read -r route; do
-              if ! echo "$route" | grep -q "linkdown"; then
-                ip route change ${route/lock/} rto_min 5ms quickack 1
-              fi
-            done
-          else
-            sysctl -w net.ipv4.tcp_rto_min_us=5000
-            ip route show | while IFS= read -r route; do
-              if ! echo "$route" | grep -q "linkdown"; then
-                ip route change ${route/lock/} quickack 1
-              fi
-            done
-          fi
-
-          # Increase TCP zerocopy control memory
-          sysctl -w net.core.optmem_max=131072
-
-          # Disable Cubic Hystart Ack-Train
-          echo 2 > /sys/module/tcp_cubic/parameters/hystart_detect
-
-          # PART 3: Larger gve buffers.
-
-          echo "Enabling max rx buffer size for v6e "
-          for nic in $(ls /sys/class/net); do
-            if [[ -d "/sys/class/net/$nic/device" ]]; then
-              if ethtool --set-priv-flags "$nic" enable-max-rx-buffer-size on; then
-                echo "Max RX buffer size enabled for $nic"
-              else
-                echo "Unable to enable max RX buffer size for $nic"
-              fi
-            fi
-          done
-
-          # The script cannot return an error status.
-          exit 0
+        - /tpu_network_optimizer.sh
         volumeMounts:
-        - mountPath: /
-          name: root
+        - name: sys
+          mountPath: /sys
+        - name: proc
+          mountPath: /proc
       volumes:
-        - name: root
-          hostPath:
-            path: /
-            type: Directory
+      - name: sys
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: proc
+        hostPath:
+          path: /proc
+          type: Directory
       containers:
       - image: "gke.gcr.io/pause:3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
         name: pause
