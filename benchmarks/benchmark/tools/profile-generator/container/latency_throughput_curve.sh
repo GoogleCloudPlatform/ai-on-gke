@@ -23,7 +23,6 @@ if [[ "$PROMPT_DATASET" = "sharegpt" ]]; then
   PROMPT_DATASET_FILE="ShareGPT_V3_unfiltered_cleaned_split.json"
 fi
 
-echo "Output Bucket: ${OUTPUT_BUCKET}"
 PYTHON="python3"
 PYTHON_OPTS="benchmark_serving.py "
 for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
