@@ -13,6 +13,7 @@ import random
 import requests
 import time
 from typing import AsyncGenerator, List, Optional, Tuple, Dict
+from prometheus_client import start_http_server, Histogram, Gauge
 
 import google.auth
 import google.auth.transport.requests
@@ -27,7 +28,24 @@ from google.protobuf.timestamp_pb2 import Timestamp
 MIN_SEQ_LEN = 4
 CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
+PROMETHEUS_PORT = 9090
 
+# Prometheus Metrics
+prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
+response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
+tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
+active_requests_metric = Gauge('LatencyProfileGenerator:active_requests', 'How many requests actively being processed')
+
+# Add trace config for monitoring in flight requests
+async def on_request_start(session, trace_config_ctx, params):
+    active_requests_metric.inc()
+
+async def on_request_end(session, trace_config_ctx, params):
+    active_requests_metric.dec()
+
+trace_config = aiohttp.TraceConfig()
+trace_config.on_request_start.append(on_request_start)
+trace_config.on_request_end.append(on_request_end)
 
 def sample_requests(
     dataset_path: str,
@@ -202,7 +220,7 @@ async def send_request(
 
   # Set client timeout to be 3 hrs.
   timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
-  async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
+  async with aiohttp.ClientSession(timeout=timeout,trust_env=True,trace_configs=[trace_config]) as session:
     while True:
       try:
         async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
@@ -264,6 +282,10 @@ async def send_request(
 
   # (prompt len, output len, latency, success)
   request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
+  tpot_metric.observe((request_end_time - request_start_time) / output_len)
+  prompt_length_metric.observe(prompt_len)
+  response_length_metric.observe(output_len)
+
   return request_latency, None
 
 async def benchmark(
@@ -588,6 +610,9 @@ async def main(args: argparse.Namespace):
     if args.backend == "vllm"
     else args.endpoint
 )
+
+  print(f"Starting Prometheus Server on port {PROMETHEUS_PORT}")
+  start_http_server(PROMETHEUS_PORT)
 
   api_url = f"http://{args.host}:{args.port}/{endpoint}"
   tokenizer = AutoTokenizer.from_pretrained(
