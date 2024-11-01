@@ -54,11 +54,17 @@ gcloud compute ssh $VM_NAME
 
 Mount and load the data from GCS
 ```sh 
-% lsblk
-# Save device name given by lsblk
+lsblk
+```
+
+Save device name given by lsblk
+```sh
 DEVICE=nvme0n2
+```
+
+```sh
 GCS_DIR=gs://vertex-model-garden-public-us-central1/llama2/llama2-70b-hf 
-% sudo /sbin/mkfs -t ext4 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/$DEVICE
+sudo /sbin/mkfs -t ext4 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/$DEVICE
  sudo mount $DEVICE /mnt
  gcloud storage cp -r $GCS_DIR /mnt
  sudo umount /mnt
