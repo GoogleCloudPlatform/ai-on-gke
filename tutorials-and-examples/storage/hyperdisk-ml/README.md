@@ -2,11 +2,11 @@
 
 ### This guide uses the Google Cloud API to create a Hyperdisk ML disk from data in Cloud Storage and then use it in a GKE cluster. Refer to [this documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/hyperdisk-ml) for instructions all in the GKE API
 
-1. Create a new GCE instance that you will use to hydrate the new Hyperdisk ML disk with data.
+1. Create a new GCE instance that you will use to hydrate the new Hyperdisk ML disk with data. Note a c3-standard-44 instance is used to provide the max throughput while populating the hyperdisk((Instance to throughput rates)[https://cloud.google.com/compute/docs/disks/hyperdisks#performance_limits_for_other_vms]).
 
 ```sh
 VM_NAME=hydrator
-MACHINE_TYPE=c3-standard-4
+MACHINE_TYPE=c3-standard-44
 IMAGE_FAMILY=debian-11
 IMAGE_PROJECT=debian-cloud
 ZONE=us-central1-a
@@ -37,7 +37,7 @@ gcloud auth login
 
 ```sh
 SIZE=140
-THROUGHPUT=12000
+THROUGHPUT=2400
 
 gcloud compute disks create $DISK_NAME --type=hyperdisk-ml \
 --size=$SIZE --provisioned-throughput=$THROUGHPUT  \
