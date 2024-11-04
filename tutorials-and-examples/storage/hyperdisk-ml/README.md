@@ -94,7 +94,7 @@ gcloud compute instances delete $VM_NAME --zone=$ZONE
 gcloud compute disks delete $DISK_NAME --project $PROJECT_ID --zone $ZONE
 ```
 
-7. In your GKE cluster create your Hypedisk ML multi zone and standard Storage Classes. Hyperdisk ML disks are zonal and the Hyperdisk-ml-multi-zone storage class automatically provisions disks in zones where the pods using them are. 
+7. In your GKE cluster create your Hypedisk ML multi zone and Hyperdisk ML storage classes. Hyperdisk ML disks are zonal and the Hyperdisk-ml-multi-zone storage class automatically provisions disks in zones where the pods using them are. 
 Replace the zones in this class with the zones you want to allow the Hyperdisk ML snapshot to create disks in. 
 
 ```yaml
