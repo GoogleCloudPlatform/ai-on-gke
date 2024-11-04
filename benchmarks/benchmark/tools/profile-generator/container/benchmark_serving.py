@@ -17,6 +17,7 @@ from prometheus_client import start_http_server, Histogram, Gauge
 
 import google.auth
 import google.auth.transport.requests
+from google.cloud import storage
 
 import aiohttp
 import numpy as np
@@ -46,6 +47,10 @@ async def on_request_end(session, trace_config_ctx, params):
 trace_config = aiohttp.TraceConfig()
 trace_config.on_request_start.append(on_request_start)
 trace_config.on_request_end.append(on_request_end)
+
+# Google Cloud Storage Client
+gcs_client = None
+gcs_bucket = None
 
 def sample_requests(
     dataset_path: str,
@@ -337,7 +342,6 @@ async def benchmark(
   print_and_save_result(args, benchmark_duration, len(input_requests), model, combined_latencies, combined_errors)
   return combined_latencies, combined_errors
 
-
 def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics, model, errors):
   # Setup
   start_dt_proto = Timestamp()
@@ -427,6 +431,9 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
   )
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
+  if gcs_bucket is not None:
+    gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
+    print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
 
 def metrics_to_scrape(backend: str) -> List[str]:
   # Each key in the map is a metric, it has a corresponding 'stats' object
@@ -610,6 +617,19 @@ async def main(args: argparse.Namespace):
     if args.backend == "vllm"
     else args.endpoint
 )
+  
+  # Create GCS client before benchmarking
+  # Should fail fast if client is misconfigured or missing permissions
+  if args.output_bucket is not None:
+    global gcs_client
+    gcs_client = storage.Client()
+    global gcs_bucket
+    gcs_bucket = gcs_client.bucket(args.output_bucket)
+
+    if args.output_bucket_filepath:
+      blob = gcs_bucket.blob(args.output_bucket_filepath)
+      if not blob.exists():
+        blob.upload_from_string('')
 
   print(f"Starting Prometheus Server on port {PROMETHEUS_PORT}")
   start_http_server(PROMETHEUS_PORT)
@@ -758,6 +778,27 @@ if __name__ == "__main__":
       "--save-json-results",
       action="store_true",
       help="Whether to save benchmark results to a json file.",
+  )
+  parser.add_argument(
+    "--output-bucket",
+    type=str,
+    default=None,
+    help=(
+      "Specifies the Google Cloud Storage bucket to which JSON-format results"
+      " will be uploaded. If not provided, no upload will occur."
+    )
+  )
+  parser.add_argument(
+    "--output-bucket-filepath",
+    type=str,
+    default=None,
+    help=(
+      "Specifies the destination path within the bucket provided by"
+      " --output-bucket for uploading the JSON results. This argument requires"
+      " --output-bucket to be set. If not specified, results will be uploaded "
+      " to the root of the bucket. If the filepath doesnt exist, it will be"
+      " created for you."
+    )
   )
   parser.add_argument(
     "--save-aggregated-result",
