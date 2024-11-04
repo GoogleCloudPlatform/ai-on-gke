@@ -37,6 +37,7 @@ variable "impersonate_service_account" {
   description = "Service account to be used while using Google Cloud APIs"
   type        = string
   nullable    = true
+  default     = null
 }
 
 variable "config" {

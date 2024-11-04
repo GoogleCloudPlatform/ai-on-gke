@@ -15,7 +15,7 @@
  */
 
 module "slurm-cluster-001" {
-  source           = "./modules/slurm-cluster/"
+  source           = "../modules/slurm-cluster/"
   namespace        = "slurm"
   namespace_create = true
 
@@ -23,7 +23,18 @@ module "slurm-cluster-001" {
 }
 
 module "slurm-workers-001" {
-  source = "./modules/slurm-nodeset"
+  source = "../modules/slurm-nodeset"
+  name   = "slurmd"
+  config = {
+    type      = "g2-standard-4"
+    instances = 2
+    namespace = module.slurm-cluster-001.namespace
+    image     = var.config.image
+  }
+}
+
+module "slurm-workers-002" {
+  source = "../modules/slurm-nodeset"
   name   = "slurmd1"
   config = {
     type      = "n1-standard-8"
@@ -34,16 +45,5 @@ module "slurm-workers-001" {
       type  = "nvidia-tesla-t4"
       count = 2
     }
-  }
-}
-
-module "slurm-workers-002" {
-  source = "./modules/slurm-nodeset"
-  name   = "slurmd"
-  config = {
-    type      = "g2-standard-4"
-    instances = 2
-    namespace = module.slurm-cluster-001.namespace
-    image     = var.config.image
   }
 }
