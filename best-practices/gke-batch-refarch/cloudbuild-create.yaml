@@ -207,9 +207,7 @@ steps:
         kubectl apply -f kueue && \
         export PROJECT_ID=${PROJECT_ID} && \
         export REGION=${_REGION} && \
-        ./monitoring/install-prometheus.sh && \
-        cd monitoring/gmp
-        ./install-gmp.sh
+        ./monitoring/install-prometheus.sh
 
 ##########################################################################################
 options:
