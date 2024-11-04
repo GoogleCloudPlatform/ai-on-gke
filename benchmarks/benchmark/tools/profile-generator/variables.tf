@@ -115,12 +115,15 @@ variable "request_rates" {
 variable "output_bucket" {
   description = "Bucket name for storing results"
   type        = string
+  nullable    = true
+  default     = ""
 }
 
 variable "output_bucket_filepath" {
   description = "Where in bucket to store json results, will upload to root of bucket if not specified"
   type        = string
   nullable    = true
+  default     = ""
 }
 
 variable "latency_profile_kubernetes_service_account" {

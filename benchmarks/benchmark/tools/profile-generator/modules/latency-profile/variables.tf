@@ -143,9 +143,16 @@ variable "gcs_output" {
   description = "Bucket name and filepath for storing json results, if filepath not specified, results uploaded to root of bucket"
   type = object({
     bucket   = string
-    filepath = optional(string)
+    filepath = string
   })
-  nullable = true
+  default = {
+    bucket   = ""
+    filepath = ""
+  }
+  validation {
+    condition     = var.gcs_output != null ? !(var.gcs_output.bucket == "" && var.gcs_output.filepath != "") : true
+    error_message = "If gcs_output is defined, cannot specify filepath without bucket"
+  }
 }
 
 variable "latency_profile_kubernetes_service_account" {
