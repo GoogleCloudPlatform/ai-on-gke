@@ -53,7 +53,7 @@ Before proceeding further, review the Terraform module configuration for this pa
 
 ```HCL
 module "slurm-cluster-001" {
-  source           = "./modules/slurm-cluster/"
+  source           = "../modules/slurm-cluster/"
   namespace        = "slurm"
   namespace_create = true
 
@@ -102,7 +102,7 @@ The following streamlined configuration for a new set of worker nodes requires o
 ```HCL
 # example - 1
 module "slurm-workers-001" {
-  source = "./modules/slurm-nodeset"
+  source = "../modules/slurm-nodeset"
   name   = "slurmd"
   config = {
     type      = "g2-standard-4"
@@ -114,7 +114,7 @@ module "slurm-workers-001" {
 
 # example - 2
 module "slurm-workers-002" {
-  source = "./modules/slurm-nodeset"
+  source = "../modules/slurm-nodeset"
   name   = "slurmd1"
   config = {
     type      = "n1-standard-8"
