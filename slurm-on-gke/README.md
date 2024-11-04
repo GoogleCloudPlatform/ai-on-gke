@@ -269,7 +269,6 @@ cd image docker build -t europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:53
 docker push europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:535
 ```
 
-
 The output is similar to the following:
 
 ```bash
