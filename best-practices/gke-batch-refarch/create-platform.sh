@@ -65,13 +65,13 @@ if [[ -v ENVIRONMENT_NAME ]] && [[ ! -z "${PLATFORM_NAME}" ]]; then
   BUILD_SUBSTITUTIONS+=",_PLATFORM_NAME=${PLATFORM_NAME}"
 fi
 
+echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds;region=global?project=${PROJECT_ID}\e[0m"
+sleep 1
 cd "${SCRIPT_PATH}/.."
-gcloud builds submit \
-  --async \
+gcloud beta builds submit \
   --config gke-batch-refarch/cloudbuild-create.yaml \
   --ignore-file gke-batch-refarch/cloudbuild-ignore \
   --project "${PROJECT_ID}" \
   --service-account "projects/${PROJECT_ID}/serviceAccounts/${TF_CLOUDBUILD_SA}" \
-  --substitutions ${BUILD_SUBSTITUTIONS} &&
-  echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds;region=global?project=${PROJECT_ID}\e[0m"
+  --substitutions ${BUILD_SUBSTITUTIONS}
 cd -
