@@ -52,19 +52,20 @@ gcloud compute instances attach-disk $VM_NAME --disk=$DISK_NAME --zone=$ZONE
 gcloud compute ssh $VM_NAME
 ```
 
-Mount and load the data from GCS
+Identify the device name (eg: /dev/nvme0n2) by looking at the output of lsblk. This should correspond to the disk that was attached in the previous step. 
+
 ```sh 
 lsblk
 ```
 
 Save device name given by lsblk(example nvme0n2)
 ```sh
-DEVICE=nvme0n2
+DEVICE=/dev/nvme0n2
 ```
 
 ```sh
 GCS_DIR=gs://vertex-model-garden-public-us-central1/llama2/llama2-70b-hf 
-sudo /sbin/mkfs -t ext4 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/$DEVICE
+sudo /sbin/mkfs -t ext4 -E lazy_itable_init=0,lazy_journal_init=0,discard $DEVICE
 
 sudo mount $DEVICE /mnt
 gcloud storage cp -r $GCS_DIR /mnt
@@ -163,7 +164,7 @@ spec:
 
 ```
 
-8. Reference your snapshot in the persistent volume claim. Be sure to adjust the spec.dataSource.name to your snapshot name
+8. Reference your snapshot in the persistent volume claim. Be sure to adjust the spec.dataSource.name and spec.resources.requests.storage to your snapshot name and size.
 
 ```yaml
 kind: PersistentVolumeClaim
