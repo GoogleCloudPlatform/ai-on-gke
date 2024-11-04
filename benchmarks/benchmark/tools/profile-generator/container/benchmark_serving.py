@@ -796,7 +796,8 @@ if __name__ == "__main__":
       "Specifies the destination path within the bucket provided by"
       " --output-bucket for uploading the JSON results. This argument requires"
       " --output-bucket to be set. If not specified, results will be uploaded "
-      " to the root of the bucket."
+      " to the root of the bucket. If the filepath doesnt exist, it will be"
+      " created for you."
     )
   )
   parser.add_argument(
