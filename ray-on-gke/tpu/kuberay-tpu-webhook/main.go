@@ -58,10 +58,11 @@ type slice struct {
 // TPUWebhookServer is a KubeRay TPU webhook server instance.
 type TPUWebhookServer struct {
 	// podLister is used to query Pods from an informer cache.
-	podLister  listersv1.PodLister
-	cacheMutex sync.Mutex
-	wg         sync.WaitGroup
-	waiting    int
+	podLister  	 listersv1.PodLister
+	cacheMutex 	 sync.Mutex
+	wg         	 sync.WaitGroup
+	waiting    	 int
+	lastAdmitted string
 }
 
 // patch is a JSON patch describing mutate operation(s) for an incoming object.
@@ -647,6 +648,9 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 	if err != nil {
 		return nil, err
 	}
+	// set the unique identifier for the last admitted Pod by this TPUWebhookServer
+	t.lastAdmitted = fmt.Sprintf("%d-%d", replicaIndex, tpuWorkerID)
+
 	// inject replica index label
 	injectReplicaLabel(clusterName, namespace, replicaIndex, groupName, &patches)
 
@@ -753,12 +757,28 @@ func init() {
 
 // addPod allows next goroutine to start once the webhook PodInformer cache updates
 func (t *TPUWebhookServer) addPod(obj interface{}) {
-	// It's not guaranteed the webhook replica that admitted the Pod for this event is the same as the current caller (i.e. wg could be 0).
-	// It's sufficient to wait until the cache has updated once with a TPU pod to unblock the next Mutate call.
 	pod := obj.(*corev1.Pod)
 	klog.V(1).InfoS("addPod", "Pod", pod.Namespace+"/"+pod.Name, "Time", time.Now())
 
+	if t.lastAdmitted == "" {
+		// There is not a pending TPU worker Pod to the informer cache, unblock if waiting and return
+		for {
+			if t.waiting == 0 {
+				break
+			}
+			t.wg.Done()
+			t.waiting -= 1
+		}
+		return
+	}
+
 	if t.waiting == 0 || pod.Spec.Containers == nil || !containerRequestingTPUs(pod.Spec.Containers...) {
+		// Webhook is not waiting or Pod does not use TPUs, no-op
+		return
+	}
+	replicaIndex := pod.Labels["replicaIndex"]
+	if replicaIndex == "" {
+		// This Pod was not mutated by the webhook, no-op
 		return
 	}
 	for _, container := range pod.Spec.Containers {
@@ -766,14 +786,19 @@ func (t *TPUWebhookServer) addPod(obj interface{}) {
 			// Skip to the next container
 			continue
 		}
-		if getEnvironmentVariable("TPU_WORKER_ID", container) == "" {
-			// This TPU pod was not intercepted by the webhook
+		tpuWorkerID := getEnvironmentVariable("TPU_WORKER_ID", container)
+		if tpuWorkerID == "" {
+			// This TPU pod was not intercepted by the webhook, no-op
 			return
 		}
-		// Added a TPU worker Pod to the cache, unblock the next Mutate call
-		t.wg.Done()
-		t.waiting -= 1
-		return
+		uniquePodID := fmt.Sprintf("%s-%s", replicaIndex, tpuWorkerID)
+
+		if uniquePodID == t.lastAdmitted {
+			// Added the last TPU worker Pod to the cache, unblock the next Mutate call
+			t.wg.Done()
+			t.waiting -= 1
+			return
+		}
 	}
 }
 
