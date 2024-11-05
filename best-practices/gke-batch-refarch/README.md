@@ -4,19 +4,17 @@
 
 This reference architecture is intended to help platform administrators, cloud architects, and operations professionals deploy a batch processing platform on [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview) (GKE). This document features GKE in [Standard](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture#nodes) mode, using [Kueue](https://kueue.sigs.k8s.io/) to manage resource quotas and borrowing rules between multiple tenant teams sharing the cluster to run their batch workloads in a fair, cost efficient and performant way. [Best practices for running batch workloads on GKE](https://cloud.google.com/kubernetes-engine/docs/best-practices/batch-platform-on-gke) discusses many recommendations that are implemented in this document.
 
-
 ## Overview
 
 Traditionally, batch platforms have two main user personas, developers and platform administrators:
 
-* A developer submits a Job specifying the program, the data to be processed, and requirements for the Job.
+- A developer submits a Job specifying the program, the data to be processed, and requirements for the Job.
 
-* A platform administrator manages and delivers an efficient and reliable batch processing platform to the developers.
+- A platform administrator manages and delivers an efficient and reliable batch processing platform to the developers.
 
 Let's assume we have four teams of developers (`team-a`, `team-b`, `team-c`, `team-d`) who want to share a GKE cluster to run their batch machine learning training workloads. Additionally, `team-a` and `team-b` share billing so would like to use each other's unused resource quota for their workloads. `team-c` and `team-d` have a similar agreement. The Organization has purchased a [Committed Use Discount consumed via reservations](https://cloud.google.com/compute/docs/instances/reservations-with-commitments) and would like to maximize the utilization of their reservations before bursting into [On-demand](https://cloud.google.com/compute/vm-instance-pricing) or [Spot](https://cloud.google.com/compute/docs/instances/spot) VMs.
 
 To support these teams, the platform administrator would create a GKE cluster and configure it with [Google published good practices](https://cloud.google.com/kubernetes-engine/docs/best-practices/batch-platform-on-gke) for building batch platforms on GKE, in addition to their specific organizational best practices.
- 
 
 This reference architecture illustrates an example of a batch platform on GKE that can support multiple teams:
 
@@ -27,11 +25,11 @@ This reference architecture illustrates an example of a batch platform on GKE th
   - The cluster is configured with user defined node pools and is capable of creating auto-provisioned GPU node pools based on workload requirements:
 
     - Reserved node pool consuming zonal NVIDIA L4 GPU VM [reservations](https://cloud.google.com/compute/docs/instances/reservations-overview).
-    
+
     - Autoscaling [On-demand](https://cloud.google.com/compute/vm-instance-pricing) node pool with NVIDIA L4 GPU for high-priority Jobs spilling over from reservations.
-    
+
     - Autoscaling [Spot](https://cloud.google.com/compute/docs/instances/spot) node pool with NVIDIA L4 GPU for failure tolerant or low-priority workloads spilling over from reservations.
-    
+
     - [Compactly placed](https://cloud.google.com/kubernetes-engine/docs/how-to/compact-placement), auto-provisioned Spot node pools for low latency communication between workload Pods consuming NVIDIA A100 GPUs.
 
   - Four teams (`team-a`, `team-b`, `team-c`, `team-d`) each with their own [namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) on the cluster, with [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity) established.
@@ -39,22 +37,23 @@ This reference architecture illustrates an example of a batch platform on GKE th
   - [PriorityClasses](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/) defined for low-priority (default), high-priority and compactly placed Jobs. Incoming high-priority Jobs can preempt running low-priority Jobs to reclaim reserved resources.
 
   - Kueue is configured such that:
+
     - Each team has a `high-priority queue`, a `low-priority` queue and a `compact-placement` queue to which Jobs are submitted.
-    
+
     - Four ResourceFlavors defined; one each for `reserved`, `on-demand` and `spot` G2 VMs with NVIDIA L4 GPUs, and one for `spot` A2 VMs with NVIDIA A100 GPUs that are compactly-placed.
-    
+
     - [Prometheus and Grafana](https://github.com/prometheus-operator/kube-prometheus) are installed on the cluster for monitoring Kueue.
 
 - This reference architecture shows the teams submitting the following workloads:
 
   - Distributed (multi-GPU, multi-host) machine learning model training using PyTorch and the mnist dataset, using Kubernetes Jobs in Indexed mode. See original example published [here](https://github.com/google/learn-oss-with-google/tree/main/kubernetes/job-examples/ml_training_pytorch). This workload is used to showcase Kubernetes Job priority and preemption behavior using L4 GPUs and to show how to setup A100 GPUs in compact placement for multi-node training:
-    
+
     - **Low-priority Jobs:** Jobs that don't specify a PriorityClass will get this default PriorityClass set to them. Kueue is configured to allow these Jobs to run on reserved VMs or Spot G2 VMs. If there is no room in or if a low-priority Job gets preempted from the reserved node pool, Kueue will evaluate them for other ResourceFlavors and will assign them the Spot G2 VM ResourceFlavor. In this example, each low-priority Job will have two Pods, each consuming two L4 GPUs.
 
     - **High-priority Jobs:** Jobs specifying this PriorityClass will preempt any low-priority Jobs running on reserved VMs. Any overflow high-priority Jobs will trigger scale-up in the On-demand node pool. In this example, each high-priority Job will have two Pods, each consuming two L4 GPUs.
-    
+
     - **Compactly placed Jobs:** When admitted by Kueue, these Jobs will trigger GKE Node Auto Provisioning to create node pools purpose built for each of the Jobs, with nodes placed in close physical proximity to each other for low latency communication. In this example, each compactly placed Job will have two Pods, each consuming a single A100 GPU.
-  
+
   - Distributed (multi-GPU, multi-host) machine learning training using PyTorch and the mnist dataset, using the Kubernetes JobSet API. In this example, JobSet automatically creates the headless ClusterIP service for all the workers in the Job to communicate with each other. See original example published [here](https://github.com/kubernetes-sigs/jobset/tree/main/examples/pytorch/cnn-mnist).
 
 ## Prerequistes
@@ -63,9 +62,9 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
 2. Since a recent change in Grafana, services that run behind a reverse proxy cannot directly access metrics data. Port-forwarding from Cloud Shell, you would not be able to view Kueue metrics in Grafana. For a portion of this guide, you will be doing a port-forward from your local machine and for this, your local machine must have [gcloud CLI](https://cloud.google.com/sdk/docs/install) available.
 
-2. It is recommended to start the guide in a fresh project since the easiest way to clean up once complete is to delete the project. See [here](https://cloud.google.com/resource-manager/docs/creating-managing-projects) for more details.
+3. It is recommended to start the guide in a fresh project since the easiest way to clean up once complete is to delete the project. See [here](https://cloud.google.com/resource-manager/docs/creating-managing-projects) for more details.
 
-3. This guide requires a number of different GCP Quotas (~60 L4 GPUs, ~30 Spot A100 GPUs and up to 600 CPU cores) in the region of your choosing. Please visit the [IAM -> Quotas page](https://console.cloud.google.com/iam-admin/quotas) in the context of your project, region and zone to request additional quota before proceeding with this guide. [This document](https://cloud.google.com/compute/docs/regions-zones#available) can help you find the appropriate regions and zones where the G2 (with NVIDIA L4 GPUs) and A2 (with NVIDIA A100 GPUs) VM families are available. For example, the zones us-central-a, us-central1-b and us-central-c all have both VM families available.
+4. This guide requires a number of different GCP Quotas (~60 L4 GPUs, ~30 Spot A100 GPUs and up to 600 CPU cores) in the region of your choosing. Please visit the [IAM -> Quotas page](https://console.cloud.google.com/iam-admin/quotas) in the context of your project, region and zone to request additional quota before proceeding with this guide. [This document](https://cloud.google.com/compute/docs/regions-zones#available) can help you find the appropriate regions and zones where the G2 (with NVIDIA L4 GPUs) and A2 (with NVIDIA A100 GPUs) VM families are available. For example, the zones us-central-a, us-central1-b and us-central-c all have both VM families available.
 
 ## Deploy Google Cloud resources using Cloud Build and Terraform.
 
@@ -98,18 +97,18 @@ This reference architecture illustrates an example of a batch platform on GKE th
 
 4. For monitoring Kueue metrics [Prometheus and Grafana](https://github.com/prometheus-operator/kube-prometheus) have been deployed on the GKE cluster and a dashboard to visualize the data has been configured. Since a recent change in Grafana, services that run behind a reverse proxy cannot directly access metrics data. Port-forwarding from Cloud Shell, you would not be able to view Kueue metrics. You will be doing a port-forward from your local machine and for this, your local machine must have [gcloud CLI](https://cloud.google.com/sdk/docs/install) available.
 
-   a. Open a new terminal on your local machine and get the cluster credentials using the following command: 
+   a. Open a new terminal on your local machine and get the cluster credentials using the following command:
 
    ```bash
-   gcloud container clusters get-credentials gke-batch-refarch --region $REGION --project $PROJECT_ID
+   gcloud container clusters get-credentials batch-dev --region $REGION --project $PROJECT_ID
    ```
 
-   b. Next, create a port-forward to the `grafana` service running in the cluster so you can use your web browser to access the Grafana UI. Keep this terminal open for the rest of this guide. 
+   b. Next, create a port-forward to the `grafana` service running in the cluster so you can use your web browser to access the Grafana UI. Keep this terminal open for the rest of this guide.
 
    ```bash
    kubectl port-forward svc/grafana 8080:3000 -n monitoring
    ```
-   
+
    Expected output:
 
    ```bash
@@ -123,11 +122,11 @@ This reference architecture illustrates an example of a batch platform on GKE th
    e. Navigate to `Kueue Dashboard`, you should see the current number of nodes in the cluster and other useful Kueue metrics; there should be no workloads pending or admitted. We will return to this dashboard periodically during this guide to see how the system has reacted to incoming workloads.
 
    <img src="./images/kueue_dash_1.png" width="800">
-  
-5. Deploying Low Priority workloads: Switch to the `03_low_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+
+5. **Deploying Low Priority workloads:** Switch to the `low_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/03_low_priority && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/low_priority && \
    ./create_workloads.sh
    ```
 
@@ -144,7 +143,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```
 
    <img src="./images/02_submit_low_priority.svg" width="800">
-   
+
    a. List the Jobs running on the GKE cluster across all namespaces, you should see four Jobs from each team created. These Jobs have been admitted by Kueue.
 
    ```bash
@@ -176,7 +175,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    b. In a new terminal tab, watch the ClusterQueues, you should see four admitted workloads for each team's low priority ClusterQueue. These workloads correspond to the Jobs you saw in the previous step.
 
    ```bash
-   watch kubectl get clusterqueues
+   watch kubectl get clusterqueues -o wide
    ```
 
    Expected output:
@@ -200,7 +199,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    c. Since the Reserved node pool already has nodes available to run admitted low priority workloads, some of these workloads will be scheduled on the Reserved nodes. <img src="./images/03_low_priority_reservation.svg" width="800">
 
    d. In a new terminal tab, watch the cluster nodes. Initially you should see ten nodes, six in the default node pool and four in the reserved node pool.
-   
+
    ```bash
    watch kubectl get nodes
    ```
@@ -264,12 +263,11 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```
 
    <img src="./images/04_low_priority_spot.svg" width="800">
-   
 
-5. **Deploying High Priority workloads:** Switch to the `04_high_priority` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
+6. **Deploying High Priority workloads:** Switch to the `high_priority` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/04_high_priority && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/high_priority && \
    ./create_workloads.sh
    ```
 
@@ -288,7 +286,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    a. Return to the terminal tab watching the `clusterqueues`. You should see high-priority workloads being added to the high-priority clusterqueues.
 
    ```bash
-   watch kubectl get clusterqueues
+   watch kubectl get clusterqueues -o wide
    ```
 
    Expected output:
@@ -308,13 +306,13 @@ This reference architecture illustrates an example of a batch platform on GKE th
    cq-team-d-hp        team-c-d   StrictFIFO   2                   2
    cq-team-d-lp        team-c-d   StrictFIFO   0                   3
    ```
-   
+
    b. As high priority workloads are admitted, the low priority workloads running on the Reserved node pool are evicted to make room.
-   
+
    <img src="./images/05a_high_priority_reservation.svg" width="800">.
-   
+
    These low priority workloads are then set to pending and reevaluated by Kueue. They will use the Spot flavor to schedule on to the Spot node pool once new nodes have spun up to accommodate them.
-   
+
    <img src="./images/05b_high_priority_reservation.svg" width="800">
 
    d. Return to the terminal tab watching the cluster nodes, after a short while you should see nodes being added to the On Demand node pool to accommodate the high priority Jobs that could not fit on the Reserved node pool.
@@ -368,17 +366,17 @@ This reference architecture illustrates an example of a batch platform on GKE th
    ```
 
    The following diagram illustrates scale up in the On Demand node pool:
-   
+
    <img src="./images/06_high_priority_ondemand.svg" width="800">
 
    The Kueue dashboard also shows updated node counts, pending and active workloads,and other useful metrics from the batch platform.
 
    <img src="./images/kueue_dash_2.png" width="800">
 
-6. **Deploying compact placement workloads:** Switch to the `05_compact_placement` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
+7. **Deploying compact placement workloads:** Switch to the `compact_placement` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/05_compact_placement && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/compact_placement && \
    ./create_workloads.sh
    ```
 
@@ -413,12 +411,12 @@ This reference architecture illustrates an example of a batch platform on GKE th
    cq-team-d-hp        team-c-d   StrictFIFO   0                   2
    cq-team-d-lp        team-c-d   StrictFIFO   0                   1
    ```
-   
+
    b. As these Jobs are admitted by Kueue, they will become Unschedulable, meaning that the cluster does not have the resources these workloads are asking for. However, since the cluster is configured with Node Auto Provisioning, GKE will create and scale a node pool purpose built for each Job based on the resource requests and limits. Once the Job is complete, the node pool will be cleaned up by GKE automatically, eliminating unnecessary spend.
-   
+
    <img src="./images/07_compact_placement.svg" width="800">
-   
-   c. Return to the terminal tab watching the cluster nodes, after a short while you should see nodes being created in auto-provisioned Spot node pools to accommodate the compactly placed Jobs that could not find A100 GPUs in the node pools present on the cluster.
+
+   c. Return to the terminal tab watching the cluster nodes, after a short while you should see nodes being created in auto-provisioned Spot node pools to accommodate the compactly placed Jobs that could not find any A100 GPUs in the node pools present on the cluster.
 
    Expected output:
 
@@ -450,10 +448,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
    gke-gke-batch-refarch-reserved-np-866c1d22-r6rt       Ready    <none>   12h     v1.28.3-gke.1203001
    ```
 
-7. **Deploying JobSet workloads:** Switch to the `06_jobset` directory and run the `deploy_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
+8. **Deploying JobSet workloads:** Switch to the `jobset` directory and run the `create_workloads.sh` script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).
 
    ```bash
-   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/06_jobset && \
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/jobset && \
    ./create_workloads.sh
    ```
 
@@ -491,27 +489,84 @@ This reference architecture illustrates an example of a batch platform on GKE th
    cq-team-d-lp        team-c-d   StrictFIFO   0                   4
    ```
 
+9. **Deploying workloads to DWS:** This section of the reference architecture will introduce you to Dynamic Workload Scheduler ([blog](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler), [docs](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest)). DWS supports all-or-nothing scheduling, allowing you to procure all the accelerators needed for your workload all at once instead of acquiring partial resources and waiting to get the full set before running the workload.
+
+   The examples shown will deploy one model training job for `team-a` seeking A100 GPUs to fine-tune the Gemma 2B model and one job from `team-b` seeking H100 GPUs to fine-tune the Gemma 7B model, in both cases the model is fine-tuned to output SQL when asked a question in natural language. These example workloads are adapted from the example published [here](https://cloud.google.com/kubernetes-engine/docs/tutorials/finetune-gemma-gpu).
+
+   The model weights are download from and uploaded to Hugging Face. In order to access these weights, you will need your Hugging Face token which can be generated [here](https://huggingface.co/settings/tokens). Once you have the token, export it as an environment variable by replacing `YOUR_HUGGING_FACE_TOKEN` with your token and create the Kubernetes Secrets for team-a and team-b for their respective workloads to be able to access Hugging Face.
+
+   ```bash
+   export HF_TOKEN=YOUR_HUGGING_FACE_TOKEN && \
+
+   kubectl create secret generic hf-secret \
+   --from-literal=hf_api_token=${HF_TOKEN} \
+   --dry-run=client -o yaml | kubectl -n team-a apply -f - && \
+
+   kubectl create secret generic hf-secret \
+   --from-literal=hf_api_token=${HF_TOKEN} \
+   --dry-run=client -o yaml | kubectl -n team-b apply -f -
+   ```
+
+   Next, configure Kueue to use DWS and deploy the workloads by switching to the `dws` directory, applying the `kueue-dws-config.yaml` and running the `create_workloads.sh` script:
+
+   ```bash
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/dws && \
+   kubectl apply -f kueue-dws-config.yaml && \
+   ./create_workloads.sh
+   ```
+
+   Expected output:
+
+   ```bash
+   ...
+   job.batch/finetune-gemma-2xa100 created
+   job.batch/finetune-gemma-8xh100 created
+   ```
+
+   a. Return to the terminal tab watching the `clusterqueues`, you should see submitted DWS workloads being pending and after a while admitted to the DWS clusterqueue for both team-a and team-b.
+
+   Expected output:
+
+   ```bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   2                   1
+   cq-team-a-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-a-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-b-compact   team-a-b   StrictFIFO   2                   0
+   cq-team-b-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-c-compact   team-c-d   StrictFIFO   0                   1
+   cq-team-c-hp        team-c-d   StrictFIFO   0                   1
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   4
+   cq-team-d-compact   team-c-d   StrictFIFO   2                   1
+   cq-team-d-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   4
+   dws-cluster-queue          BestEffortFIFO   0                   2
+   ```
+
    b. At this time all the workloads have been submitted to the batch platform, and will continue to process in the order decided by Kueue.
 
    c. Head over to the GPU monitoring dashboard you opened earlier. You should see charts displaying useful GPU utilization data from the batch platform for example:
-      - Number and type of GPUs in the cluster over time
-      
+
+   - Number and type of GPUs in the cluster over time
+
       <img src="./images/gpu_count.png" width="600">
 
-      - Distribution (heatmap) of GPU utilization
-      
+   - Distribution (heatmap) of GPU utilization
+
       <img src="./images/gpu_util_heatmap.png" width="600">
       
-      - Distribution (heatmap) of GPU memory utilization 
+      - Distribution (heatmap) of GPU memory utilization
 
       <img src="./images/gpu_mem_heatmap.png" width="600">
 
    d. Return to the terminal tab watching Jobs across all namespaces, after a while you should see all Jobs completed.
-   
+
    Expected output:
 
    ```bash
    NAMESPACE   NAME                         COMPLETIONS   DURATION   AGE
+   team-a      finetune-gemma-2xa100        1/1           8m17s      15m
    team-a      team-a-compact-job-0         2/2           7m22s      42m
    team-a      team-a-compact-job-1         2/2           11m        42m
    team-a      team-a-compact-job-2         2/2           7m52s      42m
@@ -520,14 +575,15 @@ This reference architecture illustrates an example of a batch platform on GKE th
    team-a      team-a-high-priority-job-1   2/2           15m        53m
    team-a      team-a-high-priority-job-2   2/2           4m38s      53m
    team-a      team-a-high-priority-job-3   2/2           4m38s      53m
-   team-a      team-a-jobset-0-worker-0     2/2           18m        24m  
-   team-a      team-a-jobset-1-worker-0     2/2           5m4s       26m  
-   team-a      team-a-jobset-2-worker-0     2/2           91s        22m  
-   team-a      team-a-jobset-3-worker-0     2/2           5m         26m  
+   team-a      team-a-jobset-0-worker-0     2/2           18m        24m
+   team-a      team-a-jobset-1-worker-0     2/2           5m4s       26m
+   team-a      team-a-jobset-2-worker-0     2/2           91s        22m
+   team-a      team-a-jobset-3-worker-0     2/2           5m         26m
    team-a      team-a-low-priority-job-0    2/2           3m31s      58m
    team-a      team-a-low-priority-job-1    2/2           11m        58m
    team-a      team-a-low-priority-job-2    2/2           10m        58m
    team-a      team-a-low-priority-job-3    2/2           10m        57m
+   team-b      finetune-gemma-8xh100        1/1           10m8s      15m
    team-b      team-b-compact-job-0         2/2           8m56s      42m
    team-b      team-b-compact-job-1         2/2           7m28s      42m
    team-b      team-b-compact-job-2         2/2           7m16s      42m
@@ -536,10 +592,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
    team-b      team-b-high-priority-job-1   2/2           7m34s      53m
    team-b      team-b-high-priority-job-2   2/2           13m        53m
    team-b      team-b-high-priority-job-3   2/2           4m52s      53m
-   team-b      team-b-jobset-0-worker-0     2/2           5m25s      26m  
+   team-b      team-b-jobset-0-worker-0     2/2           5m25s      26m
    team-b      team-b-jobset-1-worker-0     2/2           3m37s      4m21s
-   team-b      team-b-jobset-2-worker-0     2/2           5m2s       26m  
-   team-b      team-b-jobset-3-worker-0     2/2           5m10s      26m  
+   team-b      team-b-jobset-2-worker-0     2/2           5m2s       26m
+   team-b      team-b-jobset-3-worker-0     2/2           5m10s      26m
    team-b      team-b-low-priority-job-0    2/2           3m40s      58m
    team-b      team-b-low-priority-job-1    2/2           11m        58m
    team-b      team-b-low-priority-job-2    2/2           12m        58m
@@ -552,10 +608,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
    team-c      team-c-high-priority-job-1   2/2           11m        53m
    team-c      team-c-high-priority-job-2   2/2           3m36s      53m
    team-c      team-c-high-priority-job-3   2/2           3m30s      53m
-   team-c      team-c-jobset-0-worker-0     2/2           3m37s      11m  
-   team-c      team-c-jobset-1-worker-0     2/2           3m33s      16m  
-   team-c      team-c-jobset-2-worker-0     2/2           5m2s       26m  
-   team-c      team-c-jobset-3-worker-0     2/2           3m38s      18m  
+   team-c      team-c-jobset-0-worker-0     2/2           3m37s      11m
+   team-c      team-c-jobset-1-worker-0     2/2           3m33s      16m
+   team-c      team-c-jobset-2-worker-0     2/2           5m2s       26m
+   team-c      team-c-jobset-3-worker-0     2/2           3m38s      18m
    team-c      team-c-low-priority-job-0    2/2           2m46s      58m
    team-c      team-c-low-priority-job-1    2/2           11m        58m
    team-c      team-c-low-priority-job-2    2/2           9m50s      58m
@@ -568,10 +624,10 @@ This reference architecture illustrates an example of a batch platform on GKE th
    team-d      team-d-high-priority-job-1   2/2           27m        53m
    team-d      team-d-high-priority-job-2   2/2           6m16s      53m
    team-d      team-d-high-priority-job-3   2/2           6m22s      53m
-   team-d      team-d-jobset-0-worker-0     2/2           5m3s       26m  
-   team-d      team-d-jobset-1-worker-0     2/2           97s        22m  
-   team-d      team-d-jobset-2-worker-0     2/2           93s        22m  
-   team-d      team-d-jobset-3-worker-0     2/2           16m        22m  
+   team-d      team-d-jobset-0-worker-0     2/2           5m3s       26m
+   team-d      team-d-jobset-1-worker-0     2/2           97s        22m
+   team-d      team-d-jobset-2-worker-0     2/2           93s        22m
+   team-d      team-d-jobset-3-worker-0     2/2           16m        22m
    team-d      team-d-low-priority-job-0    2/2           2m57s      58m
    team-d      team-d-low-priority-job-1    2/2           10m        58m
    team-d      team-d-low-priority-job-2    2/2           19m        58m
@@ -596,6 +652,7 @@ This reference architecture illustrates an example of a batch platform on GKE th
    cq-team-d-compact   team-c-d   StrictFIFO   0                   0
    cq-team-d-hp        team-c-d   StrictFIFO   0                   0
    cq-team-d-lp        team-c-d   StrictFIFO   0                   0
+   dws-cluster-queue          BestEffortFIFO   0                   0
    ```
 
    f. Return to the terminal tab watching the nodes, you should see GKE shrink the cluster back down to the initial state of ten nodes, six in the default node pool and four in the reserved node pool.
