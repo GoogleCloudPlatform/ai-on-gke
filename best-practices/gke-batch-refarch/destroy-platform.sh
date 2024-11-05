@@ -45,8 +45,9 @@ gcloud beta builds submit \
   --ignore-file gke-batch-refarch/cloudbuild-ignore \
   --project="${PROJECT_ID}" \
   --service-account "projects/${PROJECT_ID}/serviceAccounts/${TF_CLOUDBUILD_SA}" \
-  --substitutions ${BUILD_SUBSTITUTIONS} &&
-  cd -
+  --substitutions ${BUILD_SUBSTITUTIONS} || exit 1
+cd -
 gcloud artifacts repositories delete gemma --location=us --quiet
 gcloud artifacts repositories delete tutorial-installer --location=${REGION} --quiet
+gcloud projects remove-iam-policy-binding "${PROJECT_ID}" --member serviceAccount:"${TF_CLOUDBUILD_SA}" --role roles/owner
 gcloud iam service-accounts delete ${TF_CLOUDBUILD_SA} --quiet
