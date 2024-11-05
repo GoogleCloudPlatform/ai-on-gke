@@ -12,10 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "cluster_location" {
-  value = google_container_cluster.gke_batch.location
+terraform {
+  required_version = ">= 1.5.7"
+
+  required_providers {
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "5.38.0"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "5.38.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.31.0"
+    }
+  }
 }
 
-output "cluster_name" {
-  value = google_container_cluster.gke_batch.name
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
 }

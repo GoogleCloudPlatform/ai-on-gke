@@ -12,29 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-terraform {
-  required_providers {
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = "5.16.0"
-    }
-    google = {
-      source  = "hashicorp/google"
-      version = "5.16.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.26.0"
-    }
-  }
-}
+[[ ! "${PROJECT_ID}" ]] && echo -e "Please export PROJECT_ID variable (\e[95mexport PROJECT_ID=<YOUR POROJECT ID>\e[0m)\nExiting." && exit 0
+echo -e "\e[95mPROJECT_ID is set to ${PROJECT_ID}\e[0m"
 
-provider "google-beta" {
-  project = var.project_id
-  region  = var.region
-}
+[[ ! "${REGION}" ]] && echo -e "Please export REGION variable (\e[95mexport REGION=<YOUR REGION, eg: us-central1>\e[0m)\nExiting." && exit 0
+echo -e "\e[95mREGION is set to ${REGION}\e[0m"
 
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
+gcloud container clusters get-credentials batch-dev --region ${REGION} --project ${PROJECT_ID} &&
+    # Delete compact placement Jobs
+    kubectl delete -f workloads/ --recursive

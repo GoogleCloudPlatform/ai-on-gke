@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,5 +18,12 @@ echo -e "\e[95mPROJECT_ID is set to ${PROJECT_ID}\e[0m"
 [[ ! "${REGION}" ]] && echo -e "Please export REGION variable (\e[95mexport REGION=<YOUR REGION, eg: us-central1>\e[0m)\nExiting." && exit 0
 echo -e "\e[95mREGION is set to ${REGION}\e[0m"
 
-kubectl apply -f gmp-kueue-monitoring.yaml && \
-gcloud monitoring dashboards create --project=$PROJECT_ID --config-from-file=kueue-dashboard.json
+gcloud container clusters get-credentials batch-dev --region ${REGION} --project ${PROJECT_ID} &&
+  # Low priority Jobs
+  for job_id in 0 1 2 3; do
+    for team in team-a team-b team-c team-d; do
+      envsubst '$REGION, $PROJECT_ID' <./workloads/${team}/${team}-low-priority-job-${job_id}.yaml | kubectl apply -f - &&
+        sleep 0.5
+    done
+    sleep 1
+  done

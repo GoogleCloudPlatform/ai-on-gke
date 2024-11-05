@@ -12,14 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-[[ ! "${PROJECT_ID}" ]] && echo -e "Please export PROJECT_ID variable (\e[95mexport PROJECT_ID=<YOUR POROJECT ID>\e[0m)\nExiting." && exit 0
-echo -e "\e[95mPROJECT_ID is set to ${PROJECT_ID}\e[0m"
-
-[[ ! "${REGION}" ]] && echo -e "Please export REGION variable (\e[95mexport REGION=<YOUR REGION, eg: us-central1>\e[0m)\nExiting." && exit 0
-echo -e "\e[95mREGION is set to ${REGION}\e[0m"
-
-gcloud container clusters get-credentials gke-batch-refarch --region ${REGION} --project ${PROJECT_ID} && \
-
-# Delete compact placement Jobs
-kubectl delete -f workloads/ --recursive
+terraform {
+  backend "gcs" {
+    prefix = "terraform/batch-ref"
+  }
+}

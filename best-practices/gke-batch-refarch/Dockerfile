@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
+FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine
 
 RUN apk --update add --no-cache \
 coreutils \
-git \
 curl \
 gettext \
+git \
+go \
 jq \
 openssl \
 python3 \
 unzip \
 wget
 
-ENV TERRAFORM_VERSION=1.7.3
+ENV TERRAFORM_VERSION=1.9.5
 
 # Install terraform
 RUN echo "INSTALL TERRAFORM v${TERRAFORM_VERSION}" \
@@ -38,5 +39,10 @@ RUN echo "INSTALL TERRAFORM v${TERRAFORM_VERSION}" \
 # Install additional tools
 RUN gcloud components install \
 kubectl \
+--quiet \
 && rm -rf $(find google-cloud-sdk/ -regex ".*/__pycache__") \
 && rm -rf google-cloud-sdk/.install/.backup
+
+# Install crane
+RUN go install github.com/google/go-containerregistry/cmd/crane@latest
+ENV PATH="${PATH}:/root/go/bin"
