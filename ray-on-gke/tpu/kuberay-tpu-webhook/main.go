@@ -58,10 +58,10 @@ type slice struct {
 // TPUWebhookServer is a KubeRay TPU webhook server instance.
 type TPUWebhookServer struct {
 	// podLister is used to query Pods from an informer cache.
-	podLister  	 listersv1.PodLister
-	cacheMutex 	 sync.Mutex
-	wg         	 sync.WaitGroup
-	waiting    	 int
+	podLister    listersv1.PodLister
+	cacheMutex   sync.Mutex
+	wg           sync.WaitGroup
+	waiting      int
 	lastAdmitted string
 }
 
@@ -649,7 +649,7 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 		return nil, err
 	}
 	// set the unique identifier for the last admitted Pod by this TPUWebhookServer
-	t.lastAdmitted = fmt.Sprintf("%d-%d", replicaIndex, tpuWorkerID)
+	t.lastAdmitted = fmt.Sprintf("%s-%s-%d-%d", namespace, clusterName, replicaIndex, tpuWorkerID)
 
 	// inject replica index label
 	injectReplicaLabel(clusterName, namespace, replicaIndex, groupName, &patches)
@@ -781,6 +781,12 @@ func (t *TPUWebhookServer) addPod(obj interface{}) {
 		// This Pod was not mutated by the webhook, no-op
 		return
 	}
+	clusterName := pod.Labels["ray.io/cluster"]
+	if clusterName == "" {
+		klog.Errorf("Invalid addPod: %s", errors.New("Ray Pod created by KubeRay missing RayCluster label"))
+		return
+	}
+	namespace := pod.Namespace
 	for _, container := range pod.Spec.Containers {
 		if !containerRequestingTPUs(container) {
 			// Skip to the next container
@@ -791,7 +797,7 @@ func (t *TPUWebhookServer) addPod(obj interface{}) {
 			// This TPU pod was not intercepted by the webhook, no-op
 			return
 		}
-		uniquePodID := fmt.Sprintf("%s-%s", replicaIndex, tpuWorkerID)
+		uniquePodID := fmt.Sprintf("%s-%s-%s-%s", namespace, clusterName, replicaIndex, tpuWorkerID)
 
 		if uniquePodID == t.lastAdmitted {
 			// Added the last TPU worker Pod to the cache, unblock the next Mutate call
