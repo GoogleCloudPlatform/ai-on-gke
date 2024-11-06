@@ -44,6 +44,9 @@ for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
   if [[ "$SAVE_AGGREGATED_RESULT" = "true" ]]; then
     PYTHON_OPTS="$PYTHON_OPTS --save-aggregated-result"
   fi
+  if [[ "$STREAM_REQUEST" = "true" ]]; then
+    PYTHON_OPTS="$PYTHON_OPTS --stream-request"
+  fi
   $PYTHON $PYTHON_OPTS > $output_file
   cat $output_file
   sleep 5 # wait 5 seconds before next run
