@@ -170,6 +170,12 @@ async def send_stream_request(
         "ignore_eos": True,
         "stream": True,
     }
+  elif backend == "jetstream":
+    pload = {
+        "prompt": prompt,
+        "max_tokens": output_len,
+        "stream": True,
+    }
   else: 
     raise ValueError(f"Unknown backend: {backend}")
 
@@ -189,9 +195,12 @@ async def send_stream_request(
           if ttft == 0.0:
             ttft = timestamp - st
           
-          if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
-              if backend == "vllm":
-                output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+          if backend == "vllm":
+            if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
+              output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+          elif backend == "jetstream":
+            if chunk_bytes.decode("utf-8") != "":
+              output += json.loads(chunk_bytes.decode("utf-8"))["text"]
     except aiohttp.client_exceptions.ClientConnectorError as client_err:
       errors["ClientConnectorError"] += 1
       print(f"ClientConnectorError: {client_err}")
