@@ -49,7 +49,7 @@ for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
   fi
   $PYTHON $PYTHON_OPTS > $output_file
   cat $output_file
-  sleep 5 # wait 5 seconds before next run
+  sleep 30 # wait 30 seconds before next run to ensure metrics isolation (metrics pulled every 15s)
 done
 
 export LPG_FINISHED="true"
