@@ -438,6 +438,10 @@ terraform  destroy
 
 This step deletes all the resources that you created previously: the GKE cluster, the VPC network, the firewall rules, and the Google Cloud project.
 
+## Disclaimer
+
+This project welcomes contributions but operates with a best-effort maintenance approach. Please review our [CONTRIBUTING](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/contributing.md) for guidelines on how to contribute effectively and understand the review process.
+
 ## License
 
 * The use of the assets contained in this repository is subject to compliance with [Google's AI Principles](https://ai.google/responsibility/principles/)  
