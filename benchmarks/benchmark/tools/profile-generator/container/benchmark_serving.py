@@ -5,7 +5,7 @@ https://github.com/vllm-project/vllm/blob/main/benchmarks/benchmark_serving.py.
 It currently supports TGI, vLLM, Triton TensorRT-LLM and Saxml.
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 import argparse
 import asyncio
 from datetime import datetime
@@ -263,12 +263,91 @@ class Backend(ABC):
     for new model server backends.
     """
 
-    def request(self):
-      print()
+    async def send_request(
+        self,
+        api_url: str,
+        prompt: str,
+        prompt_len: int,
+        output_len: int,
+        best_of: int,
+        use_beam_search: bool,
+        top_k: int,
+        tokenizer: PreTrainedTokenizerBase,
+        sax_model: str,
+        model: str,
+    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[Dict[str, int]]]:
+      """Sends request to server."""
+      request_start_time = time.time()
+      errors = init_errors_map()
+
+      headers = {"User-Agent": "Benchmark Client"}
+      pload = self.create_request_payload(
+        prompt=prompt,
+        prompt_len=prompt_len,
+        output_len=output_len,
+        best_of=best_of,
+        use_beam_search=use_beam_search,
+        top_k=top_k,
+        tokenizer=tokenizer,
+        sax_model=sax_model,
+        model=model,
+      )
+      
+      # Set client timeout to be 3 hrs.
+      timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+      async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
+        while True:
+          try:
+            async with session.post(f"{api_url}/{self.get_endpoint()}", headers=headers, json=pload, ssl=False) as response:
+              output = await response.json()
+
+            # Re-send the request if it failed.
+            if "error" not in output:
+              break
+          except aiohttp.client_exceptions.ClientConnectorError as client_err:
+            errors["ClientConnectorError"] += 1
+            print(f"ClientConnectorError: {client_err}")
+            return None, errors
+          except asyncio.TimeoutError as timeout_err:
+            errors["TimeoutError"] += 1
+            print(f"TimeoutError: {timeout_err}")
+            return None, errors
+          except aiohttp.client_exceptions.ClientOSError as e:
+            errors["ClientOSError"] += 1
+            print(f"ClientOSError: {e}")
+            return None, errors
+          except aiohttp.client_exceptions.ContentTypeError as e:
+            print(f"ContentTypeError: {e}, response: {response}")
+            errors["ContentTypeError"] += 1
+            return None, errors
+          except aiohttp.client_exceptions.ServerDisconnectedError as e:
+            errors["ServerDisconnectedError"] += 1
+            print(f"ServerDisconnectedError: {e}")
+            return None, errors
+          except Exception as e: 
+            print(f"Unknown error {e}")
+            errors["unknown_error"] += 1
+            return None, errors
+      request_end_time = time.time()
+      # Naive HF transformers generation and TensorRT-LLM generation stops at EOS
+      # tokens and the generation may be shorter than the ground-truth output
+      # sequence length.
+      output_len = self.get_response_length(
+        response=output,
+        request_len=prompt_len,
+        tokenizer=tokenizer
+      )
+
+      # (prompt len, output len, latency, success)
+      request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
+      tpot_metric.observe((request_end_time - request_start_time) / output_len)
+      prompt_length_metric.observe(prompt_len)
+      response_length_metric.observe(output_len)
+
+      return request_latency, None
 
     @abstractmethod
     def create_request_payload(self,
-      api_url: str,
       prompt: str,
       prompt_len: int,
       output_len: int,
@@ -280,29 +359,36 @@ class Backend(ABC):
       model: str) -> Dict:
         pass
 
-    def tokens_from_response(self, response: Dict):
-      return ""
-    
-    @property
     @abstractmethod
-    def server_metrics(self) -> List[str]:
+    def get_response_length(
+        self, 
+        request_len: int, 
+        response: Dict, 
+        tokenizer: PreTrainedTokenizerBase) -> int:
+      pass
+    
+    @abstractmethod
+    def get_server_metrics(self) -> List[str]:
       pass
 
-    @property
     @abstractmethod
-    def api_url(self) -> str:
+    def get_endpoint(self) -> str:
       pass
 
 class vLLMBackend(Backend):
-  def server_metrics(self) -> List[str]:
+  def get_server_metrics(self) -> List[str]:
     return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
-  def api_url(self) -> str:
+  def get_endpoint(self) -> str:
       return "v1/completions"
   def create_request_payload(self,
       prompt: str,
+      prompt_len: int,
       output_len: int,
       best_of: int,
       use_beam_search: bool,
+      top_k: int,
+      tokenizer: PreTrainedTokenizerBase,
+      sax_model: str,
       model: str):
     return {
         "model": model,
@@ -316,36 +402,60 @@ class vLLMBackend(Backend):
         "ignore_eos": False,
         "stream": False,
     }
-  def tokens_from_response(self, response : Dict):
-    return response["choices"][0]["text"]
+  def get_response_length(
+        self, 
+        request_len: int, 
+        response: Dict, 
+        tokenizer: PreTrainedTokenizerBase):
+    print(response)
+    output_token_ids = tokenizer(response["choices"][0]["text"]).input_ids
+    return len(output_token_ids)
 
 class JetstreamBackend(Backend):
-  def server_metrics(self) -> List[str]:
+  def get_server_metrics(self) -> List[str]:
     return [
       "jetstream_slots_used_percentage",
       "jetstream_prefill_backlog_size",
     ]
-  def api_url(self) -> str:
+  def get_endpoint(self) -> str:
       return ""
   def create_request_payload(self,
-    prompt: str,
-    output_len: int):
+      prompt: str,
+      prompt_len: int,
+      output_len: int,
+      best_of: int,
+      use_beam_search: bool,
+      top_k: int,
+      tokenizer: PreTrainedTokenizerBase,
+      sax_model: str,
+      model: str):
     return {
         "prompt": prompt,
         "max_tokens": output_len,
     }
-  def tokens_from_response(self, response: Dict):
-    return response["response"]
+  def get_response_length(
+        self, 
+        request_len: int, 
+        response: Dict, 
+        tokenizer: PreTrainedTokenizerBase):
+    output_token_ids = tokenizer(response["response"]).input_ids
+    return len(output_token_ids)
 
 class TgiBackend(Backend):
-  def server_metrics(self) -> List[str]:
+  def get_server_metrics(self) -> List[str]:
     return [""]
-  def api_url(self) -> str:
+  def get_endpoint(self) -> str:
     return ""
-  def create_request_payload(self,  
-    prompt: str,
-    output_len: int,
-    best_of: int):
+  def create_request_payload(self,
+      prompt: str,
+      prompt_len: int,
+      output_len: int,
+      best_of: int,
+      use_beam_search: bool,
+      top_k: int,
+      tokenizer: PreTrainedTokenizerBase,
+      sax_model: str,
+      model: str):
     return {
       "inputs": prompt,
       "parameters": {
@@ -354,18 +464,29 @@ class TgiBackend(Backend):
         "do_sample": True,
       },
     }
-  def tokens_from_response(self, response: Dict):
-    return response["generated_text"]
+  def get_response_length(
+        self, 
+        request_len: int, 
+        response: Dict, 
+        tokenizer: PreTrainedTokenizerBase):
+    output_token_ids = tokenizer(response["generated_text"]).input_ids
+    return len(output_token_ids)
 
 class NaiveTransformersBackend(Backend):
-  def server_metrics(self) -> List[str]:
+  def get_server_metrics(self) -> List[str]:
     return [""]
-  def api_url(self) -> str:
+  def get_endpoint(self) -> str:
       return ""
-  def create_request_payload(self,  
-    prompt: str,
-    output_len: int,
-    top_k: int,):
+  def create_request_payload(self,
+      prompt: str,
+      prompt_len: int,
+      output_len: int,
+      best_of: int,
+      use_beam_search: bool,
+      top_k: int,
+      tokenizer: PreTrainedTokenizerBase,
+      sax_model: str,
+      model: str):
     return {
         "instances": [{
             "prompt": prompt,
@@ -373,21 +494,32 @@ class NaiveTransformersBackend(Backend):
             "top_k": top_k,
         }]
     }
-  def tokens_from_response(self, response: Dict):
+  def get_response_length(
+        self, 
+        request_len: int, 
+        response: Dict, 
+        tokenizer: PreTrainedTokenizerBase):
     complete_pred = response["predictions"][0][0]["generated_text"]
     new_text_start_index = complete_pred.find(NEW_TEXT_KEY) + len(NEW_TEXT_KEY)
-    return complete_pred[new_text_start_index:]
+    pred = complete_pred[new_text_start_index:]
+    output_token_ids = tokenizer(pred).input_ids
+    return len(output_token_ids) - request_len
 
 class TensorrtLlmTritonBackend(Backend):
-  def server_metrics(self) -> List[str]:
+  def get_server_metrics(self) -> List[str]:
     return [""]
-  def api_url(self) -> str:
+  def get_endpoint(self) -> str:
       return ""
   def create_request_payload(self,
-    prompt: str,
-    output_len: int,
-    best_of: int,
-    use_beam_search: bool):
+      prompt: str,
+      prompt_len: int,
+      output_len: int,
+      best_of: int,
+      use_beam_search: bool,
+      top_k: int,
+      tokenizer: PreTrainedTokenizerBase,
+      sax_model: str,
+      model: str):
     return {
         "text_input": prompt,
         "max_tokens": output_len,
@@ -398,20 +530,29 @@ class TensorrtLlmTritonBackend(Backend):
         "stop_words": "",
         "stream": False,
     }
-  def tokens_from_response(self, response: Dict):
-    return response["text_output"]
+  def get_response_length(
+        self, 
+        request_len: int, 
+        response: Dict, 
+        tokenizer: PreTrainedTokenizerBase):
+    output_token_ids = tokenizer(response["text_output"]).input_ids
+    return len(output_token_ids)
 
 class SaxBackend(Backend):
-  def server_metrics(self) -> List[str]:
+  def get_server_metrics(self) -> List[str]:
     return [""]
-  def api_url(self) -> str:
+  def get_endpoint(self) -> str:
       return ""
   def create_request_payload(self,
-    prompt: str,
-    output_len: int,
-    best_of: int,
-    use_beam_search: bool,
-    sax_model: str):
+      prompt: str,
+      prompt_len: int,
+      output_len: int,
+      best_of: int,
+      use_beam_search: bool,
+      top_k: int,
+      tokenizer: PreTrainedTokenizerBase,
+      sax_model: str,
+      model: str):
     return {
         "model": sax_model,
         "prompt": prompt,
@@ -424,8 +565,13 @@ class SaxBackend(Backend):
         "max_tokens": output_len,
         "stream": False,
     }
-  def tokens_from_response(self, response: Dict):
-    return response["choices"][0]["text"]
+  def get_response_length(
+        self, 
+        request_len: int, 
+        response: Dict, 
+        tokenizer: PreTrainedTokenizerBase):
+    output_token_ids = tokenizer(response["choices"][0]["text"]).input_ids
+    return len(output_token_ids)
 
 def init_errors_map() -> Dict[str, int]:
   errors = {
@@ -792,8 +938,8 @@ def get_filtered_dataset(
     return filtered_dataset
 
 async def benchmark(
-    args: argparse.Namespace, 
-    api_url: str,
+    args: argparse.Namespace,
+    backend: Backend,
     tokenizer: PreTrainedTokenizerBase,
     model: str,
 ) -> BenchmarkingReport:
@@ -817,14 +963,13 @@ async def benchmark(
         "max_num_prompts": args.num_prompts,
       }]
     }
-  
   for index, step in enumerate(all_steps["steps"]):
   
     # No need to sleep before running the first step
     if 'time_between_steps' in args.job and index != 0:
       print(f"Sleeping for {args.job['time_between_steps']} sec...")
       await asyncio.sleep(args.job["time_between_steps"])
-    max_prompts = f" {step['max_num_prompts']} requests" if 'max_num_prompts' in step else " "
+    max_prompts = f" {step['max_num_prompts']} requests" if 'max_num_prompts' in step else ""
     duration = f" {step['time']} sec" if 'time' in step else " "
     print(f"Starting benchmarking{max_prompts} at {step['rate']} requests/sec for{duration}")
 
@@ -840,9 +985,8 @@ async def benchmark(
 
       prompt, prompt_len, output_len = request
       task = asyncio.create_task(
-          send_request(
-              args.backend,
-              api_url,
+          backend.send_request(
+              f"http://{args.host}:{args.port}",
               prompt,
               prompt_len,
               output_len,
@@ -931,8 +1075,9 @@ async def main(args: argparse.Namespace):
   )
   args.start_datetime = datetime.fromtimestamp(time.time_ns() / NS_IN_SEC)
   
+  backend: Backend = getBackend(args.backend)
   reports : List[BenchmarkingReport] = await asyncio.gather(
-    *[benchmark(args, api_url, tokenizer, model) for model in models]
+    *[benchmark(args, backend, tokenizer, model) for model in models]
   )
 
   if args.save_aggregated_result:
