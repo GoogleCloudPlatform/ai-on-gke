@@ -489,7 +489,8 @@ func getNextWorkerID(sliceToWorkerIDs map[slice][]int, podSlice slice, namespace
 func (t *TPUWebhookServer) getSliceToWorkerIDs(clusterName string, groupName string, namespace string, numOfHosts int32) (map[slice][]int, error) {
 	sliceToWorkerIDs := make(map[slice][]int)
 
-	podsInGroup, err := t.podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/group": groupName}))
+	// we only care about workers in the same RayCluster and worker group when assigning IDs
+	podsInGroup, err := t.podLister.Pods(namespace).List(labels.SelectorFromSet(labels.Set{"ray.io/cluster": clusterName, "ray.io/group": groupName}))
 	if err != nil {
 		return nil, err
 	}
@@ -503,11 +504,9 @@ func (t *TPUWebhookServer) getSliceToWorkerIDs(clusterName string, groupName str
 		if existingPod.DeletionTimestamp != nil {
 			continue
 		}
-		existingClusterName := existingPod.Labels["ray.io/cluster"]
-		existingGroupName := existingPod.Labels["ray.io/group"]
 		existingNamespace := existingPod.Namespace
-		// we only care about workers in the same RayCluster and worker group when assigning IDs
-		if clusterName != existingClusterName || groupName != existingGroupName || namespace != existingNamespace {
+		// check that Pods are in the same namespace
+		if namespace != existingNamespace {
 			continue
 		}
 
@@ -542,7 +541,7 @@ func (t *TPUWebhookServer) getSliceToWorkerIDs(clusterName string, groupName str
 		}
 		if existingWorkerID != -1 {
 			// Pod has been intercepted by the webhook
-			podSlice := slice{existingClusterName, existingGroupName, namespace, existingReplicaIndex, numOfHosts}
+			podSlice := slice{clusterName, groupName, namespace, existingReplicaIndex, numOfHosts}
 			if sliceToWorkerIDs[podSlice] == nil {
 				sliceToWorkerIDs[podSlice] = []int{existingWorkerID}
 			} else {
