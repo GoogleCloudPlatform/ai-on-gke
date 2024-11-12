@@ -570,7 +570,7 @@ class BenchmarkingReport():
           points=[float(output_len) for _, output_len, _ in latencies]),
         MetricSummary(
           name = "throughput",
-          description = "throughput",
+          description = "throughput in requests per second",
           mean = (len(latencies) / ((timestamp_end - timestamp_start) / NS_IN_SEC)),
         ),
       ],
@@ -655,7 +655,7 @@ class BenchmarkingReport():
       "metrics": {
           # Traffic metrics
           "num_prompts_attempted": self.steps[0]['num_prompts_attempted'],
-          "num_prompts_succeeded": self.steps[0]['latencies'],
+          "num_prompts_succeeded": len(self.steps[0]['latencies']),
           "request_rate": self.steps[0]['request_rate'],
           
           **{
@@ -663,7 +663,6 @@ class BenchmarkingReport():
               for metric in self.steps[0]["local_metrics"]
               if "json_field_name" in metric
               for stat, value in metric.items()
-              if stat not in ["name", "description", "json_field_name"] and value is not None
           }
       } if len(self.steps) == 1 else None
     }
