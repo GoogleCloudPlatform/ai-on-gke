@@ -621,7 +621,6 @@ class BenchmarkingReport():
 
   # The output is a a single json summary of all steps
   def to_json_report(self, write_to_file: bool = False) -> Dict:
-    print(self.steps[0]["local_metrics"])
     output = {
       "config": {
          **self.config,
@@ -1056,7 +1055,6 @@ if __name__ == "__main__":
       if os.path.isfile(input_str):
           with open(input_str, 'r') as file:
               input_str = file.read()
-      print(input_str)
       try:
           # Parse the input string as JSON
           request_data = json.loads(input_str)
