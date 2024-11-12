@@ -663,6 +663,7 @@ class BenchmarkingReport():
               for metric in self.steps[0]["local_metrics"]
               if "json_field_name" in metric
               for stat, value in metric.items()
+              if stat not in ["name", "description", "json_field_name"] and value is not None
           }
       } if len(self.steps) == 1 else None
     }
