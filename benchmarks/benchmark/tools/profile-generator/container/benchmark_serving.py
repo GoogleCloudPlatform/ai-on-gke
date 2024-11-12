@@ -667,7 +667,7 @@ class BenchmarkingReport():
           },
           "server_metrics": [
                   {"name": server_metric["name"], **server_metric}
-                  for server_metric in step["server_metrics"]
+                  for server_metric in self.steps[0]["server_metrics"]
               ] if self.steps[0]["server_metrics"] is not None else []
       } if len(self.steps) == 1 else None
     }
