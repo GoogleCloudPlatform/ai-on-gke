@@ -360,15 +360,15 @@ class BenchmarkConfig(TypedDict):
 
 class MetricSummary(TypedDict, total=False):
   json_field_name:   Optional[str]
-  name:         str
-  description:  str
-  mean:         float
-  median:       Optional[float]
-  sd:           Optional[float]
-  min:          Optional[float]
-  max:          Optional[float]
-  p90:          Optional[float]
-  p99:          Optional[float]
+  name:              str
+  description:       str
+  mean:              float
+  median:            Optional[float]
+  sd:                Optional[float]
+  min:               Optional[float]
+  max:               Optional[float]
+  p90:               Optional[float]
+  p99:               Optional[float]
 
 class BenchmarkingStepReport(TypedDict):
   """Result for one step"""
@@ -621,6 +621,7 @@ class BenchmarkingReport():
 
   # The output is a a single json summary of all steps
   def to_json_report(self, write_to_file: bool = False) -> Dict:
+    print(self.steps[0]["local_metrics"])
     output = {
       "config": {
          **self.config,
@@ -634,7 +635,7 @@ class BenchmarkingReport():
         "stats": [
             {
               "request_rate": step["request_rate"],
-              **{metric["json_field_name"]: metric for metric in step["local_metrics"] if "json_field_name" in metric},
+              **{(metric["json_field_name"] if "json_field_name" in metric else metric["name"]): metric for metric in step["local_metrics"]},
               "model_server_metrics": [
                   {"name": server_metric["name"], **server_metric}
                   for server_metric in step["server_metrics"]
@@ -657,14 +658,17 @@ class BenchmarkingReport():
           "num_prompts_attempted": self.steps[0]['num_prompts_attempted'],
           "num_prompts_succeeded": len(self.steps[0]['latencies']),
           "request_rate": self.steps[0]['request_rate'],
-          
           **{
               f"{stat}_{metric['name']}": value
               for metric in self.steps[0]["local_metrics"]
               if "json_field_name" in metric
               for stat, value in metric.items()
               if stat not in ["name", "description", "json_field_name"] and value is not None
-          }
+          },
+          "server_metrics": [
+                  {"name": server_metric["name"], **server_metric}
+                  for server_metric in step["server_metrics"]
+              ] if self.steps[0]["server_metrics"] is not None else []
       } if len(self.steps) == 1 else None
     }
   
