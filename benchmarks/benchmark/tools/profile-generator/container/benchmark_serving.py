@@ -407,7 +407,6 @@ class vLLMBackend(Backend):
         request_len: int, 
         response: Dict, 
         tokenizer: PreTrainedTokenizerBase):
-    print(response)
     output_token_ids = tokenizer(response["choices"][0]["text"]).input_ids
     return len(output_token_ids)
 
