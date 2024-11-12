@@ -359,7 +359,7 @@ class BenchmarkConfig(TypedDict):
     start_time: float
 
 class MetricSummary(TypedDict, total=False):
-  short_name:   Optional[str]
+  json_field_name:   Optional[str]
   name:         str
   description:  str
   mean:         float
@@ -512,7 +512,7 @@ class BenchmarkingReport():
         metrics_list.append(metric_data)
       return metrics_list
 
-    def metric_sumamry_from_points(name: str, description: str, points : List[float], short_name: Optional[str] = None) -> MetricSummary:
+    def metric_sumamry_from_points(name: str, description: str, points : List[float], json_field_name: Optional[str] = None) -> MetricSummary:
         mean = np.mean(points) if points else 0
         median = np.median(points) if points else 0
         sd = np.std(points) if points else 0
@@ -522,7 +522,7 @@ class BenchmarkingReport():
         p99 = np.percentile(points, 99) if points else 0
 
         return MetricSummary(
-          short_name = short_name if short_name is not None else name,
+          json_field_name = json_field_name if json_field_name is not None else name,
           name = name,
           description = description,
           mean = float(mean),
@@ -551,21 +551,22 @@ class BenchmarkingReport():
           description="seconds/token (includes waiting time on server)", 
           points=[latency / (prompt_len + output_len) for prompt_len, output_len, latency in latencies]),
         metric_sumamry_from_points(
-          name="latency", 
+          json_field_name="request_latency", 
+          name="latency",
           description="milliseconds/request (includes waiting time on server)" ,
           points=[1000 * latency for _, _, latency in latencies]),
         metric_sumamry_from_points(
-          short_name="tpot", 
+          json_field_name="tpot", 
           name="per_output_token_latency", 
           description="milliseconds/output_token (includes waiting time on server)", 
           points=[1000 * latency / output_len for _, output_len, latency in latencies]),
         metric_sumamry_from_points(
           name="input_length", 
-          description="input length", 
+          description="length of prompt", 
           points=[float(prompt_len) for prompt_len, _, _ in latencies]),
         metric_sumamry_from_points(
           name="output_length", 
-          description="output length", 
+          description="length of response", 
           points=[float(output_len) for _, output_len, _ in latencies]),
         MetricSummary(
           name = "throughput",
@@ -622,18 +623,18 @@ class BenchmarkingReport():
   def to_json_report(self, write_to_file: bool = False) -> Dict:
     output = {
       "config": {
+         **self.config,
         "num_models":  len(self.args.models) if self.args.save_aggregated_result else 1,
         "start_time": {
           "seconds" : self.steps[0]["timestamp_start"] // NS_IN_SEC,
           "nanos" : self.steps[0]["timestamp_start"] % NS_IN_SEC,
         },
-        **self.config,
       },
       "summary_stats": {
         "stats": [
             {
               "request_rate": step["request_rate"],
-              **{metric["short_name"]: metric for metric in step["local_metrics"] if "short_name" in metric},
+              **{metric["json_field_name"]: metric for metric in step["local_metrics"] if "json_field_name" in metric},
               "model_server_metrics": [
                   {"name": server_metric["name"], **server_metric}
                   for server_metric in step["server_metrics"]
@@ -649,14 +650,22 @@ class BenchmarkingReport():
         "backend":  self.args.backend,
         "model_id": self.config['model'],
         "tokenizer_id": self.args.tokenizer,
-      } if len(self.steps) == 1 else None,
+      } if len(self.args.models.split(',')) == 1 else None,
       # Legacy use case, use summary_stats if possible
-      "metrics" : {
-      # Traffic
-        "num_prompts_attempted": 0,
-        "num_prompts_succeeded": 0,
-        "request_rate": self.steps[0]['request_rate'],
-      } if len(self.steps) == 1 else None,
+      "metrics": {
+          # Traffic metrics
+          "num_prompts_attempted": self.steps[0]['num_prompts_attempted'],
+          "num_prompts_succeeded": self.steps[0]['latencies'],
+          "request_rate": self.steps[0]['request_rate'],
+          
+          **{
+              f"{stat}_{metric['name']}": value
+              for metric in self.steps[0]["local_metrics"]
+              if "json_field_name" in metric
+              for stat, value in metric.items()
+              if stat not in ["name", "description", "json_field_name"] and value is not None
+          }
+      } if len(self.steps) == 1 else None
     }
   
     if write_to_file:
@@ -679,7 +688,7 @@ def init_errors_map() -> Dict[str, int]:
   }
   return errors
 
-def getBackend(backend: str) -> Backend:
+def get_backend(backend: str) -> Backend:
   if backend == "vllm":
     return vLLMBackend()
   elif backend == "tgi":
@@ -905,7 +914,7 @@ async def main(args: argparse.Namespace):
   )
   args.start_datetime = datetime.fromtimestamp(time.time_ns() / NS_IN_SEC)
   
-  backend: Backend = getBackend(args.backend)
+  backend: Backend = get_backend(args.backend)
   reports : List[BenchmarkingReport] = await asyncio.gather(
     *[benchmark(args, backend, tokenizer, model) for model in models]
   )
