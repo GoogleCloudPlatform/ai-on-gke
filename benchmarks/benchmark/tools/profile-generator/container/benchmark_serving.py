@@ -5,7 +5,7 @@ https://github.com/vllm-project/vllm/blob/main/benchmarks/benchmark_serving.py.
 It currently supports TGI, vLLM, Triton TensorRT-LLM and Saxml.
 """
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 import argparse
 import asyncio
 from datetime import datetime
@@ -38,225 +38,6 @@ prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input
 response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
   
-class BenchmarkConfig(TypedDict):
-    model: str
-    model_server: str
-    start_time: float
-
-class MetricSummary(TypedDict, total=False):
-  short_name:   Optional[str]
-  name:         str
-  description:  str
-  mean:         float
-  median:       Optional[float]
-  sd:           Optional[float]
-  min:          Optional[float]
-  max:          Optional[float]
-  p90:          Optional[float]
-  p99:          Optional[float]
-
-class BenchmarkingStepReport(TypedDict):
-  """Result for one step"""
-  request_rate: float
-  timestamp_start: float
-  timestamp_end: float
-  num_prompts_attempted: int
-  latencies: List
-  local_metrics: List[MetricSummary]
-  server_metrics: Optional[List[MetricSummary]]
-  errors: Dict[str, int]
-
-class BenchmarkingReport():
-  """Results for all steps for a single model"""
-  args: argparse.Namespace
-  config: BenchmarkConfig
-  steps: List[BenchmarkingStepReport]
-  
-  def __init__(self, args : argparse.Namespace, model: str, start_time: float):
-    self.args = args
-    self.config = BenchmarkConfig(
-      model        = model, 
-      model_server  = args.backend, 
-      start_time    = start_time
-    )
-    self.steps = []
-
-  def record_metrics_for_step(
-      self,
-      request_rate: float, 
-      timestamp_start: float,
-      timestamp_end: float,
-      num_prompts_attempted : int, 
-      latencies: List,
-      errors: Dict[str, int],
-    ):
-    def get_metrics_to_scrape(backend: str) -> List[str]:
-      if backend == "vllm":
-        return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
-      elif backend == "jetstream":
-        return [
-          "jetstream_slots_used_percentage",
-          "jetstream_prefill_backlog_size",
-        ]
-      else:
-        return []
-      
-    def metric_sumamry_from_points(name: str, description: str, points : List[float], short_name: Optional[str] = None) -> MetricSummary:
-        mean = np.mean(points) if points else 0
-        median = np.median(points) if points else 0
-        sd = np.std(points) if points else 0
-        min = np.min(points) if points else 0
-        max = np.max(points) if points else 0
-        p90 = np.percentile(points, 90) if points else 0
-        p99 = np.percentile(points, 99) if points else 0
-
-        return MetricSummary(
-          short_name = short_name if short_name is not None else name,
-          name = name,
-          description = description,
-          mean = float(mean),
-          median = float(median),
-          sd = float(sd),
-          min = float(min),
-          max = float(max),
-          p90 = float(p90),
-          p99 = float(p99)
-        ) 
-    
-    total_time = (timestamp_end - timestamp_start)/ NS_IN_SEC
-    if self.args.scrape_server_metrics:
-      server_metrics = fetch_metrics_from_gmp(get_metrics_to_scrape(self.args.backend), total_time, self.args.backend)
-
-    self.steps.append(BenchmarkingStepReport(
-      request_rate = request_rate,
-      timestamp_start = timestamp_start,
-      timestamp_end = timestamp_end,
-      num_prompts_attempted = num_prompts_attempted,
-      latencies = latencies,
-      errors = errors,
-      local_metrics = [
-        metric_sumamry_from_points( 
-          name="per_token_latency", 
-          description="seconds/token (includes waiting time on server)", 
-          points=[latency / (prompt_len + output_len) for prompt_len, output_len, latency in latencies]),
-        metric_sumamry_from_points(
-          name="latency", 
-          description="milliseconds/request (includes waiting time on server)" ,
-          points=[1000 * latency for _, _, latency in latencies]),
-        metric_sumamry_from_points(
-          short_name="tpot", 
-          name="per_output_token_latency", 
-          description="milliseconds/output_token (includes waiting time on server)", 
-          points=[1000 * latency / output_len for _, output_len, latency in latencies]),
-        metric_sumamry_from_points(
-          name="input_length", 
-          description="input length", 
-          points=[float(prompt_len) for prompt_len, _, _ in latencies]),
-        metric_sumamry_from_points(
-          name="output_length", 
-          description="output length", 
-          points=[float(output_len) for _, output_len, _ in latencies]),
-        MetricSummary(
-          name = "throughput",
-          description = "throughput",
-          mean = (len(latencies) / ((timestamp_end - timestamp_start) / NS_IN_SEC)),
-        ),
-      ],
-      server_metrics = server_metrics
-    ))
-
-  # Each element in the output list is a report for each step
-  def to_text_reports(self, write_to_files: bool = False) -> List[str]:
-    output : Dict[str, str] = {}
-    required_stats = ["latency", "throughput", "input_length", "output_length", "per_output_token_latency"]
-    for step in self.steps:
-     if not all(required_stat in [metric['name'] for metric in step['local_metrics']] for required_stat in required_stats):
-        raise Exception(f"All of the following stats must be recorded: {required_stats}")
-     
-    for step in self.steps:
-      step_output : List[str] = []
-      total_time = (step['timestamp_end'] - step['timestamp_start']) / NS_IN_SEC
-      total_output_tokens = np.sum([output_len for _, output_len, _ in step['latencies']])
-      output_tokens_per_second = total_output_tokens / total_time
-      output_tokens_per_min = 60 * output_tokens_per_second
-
-      total_input_tokens = np.sum([prompt_len for prompt_len, _, _ in step['latencies']])
-      input_tokens_per_min = 60 * total_input_tokens / total_time
-
-      total_tokens = total_input_tokens + total_output_tokens
-      tokens_per_min = 60 * total_tokens / total_time
-      step_output.append(f"====Result for Model: {self.config['model']}====")
-      step_output.append(f"Errors: {step['errors']}")
-      step_output.append(f"Total time: {total_time:.2f} s")
-      step_output.append(f"Successful/total requests: {len(step['latencies'])}/{step['num_prompts_attempted']}")
-      step_output.append(f"Requests/min: {60 * step['num_prompts_attempted'] / total_time:.2f}")
-      step_output.append(f"Output_tokens/min: {output_tokens_per_min:.2f}")
-      step_output.append(f"Input_tokens/min: {input_tokens_per_min:.2f}")
-      step_output.append(f"Tokens/min: {tokens_per_min:.2f}")
-
-      if self.args.machine_cost:
-          step_output.append(
-              f"Cost $/1k tokens: {self.args.machine_cost * 1000 / (60 * output_tokens_per_min)}"
-          )
-      for metric in step['local_metrics']:
-        step_output.append(f"Average {metric['description']}:" f" {metric['mean']:.2f}")
-      output_filename = f"latency-profile-{datetime.fromtimestamp(step['timestamp_start'] / NS_IN_SEC).strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-      output[output_filename] = '\n'.join(step_output)
-      if write_to_files:
-        with open(output_filename, 'w') as file:
-          file.write(output[output_filename])
-    return list(output.values())
-
-  # The output is a a single json summary of all steps
-  def to_json_report(self, write_to_file: bool = False) -> Dict:
-    output = {
-      "config": {
-        "num_models":  len(self.args.models) if self.args.save_aggregated_result else 1,
-        "start_time": {
-          "seconds" : self.steps[0]["timestamp_start"] // NS_IN_SEC,
-          "nanos" : self.steps[0]["timestamp_start"] % NS_IN_SEC,
-        },
-        **self.config,
-      },
-      "summary_stats": {
-        "stats": [
-            {
-              "request_rate": step["request_rate"],
-              **{metric["short_name"]: metric for metric in step["local_metrics"] if "short_name" in metric},
-              "model_server_metrics": [
-                  {"name": server_metric["name"], **server_metric}
-                  for server_metric in step["server_metrics"]
-              ] if step["server_metrics"] is not None else []
-            }
-            for step in self.steps
-        ]
-      },
-
-      # Legacy use case, use config if possible
-      "dimensions": {
-        "date": self.args.start_datetime.strftime('%Y%m%d-%H%M%S'),
-        "backend":  self.args.backend,
-        "model_id": self.config['model'],
-        "tokenizer_id": self.args.tokenizer,
-      } if len(self.steps) == 1 else None,
-      # Legacy use case, use summary_stats if possible
-      "metrics" : {
-      # Traffic
-        "num_prompts_attempted": 0,
-        "num_prompts_succeeded": 0,
-        "request_rate": self.steps[0]['request_rate'],
-      } if len(self.steps) == 1 else None,
-    }
-  
-    if write_to_file:
-      model_without_slash = self.config['model'].replace("/","-")
-      file_name = (
-          f"{self.args.file_prefix}-{self.args.backend}-{self.args.start_datetime.strftime('%Y%m%d-%H%M%S')}-{model_without_slash}.json"
-      )
-      with open(file_name, "w", encoding="utf-8") as outfile:
-        json.dump(output, outfile)
-    return output
-
 class Backend(ABC):
     """
     An abstract base class for Backend that defines the interface
@@ -572,6 +353,321 @@ class SaxBackend(Backend):
     output_token_ids = tokenizer(response["choices"][0]["text"]).input_ids
     return len(output_token_ids)
 
+class BenchmarkConfig(TypedDict):
+    model: str
+    model_server: str
+    start_time: float
+
+class MetricSummary(TypedDict, total=False):
+  short_name:   Optional[str]
+  name:         str
+  description:  str
+  mean:         float
+  median:       Optional[float]
+  sd:           Optional[float]
+  min:          Optional[float]
+  max:          Optional[float]
+  p90:          Optional[float]
+  p99:          Optional[float]
+
+class BenchmarkingStepReport(TypedDict):
+  """Result for one step"""
+  request_rate: float
+  timestamp_start: float
+  timestamp_end: float
+  num_prompts_attempted: int
+  latencies: List
+  local_metrics: List[MetricSummary]
+  server_metrics: Optional[List[MetricSummary]]
+  errors: Dict[str, int]
+
+class BenchmarkingReport():
+  """Results for all steps for a single model"""
+  args: argparse.Namespace
+  config: BenchmarkConfig
+  steps: List[BenchmarkingStepReport]
+  
+  def __init__(self, args : argparse.Namespace, model: str, start_time: float):
+    self.args = args
+    self.config = BenchmarkConfig(
+      model        = model, 
+      model_server  = args.backend, 
+      start_time    = start_time
+    )
+    self.steps = []
+
+  def record_metrics_for_step(
+      self,
+      request_rate: float, 
+      timestamp_start: float,
+      timestamp_end: float,
+      num_prompts_attempted : int, 
+      latencies: List,
+      errors: Dict[str, int],
+      backend: Backend,
+    ):
+
+    def fetch_metrics_from_gmp(backend: Backend, duration: float) -> List[MetricSummary]:
+      """Gets summaries for metrics queried from GMP, queries vary per model server"""
+
+      # Creates a credentials object from the default service account file
+      # Assumes that script has appropriate default credentials set up, ref:
+      # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
+      credentials, project_id = google.auth.default()
+      # Prepare an authentication request - helps format the request auth token
+      auth_req = google.auth.transport.requests.Request()
+
+      # Request refresh tokens
+      credentials.refresh(auth_req)
+      url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
+      headers_api = {'Authorization': 'Bearer ' + credentials.token}
+      request_post = requests.get(url=url, headers=headers_api)
+      all_metrics_metadata = request_post.json()
+      if request_post.ok is not True:
+        print("HTTP Error: %s" % (all_metrics_metadata))
+        return []
+      if all_metrics_metadata["status"] != "success":
+        print("Metadata error response: %s" % all_metrics_metadata["error"])
+        return []
+        
+      metrics_list : List[MetricSummary] = []
+      for metric in backend.get_server_metrics():
+        print("Metric Name: %s" % (metric))
+
+      # Find metric type
+        metric_type = all_metrics_metadata['data'][metric]
+        if all_metrics_metadata['data'][metric] is None:
+          print("No metric found for: %s" % metric)
+          return []
+        metric_type = metric_type[0]['type']
+
+        metric_results = {}
+        # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
+        # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
+        queries = {
+          "gauge": {
+            "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, self.args.backend, duration),
+            "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, self.args.backend, duration),
+            "Sd": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, self.args.backend, duration),
+            "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, self.args.backend, duration),
+            "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, self.args.backend, duration),
+            "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, self.args.backend, duration),
+            "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, self.args.backend, duration),
+          },
+        "histogram": {
+            "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, self.args.backend, duration, metric, self.args.backend, duration),
+            "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, self.args.backend, duration),
+            "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, self.args.backend, duration),
+            "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, self.args.backend, duration),
+            "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, self.args.backend, duration),
+            "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, self.args.backend, duration),
+          }
+        }
+
+        metric_data : MetricSummary = {
+              "name": metric,
+              "description": f"Metrics for {metric} from {self.args.backend} backend",
+            }
+        for query_name, query in queries[metric_type].items():
+            
+            # Configure respective query
+            url = f'https://monitoring.googleapis.com/v1/projects/{project_id}/location/global/prometheus/api/v1/query'
+            headers_api = {'Authorization': f'Bearer {credentials.token}'}
+            params = {'query': query}
+            
+            request_post = requests.get(url=url, headers=headers_api, params=params)
+            response = request_post.json()
+
+            # handle response
+            if request_post.ok:
+              if response["status"] == "success":
+                metric_results[query_name] = float(response["data"]["result"][0]["value"][1])
+                print("%s: %s" % (query_name, response["data"]["result"][0]["value"][1]))
+              else:
+                print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
+            else:
+              print("HTTP Error: %s" % (response))
+              
+            # Handle response
+            if request_post.ok and response["status"] == "success":
+                result_value = float(response["data"]["result"][0]["value"][1])
+                if query_name == "Mean":
+                    metric_data["mean"] = result_value
+                elif query_name == "Median":
+                    metric_data["median"] = result_value
+                elif query_name == "Sd":
+                    metric_data["sd"] = result_value
+                elif query_name == "Min":
+                    metric_data["min"] = result_value
+                elif query_name == "Max":
+                    metric_data["max"] = result_value
+                elif query_name == "P90":
+                    metric_data["p90"] = result_value
+                elif query_name == "P99":
+                    metric_data["p99"] = result_value
+            else:
+                error_message = response.get("error", "HTTP Error")
+                print(f"Error fetching {query_name} for {metric}: {error_message}")
+          
+        metrics_list.append(metric_data)
+      return metrics_list
+
+    def metric_sumamry_from_points(name: str, description: str, points : List[float], short_name: Optional[str] = None) -> MetricSummary:
+        mean = np.mean(points) if points else 0
+        median = np.median(points) if points else 0
+        sd = np.std(points) if points else 0
+        min = np.min(points) if points else 0
+        max = np.max(points) if points else 0
+        p90 = np.percentile(points, 90) if points else 0
+        p99 = np.percentile(points, 99) if points else 0
+
+        return MetricSummary(
+          short_name = short_name if short_name is not None else name,
+          name = name,
+          description = description,
+          mean = float(mean),
+          median = float(median),
+          sd = float(sd),
+          min = float(min),
+          max = float(max),
+          p90 = float(p90),
+          p99 = float(p99)
+        ) 
+    
+    total_time = (timestamp_end - timestamp_start)/ NS_IN_SEC
+    if self.args.scrape_server_metrics:
+      server_metrics = fetch_metrics_from_gmp(backend, total_time)
+
+    self.steps.append(BenchmarkingStepReport(
+      request_rate = request_rate,
+      timestamp_start = timestamp_start,
+      timestamp_end = timestamp_end,
+      num_prompts_attempted = num_prompts_attempted,
+      latencies = latencies,
+      errors = errors,
+      local_metrics = [
+        metric_sumamry_from_points( 
+          name="per_token_latency", 
+          description="seconds/token (includes waiting time on server)", 
+          points=[latency / (prompt_len + output_len) for prompt_len, output_len, latency in latencies]),
+        metric_sumamry_from_points(
+          name="latency", 
+          description="milliseconds/request (includes waiting time on server)" ,
+          points=[1000 * latency for _, _, latency in latencies]),
+        metric_sumamry_from_points(
+          short_name="tpot", 
+          name="per_output_token_latency", 
+          description="milliseconds/output_token (includes waiting time on server)", 
+          points=[1000 * latency / output_len for _, output_len, latency in latencies]),
+        metric_sumamry_from_points(
+          name="input_length", 
+          description="input length", 
+          points=[float(prompt_len) for prompt_len, _, _ in latencies]),
+        metric_sumamry_from_points(
+          name="output_length", 
+          description="output length", 
+          points=[float(output_len) for _, output_len, _ in latencies]),
+        MetricSummary(
+          name = "throughput",
+          description = "throughput",
+          mean = (len(latencies) / ((timestamp_end - timestamp_start) / NS_IN_SEC)),
+        ),
+      ],
+      server_metrics = server_metrics
+    ))
+
+  # Each element in the output list is a report for each step
+  def to_text_reports(self, write_to_files: bool = False) -> List[str]:
+    output : Dict[str, str] = {}
+    required_stats = ["latency", "throughput", "input_length", "output_length", "per_output_token_latency"]
+    for step in self.steps:
+     if not all(required_stat in [metric['name'] for metric in step['local_metrics']] for required_stat in required_stats):
+        raise Exception(f"All of the following stats must be recorded: {required_stats}")
+     
+    for step in self.steps:
+      step_output : List[str] = []
+      total_time = (step['timestamp_end'] - step['timestamp_start']) / NS_IN_SEC
+      total_output_tokens = np.sum([output_len for _, output_len, _ in step['latencies']])
+      output_tokens_per_second = total_output_tokens / total_time
+      output_tokens_per_min = 60 * output_tokens_per_second
+
+      total_input_tokens = np.sum([prompt_len for prompt_len, _, _ in step['latencies']])
+      input_tokens_per_min = 60 * total_input_tokens / total_time
+
+      total_tokens = total_input_tokens + total_output_tokens
+      tokens_per_min = 60 * total_tokens / total_time
+      step_output.append(f"====Result for Model: {self.config['model']}====")
+      step_output.append(f"Errors: {step['errors']}")
+      step_output.append(f"Total time: {total_time:.2f} s")
+      step_output.append(f"Successful/total requests: {len(step['latencies'])}/{step['num_prompts_attempted']}")
+      step_output.append(f"Requests/min: {60 * step['num_prompts_attempted'] / total_time:.2f}")
+      step_output.append(f"Output_tokens/min: {output_tokens_per_min:.2f}")
+      step_output.append(f"Input_tokens/min: {input_tokens_per_min:.2f}")
+      step_output.append(f"Tokens/min: {tokens_per_min:.2f}")
+
+      if self.args.machine_cost:
+          step_output.append(
+              f"Cost $/1k tokens: {self.args.machine_cost * 1000 / (60 * output_tokens_per_min)}"
+          )
+      for metric in step['local_metrics']:
+        step_output.append(f"Average {metric['description']}:" f" {metric['mean']:.2f}")
+      output_filename = f"latency-profile-{datetime.fromtimestamp(step['timestamp_start'] / NS_IN_SEC).strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+      output[output_filename] = '\n'.join(step_output)
+      if write_to_files:
+        with open(output_filename, 'w') as file:
+          file.write(output[output_filename])
+    return list(output.values())
+
+  # The output is a a single json summary of all steps
+  def to_json_report(self, write_to_file: bool = False) -> Dict:
+    output = {
+      "config": {
+        "num_models":  len(self.args.models) if self.args.save_aggregated_result else 1,
+        "start_time": {
+          "seconds" : self.steps[0]["timestamp_start"] // NS_IN_SEC,
+          "nanos" : self.steps[0]["timestamp_start"] % NS_IN_SEC,
+        },
+        **self.config,
+      },
+      "summary_stats": {
+        "stats": [
+            {
+              "request_rate": step["request_rate"],
+              **{metric["short_name"]: metric for metric in step["local_metrics"] if "short_name" in metric},
+              "model_server_metrics": [
+                  {"name": server_metric["name"], **server_metric}
+                  for server_metric in step["server_metrics"]
+              ] if step["server_metrics"] is not None else []
+            }
+            for step in self.steps
+        ]
+      },
+
+      # Legacy use case, use config if possible
+      "dimensions": {
+        "date": self.args.start_datetime.strftime('%Y%m%d-%H%M%S'),
+        "backend":  self.args.backend,
+        "model_id": self.config['model'],
+        "tokenizer_id": self.args.tokenizer,
+      } if len(self.steps) == 1 else None,
+      # Legacy use case, use summary_stats if possible
+      "metrics" : {
+      # Traffic
+        "num_prompts_attempted": 0,
+        "num_prompts_succeeded": 0,
+        "request_rate": self.steps[0]['request_rate'],
+      } if len(self.steps) == 1 else None,
+    }
+  
+    if write_to_file:
+      model_without_slash = self.config['model'].replace("/","-")
+      file_name = (
+          f"{self.args.file_prefix}-{self.args.backend}-{self.args.start_datetime.strftime('%Y%m%d-%H%M%S')}-{model_without_slash}.json"
+      )
+      with open(file_name, "w", encoding="utf-8") as outfile:
+        json.dump(output, outfile)
+    return output
+
 def init_errors_map() -> Dict[str, int]:
   errors = {
     "ClientConnectorError": 0,
@@ -599,112 +695,6 @@ def getBackend(backend: str) -> Backend:
   else:
     raise ValueError("Unsupported backend")
 
-
-def fetch_metrics_from_gmp(metrics: List[str], duration: float, backend: str) -> List[MetricSummary]:
-    """Gets summaries for metrics queried from GMP, queries vary per model server"""
-
-    # Creates a credentials object from the default service account file
-    # Assumes that script has appropriate default credentials set up, ref:
-    # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
-    credentials, project_id = google.auth.default()
-    # Prepare an authentication request - helps format the request auth token
-    auth_req = google.auth.transport.requests.Request()
-
-    # Request refresh tokens
-    credentials.refresh(auth_req)
-    url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/metadata' % (project_id)
-    headers_api = {'Authorization': 'Bearer ' + credentials.token}
-    request_post = requests.get(url=url, headers=headers_api)
-    all_metrics_metadata = request_post.json()
-    if request_post.ok is not True:
-      print("HTTP Error: %s" % (all_metrics_metadata))
-      return []
-    if all_metrics_metadata["status"] != "success":
-      print("Metadata error response: %s" % all_metrics_metadata["error"])
-      return []
-      
-    metrics_list : List[MetricSummary] = []
-    for metric in metrics:
-      print("Metric Name: %s" % (metric))
-
-     # Find metric type
-      metric_type = all_metrics_metadata['data'][metric]
-      if all_metrics_metadata['data'][metric] is None:
-        print("No metric found for: %s" % metric)
-        return []
-      metric_type = metric_type[0]['type']
-
-      metric_results = {}
-      # Queries scrape all metrics collected from the last $DURATION seconds from the backend's related
-      # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
-      queries = {
-        "gauge": {
-          "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-          "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-          "Sd": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-          "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-          "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-          "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-          "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        },
-      "histogram": {
-          "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
-          "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-          "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-          "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-          "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-          "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        }
-      }
-
-      metric_data : MetricSummary = {
-            "name": metric,
-            "description": f"Metrics for {metric} from {backend} backend",
-          }
-      for query_name, query in queries[metric_type].items():
-          
-          # Configure respective query
-          url = f'https://monitoring.googleapis.com/v1/projects/{project_id}/location/global/prometheus/api/v1/query'
-          headers_api = {'Authorization': f'Bearer {credentials.token}'}
-          params = {'query': query}
-          
-          request_post = requests.get(url=url, headers=headers_api, params=params)
-          response = request_post.json()
-
-          # handle response
-          if request_post.ok:
-            if response["status"] == "success":
-              metric_results[query_name] = float(response["data"]["result"][0]["value"][1])
-              print("%s: %s" % (query_name, response["data"]["result"][0]["value"][1]))
-            else:
-              print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
-          else:
-            print("HTTP Error: %s" % (response))
-            
-          # Handle response
-          if request_post.ok and response["status"] == "success":
-              result_value = float(response["data"]["result"][0]["value"][1])
-              if query_name == "Mean":
-                  metric_data["mean"] = result_value
-              elif query_name == "Median":
-                  metric_data["median"] = result_value
-              elif query_name == "Sd":
-                  metric_data["sd"] = result_value
-              elif query_name == "Min":
-                  metric_data["min"] = result_value
-              elif query_name == "Max":
-                  metric_data["max"] = result_value
-              elif query_name == "P90":
-                  metric_data["p90"] = result_value
-              elif query_name == "P99":
-                  metric_data["p99"] = result_value
-          else:
-              error_message = response.get("error", "HTTP Error")
-              print(f"Error fetching {query_name} for {metric}: {error_message}")
-        
-      metrics_list.append(metric_data)
-    return metrics_list
-
 async def generate_next_request(
     input_requests: List[Tuple[str, int, int]],
     request_rate_expr: str,
@@ -728,159 +718,6 @@ async def generate_next_request(
     interval = np.random.exponential(1.0 / request_rate_at_t)
     # The next request will be sent after the interval.
     await asyncio.sleep(interval)
-
-async def send_request(
-    backend: str,
-    api_url: str,
-    prompt: str,
-    prompt_len: int,
-    output_len: int,
-    best_of: int,
-    use_beam_search: bool,
-    top_k: int,
-    tokenizer: PreTrainedTokenizerBase,
-    sax_model: str,
-    model: str,
-) -> Tuple[Optional[Tuple[int, int, float]], Optional[Dict[str, int]]]:
-  """Sends request to server."""
-  request_start_time = time.time()
-  errors = init_errors_map()
-
-  headers = {"User-Agent": "Benchmark Client"}
-  if backend == "vllm":
-    pload = {
-        "model": model,
-        "prompt": prompt,
-        "n": 1,
-        "best_of": best_of,
-        "use_beam_search": use_beam_search,
-        "temperature": 0.0 if use_beam_search else 1.0,
-        "top_p": 1.0,
-        "max_tokens": output_len,
-        "ignore_eos": False,
-        "stream": False,
-    }
-  elif backend == "tgi":
-    params = {
-        "best_of": best_of,
-        "max_new_tokens": output_len,
-        "do_sample": True,
-    }
-    pload = {
-        "inputs": prompt,
-        "parameters": params,
-    }
-  elif backend == "naive_transformers":
-    # If max_length or top_k is not specified _MAX_LENGTH_DEFAULT = 200 and
-    # _TOP_K_DEFAULT = 10 in peft/handler.py will be used.
-    pload = {
-        "instances": [{
-            "prompt": prompt,
-            "max_length": output_len,
-            "top_k": top_k,
-        }]
-    }
-  elif backend == "tensorrt_llm_triton":
-    pload = {
-        "text_input": prompt,
-        "max_tokens": output_len,
-        "beam_width": 1 if not use_beam_search else best_of,
-        "temperature": 0.0 if use_beam_search else 1.0,
-        "top_p": 1.0,
-        "bad_words": "",
-        "stop_words": "",
-        "stream": False,
-    }
-  elif backend == "sax":
-    pload = {
-        "model": sax_model,
-        "prompt": prompt,
-        "n": 1,
-        "best_of": best_of,
-        "use_beam_search": use_beam_search,
-        "temperature": 0.0 if use_beam_search else 1.0,
-        "top_p": 1.0,
-        "top_k": 50,
-        "max_tokens": output_len,
-        "stream": False,
-    }
-  elif backend == "jetstream":
-    pload = {
-        "prompt": prompt,
-        "max_tokens": output_len,
-    }
-  else:
-    raise ValueError(f"Unknown backend: {backend}")
-
-  # Set client timeout to be 3 hrs.
-  timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
-  async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
-    while True:
-      try:
-        async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
-           output = await response.json()
-
-        # Re-send the request if it failed.
-        if "error" not in output:
-          break
-      except aiohttp.client_exceptions.ClientConnectorError as client_err:
-        errors["ClientConnectorError"] += 1
-        print(f"ClientConnectorError: {client_err}")
-        return None, errors
-      except asyncio.TimeoutError as timeout_err:
-        errors["TimeoutError"] += 1
-        print(f"TimeoutError: {timeout_err}")
-        return None, errors
-      except aiohttp.client_exceptions.ClientOSError as e:
-        errors["ClientOSError"] += 1
-        print(f"ClientOSError: {e}")
-        return None, errors
-      except aiohttp.client_exceptions.ContentTypeError as e:
-        print(f"ContentTypeError: {e}, response: {response}")
-        errors["ContentTypeError"] += 1
-        return None, errors
-      except aiohttp.client_exceptions.ServerDisconnectedError as e:
-        errors["ServerDisconnectedError"] += 1
-        print(f"ServerDisconnectedError: {e}")
-        return None, errors
-      except Exception as e: 
-        print(f"Unknown error {e}")
-        errors["unknown_error"] += 1
-        return None, errors
-
-  request_end_time = time.time()
-  # Naive HF transformers generation and TensorRT-LLM generation stops at EOS
-  # tokens and the generation may be shorter than the ground-truth output
-  # sequence length.
-  if backend == "naive_transformers":
-    complete_pred = output["predictions"][0][0]["generated_text"]
-    new_text_start_index = complete_pred.find(NEW_TEXT_KEY) + len(NEW_TEXT_KEY)
-    pred = complete_pred[new_text_start_index:]
-    output_token_ids = tokenizer(pred).input_ids
-    output_len = len(output_token_ids) - prompt_len
-  elif backend == "tensorrt_llm_triton":
-    output_token_ids = tokenizer(output["text_output"]).input_ids
-    output_len = len(output_token_ids)
-  elif backend == "sax":
-    output_token_ids = tokenizer(output["choices"][0]["text"]).input_ids
-    output_len = len(output_token_ids)
-  elif backend == "tgi":
-    output_token_ids = tokenizer(output["generated_text"]).input_ids
-    output_len = len(output_token_ids)
-  elif backend == "vllm":
-    output_token_ids = tokenizer(output["choices"][0]["text"]).input_ids
-    output_len = len(output_token_ids)
-  elif backend == "jetstream":
-    output_token_ids = tokenizer(output["response"]).input_ids
-    output_len = len(output_token_ids)
-
-  # (prompt len, output len, latency, success)
-  request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
-  tpot_metric.observe((request_end_time - request_start_time) / output_len)
-  prompt_length_metric.observe(prompt_len)
-  response_length_metric.observe(output_len)
-
-  return request_latency, None
 
 def get_filtered_dataset(
     dataset_path: str,
@@ -1013,7 +850,7 @@ async def benchmark(
       if errors:
         for err, count in errors.items():
           all_errors[err] = all_errors[err] + count
-    benchmark_results.record_metrics_for_step(step['rate'], step_start_timestamp, step_end_timestamp, prompts_sent_this_step, all_latencies, all_errors)
+    benchmark_results.record_metrics_for_step(step['rate'], step_start_timestamp, step_end_timestamp, prompts_sent_this_step, all_latencies, all_errors, backend)
   
   print(f"Completed all steps, generating reports...")
   return benchmark_results
@@ -1059,16 +896,10 @@ async def main(args: argparse.Namespace):
   print(f"Models to benchmark: {models}")
   random.seed(args.seed)
   np.random.seed(args.seed)
-  endpoint = (
-    "v1/completions"
-    if args.backend == "vllm"
-    else args.endpoint
-  )
 
   print(f"Starting Prometheus Server on port {PROMETHEUS_PORT}")
   start_http_server(PROMETHEUS_PORT)
 
-  api_url = f"http://{args.host}:{args.port}/{endpoint}"
   tokenizer = AutoTokenizer.from_pretrained(
       args.tokenizer, trust_remote_code=args.trust_remote_code
   )
