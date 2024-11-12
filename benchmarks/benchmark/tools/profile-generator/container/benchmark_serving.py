@@ -654,8 +654,7 @@ class BenchmarkingReport():
       # Legacy use case, use summary_stats if possible
       "metrics": {
           # Traffic metrics
-          "num_prompts_attempted": self.steps[0]['num_prompts_attempted'],
-          "num_prompts_succeeded": len(self.steps[0]['latencies']),
+          "num_prompts": self.steps[0]['num_prompts_attempted'],
           "request_rate": self.steps[0]['request_rate'],
           **{
               f"{stat}_{metric['name']}": value
