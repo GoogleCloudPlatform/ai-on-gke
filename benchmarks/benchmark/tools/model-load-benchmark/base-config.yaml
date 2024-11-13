@@ -1,0 +1,63 @@
+basePodSpec: "example-pod.yaml"
+sideCarResources:
+  cpu-limit: 
+    base: 20
+    max: 20
+    step: 5
+  memory-limit: 
+    base: 2Gi
+    max: 2Gi
+    step: 20
+  ephemeral-storage-limit: 
+    base: 50Gi
+    max: 50Gi
+    step: 20
+  cpu-request: 
+    base: 200m
+    max: 250m
+    step: 50
+  memory-request: 
+    base: 1Gi 
+    max: 3Gi 
+    step: 2
+  ephemeral-storage-request: 
+    base: 40Gi
+    max: 40Gi
+    step: 10
+volumeAttributes:
+  bucketName: "vertex-model-garden-public-us"
+  mountOptions:
+    implicit-dirs: true
+    only-dir: "codegemma/codegemma-2b"
+    file-cache:
+      enable-parallel-downloads: true
+      parallel-downloads-per-file: 
+        base: 4
+        step: 5
+        max:  5
+      max-parallel-downloads: 
+        base: 2
+        step: 2 
+        max: 5
+      download-chunk-size-mb: 
+        base: 3
+        step: 3 
+        max:  6
+  fileCacheCapacity: 
+    base: 10Gi
+    step: 2
+    max: 10Gi
+  fileCacheForRangeRead: true
+  metadataStatCacheCapacity: 
+    base: 500Mi
+    step: 20
+    max: 500Mi
+  metadataTypeCacheCapacity: 
+    base: 500Mi
+    step: 20
+    max: 500Mi
+  metadataCacheTTLSeconds: 
+    base: 600
+    step: 20
+    max: 620
+

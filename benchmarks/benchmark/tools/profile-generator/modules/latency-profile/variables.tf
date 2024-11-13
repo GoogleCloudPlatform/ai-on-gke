@@ -139,9 +139,20 @@ variable "models" {
   default     = "tiiuae/falcon-7b"
 }
 
-variable "output_bucket" {
-  description = "Bucket name for storing results"
-  type        = string
+variable "gcs_output" {
+  description = "Bucket name and filepath for storing json results, if filepath not specified, results uploaded to root of bucket"
+  type = object({
+    bucket   = string
+    filepath = string
+  })
+  default = {
+    bucket   = ""
+    filepath = ""
+  }
+  validation {
+    condition     = var.gcs_output != null ? !(var.gcs_output.bucket == "" && var.gcs_output.filepath != "") : true
+    error_message = "If gcs_output is defined, cannot specify filepath without bucket"
+  }
 }
 
 variable "latency_profile_kubernetes_service_account" {
@@ -194,6 +205,12 @@ variable "file_prefix" {
 
 variable "save_aggregated_result" {
   description = "Whether to save aggregated result, useful when benchmarking multiple models."
+  type        = bool
+  default     = false
+}
+
+variable "stream_request" {
+  description = "Whether to stream the request. Needed for TTFT metric"
   type        = bool
   default     = false
 }

@@ -63,11 +63,13 @@ resource "kubernetes_manifest" "latency-profile-generator" {
     request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
     hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
     k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
-    output_bucket                              = var.output_bucket
+    output_bucket                              = var.gcs_output.bucket
+    output_bucket_filepath                     = var.gcs_output.filepath
     scrape_server_metrics                      = var.scrape_server_metrics
     file_prefix                                = var.file_prefix
     save_aggregated_result                     = var.save_aggregated_result
     models                                     = var.models
+    stream_request                             = var.stream_request
   }))
 }
 

@@ -15,10 +15,11 @@ import requests
 import time
 import os
 from typing import AsyncGenerator, List, Optional, Tuple, Dict, TypedDict
-from prometheus_client import start_http_server, Histogram
+from prometheus_client import start_http_server, Histogram, Gauge
 
 import google.auth
 import google.auth.transport.requests
+from google.cloud import storage
 
 import aiohttp
 import numpy as np
@@ -37,6 +38,22 @@ NS_IN_SEC = 1_000_000_000
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
 response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
+active_requests_metric = Gauge('LatencyProfileGenerator:active_requests', 'How many requests actively being processed')
+
+# Add trace config for monitoring in flight requests
+async def on_request_start(session, trace_config_ctx, params):
+    active_requests_metric.inc()
+
+async def on_request_end(session, trace_config_ctx, params):
+    active_requests_metric.dec()
+
+trace_config = aiohttp.TraceConfig()
+trace_config.on_request_start.append(on_request_start)
+trace_config.on_request_end.append(on_request_end)
+
+# Google Cloud Storage Client
+gcs_client = None
+gcs_bucket = None
 
 class ErrorsReport():
   ClientConnectorErrors: int
@@ -91,6 +108,90 @@ class Backend(ABC):
     An abstract base class for Backend that defines the interface
     for new model server backends.
     """
+    
+    async def send_stream_request(
+        self,
+        backend: str,
+        api_url: str,
+        prompt: str,
+        prompt_len: int,
+        output_len: int,
+        best_of: int,
+        use_beam_search: bool,
+        top_k: int,
+        tokenizer: PreTrainedTokenizerBase,
+        sax_model: str,
+        model: str,
+    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[float],  Optional[ErrorsReport]]:
+      """Sends stream request to server"""
+      request_start_time = time.time()
+      errors = init_errors_map()
+
+      headers = {"User-Agent": "Benchmark Client"}
+      if backend == "vllm":
+        pload = {
+            "model": model,
+            "prompt": prompt,
+            "n": 1,
+            "best_of": best_of,
+            "use_beam_search": use_beam_search,
+            "temperature": 0.0 if use_beam_search else 1.0,
+            "top_p": 1.0,
+            "max_tokens": output_len,
+            "ignore_eos": True,
+            "stream": True,
+        }
+      else: 
+        raise ValueError(f"Unknown backend: {backend}")
+
+      ttft = 0.0
+      st = time.perf_counter()
+      output = ""
+      timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+      async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
+        try:
+          async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
+            async for chunk_bytes in response.content.iter_chunks():
+              chunk_bytes = chunk_bytes[0].strip()
+              if not chunk_bytes:
+                  continue
+              timestamp = time.perf_counter()
+              # First token
+              if ttft == 0.0:
+                ttft = timestamp - st
+
+              if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
+                  if backend == "vllm":
+                    output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+        except aiohttp.client_exceptions.ClientConnectorError as client_err:
+          errors["ClientConnectorError"] += 1
+          print(f"ClientConnectorError: {client_err}")
+          return None, None, errors
+        except asyncio.TimeoutError as timeout_err:
+          errors["TimeoutError"] += 1
+          print(f"TimeoutError: {timeout_err}")
+          return None, None, errors
+        except aiohttp.client_exceptions.ClientOSError as e:
+          errors["ClientOSError"] += 1
+          print(f"ClientOSError: {e}")
+          return None, None, errors
+        except aiohttp.client_exceptions.ContentTypeError as e:
+          print(f"ContentTypeError: {e}, response: {response}")
+          errors["ContentTypeError"] += 1
+          return None, None, errors
+        except aiohttp.client_exceptions.ServerDisconnectedError as e:
+          errors["ServerDisconnectedError"] += 1
+          print(f"ServerDisconnectedError: {e}")
+          return None, None, errors
+        except Exception as e: 
+          print(f"Unknown error {e}")
+          errors["unknown_error"] += 1
+          return None, None, errors
+      request_end_time = time.time()
+      output_token_ids = tokenizer(output).input_ids
+      output_len = len(output_token_ids)
+      request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
+      return request_latency, ttft, None
 
     async def send_request(
         self,
@@ -104,11 +205,10 @@ class Backend(ABC):
         tokenizer: PreTrainedTokenizerBase,
         sax_model: str,
         model: str,
-    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[ErrorsReport]]:
+    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[float],  Optional[ErrorsReport]]
       """Sends request to server."""
       request_start_time = time.time()
       errors = ErrorsReport()
-
       headers = {"User-Agent": "Benchmark Client"}
       pload = self.create_request_payload(
         prompt=prompt,
@@ -404,6 +504,7 @@ class BenchmarkingStepReport(TypedDict):
   timestamp_end: float
   num_prompts_attempted: int
   latencies: List
+  ttfts: List[float]
   local_metrics: List[MetricSummary]
   server_metrics: Optional[List[MetricSummary]]
   errors: ErrorsReport
@@ -569,6 +670,7 @@ class BenchmarkingReport():
       timestamp_end = timestamp_end,
       num_prompts_attempted = num_prompts_attempted,
       latencies = latencies,
+      ttfts = ttfts,
       errors = errors,
       local_metrics = [
         metric_sumamry_from_points( 
@@ -584,6 +686,11 @@ class BenchmarkingReport():
           json_field_name="tpot", 
           name="per_output_token_latency", 
           description="milliseconds/output_token (includes waiting time on server)", 
+          points=[1000 * latency / output_len for _, output_len, latency in latencies]),
+         metric_sumamry_from_points(
+          json_field_name="ttft", 
+          name="time_to_first_token", 
+          description="time to first token in seconds (includes waiting time on server)", 
           points=[1000 * latency / output_len for _, output_len, latency in latencies]),
         metric_sumamry_from_points(
           name="input_length", 
@@ -643,6 +750,9 @@ class BenchmarkingReport():
       if write_to_files:
         with open(output_filename, 'w') as file:
           file.write(output[output_filename])
+        if gcs_bucket is not None:
+          gcs_bucket.blob(f"{args.output_bucket_filepath}/{output_filename}").upload_from_filename(output_filename)
+          print(f"File {output_filename} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
     return list(output.values())
 
   # The output is a a single json summary of all steps
@@ -712,7 +822,11 @@ class BenchmarkingReport():
       )
       with open(file_name, "w", encoding="utf-8") as outfile:
         json.dump(output, outfile)
+      if gcs_bucket is not None:
+        gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
+        print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
     return output
+
 
 def get_backend(backend: str) -> Backend:
   if backend == "vllm":
@@ -822,20 +936,19 @@ async def benchmark(
       tokenizer,
       args.use_dummy_text,
   )
-  benchmark_results = BenchmarkingReport(args, model, time.time_ns())
-
+  
   all_steps = {}
   if args.job is not None:
     all_steps = args.job
   elif args.num_prompts is not None:
     all_steps = {
       "steps": [{
-        "rate": args.request_rate,
-        "max_num_prompts": args.num_prompts,
-      }]
+          "rate": args.request_rate,
+          "max_num_prompts": args.num_prompts,
+       }]
     }
+   benchmark_results = BenchmarkingReport(args, model, time.time_ns())
   for index, step in enumerate(all_steps["steps"]):
-  
     # No need to sleep before running the first step
     if args.job is not None and 'time_between_steps' in args.job and index != 0:
       print(f"Sleeping for {args.job['time_between_steps']} sec...")
@@ -853,7 +966,7 @@ async def benchmark(
         break
       if "time" in step and ((time.time_ns() - step_start_timestamp ) / NS_IN_SEC) > step["time"]:
         break
-
+        
       prompt, prompt_len, output_len = request
       task = asyncio.create_task(
           backend.send_request(
@@ -878,6 +991,7 @@ async def benchmark(
     print(f"Finished benchmarking step {index + 1}")
 
     all_latencies = []
+    all_ttfts = []
     all_errors = ErrorsReport()
     for latency, errors in results:
       if latency:
@@ -885,7 +999,9 @@ async def benchmark(
       if errors:
         for err, count in errors.items():
           all_errors.record_error(err)
-    benchmark_results.record_metrics_for_step(step['rate'], step_start_timestamp, step_end_timestamp, prompts_sent_this_step, all_latencies, all_errors, backend)
+      if ttft:
+        all_ttfts.append(ttft)
+    benchmark_results.record_metrics_for_step(step['rate'], step_start_timestamp, step_end_timestamp, prompts_sent_this_step, all_latencies, all_ttfts, all_errors, backend)
   
   print(f"Completed all steps, generating reports...")
   return benchmark_results
@@ -924,6 +1040,19 @@ async def main(args: argparse.Namespace):
   print(f"Models to benchmark: {models}")
   random.seed(args.seed)
   np.random.seed(args.seed)
+
+  # Create GCS client before benchmarking
+  # Should fail fast if client is misconfigured or missing permissions
+  if args.output_bucket is not None:
+    global gcs_client
+    gcs_client = storage.Client()
+    global gcs_bucket
+    gcs_bucket = gcs_client.bucket(args.output_bucket)
+
+    if args.output_bucket_filepath:
+      blob = gcs_bucket.blob(args.output_bucket_filepath)
+      if not blob.exists():
+        blob.upload_from_string('')
 
   print(f"Starting Prometheus Server on port {PROMETHEUS_PORT}")
   start_http_server(PROMETHEUS_PORT)
@@ -990,6 +1119,11 @@ if __name__ == "__main__":
     "--models",
     type=str,
     help="Comma separated list of models to benchmark.",
+  )
+  parser.add_argument(
+    "--stream-request", 
+    action="store_true",
+    help="Whether to stream the request. Needed for TTFT metric",
   )
   parser.add_argument(
       "--tokenizer",
@@ -1160,6 +1294,27 @@ if __name__ == "__main__":
       "--save-json-results",
       action="store_true",
       help="Whether to save benchmark results to a json file.",
+  )
+  parser.add_argument(
+    "--output-bucket",
+    type=str,
+    default=None,
+    help=(
+      "Specifies the Google Cloud Storage bucket to which JSON-format results"
+      " will be uploaded. If not provided, no upload will occur."
+    )
+  )
+  parser.add_argument(
+    "--output-bucket-filepath",
+    type=str,
+    default=None,
+    help=(
+      "Specifies the destination path within the bucket provided by"
+      " --output-bucket for uploading the JSON results. This argument requires"
+      " --output-bucket to be set. If not specified, results will be uploaded "
+      " to the root of the bucket. If the filepath doesnt exist, it will be"
+      " created for you."
+    )
   )
   parser.add_argument(
     "--save-aggregated-result",

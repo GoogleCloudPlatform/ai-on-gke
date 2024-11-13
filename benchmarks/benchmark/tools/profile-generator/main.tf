@@ -68,13 +68,16 @@ module "latency-profile" {
       port = var.targets.manual.service_port
     }
   }
-  prompt_dataset                             = var.prompt_dataset
-  max_num_prompts                            = var.max_num_prompts
-  max_output_len                             = var.max_output_len
-  max_prompt_len                             = var.max_prompt_len
-  request_rates                              = var.request_rates
-  benchmark_time_seconds                     = var.benchmark_time_seconds
-  output_bucket                              = var.output_bucket
+  prompt_dataset         = var.prompt_dataset
+  max_num_prompts        = var.max_num_prompts
+  max_output_len         = var.max_output_len
+  max_prompt_len         = var.max_prompt_len
+  request_rates          = var.request_rates
+  benchmark_time_seconds = var.benchmark_time_seconds
+  gcs_output = {
+    bucket   = var.output_bucket
+    filepath = var.output_bucket_filepath
+  }
   latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
   k8s_hf_secret                              = var.k8s_hf_secret
   hugging_face_secret                        = var.hugging_face_secret
@@ -83,4 +86,5 @@ module "latency-profile" {
   file_prefix                                = var.file_prefix
   save_aggregated_result                     = var.save_aggregated_result
   models                                     = var.models
+  stream_request                             = var.stream_request
 }

@@ -15,22 +15,100 @@
 timeout: 3600s
 steps:
   - name: "gcr.io/kaniko-project/executor:v1.20.1-slim"
+    dir: "gke-batch-refarch"
     id: "Build Installer Image"
+    waitFor: 
+    - "-"
     args:
       - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer
       - --cache=true
       - --cache-ttl=12h
+
   - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
-    id: "Destroy GKE batch platform"
-    dir: "01_gke"
+    id: "Destroy GKE Batch Reference Architecture"
+    dir: "gke-batch-refarch/gke"
     entrypoint: "ash"
     waitFor: ["Build Installer Image"]
     args:
       - "-xe"
       - "-c"
       - |
-        terraform init -backend-config="bucket=${PROJECT_ID}-tutorial-tfstate" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
+        terraform init -backend-config="bucket=${PROJECT_ID}-batch-dev-terraform" -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -no-color && \
         terraform destroy -var="project_id=${PROJECT_ID}" -var="region=${_REGION}" -var="zone=${_ZONE}" -auto-approve -no-color
+
+  - name: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/tutorial-installer/installer"
+    id: "Destroy Infrastructure"
+    dir: "accelerated-platforms/platforms/gke/base/core"
+    entrypoint: "ash"
+    waitFor: 
+      ["Build Installer Image", "Destroy GKE Batch Reference Architecture"]
+    args:
+      - "-xe"
+      - "-c"
+      - |
+        export ACP_REPO_DIR=/workspace/accelerated-platforms
+        export ACP_PLATFORM_BASE_DIR=/workspace/accelerated-platforms/platforms/gke/base
+        export ACP_PLATFORM_CORE_DIR=/workspace/accelerated-platforms/platforms/gke/base/core
+
+        export TF_CLI_ARGS="-no-color"
+        export TF_IN_AUTOMATION="1"
+
+        export TF_VAR_cluster_project_id="${PROJECT_ID}"
+        export TF_VAR_terraform_project_id="${PROJECT_ID}"
+  
+        export TF_VAR_cluster_enable_private_endpoint="${_ENABLE_PRIVATE_ENDPOINT}"
+        export TF_VAR_cluster_region="${_REGION}"
+        export TF_VAR_cluster_use_connect_gateway="false"
+        export TF_VAR_platform_name="${_PLATFORM_NAME}"
+        export TF_VAR_resource_name_prefix="${_RESOURCE_NAME_PREFIX}"
+
+        source $${ACP_PLATFORM_BASE_DIR}/_shared_config/scripts/set_environment_variables.sh $${ACP_PLATFORM_BASE_DIR}/_shared_config
+
+        cd $${ACP_PLATFORM_CORE_DIR}/initialize &&
+          echo "Current directory: $(pwd)" &&
+          sed -i "s/^\([[:blank:]]*bucket[[:blank:]]*=\).*$/\1 \"$${ACP_TERRAFORM_BUCKET_NAME}\"/" $${ACP_PLATFORM_CORE_DIR}/initialize/backend.tf.bucket &&
+          cp backend.tf.bucket backend.tf &&
+          terraform init &&
+          terraform plan -input=false -out=tfplan &&
+          terraform apply -input=false tfplan || exit 1
+        rm tfplan
+
+        cd $${ACP_PLATFORM_CORE_DIR}/workloads/kueue &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
+
+        cd $${ACP_PLATFORM_CORE_DIR}/container_node_pool &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
+
+        cd $${ACP_PLATFORM_CORE_DIR}/container_cluster &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
+
+        cd $${ACP_PLATFORM_CORE_DIR}/networking &&
+            echo "Current directory: $(pwd)" &&
+            terraform init &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl
+
+        cd $${ACP_PLATFORM_CORE_DIR}/initialize &&
+            echo "Current directory: $(pwd)" &&
+            cp backend.tf.local backend.tf &&
+            terraform init -force-copy -lock=false -migrate-state || exit 1
+        gcloud storage rm -r gs://$${ACP_TERRAFORM_BUCKET_NAME}/* &&
+            terraform destroy -auto-approve || exit 1
+        rm -rf .terraform/ .terraform.lock.hcl state/
 
 options:
   logging: CLOUD_LOGGING_ONLY
+substitutions:
+  # default values
+  _ENABLE_PRIVATE_ENDPOINT: "false"
+  _PLATFORM_NAME: "dev"
+  _RESOURCE_NAME_PREFIX: "batch"

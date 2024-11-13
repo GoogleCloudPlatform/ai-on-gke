@@ -42,6 +42,8 @@ spec:
               value: ${benchmark_time_seconds}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
+            - name: OUTPUT_BUCKET_FILEPATH
+              value: ${output_bucket_filepath}
             - name: SCRAPE_SERVER_METRICS
               value: ${scrape_server_metrics}
             - name: MAX_NUM_PROMPTS
@@ -50,6 +52,8 @@ spec:
               value: ${file_prefix}
             - name: SAVE_AGGREGATED_RESULT
               value: ${save_aggregated_result}
+            - name: STREAM_REQUEST
+              value: ${stream_request}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:
