@@ -634,7 +634,13 @@ class BenchmarkingReport():
         "stats": [
             {
               "request_rate": step["request_rate"],
-              **{(metric["json_field_name"] if "json_field_name" in metric else metric["name"]): metric for metric in step["local_metrics"]},
+              **{(metric["json_field_name"] if "json_field_name" in metric else metric["name"]): {
+                      stat: value
+                      for stat, value in metric.items()
+                      if stat not in ["name", "description", "json_field_name"] and value is not None
+                  }
+                  for metric in step["local_metrics"]
+              },
               "model_server_metrics": [
                   {"name": server_metric["name"], **server_metric}
                   for server_metric in step["server_metrics"]
@@ -656,17 +662,20 @@ class BenchmarkingReport():
           # Traffic metrics
           "num_prompts": self.steps[0]['num_prompts_attempted'],
           "request_rate": self.steps[0]['request_rate'],
+          "benchmark_time": (self.steps[0]['timestamp_end'] - self.steps[0]['timestamp_start']) / NS_IN_SEC,
+          "throughput_rps": (len(self.steps[0]['latencies']) / ((self.steps[0]['timestamp_end'] - self.steps[0]['timestamp_start']) / NS_IN_SEC)),
+          "throughput": np.sum([output_len for _, output_len, _ in self.steps[0]['latencies']]) / ((self.steps[0]['timestamp_end'] - self.steps[0]['timestamp_start']) / NS_IN_SEC),
           **{
-              f"{stat}_{metric['name']}": value
+              f"{'avg' if stat == 'mean' else stat}_{metric['name']}": value
               for metric in self.steps[0]["local_metrics"]
               if "json_field_name" in metric
               for stat, value in metric.items()
               if stat not in ["name", "description", "json_field_name"] and value is not None
           },
-          "server_metrics": [
-                  {"name": server_metric["name"], **server_metric}
-                  for server_metric in self.steps[0]["server_metrics"]
-              ] if self.steps[0]["server_metrics"] is not None else []
+          "server_metrics": {
+              server_metric["name"]: {k.capitalize(): v for k, v in server_metric.items() if k != "name"}
+              for server_metric in self.steps[0]["server_metrics"]
+          } if self.steps[0]["server_metrics"] is not None else {}
       } if len(self.steps) == 1 else None
     }
   
