@@ -38,6 +38,7 @@ NS_IN_SEC = 1_000_000_000
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
 response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
+ttft_metric = Histogram('LatencyProfileGenerator:time_to_first_token', 'Time to first token per request')
 active_requests_metric = Gauge('LatencyProfileGenerator:active_requests', 'How many requests actively being processed')
 
 # Add trace config for monitoring in flight requests
@@ -108,90 +109,6 @@ class Backend(ABC):
     An abstract base class for Backend that defines the interface
     for new model server backends.
     """
-    
-    async def send_stream_request(
-        self,
-        backend: str,
-        api_url: str,
-        prompt: str,
-        prompt_len: int,
-        output_len: int,
-        best_of: int,
-        use_beam_search: bool,
-        top_k: int,
-        tokenizer: PreTrainedTokenizerBase,
-        sax_model: str,
-        model: str,
-    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[float],  Optional[ErrorsReport]]:
-      """Sends stream request to server"""
-      request_start_time = time.time()
-      errors = init_errors_map()
-
-      headers = {"User-Agent": "Benchmark Client"}
-      if backend == "vllm":
-        pload = {
-            "model": model,
-            "prompt": prompt,
-            "n": 1,
-            "best_of": best_of,
-            "use_beam_search": use_beam_search,
-            "temperature": 0.0 if use_beam_search else 1.0,
-            "top_p": 1.0,
-            "max_tokens": output_len,
-            "ignore_eos": True,
-            "stream": True,
-        }
-      else: 
-        raise ValueError(f"Unknown backend: {backend}")
-
-      ttft = 0.0
-      st = time.perf_counter()
-      output = ""
-      timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
-      async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
-        try:
-          async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
-            async for chunk_bytes in response.content.iter_chunks():
-              chunk_bytes = chunk_bytes[0].strip()
-              if not chunk_bytes:
-                  continue
-              timestamp = time.perf_counter()
-              # First token
-              if ttft == 0.0:
-                ttft = timestamp - st
-
-              if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
-                  if backend == "vllm":
-                    output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
-        except aiohttp.client_exceptions.ClientConnectorError as client_err:
-          errors["ClientConnectorError"] += 1
-          print(f"ClientConnectorError: {client_err}")
-          return None, None, errors
-        except asyncio.TimeoutError as timeout_err:
-          errors["TimeoutError"] += 1
-          print(f"TimeoutError: {timeout_err}")
-          return None, None, errors
-        except aiohttp.client_exceptions.ClientOSError as e:
-          errors["ClientOSError"] += 1
-          print(f"ClientOSError: {e}")
-          return None, None, errors
-        except aiohttp.client_exceptions.ContentTypeError as e:
-          print(f"ContentTypeError: {e}, response: {response}")
-          errors["ContentTypeError"] += 1
-          return None, None, errors
-        except aiohttp.client_exceptions.ServerDisconnectedError as e:
-          errors["ServerDisconnectedError"] += 1
-          print(f"ServerDisconnectedError: {e}")
-          return None, None, errors
-        except Exception as e: 
-          print(f"Unknown error {e}")
-          errors["unknown_error"] += 1
-          return None, None, errors
-      request_end_time = time.time()
-      output_token_ids = tokenizer(output).input_ids
-      output_len = len(output_token_ids)
-      request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
-      return request_latency, ttft, None
 
     async def send_request(
         self,
@@ -205,7 +122,8 @@ class Backend(ABC):
         tokenizer: PreTrainedTokenizerBase,
         sax_model: str,
         model: str,
-    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[float],  Optional[ErrorsReport]]
+        streaming: bool,
+    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[float],  Optional[ErrorsReport]]:
       """Sends request to server."""
       request_start_time = time.time()
       errors = ErrorsReport()
@@ -220,22 +138,25 @@ class Backend(ABC):
         tokenizer=tokenizer,
         sax_model=sax_model,
         model=model,
+        streaming=streaming
       )
       
       # Set client timeout to be 3 hrs.
       timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+      start_time = time.perf_counter()
+      output = ""
+      ttft = 0.0
       async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
         while True:
           try:
             async with session.post(f"{api_url}/{self.get_endpoint()}", headers=headers, json=pload, ssl=False) as response:
-              output = await response.json()
-
+              output, ttft = await self.results_from_response(response, streaming, start_time)
             # Re-send the request if it failed.
             if "error" not in output:
               break
           except Exception as e:
             errors.record_error(e)
-            return None, errors
+            return None, None, errors
       request_end_time = time.time()
       # Naive HF transformers generation and TensorRT-LLM generation stops at EOS
       # tokens and the generation may be shorter than the ground-truth output
@@ -251,8 +172,10 @@ class Backend(ABC):
       tpot_metric.observe((request_end_time - request_start_time) / output_len)
       prompt_length_metric.observe(prompt_len)
       response_length_metric.observe(output_len)
+      if ttft is not None:
+        ttft_metric.observe(ttft)
 
-      return request_latency, None
+      return request_latency, ttft, None
 
     @abstractmethod
     def create_request_payload(self,
@@ -264,7 +187,8 @@ class Backend(ABC):
       top_k: int,
       tokenizer: PreTrainedTokenizerBase,
       sax_model: str,
-      model: str) -> Dict:
+      model: str,
+      streaming: bool) -> Dict:
         pass
 
     @abstractmethod
@@ -283,6 +207,12 @@ class Backend(ABC):
     def get_endpoint(self) -> str:
       pass
 
+    async def results_from_response(self, response: aiohttp.ClientResponse, streaming: bool, start_time: float) -> Tuple[Dict, Optional[float]]:
+      if streaming:
+        raise Exception("This backend does not support parsing streaming responses")
+      else:
+        return await response.json()   
+
 class vLLMBackend(Backend):
   def get_server_metrics(self) -> List[str]:
     return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
@@ -297,7 +227,8 @@ class vLLMBackend(Backend):
       top_k: int,
       tokenizer: PreTrainedTokenizerBase,
       sax_model: str,
-      model: str):
+      model: str,
+      streaming: bool):
     return {
         "model": model,
         "prompt": prompt,
@@ -308,7 +239,7 @@ class vLLMBackend(Backend):
         "top_p": 1.0,
         "max_tokens": output_len,
         "ignore_eos": False,
-        "stream": False,
+        "stream": streaming,
     }
   def get_response_length(
         self, 
@@ -317,6 +248,34 @@ class vLLMBackend(Backend):
         tokenizer: PreTrainedTokenizerBase):
     output_token_ids = tokenizer(response["choices"][0]["text"]).input_ids
     return len(output_token_ids)
+  async def results_from_response(self, response: aiohttp.ClientResponse, streaming: bool, start_time: float) -> Tuple[Dict, Optional[float]]:
+    ttft = 0.0
+
+    # Make a streaming response look like a non streaming response for detokenizing later
+    output = {
+       'choices': [{
+          'text' : ""
+       }]
+    }
+    if streaming:
+      async for chunk_bytes in response.content.iter_chunks():
+        chunk_bytes = chunk_bytes[0].strip()
+        if not chunk_bytes:
+          continue
+          
+        timestamp = time.perf_counter()
+          
+        # Calculate Time-to-First-Token (TTFT)
+        if ttft == 0.0:
+          ttft = timestamp - start_time
+
+        # Process the chunk if it's not the "[DONE]" message
+        if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
+          output["choices"][0]["text"] += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+      return output, ttft
+    else:
+      res = await response.json()
+      return res, None
 
 class JetstreamBackend(Backend):
   def get_server_metrics(self) -> List[str]:
@@ -335,7 +294,8 @@ class JetstreamBackend(Backend):
       top_k: int,
       tokenizer: PreTrainedTokenizerBase,
       sax_model: str,
-      model: str):
+      model: str,
+      streaming: bool):
     return {
         "prompt": prompt,
         "max_tokens": output_len,
@@ -362,7 +322,8 @@ class TgiBackend(Backend):
       top_k: int,
       tokenizer: PreTrainedTokenizerBase,
       sax_model: str,
-      model: str):
+      model: str,
+      streaming: bool):
     return {
       "inputs": prompt,
       "parameters": {
@@ -393,7 +354,8 @@ class NaiveTransformersBackend(Backend):
       top_k: int,
       tokenizer: PreTrainedTokenizerBase,
       sax_model: str,
-      model: str):
+      model: str,
+      streaming: bool):
     return {
         "instances": [{
             "prompt": prompt,
@@ -426,7 +388,8 @@ class TensorrtLlmTritonBackend(Backend):
       top_k: int,
       tokenizer: PreTrainedTokenizerBase,
       sax_model: str,
-      model: str):
+      model: str,
+      streaming: bool):
     return {
         "text_input": prompt,
         "max_tokens": output_len,
@@ -435,7 +398,7 @@ class TensorrtLlmTritonBackend(Backend):
         "top_p": 1.0,
         "bad_words": "",
         "stop_words": "",
-        "stream": False,
+        "stream": streaming,
     }
   def get_response_length(
         self, 
@@ -459,7 +422,8 @@ class SaxBackend(Backend):
       top_k: int,
       tokenizer: PreTrainedTokenizerBase,
       sax_model: str,
-      model: str):
+      model: str,
+      streaming: bool):
     return {
         "model": sax_model,
         "prompt": prompt,
@@ -470,7 +434,7 @@ class SaxBackend(Backend):
         "top_p": 1.0,
         "top_k": 50,
         "max_tokens": output_len,
-        "stream": False,
+        "stream": streaming,
     }
   def get_response_length(
         self, 
@@ -531,6 +495,7 @@ class BenchmarkingReport():
       timestamp_end: float,
       num_prompts_attempted : int, 
       latencies: List,
+      ttfts: List[float],
       errors: ErrorsReport,
       backend: Backend,
     ):
@@ -664,15 +629,7 @@ class BenchmarkingReport():
     if self.args.scrape_server_metrics:
       server_metrics = fetch_metrics_from_gmp(backend, total_time)
 
-    self.steps.append(BenchmarkingStepReport(
-      request_rate = request_rate,
-      timestamp_start = timestamp_start,
-      timestamp_end = timestamp_end,
-      num_prompts_attempted = num_prompts_attempted,
-      latencies = latencies,
-      ttfts = ttfts,
-      errors = errors,
-      local_metrics = [
+    local_metrics = [
         metric_sumamry_from_points( 
           name="per_token_latency", 
           description="seconds/token (includes waiting time on server)", 
@@ -687,11 +644,7 @@ class BenchmarkingReport():
           name="per_output_token_latency", 
           description="milliseconds/output_token (includes waiting time on server)", 
           points=[1000 * latency / output_len for _, output_len, latency in latencies]),
-         metric_sumamry_from_points(
-          json_field_name="ttft", 
-          name="time_to_first_token", 
-          description="time to first token in seconds (includes waiting time on server)", 
-          points=[1000 * latency / output_len for _, output_len, latency in latencies]),
+       
         metric_sumamry_from_points(
           name="input_length", 
           description="length of prompt", 
@@ -705,7 +658,24 @@ class BenchmarkingReport():
           description = "throughput in requests per second",
           mean = (len(latencies) / ((timestamp_end - timestamp_start) / NS_IN_SEC)),
         ),
-      ],
+      ]
+    if self.args.stream_request:
+      local_metrics.append(metric_sumamry_from_points(
+        json_field_name="ttft", 
+        name="time_to_first_token", 
+        description="Time to First Token (s)", 
+        points=ttfts)
+      )
+
+    self.steps.append(BenchmarkingStepReport(
+      request_rate = request_rate,
+      timestamp_start = timestamp_start,
+      timestamp_end = timestamp_end,
+      num_prompts_attempted = num_prompts_attempted,
+      latencies = latencies,
+      ttfts = ttfts,
+      errors = errors,
+      local_metrics=local_metrics,
       server_metrics = server_metrics
     ))
 
@@ -823,8 +793,8 @@ class BenchmarkingReport():
       with open(file_name, "w", encoding="utf-8") as outfile:
         json.dump(output, outfile)
       if gcs_bucket is not None:
-        gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
-        print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
+        gcs_bucket.blob(f"{self.args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
+        print(f"File {file_name} uploaded to gs://{self.args.output_bucket}/{self.args.output_bucket_filepath}")
     return output
 
 
@@ -947,7 +917,7 @@ async def benchmark(
           "max_num_prompts": args.num_prompts,
        }]
     }
-   benchmark_results = BenchmarkingReport(args, model, time.time_ns())
+  benchmark_results = BenchmarkingReport(args, model, time.time_ns())
   for index, step in enumerate(all_steps["steps"]):
     # No need to sleep before running the first step
     if args.job is not None and 'time_between_steps' in args.job and index != 0:
@@ -969,18 +939,19 @@ async def benchmark(
         
       prompt, prompt_len, output_len = request
       task = asyncio.create_task(
-          backend.send_request(
-              f"http://{args.host}:{args.port}",
-              prompt,
-              prompt_len,
-              output_len,
-              args.best_of,
-              args.use_beam_search,
-              args.top_k,
-              tokenizer,
-              args.sax_model,
-              model,
-          )
+        backend.send_request(
+          f"http://{args.host}:{args.port}",
+          prompt,
+          prompt_len,
+          output_len,
+          args.best_of,
+          args.use_beam_search,
+          args.top_k,
+          tokenizer,
+          args.sax_model,
+          model,
+          args.stream_request,  
+        )
       )
       tasks.append(task)
       prompts_sent_this_step += 1
@@ -993,12 +964,11 @@ async def benchmark(
     all_latencies = []
     all_ttfts = []
     all_errors = ErrorsReport()
-    for latency, errors in results:
+    for latency, ttft, errors in results:
       if latency:
         all_latencies.append(latency)
       if errors:
-        for err, count in errors.items():
-          all_errors.record_error(err)
+        all_errors.append_report(errors)
       if ttft:
         all_ttfts.append(ttft)
     benchmark_results.record_metrics_for_step(step['rate'], step_start_timestamp, step_end_timestamp, prompts_sent_this_step, all_latencies, all_ttfts, all_errors, backend)
@@ -1016,6 +986,7 @@ def aggregate_benchmark_reports(reports: List[BenchmarkingReport]) -> Benchmarki
     "timestamp_end": 0.0,
     "num_prompts_attempted": 0,
     "latencies": [],
+    "ttfts": [],
     "server_metrics": [],
     "errors": ErrorsReport(),
   }
@@ -1027,6 +998,7 @@ def aggregate_benchmark_reports(reports: List[BenchmarkingReport]) -> Benchmarki
     aggregated_step_report["timestamp_end"] = max(aggregated_step_report["timestamp_end"], report["timestamp_end"])
     aggregated_step_report["num_prompts_attempted"] += report["num_prompts_attempted"]
     aggregated_step_report["latencies"].extend(report["latencies"])
+    aggregated_step_report["ttfts"].extend(report["ttfts"])
     aggregated_step_report["errors"] = aggregated_step_report["errors"].append_report(report["errors"])
 
   aggregated_report = BenchmarkingReport(reports[0].args, f"ALL-{len(reports)}-MODELS", aggregated_step_report["timestamp_start"])
