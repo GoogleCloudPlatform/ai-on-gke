@@ -461,8 +461,8 @@ class MetricSummary(TypedDict, total=False):
   p90:               Optional[float]
   p99:               Optional[float]
 
-class BenchmarkingStepReport(TypedDict):
-  """Result for one step"""
+class BenchmarkingStageReport(TypedDict):
+  """Result for one stage"""
   request_rate: float
   timestamp_start: float
   timestamp_end: float
@@ -474,10 +474,10 @@ class BenchmarkingStepReport(TypedDict):
   errors: ErrorsReport
 
 class BenchmarkingReport():
-  """Results for all steps for a single model"""
+  """Results for all stages for a single model"""
   args: argparse.Namespace
   config: BenchmarkConfig
-  steps: List[BenchmarkingStepReport]
+  stages: List[BenchmarkingStageReport]
   
   def __init__(self, args : argparse.Namespace, model: str, start_time: float):
     self.args = args
@@ -486,9 +486,9 @@ class BenchmarkingReport():
       model_server  = args.backend, 
       start_time    = start_time
     )
-    self.steps = []
+    self.stages = []
 
-  def record_metrics_for_step(
+  def record_metrics_for_stage(
       self,
       request_rate: float, 
       timestamp_start: float,
@@ -667,7 +667,7 @@ class BenchmarkingReport():
         points=ttfts)
       )
 
-    self.steps.append(BenchmarkingStepReport(
+    self.stages.append(BenchmarkingStageReport(
       request_rate = request_rate,
       timestamp_start = timestamp_start,
       timestamp_end = timestamp_end,
@@ -680,43 +680,43 @@ class BenchmarkingReport():
     ))
 
   def to_text_reports(self, write_to_files: bool = False) -> List[str]:
-    """Each element in the output list is a report for each step"""
+    """Each element in the output list is a report for each stage"""
 
     output : Dict[str, str] = {}
     required_stats = ["latency", "throughput", "input_length", "output_length", "per_output_token_latency"]
-    for step in self.steps:
-     if not all(required_stat in [metric['name'] for metric in step['local_metrics']] for required_stat in required_stats):
+    for stage in self.stages:
+     if not all(required_stat in [metric['name'] for metric in stage['local_metrics']] for required_stat in required_stats):
         raise Exception(f"All of the following stats must be recorded: {required_stats}")
      
-    for step in self.steps:
-      step_output : List[str] = []
-      total_time = (step['timestamp_end'] - step['timestamp_start']) / NS_IN_SEC
-      total_output_tokens = np.sum([output_len for _, output_len, _ in step['latencies']])
+    for stage in self.stages:
+      stage_output : List[str] = []
+      total_time = (stage['timestamp_end'] - stage['timestamp_start']) / NS_IN_SEC
+      total_output_tokens = np.sum([output_len for _, output_len, _ in stage['latencies']])
       output_tokens_per_second = total_output_tokens / total_time
       output_tokens_per_min = 60 * output_tokens_per_second
 
-      total_input_tokens = np.sum([prompt_len for prompt_len, _, _ in step['latencies']])
+      total_input_tokens = np.sum([prompt_len for prompt_len, _, _ in stage['latencies']])
       input_tokens_per_min = 60 * total_input_tokens / total_time
 
       total_tokens = total_input_tokens + total_output_tokens
       tokens_per_min = 60 * total_tokens / total_time
-      step_output.append(f"====Result for Model: {self.config['model']}====")
-      step_output.append(f"Errors: {step['errors'].to_dict()}")
-      step_output.append(f"Total time: {total_time:.2f} s")
-      step_output.append(f"Successful/total requests: {len(step['latencies'])}/{step['num_prompts_attempted']}")
-      step_output.append(f"Requests/min: {60 * step['num_prompts_attempted'] / total_time:.2f}")
-      step_output.append(f"Output_tokens/min: {output_tokens_per_min:.2f}")
-      step_output.append(f"Input_tokens/min: {input_tokens_per_min:.2f}")
-      step_output.append(f"Tokens/min: {tokens_per_min:.2f}")
+      stage_output.append(f"====Result for Model: {self.config['model']}====")
+      stage_output.append(f"Errors: {stage['errors'].to_dict()}")
+      stage_output.append(f"Total time: {total_time:.2f} s")
+      stage_output.append(f"Successful/total requests: {len(stage['latencies'])}/{stage['num_prompts_attempted']}")
+      stage_output.append(f"Requests/min: {60 * stage['num_prompts_attempted'] / total_time:.2f}")
+      stage_output.append(f"Output_tokens/min: {output_tokens_per_min:.2f}")
+      stage_output.append(f"Input_tokens/min: {input_tokens_per_min:.2f}")
+      stage_output.append(f"Tokens/min: {tokens_per_min:.2f}")
 
       if self.args.machine_cost:
-          step_output.append(
+          stage_output.append(
               f"Cost $/1k tokens: {self.args.machine_cost * 1000 / (60 * output_tokens_per_min)}"
           )
-      for metric in step['local_metrics']:
-        step_output.append(f"Average {metric['description']}:" f" {metric['mean']:.2f}")
-      output_filename = f"latency-profile-{datetime.fromtimestamp(step['timestamp_start'] / NS_IN_SEC).strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-      output[output_filename] = '\n'.join(step_output)
+      for metric in stage['local_metrics']:
+        stage_output.append(f"Average {metric['description']}:" f" {metric['mean']:.2f}")
+      output_filename = f"latency-profile-{datetime.fromtimestamp(stage['timestamp_start'] / NS_IN_SEC).strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+      output[output_filename] = '\n'.join(stage_output)
       if write_to_files:
         with open(output_filename, 'w') as file:
           file.write(output[output_filename])
@@ -725,34 +725,34 @@ class BenchmarkingReport():
           print(f"File {output_filename} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
     return list(output.values())
 
-  # The output is a a single json summary of all steps
+  # The output is a a single json summary of all stages
   def to_json_report(self, write_to_file: bool = False) -> Dict:
     output = {
       "config": {
          **self.config,
         "num_models":  len(self.args.models) if self.args.save_aggregated_result else 1,
         "start_time": {
-          "seconds" : self.steps[0]["timestamp_start"] // NS_IN_SEC,
-          "nanos" : self.steps[0]["timestamp_start"] % NS_IN_SEC,
+          "seconds" : self.stages[0]["timestamp_start"] // NS_IN_SEC,
+          "nanos" : self.stages[0]["timestamp_start"] % NS_IN_SEC,
         },
       },
       "summary_stats": {
         "stats": [
             {
-              "request_rate": step["request_rate"],
+              "request_rate": stage["request_rate"],
               **{(metric["json_field_name"] if "json_field_name" in metric else metric["name"]): {
                       stat: value
                       for stat, value in metric.items()
                       if stat not in ["name", "description", "json_field_name"] and value is not None
                   }
-                  for metric in step["local_metrics"]
+                  for metric in stage["local_metrics"]
               },
               "model_server_metrics": [
                   {"name": server_metric["name"], **server_metric}
-                  for server_metric in step["server_metrics"]
-              ] if step["server_metrics"] is not None else []
+                  for server_metric in stage["server_metrics"]
+              ] if stage["server_metrics"] is not None else []
             }
-            for step in self.steps
+            for stage in self.stages
         ]
       },
 
@@ -766,23 +766,23 @@ class BenchmarkingReport():
       # Legacy use case, use summary_stats if possible
       "metrics": {
           # Traffic metrics
-          "num_prompts": self.steps[0]['num_prompts_attempted'],
-          "request_rate": self.steps[0]['request_rate'],
-          "benchmark_time": (self.steps[0]['timestamp_end'] - self.steps[0]['timestamp_start']) / NS_IN_SEC,
-          "throughput_rps": (len(self.steps[0]['latencies']) / ((self.steps[0]['timestamp_end'] - self.steps[0]['timestamp_start']) / NS_IN_SEC)),
-          "throughput": np.sum([output_len for _, output_len, _ in self.steps[0]['latencies']]) / ((self.steps[0]['timestamp_end'] - self.steps[0]['timestamp_start']) / NS_IN_SEC),
+          "num_prompts": self.stages[0]['num_prompts_attempted'],
+          "request_rate": self.stages[0]['request_rate'],
+          "benchmark_time": (self.stages[0]['timestamp_end'] - self.stages[0]['timestamp_start']) / NS_IN_SEC,
+          "throughput_rps": (len(self.stages[0]['latencies']) / ((self.stages[0]['timestamp_end'] - self.stages[0]['timestamp_start']) / NS_IN_SEC)),
+          "throughput": np.sum([output_len for _, output_len, _ in self.stages[0]['latencies']]) / ((self.stages[0]['timestamp_end'] - self.stages[0]['timestamp_start']) / NS_IN_SEC),
           **{
               f"{'avg' if stat == 'mean' else stat}_{metric['name']}": value
-              for metric in self.steps[0]["local_metrics"]
+              for metric in self.stages[0]["local_metrics"]
               if "json_field_name" in metric
               for stat, value in metric.items()
               if stat not in ["name", "description", "json_field_name"] and value is not None
           },
           "server_metrics": {
               server_metric["name"]: {k.capitalize(): v for k, v in server_metric.items() if k != "name"}
-              for server_metric in self.steps[0]["server_metrics"]
-          } if self.steps[0]["server_metrics"] is not None else {}
-      } if len(self.steps) == 1 else None
+              for server_metric in self.stages[0]["server_metrics"]
+          } if self.stages[0]["server_metrics"] is not None else {}
+      } if len(self.stages) == 1 else None
     }
   
     if write_to_file:
@@ -907,34 +907,34 @@ async def benchmark(
       args.use_dummy_text,
   )
   
-  all_steps = {}
+  all_stages = {}
   if args.job is not None:
-    all_steps = args.job
+    all_stages = args.job
   elif args.num_prompts is not None:
-    all_steps = {
-      "steps": [{
+    all_stages = {
+      "stages": [{
           "rate": args.request_rate,
           "max_num_prompts": args.num_prompts,
        }]
     }
   benchmark_results = BenchmarkingReport(args, model, time.time_ns())
-  for index, step in enumerate(all_steps["steps"]):
-    # No need to sleep before running the first step
-    if args.job is not None and 'time_between_steps' in args.job and index != 0:
-      print(f"Sleeping for {args.job['time_between_steps']} sec...")
-      await asyncio.sleep(args.job["time_between_steps"])
-    max_prompts = f" {step['max_num_prompts']} requests" if 'max_num_prompts' in step else ""
-    duration = f" {step['time']} sec" if 'time' in step else " "
-    print(f"Starting benchmarking{max_prompts} at {step['rate']} requests/sec for{duration}")
+  for index, stage in enumerate(all_stages["stages"]):
+    # No need to sleep before running the first stage
+    if args.job is not None and 'time_between_stages' in args.job and index != 0:
+      print(f"Sleeping for {args.job['time_between_stages']} sec...")
+      await asyncio.sleep(args.job["time_between_stages"])
+    max_prompts = f" {stage['max_num_prompts']} requests" if 'max_num_prompts' in stage else ""
+    duration = f" {stage['time']} sec" if 'time' in stage else " "
+    print(f"Starting benchmarking{max_prompts} at {stage['rate']} requests/sec for{duration}")
 
     tasks: List[asyncio.Task] = []
-    prompts_sent_this_step: int = 0
-    step_start_timestamp = time.time_ns()
-    async for request in generate_next_request(input_requests, str(step["rate"]), step_start_timestamp):
+    prompts_sent_this_stage: int = 0
+    stage_start_timestamp = time.time_ns()
+    async for request in generate_next_request(input_requests, str(stage["rate"]), stage_start_timestamp):
       # Stop conditions
-      if "max_num_prompts" in step and prompts_sent_this_step >= step["max_num_prompts"]:
+      if "max_num_prompts" in stage and prompts_sent_this_stage >= stage["max_num_prompts"]:
         break
-      if "time" in step and ((time.time_ns() - step_start_timestamp ) / NS_IN_SEC) > step["time"]:
+      if "time" in stage and ((time.time_ns() - stage_start_timestamp ) / NS_IN_SEC) > stage["time"]:
         break
         
       prompt, prompt_len, output_len = request
@@ -954,12 +954,12 @@ async def benchmark(
         )
       )
       tasks.append(task)
-      prompts_sent_this_step += 1
+      prompts_sent_this_stage += 1
 
     print("All requests sent, awaiting responses...")
     results = await asyncio.gather(*tasks)
-    step_end_timestamp = time.time_ns()
-    print(f"Finished benchmarking step {index + 1}")
+    stage_end_timestamp = time.time_ns()
+    print(f"Finished benchmarking stage {index + 1}")
 
     all_latencies = []
     all_ttfts = []
@@ -971,17 +971,17 @@ async def benchmark(
         all_errors.append_report(errors)
       if ttft:
         all_ttfts.append(ttft)
-    benchmark_results.record_metrics_for_step(step['rate'], step_start_timestamp, step_end_timestamp, prompts_sent_this_step, all_latencies, all_ttfts, all_errors, backend)
+    benchmark_results.record_metrics_for_stage(stage['rate'], stage_start_timestamp, stage_end_timestamp, prompts_sent_this_stage, all_latencies, all_ttfts, all_errors, backend)
   
-  print(f"Completed all steps, generating reports...")
+  print(f"Completed all stages, generating reports...")
   return benchmark_results
 
 def aggregate_benchmark_reports(reports: List[BenchmarkingReport]) -> BenchmarkingReport: 
   """When benchmarking multiple models we will generate a BenchmarkingReport for each."""
   """If `save_aggregated_result` is set, we aggregate these into a single report."""
 
-  aggregated_step_report = {
-    "request_rate":  reports[0].steps[0]["request_rate"],
+  aggregated_stage_report = {
+    "request_rate":  reports[0].stages[0]["request_rate"],
     "timestamp_start": 0.0,
     "timestamp_end": 0.0,
     "num_prompts_attempted": 0,
@@ -992,17 +992,17 @@ def aggregate_benchmark_reports(reports: List[BenchmarkingReport]) -> Benchmarki
   }
 
   for report in reports:
-    # Input metavalidation asserts this report only has one step report
-    report = report.steps[0]
-    aggregated_step_report["timestamp_start"] = min(aggregated_step_report["timestamp_start"], report["timestamp_start"])
-    aggregated_step_report["timestamp_end"] = max(aggregated_step_report["timestamp_end"], report["timestamp_end"])
-    aggregated_step_report["num_prompts_attempted"] += report["num_prompts_attempted"]
-    aggregated_step_report["latencies"].extend(report["latencies"])
-    aggregated_step_report["ttfts"].extend(report["ttfts"])
-    aggregated_step_report["errors"] = aggregated_step_report["errors"].append_report(report["errors"])
+    # Input metavalidation asserts this report only has one stage report
+    report = report.stages[0]
+    aggregated_stage_report["timestamp_start"] = min(aggregated_stage_report["timestamp_start"], report["timestamp_start"])
+    aggregated_stage_report["timestamp_end"] = max(aggregated_stage_report["timestamp_end"], report["timestamp_end"])
+    aggregated_stage_report["num_prompts_attempted"] += report["num_prompts_attempted"]
+    aggregated_stage_report["latencies"].extend(report["latencies"])
+    aggregated_stage_report["ttfts"].extend(report["ttfts"])
+    aggregated_stage_report["errors"] = aggregated_stage_report["errors"].append_report(report["errors"])
 
-  aggregated_report = BenchmarkingReport(reports[0].args, f"ALL-{len(reports)}-MODELS", aggregated_step_report["timestamp_start"])
-  aggregated_report.record_metrics_for_step(**aggregated_step_report)
+  aggregated_report = BenchmarkingReport(reports[0].args, f"ALL-{len(reports)}-MODELS", aggregated_stage_report["timestamp_start"])
+  aggregated_report.record_metrics_for_stage(**aggregated_stage_report)
 
   return aggregated_report
 
@@ -1055,7 +1055,7 @@ def input_metavalidation(args: argparse.Namespace):
     raise ValueError("All args must be set for one and only one of the following sets of arguments: {--request-rate, --num-prompts} or {--job}")
 
   if args.save_aggregated_result and args.benchmark is not None and len(args.benchmark) != 1 and args.models is not None and len(args.models) > 1:
-      raise ValueError("Multi model benchmarking with multi step benchmarking is not supported yet")
+      raise ValueError("Multi model benchmarking with multi stage benchmarking is not supported yet")
 
   if args.use_beam_search and args.backend == "tgi":
     raise ValueError("Beam search is not supported by TGI")
@@ -1182,33 +1182,33 @@ if __name__ == "__main__":
           request_data = json.loads(input_str)
           # Validate that the JSON has the correct structure
           if not isinstance(request_data, dict):
-              raise argparse.ArgumentTypeError("Input JSON must be an object containing 'time_between_steps' and 'steps'.")
-          # Check 'time_between_steps' field
-          if "time_between_steps" not in request_data or (not isinstance(request_data["time_between_steps"], float) and not isinstance(request_data["time_between_steps"], int)):
-              raise argparse.ArgumentTypeError("'time_between_steps' must be a float or int.")
-          # Check 'steps' field
-          if "steps" not in request_data or not isinstance(request_data["steps"], list):
-              raise argparse.ArgumentTypeError("'steps' must be a list of objects with 'rate' and 'time'.")
+              raise argparse.ArgumentTypeError("Input JSON must be an object containing 'time_between_stages' and 'stages'.")
+          # Check 'time_between_stages' field
+          if "time_between_stages" not in request_data or (not isinstance(request_data["time_between_stages"], float) and not isinstance(request_data["time_between_stages"], int)):
+              raise argparse.ArgumentTypeError("'time_between_stages' must be a float or int.")
+          # Check 'stages' field
+          if "stages" not in request_data or not isinstance(request_data["stages"], list):
+              raise argparse.ArgumentTypeError("'stages' must be a list of objects with 'rate' and 'time'.")
           
-          # Validate each entry in the 'steps' list
-          for i, rate_entry in enumerate(request_data["steps"]):
+          # Validate each entry in the 'stages' list
+          for i, rate_entry in enumerate(request_data["stages"]):
             if not isinstance(rate_entry, dict):
-                raise argparse.ArgumentTypeError(f"Entry {i} in 'steps' must be a JSON object.")
+                raise argparse.ArgumentTypeError(f"Entry {i} in 'stages' must be a JSON object.")
             
             if "rate" not in rate_entry:
-                raise argparse.ArgumentTypeError(f"Entry {i} in 'steps' must have a 'rate' key.")
+                raise argparse.ArgumentTypeError(f"Entry {i} in 'stages' must have a 'rate' key.")
             if "time" not in rate_entry  and "max_num_prompts" not in rate_entry:
-                raise argparse.ArgumentTypeError(f"Entry {i} in 'steps' must have a 'time' and/or 'max_num_prompts' key.")
+                raise argparse.ArgumentTypeError(f"Entry {i} in 'stages' must have a 'time' and/or 'max_num_prompts' key.")
 
             # Validate the 'rate' field to allow for string expressions or floats
             if isinstance(rate_entry["rate"], str):
                 try:
                   is_expression_of_t(rate_entry["rate"])  # Validate the expression
                 except Exception as e:
-                  raise argparse.ArgumentTypeError(f"Entry {i} in 'steps': {e}")
+                  raise argparse.ArgumentTypeError(f"Entry {i} in 'stages': {e}")
             # Validate the 'time' field
             if not isinstance(rate_entry["time"], (float, int)):
-                raise argparse.ArgumentTypeError(f"Entry {i} in 'steps': 'time' must be a positive float.")
+                raise argparse.ArgumentTypeError(f"Entry {i} in 'stages': 'time' must be a positive float.")
           return request_data
       except json.JSONDecodeError as e:
           raise argparse.ArgumentTypeError("Invalid JSON format")
@@ -1223,18 +1223,18 @@ if __name__ == "__main__":
           " or as a filename. \n"
           " The JSON should have the following structure:\n\n"
           "     {\n"
-          "         \"time_between_steps\": float (seconds to rest between rates),\n" 
+          "         \"time_between_stages\": float (seconds to rest between rates),\n" 
           "         \"rates\": [\n"
           "             {\n"
           "                 \"rate\": float | str (as would be passed to request-rate),\n"
-          "                 \"time\": float (number of seconds for this step)\n"
-          "                 \"max_num_prompts\": int (maximum number of prompts for this step)"
+          "                 \"time\": float (number of seconds for this stage)\n"
+          "                 \"max_num_prompts\": int (maximum number of prompts for this stage)"
           "             },\n"
           "             ...\n"
           "         ]\n"
           "     }\n\n"
           " Example JSON:\n"
-          "     '{\"time_between_steps\": 1.0, \"rates\": [{\"rate\": 2.0, \"time\": 0.0}, {\"rate\": \"1+0.5*t\", \"time\": 5.0}]}'\n\n"
+          "     '{\"time_between_stages\": 1.0, \"rates\": [{\"rate\": 2.0, \"time\": 0.0}, {\"rate\": \"1+0.5*t\", \"time\": 5.0}]}'\n\n"
           " Each entry should have a 'rate' and/or 'num_prompts' and 'time' value."
           " Each rate is finished when \"num_prompts\" prompts are sent"
           " (if specified) and \"time\" seconds have passed (if specified),"
