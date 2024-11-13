@@ -37,7 +37,55 @@ NS_IN_SEC = 1_000_000_000
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
 response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
+
+class ErrorsReport():
+  ClientConnectorErrors: int
+  TimeoutErrors: int
+  ContentTypeErrors: int
+  ClientOSErrors: int
+  ServerDisconnectedErrors: int
+  unknown_errors: int
+
+  def __init__(self):
+    self.ClientConnectorErrors = 0
+    self.TimeoutErrors = 0
+    self.ContentTypeErrors = 0
+    self.ClientOSErrors = 0
+    self.ServerDisconnectedErrors = 0
+    self.unknown_errors = 0
+
   
+  def to_dict(self) -> dict:
+    return {k: v for k, v in self.__dict__.items() if isinstance(v, int)}
+
+  def record_error(self, error: Exception):
+      if isinstance(error, aiohttp.client_exceptions.ClientConnectorError):
+          self.ClientConnectorErrors += 1
+          print(f"ClientConnectorError: {error}")
+      elif isinstance(error, asyncio.TimeoutError):
+          self.TimeoutErrors += 1
+          print(f"TimeoutError: {error}")
+      elif isinstance(error, aiohttp.client_exceptions.ContentTypeError):
+          self.ContentTypeErrors += 1
+          print(f"ContentTypeError: {error}")
+      elif isinstance(error, aiohttp.client_exceptions.ClientOSError):
+          self.ClientOSErrors += 1
+          print(f"ClientOSError: {error}")
+      elif isinstance(error, aiohttp.client_exceptions.ServerDisconnectedError):
+          self.ServerDisconnectedErrors += 1
+          print(f"ServerDisconnectedError: {error}")
+      else:
+          self.unknown_errors += 1
+          print(f"Unknown error: {error}")
+
+  def append_report(self, report: "ErrorsReport"):
+      self.ClientConnectorErrors += report.ClientConnectorErrors
+      self.TimeoutErrors += report.TimeoutErrors
+      self.ContentTypeErrors += report.ContentTypeErrors
+      self.ClientOSErrors += report.ClientOSErrors
+      self.ServerDisconnectedErrors += report.ServerDisconnectedErrors
+      self.unknown_errors += report.unknown_errors
+     
 class Backend(ABC):
     """
     An abstract base class for Backend that defines the interface
@@ -56,10 +104,10 @@ class Backend(ABC):
         tokenizer: PreTrainedTokenizerBase,
         sax_model: str,
         model: str,
-    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[Dict[str, int]]]:
+    ) -> Tuple[Optional[Tuple[int, int, float]], Optional[ErrorsReport]]:
       """Sends request to server."""
       request_start_time = time.time()
-      errors = init_errors_map()
+      errors = ErrorsReport()
 
       headers = {"User-Agent": "Benchmark Client"}
       pload = self.create_request_payload(
@@ -85,29 +133,8 @@ class Backend(ABC):
             # Re-send the request if it failed.
             if "error" not in output:
               break
-          except aiohttp.client_exceptions.ClientConnectorError as client_err:
-            errors["ClientConnectorError"] += 1
-            print(f"ClientConnectorError: {client_err}")
-            return None, errors
-          except asyncio.TimeoutError as timeout_err:
-            errors["TimeoutError"] += 1
-            print(f"TimeoutError: {timeout_err}")
-            return None, errors
-          except aiohttp.client_exceptions.ClientOSError as e:
-            errors["ClientOSError"] += 1
-            print(f"ClientOSError: {e}")
-            return None, errors
-          except aiohttp.client_exceptions.ContentTypeError as e:
-            print(f"ContentTypeError: {e}, response: {response}")
-            errors["ContentTypeError"] += 1
-            return None, errors
-          except aiohttp.client_exceptions.ServerDisconnectedError as e:
-            errors["ServerDisconnectedError"] += 1
-            print(f"ServerDisconnectedError: {e}")
-            return None, errors
-          except Exception as e: 
-            print(f"Unknown error {e}")
-            errors["unknown_error"] += 1
+          except Exception as e:
+            errors.record_error(e)
             return None, errors
       request_end_time = time.time()
       # Naive HF transformers generation and TensorRT-LLM generation stops at EOS
@@ -379,7 +406,7 @@ class BenchmarkingStepReport(TypedDict):
   latencies: List
   local_metrics: List[MetricSummary]
   server_metrics: Optional[List[MetricSummary]]
-  errors: Dict[str, int]
+  errors: ErrorsReport
 
 class BenchmarkingReport():
   """Results for all steps for a single model"""
@@ -403,7 +430,7 @@ class BenchmarkingReport():
       timestamp_end: float,
       num_prompts_attempted : int, 
       latencies: List,
-      errors: Dict[str, int],
+      errors: ErrorsReport,
       backend: Backend,
     ):
 
@@ -432,7 +459,6 @@ class BenchmarkingReport():
         
       metrics_list : List[MetricSummary] = []
       for metric in backend.get_server_metrics():
-        print("Metric Name: %s" % (metric))
 
       # Find metric type
         metric_type = all_metrics_metadata['data'][metric]
@@ -482,7 +508,6 @@ class BenchmarkingReport():
             if request_post.ok:
               if response["status"] == "success":
                 metric_results[query_name] = float(response["data"]["result"][0]["value"][1])
-                print("%s: %s" % (query_name, response["data"]["result"][0]["value"][1]))
               else:
                 print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
             else:
@@ -577,8 +602,9 @@ class BenchmarkingReport():
       server_metrics = server_metrics
     ))
 
-  # Each element in the output list is a report for each step
   def to_text_reports(self, write_to_files: bool = False) -> List[str]:
+    """Each element in the output list is a report for each step"""
+
     output : Dict[str, str] = {}
     required_stats = ["latency", "throughput", "input_length", "output_length", "per_output_token_latency"]
     for step in self.steps:
@@ -598,7 +624,7 @@ class BenchmarkingReport():
       total_tokens = total_input_tokens + total_output_tokens
       tokens_per_min = 60 * total_tokens / total_time
       step_output.append(f"====Result for Model: {self.config['model']}====")
-      step_output.append(f"Errors: {step['errors']}")
+      step_output.append(f"Errors: {step['errors'].to_dict()}")
       step_output.append(f"Total time: {total_time:.2f} s")
       step_output.append(f"Successful/total requests: {len(step['latencies'])}/{step['num_prompts_attempted']}")
       step_output.append(f"Requests/min: {60 * step['num_prompts_attempted'] / total_time:.2f}")
@@ -687,17 +713,6 @@ class BenchmarkingReport():
       with open(file_name, "w", encoding="utf-8") as outfile:
         json.dump(output, outfile)
     return output
-
-def init_errors_map() -> Dict[str, int]:
-  errors = {
-    "ClientConnectorError": 0,
-    "TimeoutError": 0,
-    "ContentTypeError": 0,
-    "ClientOSError": 0,
-    "ServerDisconnectedError": 0,
-    "unknown_error": 0,
-  }
-  return errors
 
 def get_backend(backend: str) -> Backend:
   if backend == "vllm":
@@ -822,7 +837,7 @@ async def benchmark(
   for index, step in enumerate(all_steps["steps"]):
   
     # No need to sleep before running the first step
-    if 'time_between_steps' in args.job and index != 0:
+    if args.job is not None and 'time_between_steps' in args.job and index != 0:
       print(f"Sleeping for {args.job['time_between_steps']} sec...")
       await asyncio.sleep(args.job["time_between_steps"])
     max_prompts = f" {step['max_num_prompts']} requests" if 'max_num_prompts' in step else ""
@@ -863,13 +878,13 @@ async def benchmark(
     print(f"Finished benchmarking step {index + 1}")
 
     all_latencies = []
-    all_errors = init_errors_map()
+    all_errors = ErrorsReport()
     for latency, errors in results:
       if latency:
         all_latencies.append(latency)
       if errors:
         for err, count in errors.items():
-          all_errors[err] = all_errors[err] + count
+          all_errors.record_error(err)
     benchmark_results.record_metrics_for_step(step['rate'], step_start_timestamp, step_end_timestamp, prompts_sent_this_step, all_latencies, all_errors, backend)
   
   print(f"Completed all steps, generating reports...")
@@ -886,15 +901,8 @@ def aggregate_benchmark_reports(reports: List[BenchmarkingReport]) -> Benchmarki
     "num_prompts_attempted": 0,
     "latencies": [],
     "server_metrics": [],
-    "errors": {},
+    "errors": ErrorsReport(),
   }
-
-  def accumulate_errors(errors_list: List[Dict[str, int]]) -> Dict[str, int]:
-    accumulated_errors = init_errors_map()
-    for errors in errors_list:
-        for error_type, count in errors.items():
-            accumulated_errors[error_type] += count
-    return accumulated_errors
 
   for report in reports:
     # Input metavalidation asserts this report only has one step report
@@ -903,7 +911,7 @@ def aggregate_benchmark_reports(reports: List[BenchmarkingReport]) -> Benchmarki
     aggregated_step_report["timestamp_end"] = max(aggregated_step_report["timestamp_end"], report["timestamp_end"])
     aggregated_step_report["num_prompts_attempted"] += report["num_prompts_attempted"]
     aggregated_step_report["latencies"].extend(report["latencies"])
-    aggregated_step_report["errors"] = accumulate_errors([aggregated_step_report["errors"], report["errors"]])
+    aggregated_step_report["errors"] = aggregated_step_report["errors"].append_report(report["errors"])
 
   aggregated_report = BenchmarkingReport(reports[0].args, f"ALL-{len(reports)}-MODELS", aggregated_step_report["timestamp_start"])
   aggregated_report.record_metrics_for_step(**aggregated_step_report)
