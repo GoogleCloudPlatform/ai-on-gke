@@ -14,6 +14,24 @@
  * limitations under the License.
  */
 
+terraform {
+  required_version = ">= 1.9.3"
+  required_providers {
+    google = {
+      source  = "google"
+      version = "~> 6.9.0"
+    }
+    google-beta = {
+      source  = "google-beta"
+      version = "~> 6.9.0"
+    }
+    kubernetes = {
+      source  = "kubernetes"
+      version = "~> 2.33.0"
+    }
+  }
+}
+
 provider "google" {
   impersonate_service_account = var.impersonate_service_account
 }
