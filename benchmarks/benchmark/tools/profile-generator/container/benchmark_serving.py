@@ -35,6 +35,7 @@ PROMETHEUS_PORT = 9090
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
 response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
+ttft_metric = Histogram('LatencyProfileGenerator:time_to_first_token', 'Time to first token per request')
 active_requests_metric = Gauge('LatencyProfileGenerator:active_requests', 'How many requests actively being processed')
 
 # Add trace config for monitoring in flight requests
@@ -220,6 +221,11 @@ async def send_stream_request(
   output_token_ids = tokenizer(output).input_ids
   output_len = len(output_token_ids)
   request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
+  tpot_metric.observe((request_end_time - request_start_time) / output_len)
+  if ttft is not None:
+    ttft_metric.observe(ttft)
+  prompt_length_metric.observe(prompt_len)
+  response_length_metric.observe(output_len)
   return request_latency, ttft, None
 
 async def send_request(
