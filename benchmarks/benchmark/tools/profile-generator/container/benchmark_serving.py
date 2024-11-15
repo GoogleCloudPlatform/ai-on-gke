@@ -610,8 +610,11 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
       url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/query' % (project_id)
       headers_api = {'Authorization': 'Bearer ' + credentials.token}
       params = {'query': query}
+      print(f"Finding {query_name} {metric} with the following query: {query}")
       request_post = requests.get(url=url, headers=headers_api, params=params)
       response = request_post.json()
+
+      print(f"Got response from metrics server: {response}")
 
       # handle response
       if request_post.ok:
