@@ -98,7 +98,7 @@ module "project" {
 }
 
 module "vpc" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/net-vpc"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/net-vpc?ref=v30.0.0&depth=1"
   count      = local.vpc_create ? 1 : 0
   project_id = module.project.project_id
   name = coalesce(
