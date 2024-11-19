@@ -359,7 +359,7 @@ func getTestRayCluster(clusterName string, groupName string, namespace string, n
 }
 
 // setupInformer creates a PodInformer, waits for cache to sync, and returns the Informer PodLister
-func setupInformer(pods []*corev1.Pod) listersv1.PodLister {
+func setupInformer(pods ...*corev1.Pod) listersv1.PodLister {
 	// initialize fake Clientset with pod objects
 	tpuObjects := make([]runtime.Object, len(pods))
 	for i, pod := range pods {
@@ -1214,7 +1214,7 @@ func Test_GetSliceToWorkerIDs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			podLister := setupInformer(tc.podsInGroup)
+			podLister := setupInformer(tc.podsInGroup...)
 			tpuWebhook := NewTPUWebhookServer(podLister)
 			sliceToWorkerIDs, err := tpuWebhook.getSliceToWorkerIDs("test-cluster", "test-group", "test-namespace", tc.numOfHosts)
 
@@ -1232,13 +1232,78 @@ func Test_GetSliceToWorkerIDs(t *testing.T) {
 	}
 }
 
+func Test_IsLastAdmittedPod(t *testing.T) {
+	tests := map[string]struct {
+		testPod        *corev1.Pod
+		testWorkerID   string
+		testReplicaID  string
+		lastAdmitted   string
+		isLastAdmitted bool
+		expectedError  error
+	}{
+		"isLastAdmittedPod Pod missing RayCluster label": {
+			// missing Ray cluster label - returns error
+			testPod:        getTestCPUWorker("", "test-group", "test-namespace"),
+			expectedError:  errors.New("Ray Pod created by KubeRay missing RayCluster label"),
+			isLastAdmitted: false,
+		},
+		"isLastAdmittedPod Pod does not request TPUs": {
+			// pod is not a TPU pod, should return false
+			testPod:        getTestCPUWorker("test-cluster", "test-group", "test-namespace"),
+			isLastAdmitted: false,
+		},
+		"isLastAdmittedPod TPU Pod does not match lastAdmitted": {
+			// TPU pod does not match lastAdmitted, return false
+			testPod:        getTestTPUWorker("test-cluster", "test-group", "test-namespace", "tpu-v6e-slice", "4x4", "4"),
+			testWorkerID:   "4",
+			testReplicaID:  "test-group-0",
+			lastAdmitted:   "test-namespace-test-cluster-test-group-0-3",
+			isLastAdmitted: false,
+		},
+		"isLastAdmittedPod TPU Pod matches lastAdmitted": {
+			// TPU pod matches lastAdmitted, return true
+			testPod:        getTestTPUWorker("test-cluster", "test-group", "test-namespace", "tpu-v6e-slice", "4x4", "4"),
+			testWorkerID:   "0",
+			testReplicaID:  "test-group-0",
+			lastAdmitted:   "test-namespace-test-cluster-test-group-0-0",
+			isLastAdmitted: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// set TPU_WORKER_ID for testPod
+			if containerRequestingTPUs(tc.testPod.Spec.Containers...) {
+				if tc.testReplicaID != "" {
+					tc.testPod.Labels["replicaIndex"] = tc.testReplicaID
+					tc.testPod.Spec.Containers[0].Env = []corev1.EnvVar{
+						{
+							Name:  "TPU_WORKER_ID",
+							Value: tc.testWorkerID,
+						},
+					}
+				}
+			}
+			// set up TPUWebhookServer
+			testPodLister := setupInformer(tc.testPod)
+			tpuWebhookServer := NewTPUWebhookServer(testPodLister)
+			tpuWebhookServer.lastAdmitted = tc.lastAdmitted
+
+			isLastAdmitted, err := tpuWebhookServer.isLastAdmittedPod(tc.testPod)
+			if err != nil {
+				assert.Equal(t, tc.expectedError, err)
+			} else {
+				assert.Equal(t, tc.isLastAdmitted, isLastAdmitted)
+			}
+		})
+	}
+}
+
 func Test_MutatePod(t *testing.T) {
 	tests := map[string]struct {
 		testPod              *corev1.Pod
 		numOfHosts           int
 		existingPods         int
 		existingReplicas     int
-		missingClusterLabel  bool
 		missingContainers    bool
 		expectedWorkerID     string
 		expectedReplicaID    int
@@ -1249,23 +1314,20 @@ func Test_MutatePod(t *testing.T) {
 	}{
 		"mutatePod missing cluster label": {
 			// missing Ray cluster label - returns error
-			testPod:             getTestCPUWorker("test-cluster", "test-group", "test-namespace"),
-			missingClusterLabel: true,
-			expectedError:       errors.New("Ray Pod created by KubeRay missing RayCluster label"),
+			testPod:       getTestCPUWorker("", "test-group", "test-namespace"),
+			expectedError: errors.New("Ray Pod created by KubeRay missing RayCluster label"),
 		},
 		"mutatePod missing container": {
 			// missing containers - returns error
-			testPod:             getTestCPUWorker("test-cluster", "test-group", "test-namespace"),
-			missingClusterLabel: false,
-			missingContainers:   true,
-			expectedError:       errors.New("Container path not specified"),
+			testPod:           getTestCPUWorker("test-cluster", "test-group", "test-namespace"),
+			missingContainers: true,
+			expectedError:     errors.New("Container path not specified"),
 		},
 		"mutatePod missing gke-tpu-topology nodeSelector": {
 			// requests TPUs, topology not specified - returns error
-			testPod:             getTestTPUWorker("test-cluster", "test-group", "test-namespace", "tpu-v4-podslice", "2x2x1", "4"),
-			missingClusterLabel: false,
-			missingContainers:   false,
-			expectedError:       errors.New("Ray Pod created by KubeRay missing TPU topology nodeSelector"),
+			testPod:           getTestTPUWorker("test-cluster", "test-group", "test-namespace", "tpu-v4-podslice", "2x2x1", "4"),
+			missingContainers: false,
+			expectedError:     errors.New("Ray Pod created by KubeRay missing TPU topology nodeSelector"),
 		},
 		"mutatePod in single-host TPU worker group": {
 			// requests TPUs, single-host - injects TPU_WORKER_ID, TPU_NAME and replicaIndex label
@@ -1351,9 +1413,6 @@ func Test_MutatePod(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// set up Pod object
-			if tc.missingClusterLabel {
-				tc.testPod.Labels["ray.io/cluster"] = ""
-			}
 			if tc.missingContainers {
 				tc.testPod.Spec.Containers = nil
 			}
@@ -1366,7 +1425,7 @@ func Test_MutatePod(t *testing.T) {
 
 			// generate Pod list and create Pod Lister
 			testTPUPods := getTestInterceptedTPUPods(tc.testPod, tc.existingPods, tc.existingReplicas, tc.numOfHosts)
-			testPodLister := setupInformer(testTPUPods)
+			testPodLister := setupInformer(testTPUPods...)
 
 			// set up TPUWebhookServer
 			tpuWebhookServer := NewTPUWebhookServer(testPodLister)

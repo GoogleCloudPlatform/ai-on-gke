@@ -754,36 +754,20 @@ func init() {
 	klog.InitFlags(nil)
 }
 
-// addPod allows next goroutine to start once the webhook PodInformer cache updates
-func (t *TPUWebhookServer) addPod(obj interface{}) {
-	pod := obj.(*corev1.Pod)
-	klog.V(1).InfoS("addPod", "Pod", pod.Namespace+"/"+pod.Name, "Time", time.Now())
-
-	if t.lastAdmitted == "" {
-		// There is not a pending TPU worker Pod to the informer cache, unblock if waiting and return
-		for {
-			if t.waiting == 0 {
-				break
-			}
-			t.wg.Done()
-			t.waiting -= 1
-		}
-		return
-	}
-
-	if t.waiting == 0 || pod.Spec.Containers == nil || !containerRequestingTPUs(pod.Spec.Containers...) {
-		// Webhook is not waiting or Pod does not use TPUs, no-op
-		return
+// isLastAdmittedPod returns True if Pod matches the last Pod admitted by the webhook server
+func (t *TPUWebhookServer) isLastAdmittedPod(pod *corev1.Pod) (bool, error) {
+	if pod.Spec.Containers == nil || !containerRequestingTPUs(pod.Spec.Containers...) {
+		// Pod does not use TPUs
+		return false, nil
 	}
 	replicaIndex := pod.Labels["replicaIndex"]
 	if replicaIndex == "" {
-		// This Pod was not mutated by the webhook, no-op
-		return
+		// Pod was not mutated by the webhook
+		return false, nil
 	}
 	clusterName := pod.Labels["ray.io/cluster"]
 	if clusterName == "" {
-		klog.Errorf("Invalid addPod: %s", errors.New("Ray Pod created by KubeRay missing RayCluster label"))
-		return
+		return false, errors.New("Ray Pod created by KubeRay missing RayCluster label")
 	}
 	namespace := pod.Namespace
 	for _, container := range pod.Spec.Containers {
@@ -793,17 +777,45 @@ func (t *TPUWebhookServer) addPod(obj interface{}) {
 		}
 		tpuWorkerID := getEnvironmentVariable("TPU_WORKER_ID", container)
 		if tpuWorkerID == "" {
-			// This TPU pod was not intercepted by the webhook, no-op
-			return
+			// TPU pod was not intercepted by the webhook
+			return false, nil
 		}
 		uniquePodID := fmt.Sprintf("%s-%s-%s-%s", namespace, clusterName, replicaIndex, tpuWorkerID)
-
 		if uniquePodID == t.lastAdmitted {
-			// Added the last TPU worker Pod to the cache, unblock the next Mutate call
+			// Pod matches the last TPU worker Pod intercepted by the webhook server
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// addPod allows next goroutine to start once the webhook PodInformer cache updates
+func (t *TPUWebhookServer) addPod(obj interface{}) {
+	pod := obj.(*corev1.Pod)
+	klog.V(1).InfoS("addPod", "Pod", pod.Namespace+"/"+pod.Name, "Time", time.Now())
+
+	if t.lastAdmitted == "" {
+		// There is not a pending TPU worker Pod to the informer cache, unblock if waiting and return
+		for t.waiting > 0 {
 			t.wg.Done()
 			t.waiting -= 1
-			return
 		}
+		return
+	}
+	if t.waiting == 0 {
+		// Webhook is not waiting, no-op
+		return
+	}
+	// Check if Pod in cache is the last admitted TPU Pod
+	isLastAdmitted, err := t.isLastAdmittedPod(pod)
+	if err != nil {
+		klog.Errorf("Invalid addPod: %s", err)
+		return
+	}
+	if isLastAdmitted {
+		// Informer cache has been updated, unblock the next Mutate call
+		t.wg.Done()
+		t.waiting -= 1
 	}
 }
 
