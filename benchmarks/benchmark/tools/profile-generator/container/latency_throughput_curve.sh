@@ -47,7 +47,7 @@ for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
   if [[ "$STREAM_REQUEST" = "true" ]]; then
     PYTHON_OPTS="$PYTHON_OPTS --stream-request"
   fi
- if [[ "$OUTPUT_BUCKET_FILEPATH" = "true" ]]; then
+  if [[ "$OUTPUT_BUCKET_FILEPATH" ]]; then
     PYTHON_OPTS="$PYTHON_OPTS --output-bucket-filepath  $OUTPUT_BUCKET_FILEPATH"
   fi
   $PYTHON $PYTHON_OPTS > $output_file
