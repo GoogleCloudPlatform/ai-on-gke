@@ -89,7 +89,7 @@ resource "kubernetes_deployment" "inference_deployment" {
           }
         }
         container {
-          image = "us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310"
+          image = "us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu124.2-3.ubuntu2204.py311"
           name  = "mistral-7b-instruct"
 
           port {

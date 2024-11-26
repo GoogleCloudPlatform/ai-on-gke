@@ -127,7 +127,7 @@ Pod Template:
   Labels:  app=mixtral8x7b
   Containers:
    mixtral8x7b:
-    Image:      us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
+    Image:      us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu124.2-3.ubuntu2204.py311
     Port:       8080/TCP
     Host Port:  0/TCP
     Limits:
