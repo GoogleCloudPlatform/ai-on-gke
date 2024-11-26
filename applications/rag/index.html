@@ -1,0 +1,3770 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://googlecloudplatform.github.io/ai-on-gke/applications/rag/">
+      
+      
+        <link rel="prev" href="../jupyter/variable_definitions/">
+      
+      
+        <link rel="next" href="frontend/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.46">
+    
+    
+      
+        <title>RAG on GKE - AI on GKE</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rag-on-gke" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI on GKE" class="md-header__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI on GKE
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              RAG on GKE
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  AI on GKE Assets
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../jupyter/" class="md-tabs__link">
+          
+  
+    
+  
+  Applications
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../best-practices/" class="md-tabs__link">
+          
+  
+    
+  
+  Best practices
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials-and-examples/cloudshell-tutorial/" class="md-tabs__link">
+          
+  
+    
+  
+  Tutorials and examples
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI on GKE" class="md-nav__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI on GKE
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AI on GKE Assets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Applications
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Applications
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../jupyter/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Jupyter
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Jupyter
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jupyter/profiles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    JupyterHub Profiles
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jupyter/storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Persistent Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jupyter/variable_definitions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Glossary for variables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  <span class="md-ellipsis">
+    Rag
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Rag
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="frontend/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Frontend
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2_2" id="__nav_2_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Frontend
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="frontend/container/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Container
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_2_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Container
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../ray/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Ray
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Ray
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../ray/tfvars_examples/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Tfvars examples
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Tfvars examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../best-practices/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Best practices
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Best practices
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/startup-latency/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Startup latency
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../best-practices/gke-batch-refarch/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Gke batch refarch
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Gke batch refarch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../best-practices/ml-platform/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Ml platform
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Ml platform
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials and examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials and examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials-and-examples/cloudshell-tutorial/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudshell tutorial
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    genAI LLM
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            genAI LLM
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/deploying-mistral-7b-instruct-L4gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    deploying mistral 7b instruct L4gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mistral 7b instruct L4gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/deploying-mixtral-8x7b-instruct-L4-gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    deploying mixtral 8x7b instruct L4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mixtral 8x7b instruct L4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/e2e-genai-langchain-app/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    E2e genai langchain app
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            E2e genai langchain app
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/finetuning-gemma-2b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning gemma 2b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning gemma 2b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/finetuning-llama-7b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning llama 7b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning llama 7b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/serving-llama2-70b-on-l4-gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Serving llama2 70b on l4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            Serving llama2 70b on l4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Gpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Gpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/gpu-examples/a100-jax/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    A100 jax
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            A100 jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/gpu-examples/online-serving-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Online serving single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Online serving single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/gpu-examples/training-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Training single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Training single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/hf-tgi/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hf tgi
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Hf tgi
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Inference servers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Inference servers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/checkpoints/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Checkpoints
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Checkpoints
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5_2" id="__nav_4_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jetstream
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Jetstream
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5_2_1" id="__nav_4_5_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Maxtext
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_5_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Maxtext
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/jetstream/maxtext/single-host-inference/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_5_2_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5_2_2" id="__nav_4_5_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_5_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/jetstream/pytorch/single-host-inference/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_5_2_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/maxdiffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Maxdiffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Maxdiffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/kserve/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Kserve
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Kserve
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/models-as-oci/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Models as oci
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Models as oci
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/nvidia-nim/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Nvidia nim
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            Nvidia nim
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_9" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/skypilot/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Skypilot
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_9" id="__nav_4_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_9">
+            <span class="md-nav__icon md-icon"></span>
+            Skypilot
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_9_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/skypilot/text-classification/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Text classification
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_9_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_9_2">
+            <span class="md-nav__icon md-icon"></span>
+            Text classification
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_10" id="__nav_4_10_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_10_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/storage/hyperdisk-ml/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hyperdisk ml
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_10_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10_1">
+            <span class="md-nav__icon md-icon"></span>
+            Hyperdisk ml
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11" id="__nav_4_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            Tpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11_1" id="__nav_4_11_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_11_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11_1_1" id="__nav_4_11_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jax
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_11_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_1_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/tpu-examples/single-host-inference/jax/stable-diffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Stable diffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_11_1_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_1_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Stable diffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11_2" id="__nav_4_11_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_11_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_2">
+            <span class="md-nav__icon md-icon"></span>
+            Training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/tpu-examples/training/mnist-single-tpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Mnist single tpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_11_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Mnist single tpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_12" id="__nav_4_12_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Vector databases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12">
+            <span class="md-nav__icon md-icon"></span>
+            Vector databases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials-and-examples/vector-databases/readme/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Vector Database Repo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/vector-databases/NEXT-2024-Weaviate-Demo/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    NEXT 2024 Weaviate Demo
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_12_2" id="__nav_4_12_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            NEXT 2024 Weaviate Demo
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/vector-databases/NEXT-2024-Weaviate-Demo/demo-website/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Demo website
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_12_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Demo website
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_13" id="__nav_4_13_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Workflow orchestration
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13">
+            <span class="md-nav__icon md-icon"></span>
+            Workflow orchestration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/workflow-orchestration/dws-examples/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Dws examples
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_13_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dws examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/workflow-orchestration/indexed-job/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Indexed job
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_13_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_2">
+            <span class="md-nav__icon md-icon"></span>
+            Indexed job
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_13_3" id="__nav_4_13_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jobset
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_13_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_3">
+            <span class="md-nav__icon md-icon"></span>
+            Jobset
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/workflow-orchestration/jobset/pytorch/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_13_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="rag-on-gke">RAG on GKE</h1>
+<p>This is a sample to deploy a Retrieval Augmented Generation (RAG) application on GKE. </p>
+<p>The latest recommended release is branch release-1.1.</p>
+<h1 id="what-is-rag">What is RAG?</h1>
+<p><a href="https://cloud.google.com/blog/products/ai-machine-learning/rag-with-databases-on-google-cloud">RAG</a> is a popular approach for boosting the accuracy of LLM responses, particularly for domain specific or private data sets.</p>
+<p>RAG uses a semantically searchable knowledge base (like vector search) to retrieve relevant snippets for a given prompt to provide additional context to the LLM. Augmenting the knowledge base with additional data is typically cheaper than fine tuning and is more scalable when incorporating current events and other rapidly changing data spaces.</p>
+<h3 id="rag-on-gke-architecture">RAG on GKE Architecture</h3>
+<ol>
+<li>A GKE service endpoint serving <a href="https://huggingface.co/docs/text-generation-inference/en/index">Hugging Face TGI inference</a> using <code>mistral-7b</code>.</li>
+<li><a href="https://github.com/pgvector/pgvector">Cloud SQL <code>pgvector</code> instance</a> with vector embeddings generated from an input dataset.</li>
+<li>A <a href="https://docs.ray.io/en/latest/ray-overview/getting-started.html">Ray</a> cluster running on GKE that runs jobs to generate embeddings and populate the vector DB.</li>
+<li>A <a href="https://docs.jupyter.org/en/latest/">Jupyter</a> notebook running on GKE that reads the dataset using GCS fuse driver integrations and runs a Ray job to populate the vector DB.</li>
+<li>A front end chat interface running on GKE that prompts the inference server with context from the vector DB.</li>
+</ol>
+<p>This tutorial walks you through installing the RAG infrastructure in a GCP project, generating vector embeddings for a sample <a href="https://www.kaggle.com/datasets/shivamb/netflix-shows">Kaggle Netflix shows</a> dataset and prompting the LLM with context.</p>
+<h1 id="prerequisites">Prerequisites</h1>
+<h3 id="install-tooling-required">Install tooling (required)</h3>
+<p>Install the following on your computer:
+* <a href="https://kubernetes.io/docs/tasks/tools/#kubectl">Kubectl</a>
+* <a href="https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli">Terraform</a>
+* <a href="https://helm.sh/docs/intro/install/">Helm</a>
+* <a href="https://cloud.google.com/sdk/docs/install">Gcloud</a></p>
+<h3 id="bring-your-own-cluster-optional">Bring your own cluster (optional)</h3>
+<p>By default, this tutorial creates a cluster on your behalf. We highly recommend following the default settings.</p>
+<p>If you prefer to manage your own cluster, set <code>create_cluster = false</code> and make sure the <code>network_name</code> is set to your cluster's network in the <a href="#installation">Installation section</a>. Creating a long-running cluster may be better for development, allowing you to iterate on Terraform components without recreating the cluster every time.</p>
+<p>Use gcloud to create a GKE Autopilot cluster. Note that RAG requires the latest Autopilot features, available on the latest versions of 1.28 and 1.29.</p>
+<pre><code>gcloud container clusters create-auto rag-cluster \
+  --location us-central1 \
+  --cluster-version 1.28
+</code></pre>
+<h3 id="bring-your-own-vpc-optional">Bring your own VPC (optional)</h3>
+<p>By default, this tutorial creates a new network on your behalf with <a href="https://cloud.google.com/vpc/docs/private-service-connect">Private Service Connect</a> already enabled. We highly recommend following the default settings.</p>
+<p>If you prefer to use your own VPC, set <code>create_network = false</code> in the in the <a href="#installation">Installation section</a>. This also requires enabling <a href="https://cloud.google.com/vpc/docs/private-service-connect">Private Service Connect</a> for your VPC. Without Private Service Connect, the RAG components cannot connect to the vector DB:</p>
+<ol>
+<li>
+<p><a href="https://cloud.google.com/vpc/docs/configure-private-services-access#procedure">Create an IP allocation</a></p>
+</li>
+<li>
+<p><a href="https://cloud.google.com/vpc/docs/configure-private-services-access#creating-connection">Create a private connection</a>.</p>
+</li>
+</ol>
+<h1 id="installation">Installation</h1>
+<p>This section sets up the RAG infrastructure in your GCP project using Terraform.</p>
+<p><strong>NOTE:</strong> Terraform keeps state metadata in a local file called <code>terraform.tfstate</code>. Deleting the file may cause some resources to not be cleaned up correctly even if you delete the cluster. We suggest using <code>terraform destroy</code> before reapplying/reinstalling.</p>
+<ol>
+<li>
+<p><code>cd ai-on-gke/applications/rag</code></p>
+</li>
+<li>
+<p>Edit <code>workloads.tfvars</code> to set your project ID, location, cluster name, and GCS bucket name. Ensure the <code>gcs_bucket</code> name is globally unique (add a random suffix). Optionally, make the following changes:</p>
+<ul>
+<li>(Recommended) <a href="#configure-authenticated-access-via-iap-recommended">Enable authenticated access</a> for JupyterHub, frontend chat and Ray dashboard services.</li>
+<li>(Optional) Set a custom <code>kubernetes_namespace</code> where all k8s resources will be created.</li>
+<li>(Optional) Set <code>autopilot_cluster = false</code> to deploy using GKE Standard.</li>
+<li>(Optional) Set <code>create_cluster = false</code> if you are bringing your own cluster. If using a GKE Standard cluster, ensure it has an L4 nodepool with autoscaling and node autoprovisioning enabled. You can simplify setup by following the Terraform instructions in <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md"><code>infrastructure/README.md</code></a>.</li>
+<li>(Optional) Set <code>create_network = false</code> if you are bringing your own VPC. Ensure your VPC has Private Service Connect enabled as described above.</li>
+</ul>
+</li>
+<li>
+<p>Run <code>terraform init</code></p>
+</li>
+<li>
+<p>Run <code>terraform apply --var-file workloads.tfvars</code></p>
+</li>
+</ol>
+<h1 id="generate-vector-embeddings-for-the-dataset">Generate vector embeddings for the dataset</h1>
+<p>This section generates the vector embeddings for your input dataset. Currently, the default dataset is <a href="https://www.kaggle.com/datasets/shivamb/netflix-shows">Netflix shows</a>. We will use a Jupyter notebook to run a Ray job that generates the embeddings &amp; populates them into the <code>pgvector</code> instance created above.</p>
+<p>Set your the namespace, cluster name and location from <code>workloads.tfvars</code>):</p>
+<pre><code>export NAMESPACE=rag
+export CLUSTER_LOCATION=us-east4
+export CLUSTER_NAME=rag-cluster
+</code></pre>
+<p>Connect to the GKE cluster:</p>
+<pre><code>gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_LOCATION}
+</code></pre>
+<ol>
+<li>Connect and login to JupyterHub:</li>
+<li>If IAP is disabled (<code>jupyter_add_auth = false</code>):
+        - Port forward to the JupyterHub service: <code>kubectl port-forward service/proxy-public -n ${NAMESPACE} 8081:80 &amp;</code>
+        - Go to <code>localhost:8081</code> in a browser
+        - Login with these credentials:
+            * username: admin
+            * password: use <code>terraform output jupyterhub_password</code> to fetch the password value</li>
+<li>
+<p>If IAP is enabled (<code>jupyter_add_auth = true</code>):
+        - Fetch the domain: <code>terraform output jupyterhub_uri</code>
+        - If you used a custom domain, ensure you configured your DNS as described above. 
+        - Verify the domain status is <code>Active</code>:
+            - <code>kubectl get managedcertificates jupyter-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'</code>
+            - Note: This can take up to 20 minutes to propagate.
+        - Once the domain status is Active, go to the domain in a browser and login with your Google credentials.
+        - To add additional users to your JupyterHub application, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>rag/proxy-public</code> service and add principals with the role <code>IAP-secured Web App User</code>.</p>
+</li>
+<li>
+<p>Load the notebook:</p>
+<ul>
+<li>Once logged in to JupyterHub, choose the <code>CPU</code> preset with <code>Default</code> storage. </li>
+<li>Click [File] -&gt; [Open From URL] and paste: <code>https://raw.githubusercontent.com/GoogleCloudPlatform/ai-on-gke/main/applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb</code></li>
+</ul>
+</li>
+<li>
+<p>Configure Kaggle:</p>
+<ul>
+<li>Create a <a href="https://www.kaggle.com/account/login?phase=startRegisterTab&amp;returnUrl=%2F">Kaggle account</a>.</li>
+<li><a href="https://www.kaggle.com/settings/account">Generate an API token</a>. See <a href="https://www.kaggle.com/docs/api#authentication">further instructions</a>. This token is used in the notebook to access the <a href="https://www.kaggle.com/datasets/shivamb/netflix-shows">Kaggle Netflix shows</a> dataset.</li>
+<li>Replace the variables in the 1st cell of the notebook with your Kaggle credentials (can be found in the <code>kaggle.json</code> file created while generating the API token):<ul>
+<li><code>KAGGLE_USERNAME</code></li>
+<li><code>KAGGLE_KEY</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Generate vector embeddings: Run all the cells in the notebook to generate vector embeddings for the Netflix shows dataset (https://www.kaggle.com/datasets/shivamb/netflix-shows) via a Ray job and store them in the <code>pgvector</code> CloudSQL instance.</p>
+<ul>
+<li>When the last cell succeeded, the vector embeddings have been generated and we can launch the frontend chat interface. Note that the Ray job can take up to 10 minutes to finish.</li>
+<li>Ray may take several minutes to create the runtime environment. During this time, the job will appear to be missing (e.g. <code>Status message: PENDING</code>).</li>
+<li>Connect to the Ray dashboard to check the job status or logs:<ul>
+<li>If IAP is disabled (<code>ray_dashboard_add_auth = false</code>):<ul>
+<li><code>kubectl port-forward -n ${NAMESPACE} service/ray-cluster-kuberay-head-svc 8265:8265</code></li>
+<li>Go to <code>localhost:8265</code> in a browser</li>
+</ul>
+</li>
+<li>If IAP is enabled (<code>ray_dashboard_add_auth = true</code>):<ul>
+<li>Fetch the domain: <code>terraform output ray-dashboard-managed-cert</code></li>
+<li>If you used a custom domain, ensure you configured your DNS as described above.</li>
+<li>Verify the domain status is <code>Active</code>:<ul>
+<li><code>kubectl get managedcertificates ray-dashboard-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'</code></li>
+<li>Note: This can take up to 20 minutes to propagate.</li>
+</ul>
+</li>
+<li>Once the domain status is Active, go to the domain in a browser and login with your Google credentials.</li>
+<li>To add additional users to your frontend application, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>rag/ray-cluster-kuberay-head-svc</code> service and add principals with the role <code>IAP-secured Web App User</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h1 id="launch-the-frontend-chat-interface">Launch the frontend chat interface</h1>
+<ol>
+<li>Connect to the frontend:<ul>
+<li>If IAP is disabled (<code>frontend_add_auth = false</code>):<ul>
+<li>Port forward to the frontend service: <code>kubectl port-forward service/rag-frontend -n ${NAMESPACE} 8080:8080 &amp;</code></li>
+<li>Go to <code>localhost:8080</code> in a browser</li>
+</ul>
+</li>
+<li>If IAP is enabled (<code>frontend_add_auth = true</code>):<ul>
+<li>Fetch the domain: <code>terraform output frontend_uri</code></li>
+<li>If you used a custom domain, ensure you configured your DNS as described above.</li>
+<li>Verify the domain status is <code>Active</code>:<ul>
+<li><code>kubectl get managedcertificates frontend-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'</code></li>
+<li>Note: This can take up to 20 minutes to propagate.</li>
+</ul>
+</li>
+<li>Once the domain status is Active, go to the domain in a browser and login with your Google credentials.</li>
+<li>To add additional users to your frontend application, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>rag/rag-frontend</code> service and add principals with the role <code>IAP-secured Web App User</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Prompt the LLM<ul>
+<li>Start chatting! This will fetch context related to your prompt from the vector embeddings in the <code>pgvector</code> CloudSQL instance, augment the original prompt with the context &amp; query the inference model (<code>mistral-7b</code>) with the augmented prompt.</li>
+</ul>
+</li>
+</ol>
+<h1 id="configure-authenticated-access-via-iap-recommended">Configure authenticated access via IAP (recommended)</h1>
+<p>We recommend you configure authenticated access via IAP for your services.</p>
+<p>1) Make sure the <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent">OAuth Consent Screen</a> is configured for your project. Ensure <code>User type</code> is set to <code>Internal</code>.
+2) Make sure <a href="https://cloud.google.com/load-balancing/docs/org-policy-constraints">Policy for Restrict Load Balancer Creation Based on Load Balancer Types</a> allows EXTERNAL_HTTP_HTTPS.
+3) Set the following variables in <code>workloads.tfvars</code>:
+    * <code>jupyter_add_auth = true</code>
+    * <code>frontend_add_auth = true</code>
+    * <code>ray_dashboard_add_auth = true</code>
+4) Allowlist principals for your services via <code>jupyter_members_allowlist</code>, <code>frontend_members_allowlist</code> and <code>ray_dashboard_members_allowlist</code>.
+5) Configure custom domains names via <code>jupyter_domain</code>, <code>frontend_domain</code> and <code>ray_dashboard_domain</code> for your services. 
+6) Configure DNS records for your custom domains:
+    - <a href="https://cloud.google.com/domains/docs/register-domain#registering-a-domain">Register a Domain on Google Cloud Domains</a> or use a domain registrar of your choice.
+    - Set up your DNS service to point to the public IP
+        * Run <code>terraform output frontend_ip_address</code> to get the public ip address of frontend, and add an A record in your DNS configuration to point to the public IP address.
+        * Run <code>terraform output jupyterhub_ip_address</code> to get the public ip address of jupyterhub, and add an A record in your DNS configuration to point to the public IP address.
+        * Run <code>terraform output ray_dashboard_ip_address</code> to get the public ip address of ray dashboard, and add an A record in your DNS configuration to point to the public IP address.
+    - Add an A record: If the DNS service of your domain is managed by <a href="https://cloud.google.com/dns/docs/zones">Google Cloud DNS managed zone</a>, there are two options to add the A record:
+        1. Go to https://console.cloud.google.com/net-services/dns/zones, select the zone and click ADD STANDARD, fill in your domain name and public IP address.
+        2. Run <code>gcloud dns record-sets create &lt;domain address&gt;. --zone=&lt;zone name&gt; --type="A" --ttl=&lt;ttl in seconds&gt; --rrdatas="&lt;public ip address&gt;"</code></p>
+<h1 id="cleanup">Cleanup</h1>
+<ol>
+<li>Run <code>terraform destroy --var-file="workloads.tfvars"</code><ul>
+<li>Network deletion issue: <code>terraform destroy</code> fails to delete the network due to a known issue in the GCP provider. For now, the workaround is to manually delete it.</li>
+</ul>
+</li>
+</ol>
+<h1 id="troubleshooting">Troubleshooting</h1>
+<p>Set your the namespace, cluster name and location from <code>workloads.tfvars</code>:</p>
+<pre><code>export NAMESPACE=rag
+export CLUSTER_LOCATION=us-central1
+export CLUSTER_NAME=rag-cluster
+</code></pre>
+<p>Connect to the GKE cluster:</p>
+<pre><code>gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_LOCATION}
+</code></pre>
+<ol>
+<li>
+<p>Troubleshoot Ray job failures:</p>
+<ul>
+<li>If the Ray actors fail to be scheduled, it could be due to a stockout or quota issue.<ul>
+<li>Run <code>kubectl get pods -n ${NAMESPACE} -l app.kubernetes.io/name=kuberay</code>. There should be a Ray head and Ray worker pod in <code>Running</code> state. If your ray pods aren't running, it's likely due to quota or stockout issues. Check that your project and selected <code>cluster_location</code> have L4 GPU capacity.</li>
+</ul>
+</li>
+<li>Often, retrying the Ray job submission (the last cell of the notebook) helps.</li>
+<li>The Ray job may take 15-20 minutes to run the first time due to environment setup.</li>
+</ul>
+</li>
+<li>
+<p>Troubleshoot IAP login issues:</p>
+<ul>
+<li>Verify the cert is Active:<ul>
+<li>For JupyterHub <code>kubectl get managedcertificates jupyter-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'</code></li>
+<li>For the frontend: <code>kubectl get managedcertificates frontend-managed-cert -n ${NAMESPACE} --output jsonpath='{.status.domainStatus[0].status}'</code></li>
+</ul>
+</li>
+<li>Verify users are allowlisted for JupyterHub or frontend services:<ul>
+<li>JupyterHub: Go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>rag/proxy-public</code> service and check if the user has role <code>IAP-secured Web App User</code>.</li>
+<li>Frontend: Go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <code>rag/rag-frontend</code> service and check if the user has role <code>IAP-secured Web App User</code>.</li>
+</ul>
+</li>
+<li>Org error:<ul>
+<li>The <a href="https://developers.google.com/workspace/guides/configure-oauth-consent#configure_oauth_consent">OAuth Consent Screen</a> has <code>User type</code> set to <code>Internal</code> by default, which means principals external to the org your project is in cannot log in. To add external principals, change <code>User type</code> to <code>External</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Troubleshoot <code>terraform apply</code> failures:</p>
+<ul>
+<li>Inference server (<code>mistral</code>) fails to deploy:<ul>
+<li>This usually indicates a stockout/quota issue. Verify your project and chosen <code>cluster_location</code> have L4 capacity.</li>
+</ul>
+</li>
+<li>GCS bucket already exists:<ul>
+<li>GCS bucket names have to be globally unique, pick a different name with a random suffix.</li>
+</ul>
+</li>
+<li>Cloud SQL instance already exists:<ul>
+<li>Ensure the <code>cloudsql_instance</code> name doesn't already exist in your project.</li>
+</ul>
+</li>
+<li>GMP operator webhook connection refused:<ul>
+<li>This is a rare, transient error. Run <code>terraform apply</code> again to resume deployment.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Troubleshoot <code>terraform destroy</code> failures:</p>
+<ul>
+<li>Network deletion issue:<ul>
+<li><code>terraform destroy</code> fails to delete the network due to a known issue in the GCP provider. For now, the workaround is to manually delete it.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Troubleshoot error: <code>Repo model mistralai/Mistral-7B-Instruct-v0.1 is gated. You must be authenticated to access it.</code> for the pod of deployment <code>mistral-7b-instruct</code>.</p>
+</li>
+</ol>
+<p>The error is because the RAG deployments uses <code>Mistral-7B-instruct</code> which is now a gated model on Hugging Face. Deployments fail as they require a Hugging Face authentication token, which is not part of the current workflow.
+   While we are actively working on long-term fix. This is how to workaround the error:
+    - Use <a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-tgi#generate-token">the guide</a> as a reference to create an access token.
+    - Go to the <a href="https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1">model card</a> in Hugging Face and click "Agree and access repository"
+    - Create <a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#create_a_kubernetes_secret_for_hugging_face_credentials">a secret</a> as noted in with the Hugging Face credential called <code>hf-secret</code> in the name space where your <code>mistral-7b-instruct</code> deployment is running.
+    - Add the following entry to <code>env</code> within the deployment <code>mistral-7b-instruct</code> via <code>kubectl edit</code>.</p>
+<pre><code>        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs", "navigation.tabs.sticky", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,56 @@
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: dws-flavor
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: AdmissionCheck
+metadata:
+  name: dws-prov
+spec:
+  controllerName: kueue.x-k8s.io/provisioning-request
+  parameters:
+    apiGroup: kueue.x-k8s.io
+    kind: ProvisioningRequestConfig
+    name: dws-config
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ProvisioningRequestConfig
+metadata:
+  name: dws-config
+spec:
+  provisioningClassName: queued-provisioning.gke.io
+  managedResources:
+  - nvidia.com/gpu
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: "dws-cluster-queue"
+spec:
+  namespaceSelector: {} 
+  resourceGroups:
+  - coveredResources: ["nvidia.com/gpu"]
+    flavors:
+    - name: "dws-flavor"
+      resources:
+      - name: "nvidia.com/gpu"
+        nominalQuota: 20
+  admissionChecks:
+  - dws-prov
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "team-a"
+  name: "dws-local-queue"
+spec:
+  clusterQueue: "dws-cluster-queue"
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "team-b"
+  name: "dws-local-queue"
+spec:
+  clusterQueue: "dws-cluster-queue"

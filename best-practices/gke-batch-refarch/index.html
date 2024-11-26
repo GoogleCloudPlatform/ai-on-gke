@@ -1,0 +1,4139 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://googlecloudplatform.github.io/ai-on-gke/best-practices/gke-batch-refarch/">
+      
+      
+        <link rel="prev" href="../startup-latency/">
+      
+      
+        <link rel="next" href="../ml-platform/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.46">
+    
+    
+      
+        <title>Reference Architecture: Batch Processing Platform on GKE - AI on GKE</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#reference-architecture-batch-processing-platform-on-gke" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI on GKE" class="md-header__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI on GKE
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reference Architecture: Batch Processing Platform on GKE
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  AI on GKE Assets
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../applications/jupyter/" class="md-tabs__link">
+          
+  
+    
+  
+  Applications
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+    
+  
+  Best practices
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials-and-examples/cloudshell-tutorial/" class="md-tabs__link">
+          
+  
+    
+  
+  Tutorials and examples
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI on GKE" class="md-nav__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI on GKE
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AI on GKE Assets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Applications
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Applications
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../applications/jupyter/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Jupyter
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Jupyter
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../applications/jupyter/profiles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    JupyterHub Profiles
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../applications/jupyter/storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Persistent Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../applications/jupyter/variable_definitions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Glossary for variables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../applications/rag/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Rag
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Rag
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../applications/rag/frontend/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Frontend
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2_2" id="__nav_2_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Frontend
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../applications/rag/frontend/container/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Container
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_2_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Container
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../applications/ray/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Ray
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Ray
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../applications/ray/tfvars_examples/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Tfvars examples
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Tfvars examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Best practices
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Best practices
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../startup-latency/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Startup latency
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  <span class="md-ellipsis">
+    Gke batch refarch
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Gke batch refarch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../ml-platform/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Ml platform
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Ml platform
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials and examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials and examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials-and-examples/cloudshell-tutorial/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudshell tutorial
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    genAI LLM
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            genAI LLM
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/deploying-mistral-7b-instruct-L4gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    deploying mistral 7b instruct L4gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mistral 7b instruct L4gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/deploying-mixtral-8x7b-instruct-L4-gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    deploying mixtral 8x7b instruct L4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mixtral 8x7b instruct L4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/e2e-genai-langchain-app/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    E2e genai langchain app
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            E2e genai langchain app
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/finetuning-gemma-2b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning gemma 2b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning gemma 2b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/finetuning-llama-7b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning llama 7b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning llama 7b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/genAI-LLM/serving-llama2-70b-on-l4-gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Serving llama2 70b on l4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            Serving llama2 70b on l4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Gpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Gpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/gpu-examples/a100-jax/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    A100 jax
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            A100 jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/gpu-examples/online-serving-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Online serving single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Online serving single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/gpu-examples/training-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Training single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Training single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/hf-tgi/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hf tgi
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Hf tgi
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Inference servers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Inference servers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/checkpoints/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Checkpoints
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Checkpoints
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5_2" id="__nav_4_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jetstream
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Jetstream
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5_2_1" id="__nav_4_5_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Maxtext
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_5_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Maxtext
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/jetstream/maxtext/single-host-inference/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_5_2_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5_2_2" id="__nav_4_5_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_5_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_2_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/jetstream/pytorch/single-host-inference/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_5_2_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_2_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/inference-servers/maxdiffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Maxdiffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Maxdiffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/kserve/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Kserve
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Kserve
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/models-as-oci/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Models as oci
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Models as oci
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/nvidia-nim/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Nvidia nim
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            Nvidia nim
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_9" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/skypilot/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Skypilot
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_9" id="__nav_4_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_9">
+            <span class="md-nav__icon md-icon"></span>
+            Skypilot
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_9_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/skypilot/text-classification/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Text classification
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_9_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_9_2">
+            <span class="md-nav__icon md-icon"></span>
+            Text classification
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_10" id="__nav_4_10_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_10_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/storage/hyperdisk-ml/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hyperdisk ml
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_10_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10_1">
+            <span class="md-nav__icon md-icon"></span>
+            Hyperdisk ml
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11" id="__nav_4_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            Tpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11_1" id="__nav_4_11_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_11_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11_1_1" id="__nav_4_11_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jax
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_11_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_1_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/tpu-examples/single-host-inference/jax/stable-diffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Stable diffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_11_1_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_1_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Stable diffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11_2" id="__nav_4_11_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_11_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_2">
+            <span class="md-nav__icon md-icon"></span>
+            Training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/tpu-examples/training/mnist-single-tpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Mnist single tpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_11_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Mnist single tpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_12" id="__nav_4_12_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Vector databases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12">
+            <span class="md-nav__icon md-icon"></span>
+            Vector databases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials-and-examples/vector-databases/readme/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Vector Database Repo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/vector-databases/NEXT-2024-Weaviate-Demo/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    NEXT 2024 Weaviate Demo
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_12_2" id="__nav_4_12_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            NEXT 2024 Weaviate Demo
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/vector-databases/NEXT-2024-Weaviate-Demo/demo-website/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Demo website
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_12_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Demo website
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_13" id="__nav_4_13_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Workflow orchestration
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13">
+            <span class="md-nav__icon md-icon"></span>
+            Workflow orchestration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/workflow-orchestration/dws-examples/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Dws examples
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_13_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dws examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/workflow-orchestration/indexed-job/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Indexed job
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_13_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_2">
+            <span class="md-nav__icon md-icon"></span>
+            Indexed job
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_13_3" id="__nav_4_13_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jobset
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_13_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_3">
+            <span class="md-nav__icon md-icon"></span>
+            Jobset
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tutorials-and-examples/workflow-orchestration/jobset/pytorch/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_13_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Purpose
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequistes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequistes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploy-google-cloud-resources-using-cloud-build-and-terraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploy Google Cloud resources using Cloud Build and Terraform.
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clean-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clean up
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="reference-architecture-batch-processing-platform-on-gke">Reference Architecture: Batch Processing Platform on GKE</h1>
+<h2 id="purpose">Purpose</h2>
+<p>This reference architecture is intended to help platform administrators, cloud architects, and operations professionals deploy a batch processing platform on <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview">Google Kubernetes Engine</a> (GKE). This document features GKE in <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture#nodes">Standard</a> mode, using <a href="https://kueue.sigs.k8s.io/">Kueue</a> to manage resource quotas and borrowing rules between multiple tenant teams sharing the cluster to run their batch workloads in a fair, cost efficient and performant way. <a href="https://cloud.google.com/kubernetes-engine/docs/best-practices/batch-platform-on-gke">Best practices for running batch workloads on GKE</a> discusses many recommendations that are implemented in this document.</p>
+<h2 id="overview">Overview</h2>
+<p>Traditionally, batch platforms have two main user personas, developers and platform administrators:</p>
+<ul>
+<li>
+<p>A developer submits a Job specifying the program, the data to be processed, and requirements for the Job.</p>
+</li>
+<li>
+<p>A platform administrator manages and delivers an efficient and reliable batch processing platform to the developers.</p>
+</li>
+</ul>
+<p>Let's assume we have four teams of developers (<code>team-a</code>, <code>team-b</code>, <code>team-c</code>, <code>team-d</code>) who want to share a GKE cluster to run their batch machine learning training workloads. Additionally, <code>team-a</code> and <code>team-b</code> share billing so would like to use each other's unused resource quota for their workloads. <code>team-c</code> and <code>team-d</code> have a similar agreement. The Organization has purchased a <a href="https://cloud.google.com/compute/docs/instances/reservations-with-commitments">Committed Use Discount consumed via reservations</a> and would like to maximize the utilization of their reservations before bursting into <a href="https://cloud.google.com/compute/vm-instance-pricing">On-demand</a> or <a href="https://cloud.google.com/compute/docs/instances/spot">Spot</a> VMs.</p>
+<p>To support these teams, the platform administrator would create a GKE cluster and configure it with <a href="https://cloud.google.com/kubernetes-engine/docs/best-practices/batch-platform-on-gke">Google published good practices</a> for building batch platforms on GKE, in addition to their specific organizational best practices.</p>
+<p>This reference architecture illustrates an example of a batch platform on GKE that can support multiple teams:</p>
+<p><img src="./images/01_initial_state.svg" width="800"></p>
+<ul>
+<li>
+<p>A regional GKE cluster with <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/node-auto-provisioning">Node Auto Provisioning</a> enabled, private nodes and <a href="https://cloud.google.com/nat/docs/overview">Cloud NAT</a> for outbound external access. A Cloud Monitoring dashboard tracking GPU utilization metrics is also created.</p>
+</li>
+<li>
+<p>The cluster is configured with user defined node pools and is capable of creating auto-provisioned GPU node pools based on workload requirements:</p>
+<ul>
+<li>
+<p>Reserved node pool consuming zonal NVIDIA L4 GPU VM <a href="https://cloud.google.com/compute/docs/instances/reservations-overview">reservations</a>.</p>
+</li>
+<li>
+<p>Autoscaling <a href="https://cloud.google.com/compute/vm-instance-pricing">On-demand</a> node pool with NVIDIA L4 GPU for high-priority Jobs spilling over from reservations.</p>
+</li>
+<li>
+<p>Autoscaling <a href="https://cloud.google.com/compute/docs/instances/spot">Spot</a> node pool with NVIDIA L4 GPU for failure tolerant or low-priority workloads spilling over from reservations.</p>
+</li>
+<li>
+<p><a href="https://cloud.google.com/kubernetes-engine/docs/how-to/compact-placement">Compactly placed</a>, auto-provisioned Spot node pools for low latency communication between workload Pods consuming NVIDIA A100 GPUs.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Four teams (<code>team-a</code>, <code>team-b</code>, <code>team-c</code>, <code>team-d</code>) each with their own <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/">namespace</a> on the cluster, with <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity">Workload Identity</a> established.</p>
+</li>
+<li>
+<p><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/">PriorityClasses</a> defined for low-priority (default), high-priority and compactly placed Jobs. Incoming high-priority Jobs can preempt running low-priority Jobs to reclaim reserved resources.</p>
+</li>
+<li>
+<p>Kueue is configured such that:</p>
+<ul>
+<li>
+<p>Each team has a <code>high-priority queue</code>, a <code>low-priority</code> queue and a <code>compact-placement</code> queue to which Jobs are submitted.</p>
+</li>
+<li>
+<p>Four ResourceFlavors defined; one each for <code>reserved</code>, <code>on-demand</code> and <code>spot</code> G2 VMs with NVIDIA L4 GPUs, and one for <code>spot</code> A2 VMs with NVIDIA A100 GPUs that are compactly-placed.</p>
+</li>
+<li>
+<p><a href="https://github.com/prometheus-operator/kube-prometheus">Prometheus and Grafana</a> are installed on the cluster for monitoring Kueue.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>This reference architecture shows the teams submitting the following workloads:</p>
+</li>
+<li>
+<p>Distributed (multi-GPU, multi-host) machine learning model training using PyTorch and the mnist dataset, using Kubernetes Jobs in Indexed mode. See original example published <a href="https://github.com/google/learn-oss-with-google/tree/main/kubernetes/job-examples/ml_training_pytorch">here</a>. This workload is used to showcase Kubernetes Job priority and preemption behavior using L4 GPUs and to show how to setup A100 GPUs in compact placement for multi-node training:</p>
+<ul>
+<li>
+<p><strong>Low-priority Jobs:</strong> Jobs that don't specify a PriorityClass will get this default PriorityClass set to them. Kueue is configured to allow these Jobs to run on reserved VMs or Spot G2 VMs. If there is no room in or if a low-priority Job gets preempted from the reserved node pool, Kueue will evaluate them for other ResourceFlavors and will assign them the Spot G2 VM ResourceFlavor. In this example, each low-priority Job will have two Pods, each consuming two L4 GPUs.</p>
+</li>
+<li>
+<p><strong>High-priority Jobs:</strong> Jobs specifying this PriorityClass will preempt any low-priority Jobs running on reserved VMs. Any overflow high-priority Jobs will trigger scale-up in the On-demand node pool. In this example, each high-priority Job will have two Pods, each consuming two L4 GPUs.</p>
+</li>
+<li>
+<p><strong>Compactly placed Jobs:</strong> When admitted by Kueue, these Jobs will trigger GKE Node Auto Provisioning to create node pools purpose built for each of the Jobs, with nodes placed in close physical proximity to each other for low latency communication. In this example, each compactly placed Job will have two Pods, each consuming a single A100 GPU.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Distributed (multi-GPU, multi-host) machine learning training using PyTorch and the mnist dataset, using the Kubernetes JobSet API. In this example, JobSet automatically creates the headless ClusterIP service for all the workers in the Job to communicate with each other. See original example published <a href="https://github.com/kubernetes-sigs/jobset/tree/main/examples/pytorch/cnn-mnist">here</a>.</p>
+</li>
+</ul>
+<h2 id="prerequistes">Prerequistes</h2>
+<ol>
+<li>
+<p>This reference architecture has been tested on <a href="https://shell.cloud.google.com">Cloud Shell</a> which comes preinstalled with <a href="https://cloud.google.com/sdk">Google Cloud SDK</a> that is required to complete this guide.</p>
+</li>
+<li>
+<p>Since a recent change in Grafana, services that run behind a reverse proxy cannot directly access metrics data. Port-forwarding from Cloud Shell, you would not be able to view Kueue metrics in Grafana. For a portion of this guide, you will be doing a port-forward from your local machine and for this, your local machine must have <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a> available.</p>
+</li>
+<li>
+<p>It is recommended to start the guide in a fresh project since the easiest way to clean up once complete is to delete the project. See <a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">here</a> for more details.</p>
+</li>
+<li>
+<p>This guide requires a number of different GCP Quotas (~60 L4 GPUs, ~30 Spot A100 GPUs and up to 600 CPU cores) in the region of your choosing. Please visit the <a href="https://console.cloud.google.com/iam-admin/quotas">IAM -&gt; Quotas page</a> in the context of your project, region and zone to request additional quota before proceeding with this guide. <a href="https://cloud.google.com/compute/docs/regions-zones#available">This document</a> can help you find the appropriate regions and zones where the G2 (with NVIDIA L4 GPUs) and A2 (with NVIDIA A100 GPUs) VM families are available. For example, the zones us-central-a, us-central1-b and us-central-c all have both VM families available.</p>
+</li>
+</ol>
+<h2 id="deploy-google-cloud-resources-using-cloud-build-and-terraform">Deploy Google Cloud resources using Cloud Build and Terraform.</h2>
+<ol>
+<li>Export the required environment variables; replace the value of <code>YOUR_PROJECT_ID</code> with that of a fresh project you created for this tutorial, <code>YOUR_REGION</code> with the name of your chosen Google Cloud region (eg. us-central1) and <code>YOUR_ZONE</code> with one of the zones in your chosen region (eg. us-central1-c).</li>
+</ol>
+<p><code>bash
+   export PROJECT_ID=YOUR_PROJECT_ID
+   export REGION=YOUR_REGION
+   export ZONE=YOUR_ZONE</code></p>
+<ol>
+<li>Clone this repo, switch to the appropriate subdirectory and run the <code>create-platform.sh</code> script. The rest of this step enables the required APIs, creates an IAM policy binding for the Cloud Build service account, creates an Artifact Registry to host the Cloud Build container images and submit a Cloud Build job to create the required Google Cloud resources using Terraform. For more details see <code>create-platform.sh</code>. Navigate to the <a href="https://console.cloud.google.com/cloud-build">Cloud Build page in the Google Cloud console</a> to view status of the build, ensure you're in the context of the correct project.</li>
+</ol>
+<p><code>bash
+   cd $HOME &amp;&amp; \
+   git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git &amp;&amp; \
+   cd ai-on-gke/best-practices/gke-batch-refarch &amp;&amp; \
+   ./create-platform.sh</code></p>
+<ol>
+<li>While the build runs, head over to the <a href="https://console.cloud.google.com/kubernetes">Kubernetes Engine page in the console</a>. You can see the cluster being created and configured by the steps running in Cloud Build.</li>
+</ol>
+<p>a. The <code>Setup GKE</code> step will create the GKE cluster with a default node pool for system pods, a statically sized reserved node pool with four g2-standard-24 reserved VMs with two Nvidia L4 accelerators each, one auto-scaled (0 - 24 nodes) On-demand node pool for spill-over high-priority Jobs, and one auto-scaled (0 - 36 nodes) Spot node pool for spill-over low-priority Jobs. For more details, or to modify the infrastructure deployed in this document see <code>01_gke/main.tf</code> in this repository.</p>
+<p>b. Once the cluster is ready, the next steps deploy the <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/gpus#installing_drivers">recommended DaemonSet</a> to install GPU drivers, and system resources for <a href="https://github.com/kubernetes-sigs/kueue">Kueue</a> and <a href="https://github.com/kubernetes-sigs/jobset">JobSet</a> are installed.</p>
+<p>c. The <code>Deploy Manifests: Priority Classes, Teams and Kueue configuration</code> step establishes default, high and compact PriorityClasses to showcase <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/">preemption</a> of lower priority workloads by higher priority workloads for reserved resources. This step deploys four team manifests one for each of <code>team-a</code>, <code>team-b</code>, <code>team-c</code> and <code>team-d</code> including Namespaces and Kubernetes Service Accounts to be used for <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity">Workload Identity</a>. In addition, this step configures Kueue such that each team gets a high priority queue, a low priority queue and a compact placement queue with the ability to specify nominalQuota and borrowingLimit for the respective flavors. See <code>02_platform/kueue</code> for more details.</p>
+<p>d. As a part of the platform deployment, a monitoring dashboard is created that tracks the number and utilization of GPUs on the cluster. Head over to <a href="https://console.cloud.google.com/monitoring/dashboards">Cloud Monitoring Dashboards</a> page and you should see a dashboard entitled <code>NVIDIA GPU Monitoring Overview (GCE &amp; GKE)</code>. Keep a tab with this dashboard open and auto-refresh enabled (icon in the top right corner next to the time-frame).</p>
+<ol>
+<li>For monitoring Kueue metrics <a href="https://github.com/prometheus-operator/kube-prometheus">Prometheus and Grafana</a> have been deployed on the GKE cluster and a dashboard to visualize the data has been configured. Since a recent change in Grafana, services that run behind a reverse proxy cannot directly access metrics data. Port-forwarding from Cloud Shell, you would not be able to view Kueue metrics. You will be doing a port-forward from your local machine and for this, your local machine must have <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a> available.</li>
+</ol>
+<p>a. Open a new terminal on your local machine and get the cluster credentials using the following command:</p>
+<p><code>bash
+   gcloud container clusters get-credentials batch-dev --region $REGION --project $PROJECT_ID</code></p>
+<p>b. Next, create a port-forward to the <code>grafana</code> service running in the cluster so you can use your web browser to access the Grafana UI. Keep this terminal open for the rest of this guide.</p>
+<p><code>bash
+   kubectl port-forward svc/grafana 8080:3000 -n monitoring</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   Forwarding from 127.0.0.1:8080 -&gt; 3000</code></p>
+<p>c. Open a new tab in your web browser and navigate to <a href="http://localhost:8080"><code>http://localhost:8080</code></a>. You should see the Grafana login page. Use <code>admin</code> as the username and password.</p>
+<p>d. In the menu located on the top left part of the home page, click <code>Dashboards</code>.</p>
+<p>e. Navigate to <code>Kueue Dashboard</code>, you should see the current number of nodes in the cluster and other useful Kueue metrics; there should be no workloads pending or admitted. We will return to this dashboard periodically during this guide to see how the system has reacted to incoming workloads.</p>
+<p><img src="./images/kueue_dash_1.png" width="800"></p>
+<ol>
+<li><strong>Deploying Low Priority workloads:</strong> Switch to the <code>low_priority</code> directory and run the <code>create_workloads.sh</code> script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).</li>
+</ol>
+<p><code>bash
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/low_priority &amp;&amp; \
+   ./create_workloads.sh</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   service/team-a-low-priority-svc-0 created
+   configmap/team-a-low-priority-config-0 created
+   job.batch/team-a-low-priority-job-0 created
+   ...
+   service/team-d-low-priority-svc-3 created
+   configmap/team-d-low-priority-config-3 created
+   job.batch/team-d-low-priority-job-3 created</code></p>
+<p><img src="./images/02_submit_low_priority.svg" width="800"></p>
+<p>a. List the Jobs running on the GKE cluster across all namespaces, you should see four Jobs from each team created. These Jobs have been admitted by Kueue.</p>
+<p><code>bash
+   watch kubectl get jobs --all-namespaces</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   NAMESPACE   NAME                        COMPLETIONS   DURATION   AGE
+   team-a      team-a-low-priority-job-0   0/2           54s        55s
+   team-a      team-a-low-priority-job-1   0/2           49s        49s
+   team-a      team-a-low-priority-job-2   0/2           43s        43s
+   team-a      team-a-low-priority-job-3   0/2           38s        38s
+   team-b      team-b-low-priority-job-0   0/2           53s        53s
+   team-b      team-b-low-priority-job-1   0/2           47s        48s
+   team-b      team-b-low-priority-job-2   0/2           42s        42s
+   team-b      team-b-low-priority-job-3   0/2           37s        37s
+   team-c      team-c-low-priority-job-0   0/2           52s        52s
+   team-c      team-c-low-priority-job-1   0/2           46s        47s
+   team-c      team-c-low-priority-job-2   0/2           41s        41s
+   team-c      team-c-low-priority-job-3   0/2           36s        36s
+   team-d      team-d-low-priority-job-0   0/2           51s        51s
+   team-d      team-d-low-priority-job-1   0/2           45s        46s
+   team-d      team-d-low-priority-job-2   0/2           40s        40s
+   team-d      team-d-low-priority-job-3   0/2           35s        35s</code></p>
+<p>b. In a new terminal tab, watch the ClusterQueues, you should see four admitted workloads for each team's low priority ClusterQueue. These workloads correspond to the Jobs you saw in the previous step.</p>
+<p><code>bash
+   watch kubectl get clusterqueues -o wide</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   0                   0
+   cq-team-a-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-a-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-b-compact   team-a-b   StrictFIFO   0                   0
+   cq-team-b-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-c-compact   team-c-d   StrictFIFO   0                   0
+   cq-team-c-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   4
+   cq-team-d-compact   team-c-d   StrictFIFO   0                   0
+   cq-team-d-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   4</code></p>
+<p>c. Since the Reserved node pool already has nodes available to run admitted low priority workloads, some of these workloads will be scheduled on the Reserved nodes. <img src="./images/03_low_priority_reservation.svg" width="800"></p>
+<p>d. In a new terminal tab, watch the cluster nodes. Initially you should see ten nodes, six in the default node pool and four in the reserved node pool.</p>
+<p><code>bash
+   watch kubectl get nodes</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                                               STATUS   ROLES    AGE   VERSION
+   gke-gke-batch-refarch-default-pool-8bba21a2-3328   Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-8bba21a2-bmzg   Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-8k19   Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-srxf   Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-gn5j   Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-wht3   Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-djvf    Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p2w7    Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p42h    Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-r6rt    Ready    &lt;none&gt;   12h   v1.28.3-gke.1203001</code></p>
+<p>e. After a short while you should see Spot nodes being added to the Spot node pool to accommodate the low priority Jobs that could not fit on the Reserved node pool (sized for two Jobs at a time).</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                                               STATUS   ROLES    AGE    VERSION
+   gke-gke-batch-refarch-default-pool-8bba21a2-3328   Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-8bba21a2-bmzg   Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-8k19   Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-srxf   Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-gn5j   Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-wht3   Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-djvf    Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p2w7    Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p42h    Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-r6rt    Ready    &lt;none&gt;   12h    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-2gl8        Ready    &lt;none&gt;   102s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-2thb        Ready    &lt;none&gt;   97s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-4ccx        Ready    &lt;none&gt;   89s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-69p2        Ready    &lt;none&gt;   94s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-7246        Ready    &lt;none&gt;   80s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-7rhl        Ready    &lt;none&gt;   96s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-8267        Ready    &lt;none&gt;   95s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-c5x5        Ready    &lt;none&gt;   100s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-cc2h        Ready    &lt;none&gt;   109s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-fsjs        Ready    &lt;none&gt;   95s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-fsqw        Ready    &lt;none&gt;   100s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-h9bh        Ready    &lt;none&gt;   96s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-hshk        Ready    &lt;none&gt;   69s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-htjv        Ready    &lt;none&gt;   97s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-j7zc        Ready    &lt;none&gt;   94s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-jr45        Ready    &lt;none&gt;   104s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-l5v2        Ready    &lt;none&gt;   90s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-ltv4        Ready    &lt;none&gt;   98s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-ptx9        Ready    &lt;none&gt;   93s    v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-q57t        Ready    &lt;none&gt;   100s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-qlsz        Ready    &lt;none&gt;   106s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-t5tl        Ready    &lt;none&gt;   100s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-t62s        Ready    &lt;none&gt;   105s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-wxrr        Ready    &lt;none&gt;   91s    v1.28.3-gke.1203001</code></p>
+<p><img src="./images/04_low_priority_spot.svg" width="800"></p>
+<ol>
+<li><strong>Deploying High Priority workloads:</strong> Switch to the <code>high_priority</code> directory and run the <code>create_workloads.sh</code> script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four low priority Jobs submitted (job-0 through job-3).</li>
+</ol>
+<p><code>bash
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/high_priority &amp;&amp; \
+   ./create_workloads.sh</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   service/team-a-high-priority-svc-0 created
+   configmap/team-a-high-priority-config-0 created
+   job.batch/team-a-high-priority-job-0 created
+   ...
+   service/team-d-high-priority-svc-3 created
+   configmap/team-d-high-priority-config-3 created
+   job.batch/team-d-high-priority-job-3 created</code></p>
+<p>a. Return to the terminal tab watching the <code>clusterqueues</code>. You should see high-priority workloads being added to the high-priority clusterqueues.</p>
+<p><code>bash
+   watch kubectl get clusterqueues -o wide</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   0                   0
+   cq-team-a-hp        team-a-b   StrictFIFO   2                   2
+   cq-team-a-lp        team-a-b   StrictFIFO   1                   3
+   cq-team-b-compact   team-a-b   StrictFIFO   0                   0
+   cq-team-b-hp        team-a-b   StrictFIFO   2                   2
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   3
+   cq-team-c-compact   team-c-d   StrictFIFO   0                   0
+   cq-team-c-hp        team-c-d   StrictFIFO   2                   2
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   3
+   cq-team-d-compact   team-c-d   StrictFIFO   0                   0
+   cq-team-d-hp        team-c-d   StrictFIFO   2                   2
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   3</code></p>
+<p>b. As high priority workloads are admitted, the low priority workloads running on the Reserved node pool are evicted to make room.</p>
+<p><img src="./images/05a_high_priority_reservation.svg" width="800">.</p>
+<p>These low priority workloads are then set to pending and reevaluated by Kueue. They will use the Spot flavor to schedule on to the Spot node pool once new nodes have spun up to accommodate them.</p>
+<p><img src="./images/05b_high_priority_reservation.svg" width="800"></p>
+<p>d. Return to the terminal tab watching the cluster nodes, after a short while you should see nodes being added to the On Demand node pool to accommodate the high priority Jobs that could not fit on the Reserved node pool.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                                               STATUS   ROLES    AGE     VERSION
+   gke-gke-batch-refarch-default-pool-8bba21a2-3328   Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-8bba21a2-bmzg   Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-8k19   Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-srxf   Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-gn5j   Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-wht3   Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-48a23fe6-426d    Ready    &lt;none&gt;   3m25s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-48a23fe6-bs59    Ready    &lt;none&gt;   3m30s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-48a23fe6-vktd    Ready    &lt;none&gt;   3m24s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-48a23fe6-znst    Ready    &lt;none&gt;   3m30s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-8687a394-7dpd    Ready    &lt;none&gt;   2m39s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-8687a394-ggs4    Ready    &lt;none&gt;   2m41s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-8687a394-qb49    Ready    &lt;none&gt;   2m32s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-8687a394-x2cq    Ready    &lt;none&gt;   2m37s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-djvf    Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p2w7    Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p42h    Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-r6rt    Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-2gl8        Ready    &lt;none&gt;   7m45s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-2thb        Ready    &lt;none&gt;   7m40s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-4ccx        Ready    &lt;none&gt;   7m32s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-69p2        Ready    &lt;none&gt;   7m37s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-7246        Ready    &lt;none&gt;   7m23s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-7rhl        Ready    &lt;none&gt;   7m39s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-8267        Ready    &lt;none&gt;   7m38s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-c5x5        Ready    &lt;none&gt;   7m43s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-cc2h        Ready    &lt;none&gt;   7m52s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-fsjs        Ready    &lt;none&gt;   7m38s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-fsqw        Ready    &lt;none&gt;   7m43s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-h9bh        Ready    &lt;none&gt;   7m39s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-hshk        Ready    &lt;none&gt;   7m12s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-htjv        Ready    &lt;none&gt;   7m40s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-j7zc        Ready    &lt;none&gt;   7m37s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-jr45        Ready    &lt;none&gt;   7m47s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-l5v2        Ready    &lt;none&gt;   7m33s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-ltv4        Ready    &lt;none&gt;   7m41s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-ptx9        Ready    &lt;none&gt;   7m36s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-q57t        Ready    &lt;none&gt;   7m43s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-qlsz        Ready    &lt;none&gt;   7m49s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-t5tl        Ready    &lt;none&gt;   7m43s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-t62s        Ready    &lt;none&gt;   7m48s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-spot-np-fd534d43-wxrr        Ready    &lt;none&gt;   7m34s   v1.28.3-gke.1203001</code></p>
+<p>The following diagram illustrates scale up in the On Demand node pool:</p>
+<p><img src="./images/06_high_priority_ondemand.svg" width="800"></p>
+<p>The Kueue dashboard also shows updated node counts, pending and active workloads,and other useful metrics from the batch platform.</p>
+<p><img src="./images/kueue_dash_2.png" width="800"></p>
+<ol>
+<li><strong>Deploying compact placement workloads:</strong> Switch to the <code>compact_placement</code> directory and run the <code>create_workloads.sh</code> script. This script will connect to the cluster and deploy one Job from each team at a time until all teams have four compactly placed Jobs submitted (job-0 through job-3).</li>
+</ol>
+<p><code>bash
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/compact_placement &amp;&amp; \
+   ./create_workloads.sh</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   service/team-a-compact-svc-0 created
+   configmap/team-a-compact-config-0 created
+   job.batch/team-a-compact-job-0 created
+   ...
+   service/team-d-compact-svc-3 created
+   configmap/team-d-compact-config-3 created
+   job.batch/team-d-compact-job-3 created</code></p>
+<p>a. Return to the terminal tab watching the <code>clusterqueues</code>, you should see submitted compact workloads being pending and admitted to the compact clusterqueues for all four teams.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   3                   1
+   cq-team-a-hp        team-a-b   StrictFIFO   0                   2
+   cq-team-a-lp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-compact   team-a-b   StrictFIFO   2                   1
+   cq-team-b-hp        team-a-b   StrictFIFO   0                   2
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   0
+   cq-team-c-compact   team-c-d   StrictFIFO   3                   1
+   cq-team-c-hp        team-c-d   StrictFIFO   1                   2
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-compact   team-c-d   StrictFIFO   2                   1
+   cq-team-d-hp        team-c-d   StrictFIFO   0                   2
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   1</code></p>
+<p>b. As these Jobs are admitted by Kueue, they will become Unschedulable, meaning that the cluster does not have the resources these workloads are asking for. However, since the cluster is configured with Node Auto Provisioning, GKE will create and scale a node pool purpose built for each Job based on the resource requests and limits. Once the Job is complete, the node pool will be cleaned up by GKE automatically, eliminating unnecessary spend.</p>
+<p><img src="./images/07_compact_placement.svg" width="800"></p>
+<p>c. Return to the terminal tab watching the cluster nodes, after a short while you should see nodes being created in auto-provisioned Spot node pools to accommodate the compactly placed Jobs that could not find any A100 GPUs in the node pools present on the cluster.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                                                  STATUS   ROLES    AGE     VERSION
+   gke-gke-batch-refarc-team-a-0-compact-4391522a-k57w   Ready    &lt;none&gt;   5m14s   v1.28.3-gke.1203001
+   gke-gke-batch-refarc-team-a-0-compact-4391522a-zqcr   Ready    &lt;none&gt;   5m12s   v1.28.3-gke.1203001
+   gke-gke-batch-refarc-team-b-0-compact-5ed4b762-7lsv   Ready    &lt;none&gt;   3m26s   v1.28.3-gke.1203001
+   gke-gke-batch-refarc-team-b-0-compact-5ed4b762-8h7n   Ready    &lt;none&gt;   3m26s   v1.28.3-gke.1203001
+   gke-gke-batch-refarc-team-c-0-compact-a2204c20-cwrt   Ready    &lt;none&gt;   3m44s   v1.28.3-gke.1203001
+   gke-gke-batch-refarc-team-c-0-compact-a2204c20-g4lz   Ready    &lt;none&gt;   4m7s    v1.28.3-gke.1203001
+   gke-gke-batch-refarc-team-d-0-compact-9f10df61-fwpj   Ready    &lt;none&gt;   2m49s   v1.28.3-gke.1203001
+   gke-gke-batch-refarc-team-d-0-compact-9f10df61-jw6k   Ready    &lt;none&gt;   2m49s   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-8bba21a2-3328      Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-8bba21a2-bmzg      Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-8k19      Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-srxf      Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-gn5j      Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-wht3      Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-48a23fe6-426d       Ready    &lt;none&gt;   17m     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-48a23fe6-bs59       Ready    &lt;none&gt;   17m     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-48a23fe6-vktd       Ready    &lt;none&gt;   17m     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-8687a394-7dpd       Ready    &lt;none&gt;   16m     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-8687a394-ggs4       Ready    &lt;none&gt;   16m     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-ondemand-np-8687a394-qb49       Ready    &lt;none&gt;   16m     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-djvf       Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p2w7       Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p42h       Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-r6rt       Ready    &lt;none&gt;   12h     v1.28.3-gke.1203001</code></p>
+<ol>
+<li><strong>Deploying JobSet workloads:</strong> Switch to the <code>jobset</code> directory and run the <code>create_workloads.sh</code> script. This script will connect to the cluster and deploy one JobSet from each team at a time until all teams have three JobSets submitted (jobset-0 through jobset-3).</li>
+</ol>
+<p><code>bash
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/jobset &amp;&amp; \
+   ./create_workloads.sh</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   jobset.jobset.x-k8s.io/team-a-jobset-0 created
+   jobset.jobset.x-k8s.io/team-b-jobset-0 created
+   jobset.jobset.x-k8s.io/team-c-jobset-0 created
+   jobset.jobset.x-k8s.io/team-d-jobset-0 created
+   ...
+   jobset.jobset.x-k8s.io/team-a-jobset-3 created
+   jobset.jobset.x-k8s.io/team-b-jobset-3 created
+   jobset.jobset.x-k8s.io/team-c-jobset-3 created
+   jobset.jobset.x-k8s.io/team-d-jobset-3 created</code></p>
+<p>a. Return to the terminal tab watching the <code>clusterqueues</code>, you should see submitted JobSet workloads being pending and admitted to the low priority clusterqueues for all four teams.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   2                   1
+   cq-team-a-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-a-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-b-compact   team-a-b   StrictFIFO   2                   0
+   cq-team-b-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-c-compact   team-c-d   StrictFIFO   0                   1
+   cq-team-c-hp        team-c-d   StrictFIFO   0                   1
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   4
+   cq-team-d-compact   team-c-d   StrictFIFO   2                   1
+   cq-team-d-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   4</code></p>
+<ol>
+<li><strong>Deploying workloads to DWS:</strong> This section of the reference architecture will introduce you to Dynamic Workload Scheduler (<a href="https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler">blog</a>, <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest">docs</a>). DWS supports all-or-nothing scheduling, allowing you to procure all the accelerators needed for your workload all at once instead of acquiring partial resources and waiting to get the full set before running the workload.</li>
+</ol>
+<p>The examples shown will deploy one model training job for <code>team-a</code> seeking A100 GPUs to fine-tune the Gemma 2B model and one job from <code>team-b</code> seeking H100 GPUs to fine-tune the Gemma 7B model, in both cases the model is fine-tuned to output SQL when asked a question in natural language. These example workloads are adapted from the example published <a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/finetune-gemma-gpu">here</a>.</p>
+<p>The model weights are download from and uploaded to Hugging Face. In order to access these weights, you will need your Hugging Face token which can be generated <a href="https://huggingface.co/settings/tokens">here</a>. Once you have the token, export it as an environment variable by replacing <code>YOUR_HUGGING_FACE_TOKEN</code> with your token and create the Kubernetes Secrets for team-a and team-b for their respective workloads to be able to access Hugging Face.</p>
+<p>```bash
+   export HF_TOKEN=YOUR_HUGGING_FACE_TOKEN &amp;&amp; \</p>
+<p>kubectl create secret generic hf-secret \
+   --from-literal=hf_api_token=${HF_TOKEN} \
+   --dry-run=client -o yaml | kubectl -n team-a apply -f - &amp;&amp; \</p>
+<p>kubectl create secret generic hf-secret \
+   --from-literal=hf_api_token=${HF_TOKEN} \
+   --dry-run=client -o yaml | kubectl -n team-b apply -f -
+   ```</p>
+<p>Next, configure Kueue to use DWS and deploy the workloads by switching to the <code>dws</code> directory, applying the <code>kueue-dws-config.yaml</code> and running the <code>create_workloads.sh</code> script:</p>
+<p><code>bash
+   cd $HOME/ai-on-gke/best-practices/gke-batch-refarch/dws &amp;&amp; \
+   kubectl apply -f kueue-dws-config.yaml &amp;&amp; \
+   ./create_workloads.sh</code></p>
+<p>Expected output:</p>
+<p><code>bash
+   ...
+   job.batch/finetune-gemma-2xa100 created
+   job.batch/finetune-gemma-8xh100 created</code></p>
+<p>a. Return to the terminal tab watching the <code>clusterqueues</code>, you should see submitted DWS workloads being pending and after a while admitted to the DWS clusterqueue for both team-a and team-b.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   2                   1
+   cq-team-a-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-a-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-b-compact   team-a-b   StrictFIFO   2                   0
+   cq-team-b-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   4
+   cq-team-c-compact   team-c-d   StrictFIFO   0                   1
+   cq-team-c-hp        team-c-d   StrictFIFO   0                   1
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   4
+   cq-team-d-compact   team-c-d   StrictFIFO   2                   1
+   cq-team-d-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   4
+   dws-cluster-queue          BestEffortFIFO   0                   2</code></p>
+<p>b. At this time all the workloads have been submitted to the batch platform, and will continue to process in the order decided by Kueue.</p>
+<p>c. Head over to the GPU monitoring dashboard you opened earlier. You should see charts displaying useful GPU utilization data from the batch platform for example:</p>
+<ul>
+<li>
+<p>Number and type of GPUs in the cluster over time</p>
+<p><img src="./images/gpu_count.png" width="600"></p>
+</li>
+<li>
+<p>Distribution (heatmap) of GPU utilization</p>
+<p><img src="./images/gpu_util_heatmap.png" width="600"></p>
+<ul>
+<li>Distribution (heatmap) of GPU memory utilization</li>
+</ul>
+<p><img src="./images/gpu_mem_heatmap.png" width="600"></p>
+</li>
+</ul>
+<p>d. Return to the terminal tab watching Jobs across all namespaces, after a while you should see all Jobs completed.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAMESPACE   NAME                         COMPLETIONS   DURATION   AGE
+   team-a      finetune-gemma-2xa100        1/1           8m17s      15m
+   team-a      team-a-compact-job-0         2/2           7m22s      42m
+   team-a      team-a-compact-job-1         2/2           11m        42m
+   team-a      team-a-compact-job-2         2/2           7m52s      42m
+   team-a      team-a-compact-job-3         2/2           7m15s      42m
+   team-a      team-a-high-priority-job-0   2/2           8m37s      53m
+   team-a      team-a-high-priority-job-1   2/2           15m        53m
+   team-a      team-a-high-priority-job-2   2/2           4m38s      53m
+   team-a      team-a-high-priority-job-3   2/2           4m38s      53m
+   team-a      team-a-jobset-0-worker-0     2/2           18m        24m
+   team-a      team-a-jobset-1-worker-0     2/2           5m4s       26m
+   team-a      team-a-jobset-2-worker-0     2/2           91s        22m
+   team-a      team-a-jobset-3-worker-0     2/2           5m         26m
+   team-a      team-a-low-priority-job-0    2/2           3m31s      58m
+   team-a      team-a-low-priority-job-1    2/2           11m        58m
+   team-a      team-a-low-priority-job-2    2/2           10m        58m
+   team-a      team-a-low-priority-job-3    2/2           10m        57m
+   team-b      finetune-gemma-8xh100        1/1           10m8s      15m
+   team-b      team-b-compact-job-0         2/2           8m56s      42m
+   team-b      team-b-compact-job-1         2/2           7m28s      42m
+   team-b      team-b-compact-job-2         2/2           7m16s      42m
+   team-b      team-b-compact-job-3         2/2           8m3s       42m
+   team-b      team-b-high-priority-job-0   2/2           9m         53m
+   team-b      team-b-high-priority-job-1   2/2           7m34s      53m
+   team-b      team-b-high-priority-job-2   2/2           13m        53m
+   team-b      team-b-high-priority-job-3   2/2           4m52s      53m
+   team-b      team-b-jobset-0-worker-0     2/2           5m25s      26m
+   team-b      team-b-jobset-1-worker-0     2/2           3m37s      4m21s
+   team-b      team-b-jobset-2-worker-0     2/2           5m2s       26m
+   team-b      team-b-jobset-3-worker-0     2/2           5m10s      26m
+   team-b      team-b-low-priority-job-0    2/2           3m40s      58m
+   team-b      team-b-low-priority-job-1    2/2           11m        58m
+   team-b      team-b-low-priority-job-2    2/2           12m        58m
+   team-b      team-b-low-priority-job-3    2/2           10m        57m
+   team-c      team-c-compact-job-0         2/2           8m39s      42m
+   team-c      team-c-compact-job-1         2/2           7m6s       42m
+   team-c      team-c-compact-job-2         2/2           7m12s      42m
+   team-c      team-c-compact-job-3         2/2           7m11s      42m
+   team-c      team-c-high-priority-job-0   2/2           28m        53m
+   team-c      team-c-high-priority-job-1   2/2           11m        53m
+   team-c      team-c-high-priority-job-2   2/2           3m36s      53m
+   team-c      team-c-high-priority-job-3   2/2           3m30s      53m
+   team-c      team-c-jobset-0-worker-0     2/2           3m37s      11m
+   team-c      team-c-jobset-1-worker-0     2/2           3m33s      16m
+   team-c      team-c-jobset-2-worker-0     2/2           5m2s       26m
+   team-c      team-c-jobset-3-worker-0     2/2           3m38s      18m
+   team-c      team-c-low-priority-job-0    2/2           2m46s      58m
+   team-c      team-c-low-priority-job-1    2/2           11m        58m
+   team-c      team-c-low-priority-job-2    2/2           9m50s      58m
+   team-c      team-c-low-priority-job-3    2/2           10m        57m
+   team-d      team-d-compact-job-0         2/2           9m50s      42m
+   team-d      team-d-compact-job-1         2/2           7m34s      42m
+   team-d      team-d-compact-job-2         2/2           7m42s      42m
+   team-d      team-d-compact-job-3         2/2           7m13s      42m
+   team-d      team-d-high-priority-job-0   2/2           10m        53m
+   team-d      team-d-high-priority-job-1   2/2           27m        53m
+   team-d      team-d-high-priority-job-2   2/2           6m16s      53m
+   team-d      team-d-high-priority-job-3   2/2           6m22s      53m
+   team-d      team-d-jobset-0-worker-0     2/2           5m3s       26m
+   team-d      team-d-jobset-1-worker-0     2/2           97s        22m
+   team-d      team-d-jobset-2-worker-0     2/2           93s        22m
+   team-d      team-d-jobset-3-worker-0     2/2           16m        22m
+   team-d      team-d-low-priority-job-0    2/2           2m57s      58m
+   team-d      team-d-low-priority-job-1    2/2           10m        58m
+   team-d      team-d-low-priority-job-2    2/2           19m        58m
+   team-d      team-d-low-priority-job-3    2/2           17m        57m</code></p>
+<p>e. Return to the terminal tab watching the <code>clusterqueues</code>, you should see no workloads pending or admitted.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                COHORT     STRATEGY     PENDING WORKLOADS   ADMITTED WORKLOADS
+   cq-team-a-compact   team-a-b   StrictFIFO   0                   0
+   cq-team-a-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-a-lp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-compact   team-a-b   StrictFIFO   0                   0
+   cq-team-b-hp        team-a-b   StrictFIFO   0                   0
+   cq-team-b-lp        team-a-b   StrictFIFO   0                   0
+   cq-team-c-compact   team-c-d   StrictFIFO   0                   0
+   cq-team-c-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-c-lp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-compact   team-c-d   StrictFIFO   0                   0
+   cq-team-d-hp        team-c-d   StrictFIFO   0                   0
+   cq-team-d-lp        team-c-d   StrictFIFO   0                   0
+   dws-cluster-queue          BestEffortFIFO   0                   0</code></p>
+<p>f. Return to the terminal tab watching the nodes, you should see GKE shrink the cluster back down to the initial state of ten nodes, six in the default node pool and four in the reserved node pool.</p>
+<p>Expected output:</p>
+<p><code>bash
+   NAME                                               STATUS   ROLES    AGE   VERSION
+   gke-gke-batch-refarch-default-pool-8bba21a2-3328   Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-8bba21a2-bmzg   Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-8k19   Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-9899b2fc-srxf   Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-gn5j   Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-default-pool-ab9bedc3-wht3   Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-djvf    Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p2w7    Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-p42h    Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001
+   gke-gke-batch-refarch-reserved-np-866c1d22-r6rt    Ready    &lt;none&gt;   13h   v1.28.3-gke.1203001</code></p>
+<h2 id="clean-up">Clean up</h2>
+<ol>
+<li>The easiest way to prevent continued billing for the resources that you created for this tutorial is to delete the project you created for the tutorial. Run the following commands from Cloud Shell:</li>
+</ol>
+<p><code>bash
+    gcloud config unset project &amp;&amp; \
+    echo y | gcloud projects delete $PROJECT_ID</code></p>
+<ol>
+<li>If the project needs to be left intact, another option is to destroy the infrastructure created for this tutorial using Cloud Build. Note, this does not destroy the Cloud Storage bucket containing the Terraform state, the artifact registry used to host container images or the IAM bindings and service enablement created via the <code>create-platform.sh</code> script.</li>
+</ol>
+<p><code>bash
+    cd $HOME/ai-on-gke/best-practices/gke-batch-refarch &amp;&amp; \
+    ./destroy-platform.sh</code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs", "navigation.tabs.sticky", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+    
+  </body>
+</html>
