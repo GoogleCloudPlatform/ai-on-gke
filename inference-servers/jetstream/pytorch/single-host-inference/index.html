@@ -1,0 +1,3491 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://googlecloudplatform.github.io/ai-on-gke/inference-servers/jetstream/pytorch/single-host-inference/">
+      
+      
+        <link rel="prev" href="../../maxtext/single-host-inference/">
+      
+      
+        <link rel="next" href="../../../maxdiffusion/">
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.46">
+    
+    
+      
+        <title>Serve a LLM using a single-host TPU on GKE with JetStream and PyTorch/XLA - AI on GKE</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#serve-a-llm-using-a-single-host-tpu-on-gke-with-jetstream-and-pytorchxla" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="AI on GKE" class="md-header__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI on GKE
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Serve a LLM using a single-host TPU on GKE with JetStream and PyTorch/XLA
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../.." class="md-tabs__link">
+        
+  
+    
+  
+  AI on GKE Assets
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../cloudshell-tutorial/" class="md-tabs__link">
+        
+  
+    
+  
+  Cloudshell tutorial
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../genAI-LLM/deploying-mistral-7b-instruct-L4gpus/" class="md-tabs__link">
+          
+  
+    
+  
+  genAI LLM
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../gpu-examples/a100-jax/" class="md-tabs__link">
+          
+  
+    
+  
+  Gpu examples
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../hf-tgi/" class="md-tabs__link">
+          
+  
+    
+  
+  Hf tgi
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../checkpoints/" class="md-tabs__link">
+          
+  
+    
+  
+  Inference servers
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../kserve/" class="md-tabs__link">
+          
+  
+    
+  
+  Kserve
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../models-as-oci/" class="md-tabs__link">
+          
+  
+    
+  
+  Models as oci
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../nvidia-nim/" class="md-tabs__link">
+          
+  
+    
+  
+  Nvidia nim
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../skypilot/" class="md-tabs__link">
+          
+  
+    
+  
+  Skypilot
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../storage/hyperdisk-ml/" class="md-tabs__link">
+          
+  
+    
+  
+  Storage
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../tpu-examples/single-host-inference/jax/stable-diffusion/" class="md-tabs__link">
+          
+  
+    
+  
+  Tpu examples
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../vector-databases/readme/" class="md-tabs__link">
+          
+  
+    
+  
+  Vector databases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../workflow-orchestration/dws-examples/" class="md-tabs__link">
+          
+  
+    
+  
+  Workflow orchestration
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="AI on GKE" class="md-nav__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI on GKE
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AI on GKE Assets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../cloudshell-tutorial/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudshell tutorial
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    genAI LLM
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            genAI LLM
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../genAI-LLM/deploying-mistral-7b-instruct-L4gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    deploying mistral 7b instruct L4gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mistral 7b instruct L4gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../genAI-LLM/deploying-mixtral-8x7b-instruct-L4-gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    deploying mixtral 8x7b instruct L4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mixtral 8x7b instruct L4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../genAI-LLM/e2e-genai-langchain-app/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    E2e genai langchain app
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            E2e genai langchain app
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../genAI-LLM/finetuning-gemma-2b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning gemma 2b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning gemma 2b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../genAI-LLM/finetuning-llama-7b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning llama 7b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning llama 7b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../genAI-LLM/serving-llama2-70b-on-l4-gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Serving llama2 70b on l4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            Serving llama2 70b on l4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Gpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Gpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../gpu-examples/a100-jax/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    A100 jax
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            A100 jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../gpu-examples/online-serving-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Online serving single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Online serving single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../gpu-examples/training-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Training single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Training single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../hf-tgi/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hf tgi
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Hf tgi
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Inference servers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Inference servers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../checkpoints/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Checkpoints
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            Checkpoints
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jetstream
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Jetstream
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2_1" id="__nav_6_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Maxtext
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Maxtext
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../maxtext/single-host-inference/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_2_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6_2_2" id="__nav_6_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2_2_1" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_2_2_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_2_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../maxdiffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Maxdiffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            Maxdiffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../kserve/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Kserve
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Kserve
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../models-as-oci/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Models as oci
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Models as oci
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../nvidia-nim/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Nvidia nim
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Nvidia nim
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../skypilot/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Skypilot
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_10" id="__nav_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            Skypilot
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../skypilot/text-classification/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Text classification
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_2">
+            <span class="md-nav__icon md-icon"></span>
+            Text classification
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../storage/hyperdisk-ml/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hyperdisk ml
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_1">
+            <span class="md-nav__icon md-icon"></span>
+            Hyperdisk ml
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            Tpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_1" id="__nav_12_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_1_1" id="__nav_12_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jax
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_12_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_1_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../tpu-examples/single-host-inference/jax/stable-diffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Stable diffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_12_1_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_1_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Stable diffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_2" id="__nav_12_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            Training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../tpu-examples/training/mnist-single-tpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Mnist single tpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_12_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Mnist single tpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Vector databases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            Vector databases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vector-databases/readme/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Vector Database Repo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../vector-databases/NEXT-2024-Weaviate-Demo/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    NEXT 2024 Weaviate Demo
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_2" id="__nav_13_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_2">
+            <span class="md-nav__icon md-icon"></span>
+            NEXT 2024 Weaviate Demo
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../vector-databases/NEXT-2024-Weaviate-Demo/demo-website/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Demo website
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Demo website
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Workflow orchestration
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            Workflow orchestration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../workflow-orchestration/dws-examples/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Dws examples
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dws examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../workflow-orchestration/indexed-job/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Indexed job
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_2">
+            <span class="md-nav__icon md-icon"></span>
+            Indexed job
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_14_3" id="__nav_14_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jobset
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_3">
+            <span class="md-nav__icon md-icon"></span>
+            Jobset
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../workflow-orchestration/jobset/pytorch/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_14_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    <span class="md-ellipsis">
+      Background
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Background">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-default-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Set default environment variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-gke-cluster-and-node-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create GKE cluster and node pool
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-applications-to-use-workload-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure Applications to use Workload Identity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-cloud-storage-bucket-to-store-your-model-checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a Cloud Storage bucket to store your model checkpoint
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Checkpoint conversion
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Checkpoint conversion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-download-weights-from-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      [Option #1] Download weights from GitHub
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-download-weights-from-huggingface" class="md-nav__link">
+    <span class="md-ellipsis">
+      [Option #2] Download weights from HuggingFace
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-the-checkpoint-conversion-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      Apply the checkpoint conversion job
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Apply the checkpoint conversion job">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llama-2-7b-hf" class="md-nav__link">
+    <span class="md-ellipsis">
+      Llama-2-7b-hf
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llama-3-8b" class="md-nav__link">
+    <span class="md-ellipsis">
+      Llama-3-8b
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gemma-2b" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gemma-2b
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploy-the-jetstream-pytorch-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploy the Jetstream Pytorch server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deploy the Jetstream Pytorch server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-the-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify the deployment
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#serve-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Serve the model
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optionals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optionals
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optionals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interact-with-the-jetstream-pytorch-server-directly-using-grpc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interact with the Jetstream Pytorch server directly using gRPC
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-a-persistent-disk-to-host-your-checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use a Persistent Disk to host your checkpoint
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="serve-a-llm-using-a-single-host-tpu-on-gke-with-jetstream-and-pytorchxla">Serve a LLM using a single-host TPU on GKE with JetStream and PyTorch/XLA</h1>
+<h2 id="background">Background</h2>
+<p>This tutorial shows you how to serve a large language model (LLM) using Tensor Processing Units (TPUs) on Google Kubernetes Engine (GKE) with <a href="https://github.com/google/JetStream">JetStream</a> and <a href="https://github.com/google/jetstream-pytorch">Jetstream-Pytorch</a>.</p>
+<h3 id="set-default-environment-variables">Set default environment variables</h3>
+<pre><code>gcloud config set project [PROJECT_ID]
+export PROJECT_ID=$(gcloud config get project)
+export REGION=[COMPUTE_REGION]
+export ZONE=[ZONE]
+</code></pre>
+<h3 id="create-gke-cluster-and-node-pool">Create GKE cluster and node pool</h3>
+<pre><code># Create zonal cluster with 2 CPU nodes
+gcloud container clusters create jetstream-maxtext \
+    --zone=${ZONE} \
+    --project=${PROJECT_ID} \
+    --workload-pool=${PROJECT_ID}.svc.id.goog \
+    --release-channel=rapid \
+    --addons GcsFuseCsiDriver
+    --num-nodes=2
+# Create one v5e TPU pool with topology 2x4 (1 TPU node with 8 chips)
+gcloud container node-pools create tpu \
+    --cluster=jetstream-maxtext \
+    --zone=${ZONE} \
+    --num-nodes=2 \
+    --machine-type=ct5lp-hightpu-8t \
+    --project=${PROJECT_ID}
+</code></pre>
+<p>You have created the following resources:</p>
+<ul>
+<li>Standard cluster with 2 CPU nodes.</li>
+<li>One v5e TPU node pool with 2 nodes, each with 8 chips.</li>
+</ul>
+<h3 id="configure-applications-to-use-workload-identity">Configure Applications to use Workload Identity</h3>
+<p>Prerequisite: make sure you have the following roles</p>
+<pre><code>roles/container.admin
+roles/iam.serviceAccountAdmin
+</code></pre>
+<p>Follow <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to">these steps</a> to configure the IAM and Kubernetes service account:</p>
+<pre><code># Get credentials for your cluster
+$ gcloud container clusters get-credentials jetstream-maxtext \
+    --zone=${ZONE}
+# Create an IAM service account.
+$ gcloud iam service-accounts create jetstream-iam-sa
+# Ensure the IAM service account has necessary roles. Here we add roles/storage.objectUser for gcs bucket access.
+$ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member &quot;serviceAccount:jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com&quot; \
+    --role roles/storage.objectUser
+$ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member &quot;serviceAccount:jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com&quot; \
+    --role roles/storage.insightsCollectorService
+# Allow the Kubernetes default service account to impersonate the IAM service account
+$ gcloud iam service-accounts add-iam-policy-binding jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com \
+    --role roles/iam.workloadIdentityUser \
+    --member &quot;serviceAccount:${PROJECT_ID}.svc.id.goog[default/default]&quot;
+# Annotate the Kubernetes service account with the email address of the IAM service account.
+$ kubectl annotate serviceaccount default \
+    iam.gke.io/gcp-service-account=jetstream-iam-sa@${PROJECT_ID}.iam.gserviceaccount.com
+</code></pre>
+<h3 id="create-a-cloud-storage-bucket-to-store-your-model-checkpoint">Create a Cloud Storage bucket to store your model checkpoint</h3>
+<pre><code>BUCKET_NAME=&lt;your desired gsbucket name&gt;
+gcloud storage buckets create $BUCKET_NAME
+</code></pre>
+<h2 id="checkpoint-conversion">Checkpoint conversion</h2>
+<h3 id="option-1-download-weights-from-github">[Option #1] Download weights from GitHub</h3>
+<p>Follow the instructions here to download the llama-2-7b weights: https://github.com/meta-llama/llama#download </p>
+<pre><code>ls llama
+
+llama-2-7b tokenizer.model ..
+</code></pre>
+<p>Upload your weights and tokenizer to your GSBucket</p>
+<pre><code>gcloud storage cp -r llama-2-7b/* gs://BUCKET_NAME/llama-2-7b/base/
+gcloud storage cp tokenizer.model gs://BUCKET_NAME/llama-2-7b/base/
+</code></pre>
+<h3 id="option-2-download-weights-from-huggingface">[Option #2] Download weights from HuggingFace</h3>
+<p>Accept the terms and conditions from https://huggingface.co/meta-llama/Llama-2-7b-hf.</p>
+<p>For llama-3-8b: https://huggingface.co/meta-llama/Meta-Llama-3-8B.</p>
+<p>For gemma-2b: https://huggingface.co/google/gemma-2b-pytorch.</p>
+<p>Obtain a HuggingFace CLI token by going to your HuggingFace settings and under the <code>Access Tokens</code>, generate a <code>New token</code>. Edit permissions to your access token to have read access to your respective checkpoint repository.</p>
+<p>Copy your access token and create a Secret to store the HuggingFace token</p>
+<pre><code>kubectl create secret generic huggingface-secret \
+  --from-literal=HUGGINGFACE_TOKEN=&lt;access_token&gt;
+</code></pre>
+<h3 id="apply-the-checkpoint-conversion-job">Apply the checkpoint conversion job</h3>
+<p>For the following models, replace the following arguments in <code>checkpoint-job.yaml</code></p>
+<h4 id="llama-2-7b-hf">Llama-2-7b-hf</h4>
+<pre><code>- -s=jetstream-pytorch
+- -m=meta-llama/Llama-2-7b-hf
+- -o=gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/
+- -n=llama-2
+- -q=False
+- -h=True
+</code></pre>
+<h4 id="llama-3-8b">Llama-3-8b</h4>
+<pre><code>- -s=jetstream-pytorch
+- -m=meta-llama/Meta-Llama-3-8B
+- -o=gs://BUCKET_NAME/pytorch/llama-3-8b/final/bf16/
+- -n=llama-3
+- -q=False
+- -h=True
+</code></pre>
+<h4 id="gemma-2b">Gemma-2b</h4>
+<pre><code>- -s=jetstream-pytorch
+- -m=google/gemma-2b-pytorch
+- -o=gs://BUCKET_NAME/pytorch/gemma-2b/final/bf16/
+- -n=gemma
+- -q=False
+- -h=True
+</code></pre>
+<p>Run the checkpoint conversion job. This will use the <a href="https://github.com/google/jetstream-pytorch/blob/main/convert_checkpoints.py">checkpoint conversion script</a> from Jetstream-pytorch to create a compatible Pytorch checkpoint</p>
+<p>Please make sure you edit <code>checkpoint-job</code> and replace all occurrences of <code>BUCKET_NAME</code> with the <code>BUCKET_NAME</code> that you have set above.</p>
+<pre><code>kubectl apply -f checkpoint-job.yaml
+</code></pre>
+<p>Observe your checkpoint</p>
+<pre><code>kubectl logs -f jobs/checkpoint-converter
+# This can take several minutes
+...
+Completed uploading converted checkpoint from local path /pt-ckpt/ to GSBucket gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/&quot;
+</code></pre>
+<p>Now your converted checkpoint will be located in <code>gs://BUCKET_NAME/pytorch/llama-2-7b/final/bf16/</code></p>
+<h2 id="deploy-the-jetstream-pytorch-server">Deploy the Jetstream Pytorch server</h2>
+<p>The following flags are set in the manifest file</p>
+<pre><code>--size: Size of model
+--model_name: Name of model (llama-2, llama-3, gemma)
+--batch_size: Batch size
+--max_cache_length: Maximum length of kv cache 
+--tokenizer_path: Path to model tokenizer file
+--checkpoint_path: Path to checkpoint
+Optional flags to add
+--quantize_weights (Default False): Checkpoint is quantized
+--quantize_kv_cache (Default False): Quantized kv cache
+</code></pre>
+<p>For llama3-8b, you can use the following arguments:</p>
+<pre><code>- --size=8b
+- --model_name=llama-3
+- --batch_size=80
+- --max_cache_length=2048
+- --quantize_weights=False
+- --quantize_kv_cache=False
+- --tokenizer_path=/models/pytorch/llama3-8b/final/bf16/tokenizer.model
+- --checkpoint_path=/models/pytorch/llama3-8b/final/bf16/model.safetensors
+</code></pre>
+<pre><code>kubectl apply -f deployment.yaml
+</code></pre>
+<h3 id="verify-the-deployment">Verify the deployment</h3>
+<pre><code>kubectl get deployment
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+jetstream-pytorch-server    2/2       2            2         ##s
+</code></pre>
+<p>View the HTTP server logs to check that the model has been loaded and compiled. It may take the server a few minutes to complete this operation.</p>
+<pre><code>kubectl logs deploy/jetstream-pytorch-server -f -c jetstream-http
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+</code></pre>
+<p>View the Jetstream Pytorch server logs and verify that the compilation is done.</p>
+<pre><code>kubectl logs deploy/jetstream-pytorch-server -f -c jetstream-pytorch-server
+Started jetstream_server....
+2024-04-12 04:33:37,128 - root - INFO - ---------Generate params 0 loaded.---------
+</code></pre>
+<h2 id="serve-the-model">Serve the model</h2>
+<pre><code>kubectl port-forward svc/jetstream-svc 8000:8000
+</code></pre>
+<p>Interact with the model via curl</p>
+<pre><code>curl --request POST \
+--header &quot;Content-type: application/json&quot; \
+-s \
+localhost:8000/generate \
+--data \
+'{
+    &quot;prompt&quot;: &quot;What are the top 5 programming languages&quot;,
+    &quot;max_tokens&quot;: 200
+}'
+</code></pre>
+<p>The initial request can take several seconds to complete due to model warmup. The output is similar to the following:</p>
+<pre><code>{
+    &quot;response&quot;: &quot; for 2019?\nWhat are the top 5 programming languages for 2019? The top 5 programming languages for 2019 are Python, Java, JavaScript, C, and C++.\nWhat are the top 5 programming languages for 2019? The top 5 programming languages for 2019 are Python, Java, JavaScript, C, and C++. These languages are used in a variety of industries and are popular among developers.\nPython is a versatile language that can be used for web development, data analysis, and machine learning. It is easy to learn and has a large community of developers.\nJava is a popular language for enterprise applications and is used by many large companies. It is also used for mobile development and has a large community of developers.\nJavaScript is a popular language for web development and is used by many websites. It is also used for mobile development and has a&quot;
+}
+</code></pre>
+<h2 id="optionals">Optionals</h2>
+<h3 id="interact-with-the-jetstream-pytorch-server-directly-using-grpc">Interact with the Jetstream Pytorch server directly using gRPC</h3>
+<p>The Jetstream HTTP server is great for initial testing and validating end-to-end requests and responses. In production use case, it's recommended to interact with the JetStream-Pytorch server directly for better throughput/latency and use the streaming decode feature on the JetStream grpc server.</p>
+<pre><code>kubectl port-forward svc/jetstream-svc 9000:9000
+</code></pre>
+<p>Now you can interact with the JetStream grpc server directly via port 9000.</p>
+<h3 id="use-a-persistent-disk-to-host-your-checkpoint">Use a Persistent Disk to host your checkpoint</h3>
+<p>Create a GCE CPU VM to do your checkpoint conversion. </p>
+<pre><code>gcloud compute instances create jetstream-ckpt-converter \
+  --zone=us-central1-a \
+  --machine-type=n2-standard-32 \
+  --scopes=https://www.googleapis.com/auth/cloud-platform \
+  --image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20230919 \
+  --boot-disk-size=128GB \
+  --boot-disk-type=pd-balanced
+</code></pre>
+<p>SSH into the VM and install python and git</p>
+<pre><code>gcloud compute ssh jetstream-ckpt-converter --zone=us-central1-a
+sudo apt update
+sudo apt-get install python3-pip
+sudo apt-get install git-all
+</code></pre>
+<p>In your CPU VM, follow these instructions to do the following:
+1. Clone the jetstream-pytorch repository
+2. Run the installation script
+3. Download and convert llama-2-7b weights</p>
+<p>After running weight safetensor convert, you should see the following files in the directory you have saved them to:</p>
+<pre><code>ls &lt;directory where checkpoint is stored&gt;
+model.safetensors  params.json
+</code></pre>
+<p>Create a persistent disk to store your checkpoint</p>
+<pre><code>gcloud compute disks create jetstream-pytorch-ckpt --zone=us-west4-a --type pd-balanced
+NAME                    ZONE        SIZE_GB  TYPE         STATUS
+pytorch-jetstream-ckpt  us-west4-a  100      pd-balanced  READY
+</code></pre>
+<p>Attach the disk to your VM</p>
+<pre><code>gcloud compute instances attach-disk jetstream-ckpt-converter \
+  --disk jetstream-pytorch-ckpt --project $PROJECT_ID --zone us-west4-a
+</code></pre>
+<p>Identity your disk, it will be similar to the following but may also have a different name:</p>
+<pre><code>lsblk
+NAME    MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+...
+sdc       8:32   0   100G  0 disk 
+</code></pre>
+<p>Format your disk and create a directory in its mount folder</p>
+<pre><code>sudo mkfs.ext4 /dev/sdc
+mkdir /mnt/jetstream-pytorch-ckpt
+sudo mount /dev/sdc /mnt/jetstream-pytorch-ckpt
+</code></pre>
+<p>Copy your converted checkpoint folder into /mnt/jetstream-pytorch-ckpt</p>
+<pre><code>cp &lt;path to converterted checkpoint&gt; /mnt/jetstream-pytorch-ckpt
+</code></pre>
+<p>Unmount and detach your persistent disk</p>
+<pre><code>sudo umount /mnt/jetstream-pytorch-ckpt
+gcloud compute instances detach-disk jetstream-ckpt-converter \
+  --disk jetstream-pytorch-ckpt --project $PROJECT_ID --zone us-west4-a
+</code></pre>
+<p>Apply your storage and deployment manifest file</p>
+<pre><code>kubectl apply -f storage.yaml
+kubectl apply -f pd-deployment.yaml
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.tabs.sticky", "navigation.expand", "navigation.indexes"], "search": "../../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+    
+  </body>
+</html>

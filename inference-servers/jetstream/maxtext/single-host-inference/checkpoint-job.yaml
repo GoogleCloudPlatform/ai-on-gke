@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-loader-7b
+spec:
+  ttlSecondsAfterFinished: 30
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: inference-checkpoint
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.2
+        args:
+        - -b=BUCKET_NAME
+        - -m=google/gemma/maxtext/7b-it/2
+        volumeMounts:
+        - mountPath: "/kaggle/"
+          name: kaggle-credentials
+          readOnly: true
+        resources:
+          requests:
+            google.com/tpu: 8
+          limits:
+            google.com/tpu: 8
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 2x4
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+      volumes:
+      - name: kaggle-credentials
+        secret:
+          defaultMode: 0400
+          secretName: kaggle-secret

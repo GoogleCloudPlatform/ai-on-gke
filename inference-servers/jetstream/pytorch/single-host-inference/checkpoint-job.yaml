@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: checkpoint-converter
+spec:
+  ttlSecondsAfterFinished: 30
+  template:
+    metadata:
+      annotations:
+          gke-gcsfuse/volumes: "true"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: inference-checkpoint
+        image: us-docker.pkg.dev/cloud-tpu-images/inference/inference-checkpoint:v0.2.3
+        args:
+        - -s=jetstream-pytorch
+        - -m=/models
+        - -i=gs://BUCKET_NAME/pytorch/llama2-7b/base/
+        - -o=gs://BUCKET_NAME/pytorch/llama2-7b/final/bf16/
+        - -q=False
+        volumeMounts:
+        - mountPath: "/kaggle/"
+          name: kaggle-credentials
+          readOnly: true
+        - mountPath: "/huggingface/"
+          name: huggingface-credentials
+          readOnly: true
+        - name: gcs-fuse-checkpoint
+          mountPath: /models
+          readOnly: true
+        resources:
+          requests:
+            google.com/tpu: 8
+          limits:
+            google.com/tpu: 8
+      nodeSelector:
+        cloud.google.com/gke-tpu-topology: 2x4
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+      volumes:
+      - name: kaggle-credentials
+        secret:
+          defaultMode: 0400
+          secretName: kaggle-secret
+      - name: huggingface-credentials
+        secret:
+          defaultMode: 0400
+          secretName: huggingface-secret
+      - name: gcs-fuse-checkpoint
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          readOnly: true
+          volumeAttributes:
+            bucketName: BUCKET_NAME
+            mountOptions: "implicit-dirs"

@@ -1,0 +1,55 @@
+steps:
+  - name: 'python:3.10-slim'
+    entrypoint: 'bash'
+    secretEnv:  # Specify the secret environment variables here
+      - HUGGINGFACE_TOKEN  # This will be populated from the secret manager
+    args:
+      - '-c'
+      - |
+        # Install the huggingface_hub with hf_transfer
+        pip install hf_transfer
+        pip install huggingface_hub[hf_transfer]
+
+        mkdir -r /workspace/model
+        
+        # Enable hf_transfer for faster downloads
+        export HF_HUB_ENABLE_HF_TRANSFER=1
+        
+        # Write the token to the expected location
+        huggingface-cli login --token $$HUGGINGFACE_TOKEN 
+        
+        # Download the model using huggingface_hub
+        huggingface-cli download $_MODEL_NAME --local-dir /workspace/model
+
+  - name: 'gcr.io/cloud-builders/docker'
+    env:
+      - "DOCKER_BUILDKIT=1"
+    args: 
+      - build
+      - '-t'
+      - '$_REGISTRY/$PROJECT_ID/$_REPO/$_IMAGE_NAME'
+      - '/workspace'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '$_REGISTRY/$PROJECT_ID/$_REPO/$_IMAGE_NAME']
+
+availableSecrets:
+  secretManager:
+    - versionName: 'projects/$PROJECT_ID/secrets/$_CLOUD_SECRET_NAME/versions/latest'
+      env: 'HUGGINGFACE_TOKEN'  # Environment variable name
+
+timeout: '3000s'
+
+# Configure disk size for the build
+options:
+  diskSizeGb: '100'  # Use the DISK_SIZE substitution
+  machineType: 'E2_HIGHCPU_32'  # Specify the machine type
+  dynamicSubstitutions: true
+
+substitutions:
+  _MODEL_NAME: 'huggingfaceh4/zephyr-7b-beta'  # Default value for model name
+  _REGISTRY: 'us-docker.pkg.dev'
+  _REPO: 'cloud-blog-oci-models'
+  _IMAGE_NAME: 'zephyr-7b-beta'  # Default value for image name
+  _CLOUD_SECRET_NAME: 'huggingface-token'  # Default value for cloud secret name
+  

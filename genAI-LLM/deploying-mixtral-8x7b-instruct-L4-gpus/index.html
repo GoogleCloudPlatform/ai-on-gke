@@ -1,0 +1,3477 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://googlecloudplatform.github.io/ai-on-gke/genAI-LLM/deploying-mixtral-8x7b-instruct-L4-gpus/">
+      
+      
+        <link rel="prev" href="../deploying-mistral-7b-instruct-L4gpus/">
+      
+      
+        <link rel="next" href="../e2e-genai-langchain-app/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.46">
+    
+    
+      
+        <title>Guide to Serving Mixtral 8x7 Model on GKE Utilizing Nvidia L4-GPUs - AI on GKE</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#guide-to-serving-mixtral-8x7-model-on-gke-utilizing-nvidia-l4-gpus" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI on GKE" class="md-header__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI on GKE
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Guide to Serving Mixtral 8x7 Model on GKE Utilizing Nvidia L4-GPUs
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  AI on GKE Assets
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../cloudshell-tutorial/" class="md-tabs__link">
+        
+  
+    
+  
+  Cloudshell tutorial
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../deploying-mistral-7b-instruct-L4gpus/" class="md-tabs__link">
+          
+  
+    
+  
+  genAI LLM
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../gpu-examples/a100-jax/" class="md-tabs__link">
+          
+  
+    
+  
+  Gpu examples
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../hf-tgi/" class="md-tabs__link">
+          
+  
+    
+  
+  Hf tgi
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../inference-servers/checkpoints/" class="md-tabs__link">
+          
+  
+    
+  
+  Inference servers
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../kserve/" class="md-tabs__link">
+          
+  
+    
+  
+  Kserve
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../models-as-oci/" class="md-tabs__link">
+          
+  
+    
+  
+  Models as oci
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../nvidia-nim/" class="md-tabs__link">
+          
+  
+    
+  
+  Nvidia nim
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../skypilot/" class="md-tabs__link">
+          
+  
+    
+  
+  Skypilot
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../storage/hyperdisk-ml/" class="md-tabs__link">
+          
+  
+    
+  
+  Storage
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tpu-examples/single-host-inference/jax/stable-diffusion/" class="md-tabs__link">
+          
+  
+    
+  
+  Tpu examples
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../vector-databases/readme/" class="md-tabs__link">
+          
+  
+    
+  
+  Vector databases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../workflow-orchestration/dws-examples/" class="md-tabs__link">
+          
+  
+    
+  
+  Workflow orchestration
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI on GKE" class="md-nav__button md-logo" aria-label="AI on GKE" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI on GKE
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AI on GKE Assets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cloudshell-tutorial/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudshell tutorial
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    genAI LLM
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            genAI LLM
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../deploying-mistral-7b-instruct-L4gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    deploying mistral 7b instruct L4gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mistral 7b instruct L4gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  <span class="md-ellipsis">
+    deploying mixtral 8x7b instruct L4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            deploying mixtral 8x7b instruct L4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../e2e-genai-langchain-app/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    E2e genai langchain app
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            E2e genai langchain app
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../finetuning-gemma-2b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning gemma 2b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning gemma 2b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../finetuning-llama-7b-on-l4/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Finetuning llama 7b on l4
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Finetuning llama 7b on l4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../serving-llama2-70b-on-l4-gpus/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Serving llama2 70b on l4 gpus
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            Serving llama2 70b on l4 gpus
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Gpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Gpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../gpu-examples/a100-jax/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    A100 jax
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            A100 jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../gpu-examples/online-serving-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Online serving single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Online serving single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../gpu-examples/training-single-gpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Training single gpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Training single gpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../hf-tgi/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hf tgi
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Hf tgi
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Inference servers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Inference servers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../inference-servers/checkpoints/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Checkpoints
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            Checkpoints
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jetstream
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Jetstream
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2_1" id="__nav_6_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Maxtext
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Maxtext
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../inference-servers/jetstream/maxtext/single-host-inference/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_2_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2_2" id="__nav_6_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../inference-servers/jetstream/pytorch/single-host-inference/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_2_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../inference-servers/maxdiffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Maxdiffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            Maxdiffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../kserve/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Kserve
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Kserve
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../models-as-oci/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Models as oci
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Models as oci
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../nvidia-nim/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Nvidia nim
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Nvidia nim
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../skypilot/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Skypilot
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_10" id="__nav_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            Skypilot
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../skypilot/text-classification/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Text classification
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_2">
+            <span class="md-nav__icon md-icon"></span>
+            Text classification
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../storage/hyperdisk-ml/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Hyperdisk ml
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_1">
+            <span class="md-nav__icon md-icon"></span>
+            Hyperdisk ml
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tpu examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            Tpu examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_1" id="__nav_12_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Single host inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_1">
+            <span class="md-nav__icon md-icon"></span>
+            Single host inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_1_1" id="__nav_12_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jax
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_12_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Jax
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_1_1_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tpu-examples/single-host-inference/jax/stable-diffusion/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Stable diffusion
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_12_1_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_1_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Stable diffusion
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_2" id="__nav_12_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            Training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12_2_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tpu-examples/training/mnist-single-tpu/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Mnist single tpu
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_12_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Mnist single tpu
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Vector databases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            Vector databases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vector-databases/readme/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Vector Database Repo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../vector-databases/NEXT-2024-Weaviate-Demo/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    NEXT 2024 Weaviate Demo
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_2" id="__nav_13_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_2">
+            <span class="md-nav__icon md-icon"></span>
+            NEXT 2024 Weaviate Demo
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_2_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../vector-databases/NEXT-2024-Weaviate-Demo/demo-website/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Demo website
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Demo website
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Workflow orchestration
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            Workflow orchestration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../workflow-orchestration/dws-examples/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Dws examples
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dws examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../workflow-orchestration/indexed-job/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Indexed job
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_2">
+            <span class="md-nav__icon md-icon"></span>
+            Indexed job
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_14_3" id="__nav_14_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Jobset
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_3">
+            <span class="md-nav__icon md-icon"></span>
+            Jobset
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14_3_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../workflow-orchestration/jobset/pytorch/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Pytorch
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_14_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            Pytorch
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-memory-allocation-and-quantization-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      GPU-Memory Allocation and Quantization Strategy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature-specific-to-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature-specific to Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Feature-specific to Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gke-cluster-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      GKE Cluster Creation:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-pool-with-single-l4-gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      Node Pool with Single L4 GPU:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hugging-face-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hugging Face Authentication:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-for-deployment-and-retrieve-load-balancer-external-exposed-ip-address" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check for deployment and retrieve Load-Balancer external exposed ip address:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-load-balancer-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generate Load Balancer Details:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-if-using-hpa-make-sure-hpa-horizontal-pod-autoscalar-is-working-please-see-hpa-documentation-and-preconfigurations-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      OPTIONAL: (If using HPA) Make sure HPA Horizontal Pod Autoscalar is working (Please see HPA documentation and preconfigurations needed):
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-the-model-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test the model deployment
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="guide-to-serving-mixtral-8x7-model-on-gke-utilizing-nvidia-l4-gpus">Guide to Serving Mixtral 8x7 Model on GKE Utilizing Nvidia L4-GPUs</h1>
+<p>This guide walks you through the process of serving the Mixtral 8x7 model on Google Kubernetes Engine (GKE) leveraging Nvidia L4 GPUs. We'll adapt from the previous Mistral model deployment, focusing on a quadpod L4 GPU setup for enhanced performance.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Terminal Setup: Ensure kubectl and gcloud are installed. Google Cloud Shell is recommended for its ease of use and built-in tools.</li>
+<li>GPU Quota: Confirm you have the quota for at least four L4 GPUs in your Google Cloud account.</li>
+<li>Model Access: Secure access to the Mixtral 8x7 model by agreeing to terms on a designated platform, typically involving account creation and acceptance of use conditions.
+Transformers Library: Ensure you have installed a stable version of the Transformers library, version 4.34.0 or newer.</li>
+<li>HPA (Optional): If you plan to use the Horizontal Pod Autoscaler (HPA) to scale for incoming requests, ensure the 'maxReplicas' assignment in your mixtral-8x7.yaml HorizontalPodAutoscaler section is set to equal or be less than the number of GPUs available for deployment.</li>
+</ul>
+<h3 id="gpu-memory-allocation-and-quantization-strategy">GPU-Memory Allocation and Quantization Strategy</h3>
+<p>GPU-Memory Allocation and Quantization Strategy
+When deploying the Mixtral 8x7 model, it's crucial to assess both the memory requirements and the computational efficiency, especially when leveraging Nvidia L4 GPUs, each with 24 GB of GPU memory. A key factor in this consideration is the use of quantization techniques to optimize model performance and memory usage.</p>
+<p>Currently, the deployment employs 4-bit quantization (using the bitsandbytes-nf4 method), which significantly reduces the memory footprint of the model while maintaining a balance between performance and resource allocation. This quantization strategy allows the model to be efficiently served on a single L4 GPU for standard operations.</p>
+<p>However, should you opt for a larger quantization scale (upwards to no quantization), accommodating the increased memory and computational demands may necessitate scaling up to eight L4 GPUs to achieve optimal production performance. Consequently, it's advisable to adjust the number of shards to 8 in such scenarios to fully leverage the enhanced processing capacity and ensure that the deployment is scaled appropriately to handle the increased workload efficiently.</p>
+<h3 id="feature-specific-to-model">Feature-specific to Model</h3>
+<ul>
+<li>Model: Mixtral8x7B-instruct-v0.1, a transformer-based architecture contained in a Mixture of experts with sparse gating model.</li>
+<li>
+<p>Attention Mechanisms:</p>
+<ul>
+<li>Grouped-Query Attention (GQA): The GQA framework is an innovative approach to managing memory and computational resources more efficiently. By categorizing attention heads into groups, each sharing a common key and value projection, GQA facilitates three distinct configurations:</li>
+<li>GQA-1, akin to MQA (Mixed Query Attention), focuses on enhancing the model's responsiveness and agility in handling queries.</li>
+<li>GQA-H, reflective of the traditional Multi-Head Attention (MHA) mechanism, balances complexity with computational efficiency.</li>
+<li>GQA-G, an intermediate form, optimizes both expressiveness and efficiency. This organization of query heads into groups minimizes memory overhead and enables precise control over performance, addressing challenges in scenarios requiring extensive context processing.</li>
+<li>Sliding-Window Attention: This technique restricts the model's attention span to a localized set of positions around each token. By doing so, it significantly boosts the ability to grasp and leverage context-specific information, sharpening the model's comprehension and generation capabilities, especially for text requiring nuanced understanding of proximate relationships.</li>
+</ul>
+</li>
+<li>
+<p>Tokenization:</p>
+<ul>
+<li>Hybrid-fallback Tokenizer: Building on the byte-fallback BPE tokenizer's foundation, the Hybrid-fallback tokenizer introduces an adaptive mechanism that seamlessly switches between byte-level and subword encoding. This dual approach ensures comprehensive coverage across a diverse array of textual inputs, from highly frequent words to rare or out-of-vocabulary terms, guaranteeing no loss in textual fidelity.</li>
+</ul>
+</li>
+<li>Mixture of Experts (MoE)
+Mixtral utilizes a unique component within its transformer architecture known as the MoE (Mixture-of-Experts) layer. This layer functions by intelligently directing input across a dynamically chosen subset of expert networks, each distinct in their training on various segments of data or specific tasks. By engaging this method, Mixtral is equipped to harness specialized knowledge and insights from these experts. This approach significantly enhances the model's capability for generating and analyzing text with greater accuracy and depth.</li>
+</ul>
+<p>Set your region and project:</p>
+<pre><code class="language-bash">export REGION=us-central1
+export PROJECT_ID=$(gcloud config get-value project)
+</code></pre>
+<h4 id="gke-cluster-creation">GKE Cluster Creation:</h4>
+<pre><code class="language-bash">gcloud container clusters create mixtral8x7-cluster-gke \
+  --region=${REGION} \
+  --node-locations=${REGION} \
+  --project=${PROJECT_ID} \
+  --machine-type=n2d-standard-8 \
+  --no-enable-master-authorized-networks \
+  --addons=HorizontalPodAutoscaling \
+  --addons=HttpLoadBalancing \
+  --addons=GcePersistentDiskCsiDriver \
+  --addons=GcsFuseCsiDriver \
+  --num-nodes=4 \
+  --min-nodes=3 \
+  --max-nodes=6 \
+  --enable-ip-alias \
+  --enable-image-streaming \
+  --enable-shielded-nodes \
+  --shielded-secure-boot \
+  --shielded-integrity-monitoring \
+  --workload-pool=${PROJECT_ID}.svc.id.goog \
+  --logging=SYSTEM,WORKLOAD \
+  --monitoring=SYSTEM \
+  --enable-autoupgrade \
+  --enable-autorepair \
+  --network=&quot;projects/${PROJECT_ID}/global/networks/default&quot; \
+  --subnetwork=&quot;projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default&quot; \
+  --tags=web,sftp \
+  --labels=env=production,team=mixtral8x7 \
+  --release-channel=regular
+
+</code></pre>
+<h4 id="node-pool-with-single-l4-gpu">Node Pool with Single L4 GPU:</h4>
+<p>Create a node pool for deploying Mixtral 7B with quadpod deployment L4 GPU {4 x L4}:</p>
+<pre><code class="language-bash">gcloud container node-pools create mixtral-moe-gpu-pool \
+  --cluster=mixtral8x7-cluster-gke  \
+  --project=gke-aishared-dev \
+  --machine-type=g2-standard-48 \
+  --ephemeral-storage-local-ssd=count=4 \
+  --accelerator=type=nvidia-l4,count=4 \
+  --node-locations=us-west4-a \
+  --enable-image-streaming \
+  --num-nodes=1 \
+  --enable-autoscaling \
+  --min-nodes=1 \
+  --max-nodes=2 \
+  --node-labels=accelerator=nvidia-gpu \
+  --workload-metadata=GKE_METADATA
+</code></pre>
+<h4 id="hugging-face-authentication">Hugging Face Authentication:</h4>
+<p>Obtain your Hugging Face token for model access: https://huggingface.co/settings/tokens
+For Hugging Face authentication and to download the Mixtral8x7 instruct model:</p>
+<pre><code class="language-bash">export HF_TOKEN=&lt;your-token&gt;
+kubectl create secret generic mixtral-demo --from-literal=&quot;HF_TOKEN=$HF_TOKEN&quot;
+</code></pre>
+<p>Please use the given YAML file named mixtral-8x7b.yaml with the provided content: Mixtral8x7Bv0.1 instruct-deployment.</p>
+<p>Deploy Mixtral8x7B with the following command:</p>
+<pre><code class="language-bash">kubectl apply -f mixtral8x7b.yaml
+</code></pre>
+<p>Assess the details of your deployment using the following command (Adjust if you utilized a different name in your YAML):</p>
+<pre><code class="language-bash">kubectl describe deployment mixtral8x7b -n default
+</code></pre>
+<p>Your output should resemble the following; please make sure the details are in accordance with your declarations and deployment needs: </p>
+<pre><code class="language-bash">Name:                   mixtral8x7b
+Namespace:              default
+CreationTimestamp:      Fri, 22 Mar 2024 12:09:13 -0700
+Labels:                 &lt;none&gt;
+Annotations:            deployment.kubernetes.io/revision: 9
+Selector:               app=mixtral8x7b
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=mixtral8x7b
+  Containers:
+   mixtral8x7b:
+    Image:      us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
+    Port:       8080/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:             5
+      memory:          42Gi
+      nvidia.com/gpu:  4
+    Requests:
+      cpu:             5
+      memory:          42Gi
+      nvidia.com/gpu:  4
+    Environment:
+      QUANTIZE:   bitsandbytes-nf4
+      MODEL_ID:   mistralai/Mixtral-8x7B-Instruct-v0.1
+      NUM_SHARD:  2
+      PORT:       8080
+    Mounts:
+      /data from ephemeral-volume (rw)
+      /dev/shm from dshm (rw)
+  Volumes:
+   dshm:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     Memory
+    SizeLimit:  &lt;unset&gt;
+   data:
+    Type:          HostPath (bare host directory volume)
+    Path:          /mnt/stateful_partition/kube-ephemeral-ssd/mixtral-data
+    HostPathType:  
+   ephemeral-volume:
+    Type:          EphemeralVolume (an inline specification for a volume that gets created and deleted with the pod)
+    StorageClass:  premium-rwo
+    Volume:        
+    Labels:            type=ephemeral
+    Annotations:       &lt;none&gt;
+    Capacity:      
+    Access Modes:  
+    VolumeMode:    Filesystem
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+NewReplicaSet:   mixtral8x7b-5c888947fd (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  43m   deployment-controller  Scaled up replica set mixtral8x7b-5c888947fd to 1
+</code></pre>
+<p>Test the deployment by forwarding the port and using curl to send a prompt:</p>
+<pre><code class="language-bash">kubectl port-forward deployment/mixtral8x7b 8080:8080
+</code></pre>
+<h4 id="check-for-deployment-and-retrieve-load-balancer-external-exposed-ip-address">Check for deployment and retrieve Load-Balancer external exposed ip address:</h4>
+<p>List Services: First, list all services in the namespace (assuming default namespace as per your YAML) to make sure your service is up and running.</p>
+<pre><code class="language-bash">kubectl get svc --namespace=default
+</code></pre>
+<p>Attach correct labels to load balancer deployment:</p>
+<pre><code class="language-bash">kubectl label service mixtral8x7b-service LLM_deployment=true model_LoadBalancer=true Ingress_Point=true
+</code></pre>
+<h4 id="generate-load-balancer-details">Generate Load Balancer Details:</h4>
+<p>To describe all services of type Load Balancer in your Kubernetes cluster, you should be able to see the details of your mixtral-LB here and get the ingress as well as external ip. (The external exposed ip will be important for connecting it to external services).</p>
+<pre><code class="language-bash">kubectl get services --all-namespaces -o wide | grep LoadBalancer | while read -r namespace name type cluster_ip external_ip ports age; do echo &quot;Describing service $name in namespace $namespace:&quot;; kubectl describe service -n $namespace $name; done
+</code></pre>
+<p>Your Load Balancer details should resemble the following
+Describing service mixtral8x7b-service in namespace default:</p>
+<pre><code class="language-bash">Name:                     mixtral8x7b-service
+Namespace:                default
+Labels:                   &lt;none&gt;
+Annotations:              &lt;none&gt;
+Selector:                 app=mixtral8x7b
+Type:                     LoadBalancer
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.65.140.207
+IPs:                      10.65.140.207
+LoadBalancer Ingress:     34.16.133.177
+Port:                     &lt;unset&gt;  80/TCP
+TargetPort:               8080/TCP
+NodePort:                 &lt;unset&gt;  30640/TCP
+Endpoints:                10.92.1.10:8080
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   &lt;none&gt;
+
+</code></pre>
+<h4 id="optional-if-using-hpa-make-sure-hpa-horizontal-pod-autoscalar-is-working-please-see-hpa-documentation-and-preconfigurations-needed">OPTIONAL: (If using HPA) Make sure HPA Horizontal Pod Autoscalar is working (Please see HPA documentation and preconfigurations needed):</h4>
+<p>Please make sure you have adjusted the yaml file appropriately.</p>
+<pre><code class="language-bash"># kubectl describe hpa mixtral-8x7b-hpa
+</code></pre>
+<h4 id="test-the-model-deployment">Test the model deployment</h4>
+<p>Interact with the Model via curl, replace ip address with your external load balancer ip obtained from the kubectl get svc --namespace=default command earlier.</p>
+<pre><code class="language-bash"># Define the instruction
+instruction=&quot;INST] You are a wise, courteous, and truthful Cheshire Cat, always offering guidance through Wonderland. Your responses must be insightful and protective, avoiding any mischief, malice, or misunderstanding. Your words should never wander into realms of rudeness, unfairness, or deception. Ensure your guidance is free from any bias and shines with positivity. If a query seems like a riddle without an answer or strays too far from Wonderland's wisdom, kindly explain why it doesn't hold water in our world rather than leading someone astray. Should a question's answer elude you in the vastness of Wonderland, refrain from conjuring falsehoods. What is a secret in the gardens of Wonderland?[/INST]&quot;
+
+# Additional text to be concatenated with the instruction
+additionalText=&quot; The story of the killer pancake monster:&quot;
+
+# Combine them
+fullText=&quot;$instruction$additionalText&quot;
+
+# Create the JSON payload
+jsonPayload=$(cat &lt;&lt;EOF
+{
+  &quot;inputs&quot;: &quot;$fullText&quot;,
+  &quot;parameters&quot;: {
+    &quot;best_of&quot;: 1,
+    &quot;decoder_input_details&quot;: false,
+    &quot;details&quot;: false,
+    &quot;do_sample&quot;: true,
+    &quot;max_new_tokens&quot;: 400,
+    &quot;repetition_penalty&quot;: 1.03,
+    &quot;return_full_text&quot;: true,
+    &quot;seed&quot;: null,
+    &quot;stop&quot;: [&quot;EOS&quot;, &quot;EOSTOKEN&quot;, &quot;ENDTOKEN&quot;, &quot;ENDOFLINE&quot;],
+
+    &quot;temperature&quot;: 0.5,
+    &quot;top_k&quot;: 10,
+    &quot;top_n_tokens&quot;: 5,
+    &quot;top_p&quot;: 0.95,
+    &quot;truncate&quot;: null,
+    &quot;typical_p&quot;: 0.95,
+    &quot;watermark&quot;: true
+  },
+  &quot;stream&quot;: false
+}
+EOF
+)
+
+# Execute the curl command, Please replace IP with the current External(Exposed)IP of the Loadbalancer
+curl -X 'POST' \
+  'http://{EXTERNAL_IP}/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d &quot;$jsonPayload&quot;
+
+</code></pre>
+<p>Measure the latency of a model deployment by timing a POST request to a model's generate endpoint, calculating the total response time and the latency per generated token. Make sure deployment latency is within tolerneces, otherwise your cluster/nodepool is misconfigured.</p>
+<pre><code class="language-bash">#### Test model deployment latency, Please make sure you differentiate hot and cold latency.
+start=$(date +%s.%N)
+
+instruction=&quot;[INST] You are a wise, courteous, and truthful Cheshire Cat, always offering guidance through Wonderland. Your responses must be insightful and protective, avoiding any mischief. Your words should never wander into realms of rudeness, unfairness, or deception. refrain from conjuring falsehoods. What is a secret in the gardens of Wonderland?[/INST]&quot;
+
+# Additional text to be concatenated with the instruction
+additionalText=&quot; The story of the killer pancake monster:&quot;
+
+# Combine them
+fullText=&quot;$instruction$additionalText&quot;
+
+# Create the JSON payload
+jsonPayload=$(cat &lt;&lt;EOF
+{
+  &quot;inputs&quot;: &quot;$fullText&quot;,
+  &quot;parameters&quot;: {
+    &quot;best_of&quot;: 1,
+    &quot;decoder_input_details&quot;: false,
+    &quot;details&quot;: false,
+    &quot;do_sample&quot;: true,
+    &quot;max_new_tokens&quot;: 400,
+    &quot;repetition_penalty&quot;: 1.03,
+    &quot;return_full_text&quot;: true,
+    &quot;seed&quot;: null,
+    &quot;stop&quot;: [&quot;EOS&quot;, &quot;EOSTOKEN&quot;, &quot;ENDTOKEN&quot;, &quot;ENDOFLINE&quot;],
+
+    &quot;temperature&quot;: 0.5,
+    &quot;top_k&quot;: 10,
+    &quot;top_n_tokens&quot;: 5,
+    &quot;top_p&quot;: 0.95,
+    &quot;truncate&quot;: null,
+    &quot;typical_p&quot;: 0.95,
+    &quot;watermark&quot;: true
+  },
+  &quot;stream&quot;: false
+}
+EOF
+)
+
+# Execute the curl command, Please replace IP with the current External(Exposed)IP of the Loadbalancer
+curl -X 'POST' \
+  'http://{EXTERNAL_IP}/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d &quot;$jsonPayload&quot;
+
+end=$(date +%s.%N)
+
+# Extract the number of generated tokens from the response
+generated_tokens=$(echo &quot;$response&quot; | jq '.[0].details.generated_tokens')
+
+
+# If jq didn't find the field, or it's not a number, default to 1 to avoid division by zero
+if ! [[ &quot;$generated_tokens&quot; =~ ^[0-9]+$ ]]; then
+  generated_tokens=1
+fi
+
+total_latency=$(echo &quot;$end - $start&quot; | bc)
+
+# Calculate latency per generated token / This is meant to calculate general latency, might vary depending on your own setup. 
+latency_per_token=$(echo &quot;scale=6; $total_latency / $generated_tokens&quot; | bc)
+
+echo &quot;Total Latency: $total_latency seconds&quot;
+echo &quot;Generated Tokens: $generated_tokens&quot;
+echo &quot;Latency per Generated Token: $latency_per_token seconds&quot;
+
+</code></pre>
+<p>Visit the API docs at http://localhost:8080/docs for more details.</p>
+<p>This README provides a concise guide to deploying the Mixtral8x7B instruct v.01 model, listed above are key steps and adjustments needed for a general sample deployment. Ensure to replace placeholders and commands with the specific details of your GKE setup and Mixtral-v.01-instruct model deployment.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs", "navigation.tabs.sticky", "navigation.expand", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+    
+  </body>
+</html>

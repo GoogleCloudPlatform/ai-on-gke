@@ -1,0 +1,73 @@
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: "reservation"
+spec:
+  nodeLabels:
+    cloud.google.com/gke-nodepool: "reservation-nodepool" # placeholder value
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: "dws"
+spec:
+  nodeLabels:
+    cloud.google.com/gke-nodepool: "dws-nodepool" # placeholder value
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: "cluster-queue"
+spec:
+  namespaceSelector: {} # match all.
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+    flavors:
+    - name: "reservation" # first we try reservation
+      resources:
+      - name: "cpu"
+        nominalQuota: 9
+      - name: "memory"
+        nominalQuota: 36Gi
+      - name: "nvidia.com/gpu"
+        nominalQuota: 9
+    - name: "dws"         # if reservation is saturated we try dws
+      resources:
+      - name: "cpu"
+        nominalQuota: 10000   # Infinite quota.
+      - name: "memory"
+        nominalQuota: 10000Gi # Infinite quota.
+      - name: "nvidia.com/gpu"
+        nominalQuota: 10000   # Infinite quota.
+  admissionChecksStrategy:
+    admissionChecks:
+      - name: "dws-prov"
+        onFlavors: [dws]
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "default"
+  name: "user-queue"
+spec:
+  clusterQueue: "cluster-queue"
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: AdmissionCheck
+metadata:
+  name: dws-prov
+spec:
+  controllerName: kueue.x-k8s.io/provisioning-request
+  parameters:
+    apiGroup: kueue.x-k8s.io
+    kind: ProvisioningRequestConfig
+    name: dws-config
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ProvisioningRequestConfig
+metadata:
+  name: dws-config
+spec:
+  provisioningClassName: queued-provisioning.gke.io
+  managedResources:
+  - nvidia.com/gpu

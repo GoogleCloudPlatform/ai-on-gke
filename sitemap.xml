@@ -1,19 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://genlu2011.github.io/site/</loc>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/</loc>
          <lastmod>2024-11-26</lastmod>
     </url>
     <url>
-         <loc>https://genlu2011.github.io/site/applications/jupyter/</loc>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/cloudshell-tutorial/</loc>
          <lastmod>2024-11-26</lastmod>
     </url>
     <url>
-         <loc>https://genlu2011.github.io/site/applications/rag/</loc>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/genAI-LLM/deploying-mistral-7b-instruct-L4gpus/</loc>
          <lastmod>2024-11-26</lastmod>
     </url>
     <url>
-         <loc>https://genlu2011.github.io/site/applications/ray/</loc>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/genAI-LLM/deploying-mixtral-8x7b-instruct-L4-gpus/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/genAI-LLM/e2e-genai-langchain-app/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/genAI-LLM/finetuning-gemma-2b-on-l4/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/genAI-LLM/finetuning-llama-7b-on-l4/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/genAI-LLM/serving-llama2-70b-on-l4-gpus/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/gpu-examples/a100-jax/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/gpu-examples/online-serving-single-gpu/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/gpu-examples/training-single-gpu/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/hf-tgi/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/inference-servers/checkpoints/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/inference-servers/jetstream/maxtext/single-host-inference/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/inference-servers/jetstream/pytorch/single-host-inference/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/inference-servers/maxdiffusion/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/kserve/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/models-as-oci/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/nvidia-nim/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/skypilot/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/skypilot/text-classification/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/storage/hyperdisk-ml/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/tpu-examples/single-host-inference/jax/stable-diffusion/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/tpu-examples/training/mnist-single-tpu/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/vector-databases/readme/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/vector-databases/NEXT-2024-Weaviate-Demo/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/vector-databases/NEXT-2024-Weaviate-Demo/demo-website/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/workflow-orchestration/dws-examples/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/workflow-orchestration/indexed-job/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://googlecloudplatform.github.io/ai-on-gke/workflow-orchestration/jobset/pytorch/</loc>
          <lastmod>2024-11-26</lastmod>
     </url>
 </urlset>
