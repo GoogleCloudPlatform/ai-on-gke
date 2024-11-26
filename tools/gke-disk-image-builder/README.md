@@ -24,7 +24,8 @@ examples below to understand how this tool work better.
 1.  Compute Engine API must be enabled.
     (https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=$PROJECT_NAME)
 1.  Verify that `$PROJECT_NUMBER-compute@developer.gserviceaccount.com` has
-    `storage.objectCreator` and `storage.objectViewer` permissions to the provided *GCS path* for the logs.
+    `storage.objectCreator` and `storage.objectViewer` permissions to the
+    provided *GCS path* for the logs and startup script.
     You can run the following command to grant proper permissions for this:
 
     ```shell
@@ -32,6 +33,11 @@ examples below to understand how this tool work better.
       --project=$PROJECT_NAME \
       --member=serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
       --role=roles/storage.objectCreator
+
+      gcloud storage buckets add-iam-policy-binding gs://$GCS_PATH \
+      --project=$PROJECT_NAME \
+      --member=serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
+      --role=roles/storage.objectViewer
     ```
 
 1.  If a disk image with the given name (via the **--image-name** flag) already
