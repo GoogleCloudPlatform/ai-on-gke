@@ -111,8 +111,8 @@ async def generate_next_request(
     request_rate: float,
 ) -> AsyncGenerator[Tuple[str, int, int], None]:
   """Gets request async."""
-  request = random.choice(input_requests)
   while True:
+    request = random.choice(input_requests)
     yield request
 
     if request_rate == float("inf"):

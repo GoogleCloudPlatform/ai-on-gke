@@ -36,4 +36,5 @@ accelerate
 aiohttp
 google-auth
 google-cloud-storage >= 2.18.2
+google-cloud-monitoring >= 0.20.0
 prometheus_client >= 0.21.0
