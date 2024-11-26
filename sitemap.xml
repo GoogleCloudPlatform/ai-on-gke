@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://mydomain.org/mysite/</loc>
-         <lastmod>2024-11-25</lastmod>
+         <loc>https://genlu2011.github.io/site/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://genlu2011.github.io/site/applications/jupyter/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://genlu2011.github.io/site/applications/rag/</loc>
+         <lastmod>2024-11-26</lastmod>
+    </url>
+    <url>
+         <loc>https://genlu2011.github.io/site/applications/ray/</loc>
+         <lastmod>2024-11-26</lastmod>
     </url>
 </urlset>
