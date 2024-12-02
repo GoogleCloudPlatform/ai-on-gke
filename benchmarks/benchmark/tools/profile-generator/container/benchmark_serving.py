@@ -35,6 +35,7 @@ PROMETHEUS_PORT = 9090
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
 response_length_metric = Histogram("LatencyProfileGenerator:response_length", "Response length", buckets=[2**i for i in range(1, 16)])
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request')
+ttft_metric = Histogram('LatencyProfileGenerator:time_to_first_token', 'Time to first token per request')
 active_requests_metric = Gauge('LatencyProfileGenerator:active_requests', 'How many requests actively being processed')
 
 class ErrorsReport():
@@ -100,9 +101,8 @@ trace_config.on_request_end.append(on_request_end)
 gcs_client = None
 gcs_bucket = None
 
-def sample_requests(
+def get_filtered_dataset(
     dataset_path: str,
-    num_requests: int,
     max_input_len: int,
     max_output_len: int,
     tokenizer: PreTrainedTokenizerBase,
@@ -112,12 +112,11 @@ def sample_requests(
   if use_dummy_text:
     dummy_prompt_token_ids = [0] * max_input_len
     dummy_prompt = tokenizer.decode(dummy_prompt_token_ids)
-    dummy_requests = [(
-        dummy_prompt,
-        max_input_len,
-        max_output_len,
-    )] * num_requests
-    return dummy_requests
+    return [(
+          dummy_prompt,
+          max_input_len,
+          max_output_len,
+    )]
 
   # Load the dataset.
   with open(dataset_path) as f:
@@ -154,18 +153,15 @@ def sample_requests(
       continue
     filtered_dataset.append((prompt, prompt_len, output_len))
 
-  # Sample the requests.
-  sampled_requests = random.sample(filtered_dataset, num_requests)
-  return sampled_requests
+  return filtered_dataset
 
-
-async def get_request(
+async def generate_next_request(
     input_requests: List[Tuple[str, int, int]],
     request_rate: float,
 ) -> AsyncGenerator[Tuple[str, int, int], None]:
   """Gets request async."""
-  input_requests = iter(input_requests)
-  for request in input_requests:
+  while True:
+    request = random.choice(input_requests)
     yield request
 
     if request_rate == float("inf"):
@@ -207,6 +203,12 @@ async def send_stream_request(
         "ignore_eos": True,
         "stream": True,
     }
+  elif backend == "jetstream":
+    pload = {
+        "prompt": prompt,
+        "max_tokens": output_len,
+        "stream": True,
+    }
   else: 
     raise ValueError(f"Unknown backend: {backend}")
 
@@ -225,10 +227,12 @@ async def send_stream_request(
           # First token
           if ttft == 0.0:
             ttft = timestamp - st
-          
-          if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
-              if backend == "vllm":
-                output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+          if backend == "vllm":
+            if chunk_bytes.decode("utf-8")[6:] != "[DONE]":
+              output += json.loads(chunk_bytes.decode("utf-8")[6:])["choices"][0]["text"]
+          elif backend == "jetstream":
+            if chunk_bytes.decode("utf-8") != "":
+              output += json.loads(chunk_bytes.decode("utf-8"))["text"]
     except Exception as e:
       errors.record_error(e)
       return None, None, errors
@@ -236,6 +240,11 @@ async def send_stream_request(
   output_token_ids = tokenizer(output).input_ids
   output_len = len(output_token_ids)
   request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
+  tpot_metric.observe((request_end_time - request_start_time) / output_len)
+  if ttft is not None:
+    ttft_metric.observe(ttft)
+  prompt_length_metric.observe(prompt_len)
+  response_length_metric.observe(output_len)
   return request_latency, ttft, None
 
 async def send_request(
@@ -378,9 +387,8 @@ async def benchmark(
     model: str,
 ) -> Tuple[List[Tuple[int, int, float]], List[float], Optional[ErrorsReport]]:
   """Runs benchmark with asynchronous requests."""
-  input_requests = sample_requests(
+  input_requests = get_filtered_dataset(
       args.dataset,
-      args.num_prompts,
       args.max_input_length,
       args.max_output_length,
       tokenizer,
@@ -388,7 +396,10 @@ async def benchmark(
   )
   benchmark_start_time = time.time()
   tasks: List[asyncio.Task] = []
-  async for request in get_request(input_requests, args.request_rate):
+  prompts_sent: int = 0
+  async for request in generate_next_request(input_requests, args.request_rate):
+    if args.num_prompts <= prompts_sent:
+      break
     prompt, prompt_len, output_len = request
     if args.stream_request:
       task = asyncio.create_task(
@@ -423,6 +434,7 @@ async def benchmark(
         )
       )
     tasks.append(task)
+    prompts_sent += 1
   results = await asyncio.gather(*tasks)
   combined_latencies = []
   combined_ttfts = []
@@ -436,7 +448,7 @@ async def benchmark(
       combined_ttfts.append(ttft)
   
   benchmark_duration = time.time() - benchmark_start_time
-  print_and_save_result(args, benchmark_duration, len(input_requests), model, combined_latencies, combined_ttfts, combined_errors)
+  print_and_save_result(args, benchmark_duration, prompts_sent, model, combined_latencies, combined_ttfts, combined_errors)
   return combined_latencies, combined_ttfts, combined_errors
 
 def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics, model, errors):
@@ -604,8 +616,11 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
       url='https://monitoring.googleapis.com/v1/projects/%s/location/global/prometheus/api/v1/query' % (project_id)
       headers_api = {'Authorization': 'Bearer ' + credentials.token}
       params = {'query': query}
+      print(f"Finding {query_name} {metric} with the following query: {query}")
       request_post = requests.get(url=url, headers=headers_api, params=params)
       response = request_post.json()
+
+      print(f"Got response from metrics server: {response}")
 
       # handle response
       if request_post.ok:
