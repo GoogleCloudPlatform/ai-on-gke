@@ -2,7 +2,7 @@ name: train
 
 resources:
   cloud: kubernetes
-  # list has orders
+  # The order of accelerators represent the preference.
   accelerators: [ A100:4, L4:4 ]
 
 envs:
