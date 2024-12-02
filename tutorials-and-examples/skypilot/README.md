@@ -8,12 +8,12 @@ In this tutorial, we will demonstrate how to leverage the open-source software [
 
 SkyPilot is a framework for running AI and batch workloads on any infra, offering unified execution, high cost savings, and high GPU availability. By combining SkyPilot with GKE's solutions (such as [Kueue + Dynamic Workload Scheduler](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest), [Custom compute class](https://cloud.google.com/kubernetes-engine/docs/concepts/about-custom-compute-classes), [GCS FUSE](https://cloud.google.com/storage/docs/cloud-storage-fuse/overview)), users can effectively address capacity challenges while optimizing costs.
 
-## The overview. 
+## The tutorial overview 
 In this tutorial, our persona is an ML scientist planning to run a batch workload for hyperparameter tuning. This workload involves two experiments, with each experiment requiring 4 GPUs to execute. 
 
 We have two GKE clusters in different regions: one in us-central1 with 4*A100 and another in us-west1 with 4*L4.
 
-By the end of this tutorial, our goal is to have one experiment running in the us-central cluster and the other in the us-west cluster, demonstrating efficient resource distribution across regions.
+By the end of this tutorial, our goal is to have one experiment running in the us-central1 cluster and the other in the us-west1 cluster, demonstrating efficient resource distribution across regions.
 
 SkyPilot supports GKE's cluster autoscaling for dynamic resource management. However, to keep this tutorial straightforward, we will demonstrate the use of a static node pool instead.
 
@@ -51,24 +51,24 @@ gcloud container clusters get-credentials demo-us-central1 \
 --project ${PROJECT_ID}
 ```
 
-3. Create a GKE cluster in us-west1-c with 4*L4
+3. Create a GKE cluster in us-west1-a with 4*L4
 ```bash
 gcloud container clusters create demo-us-west1 \
-    --location=us-west1-c \
+    --location=us-west1-a \
     --project=$PROJECT_ID 
 ```
 ```bash
 gcloud container node-pools create gpu-node-pool \
   --accelerator type=nvidia-l4,count=4 \
   --machine-type g2-standard-48 \
-  --region us-west1-c \
+  --region us-west1-a \
   --cluster=demo-us-west1 \
   --num-nodes=1
 ```
 
 ```bash
 gcloud container clusters get-credentials demo-us-west1 \
---region us-west1-c \
+--region us-west1-a \
 --project ${PROJECT_ID}
 ```
 
@@ -76,16 +76,19 @@ gcloud container clusters get-credentials demo-us-west1 \
 1. Create a virtual environment.
 ```bash
 cd ~
+python3 -m venv skypilot-test
+cd skypilot-test
+source bin/activate
+
 git clone https://github.com/GoogleCloudPlatform/ai-on-gke.git
 cd ai-on-gke/tutorials-and-examples/skypilot
-python3 -m venv ~/ai-on-gke/tutorials-and-examples/skypilot
-source bin/activate 
 ```
 
 2. Install SkyPilot
 ```bash
 pip install -U "skypilot[kubernetes,gcp]"
 ```
+You can find the available GPUs in a GKE cluster.
 ```bash
 sky check
 
@@ -98,7 +101,7 @@ kubectl config get-contexts
 
 # Find the context name, for example: 
 gke_${PROJECT_NAME}_us-central1-c_demo-us-central1
-gke_${PROJECT_NAME}_us-west1-c_demo-us-west1
+gke_${PROJECT_NAME}_us-west1-a_demo-us-west1
 ```
 
 4. Copy the following yaml to ~/.sky/config.yaml with context name replaced.
@@ -111,33 +114,34 @@ kubernetes:
   # Use the context's name
   allowed_contexts:
     - gke_${PROJECT_NAME}_us-central1-c_demo-us-central1
-    - gke_${PROJECT_NAME}_us-west1-c_demo-us-west1
+    - gke_${PROJECT_NAME}_us-west1-a_demo-us-west1
   provision_timeout: 30
 ```
 
 ## Launch the jobs
-Under `~/ai-on-gke/tutorials-and-examples/skypilot`, you’ll find a file named `train.yaml`, which uses SkyPilot's syntax to define a job. The job will ask for 4* A100 first. If no capacity is found, it failovers to L4. 
+Under `~/skypilot-test/ai-on-gke/tutorials-and-examples/skypilot`, you’ll find a file named `train.yaml`, which uses SkyPilot's syntax to define a job. 
+In the resource section, the job asks for 4* A100 first. If no capacity is found, it failovers to L4. 
 ```yaml
 resources:
   cloud: kubernetes
-  # list has orders
+  # The order of accelerators represent the preference.
   accelerators: [ A100:4, L4:4 ]
 ```
 
-The `launch.py` a Python program that initiates a hyperparameter tuning process with two candidates for the learning rate (LR) parameter. In production environments, such experiments are typically tracked using open-source frameworks like MLFlow.
+The `launch.py` a Python program that initiates a hyperparameter tuning process with two jobs for the learning rate (LR) parameter. In production environments, such experiments are typically tracked using open-source frameworks like MLFlow.
 
 Start the trainig:
 ```bash
 python launch.py
 ```
-SkyPilot will first select the demo-us-central1 cluster, which has 4 A100 GPUs available. For the second job, it will launch in the demo-us-west1 cluster using L4 GPUs, as no additional clusters with 4 A100 GPUs were available.
+The first job will be first deployed to the demo-us-central1 GKE cluster with 4*A100 GPUs. For the second job, it will be deployed to the demo-us-west1 cluster with 4*L4 GPUs, because no 4*A100 GPUs were available in all clusters.
 
 You also can check SkyPilot's status using: 
 ```bash
 sky status
 ```
 
-You can SSH into the pod in GKE using the cluster's name. Once inside, you'll find the local source code synced to the pod under `~/sky_workdir`. This setup makes it convenient for developers to debug and iterate on their AI/ML code efficiently.
+You can SSH into the pod in GKE using the cluster's name. Once inside, you'll find the local source code `text-classification` are synced to the pod under `~/sky_workdir`. This setup makes it convenient for developers to debug and iterate on their AI/ML code efficiently.
 
 ```bash
 ssh train-cluster1
@@ -153,6 +157,6 @@ gcloud container clusters delete demo-us-central1 \
 
 ```bash
 gcloud container clusters delete demo-us-west1 \
-    --location=us-west1-c \
+    --location=us-west1-a \
     --project=$PROJECT_ID
 ```
