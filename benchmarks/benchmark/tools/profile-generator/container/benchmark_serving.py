@@ -225,7 +225,8 @@ async def send_stream_request(
   output_token_ids = tokenizer(output).input_ids
   output_len = len(output_token_ids)
   request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
-  tpot_metric.observe((request_end_time - request_start_time) / output_len)
+  # Exclude first token for tpot calculation
+  tpot_metric.observe((request_end_time - ttft - request_start_time) / (output_len - 1))
   if ttft is not None:
     ttft_metric.observe(ttft)
   prompt_length_metric.observe(prompt_len)
