@@ -356,10 +356,40 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		}
 	}
 
+	var networkConfig *containerv1beta1.NodeNetworkConfig
+	var additionalNodeNetworks []*containerv1beta1.AdditionalNodeNetworkConfig
+	// additional-node-networks: "vpc1:subnet1, vpc2:subnet2"
+	for _, pair := range strings.Split(getAnnotation(p, AnnotationAdditionalNodeNetworks), ",") {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+
+		netAndSubnet := strings.SplitN(pair, ":", 2)
+		if len(netAndSubnet) != 2 {
+			return nil, fmt.Errorf("invalid additional network annotation: %v", pair)
+		}
+
+		additionalNodeNetworks = append(additionalNodeNetworks, &containerv1beta1.AdditionalNodeNetworkConfig{
+			Network:    strings.TrimSpace(netAndSubnet[0]),
+			Subnetwork: strings.TrimSpace(netAndSubnet[1]),
+		})
+	}
+	if len(additionalNodeNetworks) > 0 {
+		networkConfig = &containerv1beta1.NodeNetworkConfig{
+			AdditionalNodeNetworkConfigs: additionalNodeNetworks,
+		}
+	}
+
+	nodeServiceAccount := g.ClusterContext.NodeServiceAccount
+	if sa, ok := p.Annotations[AnnotationNodeServiceAccount]; ok {
+		nodeServiceAccount = sa
+	}
+
 	return &containerv1beta1.NodePool{
 		Name: name,
 		Config: &containerv1beta1.NodeConfig{
-			ServiceAccount: g.ClusterContext.NodeServiceAccount,
+			ServiceAccount: nodeServiceAccount,
 			ShieldedInstanceConfig: &containerv1beta1.ShieldedInstanceConfig{
 				EnableIntegrityMonitoring: true,
 				EnableSecureBoot:          g.ClusterContext.NodeSecureBoot,
@@ -388,6 +418,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 			MaxSurge: 1,
 		},
 		MaxPodsConstraint: &containerv1beta1.MaxPodsConstraint{MaxPodsPerNode: maxPodsPerNode},
+		NetworkConfig:     networkConfig,
 	}, nil
 }
 
