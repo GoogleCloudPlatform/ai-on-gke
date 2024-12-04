@@ -20,9 +20,6 @@ spec:
       - name: acknowledge
         varType: bool
         required: true
-      - name: solution_deployment_view
-        varType: bool
-        required: true
       - name: additional_labels
         description: Additional labels to add to Kubernetes resources.
         varType: string

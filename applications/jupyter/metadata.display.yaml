@@ -41,16 +41,6 @@ spec:
           enumValueLabels:
             - label: Confirm that all prerequisites have been met.
               value: "true"
-        solution_deployment_view:
-          name: solution_deployment_view
-          title: Check to confirm that upon deployment completion, you need to go to the Solution deployment page, find your deployment, and follow suggested next steps on the deployment DETAILS tab.
-          section: acknowledge
-          subtext: <p>
-                    <a href="https://console.cloud.google.com/products/solutions/deployments"><i>Solution deployment page</i></a>
-                   </p>
-          enumValueLabels:
-            - label: Confirm that all prerequisites have been met.
-              value: "true"
         iap_consent_info:
           name: iap_consent_info
           title: Confirm your OAuth consent screen is configured correctly.
