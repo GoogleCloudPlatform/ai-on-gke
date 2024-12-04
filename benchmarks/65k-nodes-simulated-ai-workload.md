@@ -1,6 +1,8 @@
-# 65k GKE Benchmarks - Simulated AI workload
+# 65k GKE CPU Benchmarks - Simulated AI workload
 
-This repository contains the code and configuration files for benchmarking Google Kubernetes Engine (GKE) at a massive scale (65,000 nodes) with simulated AI workloads.
+This repository contains the code and configuration files for benchmarking Google Kubernetes Engine (GKE) at a massive scale (65,000 nodes) with simulated AI workloads via Terraform automation and ClusterLoader2 performance testing tool.
+
+You can find the current set of supported cluster deployments under `infra/65k-cpu-cluster` and the ClusterLoader2 benchmark under `benchmark/tools/CL2-benchmark`.
 
 ## Introduction
 
