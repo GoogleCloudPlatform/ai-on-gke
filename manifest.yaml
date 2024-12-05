@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    gkit.gke.io/generated: "true"
+    gkit.gke.io/inference-server: vllm
+  creationTimestamp: null
+  labels:
+    app: llama3-8b-vllm-inference-server
+  name: llama3-8b-vllm-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama3-8b-vllm-inference-server
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        ai.gke.io/inference-server: vllm
+        ai.gke.io/model: LLaMA3_8B
+        app: llama3-8b-vllm-inference-server
+        examples.ai.gke.io/source: blueprints
+    spec:
+      containers:
+      - args:
+        - --model=$(MODEL_ID)
+        - --max-num-seq=1024
+        - --num-scheduler-steps=4
+        command:
+        - python3
+        - -m
+        - vllm.entrypoints.openai.api_server
+        env:
+        - name: MODEL_ID
+          value: meta-llama/Meta-Llama-3-8B
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: hf_api_token
+              name: hf-secret
+        image: vllm/vllm-openai:latest
+        name: inference-server
+        ports:
+        - containerPort: 8000
+          name: metrics
+        readinessProbe:
+          failureThreshold: 60
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+          requests:
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-tesla-a100
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: dshm
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    gkit.gke.io/generated: "true"
+  creationTimestamp: null
+  name: llama3-8b-vllm-hpa
+spec:
+  maxReplicas: 3
+  metrics:
+  - pods:
+      metric:
+        name: prometheus.googleapis.com|vllm:gpu_cache_usage_perc|gauge
+      target:
+        averageValue: 512546u
+        type: AverageValue
+    type: Pods
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llama3-8b-vllm-deployment
+status:
+  currentMetrics: null
+  desiredReplicas: 0
