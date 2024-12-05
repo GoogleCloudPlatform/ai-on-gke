@@ -24,23 +24,23 @@ resource "google_compute_router" "router" {
 }
 
 resource "google_compute_router_nat" "nat" {
-  name                                = "nat-router-${var.cluster_name}"
-  router                              = google_compute_router.router.name
-  region                              = google_compute_router.router.region
-  nat_ip_allocate_option              = "AUTO_ONLY"
+  name                               = "nat-router-${var.cluster_name}"
+  router                             = google_compute_router.router.name
+  region                             = google_compute_router.router.region
+  nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES"
-  min_ports_per_vm                    = 64
+  min_ports_per_vm                   = 64
 
   depends_on = [google_compute_router.router]
 }
 
 resource "google_container_cluster" "test_cluster" {
-  name     = var.cluster_name
-  location = var.region
-  min_master_version = var.min_master_version
-  node_locations = var.node_locations
-  initial_node_count = var.initial_node_count
- default_max_pods_per_node = 16
+  name                      = var.cluster_name
+  location                  = var.region
+  min_master_version        = var.min_master_version
+  node_locations            = var.node_locations
+  initial_node_count        = var.initial_node_count
+  default_max_pods_per_node = 16
 
   release_channel {
     channel = "RAPID"
@@ -48,7 +48,7 @@ resource "google_container_cluster" "test_cluster" {
   node_config {
     machine_type = "e2-medium"
     disk_size_gb = 20
-    disk_type = "pd-standard"
+    disk_type    = "pd-standard"
     labels = {
       worker-node-pool = "true"
     }
@@ -58,18 +58,18 @@ resource "google_container_cluster" "test_cluster" {
   deletion_protection = false
 
   # Networking-related options.
-  network        = data.google_compute_network.vpc.id
-  subnetwork     = google_compute_subnetwork.vpc.id
-  networking_mode = "VPC_NATIVE"
+  network           = data.google_compute_network.vpc.id
+  subnetwork        = google_compute_subnetwork.vpc.id
+  networking_mode   = "VPC_NATIVE"
   datapath_provider = var.datapath_provider
 
   private_cluster_config {
-    enable_private_nodes = true
+    enable_private_nodes   = true
     master_ipv4_cidr_block = var.master_ipv4_cidr_block
   }
   ip_allocation_policy {
-    cluster_ipv4_cidr_block  =var.cluster_ipv4_cidr_block
-    services_ipv4_cidr_block =var.services_ipv4_cidr_block
+    cluster_ipv4_cidr_block  = var.cluster_ipv4_cidr_block
+    services_ipv4_cidr_block = var.services_ipv4_cidr_block
   }
 
   workload_identity_config {
@@ -126,7 +126,7 @@ resource "google_container_node_pool" "additional_pools" {
   node_config {
     machine_type = "e2-medium"
     disk_size_gb = 20
-    disk_type = "pd-standard"
+    disk_type    = "pd-standard"
     labels = {
       worker-node-pool = "true"
     }
