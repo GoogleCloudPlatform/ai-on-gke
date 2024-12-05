@@ -905,7 +905,7 @@ if __name__ == "__main__":
   parser.add_argument(
       "--request-rate",
       type=is_expression_of_t,
-      default=None,
+      default="inf",
       help=(
           "Specifies the request rate as a function of time, f(t)."
           " Example format: '1+1.05*t', where 't' represents seconds from"
