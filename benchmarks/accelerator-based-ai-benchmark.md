@@ -1,8 +1,8 @@
-# AI on GKE GPU Benchmarking
+# AI on GKE Accelerator-Based Benchmarking
 
-This framework enables you to run automated benchmarks on GKE for AI workloads via Terraform automation.
+This framework enables you to run automated benchmarks on Google Kubernetes Engine (GKE) for AI workloads using Terraform. The benchmark utilizes an accelerator-based cluster with GPU or TPU nodes, depending on your Terraform configuration.
 
-You can find the current set of supported cluster deployments under `infra/gpu-cluster` and the supported inference servers
+You can find the current set of supported cluster deployments under `infra/accelerator-cluster` and the supported inference servers
 under `inference-server/`.
 
 Note that you can run any stage separate from another. For example, you can deploy your own inference server
@@ -56,7 +56,7 @@ To create a GPU cluster, in the ai-on-gke/benchmarks folder run:
 
 ```sh
 # Stage 1 creates the cluster.
-cd infra/gpu-cluster/stage-1
+cd infra/accelerator-cluster/stage-1
 
 # Copy the sample variables and update the project ID, cluster name and
 # other parameters as needed in the `terraform.tfvars` file.
@@ -88,7 +88,7 @@ To configure the cluster to run inference workloads we need to set up workload i
 
 ```sh
 # Stage 2 configures the cluster for running inference workloads.
-cd infra/gpu-cluster/stage-2
+cd infra/accelerator-cluster/stage-2
 
 # Copy the sample variables and update the project number and cluster name in
 # the fleet_host variable:
@@ -216,16 +216,16 @@ terraform destroy
 cd ../../../inference-server/text-generation-inference
 terraform destroy
 
-# Run destroy on infra/gpu-cluster/stage-2 resources
+# Run destroy on infra/accelerator-cluster/stage-2 resources
 #
 # NOTE: the gcs buckets will not be destroyed unless you delete all of 
 # the files in the existing gcs buckets (benchmark output and 
 # benchmark data buckets). Keeping the gcs buckets does not interfere 
 # with future terraform commands.
-cd ../../infra/gpu-cluster/stage-2
+cd ../../infra/accelerator-cluster/stage-2
 terraform destroy
 
-# Run destroy on infra/gpu-cluster/stage-1 resources
-cd ../gpu-cluster/stage-1
+# Run destroy on infra/accelerator-cluster/stage-1 resources
+cd ../accelerator-cluster/stage-1
 terraform destroy
 ```
