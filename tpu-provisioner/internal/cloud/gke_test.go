@@ -352,6 +352,39 @@ func TestNodePoolForPod(t *testing.T) {
 			},
 		},
 		{
+			desc: "pod with cross-project reservation selector",
+			selector: map[string]string{
+				"cloud.google.com/reservation-name":    "tpu-rsv",
+				"cloud.google.com/reservation-project": "tpu-rsv-project",
+			},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+					},
+					MachineType: "ct5p-hightpu-4t",
+					ReservationAffinity: &container.ReservationAffinity{
+						ConsumeReservationType: "SPECIFIC_RESERVATION",
+						Key:                    "compute.googleapis.com/reservation-name",
+						Values:                 []string{"projects/tpu-rsv-project/reservations/tpu-rsv"},
+					},
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
+		{
 			desc:       "pod with reservation selector but on demand is forced",
 			selector:   map[string]string{"cloud.google.com/reservation-name": "tpu-rsv"},
 			gkeContext: GKEContext{ForceOnDemand: true},
@@ -523,6 +556,45 @@ func TestNodePoolForPod(t *testing.T) {
 				Name:              "test-pool",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+			},
+		},
+		{
+			desc: "pod requesting additional node networks",
+			additionalAnnotations: map[string]string{
+				"tpu-provisioner.cloud.google.com/additional-node-networks": "network-1:subnet-1, network-2:subnet-2",
+			},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+					},
+					MachineType:            "ct5p-hightpu-4t",
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+				NetworkConfig: &container.NodeNetworkConfig{
+					AdditionalNodeNetworkConfigs: []*container.AdditionalNodeNetworkConfig{
+						{
+							Network:    "network-1",
+							Subnetwork: "subnet-1",
+						},
+						{
+							Network:    "network-2",
+							Subnetwork: "subnet-2",
+						},
+					},
+				},
 			},
 		},
 	}

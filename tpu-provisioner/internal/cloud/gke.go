@@ -324,11 +324,18 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 
 	if !g.ClusterContext.ForceOnDemand {
 		if resName, ok := p.Spec.NodeSelector["cloud.google.com/reservation-name"]; ok {
+			var resVal string
+			resProj, ok := p.Spec.NodeSelector["cloud.google.com/reservation-project"]
+			if ok {
+				resVal = fmt.Sprintf("projects/%s/reservations/%s", resProj, resName)
+			} else {
+				resVal = resName
+			}
 			reservation = &containerv1beta1.ReservationAffinity{
 				ConsumeReservationType: "SPECIFIC_RESERVATION",
 				Key:                    "compute.googleapis.com/reservation-name",
 				Values: []string{
-					resName,
+					resVal,
 				},
 			}
 		}
