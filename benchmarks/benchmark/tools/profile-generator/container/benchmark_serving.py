@@ -34,13 +34,6 @@ NEW_TEXT_KEY = "\nOutput:\n"
 PROMETHEUS_PORT = 9090
 NS_IN_SEC = 1_000_000_000
 
-class QueryStats(NamedTuple):
-  start_time: float
-  end_time: float
-  output_len: float
-  ttft: Optional[float]
-
-RESULTS_BUCKET : List[QueryStats] = []
 
 # Prometheus Metrics
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
@@ -907,7 +900,7 @@ if __name__ == "__main__":
       expr_parsed.subs(t, 1)
       return input_str
     except Exception:
-      raise ValueError(f"Request rate {input_str}, must be an expression of `t`")
+      raise ValueError(f"Request rate {input_str}, must be numeric or an expression of `t`")
     
   parser.add_argument(
       "--request-rate",
