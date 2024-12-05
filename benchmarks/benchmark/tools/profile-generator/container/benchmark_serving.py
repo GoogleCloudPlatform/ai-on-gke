@@ -12,7 +12,7 @@ import json
 import random
 import requests
 import time
-from typing import AsyncGenerator, List, Optional, Tuple, Dict
+from typing import AsyncGenerator, List, NamedTuple, Optional, Tuple, Dict
 from prometheus_client import start_http_server, Histogram, Gauge
 
 import google.auth
@@ -30,6 +30,14 @@ MIN_SEQ_LEN = 4
 CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 PROMETHEUS_PORT = 9090
+
+class QueryStats(NamedTuple):
+  start_time: float
+  end_time: float
+  output_len: float
+  ttft: Optional[float]
+
+RESULTS_BUCKET : List[QueryStats] = []
 
 # Prometheus Metrics
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
@@ -228,8 +236,16 @@ async def send_stream_request(
   request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
 
   # Exclude first token for tpot calculation
-  tpot_metric.observe((request_end_time - ttft - request_start_time) / (output_len - 1))
+  if output_len != 0:
+    tpot_metric.observe((request_end_time - ttft - request_start_time) / (output_len - 1))
   request_latency_per_output_token_metric.observe((request_end_time - request_start_time) / output_len)
+  RESULTS_BUCKET.append(QueryStats(
+    request_start_time,
+    request_end_time,
+    output_len,
+    ttft
+  ))
+
   if ttft is not None:
     ttft_metric.observe(ttft)
   prompt_length_metric.observe(prompt_len)
@@ -458,7 +474,33 @@ async def benchmark(
     if ttft:
       combined_ttfts.append(ttft)
   
-  benchmark_duration = time.time() - benchmark_start_time
+  benchmark_end_time = time.time()
+  benchmark_duration = benchmark_end_time - benchmark_start_time
+
+  P50 = 89.755325
+  P90 = 190.50281
+  pts = [(req.end_time - req.start_time) / req.output_len for req in RESULTS_BUCKET]
+
+  out_of_tolerance_time = 0.0
+  points = []
+  for index, _ in enumerate(RESULTS_BUCKET):
+    points.append((RESULTS_BUCKET[index].end_time - RESULTS_BUCKET[index].start_time) / RESULTS_BUCKET[index].output_len)
+    if np.percentile(points, 50) > P50:
+      if index != len(RESULTS_BUCKET) - 1:
+        out_of_tolerance_time  += RESULTS_BUCKET[index + 1].end_time - RESULTS_BUCKET[index].end_time
+  print(f'p50 {np.percentile(pts, 50)}')
+  print(f"WITHIN p50 TOLERNACE PERCENTAGE: {1- (out_of_tolerance_time / benchmark_duration)}")
+
+  out_of_tolerance_time = 0.0
+  points = []
+  for index, _ in enumerate(RESULTS_BUCKET):
+    points.append((RESULTS_BUCKET[index].end_time - RESULTS_BUCKET[index].start_time) / RESULTS_BUCKET[index].output_len)
+    if np.percentile(points, 90) > P90:
+      if index != len(RESULTS_BUCKET) - 1:
+        out_of_tolerance_time  += RESULTS_BUCKET[index + 1].end_time - RESULTS_BUCKET[index].end_time
+  print(f'p90 {np.percentile(pts, 90)}')
+  print(f"WITHIN p90 TOLERNACE PERCENTAGE: {1- (out_of_tolerance_time / benchmark_duration)}")
+
   print_and_save_result(args, benchmark_duration, prompts_sent, model, combined_latencies, combined_ttfts, combined_errors)
   return combined_latencies, combined_ttfts, combined_errors
 
@@ -911,6 +953,13 @@ if __name__ == "__main__":
       action="store_true",
       help="Whether to save benchmark results to a json file.",
   )
+
+  parser.add_argument(
+    "--save_raw",
+    action="store_true",
+    help="Save the results for individual requests"
+  )
+
   parser.add_argument(
     "--output-bucket",
     type=str,
