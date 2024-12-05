@@ -12,7 +12,7 @@ import json
 import random
 import requests
 import time
-from typing import AsyncGenerator, List, Optional, Tuple, Dict
+from typing import AsyncGenerator, List, NamedTuple, Optional, Tuple, Dict
 from prometheus_client import start_http_server, Histogram, Gauge
 
 import google.auth
@@ -21,6 +21,8 @@ from google.cloud import storage
 
 import aiohttp
 import numpy as np
+from sympy import symbols
+from sympy.parsing.sympy_parser import parse_expr
 from transformers import AutoTokenizer
 from transformers import PreTrainedTokenizerBase
 
@@ -30,6 +32,15 @@ MIN_SEQ_LEN = 4
 CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 PROMETHEUS_PORT = 9090
+NS_IN_SEC = 1_000_000_000
+
+class QueryStats(NamedTuple):
+  start_time: float
+  end_time: float
+  output_len: float
+  ttft: Optional[float]
+
+RESULTS_BUCKET : List[QueryStats] = []
 
 # Prometheus Metrics
 prompt_length_metric = Histogram("LatencyProfileGenerator:prompt_length", "Input prompt length", buckets=[2**i for i in range(1, 16)])
@@ -38,6 +49,7 @@ request_latency_per_output_token_metric = Histogram('LatencyProfileGenerator:req
 tpot_metric = Histogram('LatencyProfileGenerator:time_per_output_token', 'Time per output token per request (excluding first token)')
 ttft_metric = Histogram('LatencyProfileGenerator:time_to_first_token', 'Time to first token per request')
 active_requests_metric = Gauge('LatencyProfileGenerator:active_requests', 'How many requests actively being processed')
+request_rate_metric = Gauge('LatencyProfileGenerator:request_rate', "The current request rate in seconds")
 
 # Add trace config for monitoring in flight requests
 async def on_request_start(session, trace_config_ctx, params):
@@ -110,18 +122,26 @@ def get_filtered_dataset(
 
 async def generate_next_request(
     input_requests: List[Tuple[str, int, int]],
-    request_rate: float,
+    request_rate_expr: float,
+    start_time: float,
 ) -> AsyncGenerator[Tuple[str, int, int], None]:
   """Gets request async."""
   while True:
     request = random.choice(input_requests)
     yield request
 
-    if request_rate == float("inf"):
+    if request_rate_expr == "oo":
       # If the request rate is infinity, then we don't need to wait.
       continue
+
+    # Evaluate the request rate at this point in time
+    t = symbols('t')
+    expr_parsed = parse_expr(request_rate_expr, transformations="all", local_dict={"t": t})
+    request_rate_at_t = expr_parsed.subs(t, ((time.time_ns() - start_time) / NS_IN_SEC))
+    request_rate_metric.set(request_rate_at_t)
+
     # Sample the request interval from the exponential distribution.
-    interval = np.random.exponential(1.0 / request_rate)
+    interval = np.random.exponential(1.0 / request_rate_at_t)
     # The next request will be sent after the interval.
     await asyncio.sleep(interval)
 
@@ -408,7 +428,7 @@ async def benchmark(
   benchmark_start_time = time.time()
   tasks: List[asyncio.Task] = []
   prompts_sent: int = 0
-  async for request in generate_next_request(input_requests, args.request_rate):
+  async for request in generate_next_request(input_requests, args.request_rate, time.time_ns()):
     if args.num_prompts <= prompts_sent:
       break
     prompt, prompt_len, output_len = request
@@ -876,16 +896,31 @@ if __name__ == "__main__":
           " LLaMA2 models."
       ),
   )
+  # Input assertions
+  def is_expression_of_t(input_str):
+    if input_str == "inf":
+      return "oo"
+    # Check if expression uses variables other than 't' by attempting to evaluate with only 't' defined
+    try:
+      t = symbols('t')
+      expr_parsed = parse_expr(input_str, transformations="all", local_dict={"t": t})
+      expr_parsed.subs(t, 1)
+      return input_str
+    except Exception:
+      raise ValueError(f"Request rate {input_str}, must be an expression of `t`")
+    
   parser.add_argument(
       "--request-rate",
-      type=float,
-      default=float("inf"),
+      type=is_expression_of_t,
+      default=None,
       help=(
-          "Number of requests per second. If this is inf, "
-          "then all the requests are sent at time 0. "
-          "Otherwise, we use Poisson process to synthesize "
-          "the request arrival times."
-      ),
+          "Specifies the request rate as a function of time, f(t)."
+          " Example format: '1+1.05*t', where 't' represents seconds from"
+          " start. If set to 'inf', all requests are sent at time 0."
+          " Otherwise, the function is interpreted to generate a Poisson"
+          " process for request arrival times based on the provided rate"
+          " expression."
+    ),
   )
   parser.add_argument("--seed", type=int, default=int(time.time()))
   parser.add_argument(
