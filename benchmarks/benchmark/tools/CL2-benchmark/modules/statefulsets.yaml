@@ -1,0 +1,452 @@
+{{$inferenceWorkloadName := .inferenceWorkloadName}}
+{{$trainingWorkloadName := .trainingWorkloadName}}
+
+
+{{$inferenceWorkloadScaledUpSize := .inferenceWorkloadScaledUpSize}}
+{{$inferenceWorkloadInitialSize := .inferenceWorkloadInitialSize}}
+{{$trainingWorkloadSingleWorkloadSize := .trainingWorkloadSingleWorkloadSize}}
+{{$trainingWorkloadMixedWorkloadSize := .trainingWorkloadMixedWorkloadSize}}
+
+{{$priorityClassHigh := .priorityClassHigh}}
+{{$priorityClassLow :=  .priorityClassLow }}
+
+{{$throughputThreshold := DefaultParam .throughputThreshold 0}}
+
+
+
+steps:
+# Phase #1: Single workload: creating a training workload (StatefulSet) from scratch of size {{$trainingWorkloadSingleWorkloadSize}}
+- name: Phase 1; starting measurements for training workload (StatefulSet) creation
+  measurements:
+  - Identifier: PodStartupLatencyTrainingWorkloadSingleWorkloadSizeCreation
+    Method: PodStartupLatency
+    Params:
+      action: start
+      labelSelector: group=training-workload
+      threshold: 1h
+  - Identifier: WaitForRunningTrainingWorkloadSingleWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      checkIfPodsAreUpdated: false
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+      labelSelector: group=training-workload
+      operationTimeout: 1h
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$trainingWorkloadName}}
+      action: start
+      threshold: {{$throughputThreshold}}
+- name: Phase 1; creating training workload (StatefulSet) of size {{$trainingWorkloadSingleWorkloadSize}}
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 1
+    tuningSet: default
+    objectBundle:
+    - basename: {{$trainingWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+      templateFillMap:
+        Replicas: {{$trainingWorkloadSingleWorkloadSize}}
+        CpuRequest: "5m"
+        PriorityClass: {{$priorityClassLow}}
+        group: training-workload
+
+- name: Phase 1; waiting for training workload (StatefulSet) to be created
+  measurements:
+  - Method: WaitForControlledPodsRunning
+    Identifier: WaitForRunningTrainingWorkloadSingleWorkloadSize
+    Params:
+      action: gather
+      labelSelector: group=training-workload
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$trainingWorkloadName}}
+      action: gather
+
+- name: Phase 1; measure training workload (StatefulSet) pod startup latency
+  measurements:
+  - Identifier: PodStartupLatencyTrainingWorkloadSingleWorkloadSizeCreation
+    Method: PodStartupLatency
+    Params:
+      action: gather
+
+- name: Phase 1; starting measurements for training workload (StatefulSet) deletion
+  measurements:
+  - Identifier: WaitForDeletionTrainingWorkloadSingleWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      checkIfPodsAreUpdated: false
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+      labelSelector: group=training-workload
+      operationTimeout: 1h
+
+- name: Phase 1; deleting training workload (StatefulSet) of size {{$trainingWorkloadSingleWorkloadSize}}
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 0
+    tuningSet: default
+    objectBundle:
+    - basename: {{$trainingWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+
+- name: Phase 1; waiting for training workload (StatefulSet) to be deleted
+  measurements:
+  - Identifier: WaitForDeletionTrainingWorkloadSingleWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      action: gather
+      labelSelector: group=training-workload
+
+
+# Phase #2: Mixed workload: Training and inference workloads (StatefulSets)
+- name:  Phase 2; starting measurements for training workload (StatefulSet) creation
+  measurements:
+  - Identifier: PodStartupLatencyTrainingWorkloadMixedWorkloadSizeCreation
+    Method: PodStartupLatency
+    Params:
+      action: start
+      labelSelector: group=training-workload
+      threshold: 1h
+  - Identifier: WaitForRunningTrainingWorkloadMixedWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      checkIfPodsAreUpdated: false
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+      labelSelector: group=training-workload
+      operationTimeout: 1h
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$trainingWorkloadName}}
+      action: start
+      threshold: {{$throughputThreshold}}
+- name: Phase 2; creating training workload (StatefulSet) of size {{$trainingWorkloadMixedWorkloadSize}}
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 1
+    tuningSet: default
+    objectBundle:
+    - basename: {{$trainingWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+      templateFillMap:
+        Replicas: {{$trainingWorkloadMixedWorkloadSize}}
+        CpuRequest: "5m"
+        PriorityClass: {{$priorityClassLow}}
+        group: training-workload
+- name: Phase 2; waiting for training workload (StatefulSet) to be created
+  measurements:
+  - Method: WaitForControlledPodsRunning
+    Identifier: WaitForRunningTrainingWorkloadMixedWorkloadSize
+    Params:
+      action: gather
+      labelSelector: group=training-workload
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$trainingWorkloadName}}
+      action: gather
+
+- name: Phase 2; measure training workload (StatefulSet) pod startup latency
+  measurements:
+  - Identifier: PodStartupLatencyTrainingWorkloadMixedWorkloadSizeCreation
+    Method: PodStartupLatency
+    Params:
+      action: gather
+
+- name: Phase 2; starting measurements for inference workload (StatefulSet) creation
+  measurements:
+  - Identifier: PodStartupLatencyInferenceWorkloadInitialSizeCreation
+    Method: PodStartupLatency
+    Params:
+      action: start
+      labelSelector: group=inference-workload
+      threshold: 1h
+  - Identifier: WaitForRunningInferenceWorkloadInitialSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      checkIfPodsAreUpdated: false
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+      labelSelector: group=inference-workload
+      operationTimeout: 1h
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$inferenceWorkloadName}}
+      action: start
+      threshold: {{$throughputThreshold}}
+- name: Phase 2; creating inference workload (StatefulSet) of size {{$inferenceWorkloadInitialSize}}
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 1
+    tuningSet: default
+    objectBundle:
+    - basename: {{$inferenceWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+      templateFillMap:
+        Replicas: {{$inferenceWorkloadInitialSize}}
+        CpuRequest: "5m"
+        PriorityClass: {{$priorityClassHigh}}
+        group: inference-workload
+
+- name: Phase 2; waiting for inference workload (StatefulSet) to be created
+  measurements:
+  - Method: WaitForControlledPodsRunning
+    Identifier: WaitForRunningInferenceWorkloadInitialSize
+    Params:
+      action: gather
+      labelSelector: group=inference-workload
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$inferenceWorkloadName}}
+      action: gather
+
+- name: Phase 2; measure inference workload (StatefulSet) pod startup latency
+  measurements:
+  - Identifier: PodStartupLatencyInferenceWorkloadInitialSizeCreation
+    Method: PodStartupLatency
+    Params:
+      action: gather
+
+
+# Phase #3: Scale up of inference workload (StatefulSet), training workload disruption
+- name: Phase 3; starting measurements for scaling up inference workload (StatefulSet) to full size
+  measurements:
+  - Identifier: WaitForRunningInferenceWorkloadScaledUpSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      labelSelector: group=inference-workload
+      checkIfPodsAreUpdated: false
+      operationTimeout: 1h
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+
+
+- name: Phase 3; starting measurements for manual preemption of training workload (StatefulSet)
+  measurements:
+  - Identifier: WaitForManualPreemptionTrainingWorkloadMixedWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      labelSelector: group=training-workload
+      checkIfPodsAreUpdated: false
+      operationTimeout: 1h
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$inferenceWorkloadName}}
+      action: start
+      threshold: {{$throughputThreshold}}
+
+- name: Phase 3; scaling up inference workload (StatefulSet) to size {{$inferenceWorkloadScaledUpSize}}
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 1
+    tuningSet: default
+    objectBundle:
+    - basename: {{$inferenceWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+      templateFillMap:
+        Replicas: {{$inferenceWorkloadScaledUpSize}}
+        CpuRequest: "5m"
+        PriorityClass: {{$priorityClassHigh}}
+        group: inference-workload
+
+- name: Phase 3; scaling down training workload (StatefulSet) to size 0 (triggering preemption)
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 1
+    tuningSet: default
+    objectBundle:
+    - basename: {{$trainingWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+      templateFillMap:
+        Replicas: 0
+        CpuRequest: "5m"
+        PriorityClass: {{$priorityClassLow}}
+        group: training-workload
+
+
+- name: Phase 3; waiting for training workload (StatefulSet) to be preempted
+  measurements:
+  - Identifier: WaitForManualPreemptionTrainingWorkloadMixedWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      labelSelector: group=training-workload
+      action: gather
+
+- name: Phase 3; waiting for inference workload (StatefulSet) to scale up
+  measurements:
+  - Identifier: WaitForRunningInferenceWorkloadScaledUpSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      labelSelector: group=inference-workload
+      action: gather
+
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$inferenceWorkloadName}}
+      action: gather
+
+
+- name: Phase 3; starting measurements for training workload (StatefulSet) recovery
+  measurements:
+  - Identifier: WaitForReschedulingTrainingWorkloadMixedWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      operationTimeout: 1h
+      checkIfPodsAreUpdated: false
+      labelSelector: group=training-workload
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+
+- name: Phase 3; attempting to scale up training workload (StatefulSet) to size {{$trainingWorkloadMixedWorkloadSize}} (should remain pending)
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 1
+    tuningSet: default
+    objectBundle:
+    - basename: {{$trainingWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+      templateFillMap:
+        Replicas: {{$trainingWorkloadMixedWorkloadSize}}
+        CpuRequest: "5m"
+        PriorityClass: {{$priorityClassLow}}
+        group: training-workload
+
+- name: Phase 3; sleep after creating scale up training workload (StatefulSet) to ensure they are pending
+  measurements:
+  - Identifier: SleepAfterLowPrioriorityScaleUp
+    Method: Sleep
+    Params:
+      duration: 5m
+
+
+# Phase #4: Scale down inference workload, training workload recovery
+- name: Phase 4; starting measurements for scaling down inference workload (StatefulSet) to small size
+  measurements:
+  - Identifier: WaitForScalingDownInferenceWorkloadInitialSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      labelSelector: group=inference-workload
+      checkIfPodsAreUpdated: false
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+      operationTimeout: 1h
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$trainingWorkloadName}}
+      action: start
+      threshold: {{$throughputThreshold}}
+
+- name: Phase 4; scaling down inference workload (StatefulSet) to size {{$inferenceWorkloadInitialSize}}
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 1
+    tuningSet: default
+    objectBundle:
+    - basename: {{$inferenceWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+      templateFillMap:
+        Replicas: {{$inferenceWorkloadInitialSize}}
+        CpuRequest: "5m"
+        PriorityClass: {{$priorityClassHigh}}
+        group: inference-workload
+
+
+
+- name: Phase 4; waiting for inference workload (StatefulSet) to scale down
+  measurements:
+  - Identifier: WaitForScalingDownInferenceWorkloadInitialSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      labelSelector: group=inference-workload
+      action: gather
+
+- name: Phase 4; waiting for training workload (StatefulSet) to recover
+  measurements:
+  - Identifier: WaitForReschedulingTrainingWorkloadMixedWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      labelSelector: group=training-workload
+      action: gather
+
+
+- module:
+    path: modules/scheduling-throughput.yaml
+    params:
+      basename: {{$trainingWorkloadName}}
+      action: gather
+
+
+# Phase #5: Training workload finishes
+- name: Phase 5; starting measurements for deleting training workload (StatefulSet)
+  measurements:
+  - Identifier: WaitForDeletionTrainingWorkloadMixedWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      checkIfPodsAreUpdated: false
+      apiVersion: apps/v1
+      kind: StatefulSet
+      action: start
+      labelSelector: group=training-workload
+      operationTimeout: 1h
+
+- name: Phase 5; deleting training workload (StatefulSet) of size {{$trainingWorkloadMixedWorkloadSize}}
+  phases:
+  - namespaceRange:
+      min: {{.minNamespace}}
+      max: {{.maxNamespace}}
+    replicasPerNamespace: 0
+    tuningSet: default
+    objectBundle:
+    - basename: {{$trainingWorkloadName}}
+      objectTemplatePath: statefulset.yaml
+
+- name: Phase 5; waiting for training workload (StatefulSet) to be deleted
+  measurements:
+  - Identifier: WaitForDeletionTrainingWorkloadMixedWorkloadSize
+    Method: WaitForControlledPodsRunning
+    Params:
+      action: gather
+      labelSelector: group=training-workload

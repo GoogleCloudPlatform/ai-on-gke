@@ -2,7 +2,7 @@
 
 set -o errexit
 
-cd ../infra/stage-1/ || exit
+cd ../infra/accelerator-cluster/stage-1/ || exit
 cp ../../../orchestration/config/stage-1.tfvars ./terraform.tfvars
 terraform init -upgrade
 terraform apply -auto-approve
