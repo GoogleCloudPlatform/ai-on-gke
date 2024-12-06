@@ -601,7 +601,7 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
   # Save to file
   model_without_slash = model.replace("/","-")
   file_name = (
-      f"{args.file_prefix}-{args.backend}-{args.request_rate}qps-{args.start_datetime.strftime('%Y%m%d-%H%M%S')}-{model_without_slash}.json"
+      f"{args.file_prefix}-{args.backend}-{args.start_datetime.strftime('%Y%m%d-%H%M%S')}-{model_without_slash}.json"
   )
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
