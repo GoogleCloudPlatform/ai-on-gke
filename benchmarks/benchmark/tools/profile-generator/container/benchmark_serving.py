@@ -248,7 +248,7 @@ async def send_stream_request(
   request_latency = (prompt_len, output_len, (request_end_time - request_start_time))
 
   # Exclude first token for tpot calculation
-  if output_len != 0:
+  if output_len > 1:
     tpot_metric.observe((request_end_time - ttft - request_start_time) / (output_len - 1))
   request_latency_per_output_token_metric.observe((request_end_time - request_start_time) / output_len)
   RESULTS_BUCKET.append(QueryStats(
@@ -659,21 +659,21 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
     # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
     queries = {
       "gauge": {
-        "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Sd": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Mean": "avg_over_time(%s{job='%s-podmonitoring-dev'}[%.0fs])" % (metric, backend, duration),
+        "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring-dev'}[%.0fs])" % (metric, backend, duration),
+        "Sd": "stddev_over_time(%s{job='%s-podmonitoring-dev'}[%.0fs])" % (metric, backend, duration),
+        "Min": "min_over_time(%s{job='%s-podmonitoring-dev'}[%.0fs])" % (metric, backend, duration),
+        "Max": "max_over_time(%s{job='%s-podmonitoring-dev'}[%.0fs])" % (metric, backend, duration),
+        "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring-dev'}[%.0fs])" % (metric, backend, duration),
+        "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring-dev'}[%.0fs])" % (metric, backend, duration),
     },
       "histogram": {
-        "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
-        "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Mean": "sum(rate(%s_sum{job='%s-podmonitoring-dev'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring-dev'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
+        "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring-dev'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring-dev'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring-dev'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring-dev'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring-dev'}[%.0fs])) by (le))" % (metric, backend, duration),
     }
   }
     for query_name, query in queries[metric_type].items():
