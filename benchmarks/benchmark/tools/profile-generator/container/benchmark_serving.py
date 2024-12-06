@@ -912,7 +912,8 @@ if __name__ == "__main__":
           " start. If set to 'inf', all requests are sent at time 0."
           " Otherwise, the function is interpreted to generate a Poisson"
           " process for request arrival times based on the provided rate"
-          " expression."
+          " expression. Current value emitted as the following prometheus"
+          " metric: 'LatencyProfileGenerator:request_rate'"
     ),
   )
   parser.add_argument("--seed", type=int, default=int(time.time()))
