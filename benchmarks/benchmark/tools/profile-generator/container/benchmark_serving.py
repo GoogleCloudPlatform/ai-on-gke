@@ -130,10 +130,6 @@ async def generate_next_request(
     request = random.choice(input_requests)
     yield request
 
-    if request_rate_expr == "oo":
-      # If the request rate is infinity, then we don't need to wait.
-      continue
-
     # Evaluate the request rate at this point in time
     t = symbols('t')
     expr_parsed = parse_expr(request_rate_expr, transformations="all", local_dict={"t": t})
@@ -489,8 +485,8 @@ async def benchmark(
   benchmark_end_time = time.time()
   benchmark_duration = benchmark_end_time - benchmark_start_time
 
-  P50 = 89.755325
-  P90 = 190.50281
+  P50 = 0.089755325
+  P90 = 0.19050281
   pts = [(req.end_time - req.start_time) / req.output_len for req in RESULTS_BUCKET]
 
   out_of_tolerance_time = 0.0
