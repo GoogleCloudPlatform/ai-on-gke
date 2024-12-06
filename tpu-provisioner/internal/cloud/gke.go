@@ -366,7 +366,11 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 	var networkConfig *containerv1beta1.NodeNetworkConfig
 	var additionalNodeNetworks []*containerv1beta1.AdditionalNodeNetworkConfig
 	// additional-node-networks: "vpc1:subnet1, vpc2:subnet2"
-	for _, pair := range strings.Split(getAnnotation(p, AnnotationAdditionalNodeNetworks), ",") {
+	additionalNodeNetworksCSV := g.ClusterContext.NodeAdditionalNetworks
+	if getAnnotation(p, AnnotationAdditionalNodeNetworks) != "" {
+		additionalNodeNetworksCSV = getAnnotation(p, AnnotationAdditionalNodeNetworks)
+	}
+	for _, pair := range strings.Split(additionalNodeNetworksCSV, ",") {
 		pair = strings.TrimSpace(pair)
 		if pair == "" {
 			continue

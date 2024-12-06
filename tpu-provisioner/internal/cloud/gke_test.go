@@ -559,7 +559,49 @@ func TestNodePoolForPod(t *testing.T) {
 			},
 		},
 		{
+			desc: "additional node networks configured in cluster context",
+			gkeContext: GKEContext{
+				NodeAdditionalNetworks: "network-1:subnet-1, network-2:subnet-2",
+			},
+			want: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					Labels: map[string]string{
+						"google.com/nodepool-manager":                 "tpu-provisioner",
+						"google.com/tpu-provisioner-jobset-name":      "jobset-test",
+						"google.com/tpu-provisioner-jobset-namespace": "default",
+						"google.com/tpu-provisioner-parent-kind":      "job",
+						"google.com/tpu-provisioner-parent-name":      "jobset-test-job-1-0",
+						"google.com/tpu-provisioner-parent-namespace": "default",
+					},
+					MachineType:            "ct5p-hightpu-4t",
+					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
+				},
+				InitialNodeCount:  512,
+				Locations:         []string{""},
+				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
+				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
+				Name:              "test-pool",
+				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
+				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
+				NetworkConfig: &container.NodeNetworkConfig{
+					AdditionalNodeNetworkConfigs: []*container.AdditionalNodeNetworkConfig{
+						{
+							Network:    "network-1",
+							Subnetwork: "subnet-1",
+						},
+						{
+							Network:    "network-2",
+							Subnetwork: "subnet-2",
+						},
+					},
+				},
+			},
+		},
+		{
 			desc: "pod requesting additional node networks",
+			gkeContext: GKEContext{
+				NodeAdditionalNetworks: "should-be-overriden-1:should-be-overriden-2",
+			},
 			additionalAnnotations: map[string]string{
 				"tpu-provisioner.cloud.google.com/additional-node-networks": "network-1:subnet-1, network-2:subnet-2",
 			},
