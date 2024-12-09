@@ -130,11 +130,11 @@ resources:
 
 The `launch.py` a Python program that initiates a hyperparameter tuning process with two jobs for the learning rate (LR) parameter. In production environments, such experiments are typically tracked using open-source frameworks like MLFlow.
 
-Start the trainig:
+Start the training:
 ```bash
 python launch.py
 ```
-The first job will be first deployed to the demo-us-central1 GKE cluster with 4*A100 GPUs. For the second job, it will be deployed to the demo-us-west1 cluster with 4*L4 GPUs, because no 4*A100 GPUs were available in all clusters.
+The first job will be first deployed to the demo-us-central1 GKE cluster with 4\*A100 GPUs. For the second job, it will be deployed to the demo-us-west1 cluster with 4\*L4 GPUs, because no 4*A100 GPUs were available in all clusters.
 
 You also can check SkyPilot's status using: 
 ```bash
