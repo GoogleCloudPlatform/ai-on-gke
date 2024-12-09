@@ -40,6 +40,8 @@ class QueryStats(NamedTuple):
   output_len: float
   ttft: Optional[float]
 
+P50 = 0.089755325
+out_of_tolerance_time = 0.0
 RESULTS_BUCKET : List[QueryStats] = []
 
 # Prometheus Metrics
@@ -153,6 +155,7 @@ def init_errors_map() -> Dict[str, int]:
   return errors
 
 async def send_stream_request(
+    benchmark_start_time: float,
     backend: str,
     api_url: str,
     prompt: str,
@@ -253,6 +256,15 @@ async def send_stream_request(
     output_len,
     ttft
   ))
+  
+  points = []
+  global out_of_tolerance_time
+  for index, _ in enumerate(RESULTS_BUCKET):
+    points.append((RESULTS_BUCKET[index].end_time - RESULTS_BUCKET[index].start_time) / RESULTS_BUCKET[index].output_len)
+    if np.percentile(points, 50) > P50:
+      if index != len(RESULTS_BUCKET) - 1:
+        out_of_tolerance_time  += RESULTS_BUCKET[index + 1].end_time - RESULTS_BUCKET[index].end_time
+  print(f'{(request_end_time - request_start_time) / output_len}, CURRENT p50 {np.percentile([(req.end_time - req.start_time) / req.output_len for req in RESULTS_BUCKET], 50)}, {1- (out_of_tolerance_time / (time.time() - benchmark_start_time))} percent')
 
   if ttft is not None:
     ttft_metric.observe(ttft)
@@ -438,6 +450,7 @@ async def benchmark(
     if args.stream_request:
       task = asyncio.create_task(
         send_stream_request(
+            benchmark_start_time,
             args.backend,
             api_url,
             prompt,
@@ -484,30 +497,6 @@ async def benchmark(
   
   benchmark_end_time = time.time()
   benchmark_duration = benchmark_end_time - benchmark_start_time
-
-  P50 = 0.089755325
-  P90 = 0.19050281
-  pts = [(req.end_time - req.start_time) / req.output_len for req in RESULTS_BUCKET]
-
-  out_of_tolerance_time = 0.0
-  points = []
-  for index, _ in enumerate(RESULTS_BUCKET):
-    points.append((RESULTS_BUCKET[index].end_time - RESULTS_BUCKET[index].start_time) / RESULTS_BUCKET[index].output_len)
-    if np.percentile(points, 50) > P50:
-      if index != len(RESULTS_BUCKET) - 1:
-        out_of_tolerance_time  += RESULTS_BUCKET[index + 1].end_time - RESULTS_BUCKET[index].end_time
-  print(f'p50 {np.percentile(pts, 50)}')
-  print(f"WITHIN p50 TOLERNACE PERCENTAGE: {1- (out_of_tolerance_time / benchmark_duration)}")
-
-  out_of_tolerance_time = 0.0
-  points = []
-  for index, _ in enumerate(RESULTS_BUCKET):
-    points.append((RESULTS_BUCKET[index].end_time - RESULTS_BUCKET[index].start_time) / RESULTS_BUCKET[index].output_len)
-    if np.percentile(points, 90) > P90:
-      if index != len(RESULTS_BUCKET) - 1:
-        out_of_tolerance_time  += RESULTS_BUCKET[index + 1].end_time - RESULTS_BUCKET[index].end_time
-  print(f'p90 {np.percentile(pts, 90)}')
-  print(f"WITHIN p90 TOLERNACE PERCENTAGE: {1- (out_of_tolerance_time / benchmark_duration)}")
 
   print_and_save_result(args, benchmark_duration, prompts_sent, model, combined_latencies, combined_ttfts, combined_errors)
   return combined_latencies, combined_ttfts, combined_errors
