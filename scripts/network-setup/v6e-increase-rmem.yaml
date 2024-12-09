@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: tpu-network-optimization
+  name: tcp-increase-rmem
   namespace: kube-system
   labels:
-    k8s-app: tpu-network-optimization
+    k8s-app: tcp-increase-rmem
 spec:
   selector:
     matchLabels:
-      k8s-app: tpu-network-optimization
+      k8s-app: tcp-increase-rmem
   template:
     metadata:
       labels:
-        k8s-app: tpu-network-optimization
+        k8s-app: tcp-increase-rmem
     spec:
       priorityClassName: system-node-critical
       # hostNetwork: true prevents a pod IP from being allocated to this pod, which can help with IP space utilization.
@@ -33,8 +33,8 @@ spec:
       - operator: "Exists"
         effect: "NoSchedule"
       initContainers:
-      - name: "tpu-network-optimization"
-        image: "gke.gcr.io/tpu_network_optimizer@sha256:e5aba9c51fc0750863187bb22767b12890a16fd98dd74fd012f3510d38874dde"
+      - name: "tcp-increase-rmem"
+        image: "ubuntu:latest"
         securityContext:
           privileged: true
         command:
@@ -42,8 +42,6 @@ spec:
         - -c
         - |
           #!/bin/bash
-
-          /tpu_network_optimizer.sh
           echo "4096 41943040 314572800" > /proc/sys/net/ipv4/tcp_rmem
         volumeMounts:
         - name: sys
