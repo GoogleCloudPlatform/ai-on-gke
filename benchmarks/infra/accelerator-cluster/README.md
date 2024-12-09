@@ -12,7 +12,7 @@ Stage 1 creates a GKE cluster with GPU accelerators. You can find more details i
 At a high level you will run the following:
 
 ```
-cd infra/stage-1
+cd infra/accelerator-cluster/stage-1
 
 cp ./sample-tfvars/gpu-sample.tfvars terraform.tfvars
 

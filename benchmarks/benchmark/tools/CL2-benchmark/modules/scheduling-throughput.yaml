@@ -1,0 +1,28 @@
+{{$query := `sum(irate(apiserver_request_total{verb="POST", resource="pods", subresource="binding",code="201"}[1m]))[%v:5s]`}}
+
+steps:
+- name: "{{.action}}ing scheduling throughput measurement"
+  measurements:
+  - Identifier: SchedulingThroughput_{{.basename}}
+    Method: GenericPrometheusQuery
+    Params:
+      action: {{.action}}
+      enableViolations: true
+      metricName: {{.basename}}
+      metricVersion: v1
+      unit: 1/s
+      queries:
+      - name: Max
+        query: max_over_time({{$query}})
+      - name: Avg
+        query: avg_over_time({{$query}})
+      - name: Perc99
+        query: quantile_over_time(0.99, {{$query}})
+        {{if .threshold}}
+        threshold: {{.threshold}}
+        lowerBound: true
+        {{end}}
+      - name: Perc90
+        query: quantile_over_time(0.90, {{$query}})
+      - name: Perc50
+        query: quantile_over_time(0.50, {{$query}})
