@@ -1,0 +1,41 @@
+name: train
+
+resources:
+  cloud: kubernetes
+  # The order of accelerators represent the preference.
+  accelerators: [ A100:4, L4:4 ]
+
+envs:
+  LR: 2e-5
+  MAX_STEPS: 50
+
+# Optional: upload a working directory to remote ~/sky_workdir.
+# Commands in "setup" and "run" will be executed under it.
+#
+workdir: .
+
+num_nodes: 1
+
+setup: |
+  set -e  # Exit if any command failed.
+  git clone https://github.com/huggingface/transformers/ || true
+  cd transformers
+  pip install .
+  cd ../text-classification
+  pip install -r requirements.txt 
+  pip uninstall -y numpy
+  pip install numpy==1.26.4
+
+run: |
+  set -e  # Exit if any command failed.
+  cd text-classification
+  python run_glue.py \
+    --model_name_or_path bert-base-cased \
+    --dataset_name imdb  \
+    --do_train \
+    --max_seq_length 128 \
+    --learning_rate ${LR} \
+    --max_steps ${MAX_STEPS} \
+    --per_device_train_batch_size 32 \
+    --output_dir /tmp/imdb/ --overwrite_output_dir \
+    --fp16

@@ -18,11 +18,10 @@ spec:
       containers:
         - name: latency-profile-generator
           image: ${artifact_registry}/latency-profile:latest
-          resources:
-            limits:
-              nvidia.com/gpu: 1
           command: ["bash", "-c", "./latency_throughput_curve.sh"]
           env:
+            - name: MODELS
+              value: ${models}
             - name: TOKENIZER
               value: ${tokenizer}
             - name: IP
@@ -31,16 +30,30 @@ spec:
               value: ${inference_server_service_port}
             - name: BACKEND
               value: ${inference_server_framework}
+            - name: PROMPT_DATASET
+              value: ${prompt_dataset}
             - name: INPUT_LENGTH
               value: ${max_prompt_len}
             - name: OUTPUT_LENGTH
               value: ${max_output_len}
             - name: REQUEST_RATES
               value: ${request_rates}
+            - name: BENCHMARK_TIME_SECONDS
+              value: ${benchmark_time_seconds}
             - name: OUTPUT_BUCKET
               value: ${output_bucket}
+            - name: OUTPUT_BUCKET_FILEPATH
+              value: ${output_bucket_filepath}
             - name: SCRAPE_SERVER_METRICS
               value: ${scrape_server_metrics}
+            - name: MAX_NUM_PROMPTS
+              value: ${max_num_prompts}
+            - name: FILE_PREFIX
+              value: ${file_prefix}
+            - name: SAVE_AGGREGATED_RESULT
+              value: ${save_aggregated_result}
+            - name: STREAM_REQUEST
+              value: ${stream_request}
 %{ for hugging_face_token_secret in hugging_face_token_secret_list ~}
             - name: HF_TOKEN
               valueFrom:
@@ -55,6 +68,3 @@ spec:
                   name: hf-token
                   key: HF_TOKEN
 %{ endfor ~}
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-l4
-        iam.gke.io/gke-metadata-server-enabled: "true"

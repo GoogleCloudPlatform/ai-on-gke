@@ -10,8 +10,11 @@ type GKEContext struct {
 	NodeServiceAccount string
 	NodeSecondaryDisk  string
 	NodeTags           []string
-	NodeSecureBoot     bool
-	ForceOnDemand      bool
+	// PodToNodeLabels is a list of key=value pairs that will be copied from the Pod
+	// to the Node.
+	PodToNodeLabels []string
+	NodeSecureBoot  bool
+	ForceOnDemand   bool
 }
 
 func (c GKEContext) ClusterName() string {

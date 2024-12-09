@@ -79,10 +79,7 @@ module "infra" {
   enable_gpu        = true
   gpu_pools         = var.gpu_pools
   ray_addon_enabled = true
-  # TODO(genlu): remove channel and k8s_version after ray addon is in REGULAR channel
-  release_channel    = "RAPID"
-  kubernetes_version = "1.30.3-gke.1969000"
-  depends_on         = [module.project-services]
+  depends_on        = [module.project-services]
 }
 
 data "google_container_cluster" "default" {
@@ -186,7 +183,7 @@ module "jupyterhub" {
   workload_identity_service_account = local.jupyter_service_account
 
   notebook_image     = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image"
-  notebook_image_tag = "v1.1-rag"
+  notebook_image_tag = "sample-public-image-v1.1-rag"
 
   db_secret_name         = module.cloudsql.db_secret_name
   cloudsql_instance_name = local.cloudsql_instance
@@ -312,7 +309,7 @@ module "frontend" {
 resource "helm_release" "gmp-apps" {
   name      = "gmp-apps"
   provider  = helm.rag
-  chart     = "../../charts/gmp-engine/"
+  chart     = "./charts/gmp-engine"
   namespace = local.kubernetes_namespace
   # Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
   timeout    = 1200

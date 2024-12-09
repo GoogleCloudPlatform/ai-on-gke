@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: finetune-gemma-2xa100
+  namespace: team-a
+  labels:
+    kueue.x-k8s.io/queue-name: dws-local-queue
+spec:
+  backoffLimit: 10
+  suspend: true
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: finetuner
+    spec:
+      nodeSelector:
+        resource-model: a100
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "on-demand"
+        operator: "Equal"
+        value: "true"
+        effect: NoSchedule
+      - key: "cloud.google.com/gke-queued"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      containers:
+      - name: finetuner
+        image: us-docker.pkg.dev/$PROJECT_ID/gemma/finetune-gemma-gpu:1.0.0
+        resources:
+          limits:
+            nvidia.com/gpu: 2
+        env:
+        - name: MODEL_NAME
+          value: "google/gemma-2b"
+        - name: NEW_MODEL
+          value: "gemma-2b-sql-team-a"
+        - name: LORA_R
+          value: "8"
+        - name: LORA_ALPHA
+          value: "16"
+        - name: TRAIN_BATCH_SIZE
+          value: "1"
+        - name: EVAL_BATCH_SIZE
+          value: "2"
+        - name: GRADIENT_ACCUMULATION_STEPS
+          value: "2"
+        - name: DATASET_LIMIT
+          value: "1000"
+        - name: MAX_SEQ_LENGTH
+          value: "512"
+        - name: LOGGING_STEPS
+          value: "5"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      restartPolicy: OnFailure

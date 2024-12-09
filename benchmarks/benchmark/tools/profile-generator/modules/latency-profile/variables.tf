@@ -77,6 +77,17 @@ variable "inference_server" {
   }
 }
 
+variable "prompt_dataset" {
+  description = "Prompt dataset URL"
+  type        = string
+  nullable    = false
+  default     = "sharegpt"
+  validation {
+    condition     = contains(["sharegpt"], var.prompt_dataset)
+    error_message = "prompt_dataset must be one of the following: 'sharegpt'"
+  }
+}
+
 variable "max_num_prompts" {
   description = "Benchmark server configuration for max number of prompts."
   type        = number
@@ -121,9 +132,27 @@ variable "tokenizer" {
   default     = "tiiuae/falcon-7b"
 }
 
-variable "output_bucket" {
-  description = "Bucket name for storing results"
+variable "models" {
+  description = "A list of comma separated models to benchmark."
   type        = string
+  nullable    = false
+  default     = "tiiuae/falcon-7b"
+}
+
+variable "gcs_output" {
+  description = "Bucket name and filepath for storing json results, if filepath not specified, results uploaded to root of bucket"
+  type = object({
+    bucket   = string
+    filepath = string
+  })
+  default = {
+    bucket   = ""
+    filepath = ""
+  }
+  validation {
+    condition     = var.gcs_output != null ? !(var.gcs_output.bucket == "" && var.gcs_output.filepath != "") : true
+    error_message = "If gcs_output is defined, cannot specify filepath without bucket"
+  }
 }
 
 variable "latency_profile_kubernetes_service_account" {
@@ -156,6 +185,32 @@ variable "hugging_face_secret_version" {
 
 variable "scrape_server_metrics" {
   description = "Whether to scrape server metrics."
+  type        = bool
+  default     = false
+}
+
+variable "benchmark_time_seconds" {
+  description = "The amount of time (in seconds) the benchmark should be run at each request rate"
+  type        = number
+  default     = 120
+  nullable    = false
+}
+
+variable "file_prefix" {
+  description = "A prefix to the saved json file, useful to add additional context to the benchmark."
+  type        = string
+  nullable    = false
+  default     = "benchmark"
+}
+
+variable "save_aggregated_result" {
+  description = "Whether to save aggregated result, useful when benchmarking multiple models."
+  type        = bool
+  default     = false
+}
+
+variable "stream_request" {
+  description = "Whether to stream the request. Needed for TTFT metric"
   type        = bool
   default     = false
 }

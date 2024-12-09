@@ -23,7 +23,8 @@ locals {
     ? "${path.module}/manifest-templates"
     : pathexpand(var.templates_path)
   )
-  latency-profile-generator-template = "${path.module}/manifest-templates/latency-profile-generator.yaml.tpl"
+  latency-profile-generator-template               = "${path.module}/manifest-templates/latency-profile-generator.yaml.tpl"
+  latency-profile-generator-podmonitoring-template = "${path.module}/manifest-templates/latency-profile-generator-podmonitoring.yaml.tpl"
   hugging_face_token_secret = (
     var.hugging_face_secret == null || var.hugging_face_secret_version == null
     ? null
@@ -54,13 +55,26 @@ resource "kubernetes_manifest" "latency-profile-generator" {
     inference_server_service_port              = var.inference_server.service.port
     tokenizer                                  = var.inference_server.tokenizer
     latency_profile_kubernetes_service_account = var.latency_profile_kubernetes_service_account
+    prompt_dataset                             = var.prompt_dataset
     max_num_prompts                            = var.max_num_prompts
     max_output_len                             = var.max_output_len
     max_prompt_len                             = var.max_prompt_len
+    benchmark_time_seconds                     = var.benchmark_time_seconds
     request_rates                              = join(",", [for number in var.request_rates : tostring(number)])
     hugging_face_token_secret_list             = local.hugging_face_token_secret == null ? [] : [local.hugging_face_token_secret]
     k8s_hf_secret_list                         = var.k8s_hf_secret == null ? [] : [var.k8s_hf_secret]
-    output_bucket                              = var.output_bucket
+    output_bucket                              = var.gcs_output.bucket
+    output_bucket_filepath                     = var.gcs_output.filepath
     scrape_server_metrics                      = var.scrape_server_metrics
+    file_prefix                                = var.file_prefix
+    save_aggregated_result                     = var.save_aggregated_result
+    models                                     = var.models
+    stream_request                             = var.stream_request
+  }))
+}
+
+resource "kubernetes_manifest" "latency-profile-generator-podmonitoring" {
+  manifest = yamldecode(templatefile(local.latency-profile-generator-podmonitoring-template, {
+    namespace = var.namespace
   }))
 }

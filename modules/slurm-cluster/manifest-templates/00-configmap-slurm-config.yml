@@ -1,0 +1,123 @@
+#
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slurm-conf-configmap
+  namespace: ${namespace}
+data:
+  slurm.conf: |
+    # slurm.conf
+    #
+    # See the slurm.conf man page for more information.
+    #
+    ClusterName=linux
+    SlurmctldHost=slurmctld-0
+    #
+    SlurmUser=slurm
+    SlurmctldPort=6820-6830
+    SlurmdPort=6818
+    AuthType=auth/munge
+    StateSaveLocation=/var/spool/slurmctld
+    SlurmdSpoolDir=/var/spool/slurmd
+    SwitchType=switch/none
+    MpiDefault=pmix
+    SlurmctldPidFile=/var/run/slurmd/slurmctld.pid
+    SlurmdPidFile=/var/run/slurmd/slurmd.pid
+    ProctrackType=proctrack/linuxproc
+    ReturnToService=2
+    #
+    # TIMERS
+    SlurmctldTimeout=300
+    SlurmdTimeout=30
+    InactiveLimit=0
+    MinJobAge=300
+    KillWait=30
+    Waittime=0
+    #
+    # SCHEDULING
+    SchedulerType=sched/backfill
+    SelectType=select/cons_tres
+    SelectTypeParameters=CR_CPU_Memory
+    #
+    # LOGGING
+    SlurmctldDebug=3
+    SlurmctldLogFile=/var/log/slurm/slurmctld.log
+    SlurmdDebug=3
+    SlurmdLogFile=/var/log/slurm/slurmd.log
+    JobCompType=jobcomp/filetxt
+    JobCompLoc=/var/log/slurm/jobcomp.log
+    #
+    # ACCOUNTING
+    JobAcctGatherType=jobacct_gather/linux
+    JobAcctGatherFrequency=30
+    #
+    AccountingStorageType=accounting_storage/slurmdbd
+    AccountingStorageHost=slurmdbd
+    AccountingStoragePort=6819
+    #
+    SlurmctldParameters=cloud_reg_addrs
+
+    # CLOUD CONFIGURATIONS
+    MaxNodeCount=64000
+    include cloud.conf
+  cloud.conf: |
+    PrivateData=cloud
+    SlurmctldParameters=enable_configless
+    ## GRES
+    GresTypes=gpu
+    AccountingStorageTRES=gres/gpu
+    DebugFlags=Gres
+    TreeWidth=128
+
+    # NODES
+    NodeName=DEFAULT State=UNKNOWN RealMemory=15000 CPUs=4 CoresPerSocket=2 ThreadsPerCore=2 Gres=gpu:1 
+    NodeName=slurmd-[0-39] State=CLOUD Gres=gpu:1
+    NodeSet=slurmdnodeset Nodes=slurmd-[0-39]
+
+    NodeName=DEFAULT State=UNKNOWN RealMemory=30000 CPUs=8 CoresPerSocket=2 ThreadsPerCore=2 Gres=gpu:2
+    NodeName=slurmd1-[0-39] State=CLOUD Gres=gpu:2
+    NodeSet=slurmd1nodeset Nodes=slurmd1-[0-39]
+
+    # PARTITIONS
+    PartitionName=all Default=yes Nodes=ALL MaxTime=INFINITE State=UP
+
+    PropagateResourceLimitsExcept=MEMLOCK
+
+    PartitionName=1gpunodes Nodes=slurmdnodeset State=UP DefMemPerCPU=7007 SuspendTime=300 Oversubscribe=Exclusive PowerDownOnIdle=YES ResumeTimeout=300 SuspendTimeout=120
+    PartitionName=2gpunodes Nodes=slurmd1nodeset State=UP DefMemPerCPU=7007 SuspendTime=300 Oversubscribe=Exclusive PowerDownOnIdle=YES ResumeTimeout=300 SuspendTimeout=120
+    
+  cloud_gres.conf: |
+     NodeName=slurmd-[0-39] Name=gpu File=/dev/nvidia0
+     NodeName=slurmd1-[0-39] Name=gpu File=/dev/nvidia[0-1]
+  gres.conf: |
+     NodeName=slurmd-[0-39] Name=gpu File=/dev/nvidia0
+     NodeName=slurmd1-[0-39] Name=gpu File=/dev/nvidia[0-1]
+  cgroup.conf: |
+    ###
+    #
+    # Slurm cgroup support configuration file
+    #
+    # See man slurm.conf and man cgroup.conf for further
+    # information on cgroup configuration parameters
+    #--
+    ConstrainCores=yes
+    ConstrainDevices=yes
+    ConstrainRAMSpace=yes
+    ConstrainSwapSpace=yes
+    IgnoreSystemd=yes
+    

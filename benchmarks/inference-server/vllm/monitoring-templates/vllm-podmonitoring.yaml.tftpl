@@ -8,5 +8,6 @@ spec:
     matchLabels:
       app: vllm
   endpoints:
-  - port: 80
+  - path: /metrics
+    port: 8000
     interval: 15s

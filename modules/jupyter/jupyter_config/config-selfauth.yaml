@@ -95,8 +95,8 @@ singleuser:
   startTimeout: 1000
   extraAnnotations:
     gke-gcsfuse/volumes: "true"
-    gke-gcsfuse/cpu-limit: 500m
-    gke-gcsfuse/memory-limit: 250Mi
+    gke-gcsfuse/cpu-limit: "1"
+    gke-gcsfuse/memory-limit: 2Gi
     gke-gcsfuse/ephemeral-storage-limit: 10Gi
   serviceAccountName: ${k8s_service_account}
     # Configure csi for gcsfuse

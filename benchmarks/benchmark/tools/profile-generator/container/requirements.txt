@@ -15,7 +15,6 @@ pytest-forked
 pytest-asyncio
 httpx
 einops # required for MPT
-flash_attn # required for HuggingFace's llama implementation
 openai
 requests
 
@@ -26,7 +25,7 @@ ray >= 2.9
 sentencepiece  # Required for LLaMA tokenizer.
 numpy < 2.0
 torch == 2.1.1
-transformers >= 4.37.0 # Required for Qwen2
+transformers >= 4.42.0 # Required for Qwen2
 xformers == 0.0.23
 fastapi
 uvicorn[standard]
@@ -36,3 +35,5 @@ pynvml == 11.5.0
 accelerate
 aiohttp
 google-auth
+google-cloud-storage >= 2.18.2
+prometheus_client >= 0.21.0

@@ -80,6 +80,7 @@ func main() {
 		GCPNodeServiceAccount string `envconfig:"GCP_NODE_SERVICE_ACCOUNT"`
 
 		GCPNodeTags          []string `envconfig:"GCP_NODE_TAGS"`
+		GCPPodToNodeLabels   []string `envconfig:"GCP_POD_TO_NODE_LABELS"`
 		GCPNodeSecondaryDisk string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
 		GCPNodeSecureBoot    bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
 
@@ -189,6 +190,7 @@ func main() {
 			"zone", cfg.GCPZone,
 			"nodeServiceAccount", cfg.GCPNodeServiceAccount,
 			"nodeTags", cfg.GCPNodeTags,
+			"podToNodeLabels", cfg.GCPPodToNodeLabels,
 		)
 
 		containers, err := containerv1beta1.NewService(context.Background() /*, option.WithCredentials(creds)*/)
@@ -206,6 +208,7 @@ func main() {
 				NodeServiceAccount: cfg.GCPNodeServiceAccount,
 				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
 				NodeTags:           cfg.GCPNodeTags,
+				PodToNodeLabels:    cfg.GCPPodToNodeLabels,
 				NodeSecureBoot:     cfg.GCPNodeSecureBoot,
 				ForceOnDemand:      cfg.GCPForceOnDemand,
 			},

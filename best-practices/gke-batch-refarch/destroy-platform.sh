@@ -13,8 +13,8 @@
 # limitations under the License.
 
 SCRIPT_PATH="$(
-    cd "$(dirname "$0")" >/dev/null 2>&1
-    pwd -P
+  cd "$(dirname "$0")" >/dev/null 2>&1
+  pwd -P
 )"
 
 [[ ! "${PROJECT_ID}" ]] && echo -e "Please export PROJECT_ID variable (\e[95mexport PROJECT_ID=<YOUR POROJECT ID>\e[0m)\nExiting." && exit 0
@@ -26,10 +26,28 @@ echo -e "\e[95mREGION is set to ${REGION}\e[0m"
 [[ ! "${ZONE}" ]] && echo -e "Please export ZONE variable (\e[95mexport ZONE=<YOUR ZONE, eg: us-central1-c >\e[0m)\nExiting." && exit 0
 echo -e "\e[95mZONE is set to ${ZONE}\e[0m"
 
-gcloud config set core/project ${PROJECT_ID} && \
-cd $SCRIPT_PATH && \
-gcloud builds submit --config cloudbuild-destroy.yaml \
-  --substitutions _REGION=$REGION,_ZONE=$ZONE \
-  --async && \
+gcloud config set core/project ${PROJECT_ID}
 
-echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds?project=${PROJECT_ID}\e[0m"
+export TF_CLOUDBUILD_SA_NAME="tutorial-builder"
+export TF_CLOUDBUILD_SA="${TF_CLOUDBUILD_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
+
+BUILD_SUBSTITUTIONS="_REGION=${REGION},_ZONE=${ZONE}"
+
+if [[ -v ENVIRONMENT_NAME ]] && [[ ! -z "${PLATFORM_NAME}" ]]; then
+  BUILD_SUBSTITUTIONS+=",_PLATFORM_NAME=${PLATFORM_NAME}"
+fi
+
+echo -e "\e[95mYou can view the Cloudbuild status through https://console.cloud.google.com/cloud-build/builds;region=global?project=${PROJECT_ID}\e[0m"
+sleep 1
+cd "${SCRIPT_PATH}/.."
+gcloud beta builds submit \
+  --config gke-batch-refarch/cloudbuild-destroy.yaml \
+  --ignore-file gke-batch-refarch/cloudbuild-ignore \
+  --project="${PROJECT_ID}" \
+  --service-account "projects/${PROJECT_ID}/serviceAccounts/${TF_CLOUDBUILD_SA}" \
+  --substitutions ${BUILD_SUBSTITUTIONS} || exit 1
+cd -
+gcloud artifacts repositories delete gemma --location=us --quiet
+gcloud artifacts repositories delete tutorial-installer --location=${REGION} --quiet
+gcloud projects remove-iam-policy-binding "${PROJECT_ID}" --member serviceAccount:"${TF_CLOUDBUILD_SA}" --role roles/owner
+gcloud iam service-accounts delete ${TF_CLOUDBUILD_SA} --quiet
