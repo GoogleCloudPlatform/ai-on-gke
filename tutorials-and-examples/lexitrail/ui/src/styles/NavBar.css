@@ -1,0 +1,90 @@
+/* NavBar.css */
+
+.navbar {
+    position: fixed;
+    /* Make the navbar stick to the top of the screen */
+    top: 0;
+    left: 0;
+    /* Ensure it starts at the very left */
+    width: 100%;
+    /* Make it stretch across the full width of the screen */
+    background-color: #333;
+    padding: 5px 10px;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+.nav-list {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    justify-content: space-between;
+}
+
+.nav-item {
+    margin-right: 20px;
+}
+
+.nav-link {
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.user-section {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    justify-content: space-between;
+    height:40px
+}
+
+.user-section .nav-user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+    margin: 3px 0 3px 0;
+    font-size: 0.5rem;
+}
+
+
+.logout-button,
+.login-button {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 2px 5px;
+    cursor: pointer;
+    border-radius: 2px;
+    height:30px;
+}
+
+.logout-button {
+    background-color: #f44336;
+    margin-left: 20px;
+}
+
+.page-content {
+    padding: 20px;
+    margin-top: 60px;
+    /* Ensure content doesn't hide under the navbar */
+}
+
+/* Profile Details */
+.profile-avatar,
+.nav-profile-avatar {
+    display: block;
+    margin-bottom: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.profile-avatar{
+    width: 100px;
+    height: 100px;
+}

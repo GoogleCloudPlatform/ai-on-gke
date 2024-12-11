@@ -1,0 +1,20 @@
+Flask==2.2.5
+Flask-SQLAlchemy==3.0.2
+pymysql==1.0.3
+python-dotenv==0.19.2
+SQLAlchemy==2.0.21
+google-cloud-storage==2.10.0
+cryptography==3.4.8
+urllib3==1.26.15
+flask-cors==3.0.10
+
+# Testing and coverage
+pytest==6.2.5
+coverage==6.3
+
+# Google Authentication
+google-auth==2.21.0
+
+# Additional dependencies for hint generation
+google-cloud-aiplatform==1.69.0 # For Vertex AI services
+Pillow==9.2.0  # For image processing

@@ -1,0 +1,207 @@
+/* Reset and base styling */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  box-sizing: border-box;
+}
+
+/* General container for the game */
+.container {
+  display: flex;
+  background-color: #a9a9a9;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border: 2px solid #d3d3d3;
+  margin-top:60px;
+}
+
+/* Container for the word cards */
+.cards-container {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+  grid-auto-flow: column; /* Prevents wrapping to a new row */
+}
+
+/* Layout combinations from 1x1 to 12x4 */
+
+/* 1 column layouts */
+.cards-container.layout1c1r { grid-template-columns: repeat(1, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout1c2r { grid-template-columns: repeat(1, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout1c3r { grid-template-columns: repeat(1, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout1c4r { grid-template-columns: repeat(1, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 2 column layouts */
+.cards-container.layout2c1r { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout2c2r { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout2c3r { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout2c4r { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 3 column layouts */
+.cards-container.layout3c1r { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout3c2r { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout3c3r { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout3c4r { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 4 column layouts */
+.cards-container.layout4c1r { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout4c2r { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout4c3r { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout4c4r { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 5 column layouts */
+.cards-container.layout5c1r { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout5c2r { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout5c3r { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout5c4r { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 6 column layouts */
+.cards-container.layout6c1r { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout6c2r { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout6c3r { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout6c4r { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 7 column layouts */
+.cards-container.layout7c1r { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout7c2r { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout7c3r { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout7c4r { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 8 column layouts */
+.cards-container.layout8c1r { grid-template-columns: repeat(8, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout8c2r { grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout8c3r { grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout8c4r { grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 9 column layouts */
+.cards-container.layout9c1r { grid-template-columns: repeat(9, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout9c2r { grid-template-columns: repeat(9, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout9c3r { grid-template-columns: repeat(9, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout9c4r { grid-template-columns: repeat(9, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 10 column layouts */
+.cards-container.layout10c1r { grid-template-columns: repeat(10, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout10c2r { grid-template-columns: repeat(10, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout10c3r { grid-template-columns: repeat(10, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout10c4r { grid-template-columns: repeat(10, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 11 column layouts */
+.cards-container.layout11c1r { grid-template-columns: repeat(11, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout11c2r { grid-template-columns: repeat(11, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout11c3r { grid-template-columns: repeat(11, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout11c4r { grid-template-columns: repeat(11, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+/* 12 column layouts */
+.cards-container.layout12c1r { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: row; }
+.cards-container.layout12c2r { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout12c3r { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, auto)); grid-auto-flow: row; }
+.cards-container.layout12c4r { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, auto)); grid-auto-flow: row; }
+
+
+
+.progress-bar-container {
+  position: relative; /* Enables absolute positioning for .progress-info to position it centrally within this container */
+  width: 100%; /* Allows the progress bar to take up the full width of its parent */
+  margin: 5px auto; /* Centers the container horizontally and adds vertical spacing */
+}
+
+.progress-bar {
+  width: 100%; /* Ensures the progress bar fills the width of the container */
+  height: 24px; /* Sets the height of the progress bar for good visibility */
+  background-color: #e0e0e0; /* Light gray background to contrast with the progress indicator */
+  border-radius: 12px; /* Rounds the corners of the progress bar for a smooth, modern look */
+  overflow: hidden; /* Clips any overflow to ensure the progress doesn't exceed rounded edges */
+}
+
+.progress {
+  height: 100%; /* Matches the height of the .progress-bar for a consistent look */
+  background-color: #4caf50; /* Green color indicating progress (can be customized) */
+  border-radius: 12px 0 0 12px; /* Rounds the starting side of the progress for smoothness */
+  transition: width 0.3s ease; /* Adds a smooth transition when progress updates */
+}
+
+.progress-info {
+  position: absolute; /* Positions this element relative to .progress-bar-container */
+  top: 50%; /* Vertically centers the element within .progress-bar-container */
+  left: 50%; /* Horizontally centers the element within .progress-bar-container */
+  transform: translate(-50%, -50%); /* Offsets the element by 50% of its height and width for exact centering */
+  padding: 4px 8px; /* Adds space around the text for visual balance */
+  border-radius: 8px; /* Rounds corners for a subtle, consistent styling with the bar */
+  font-weight: bold; /* Increases font weight for emphasis and readability */
+  font-size: 14px; /* Sets an optimal size for visibility without overwhelming the bar */
+  color: #333; /* Dark text color to contrast well against the white background */
+  text-align: center; /* Centers the text within the .progress-info box */
+}
+
+.progress-stats {
+  display: flex;
+  width:100%;
+  justify-content: space-between; /* Distribute the items evenly across the width */
+  margin: 0 0 5px 0;
+}
+
+.not-memorized, .memorized, .timer {
+  display: flex;
+  font-size: 2rem;
+  text-wrap-mode: nowrap;
+  border-radius: 10px;
+  padding:0 10px;
+  background-color: #ffffff;
+}
+
+.not-memorized {
+  color: #f44336; /* Red color for not memorized stats */
+}
+
+.memorized {
+  color: #4caf50; /* Green color for memorized stats */
+}
+
+.show-excluded-button {
+  padding: 0 4px;
+  border: none;
+  border-radius: 10%;
+  cursor: pointer;
+  color: white;
+  font-size:0.8rem;
+  text-wrap-mode: wrap;
+  padding:2px;
+  height:auto;
+  max-width:70px;
+  color:#ffffff;
+  background-color: #000000;
+}
+
+.show-excluded-button:hover {
+  background-color: #e0e0e0;
+}
+
+.mark-all-memorized-button{
+  width:100%;
+  background-color: #4285f4;
+  color:#ffffff;
+  border-radius: 10px;
+  border:1px;
+  border-color: #ffffff;
+  padding:2px;
+  font-size:1.6rem;
+  margin:2px 0 0 0;
+}

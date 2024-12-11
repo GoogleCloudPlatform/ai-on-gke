@@ -1,0 +1,298 @@
+.word-card {
+  position: relative;
+  perspective: 1000px;
+  width: 180px;
+  margin: auto;
+  cursor: pointer;
+  border: 3px solid #d3d3d3;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px;
+  box-sizing: border-box;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+.word-card.success {
+  border: 3px solid green;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.6); /* Optional glow effect */
+  transition: border 50ms ease-in-out, box-shadow 50ms ease-in-out;
+}
+
+.word-card.failure {
+  border: 3px solid red;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.6); /* Optional glow effect */
+  transition: border 50ms ease-in-out, box-shadow 50ms ease-in-out;
+}
+
+.word-card-inner {
+  position: relative;
+  width: 95%;
+  height: 85px;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  transform-origin: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.word-card-front,
+.word-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+  font-family: monospace;
+}
+
+.word-card-front {
+  background-color: #e0e0e0;
+  color: #333;
+  font-size: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.word-card-back {
+  background-color: #f5f5f5;
+  color: #555;
+  font-size: 2.5rem;
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.word-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.practice-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  width: 95%;
+  margin-top: 5px;
+  z-index: 1;
+}
+
+.practice-buttons button {
+  flex: 1;
+  max-width: 4rem;
+  max-height: 4rem;
+  background-color: #4285f4;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  padding: 0;
+  margin: 0;
+}
+
+.practice-buttons button:hover {
+  background-color: #2c6cd3;
+}
+
+
+.test-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Creates a 2-column grid */
+  gap: 0.2rem;
+  width: 95%;
+  margin-top: 5px;
+  z-index: 1;
+}
+
+.test-buttons button {
+  width: 100%;
+  aspect-ratio: 1; /* Makes the buttons square */
+  background-color: #4285f4;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  word-break: break-word; /* Allows breaking within words */
+  white-space: normal; /* Allows wrapping */
+  line-height: 1.2; /* Adjusts line spacing for better fit */
+  max-height: 100%; /* Ensures text stays within button height */
+  text-overflow: ellipsis; /* Shows ellipsis for overflow */
+}
+
+.test-buttons button:hover {
+  background-color: #2c6cd3;
+}
+
+/* Metadata Section */
+.metadata {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.exclude-button {
+  padding: 4px 6px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  font-size: 0.5rem;
+}
+
+.red {
+  background-color: red;
+}
+
+.green {
+  background-color: green;
+}
+
+.recall-state {
+  padding: 3px;
+  border-radius: 4px;
+  color: white;
+  font-size: 1.2rem;
+  margin: 0 1px;
+  width: 2.5rem;
+  height: auto;
+  text-align: center;
+}
+
+.recall-history {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.recall-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  height: 0.6rem;
+}
+
+.recall-item-time {
+  color: #555;
+  font-size: 0.4rem;
+  overflow: hidden;
+  width: 60px;
+}
+
+.recall-item-guess {
+  font-size: 0.4rem;
+  padding: 0px 2px;
+}
+
+.recall-item-old-state,
+.recall-item-new-state {
+  padding: 0px 2px;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+}
+
+.recall-item-transition {
+  margin: 0 0px;
+}
+
+.green-background {
+  background-color: green;
+  color: white;
+}
+
+.red-background {
+  background-color: red;
+  color: white;
+}
+
+/* new styles */
+
+
+
+.hint-image-container {
+  position: relative;
+  width: 100%;
+  height: 85px;
+  margin: 5px 0 5px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hint-image-wrapper {
+  position: relative;
+  width: 95%;
+  height: 100%;
+}
+
+.hint-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.regenerate-hint-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.loading-hint {
+  font-size: 1rem;
+  color: #888;
+}
+
+.word-meaning{
+  text-align: center; /* Center aligns the text */
+  line-height: 200%;
+}
+
+.word-meaning p {
+  margin: 0; /* Removes default margin */
+  display: flex; /* Uses flex to contain children elements tightly */
+  justify-content: center; /* Center-aligns inner elements */
+  align-items: center; /* Centers inner elements vertically */
+  padding: 0; /* Removes padding to minimize height */
+}
+
+.word-translation{
+  font-style:italic;
+  font-family:'Times New Roman', Times, serif;
+  color:#4285f4;
+}

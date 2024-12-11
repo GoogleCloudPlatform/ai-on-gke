@@ -1,0 +1,43 @@
+{
+  "name": "lexitrail",
+  "version": "1.0.0",
+  "description": "An interactive word memorization game",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.2",
+    "@open-match/api": "^1.0.14",
+    "@react-oauth/google": "^0.12.1",
+    "axios": "^1.2.1",
+    "date-fns": "^4.1.0",
+    "js-cookie": "^3.0.5",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.1",
+    "react-scripts": "^5.0.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "~7.21.11"
+  },
+  "author": "Alex Bulankou",
+  "license": "ISC",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
