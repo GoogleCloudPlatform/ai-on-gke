@@ -208,8 +208,7 @@ The Terraform module will also create a new project and anything that might be n
 5\. Initialize Terraform.
 
 ```bash
-cd slurm-on-gke
-cd infrastructure 
+cd ai-on-gke/slurm-on-gke/infrastructure 
 terraform init
 ```
 
