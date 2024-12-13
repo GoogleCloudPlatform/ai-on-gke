@@ -225,6 +225,8 @@ billing_account_id          = "YOUR_BILLING_ACCOUNT_ID"
 folder_id                   = "folders/FOLDER_ID"
 ```
 
+Retrieve your billing account ID with `gcloud billing projects describe ${PROJECT_ID} --format="value(billingAccountName)"` and your folder ID with `gcloud projects describe ${PROJECT_ID} --format="value(parent.id)"`.
+
 **Note:** Ensure your selected region or zone offers GPU availability. Consult the [Google Cloud documentation for a complete list](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones).
 
 7\. After you fill out the file, use the following command to apply the Terraform configuration and create the infrastructure.
