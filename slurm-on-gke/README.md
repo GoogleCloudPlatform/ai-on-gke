@@ -264,7 +264,8 @@ To build the container image, use the following commands:
 
 ```bash
 cd .. # (you were in the infrastructure directory) 
-cd image docker build -t europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:535 .  
+cd image
+docker build -t europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:535 .  
 docker push europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:535
 ```
 
