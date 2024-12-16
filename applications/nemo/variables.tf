@@ -54,5 +54,5 @@ variable "checkpoint_bucket" {
 
 variable "gpus" {
   description = "Toolkit deployment variable: gpus"
-  type        = string
+  type        = number
 }

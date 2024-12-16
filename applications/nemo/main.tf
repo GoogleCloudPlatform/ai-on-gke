@@ -16,13 +16,16 @@
 
 data "google_client_config" "default" {}
 
+locals {
+  subnetwork_name = "${var.deployment_name}-gke-net"
+}
 module "network-kevinmcw" {
   source          = "./modules/embedded/modules/network/vpc"
   deployment_name = var.deployment_name
   project_id      = var.project_id
   region          = var.region
   secondary_ranges = {
-    gke-subnet-a3-mega = [{
+    (local.subnetwork_name) = [{
       ip_cidr_range = "10.4.0.0/14"
       range_name    = "pods"
       }, {
@@ -30,7 +33,7 @@ module "network-kevinmcw" {
       range_name    = "services"
     }]
   }
-  subnetwork_name = "gke-subnet-a3-mega"
+  subnetwork_name = local.subnetwork_name
 }
 
 module "gpunets" {
@@ -100,7 +103,7 @@ module "nemo" {
   source     = "./modules/nemo"
   cluster_id = module.gke_cluster.cluster_id
   checkpoint_bucket = var.checkpoint_bucket
-  gpus = var.gpus
+  gpus = tonumber(var.gpus)
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
   providers = {
     helm = helm
