@@ -34,11 +34,11 @@ spec:
     - name: "dws"         # if reservation is saturated we try dws
       resources:
       - name: "cpu"
-        nominalQuota: 10000   # Infinite quota.
+        nominalQuota: 1000000000    # "Infinite" quota
       - name: "memory"
-        nominalQuota: 10000Gi # Infinite quota.
+        nominalQuota: 1000000000Gi  # "Infinite" quota
       - name: "nvidia.com/gpu"
-        nominalQuota: 10000   # Infinite quota.
+        nominalQuota: 1000000000    # "Infinite" quota
   admissionChecksStrategy:
     admissionChecks:
       - name: "dws-prov"
