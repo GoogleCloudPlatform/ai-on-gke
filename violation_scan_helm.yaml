@@ -1,5 +1,5 @@
 substitutions:
-  _IMAGE: us-docker.pkg.dev/zlq-gke-dev/validation-service-agent/agent@sha256:7e1f0b84e9713367cb197182fe3834fde416448a64b94337ba0ea7154e4cc519
+  _IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:7eaedb4153841b814e6b5367e63214318cb3318f902427b9214474e1256d0b37
 
 steps:
 - name: 'ubuntu'
