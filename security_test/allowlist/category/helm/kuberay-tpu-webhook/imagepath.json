@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "image": "us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.1-gke.0",
+      "containerName": "kuberay-tpu-webhook"
+    },
+    "message": "container \"kuberay-tpu-webhook\" in Deployment \"kuberay-tpu-webhook\" has an image \"us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.1-gke.0\" with an invalid path. See go/gke-shipshape#imagepath for valid image paths.",
+    "policyName": "imagepath",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "kuberay-tpu-webhook",
+      "namespace": "ray-system",
+      "version": "v1"
+    }
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "message": "pod in Deployment \"kuberay-tpu-webhook\" must set securityContext.seccompProfile.type to value RuntimeDefault",
+    "policyName": "seccompprofile",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "kuberay-tpu-webhook",
+      "namespace": "ray-system",
+      "version": "v1"
+    }
+  }
+]

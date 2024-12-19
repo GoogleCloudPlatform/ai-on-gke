@@ -1,0 +1,17 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "kuberay-tpu-webhook"
+    },
+    "message": "container \"kuberay-tpu-webhook\" in Deployment \"kuberay-tpu-webhook\" does not set readOnlyRootFilesystem: true in its securityContext. This setting is encouraged because it can prevent attackers from writing malicious binaries into runnable locations in the container filesystem.",
+    "policyName": "readonlyrootfs",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "kuberay-tpu-webhook",
+      "namespace": "ray-system",
+      "version": "v1"
+    }
+  }
+]
