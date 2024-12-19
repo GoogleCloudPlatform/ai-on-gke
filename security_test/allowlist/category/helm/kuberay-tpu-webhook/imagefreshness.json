@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "kuberay-tpu-webhook",
+      "image": "us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.1-gke.0"
+    },
+    "message": "container \"kuberay-tpu-webhook\" in Deployment \"kuberay-tpu-webhook\" has an image \"us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.1-gke.0\" that does not have a valid digest.",
+    "policyName": "imagefreshness",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "kuberay-tpu-webhook",
+      "namespace": "ray-system",
+      "version": "v1"
+    }
+  }
+]
