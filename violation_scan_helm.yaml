@@ -1,0 +1,45 @@
+substitutions:
+  _IMAGE: us-docker.pkg.dev/zlq-gke-dev/validation-service-agent/agent@sha256:7e1f0b84e9713367cb197182fe3834fde416448a64b94337ba0ea7154e4cc519
+
+steps:
+- name: 'ubuntu'
+  id: 'Copy Folder Locally'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    mkdir -p security_test/scan_target/ && find . -mindepth 1 -maxdepth 1 -type d ! -name "security_test" -exec cp -r {} security_test/scan_target/ \;
+
+- name: 'ubuntu'
+  id: 'Copy metadata'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    mkdir -p /workspace/security_test/scan_target
+    # Exclude /workspace/security_test from the copy to avoid recursive issue
+    find . -mindepth 1 -maxdepth 1 ! -path "./security_test" -exec cp -r {} /workspace/security_test/scan_target/ \;
+    chown -R 65532:65532 /workspace/security_test/scan_target
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Run Docker Image'
+  args:
+  - 'run'
+  - '--network=cloudbuild'
+  - '--rm'
+  - '-v'
+  - '/workspace/security_test/allowlist:/workspace/security_test/allowlist'
+  - '-v'
+  - '/workspace/security_test/scan_target:/workspace/security_test/scan_target'
+  - '${_IMAGE}'
+  - '--mode=helm'
+  - '--allowlist_folder=/workspace/security_test/allowlist'
+  - '--scan_path=/workspace/security_test/scan_target'
+  - '--max_wait_duration=60'
+
+
+# Fail the build if there are any violations
+timeout: '12000s'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
