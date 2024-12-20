@@ -57,28 +57,29 @@ terraform apply -var-file=your_environment.tfvar
 ```bash
 gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) --region $(terraform output -raw gke_cluster_location) --project $(terraform output -raw project_id)
 ```
-2. Install Kueue by choosing a version and running `kubectl apply` against the manifest availaible on kueue github repo.Note that `--server-side` switch is imporant and command will fail without it.
+## Install and configure Kueue
+1. Install Kueue by choosing a version and running `kubectl apply` against the manifest availaible on kueue github repo.Note that `--server-side` switch is imporant and command will fail without it.
 ```bash
 VERSION=v0.7.0
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
 ```
-3. Given that SkyPilot uses pods for provisioning we need to configure Kueue to work with pods. We will achieve this by patching Kueue manager config map. First extract the config and patch
+2. Given that SkyPilot uses pods for provisioning we need to configure Kueue to work with pods. We will achieve this by patching Kueue manager config map. First extract the config and patch
 ```bash
 kubectl -n kueue-system get cm kueue-manager-config -o jsonpath={.data.controller_manager_config\\.yaml} | yq '.integrations.frameworks += ["pod"]' > /tmp/kueueconfig.yaml
 ```
-4. Apply the changes
+3. Apply the changes
 ```bash
 kubectl -n kueue-system create cm kueue-manager-config --from_file=controller_manager_config.yaml=/tmp/kueueconfig.yaml --dry-run=client -o yaml | k -n kueue-system apply -f -
 ```
-5. Reset the manager pod
+4. Reset the manager pod
 ```bash
 kubectl -n kueue-system rollout restart deployment kueue-controller-manager
 ```
-6. Wait for completion
+5. Wait for completion
 ```bash
 kubectl -n kueue-system rollout status deployment kueue-controller-manager
 ```
-7. Install Kueue resources using the provided `kueue_resources.yaml`.
+6. Install Kueue resources using the provided `kueue_resources.yaml`.
 ```bash
 kubectl apply -f kueue_resources.yaml
 ```
