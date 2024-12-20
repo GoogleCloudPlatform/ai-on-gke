@@ -1,6 +1,6 @@
 # GKE capacity chasing with SkyPilot and Kueue utilizing Dynamic Workload Scheduling
 
-This tutorial will expand on [SkyPilot Tutorial](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/tutorials-and-examples/skypilot) by leveraging [DWS](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler) wit the help of a opensource project called [Kueue](https://kueue.sigs.k8s.io/)
+This tutorial will expand on [SkyPilot Tutorial](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/tutorials-and-examples/skypilot) by leveraging [DWS](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler) with the help of a opensource project called [Kueue](https://kueue.sigs.k8s.io/)
 
 ## Overview
 This tutorial is designed for ML scientists who plan to use SkyPilot for model traning of serving LLM models on GKE while utilizing Dynamic Workload Scheduler to aquire GPU resources when they are available. This will involve creating a GKE cluster with GPU node pools with queue processing enabled using terrafrom, installing Kueue, SkyPilot and running a model.
@@ -152,7 +152,7 @@ And labels config to the resources section
     kueue.x-k8s.io/queue-name: dws-local-queue
 ```
 Refer to the included `train_dws.yaml` file.
-## Exectue the workload
+## Execute the workload
 1. Use `sky launch` command
 ```bash
 sky launch -c skypilot-dws train_dws.yaml
