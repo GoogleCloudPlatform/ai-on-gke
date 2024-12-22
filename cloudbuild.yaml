@@ -100,7 +100,7 @@ steps:
     echo "pass" > /workspace/user_result.txt
 
     chmod +x /workspace/scripts/ci/wait_for_pods.sh
-    /workspace/scripts/ci/wait_for_pods.sh ml-$SHORT_SHA-$_BUILD_ID-ray 3000
+    /workspace/scripts/ci/wait_for_pods.sh ml-$SHORT_SHA-$_BUILD_ID-ray 3600
 
     kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID-ray --for=condition=Ready --timeout=1200s
     # Ray head's readinessProbe is not probing the head service today. Therefore the wait for ready above is not reliable.
