@@ -23,3 +23,8 @@ output "endpoint" {
 output "ca_certificate" {
   value = module.gke.ca_certificate
 }
+
+
+output "service_account" {
+  value = module.gke.service_account
+}
