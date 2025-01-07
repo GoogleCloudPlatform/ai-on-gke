@@ -132,8 +132,8 @@ resource "kubernetes_deployment" "inference_deployment" {
           }
 
           volume_mount {
-            mount_path = "/data"
-            name       = "data"
+            mount_path = "/tmp"
+            name       = "tmp"
           }
 
           volume_mount {
@@ -166,7 +166,7 @@ resource "kubernetes_deployment" "inference_deployment" {
         }
 
         volume {
-          name = "data"
+          name = "tmp"
           empty_dir {}
         }
 
