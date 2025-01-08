@@ -22,16 +22,16 @@ create_cluster   = true # this flag will create a new standard public gke cluste
 cluster_name     = "skypilot-test"
 cluster_location = "us-central1"
 
-gpu_pools = [ {
-  name                = "gpu-pool"
-  queued_provisioning = true
-  machine_type        = "g2-standard-24"
-  disk_type           = "pd-balanced"
-  autoscaling         = true
-  min_count           = 0
-  max_count           = 3
-  initial_node_count  = 0
-} ]
+# gpu_pools = [ {
+#   name                = "gpu-pool"
+#   queued_provisioning = true
+#   machine_type        = "g2-standard-24"
+#   disk_type           = "pd-balanced"
+#   autoscaling         = true
+#   min_count           = 0
+#   max_count           = 3
+#   initial_node_count  = 0
+# } ]
 
 #######################################################
 ####    APPLICATIONS
@@ -43,5 +43,9 @@ create_service_account = false
 #DISABLE IAP
 create_brand = false
 
-autopilot_cluster = false
+autopilot_cluster = true
 enable_gpu = true
+#kubernetes_version = "1.31.1-gke.2105000"
+
+create_gcs_bucket = true
+gcs_bucket = "skypilot-model-bucket"

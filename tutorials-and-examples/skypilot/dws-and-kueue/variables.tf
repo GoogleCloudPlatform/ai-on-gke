@@ -168,3 +168,20 @@ variable "additional_labels" {
   description = "Additional labels to add to Kubernetes resources."
   default     = "created-by=ai-on-gke,ai.gke.io=ray"
 }
+
+variable "kubernetes_version" {
+  type    = string
+  description = "Set Kubernetes version"
+  default = "1.30"
+}
+
+variable "create_gcs_bucket" {
+  type = bool
+  description = "Wether to create a GCS bucket"
+  default = false
+}
+
+variable "gcs_bucket" {
+  type = string
+  description = "Name for the created GCS bucket"  
+}

@@ -75,6 +75,7 @@ module "infra" {
   gpu_pools         = var.gpu_pools
   ray_addon_enabled = true
   depends_on        = [module.project-services]
+  kubernetes_version = var.kubernetes_version
 }
 
 data "google_container_cluster" "default" {
@@ -82,6 +83,10 @@ data "google_container_cluster" "default" {
   name       = var.cluster_name
   location   = var.cluster_location
   depends_on = [module.project-services]
+}
+
+data "google_service_account" "gke_service_account" {
+  account_id = module.infra[0].service_account
 }
 
 locals {
@@ -95,4 +100,33 @@ locals {
   kubernetes_namespace              = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.kubernetes_namespace}" : var.kubernetes_namespace
   workload_identity_service_account = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.workload_identity_service_account}" : var.workload_identity_service_account
   cluster_name                      = var.goog_cm_deployment_name != "" ? "${var.goog_cm_deployment_name}-${var.cluster_name}" : var.cluster_name
+}
+
+module "gcs" {
+  source      = "../../../modules/gcs"
+  count       = var.create_gcs_bucket ? 1 : 0
+  project_id  = var.project_id
+  bucket_name = var.gcs_bucket
+}
+
+resource "google_storage_bucket_iam_binding" "allow_gke_to_bucket" {
+  bucket = var.gcs_bucket
+  role = "roles/storage.admin"
+  members = [
+    data.google_service_account.gke_service_account.member,
+  ]
+}
+
+module "skypilot-workload-identity" {
+  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  name                = "skypilot-service-account"
+  namespace           = "default"
+  project_id          = var.project_id
+  roles               = ["roles/storage.admin", "roles/compute.admin"]
+  cluster_name = module.infra[0].cluster_name
+  location = var.cluster_location
+  use_existing_gcp_sa = true
+  gcp_sa_name = data.google_service_account.gke_service_account.email
+  use_existing_k8s_sa = true
+  annotate_k8s_sa = false
 }
