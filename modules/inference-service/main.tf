@@ -132,6 +132,9 @@ resource "kubernetes_deployment" "inference_deployment" {
           }
 
           volume_mount {
+            # mount_path is set to /tmp as it's the path where the HF_HOME environment
+            # variable points to i.e. where the downloaded model from the Hugging Face
+            # Hub will be stored
             mount_path = "/tmp"
             name       = "tmp"
           }

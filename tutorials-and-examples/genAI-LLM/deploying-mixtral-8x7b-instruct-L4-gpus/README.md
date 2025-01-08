@@ -144,14 +144,14 @@ Pod Template:
       NUM_SHARD:  2
       PORT:       8080
     Mounts:
-      /data from ephemeral-volume (rw)
+      /tmp from ephemeral-volume (rw)
       /dev/shm from dshm (rw)
   Volumes:
    dshm:
     Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
     Medium:     Memory
     SizeLimit:  <unset>
-   data:
+   tmp:
     Type:          HostPath (bare host directory volume)
     Path:          /mnt/stateful_partition/kube-ephemeral-ssd/mixtral-data
     HostPathType:  

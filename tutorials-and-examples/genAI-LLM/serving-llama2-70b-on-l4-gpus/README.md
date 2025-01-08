@@ -97,13 +97,13 @@ spec:
         volumeMounts:
           - mountPath: /dev/shm
             name: dshm
-          - mountPath: /data
-            name: data
+          - mountPath: /tmp
+            name: tmp
       volumes:
          - name: dshm
            emptyDir:
               medium: Memory
-         - name: data
+         - name: tmp
            hostPath:
             path: /mnt/stateful_partition/kube-ephemeral-ssd/llama-data
       nodeSelector:
