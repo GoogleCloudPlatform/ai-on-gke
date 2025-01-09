@@ -26,6 +26,9 @@ envs:
 #
 workdir: .
 
+file_mounts:
+  ~/sky_workdir/text-classification: ../text-classification
+
 num_nodes: 1
 
 
