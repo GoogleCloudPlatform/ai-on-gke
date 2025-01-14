@@ -14,7 +14,7 @@ spec:
         name: mlflow
       env:
       - name: MLSERVER_ENV_TARBALL
-        value: "/data/mlflo-gemma2-env.tar.gz"
+        value: "/data/mlflow-gemma2-env.tar.gz"
       protocolVersion: v2
       storageUri: gs://<PATH_TO_YOUR_MODEL>
       resources:
