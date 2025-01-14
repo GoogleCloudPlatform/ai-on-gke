@@ -553,8 +553,11 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
   if gcs_bucket is not None:
-    gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
-    print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
+    try:
+      gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
+      print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
+    except google.cloud.exceptions.NotFound:
+      print(f"GS Bucket (gs://{args.output_bucket}) does not exist")
 
 def metrics_to_scrape(backend: str) -> List[str]:
   # Each key in the map is a metric, it has a corresponding 'stats' object
