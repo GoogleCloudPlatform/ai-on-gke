@@ -13,39 +13,33 @@
 # limitations under the License.
 
 
-##common variables
-## Need to pull this variables from tf output from previous platform stage
 project_id = "skypilot_project"
-
-## this is required for terraform to connect to GKE master and deploy workloads
-create_cluster   = true # this flag will create a new standard public gke cluster in default network
-cluster_name     = "skypilot-test"
+create_cluster = true
+cluster_name = "skypilot-test"
 cluster_location = "us-central1"
-
-# gpu_pools = [ {
-#   name                = "gpu-pool"
-#   queued_provisioning = true
-#   machine_type        = "g2-standard-24"
-#   disk_type           = "pd-balanced"
-#   autoscaling         = true
-#   min_count           = 0
-#   max_count           = 3
-#   initial_node_count  = 0
-# } ]
-
-#######################################################
-####    APPLICATIONS
-#######################################################
-# Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-# Set to false & update the variable `workload_identity_service_account` to use an existing IAM service account.
-create_service_account = false
-
-#DISABLE IAP
-create_brand = false
-
-autopilot_cluster = true
 enable_gpu = true
-#kubernetes_version = "1.31.1-gke.2105000"
-
+create_service_account = false
+create_brand = false
 create_gcs_bucket = true
 gcs_bucket = "skypilot-model-bucket"
+release_channel = "stable"
+
+# For Autopilot clusters
+autopilot_cluster = true
+
+#  For Standard clusters, configure GPU node pools:
+#autopilot_cluster = false
+
+#  If using Standard cluster please uncomment the
+#  following gpu_pools block to enable queued_provisioning
+#  on the node pool
+# gpu_pools = [{
+# name = "gpu-pool"
+# queued_provisioning = true
+# machine_type = "g2-standard-24"
+# disk_type = "pd-balanced"
+# autoscaling = true
+# min_count = 0
+# max_count = 3
+# initial_node_count = 0
+# }]

@@ -31,7 +31,7 @@ experimental:
 
 resources:
     cpus: 4+
-    accelerators: L4:1  # Or A100:8, H100:8
+    accelerators: L4:1
     labels:
       kueue.x-k8s.io/queue-name: dws-local-queue
 # Optional: upload a working directory to remote ~/sky_workdir.
