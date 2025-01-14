@@ -171,7 +171,13 @@ kubectl logs <POD_NAME> -f
 ```
 The output should look like this:
 ```log
-
+{'loss': 0.8569, 'grad_norm': 1.615104079246521, 'learning_rate': 1.0277984159122733e-07, 'epoch': 0.99}
+{'loss': 0.8612, 'grad_norm': 2.9606473445892334, 'learning_rate': 8.391511416816489e-09, 'epoch': 1.0}
+{'train_runtime': 247.4258, 'train_samples_per_second': 4.042, 'train_steps_per_second': 2.021, 'train_loss': 1.1304109792709351, 'epoch': 1.0}
+100%|██████████| 500/500 [04:07<00:00,  2.02it/s]
+Loading checkpoint shards: 100%|██████████| 3/3 [00:03<00:00,  1.32s/it]
+🏃 View run funny-mare-232 at: http://my-mlflow-release-tracking:80/#/experiments/1/runs/31c95f20219946b9934b2f26e4a863af
+🧪 View experiment at: http://my-mlflow-release-tracking:80/#/experiments/1
 ```
 
 Or you can go to your MLFlow and check metrics.
