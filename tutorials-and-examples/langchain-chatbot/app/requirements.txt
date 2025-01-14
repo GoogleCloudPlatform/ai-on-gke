@@ -1,5 +1,7 @@
 streamlit
 langchain
 langchain-community
-redis
-openai
+langchain-openai
+langgraph
+langgraph-checkpoint-postgres
+psycopg

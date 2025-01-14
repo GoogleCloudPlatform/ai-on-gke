@@ -15,8 +15,8 @@ spec:
               value: "http://gemma2.langchain-chatbot.svc.cluster.local/openai/v1/"
             - name: MODEL_NAME
               value: "gemma2"
-            - name: REDIS_CONN_STRING
-              value: redis://<redis-ip-address>:6379
+            - name: DB_URI
+              value: "postgresql://postgres:<db-password>@<db-private-ip-address>:5432/chat"
           ports:
             - containerPort: 8501
           livenessProbe:
