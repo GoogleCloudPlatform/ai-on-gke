@@ -104,7 +104,7 @@ Pod Template:
   Labels:  app=mistral-7b
   Containers:
    mistral-7b:
-    Image:      us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
+    Image:      ghcr.io/huggingface/text-generation-inference:1.4.3
     Port:       8080/TCP
     Host Port:  0/TCP
     Limits:
