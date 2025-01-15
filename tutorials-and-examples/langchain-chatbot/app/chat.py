@@ -32,8 +32,11 @@ st.title("Streamlit chatbot")
 st.caption("Powered by Google Cloud, Langchain and PostgreSQL")
 
 # Initialize the chat_id and messages
+headers = st.context.headers
+user_id = headers.get("X-Goog-Authenticated-User-Id")
+
 if "chat_id" not in st.session_state:
-    st.session_state.chat_id = str(uuid.uuid4())
+    st.session_state.chat_id = user_id or str(uuid.uuid4())
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -68,3 +71,12 @@ if prompt := st.chat_input("Enter your message"):
     response_content = output["messages"][-1].content.strip()
     st.chat_message("ai").markdown(response_content)
     st.session_state.messages.append({"role": "ai", "content": response_content})
+
+# Add button to reset chat history
+if len(st.session_state.messages) and st.button("Restart chat"):
+    st.session_state.messages = []
+    cursor = get_checkpointer().conn.cursor()
+    cursor.execute("DELETE FROM checkpoints WHERE thread_id = %s", (st.session_state.chat_id,))
+    cursor.execute("DELETE FROM checkpoint_writes WHERE thread_id = %s", (st.session_state.chat_id,))
+    cursor.execute("DELETE FROM checkpoint_blobs WHERE thread_id = %s", (st.session_state.chat_id,))
+    st.rerun()

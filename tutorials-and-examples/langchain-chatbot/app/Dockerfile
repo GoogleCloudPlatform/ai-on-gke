@@ -16,6 +16,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 COPY chat.py ./
 
 EXPOSE 8501
+USER 1000
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 

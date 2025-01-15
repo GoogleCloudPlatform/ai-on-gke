@@ -1,10 +1,10 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# to build, run `gcloud builds submit --config cloudbuild.yaml .` in directory
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: [ 'pull', 'python:3.9-slim' ]
-- name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/vpolikarpov-langchain-chatbot/app:latest', '.' ]
-images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/vpolikarpov-langchain-chatbot/app:latest'
+terraform {
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+    }
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+    }
+    helm = {
+      source = "hashicorp/helm"
+    }
+  }
+}
