@@ -61,6 +61,10 @@ module "gke_cluster" {
   project_id           = var.project_id
   region               = var.region
   subnetwork_self_link = module.network-kevinmcw.subnetwork_self_link
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 module "a3_megagpu_pool" {
@@ -87,12 +91,20 @@ module "a3_megagpu_pool" {
   static_node_count = var.node_count
   taints            = []
   zones             = [var.zone]
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 module "topology_aware_scheduler_install" {
   source     = "./modules/embedded/community/modules/compute/gke-topology-scheduler"
   cluster_id = module.gke_cluster.cluster_id
   project_id = var.project_id
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 module "workload_manager_install" {
@@ -105,6 +117,10 @@ module "workload_manager_install" {
     install = true
   }
   project_id = var.project_id
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 # created by replicating the helm install in https://github.com/AI-Hypercomputer/gpu-recipes/tree/main/training/a3mega/llama-3-70b/nemo-pretraining-gke

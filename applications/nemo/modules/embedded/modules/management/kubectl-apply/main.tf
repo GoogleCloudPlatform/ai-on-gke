@@ -50,7 +50,7 @@ module "kubectl_apply_manifests" {
 
   providers = {
     kubectl = kubectl
-    http    = http.h
+    http    = http
   }
 }
 
@@ -61,7 +61,7 @@ module "install_kueue" {
 
   providers = {
     kubectl = kubectl
-    http    = http.h
+    http    = http
   }
 }
 
@@ -72,7 +72,7 @@ module "install_jobset" {
 
   providers = {
     kubectl = kubectl
-    http    = http.h
+    http    = http
   }
 }
 
@@ -87,6 +87,6 @@ module "configure_kueue" {
 
   providers = {
     kubectl = kubectl
-    http    = http.h
+    http    = http
   }
 }

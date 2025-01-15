@@ -34,3 +34,12 @@ provider "helm" {
     cluster_ca_certificate = base64decode(module.gke_cluster.gke_ca_cert)
   }
 }
+
+provider "kubectl" {
+  host                   = module.gke_cluster.gke_endpoint
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(module.gke_cluster.gke_ca_cert)
+  load_config_file       = false
+  apply_retry_count      = 15 # Terraform may apply resources in parallel, leading to potential dependency issues. This retry mechanism ensures that if a resource's dependencies aren't ready, Terraform will attempt to apply it again.
+}
+
