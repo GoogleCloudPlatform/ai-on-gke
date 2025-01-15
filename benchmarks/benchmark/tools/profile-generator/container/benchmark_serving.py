@@ -27,7 +27,7 @@ from transformers import PreTrainedTokenizerBase
 from google.protobuf.timestamp_pb2 import Timestamp
 
 MIN_SEQ_LEN = 4
-CLIENT_TIMEOUT_SEC = 3 * 60 * 60
+CLIENT_TIMEOUT_SEC = 10 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 PROMETHEUS_PORT = 9090
 
