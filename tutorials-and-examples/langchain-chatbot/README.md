@@ -1,4 +1,4 @@
-# Chatbot Application with LangChain, persistent storage and IAP
+# Chatbot Application with LangChain, Persistent Storage and IAP
 
 ## Introduction
 
@@ -6,9 +6,9 @@ It is important to make AI models accessible to end-users through applications t
 
 In this tutorial, you will learn how to deploy a chatbot application using LangChain and Streamlit on Google Cloud Platform (GCP).
 
-The application can be used to interact with any language model served on an OpenAI-compatible API; for example, you can use Gemma2 model deployed on Google Kubernetes Engine (GKE) using Kserve, as described in the [Kserve README](../kserve/README.md).
+The application can be used to interact with any language model served on an OpenAI-compatible API; for example, you can use the Gemma2 model deployed on Google Kubernetes Engine (GKE) using Kserve, as described in the [Kserve README](../kserve/README.md).
 
-The application will be deployed on GCP using Terraform, and secured with Identity Aware Proxy (IAP).
+The application will be deployed on GCP using Terraform and secured with Identity Aware Proxy (IAP).
 
 Finally, it will use user identity provided by IAP and store each user's messages in a Cloud SQL PostgreSQL database.
 
@@ -41,7 +41,7 @@ Before you begin, ensure you have the following:
 
    You can optionally set up a local PostgreSQL instance to test the application locally.
 
-   Start by creating network, then run the PostgreSQL container:
+   Start by creating a network, then run the PostgreSQL container:
 
    ```bash
    docker network create langchain-chatbot
@@ -73,7 +73,7 @@ Before you begin, ensure you have the following:
 
 3. **Build the Application Using Cloud Build**
 
-   Edit cloudbuild.yaml to reference the newly created repository, then submit the build:
+   Edit `cloudbuild.yaml` to reference the newly created repository, then submit the build:
 
    ```bash
    gcloud builds submit app
@@ -83,11 +83,11 @@ Before you begin, ensure you have the following:
 
    Before securing the application with Identity Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
 
-   Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials). Save the client ID and secret for later use. Also add the redirect URI to the OAuth 2.0 client as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect`.
+   Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials). Save the client ID and secret for later use. Also, add the redirect URI to the OAuth 2.0 client as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect`.
 
 5. **Apply Terraform Configuration**
 
-   Go to terraform dir, make a copy of `terraform.tfvars.example` and adjust the variables for the Terraform configuration. The minimum required variables are:
+   Go to the `terraform` directory, make a copy of `terraform.tfvars.example` and adjust the variables for the Terraform configuration. The minimum required variables are:
 
    - `project_id` - your GCP project ID
    - `model_base_url` and `model_name` - where to find the model
