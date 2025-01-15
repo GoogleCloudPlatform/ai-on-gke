@@ -30,7 +30,7 @@ spec:
         cloud.google.com/gke-accelerator: "nvidia-l4"
       containers:
       - name: mixtral8x7b
-        image: us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
+        image: ghcr.io/huggingface/text-generation-inference:1.4.3
         ports:
         - name: server-port
           containerPort: 8080
@@ -53,6 +53,9 @@ spec:
             memory: "42Gi"
             nvidia.com/gpu: "2"
         volumeMounts:
+          # mountPath is set to /data as it's the path where the HF_HOME environment
+          # variable points to in the TGI container image i.e. where the downloaded model from the Hub will be
+          # stored
           - mountPath: /data
             name: ephemeral-volume
           - mountPath: /dev/shm
