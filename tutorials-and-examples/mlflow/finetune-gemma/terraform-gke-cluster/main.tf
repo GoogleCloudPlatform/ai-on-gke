@@ -59,7 +59,7 @@ module "project-services" {
 }
 
 module "infra" {
-  source = "../infrastructure"
+  source = "../../../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
   project_id        = var.project_id
