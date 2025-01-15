@@ -148,6 +148,7 @@ async def send_stream_request(
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
     model: str,
+    timeout: float,
 ) -> Tuple[Tuple[int, int, float], float, Dict[str, int]]:
   """Sends stream request to server"""
   request_start_time = time.time()
@@ -179,7 +180,7 @@ async def send_stream_request(
   ttft = 0.0
   st = time.perf_counter()
   output = ""
-  timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+  timeout = aiohttp.ClientTimeout(total=timeout)
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
     try:
       async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
@@ -249,6 +250,7 @@ async def send_request(
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
     model: str,
+    timeout: float,
 ) -> Tuple[Tuple[int, int, float], float, Dict[str, int]]:
   """Sends request to server."""
   request_start_time = time.time()
@@ -322,7 +324,7 @@ async def send_request(
     raise ValueError(f"Unknown backend: {backend}")
 
   # Set client timeout to be 3 hrs.
-  timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+  timeout = aiohttp.ClientTimeout(total=timeout)
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True,trace_configs=[trace_config]) as session:
     while True:
       try:
@@ -426,6 +428,7 @@ async def benchmark(
             tokenizer,
             args.sax_model,
             model,
+            args.request_timeout,
         )
       )
     else: 
@@ -442,6 +445,7 @@ async def benchmark(
           tokenizer,
           args.sax_model,
           model,
+          args.request_timeout,
         )
       )
     tasks.append(task)
@@ -833,6 +837,12 @@ if __name__ == "__main__":
     "--stream-request", 
     action="store_true",
     help="Whether to stream the request. Needed for TTFT metric",
+  )
+  parser.add_argument(
+    "--request-timeout", 
+    type=float,
+    default=(3.0 * 60.0 * 60.0),
+    help="Individual request timeout",
   )
   parser.add_argument(
       "--tokenizer",
