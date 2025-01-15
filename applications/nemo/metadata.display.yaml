@@ -30,7 +30,7 @@ spec:
             type: ET_GCE_REGION
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_region:
-              allowlisted_regions: ["us-east5"]
+              allowlisted_regions: ["us-central1","us-east5"]
         zone:
           name: cluster_region
           title: Cluster Region
@@ -39,13 +39,17 @@ spec:
             type: ET_GCE_ZONE
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_zone:
-              allowlisted_zones: ["us-east5-a"]
+              allowlisted_zones: ["us-central1-a", "us-east5-a"]
         checkpoint_bucket:
           name: checkpoint_bucket
           title: Checkpoint bucket
           section: required_config
           xGoogleProperty:
             type: ET_GCS_BUCKET
+        node_count:
+          name: node_count
+          title: Node Count
+          section: required_config
         gpus:
           name: gpus
           title: GPUs
@@ -64,6 +68,14 @@ spec:
               value: gpt3-175b/32"
             - label: mixtral-8x7b/a3-megagpu-8g*32
               value: mixtral-8x7b/32
+        reservation:
+          name: reservation
+          title: Reservation
+          section: required_config
+        reservation_block:
+          name: reservation_block
+          title: Reservation Block
+          section: required_config
         acknowledge:
           name: acknowledge
           title: Check to confirm you enabled Google APIs for your project with this command.

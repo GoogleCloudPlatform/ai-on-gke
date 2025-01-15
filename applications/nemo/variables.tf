@@ -25,6 +25,16 @@ variable "deployment_name" {
   type        = string
 }
 
+variable "reservation" {
+  description = "Toolkit deployment variable: reservation"
+  type        = string
+}
+
+variable "reservation_block" {
+  description = "Toolkit deployment variable: reservation_block"
+  type        = string
+}
+
 variable "labels" {
   description = "Toolkit deployment variable: labels"
   type        = any
@@ -54,5 +64,10 @@ variable "checkpoint_bucket" {
 
 variable "gpus" {
   description = "Toolkit deployment variable: gpus"
+  type        = number
+}
+
+variable "node_count" {
+  description = "Toolkit deployment variable: node_count"
   type        = number
 }

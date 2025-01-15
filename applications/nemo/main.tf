@@ -68,14 +68,23 @@ module "a3_megagpu_pool" {
   additional_networks       = flatten([module.gpunets.additional_networks])
   cluster_id                = module.gke_cluster.cluster_id
   gke_version               = module.gke_cluster.gke_version
-  host_maintenance_interval = "PERIODIC"
+  # host_maintenance_interval = "PERIODIC"
   internal_ghpc_module_id   = "a3_megagpu_pool"
   labels                    = var.labels
   machine_type              = "a3-megagpu-8g"
-  placement_policy = {
-    type = "COMPACT"
-  }
+  # placement_policy = {
+  #   type = "COMPACT"
+  # }
   project_id        = var.project_id
+  reservation_affinity = {
+    consume_reservation_type = "SPECIFIC_RESERVATION"
+    specific_reservations = [{
+      # name = "${var.reservation}/reservationBlocks/${var.reservation_block}"
+      name = "${var.reservation}"
+      project = var.project_id
+    }]
+  }
+  static_node_count = var.node_count
   taints            = []
   zones             = [var.zone]
 }

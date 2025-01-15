@@ -46,8 +46,8 @@ spec:
       {{- end}}
 
    spec:
-    schedulingGates:
-    - name: "gke.io/topology-aware-auto-scheduling"
+     #schedulingGates:
+     #- name: "gke.io/topology-aware-auto-scheduling"
     hostNetwork: true
     dnsPolicy: ClusterFirstWithHostNet
     subdomain: "{{.Release.Name}}"
