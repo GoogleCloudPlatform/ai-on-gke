@@ -6,6 +6,9 @@ metadata:
     gke-gcsfuse/volumes: "true"
 spec:
   template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
     spec:
       serviceAccount: default
       containers:
@@ -19,6 +22,7 @@ spec:
         - name: gcsfuse-conda-env
           mountPath: /data
           readOnly: false
+      restartPolicy: Never
       volumes:
       - name: conda-config
         configMap:
@@ -29,5 +33,3 @@ spec:
           volumeAttributes:
             bucketName: <YOUR_BUCKET_NAME>
             mountOptions: "implicit-dirs"
-
-      restartPolicy: Never
