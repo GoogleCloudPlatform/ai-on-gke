@@ -214,7 +214,7 @@ You can see that we have a `conda-configs` directory. Inside this directory is a
 kubectl create configmap conda-requirements --from-file=conda-configs
 ```
 
-Before you run environment creation job, you need to adjust values in the `create-tarball.yaml`:
+Before you run environment creation job, you need to adjust values in the `create-tarball.yaml` and `deploy.yaml`:
 - <YOUR_BUCKET_NAME> – you should paste your bucket name here.
 
 Now we can run our environment creation job:
@@ -222,7 +222,10 @@ Now we can run our environment creation job:
 kubectl apply -f create-tarball.yaml
 ```
 
-After the job is done, you can see that your bucket now has `mlflo-gemma2-env.tar.gz` tarball. We will use it in the `deploy.yaml`. Run the command below:
+After the job is done, you can see that your bucket now has `mlflow-gemma2-env.tar.gz` tarball. We will use it in the deploy.yaml.
+Change the following variables in the `deploy.yaml` file:
+- `<PATH_TO_YOUR_MODEL>` – you can find the path in the MLFlow UI (it should look like `gs://<BUCKET_NAME>/asdf12345/artifacts/model`).
+- `<YOUR_BUCKET_NAME>` – your bucket name that should be mounted via gcsfuse to install your conda environment.
 ```bash
 kubectl apply -f deploy.yaml
 ```
