@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+output "app_public_ip" {
+  value = module.iap_auth.ip_address
+}
+
 output "app_url" {
   value = "https://${module.iap_auth.domain}"
 }

@@ -1,5 +1,24 @@
 # Chatbot Application with LangChain, Persistent Storage and IAP
 
+- [Introduction](#introduction)
+  - [What is LangChain](#what-is-langchain)
+  - [What is Streamlit](#what-is-streamlit)
+  - [What is Identity Aware Proxy (IAP)](#what-is-identity-aware-proxy-iap)
+- [Prerequisites](#prerequisites)
+- [Optional: Build and Run the Application Locally](#optional-build-and-run-the-application-locally)
+- [Prepare the Application for Deployment](#prepare-the-application-for-deployment)
+  - [Create Google Container Registry (GCR)](#create-google-container-registry-gcr)
+  - [Build the Application Using Cloud Build](#build-the-application-using-cloud-build)
+  - [Enable IAP and create OAuth client](#enable-iap-and-create-oauth-client)
+- [Manual Deployment](#manual-deployment)
+  - [Create Cloud SQL Instance](#create-cloud-sql-instance)
+  - [Deploy the application to GKE](#deploy-the-application-to-gke)
+  - [Expose the application to the internet](#expose-the-application-to-the-internet)
+  - [Configure IAP for the application](#configure-iap-for-the-application)
+- [Automated Deployment](#automated-deployment)
+- [Interaction with the Chatbot](#interaction-with-the-chatbot)
+- [Conclusion](#conclusion)
+
 ## Introduction
 
 It is important to make AI models accessible to end-users through applications that provide a user-friendly interface.
@@ -12,104 +31,229 @@ The application will be deployed on GCP using Terraform and secured with Identit
 
 Finally, it will use user identity provided by IAP and store each user's messages in a Cloud SQL PostgreSQL database.
 
-### What is LangChain?
+### What is LangChain
 
 LangChain is a framework designed to simplify the integration of language models into applications. It provides tools and abstractions to manage the complexities of working with language models, making it easier to build, deploy and maintain AI-powered applications.
 
-### What is Streamlit?
+### What is Streamlit
 
 Streamlit is an open-source app framework used to create interactive web applications for machine learning and data science projects. It allows developers to build and deploy powerful data-driven applications with minimal effort.
 
-### What is Identity Aware Proxy (IAP)?
+### What is Identity Aware Proxy (IAP)
 
 Identity Aware Proxy (IAP) is a Google Cloud service that provides secure access to applications running on GCP. It allows you to control access to your applications based on user identity, ensuring that only authorized users can access your resources. You can learn more about IAP [here](https://cloud.google.com/iap).
 
 ## Prerequisites
 
-Before you begin, ensure you have the following:
+This tutorial assumes you have the following:
 
 - A Google Cloud Platform account and project
 - The Google Cloud SDK (gcloud) installed and configured
-- Terraform installed on your local machine
 - A language model deployed on an OpenAI-compatible API
 
-> **Note:** Follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy your model on Google Kubernetes Engine (GKE).
+If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy your model on Google Kubernetes Engine (GKE).
 
-## Instructions
+## Optional: Build and Run the Application Locally
 
-1. **Optional: Build and Run the Application Locally**
+You can optionally set up a local PostgreSQL instance to test the application locally.
 
-   You can optionally set up a local PostgreSQL instance to test the application locally.
+Start by creating a network, then run the PostgreSQL container:
 
-   Start by creating a network, then run the PostgreSQL container:
+```bash
+docker network create langchain-chatbot
+docker run --rm --name postgres --network langchain-chatbot -e POSTGRES_PASSWORD=superpassword -d postgres
+```
 
-   ```bash
-   docker network create langchain-chatbot
-   docker run --rm --name postgres --network langchain-chatbot -e POSTGRES_PASSWORD=superpassword -d postgres
-   ```
+Next, build and run the application:
 
-   Next, build and run the application:
+```bash
+docker build -t langchain-chatbot app
+docker run --rm --name chatbot \
+   --network langchain-chatbot -p 8501:8501 \
+   -e MODEL_BASE_URL=https://model.example.com/openai/v1/ \
+   -e MODEL_NAME=gemma2 \
+   -e DB_URI=postgresql://postgres:superpassword@postgres:5432/postgres \
+   langchain-chatbot
+```
 
-   ```bash
-   docker build -t langchain-chatbot app
-   docker run --rm --name chatbot \
-     --network langchain-chatbot -p 8501:8501 \
-     -e MODEL_BASE_URL=https://model.example.com/openai/v1/ \
-     -e MODEL_NAME=gemma2 \
-     -e DB_URI=postgresql://postgres:superpassword@postgres:5432/postgres \
-     langchain-chatbot
-   ```
+## Prepare the Application for Deployment
 
-2. **Create Google Container Registry (GCR)**
+### Create Google Container Registry (GCR)
 
-   Enable the Artifact Registry API and create a Docker repository:
+Enable the Artifact Registry API and create a Docker repository:
 
-   ```bash
-   gcloud services enable artifactregistry.googleapis.com
-   gcloud artifacts repositories create langchain-chatbot \
-     --repository-format=docker \
-     --location=us-central1
-   ```
+```bash
+gcloud services enable artifactregistry.googleapis.com
+gcloud artifacts repositories create langchain-chatbot \
+   --repository-format=docker \
+   --location=us-central1
+```
 
-3. **Build the Application Using Cloud Build**
+### Build the Application Using Cloud Build
 
-   Edit `cloudbuild.yaml` to reference the newly created repository, then submit the build:
+Edit `cloudbuild.yaml` to reference the newly created repository, then submit the build:
 
-   ```bash
-   gcloud builds submit app
-   ```
+```bash
+gcloud builds submit app
+```
 
-4. **Ensure IAP and OAuth Consent Screen are Configured**
+### Enable IAP and create OAuth client
 
-   Before securing the application with Identity Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
+Before securing the application with Identity Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
 
-   Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials). Save the client ID and secret for later use. Also, add the redirect URI to the OAuth 2.0 client as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect`.
+Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials). Save the client ID and secret for later use. Also, add the redirect URI to the OAuth 2.0 client as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect`.
 
-5. **Apply Terraform Configuration**
+## Manual Deployment
 
-   Go to the `terraform` directory, make a copy of `terraform.tfvars.example` and adjust the variables for the Terraform configuration. The minimum required variables are:
+This section describes how to deploy the application manually. If you prefer an automated deployment, refer to the next section.
 
-   - `project_id` - your GCP project ID
-   - `model_base_url` and `model_name` - where to find the model
-   - `k8s_app_image` - the name and tag of the Docker image built previously
-   - `support_email`, `oauth_client_id`, `oauth_client_secret` and `members_allowlist` - for IAP configuration
+### Create Cloud SQL Instance
 
-   Initialize and apply the Terraform configuration to set up the necessary infrastructure.
+On this step we will create a Cloud SQL instance and a database to store user messages. The database should be accessible from the GKE cluster where the application will be deployed. A good practice is to use a private IP address for the Cloud SQL instance. To do this, a VPC Peering connection needs to be established between the network of the GKE cluster and the Google-managed services network.
 
-   ```bash
-   terraform init
-   terraform apply -var-file=terraform.tfvars
-   ```
+```bash
+NETWORK=<your-network-name>
+ADDRESS_RANGE=google-managed-services-${NETWORK}
 
-   It will do the following:
+# Create address range for VPC Peering
+gcloud compute addresses create ${ADDRESS_RANGE} --network=${NETWORK} --global --purpose=VPC_PEERING --prefix-length=24
 
-   - Create a PostgreSQL instance along with a database
-   - Connect the PostgreSQL instance to the network you specified using VPC Peering
-   - Create Deployment and Service resources for the application in the specified namespace of your GKE cluster
-   - Configure IAP to secure the application
+# Create a VPC Peering connection with Google-managed services network
+gcloud services vpc-peerings connect --network=${NETWORK} --ranges=${ADDRESS_RANGE} --service=servicenetworking.googleapis.com
+```
 
-   When the Terraform run completes, it will output the URL of the application. Note that it may take some time for the application to become available as provisioning of the Managed Certificate can take a few minutes.
+Once VPC Peering is established, create the Cloud SQL instance and database, and set the password for the `postgres` user:
+
+```bash
+CLOUD_SQL_INSTANCE=langchain-chatbot
+DB_NAME=chat
+DB_PASSWORD=superpassword
+
+# Create Cloud SQL instance
+gcloud sql instances create ${CLOUD_SQL_INSTANCE} --database-version=POSTGRES_16 --edition=ENTERPRISE --region=us-central1 --tier=db-f1-micro --network=${NETWORK} --no-assign-ip --enable-google-private-path
+
+# Create database and set password for postgres user
+gcloud sql databases create ${DB_NAME} --instance=${CLOUD_SQL_INSTANCE}
+gcloud sql users set-password postgres --instance=${CLOUD_SQL_INSTANCE} --host=% --password=${DB_PASSWORD}
+```
+
+### Deploy the application to GKE
+
+Open `deployment.yaml` and replace the placeholders with the actual values. There are three pieces of information you need to provide: model base URL, model name, and database URI. Then, create a namespace and deploy the application:
+
+```bash
+K8S_NAMESPACE=langchain-chatbot
+
+kubectl create namespace ${K8S_NAMESPACE}
+kubectl apply -n ${K8S_NAMESPACE} -f deployment.yaml
+kubectl apply -n ${K8S_NAMESPACE} -f service.yaml
+```
+
+Ensure that the application is running by checking the pods:
+
+```bash
+kubectl get pods -n ${K8S_NAMESPACE}
+```
+
+At this point, the application isn't accessible from the internet yet. To interact with it, you can port-forward the service to your local machine:
+
+```bash
+kubectl port-forward -n ${K8S_NAMESPACE} svc/chat 8501:80
+```
+
+Now navigate to `http://localhost:8501` in your browser and you should see the interface of the application.
+
+Note that as we didn't configure authentication yet, application won't save the chat history between page reloads but you can still test the chatbot functionality.
+
+### Expose the application to the internet
+
+To make the application accessible from the internet, we need to create an Ingress resource. The Ingress will route traffic to the application and terminate SSL connections.
+
+First, create a static IP address for the Ingress:
+
+```bash
+gcloud compute addresses create langchain-chatbot \
+  --global --ip-version=IPV4
+```
+
+Wait until the static IP address is created, then go to your domain registrar and create an A record pointing to the static IP address.
+
+Next, update `managed-certificate.yaml` with your domain name and apply manifests for the Managed Certificate and Ingress:
+
+```bash
+kubectl apply -n ${K8S_NAMESPACE} -f managed-certificate.yaml
+kubectl apply -n ${K8S_NAMESPACE} -f ingress.yaml
+```
+
+It takes some time for the Managed Certificate to be provisioned. You can check the status of the certificate using:
+
+```bash
+kubectl describe managedcertificate chat-cert -n ${K8S_NAMESPACE}
+```
+
+After certificate is provisioned, you can access the application using your domain name. But for now it is not yet secured, nor it will save the chat history between page reloads. So let's fix that.
+
+### Configure IAP for the application
+
+Start with creating a secret with OAuth client credentials (replace placeholders with your actual values obtained from the OAuth client creation):
+
+```bash
+kubectl create secret generic chat-ui-oauth \
+  --namespace ${K8S_NAMESPACE} \
+  --from-literal=client_id=<your-oauth-client-id> \
+  --from-literal=client_secret=<your-oauth-client-secret>
+```
+
+Then, create a BackendConfig resource to configure IAP and update the Service resource to use the BackendConfig:
+
+```bash
+kubectl apply -n ${K8S_NAMESPACE} -f backendconfig.yaml
+kubectl annotate service chat -n ${K8S_NAMESPACE} beta.cloud.google.com/backend-config=chat-ui
+```
+
+Finally, go to the IAP page in the GCP Console and add enable IAP for the application. Doint that, don't forget to add some principals (users, domains, etc.) to the allowlist.
+
+Now, go to your domain again. You should be prompted to log in with your Google account to access the chatbot. Once logged in, you can start chatting with the chatbot. The chat history will persist between page reloads now as it's bound to your identity.
+
+## Automated Deployment
+
+Instead of manually following the steps above, you can use Terraform to automate the deployment of the application.
+
+Go to the `terraform` directory, make a copy of `terraform.tfvars.example` and adjust the variables for the Terraform configuration. The minimum required variables are:
+
+- `project_id` - your GCP project ID
+- `model_base_url` and `model_name` - where to find the model
+- `k8s_app_image` - the name and tag of the Docker image built previously
+- `support_email`, `oauth_client_id`, `oauth_client_secret` and `members_allowlist` - for IAP configuration
+
+Initialize and apply the Terraform configuration to set up the necessary infrastructure.
+
+```bash
+terraform init
+terraform apply -var-file=terraform.tfvars
+```
+
+It will do the following:
+
+- Create a PostgreSQL instance along with a database
+- Connect the PostgreSQL instance to the network you specified using VPC Peering
+- Create Deployment and Service resources for the application in the specified namespace of your GKE cluster
+- Configure IAP to secure the application
+
+When the Terraform run completes, it will output the public IP address and the URL of the application.
+
+Make sure that IP address is associated with the domain you specified as the `domain_name` variable in the Terraform configuration. If not, go to your domain registrar and create an A record pointing to the IP address.
+
+Finally, wait some time for the Managed Certificate to be provisioned and then you can access the application using your domain name.
+
+## Interaction with the Chatbot
+
+Once the application is deployed, you can interact with the chatbot by visiting the URL of the application in your browser. If you are using Terraform, the URL will be provided as an output, but in any case it technically should be `https://<you-domain>/`. You will be prompted to log in with your Google account to access the chatbot.
+
+Once logged in, you can start chatting with the chatbot. The chatbot will use the language model you specified to generate responses to your messages. The chat history will be stored in the PostgreSQL database, and you can view it by connecting to the database using a PostgreSQL client.
+
+The history is preserved across sessions, so you can continue the conversation where you left off. You can also clear the chat history using the appropriate button in the application.
 
 ## Conclusion
 
-By following these steps, you will be able to deploy the LangChain Chatbot on GCP, leveraging the power of language models to create an interactive and intelligent application.
+In this tutorial, we have deployed a chatbot application using LangChain and Streamlit on Google Cloud Platform. The application is secured with Identity Aware Proxy (IAP) and stores user messages in a Cloud SQL PostgreSQL database.
