@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 steps:
 - id: "validate platform"
   name: "gcr.io/$PROJECT_ID/terraform"
@@ -439,8 +440,9 @@ substitutions:
   _REGION: us-east4
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
-  _BUILD_ID: "11122233"
+  _BUILD_ID: ${BUILD_ID:0:8}
   _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:1f80ae746014330a3a83b5ee2fabeacf90fa488c4f0922072b628b95144f25c8
+logsBucket: gs://ai-on-gke-build-logs
 options:
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: "ALLOW_LOOSE"
