@@ -80,14 +80,17 @@ module "a3_megagpu_pool" {
   #   type = "COMPACT"
   # }
   project_id        = var.project_id
-  reservation_affinity = {
-    consume_reservation_type = "SPECIFIC_RESERVATION"
-    specific_reservations = [{
-      # name = "${var.reservation}/reservationBlocks/${var.reservation_block}"
-      name = "${var.reservation}"
-      project = var.project_id
-    }]
-  }
+  reservation_affinity = (var.reservation != "" ? {
+      consume_reservation_type = "SPECIFIC_RESERVATION"
+      specific_reservations = [{
+	name = var.reservation_block == "" ? "${var.reservation}" : "${var.reservation}/reservationBlocks/${var.reservation_block}"
+        project = var.project_id
+      }]
+    } : {
+      consume_reservation_type = "NO_RESERVATION"
+      specific_reservations    = []
+    }
+  )
   static_node_count = var.node_count
   taints            = []
   zones             = [var.zone]
