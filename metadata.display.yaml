@@ -1,0 +1,111 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke-display
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: Ray on GKE
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/ray
+  ui:
+    input:
+      variables:
+        project_id:
+          name: project_id
+          title: Project Id
+          invisible: true
+        deployment_name:
+          name: deployment_name
+          title: Deployment Name
+          section: required_config
+        region:
+          name: region
+          title: Cluster Region
+          section: required_config
+          xGoogleProperty:
+            type: ET_GCE_REGION
+            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+            gce_region:
+              allowlisted_regions: ["us-central1","us-east5"]
+        zone:
+          name: cluster_region
+          title: Cluster Region
+          section: required_config
+          xGoogleProperty:
+            type: ET_GCE_ZONE
+            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+            gce_zone:
+              allowlisted_zones: ["us-central1-a", "us-east5-a"]
+        checkpoint_bucket:
+          name: checkpoint_bucket
+          title: Checkpoint bucket
+          section: required_config
+          xGoogleProperty:
+            type: ET_GCS_BUCKET
+        node_count:
+          name: node_count
+          title: Node Count
+          section: required_config
+        gpus:
+          name: gpus
+          title: GPUs
+          section: required_config
+          invisible: true
+        recipe:
+          name: recipe
+          title:  Launchpad Recipe
+          section: required_config
+          enumValueLabels:
+            - label: llama-3-70B-nemo/a3-megagpu-8g*16
+              value: llama3-70b/16
+            - label: llama-3-70B-nemo/a3-megagpu-8g*32
+              value: llama3-70b/32"
+            - label: gpt3-175b-nemo/a3-megagpu-8g*32
+              value: gpt3-175b/32"
+            - label: mixtral-8x7b/a3-megagpu-8g*32
+              value: mixtral-8x7b/32
+        reservation:
+          name: reservation
+          title: Reservation
+          section: required_config
+        reservation_block:
+          name: reservation_block
+          title: Reservation Block
+          section: required_config
+        acknowledge:
+          name: acknowledge
+          title: Check to confirm you enabled Google APIs for your project with this command.
+          section: acknowledge
+          subtext: |
+                  <pre>
+                    <code style="background: #f4f4f4;border: 1px solid #ddd; border-left: 3px solid #3367d6; color: #6d6868; font-size: 12px; max-width: 100%; padding: 0.5em 0.5em; display: inline; line-height: 45px;">gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com</code>
+                  </pre>
+          enumValueLabels:
+            - label: Confirm that all prerequisites have been met.
+              value: "true"
+      sections:
+        - name: acknowledge
+          title: Before you begin
+          subtext: 
+                This solution deploys a sample <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/release-1.1/applications/ray/README.md#ray-on-gke-templates"><i>Ray</i></a> application on GKE in your project.</br>
+        - name: required_config
+          title: Required configuration
+    runtime:
+      outputMessage: Deployment can take several minutes to complete.
+      suggestedActions:
+        - heading: Connect to Ray Cluster
+          description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265). Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a> to install ray and submit jobs.
+        - heading: View Job Status in Ray Dashboard
+          description: |-
+            <p>
+            1&#41; If IAP is disabled, open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button in the port forwarding page.</br>
+            </p>
+            <p>
+            2&#41; If IAP is enabled, click the <b>Launch Ray Dashboard</b> button and log in with your organization's credentials. Troubleshooting access issues:</br>
+            &emsp;&#x2022; SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</br>
+            &emsp;&#x2022; If you're unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <b>ray-cluster-kuberay-head-svc</b> service and add the user with the role <b>IAP-secured Web App User</b>.
+            </p>
