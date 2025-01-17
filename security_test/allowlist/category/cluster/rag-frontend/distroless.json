@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "rag-frontend",
+      "image": "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:ec0e7b1ce6d0f9570957dd7fb3dcf0a16259cba915570846b356a17d6e377c59"
+    },
+    "message": "container \"rag-frontend\" in Deployment \"rag-frontend\" has an image \"us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:ec0e7b1ce6d0f9570957dd7fb3dcf0a16259cba915570846b356a17d6e377c59\" built from non-distroless base image \"Debian GNU/Linux 12 (bookworm)\". See: go/gke-distroless for more details",
+    "policyName": "distroless",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "rag-frontend",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

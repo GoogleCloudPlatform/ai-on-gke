@@ -1,0 +1,74 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"rayjob-viewer-role\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayjob-viewer-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "list"
+      ]
+    },
+    "message": "ClusterRole \"rayjob-viewer-role\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"list\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayjob-viewer-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "watch"
+      ]
+    },
+    "message": "ClusterRole \"rayjob-viewer-role\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"watch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayjob-viewer-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs/status",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"rayjob-viewer-role\" has rbac rule for resource \"rayjobs/status.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayjob-viewer-role",
+      "version": "v1"
+    }
+  }
+]

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 steps:
 - id: "validate platform"
   name: "gcr.io/$PROJECT_ID/terraform"
@@ -278,6 +277,60 @@ steps:
   allowFailure: true
   waitFor: ['create gke cluster']
 
+- id: 'Generate Kubeconfig'
+  name: 'gcr.io/cloud-builders/gcloud'
+  env:
+  - 'KUBECONFIG=/workspace/kubeconfig'
+  - 'USE_GKE_GCLOUD_AUTH_PLUGIN=False'
+  args:
+  - 'container'
+  - 'clusters'
+  - 'get-credentials'
+  - 'ml-${SHORT_SHA}-${_PR_NUMBER}-${_BUILD_ID}-cluster'
+  - '--region=${_REGION}'
+  - '--project=$PROJECT_ID'
+  allowFailure: true
+  waitFor: ['test rag']
+
+- id: 'Copy metadata'
+  name: 'ubuntu'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    mkdir -p /workspace/security_test/allowlist
+    cp security_test/config.yaml /workspace/security_test/config.yaml
+    cp -r security_test/allowlist/* /workspace/security_test/allowlist/ || echo "Allowlist folder is empty or not found"
+  allowFailure: true
+  waitFor: ['Generate Kubeconfig']
+
+# gcr.io/cloud-builders/docker is a special image: This image provided by Google Cloud contains the docker command-line tool, which is essential for executing Docker commands like docker build and docker run within your Cloud Build steps.
+# gcr.io/${_PROJECT_ID}/check_violations:latest is your application image: This image contains your security check tool and its dependencies. It's designed to be run, not to build or run other Docker images.
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'run shipshape'
+  args:
+  - 'run'
+  - '--network=cloudbuild'
+  - '--rm'
+  - '-v'
+  - '/workspace/security_test/allowlist:/workspace/security_test/allowlist'
+  - '-v'
+  - '/workspace/security_test/config.yaml:/workspace/security_test/config.yaml'
+  - '-v'
+  - '/workspace/kubeconfig:/root/.kube/config'
+  - '${_SHIPSHAPE_IMAGE}'
+  - '--mode=cluster'
+  - '--allowlist_folder=/workspace/security_test/allowlist'
+  - '--cluster_name=ml-${SHORT_SHA}-${_PR_NUMBER}-${_BUILD_ID}-cluster'
+  - '--project_id=$PROJECT_ID'
+  - '--location=${_REGION}'
+  - '--kube_config_path=/root/.kube/config'
+  - '--max_wait_duration=3000'
+  - '--max_parallel=100'
+  - '--cluster_scan_config_path=/workspace/security_test/config.yaml'
+  allowFailure: true
+  waitFor: ['Copy metadata']
+
 - id: 'cleanup rag'
   name: 'gcr.io/$PROJECT_ID/terraform'
   entrypoint: 'bash'
@@ -304,7 +357,7 @@ steps:
     -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
     -auto-approve -no-color
   allowFailure: true
-  waitFor: ['test rag']
+  waitFor: ['run shipshape']
 
 - id: 'cleanup gke cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -386,9 +439,10 @@ substitutions:
   _REGION: us-east4
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
-  _BUILD_ID: ${BUILD_ID:0:8}
-logsBucket: gs://ai-on-gke-build-logs
+  _BUILD_ID: "11122233"
+  _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:1f80ae746014330a3a83b5ee2fabeacf90fa488c4f0922072b628b95144f25c8
 options:
+  logging: CLOUD_LOGGING_ONLY
   substitutionOption: "ALLOW_LOOSE"
   machineType: "E2_HIGHCPU_8"
 timeout: 5400s

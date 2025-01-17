@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "hub",
+      "image": "us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class:1710974014"
+    },
+    "message": "container \"hub\" in Deployment \"hub\" has an image \"us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class:1710974014\" built from non-distroless base image \"Debian GNU/Linux 11 (bullseye)\". See: go/gke-distroless for more details",
+    "policyName": "distroless",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

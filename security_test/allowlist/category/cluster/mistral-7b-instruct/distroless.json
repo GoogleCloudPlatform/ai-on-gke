@@ -1,0 +1,34 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "download-model",
+      "image": "google/cloud-sdk:473.0.0-alpine"
+    },
+    "message": "image \"google/cloud-sdk:473.0.0-alpine\" could not be found on gcr.io",
+    "policyName": "distroless",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "mistral-7b-instruct",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "mistral-7b-instruct",
+      "image": "ghcr.io/huggingface/text-generation-inference:1.4.3"
+    },
+    "message": "image \"ghcr.io/huggingface/text-generation-inference:1.4.3\" could not be found on gcr.io",
+    "policyName": "distroless",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "mistral-7b-instruct",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

@@ -1,0 +1,200 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"pods.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"pods.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "persistentvolumeclaims",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"persistentvolumeclaims.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "persistentvolumeclaims",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"persistentvolumeclaims.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "secrets",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"secrets.\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "secrets",
+      "verbs": [
+        "watch"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"secrets.\" with verb \"watch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "secrets",
+      "verbs": [
+        "list"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"secrets.\" with verb \"list\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "secrets",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"secrets.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "secrets",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"secrets.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"services.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "Role \"hub\" has rbac rule for resource \"services.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 
