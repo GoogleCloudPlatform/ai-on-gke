@@ -444,7 +444,6 @@ substitutions:
   _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:1f80ae746014330a3a83b5ee2fabeacf90fa488c4f0922072b628b95144f25c8
 logsBucket: gs://ai-on-gke-build-logs
 options:
-  logging: CLOUD_LOGGING_ONLY
   substitutionOption: "ALLOW_LOOSE"
   machineType: "E2_HIGHCPU_8"
 timeout: 5400s
