@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: finetune-job-mlflow-11
+  name: finetune-job-mlflow
   namespace: default
   labels:
     app: gemma-finetune
