@@ -1,16 +1,3 @@
-# output "grafana_uri" {
-#   value = module.kuberay-monitoring[0].grafana_uri
-# }
-
-# output "ray_cluster_uri" {
-#   value = module.kuberay-cluster[0].ray_cluster_uri != "" ? "http://${module.kuberay-cluster[0].ray_cluster_uri}" : local.ray_cluster_default_uri
-# }
-
-output "kubernetes_namespace" {
-  value       = local.kubernetes_namespace
-  description = "Kubernetes namespace"
-}
-
 output "gke_cluster_name" {
   value       = local.cluster_name
   description = "GKE cluster name"
@@ -26,7 +13,7 @@ output "project_id" {
   description = "GKE cluster location"
 }
 
-output "model_bucket_name" {
+output "bucket_name" {
   value = var.gcs_bucket
   description = "Name of the GCS bucket that will store the model files"
 }
@@ -39,8 +26,13 @@ output "cloudsql_ip" {
   value = google_sql_database_instance.flyte_storage.private_ip_address
   description = "Ip of cloudsql"
   }
-output "password" {
+output "cloudsql_user"{
+  value = var.cloudsql_user
+  description = "Username for the cloudsql database"
+}
+output "cloudsql_password" {
   sensitive = true
   value = random_password.db_password.result
+  description = "Password for the cloudsql database"
   
 }

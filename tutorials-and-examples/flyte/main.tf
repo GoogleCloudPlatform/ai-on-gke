@@ -177,7 +177,7 @@ resource "google_sql_database" "flyte_storage" {
 }
 
 resource "google_sql_user" "users" {
-  name     = "flytepg"
+  name     = var.cloudsql_user
   instance = google_sql_database_instance.flyte_storage.name
   password = random_password.db_password.result
 }

@@ -26,3 +26,8 @@ output "instance" {
   description = "Cloud SQL Instance name"
   value       = module.cloudsql.instance_name
 }
+
+output "ip" {
+  value = module.cloudsql.instance_ip_address
+
+}

@@ -6,9 +6,9 @@ configuration:
     username: flytepg
     # password Password to connect to database with
     # If set, a Secret will be created with this value and mounted to Flyte pod
-    password: "{m8FTw=[k=E<kGG%"
+    password: ")F-cssyw#6ieHU&%"
     # host Hostname of database instance
-    host: 10.109.0.3
+    host: 10.59.0.3
     # dbname Name of database to use
     dbname: flytepg
   # storage Specify configuration for object store
@@ -69,13 +69,13 @@ configuration:
       customData:
       - production:
         - defaultIamServiceAccount:
-            value: tf-gke-flyte-test-ck38@akvelon-gke-aieco.iam.gserviceaccount.com
+            value: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
       - staging:
         - defaultIamServiceAccount:
-            value: tf-gke-flyte-test-ck38@akvelon-gke-aieco.iam.gserviceaccount.com
+            value: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
       - development:
         - defaultIamServiceAccount:
-            value: tf-gke-flyte-test-ck38@akvelon-gke-aieco.iam.gserviceaccount.com
+            value: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
     plugins:
       k8s:
         inject-finalizer: true
@@ -131,7 +131,7 @@ serviceAccount:
   create: true
   #Automates annotation of default flyte-binary KSA. Make sure to bind the KSA to the GSA: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to
   annotations:
-    iam.gke.io/gcp-service-account: tf-gke-flyte-test-ck38@akvelon-gke-aieco.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
 # rbac Configure Kubernetes RBAC for Flyte
 rbac:
   # create Create ClusterRole and ClusterRoleBinding resources

@@ -191,3 +191,8 @@ variable "db_tier" {
   description = "Tier for the database instance"
   default = "db-f1-micro"
 }
+variable "cloudsql_user"{
+  type = string
+  description = "Username for the cloudsql database"
+  default = "flytepg"
+}
