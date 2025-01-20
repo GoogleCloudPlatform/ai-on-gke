@@ -49,9 +49,13 @@ This tutorial assumes you have the following:
 
 - A Google Cloud Platform account and project
 - The Google Cloud SDK (gcloud) installed and configured
+- The Kubernetes command-line tool (kubectl) installed and configured
 - A language model deployed on an OpenAI-compatible API
+- A Google Kubernetes Engine (GKE) to deploy the application
+- Optional: Docker installed on your local machine (if you want to build and run the application locally)
+- Optional: Terraform installed on your local machine (if you want to use the automated deployment)
 
-If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy your model on Google Kubernetes Engine (GKE).
+If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy your model on Google Kubernetes Engine (GKE). In that case feel free to use the same GK cluster to deploy the chatbot application.
 
 ## Optional: Build and Run the Application Locally
 
@@ -223,8 +227,12 @@ Go to the `terraform` directory, make a copy of `terraform.tfvars.example` and a
 
 - `project_id` - your GCP project ID
 - `model_base_url` and `model_name` - where to find the model
+- `db_network` - the network from which the Cloud SQL instance will be accessible; it should be the same network as the GKE cluster
+- `k8s_namespace` - existing namespace in your GKE cluster where the application will be deployed
 - `k8s_app_image` - the name and tag of the Docker image built previously
 - `support_email`, `oauth_client_id`, `oauth_client_secret` and `members_allowlist` - for IAP configuration
+
+Make sure you have configured `google` and `kubernetes` providers either by setting the environment variables or using the `provider` blocks in the configuration.
 
 Initialize and apply the Terraform configuration to set up the necessary infrastructure.
 

@@ -6,6 +6,15 @@ model_base_url            = "http://your-model-base-url/openai/v1/"
 // Name of the model to use
 model_name                = "your-model-name"
 
+// Name of the network that the Cloud SQL instance
+// should be accessible from; usually it is
+// the network that your Kubernetes cluster is in
+db_network                = "your-network"
+
+// Name of the namespace in you Kubernetes cluster
+// where the application will be deployed
+// (must already exist)
+k8s_namespace             = "your-namespace"
 // Docker image for the Kubernetes application
 k8s_app_image             = "your-app-image"
 

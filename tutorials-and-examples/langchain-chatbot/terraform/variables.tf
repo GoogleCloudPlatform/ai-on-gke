@@ -26,7 +26,6 @@ variable "app_name" {
 variable "k8s_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "langchain-chatbot"
 }
 
 variable "k8s_app_image" {
@@ -95,19 +94,16 @@ variable "domain" {
 variable "oauth_client_id" {
   type        = string
   description = "Client ID used for enabling IAP"
-  default     = ""
 }
 
 variable "oauth_client_secret" {
   type        = string
   description = "Client secret used for enabling IAP"
-  default     = ""
   sensitive   = false
 }
 
 variable "members_allowlist" {
   type    = list(string)
-  default = []
 }
 
 variable "db_instance_name" {
@@ -137,7 +133,6 @@ variable "db_tier" {
 variable "db_network" {
   type        = string
   description = "VPC network for the Cloud SQL instance to connect to"
-  default     = "default"
 }
 
 variable "model_base_url" {
