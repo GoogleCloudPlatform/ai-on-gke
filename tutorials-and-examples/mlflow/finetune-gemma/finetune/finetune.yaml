@@ -15,7 +15,7 @@ spec:
       terminationGracePeriodSeconds: 6000
       containers:
       - name: finetuner
-        image: us-docker.pkg.dev/akvelon-gke-aieco/gemma/finetune-gemma-mlflow:1.0.0
+        image: us-docker.pkg.dev/<PROJECT_ID>/gemma/finetune-gemma-mlflow:1.0.0
         resources:
           limits:
             nvidia.com/gpu: "1"
