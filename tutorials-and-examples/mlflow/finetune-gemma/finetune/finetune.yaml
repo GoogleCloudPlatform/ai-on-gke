@@ -30,14 +30,18 @@ spec:
           value: "google/gemma-2-9b"
         - name: NEW_MODEL
           value: "gemma-2-9b-sql-finetuned-mlflow"
+        - name: NUM_TRAIN_EPOCHS
+          value: "4"
+        - name: WEIGHT_DECAY
+          value: "1e-4"
         - name: LORA_R
-          value: "8"
+          value: "32"
         - name: LORA_ALPHA
-          value: "16"
+          value: "64"
         - name: TRAIN_BATCH_SIZE
-          value: "1"
+          value: "4"
         - name: EVAL_BATCH_SIZE
-          value: "2"
+          value: "4"
         - name: GRADIENT_ACCUMULATION_STEPS
           value: "2"
         - name: DATASET_LIMIT
