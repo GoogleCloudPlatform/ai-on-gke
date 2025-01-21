@@ -29,7 +29,7 @@ experimental:
 # Fields below describe each replica.
 resources:
   ports: 8081
-  accelerators: A100:1
+  accelerators: L4:1
   labels:
     kueue.x-k8s.io/queue-name: dws-local-queue
 
