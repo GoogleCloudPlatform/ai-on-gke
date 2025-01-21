@@ -174,5 +174,5 @@ helm delete flyte-backend
 ```
 Finally destroy the provisioned infrastructure.
 ```bash
-terraform destroy -var-file=your_environment.tfvar
+terraform destroy -var-file=your_environment.tfvars
 ```

@@ -3,20 +3,20 @@ configuration:
   # database Specify configuration for Flyte's database connection
   database:
     # username Name for user to connect to database as
-    username: flytepg
+    username: <CLOUDSQL_USERNAME>
     # password Password to connect to database with
     # If set, a Secret will be created with this value and mounted to Flyte pod
-    password: ")F-cssyw#6ieHU&%"
+    password: <CLOUDSQL_PASSWORD>
     # host Hostname of database instance
-    host: 10.59.0.3
+    host: 1<CLOUDSQL_IP>
     # dbname Name of database to use
-    dbname: flytepg
+    dbname: <CLOUDSQL_DBNAME>
   # storage Specify configuration for object store
   storage:
     # metadataContainer Bucket to store Flyte metadata
-    metadataContainer: "vdjerek-flyte-bucket"
+    metadataContainer: <BUCKET_NAME>
     # userDataContainer Bucket to store Flyte user data
-    userDataContainer: "vdjerek-flyte-bucket"
+    userDataContainer: <CLOUDSQL_USERNAME>
     # provider Object store provider (Supported values: s3, gcs)
     provider: gcs
     # providerConfig Additional object store provider-specific configuration
@@ -24,7 +24,7 @@ configuration:
       # gcs Provider configuration for GCS object store
       gcs:
         # project Google Cloud project in which bucket resides
-        project: "akvelon-gke-aieco"
+        project: <PROJECT_NAME>
   # logging Specify configuration for logs emitted by Flyte
   logging:
     # level Set the log level
@@ -69,13 +69,13 @@ configuration:
       customData:
       - production:
         - defaultIamServiceAccount:
-            value: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
+            value: 
       - staging:
         - defaultIamServiceAccount:
-            value: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
+            value: <FLYTE_IAM_SA_EMAIL>
       - development:
         - defaultIamServiceAccount:
-            value: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
+            value: <FLYTE_IAM_SA_EMAIL>
     plugins:
       k8s:
         inject-finalizer: true
@@ -131,7 +131,7 @@ serviceAccount:
   create: true
   #Automates annotation of default flyte-binary KSA. Make sure to bind the KSA to the GSA: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to
   annotations:
-    iam.gke.io/gcp-service-account: tf-gke-flyte-test-k3af@akvelon-gke-aieco.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: <FLYTE_IAM_SA_EMAIL>
 # rbac Configure Kubernetes RBAC for Flyte
 rbac:
   # create Create ClusterRole and ClusterRoleBinding resources
