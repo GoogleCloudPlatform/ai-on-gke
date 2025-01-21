@@ -167,6 +167,114 @@ Forwarding from [::1]:8088 -> 8088
 3. Access http://localhost:8088/console
 ![alt text](./img/flyte_dashboard.png)
 
+## Publish service to the internet
+
+First, create a static IP address for the Ingress:
+
+```shell
+gcloud compute addresses create flyte --global --ip-version=IPV4
+```
+
+Then, create managed certificate for the domain you want to use:
+
+```yaml
+# managed-certificate.yaml
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: flyte-http
+spec:
+  domains:
+    - <your-domain>
+```
+
+```shell
+kubectl apply -f managed-certificate.yaml
+```
+
+If you don't have a domain, but you want to test this setup, you can leverage the `sslip.io` service. In that case the domain would be `<your-static-ip>.sslip.io`. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
+
+In the final step, let's update the Helm values to configure HTTP Ingress to use the static IP address and managed certificate created. Edit the `values.yaml` file and add the following:
+
+```yaml
+ingress:
+  httpAnnotations:
+    kubernetes.io/ingress.global-static-ip-name: flyte
+    networking.gke.io/managed-certificates: flyte-http
+    kubernetes.io/ingress.class: "gce"
+```
+
+Then, update the Helm release:
+
+```shell
+helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
+```
+
+After some time the certificate should be provisioned and the application should be accessible via the domain you specified.
+
+You can check certificate status by running:
+
+```shell
+kubectl get managedcertificate flyte-http
+```
+
+Note that the certificate provisioning may take some time. Also it's up to you to configure the DNS records to point to the static IP allocated for the Ingress in the first step of the section.
+
+On this step you should be able to access the Flyte dashboard via the domain you specified. But the application is not secured yet. Let's do that next.
+
+## Enable IAP and create OAuth client
+
+Before securing the application with Identity Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
+
+Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials). Save the client ID and secret for later use. Also, add the redirect URI to the OAuth 2.0 client as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect`.
+
+## Configure IAP
+
+Create secret for IAP using the OAuth client ID and secret you obtained in the previous step:
+
+```shell
+kubectl create secret generic flyte-http-oauth \
+  --from-literal=client_id=<your-oauth-client-id> \
+  --from-literal=client_secret=<your-oauth-client-secret>
+```
+
+Then, create a BackendConfig resource that will enable IAP for the application:
+
+```yaml
+# backendconfig.yaml
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: flyte-http
+spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: flyte-http-oauth
+```
+
+```shell
+kubectl apply -f backendconfig.yaml
+```
+
+Next, update Helm Chart values for the Service to use the BackendConfig by adding the following to the `values.yaml` file:
+
+```yaml
+service:
+  httpAnnotations:
+    beta.cloud.google.com/backend-config: flyte-http
+```
+
+Then, update the Helm release again:
+
+```shell
+helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
+```
+
+Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and add enable IAP for the application. Doint that, don't forget to add some principals (users, domains, etc.) to the allowlist.
+
 ## Cleanup
 Remove the flyte helm installation
 ```
