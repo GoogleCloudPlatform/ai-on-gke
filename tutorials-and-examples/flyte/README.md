@@ -173,6 +173,8 @@ First, create a static IP address for the Ingress:
 
 ```shell
 gcloud compute addresses create flyte --global --ip-version=IPV4
+gcloud compute addresses describe flyte --g
+lobal
 ```
 
 Then, create managed certificate for the domain you want to use:
@@ -199,6 +201,7 @@ In the final step, let's update the Helm values to configure HTTP Ingress to use
 
 ```yaml
 ingress:
+  create: true
   httpAnnotations:
     kubernetes.io/ingress.global-static-ip-name: flyte
     networking.gke.io/managed-certificates: flyte-http
@@ -223,15 +226,11 @@ Note that the certificate provisioning may take some time. Also it's up to you t
 
 On this step you should be able to access the Flyte dashboard via the domain you specified. But the application is not secured yet. Let's do that next.
 
-## Enable IAP and create OAuth client
+## Configure OAuth Consent Screen and create OAuth 2.0 client
 
 Before securing the application with Identity Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
 
-Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials). Save the client ID and secret for later use. Also, add the redirect URI to the OAuth 2.0 client as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect`.
-
-## Configure IAP
-
-Create secret for IAP using the OAuth client ID and secret you obtained in the previous step:
+Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials) and selecting "Create OAuth client ID". Use the "Web application" type and proceed with the creation. Use Client ID and secret to create a Secret in the Kubernetes cluster:
 
 ```shell
 kubectl create secret generic flyte-http-oauth \
@@ -239,7 +238,11 @@ kubectl create secret generic flyte-http-oauth \
   --from-literal=client_secret=<your-oauth-client-secret>
 ```
 
-Then, create a BackendConfig resource that will enable IAP for the application:
+Then go back to the [Credentials page](https://console.cloud.google.com/apis/credentials), click on the OAuth 2.0 client ID you created, and add the redirect URI as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect` (replace `<CLIENT_ID>` with the actual client ID).
+
+## Enable IAP for the application
+
+Create a BackendConfig resource that will enable IAP for the application:
 
 ```yaml
 # backendconfig.yaml
@@ -273,7 +276,9 @@ Then, update the Helm release again:
 helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
 ```
 
-Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and add enable IAP for the application. Doint that, don't forget to add some principals (users, domains, etc.) to the allowlist.
+Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and enable IAP for the resource (it might have a name like `default/flyte-backend-flyte-binary-http`). After some time the application should be accessible only to authenticated users.  To grant access to the application, click "Add Principal" on the right panel and select the IAP-secured Web App User role.
+
+Then wait for the changes to propagate and try to access the application. You should be redirected to the Google login page and after successful authentication you should be able to access the Flyte dashboard again.
 
 ## Cleanup
 Remove the flyte helm installation
