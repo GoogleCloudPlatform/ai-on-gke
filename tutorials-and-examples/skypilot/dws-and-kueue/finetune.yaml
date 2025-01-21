@@ -1,11 +1,10 @@
-# train.yaml
-
 name: gemma-finetune
 
 envs:
   HF_TOKEN: null
   MODEL_NAME: gemma-2b-sql-finetuned
 
+# Configuration needed for GCSFuse to mount bucket for model storage and for Kueue to configure max time in queue
 experimental:
   config_overrides:
     kubernetes:

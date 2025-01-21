@@ -1,5 +1,6 @@
 name: train_dws
 
+# Configuration needed for Kueue to configure max time in queue
 experimental:
   config_overrides:
     kubernetes:

@@ -1,8 +1,8 @@
-# service.yaml
 service:
   readiness_probe: /health
   replicas: 1
 
+# Configuration needed for GCSFuse to mount bucket for model storage and for Kueue to configure max time in queue
 experimental:
   config_overrides:
     kubernetes:
