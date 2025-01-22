@@ -18,7 +18,7 @@ resource "random_password" "pwd" {
 }
 
 module "cloudsql" {
-  source              = "terraform-google-modules/sql-db/google//modules/postgresql"
+  source              = "terraform-google-modules/sql-db/google//modules/postgresql?ref=v19.0.0"
   project_id          = var.project_id
   version             = "20.0.0"
   name                = var.instance_name
