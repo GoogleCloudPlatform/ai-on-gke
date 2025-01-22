@@ -241,7 +241,7 @@ kubectl apply -f managed-certificate.yaml
 
 If you don't have a domain, but you want to test this setup, you can leverage the `sslip.io` service. In that case, the domain would be `<your-static-ip>.sslip.io`. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
 
-In the final step, let's update the Helm values to configure HTTP Ingress to use the static IP address and managed certificate created. Edit the `values.yaml` file and add the following:
+In the final step, let's update the Helm values to enable the Ingress and use the IP address and certificate we created. Edit the `values.yaml` file and add the following:
 
 ```yaml
 ingress:
@@ -250,6 +250,8 @@ ingress:
     kubernetes.io/ingress.global-static-ip-name: flyte
     networking.gke.io/managed-certificates: flyte-http
     kubernetes.io/ingress.class: "gce"
+  grpcAnnotations:
+    kubernetes.io/ingress.class: "gce-internal"
 ```
 
 Then, update the Helm release:
@@ -268,7 +270,7 @@ kubectl get managedcertificate flyte-http
 
 Note that the certificate provisioning may take some time. Also, it's up to you to configure the DNS records to point to the static IP allocated for the Ingress in the first step of this section.
 
-At this step, you should be able to access the Flyte dashboard via the domain you specified. The only problem is that the application is not secured. Flyte supports OAuth2 and OpenId Connect authentication, and you can follow the [official guide](https://docs.flyte.org/en/latest/deployment/configuration/auth_setup.html) to configure it. Otherwise, when authentication is not needed, you might consider using [Identity-Aware Proxy](https://cloud.google.com/iap/docs) to just limit access to the dashboard. The next section will guide you through this process.
+At this step, you should be able to access the Flyte dashboard via the domain you specified. The only thing left is to secure the application. Flyte supports OAuth2 and OpenId Connect authentication, there is a guide on how to configure it [here](https://docs.flyte.org/en/latest/deployment/configuration/auth_setup.html). In case you don't need authentication, consider using [Identity-Aware Proxy](https://cloud.google.com/iap/docs) to limit access to the dashboard. The next section will guide you through this process.
 
 ## Limit access to the Flyte dashboard using Identity-Aware Proxy
 
