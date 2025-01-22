@@ -76,9 +76,12 @@ module "a3_megagpu_pool" {
   internal_ghpc_module_id   = "a3_megagpu_pool"
   labels                    = var.labels
   machine_type              = "a3-megagpu-8g"
-  # placement_policy = {
-  #   type = "COMPACT"
-  # }
+  placement_policy = var.placement_policy_name == "" ? {
+    policy_type = ""
+  } : {
+    policy_type = "COMPACT"
+    policy_name = var.placement_policy_name
+  }
   project_id        = var.project_id
   reservation_affinity = (var.reservation != "" ? {
       consume_reservation_type = "SPECIFIC_RESERVATION"
@@ -91,6 +94,7 @@ module "a3_megagpu_pool" {
       specific_reservations    = []
     }
   )
+  local_ssd_count_ephemeral_storage = 16
   static_node_count = var.node_count
   taints            = []
   zones             = [var.zone]
@@ -131,7 +135,7 @@ module "nemo" {
   source     = "./modules/nemo"
   cluster_id = module.gke_cluster.cluster_id
   checkpoint_bucket = var.checkpoint_bucket
-  gpus = tonumber(var.gpus)
+  gpus = 16 # TODO: populate this based on recipe type
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
   providers = {
     helm = helm

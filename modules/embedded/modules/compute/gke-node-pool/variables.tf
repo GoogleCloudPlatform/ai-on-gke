@@ -198,16 +198,15 @@ variable "placement_policy" {
   EOT
 
   type = object({
-    type = string
-    name = optional(string)
+    policy_type = string
+    policy_name = optional(string)
   })
   default = {
-    type = null
-    name = null
+    policy_type = ""
   }
   validation {
-    condition     = var.placement_policy.type == null || try(contains(["COMPACT"], var.placement_policy.type), false)
-    error_message = "`COMPACT` is the only supported value for `placement_policy.type`."
+    condition     = var.placement_policy.policy_type == "" || try(contains(["COMPACT"], var.placement_policy.policy_type), false)
+    error_message = "`COMPACT` is the only supported value for `placement_policy.policy_type`."
   }
 }
 

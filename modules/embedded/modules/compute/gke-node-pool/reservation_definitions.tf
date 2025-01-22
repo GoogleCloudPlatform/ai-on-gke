@@ -48,18 +48,10 @@ locals {
   reservation_vm_properties = [for r in local.verified_specific_reservations : {
     "machine_type" : try(r.specific_reservation[0].instance_properties[0].machine_type, "")
     "guest_accelerators" : { for acc in try(r.specific_reservation[0].instance_properties[0].guest_accelerators, []) : acc.accelerator_type => acc.accelerator_count },
-    "local_ssds" : {
-      "NVME" : length([for d in try(r.specific_reservation[0].instance_properties[0].local_ssds, []) : d if d.interface == "NVME"])
-      "SCSI" : length([for d in try(r.specific_reservation[0].instance_properties[0].local_ssds, []) : d if d.interface == "SCSI"])
-    }
   }]
   nodepool_vm_properties = {
     "machine_type" : var.machine_type
     "guest_accelerators" : { for acc in try(local.guest_accelerator, []) : (acc.count > 0 ? coalesce(acc.type, try(local.generated_guest_accelerator[0].type, "")) : "") => acc.count if acc.count > 0 },
-    "local_ssds" : {
-      "NVME" : coalesce(local.local_ssd_config.local_ssd_count_nvme_block, 0),
-      "SCSI" : coalesce(local.local_ssd_config.local_ssd_count_ephemeral_storage, 0)
-    }
   }
 
   # Compare two maps by counting the keys that mismatch.

@@ -50,24 +50,15 @@ spec:
           name: node_count
           title: Node Count
           section: required_config
-        gpus:
-          name: gpus
-          title: GPUs
-          section: required_config
-          invisible: true
         recipe:
           name: recipe
           title:  Launchpad Recipe
           section: required_config
           enumValueLabels:
-            - label: llama-3-70B-nemo/a3-megagpu-8g*16
-              value: llama3-70b/16
-            - label: llama-3-70B-nemo/a3-megagpu-8g*32
-              value: llama3-70b/32"
-            - label: gpt3-175b-nemo/a3-megagpu-8g*32
-              value: gpt3-175b/32"
-            - label: mixtral-8x7b/a3-megagpu-8g*32
-              value: mixtral-8x7b/32
+            - label: Llama-3.1-7B pretraining
+              value: llama3.1-7b
+            - label: Llama-3.1-70B pretraining
+              value: llama3.1-70b
         reservation:
           name: reservation
           title: Reservation
@@ -75,6 +66,10 @@ spec:
         reservation_block:
           name: reservation_block
           title: Reservation Block
+          section: required_config
+        placement_policy_name:
+          name: placement_policy_name
+          title: Placement Policy
           section: required_config
         acknowledge:
           name: acknowledge
