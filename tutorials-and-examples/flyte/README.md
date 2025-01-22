@@ -285,6 +285,15 @@ Remove the flyte helm installation
 ```
 helm delete flyte-backend
 ```
+
+Delete the static IP address
+
+```bash
+gcloud compute addresses delete flyte --global
+```
+
+Go to the [Credentials page](https://console.cloud.google.com/apis/credentials) and delete the OAuth 2.0 client.
+
 Finally destroy the provisioned infrastructure.
 ```bash
 terraform destroy -var-file=your_environment.tfvars
