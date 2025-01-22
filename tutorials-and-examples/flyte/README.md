@@ -268,11 +268,11 @@ kubectl get managedcertificate flyte-http
 
 Note that the certificate provisioning may take some time. Also, it's up to you to configure the DNS records to point to the static IP allocated for the Ingress in the first step of this section.
 
-At this step, you should be able to access the Flyte dashboard via the domain you specified. But the application is not secured yet. Let's do that next.
+At this step, you should be able to access the Flyte dashboard via the domain you specified. The only problem is that the application is not secured. Flyte supports OAuth2 and OpenId Connect authentication, and you can follow the [official guide](https://docs.flyte.org/en/latest/deployment/configuration/auth_setup.html) to configure it. Otherwise, when authentication is not needed, you might consider using [Identity-Aware Proxy](https://cloud.google.com/iap/docs) to just limit access to the dashboard. The next section will guide you through this process.
 
-## Configure OAuth Consent Screen and create OAuth 2.0 client
+## Limit access to the Flyte dashboard using Identity-Aware Proxy
 
-Before securing the application with Identity-Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
+Start by ensuring that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
 
 Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials) and selecting "Create OAuth client ID". Use the "Web application" type and proceed with the creation. Use the Client ID and secret to create a Secret in the Kubernetes cluster:
 
@@ -284,9 +284,7 @@ kubectl create secret generic flyte-http-oauth \
 
 Then go back to the [Credentials page](https://console.cloud.google.com/apis/credentials), click on the OAuth 2.0 client ID you created, and add the redirect URI as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect` (replace `<CLIENT_ID>` with the actual client ID).
 
-## Enable IAP for the application
-
-Create a BackendConfig resource that will enable IAP for the application:
+Create a BackendConfig resource that will enable IAP for the HTTP service:
 
 ```yaml
 # backendconfig.yaml
@@ -306,7 +304,7 @@ spec:
 kubectl apply -f backendconfig.yaml
 ```
 
-Next, update the Helm chart values for the Service to use the BackendConfig by adding the following to the `values.yaml` file:
+Next, update the Helm chart values for the HTTP Service to use the BackendConfig by adding the following to the `values.yaml` file:
 
 ```yaml
 service:
@@ -320,9 +318,9 @@ Then, update the Helm release again:
 helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
 ```
 
-Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and enable IAP for the resource (it might have a name like `default/flyte-backend-flyte-binary-http`). After some time, the application should be accessible only to authenticated users. To grant access to the application, click "Add Principal" on the right panel and select the IAP-secured Web App User role.
+Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and enable IAP for the corresponding resource (it might have a name like `default/flyte-backend-flyte-binary-http`). After some time, the dashboard should be accessible only to authenticated users. To grant access to the dashboard, click "Add Principal" on the right panel and select the IAP-secured Web App User role.
 
-Then wait for the changes to propagate and try to access the application. You should be redirected to the Google login page, and after successful authentication, you should be able to access the Flyte dashboard again.
+When the changes propagate, try to access the dashboard again. You should be redirected to the Google login page, and after successful authentication, you should be able to access the Flyte dashboard again.
 
 ## Cleanup
 
