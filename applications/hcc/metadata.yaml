@@ -35,14 +35,10 @@ spec:
       - name: checkpoint_bucket
         varType: string
         required: true
-      - name: gpus
-        varType: number
-        required: true
-        defaultValue: 64
       - name: node_count
         varType: number
         required: true
-        defaultValue: 8
+        defaultValue: 2
       - name: recipe
         varType: string
         required: true
@@ -51,6 +47,9 @@ spec:
         varType: string
         defaultValue: ""
       - name: reservation_block
+        varType: string
+        defaultValue: ""
+      - name: placement_policy_name
         varType: string
         defaultValue: ""
       - name: additional_labels

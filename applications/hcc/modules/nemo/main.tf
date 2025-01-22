@@ -17,25 +17,6 @@ data "google_container_cluster" "gke_cluster" {
   location = local.cluster_location
 }
 
-# provider "google" {
-#   project = local.project_id
-# }
-# 
-# provider "helm" {
-#   kubernetes {
-#     host                   = "https://${data.google_container_cluster.gke_cluster.endpoint}"
-#     token                  = data.google_client_config.default.access_token
-#     cluster_ca_certificate = base64decode(data.google_container_cluster.gke_cluster.master_auth[0].cluster_ca_certificate)
-#   }
-# }
-
-# provider "kubernetes" {
-#     host                   = "https://${data.google_container_cluster.gke_cluster.endpoint}"
-#     token                  = data.google_client_config.default.access_token
-#     cluster_ca_certificate = base64decode(data.google_container_cluster.gke_cluster.master_auth[0].cluster_ca_certificate)
-# }
-
-
 resource "helm_release" "nemo" {
   name      = "nemo"
   provider  = helm
@@ -43,8 +24,6 @@ resource "helm_release" "nemo" {
   chart     = "${path.module}/helm-charts/nemo-training/"
   namespace = "default"
   reset_values = true
-# Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
-  timeout    = 1200
   values = [
     "${file("${path.module}/values.yaml")}"
   ]
@@ -53,13 +32,13 @@ resource "helm_release" "nemo" {
     name  = "nemo_config"
     value = "${file("${path.module}/llama3-70b-fp8.yaml")}"
   }
-  
+
   set {
     name = "workload.image"
     # TODO: this needs to be a public image
-    value = "us-west1-docker.pkg.dev/supercomputer-testing/kevinmcw-repo/nemo_workload:24.07"
+    value = "us-central1-docker.pkg.dev/deeplearning-images/reproducibility/pytorch-gpu-nemo@sha256:7a84264e71f82f225be639dd20fcf9104c80936c0f4f38f94b88dfb60303c70e"
   }
-  
+
   set {
     name = "workload.gcsBucketForDataCataPath"
     value = var.checkpoint_bucket

@@ -23,8 +23,3 @@
 #   description = "Generated output from module 'a3_megagpu_pool'"
 #   value       = module.a3_megagpu_pool.instructions
 # }
-
-output "debug_ca" {
-  description = "Generated output from module 'a3_megagpu_pool'"
-  value       = module.nemo.ca_debug
-}

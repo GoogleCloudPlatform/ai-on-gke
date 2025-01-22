@@ -62,12 +62,18 @@ variable "checkpoint_bucket" {
   type        = string
 }
 
-variable "gpus" {
-  description = "Toolkit deployment variable: gpus"
-  type        = number
-}
-
 variable "node_count" {
   description = "Toolkit deployment variable: node_count"
   type        = number
 }
+
+variable "placement_policy_name" {
+  description = "Toolkit deployment variable: placement_policy_name"
+  type        = string
+}
+
+variable "recipe" {
+  description = "Toolkit deployment variable: recipe"
+  type        = string
+}
+
