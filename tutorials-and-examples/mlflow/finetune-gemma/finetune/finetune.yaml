@@ -12,7 +12,7 @@ spec:
       annotations:
         kubectl.kubernetes.io/default-container: finetuner
     spec:
-      terminationGracePeriodSeconds: 6000
+      serviceAccount: default
       containers:
       - name: finetuner
         image: us-docker.pkg.dev/<PROJECT_ID>/gemma/finetune-gemma-mlflow:1.0.0

@@ -6,9 +6,4 @@ tracking:
 minio:
   enabled: false
 externalGCS:
-  bucket: "<BUCKET_NAME>"
-  googleCloudProject: "<PROJECT_ID>"
-  useCredentialsInSecret: true
-  existingSecret: "gcs-credentials"
-  existingSecretKey: "gcloud-application-credentials.json"
-  serveArtifacts: true
+  bucket: "dima_mlflow_artifact_storage"
