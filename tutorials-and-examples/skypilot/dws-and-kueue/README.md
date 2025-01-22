@@ -82,7 +82,7 @@ Server Version: v1.30.6-gke.1596000
 ```
 If not you can change the version in terraform with the  `kubectl_version` variable
 ## Install and configure Kueue
-1. Install Kueue from the official manifest. Note that --server-side switch . Without it the client cannot render the CRDs because of annotation size limitations.
+1. Install Kueue from the official manifest. Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations.
 ```bash
 VERSION=v0.7.0
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
@@ -182,7 +182,7 @@ Note: The following clouds were disabled because they were not included in allow
   ✔ Kubernetes
 ```
 ## Configure and Run SkyPilot Job
-For SkyPilot to create pods with the necessary pod config we need to add the following config to train_dws.yaml.
+For SkyPilot to create pods with the necessary pod config we need to add the following config to `train_dws.yaml`.
 ```yaml
 experimental:
   config_overrides:
@@ -311,7 +311,7 @@ kubectl annotate serviceaccount skypilot-service-account --namespace default iam
 ```
 terraform output model_bucket_name
 ```
-5. Update gcsfuse configuration in finetune.yaml and sever.yaml
+5. Update gcsfuse configuration in `finetune.yaml` and `sever.yaml`
 Replace the [BUCKET_NAME](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/finetune.yaml#L27)
 
 ### Fine-tune the Model
@@ -337,7 +337,7 @@ Loading checkpoint shards: 100%|██████████| 2/2 [00:07<00:00
 ```
 
 ### Serve the Model
-Next, run the finetuned model with the serve.yaml and serve cli
+Next, run the finetuned model with the `serve.yaml` and serve cli
 ```
 sky serve up serve.yaml
 ```
