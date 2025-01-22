@@ -2,22 +2,22 @@
 
 ## Overview
 
-This guide will show how to install  Flyte on GKE using Helm. Deployment will use Google Cloud Storage bucket and Cloudsql Postgresql database.
+This guide will show how to install Flyte on GKE using Helm. Deployment will use Google Cloud Storage bucket and Cloud SQL PostgreSQL database.
 
 ## Before you begin
 
-1. Ensure you have a gcp project with billing enabled and enabled the GKE API.
+1. Ensure you have a GCP project with billing enabled and have enabled the GKE API.
    [How to enable billing](https://cloud.google.com/billing/v1/getting-started)
-   And for the GKE API
+   And for the GKE API:
 
    ```bash
    gcloud services enable container.googleapis.com
    ```
 
-2. Ensure you have the following tools installed on your workstation
+2. Ensure you have the following tools installed on your workstation:
 
    * [gcloud CLI](https://cloud.google.com/sdk/docs/install)
-   * [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
+   * [kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
    * [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
 ## Setting up your GKE cluster with Terraform
@@ -27,7 +27,7 @@ We’ll use Terraform to provision:
 * A GKE cluster ([Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) or [Standard](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-regional-cluster))
 * GPU node pools (only for Standard clusters)
 
-Create your environment configuration(.tfvar) file and edit based on  example_environment.tfvars.
+Create your environment configuration (.tfvars) file and edit based on example_environment.tfvars.
 
 ```hcl
 project_id = "flyte-project"
@@ -35,16 +35,16 @@ cluster_name = "flyte-tutorial"
 autopilot_cluster = true  # Set to false for Standard cluster
 ```
 
-1. Initialize the modules
+1. Initialize the modules:
 
    ```bash
    terraform init
    ```
 
-2. Apply while referencing the `.tfvar` file we created
+2. Apply while referencing the `.tfvars` file we created:
 
    ```bash
-   terraform apply -var-file=your_environment.tfvar
+   terraform apply -var-file=your_environment.tfvars
    ```
 
    And you should see your resources created:
@@ -60,24 +60,24 @@ autopilot_cluster = true  # Set to false for Standard cluster
    gke_cluster_location = "us-central1"
    gke_cluster_name = "flyte-test"
    bucket_name = "flyte-bucket"
-   project_id = "flyte-bucket"
+   project_id = "flyte-project"
    service_account = "tf-gke-flyte-test-k3af@flyte-project.iam.gserviceaccount.com"
    ```
 
-3. Get kubernetes access.
+3. Get Kubernetes access.
    Fetch the kubeconfig file by running:
 
    ```bash
    gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) --region $(terraform output -raw gke_cluster_location) --project $(terraform output -raw project_id)
    ```
 
-4. Get the deployed service account name by running
+4. Get the deployed service account name by running:
 
    ```bash
    terraform output service_account
    ```
 
-5. Use the service account name to create an IAM policy binding to enable workload identity.
+5. Use the service account name to create an IAM policy binding to enable workload identity:
 
    ```bash
    gcloud iam service-accounts add-iam-policy-binding SERVICE_ACCOUNT \
@@ -85,14 +85,14 @@ autopilot_cluster = true  # Set to false for Standard cluster
      --member "serviceAccount:PROJECT_ID.svc.id.goog[default/flyte-backend-flyte-binary]"
    ```
 
-   Where `flyte-backend-flyte-binary` is the kubernetes service account that flyte helm chart deploys by default.
+   Where `flyte-backend-flyte-binary` is the Kubernetes service account that the Flyte Helm chart deploys by default.
 
-6. Change all instances of `<FLYTE_IAM_SA_EMAIL>` in the included flyte.yaml helm value file to the same service account from the step 4.
+6. Change all instances of `<FLYTE_IAM_SA_EMAIL>` in the included flyte.yaml Helm values file to the same service account from step 4.
 
    ```yaml
    inline:
-     #This section automates the IAM Role annotation for the default KSA on each project namespace to enable IRSA
-     #Learn more: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
+     # This section automates the IAM Role annotation for the default KSA on each project namespace to enable IRSA
+     # Learn more: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
      cluster_resources:
        customData:
        - production:
@@ -109,12 +109,12 @@ autopilot_cluster = true  # Set to false for Standard cluster
    serviceAccount:
      # create Create ServiceAccount for Flyte
      create: true
-     #Automates annotation of default flyte-binary KSA. Make sure to bind the KSA to the GSA: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to
+     # Automates annotation of default flyte-binary KSA. Make sure to bind the KSA to the GSA: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to
      annotations:
        iam.gke.io/gcp-service-account: <FLYTE_IAM_SA_EMAIL> 
    ```
 
-7. Get the cloudsql username and password
+7. Get the Cloud SQL username and password:
 
    ```bash
    $ terraform output cloudsql_ip
@@ -125,7 +125,7 @@ autopilot_cluster = true  # Set to false for Standard cluster
    "password"
    ```
 
-   and replace the values inside of flyte.yaml values file:
+   and replace the values inside the flyte.yaml values file:
 
    ```yaml
    configuration:
@@ -142,21 +142,21 @@ autopilot_cluster = true  # Set to false for Standard cluster
        dbname: flytepg
    ```
 
-8. Get the bucket name
+8. Get the bucket name:
 
    ```bash
    $ terraform output bucket_name
    "flyte-bucket"
    ```
 
-   and replace the values in the values file
+   and replace the values in the values file:
 
    ```yaml
    storage:
      # metadataContainer Bucket to store Flyte metadata
-     metadataContainer: "flyte_bucket"
+     metadataContainer: "flyte-bucket"
      # userDataContainer Bucket to store Flyte user data
-     userDataContainer: "flyte_bucket"
+     userDataContainer: "flyte-bucket"
      # provider Object store provider (Supported values: s3, gcs)
      provider: gcs
      # providerConfig Additional object store provider-specific configuration
@@ -164,28 +164,33 @@ autopilot_cluster = true  # Set to false for Standard cluster
        # gcs Provider configuration for GCS object store
        gcs:
          # project Google Cloud project in which bucket resides
-         project: "flyte_project"
+         project: "flyte-project"
    ```
 
-9. Add the flyte helm repo
+9. Add the Flyte Helm repo:
 
    ```bash
    helm repo add flyteorg https://flyteorg.github.io/flyte
    ```
 
-10. Install flyte using Helm and the flyte.yaml values file
+10. Install Flyte using Helm and the flyte.yaml values file:
 
    ```bash
-   helm install flyte-backend flyteorg/flyte-binary  --namespace default --values flyte.yaml
+   helm install flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
    ```
 
-And wait for helm to complete the installation
+   After Helm finishes deploying the resources, wait for the pods to be in the `Running` state.
+   Note that in the case of an Autopilot cluster, it may take significant time. You can use this command to track the progress:
+
+   ```bash
+   kubectl get pods -n default -w
+   ```
 
 ## Access the Flyte Dashboard
 
-To access the dashboard we will use kubernetes port forwarding.
+At this point, the Flyte dashboard is not exposed to the internet. Let's access it using Kubernetes port forwarding.
 
-1. Get the service name and port
+1. Get the service name and port:
 
    ```bash
    $ kubectl get svc
@@ -196,7 +201,7 @@ To access the dashboard we will use kubernetes port forwarding.
    kubernetes                           ClusterIP   34.118.224.1     <none>        443/TCP    5h17m
    ```
 
-2. Use kubectl port-forward to do the actual forwarding
+2. Use kubectl port-forward to do the actual forwarding:
 
    ```bash
    $ kubectl port-forward svc/flyte-backend-flyte-binary-http 8088:8088
@@ -213,11 +218,10 @@ First, create a static IP address for the Ingress:
 
 ```bash
 gcloud compute addresses create flyte --global --ip-version=IPV4
-gcloud compute addresses describe flyte --g
-lobal
+gcloud compute addresses describe flyte --global
 ```
 
-Then, create managed certificate for the domain you want to use:
+Then, create a managed certificate for the domain you want to use:
 
 ```yaml
 # managed-certificate.yaml
@@ -235,7 +239,7 @@ spec:
 kubectl apply -f managed-certificate.yaml
 ```
 
-If you don't have a domain, but you want to test this setup, you can leverage the `sslip.io` service. In that case the domain would be `<your-static-ip>.sslip.io`. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
+If you don't have a domain, but you want to test this setup, you can leverage the `sslip.io` service. In that case, the domain would be `<your-static-ip>.sslip.io`. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
 
 In the final step, let's update the Helm values to configure HTTP Ingress to use the static IP address and managed certificate created. Edit the `values.yaml` file and add the following:
 
@@ -254,23 +258,23 @@ Then, update the Helm release:
 helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
 ```
 
-After some time the certificate should be provisioned and the application should be accessible via the domain you specified.
+After some time, the certificate should be provisioned and the application should be accessible via the domain you specified.
 
-You can check certificate status by running:
+You can check the certificate status by running:
 
 ```bash
 kubectl get managedcertificate flyte-http
 ```
 
-Note that the certificate provisioning may take some time. Also it's up to you to configure the DNS records to point to the static IP allocated for the Ingress in the first step of the section.
+Note that the certificate provisioning may take some time. Also, it's up to you to configure the DNS records to point to the static IP allocated for the Ingress in the first step of this section.
 
-On this step you should be able to access the Flyte dashboard via the domain you specified. But the application is not secured yet. Let's do that next.
+At this step, you should be able to access the Flyte dashboard via the domain you specified. But the application is not secured yet. Let's do that next.
 
 ## Configure OAuth Consent Screen and create OAuth 2.0 client
 
-Before securing the application with Identity Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
+Before securing the application with Identity-Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
 
-Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials) and selecting "Create OAuth client ID". Use the "Web application" type and proceed with the creation. Use Client ID and secret to create a Secret in the Kubernetes cluster:
+Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials) and selecting "Create OAuth client ID". Use the "Web application" type and proceed with the creation. Use the Client ID and secret to create a Secret in the Kubernetes cluster:
 
 ```bash
 kubectl create secret generic flyte-http-oauth \
@@ -302,7 +306,7 @@ spec:
 kubectl apply -f backendconfig.yaml
 ```
 
-Next, update Helm Chart values for the Service to use the BackendConfig by adding the following to the `values.yaml` file:
+Next, update the Helm chart values for the Service to use the BackendConfig by adding the following to the `values.yaml` file:
 
 ```yaml
 service:
@@ -316,19 +320,19 @@ Then, update the Helm release again:
 helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
 ```
 
-Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and enable IAP for the resource (it might have a name like `default/flyte-backend-flyte-binary-http`). After some time the application should be accessible only to authenticated users.  To grant access to the application, click "Add Principal" on the right panel and select the IAP-secured Web App User role.
+Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and enable IAP for the resource (it might have a name like `default/flyte-backend-flyte-binary-http`). After some time, the application should be accessible only to authenticated users. To grant access to the application, click "Add Principal" on the right panel and select the IAP-secured Web App User role.
 
-Then wait for the changes to propagate and try to access the application. You should be redirected to the Google login page and after successful authentication you should be able to access the Flyte dashboard again.
+Then wait for the changes to propagate and try to access the application. You should be redirected to the Google login page, and after successful authentication, you should be able to access the Flyte dashboard again.
 
 ## Cleanup
 
-Remove the flyte helm installation
+Remove the Flyte Helm installation:
 
 ```bash
 helm delete flyte-backend
 ```
 
-Delete the static IP address
+Delete the static IP address:
 
 ```bash
 gcloud compute addresses delete flyte --global
@@ -336,7 +340,7 @@ gcloud compute addresses delete flyte --global
 
 Go to the [Credentials page](https://console.cloud.google.com/apis/credentials) and delete the OAuth 2.0 client.
 
-Finally destroy the provisioned infrastructure.
+Finally, destroy the provisioned infrastructure:
 
 ```bash
 terraform destroy -var-file=your_environment.tfvars

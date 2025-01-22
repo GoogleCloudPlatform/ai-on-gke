@@ -69,7 +69,7 @@ configuration:
       customData:
       - production:
         - defaultIamServiceAccount:
-            value: 
+            value: <FLYTE_IAM_SA_EMAIL>
       - staging:
         - defaultIamServiceAccount:
             value: <FLYTE_IAM_SA_EMAIL>
