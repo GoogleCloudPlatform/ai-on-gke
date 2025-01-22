@@ -25,7 +25,7 @@ module "cloudsql" {
   database_version    = "POSTGRES_15"
   region              = var.region
   deletion_protection = false
-  tier                = "db-f1-micro"
+  tier                = "db-custom-1-1536"
 
   database_deletion_policy = "ABANDON"
   user_deletion_policy     = "ABANDON"
