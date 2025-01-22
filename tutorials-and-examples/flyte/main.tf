@@ -124,12 +124,12 @@ module "flyte-workload-identity" {
   namespace           = "default"
   project_id          = var.project_id
   roles               = ["roles/storage.admin", "roles/compute.admin"]
-  cluster_name = module.infra[0].cluster_name
-  location = var.cluster_location
+  cluster_name        = module.infra[0].cluster_name
+  location            = var.cluster_location
   use_existing_gcp_sa = true
-  gcp_sa_name = data.google_service_account.gke_service_account.email
+  gcp_sa_name         = data.google_service_account.gke_service_account.email
   use_existing_k8s_sa = true
-  annotate_k8s_sa = false
+  annotate_k8s_sa     = false
 }
 
 resource "random_password" "csql_root_password" {
@@ -141,11 +141,9 @@ resource "random_password" "db_password" {
   special = true
 }
 
-
 data "google_compute_network" "network" {
-  name = "flyte"
-  depends_on = [ module.infra ]
-  
+  name       = "flyte"
+  depends_on = [module.infra]
 }
 
 resource "google_sql_database_instance" "flyte_storage" {
@@ -156,7 +154,7 @@ resource "google_sql_database_instance" "flyte_storage" {
   root_password    = random_password.csql_root_password.result
   settings {
     edition = "ENTERPRISE"
-    tier = var.db_tier
+    tier    = var.db_tier
     ip_configuration {
       ipv4_enabled    = false
       private_network = data.google_compute_network.network.id

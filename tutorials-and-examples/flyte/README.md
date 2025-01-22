@@ -111,7 +111,7 @@ autopilot_cluster = true  # Set to false for Standard cluster
      create: true
      # Automates annotation of default flyte-binary KSA. Make sure to bind the KSA to the GSA: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to
      annotations:
-       iam.gke.io/gcp-service-account: <FLYTE_IAM_SA_EMAIL> 
+       iam.gke.io/gcp-service-account: <FLYTE_IAM_SA_EMAIL>
    ```
 
 7. Get the Cloud SQL username and password:

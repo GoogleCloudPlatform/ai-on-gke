@@ -170,29 +170,29 @@ variable "additional_labels" {
 }
 
 variable "kubernetes_version" {
-  type    = string
+  type        = string
   description = "Set Kubernetes version"
-  default = "1.30"
+  default     = "1.30"
 }
 
 variable "create_gcs_bucket" {
-  type = bool
-  description = "Wether to create a GCS bucket"
-  default = false
+  type        = bool
+  description = "Whether to create a GCS bucket"
+  default     = false
 }
 
 variable "gcs_bucket" {
-  type = string
-  description = "Name for the created GCS bucket"  
+  type        = string
+  description = "Name for the created GCS bucket"
 }
 
 variable "db_tier" {
-  type = string
+  type        = string
   description = "Tier for the database instance"
-  default = "db-f1-micro"
+  default     = "db-f1-micro"
 }
 variable "cloudsql_user"{
-  type = string
+  type        = string
   description = "Username for the cloudsql database"
-  default = "flytepg"
+  default     = "flytepg"
 }

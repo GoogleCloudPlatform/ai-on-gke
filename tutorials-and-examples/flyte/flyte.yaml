@@ -8,7 +8,7 @@ configuration:
     # If set, a Secret will be created with this value and mounted to Flyte pod
     password: <CLOUDSQL_PASSWORD>
     # host Hostname of database instance
-    host: 1<CLOUDSQL_IP>
+    host: <CLOUDSQL_IP>
     # dbname Name of database to use
     dbname: <CLOUDSQL_DBNAME>
   # storage Specify configuration for object store
@@ -16,7 +16,7 @@ configuration:
     # metadataContainer Bucket to store Flyte metadata
     metadataContainer: <BUCKET_NAME>
     # userDataContainer Bucket to store Flyte user data
-    userDataContainer: <CLOUDSQL_USERNAME>
+    userDataContainer: <BUCKET_NAME>
     # provider Object store provider (Supported values: s3, gcs)
     provider: gcs
     # providerConfig Additional object store provider-specific configuration
@@ -62,7 +62,7 @@ configuration:
     authorizedUris: []
 
   # inline Specify additional configuration or overrides for Flyte, to be merged with the base configuration
-  inline: 
+  inline:
     #This section automates the IAM Role annotation for the default KSA on each project namespace to enable IRSA
     #Learn more: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
     cluster_resources:
@@ -88,7 +88,7 @@ configuration:
               value: "present"
               effect: "NoSchedule"
     # Configuration for the Datacatalog engine, used when caching is enabled
-    # Learn more: https://docs.flyte.org/en/latest/deployment/configuration/generated/datacatalog_config.html  
+    # Learn more: https://docs.flyte.org/en/latest/deployment/configuration/generated/datacatalog_config.html
     storage:
       cache:
         max_size_mbs: 10
@@ -108,7 +108,7 @@ configuration:
 # clusterResourceTemplates Specify templates for Kubernetes resources that should be created for new Flyte projects
 clusterResourceTemplates:
   # inline Specify additional cluster resource templates, to be merged with the base configuration
-  inline: 
+  inline:
     #This section automates the creation of the project-domain namespaces
     001_namespace.yaml: |
       apiVersion: v1
@@ -123,7 +123,7 @@ clusterResourceTemplates:
         name: default
         namespace: '{{ namespace }}'
         annotations:
-          iam.gke.io/gcp-service-account: '{{ defaultIamServiceAccount }}' 
+          iam.gke.io/gcp-service-account: '{{ defaultIamServiceAccount }}'
 
 # serviceAccount Configure Flyte ServiceAccount
 serviceAccount:
@@ -137,7 +137,7 @@ rbac:
   # create Create ClusterRole and ClusterRoleBinding resources
   create: true
   # extraRules Add additional rules to the ClusterRole
-  extraRules: 
+  extraRules:
    - apiGroups:
       - ""
      resources:
