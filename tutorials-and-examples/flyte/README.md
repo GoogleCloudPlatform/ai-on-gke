@@ -241,7 +241,7 @@ kubectl apply -f managed-certificate.yaml
 
 If you don't have a domain, but you want to test this setup, you can leverage the `sslip.io` service. In that case, the domain would be `<your-static-ip>.sslip.io`. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
 
-In the final step, let's update the Helm values to enable the Ingress and use the IP address and certificate we created. Edit the `values.yaml` file and add the following:
+In the final step, let's update the Helm values to enable the Ingress and use the IP address and certificate we created. Edit the `flyte.yaml` file and add the following:
 
 ```yaml
 ingress:
@@ -306,7 +306,7 @@ spec:
 kubectl apply -f backendconfig.yaml
 ```
 
-Next, update the Helm chart values for the HTTP Service to use the BackendConfig by adding the following to the `values.yaml` file:
+Next, update the Helm chart values for the HTTP Service to use the BackendConfig by adding the following to the `flyte.yaml` file:
 
 ```yaml
 service:
