@@ -289,7 +289,7 @@ module "skypilot-workload-identity" {
 }
 
 ```
-1. 1.  Get project and service account details
+1. Get project and service account details
 ```
 terraform output project_id
 terraform output service_account
@@ -408,7 +408,7 @@ terraform destroy -var-file=your_environment.tfvar
 ```
 ## Troubleshooting
 
-1.If Kueue install gives the error:
+1. If Kueue install gives the error:
 ```
 the CustomResourceDefinition "workloads.kueue.x-k8s.io" is invalid: metadata.annotations: Too long: must have at most 262144 bytes
 ```
@@ -435,7 +435,7 @@ Hint: sky show-gpus to list available accelerators.
 ```
 Make sure you added `autoscaling: gke` to the sky config in step [Install SkyPilot](#install-skypilot)
 
-5. Permission denied when trying to write to the mounted gcsfuse volume.
+4. Permission denied when trying to write to the mounted gcsfuse volume.
 
 Make sure you added `uid=1000,gid=1000` to the `mountOptions:` YAML inside of the task yaml file. SkyPilot by default uses 1000 gid and uid
 ```
