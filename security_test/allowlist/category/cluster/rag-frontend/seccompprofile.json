@@ -1,0 +1,13 @@
+[
+  {
+    "message": "pod in Deployment \"rag-frontend\" must set securityContext.seccompProfile.type to value RuntimeDefault",
+    "policyName": "seccompprofile",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "rag-frontend",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

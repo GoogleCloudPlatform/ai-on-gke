@@ -1,0 +1,69 @@
+wantedResources:
+- Group: "^apps$"
+  Version: "^v1$"
+  Kind: "^Deployment$"
+- Group: "^apps$"
+  Version: "^v1$"
+  Kind: "^Job$"
+- Group: "^apps$"
+  Version: "^v1$"
+  Kind: "^DaemonSet$"
+- Group: ".*"
+  Version: "^v1$"
+  Kind: "^ServiceAccount$"
+- Group: "rbac.authorization.k8s.io$"
+  Version: "^v1$"
+  Kind: "^Role$"
+- Group: "rbac.authorization.k8s.io$"
+  Version: "^v1$"
+  Kind: "^RoleBinding$"
+- Group: "rbac.authorization.k8s.io$"
+  Version: "^v1$"
+  Kind: "^ClusterRole$"
+- Group: "rbac.authorization.k8s.io$"
+  Version: "^v1$"
+  Kind: "^ClusterRoleBinding$"
+# Ignored objects configuration
+ignoredObjects:
+
+# General system-related objects
+- Group: ".*"
+  Kind: ".*"
+  Version: ".*"
+  Namespace: ".*"
+  Name: "^system:.*"
+
+# Objects from system-related namespaces
+- Group: ".*"
+  Kind: ".*"
+  Version: ".*"
+  Namespace: "^(kube-system|kube-public|kube-node-lease|gke-(gmp-system.*|managed-.*|gmp-public))$"
+  Name: ".*"
+
+# ClusterRoles (system-related or not security-relevant)
+- Group: "rbac.authorization.k8s.io"
+  Kind: "ClusterRole"
+  Version: "v1"
+  Namespace: ".*"
+  Name: "^(cluster-admin|cilium.*|external-metrics-reader|anet-operator-cluster-role|cluster-autoscaler|filestorecsi-resizer-role|pdcsi-snapshotter-role|ca-cr-actor|antrea-agent|egress-nat-controller|pdcsi-resizer-role|snapshot-controller-runner|gce:cloud-provider|gce:beta:kubelet-certificate-rotation|pdcsi-attacher-role|pdcsi-provisioner-role|edit|gke-gmp-system:operator|filestorecsi-provisioner-role|admin|gke-spiffe-issuer|gke-spiffe-user|ca-pr-beta-actor|kubelet-api-admin|gmp-system:operator|gce:beta:kubelet-certificate-bootstrap)$"
+
+# ClusterRoleBindings (system-related or not security-relevant)
+- Group: "rbac.authorization.k8s.io"
+  Kind: "ClusterRoleBinding"
+  Version: "v1"
+  Namespace: ".*"
+  Name: "^(gce:beta:kubelet-certificate-rotation|gce:gke-metadata-server-reader|antrea-agent|nodes-are-gke-spiffe-users)$"
+
+# Role-related objects in specific namespaces
+- Group: "rbac.authorization.k8s.io"
+  Kind: "Role"
+  Version: "v1"
+  Namespace: "^(gmp-public|gmp-system)$"
+  Name: "^operator$"
+
+# Specific ServiceAccounts
+- Group: ".*"
+  Kind: "ServiceAccount"
+  Version: "v1"
+  Namespace: "default"
+  Name: "^default$"

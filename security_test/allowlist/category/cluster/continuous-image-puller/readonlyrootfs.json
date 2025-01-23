@@ -1,0 +1,17 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "pause"
+    },
+    "message": "container \"pause\" in DaemonSet \"continuous-image-puller\" does not set readOnlyRootFilesystem: true in its securityContext. This setting is encouraged because it can prevent attackers from writing malicious binaries into runnable locations in the container filesystem.",
+    "policyName": "readonlyrootfs",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "DaemonSet",
+      "name": "continuous-image-puller",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

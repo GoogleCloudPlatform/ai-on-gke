@@ -1,0 +1,146 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices.ray.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices.ray.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "list"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices.ray.io\" with verb \"list\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "watch"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices.ray.io\" with verb \"watch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices/status",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"rayservice-editor-role\" has rbac rule for resource \"rayservices/status.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "rayservice-editor-role",
+      "version": "v1"
+    }
+  }
+]

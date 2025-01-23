@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "image": "quay.io/jupyterhub/configurable-http-proxy:4.6.1",
+      "containerName": "chp"
+    },
+    "message": "container \"chp\" in Deployment \"proxy\" has an image \"quay.io/jupyterhub/configurable-http-proxy:4.6.1\" with an invalid path. See go/gke-shipshape#imagepath for valid image paths.",
+    "policyName": "imagepath",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "proxy",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

@@ -1,0 +1,17 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "mistral-7b-instruct"
+    },
+    "message": "container \"mistral-7b-instruct\" in Deployment \"mistral-7b-instruct\" does not drop all capabilities in its securityContext. See go/gke-shipshape#capabilities for more details",
+    "policyName": "capabilities",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "mistral-7b-instruct",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 
