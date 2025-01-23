@@ -62,19 +62,19 @@ module "infra" {
   source = "../../../infrastructure"
   count  = var.create_cluster ? 1 : 0
 
-  project_id        = var.project_id
-  cluster_name      = local.cluster_name
-  cluster_location  = var.cluster_location
-  autopilot_cluster = var.autopilot_cluster
-  private_cluster   = var.private_cluster
-  create_network    = false
-  network_name      = "default"
-  subnetwork_name   = "default"
-  cpu_pools         = var.cpu_pools
-  enable_gpu        = var.enable_gpu
-  gpu_pools         = var.gpu_pools
-  ray_addon_enabled = true
-  depends_on        = [module.project-services]
+  project_id         = var.project_id
+  cluster_name       = local.cluster_name
+  cluster_location   = var.cluster_location
+  autopilot_cluster  = var.autopilot_cluster
+  private_cluster    = var.private_cluster
+  create_network     = false
+  network_name       = "default"
+  subnetwork_name    = "default"
+  cpu_pools          = var.cpu_pools
+  enable_gpu         = var.enable_gpu
+  gpu_pools          = var.gpu_pools
+  ray_addon_enabled  = true
+  depends_on         = [module.project-services]
   kubernetes_version = var.kubernetes_version
 }
 
@@ -111,7 +111,7 @@ module "gcs" {
 
 resource "google_storage_bucket_iam_binding" "allow_gke_to_bucket" {
   bucket = var.gcs_bucket
-  role = "roles/storage.admin"
+  role   = "roles/storage.admin"
   members = [
     data.google_service_account.gke_service_account.member,
   ]
@@ -123,10 +123,10 @@ module "skypilot-workload-identity" {
   namespace           = "default"
   project_id          = var.project_id
   roles               = ["roles/storage.admin", "roles/compute.admin"]
-  cluster_name = module.infra[0].cluster_name
-  location = var.cluster_location
+  cluster_name        = module.infra[0].cluster_name
+  location            = var.cluster_location
   use_existing_gcp_sa = true
-  gcp_sa_name = data.google_service_account.gke_service_account.email
+  gcp_sa_name         = data.google_service_account.gke_service_account.email
   use_existing_k8s_sa = true
-  annotate_k8s_sa = false
+  annotate_k8s_sa     = false
 }
