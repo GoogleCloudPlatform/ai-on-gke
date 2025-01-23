@@ -17,11 +17,11 @@
 data "google_client_config" "default" {}
 
 locals {
-  subnetwork_name = "${var.deployment_name}-gke-net"
+  subnetwork_name = "${var.goog_cm_deployment_name}-gke-net"
 }
 module "network-kevinmcw" {
   source          = "./modules/embedded/modules/network/vpc"
-  deployment_name = var.deployment_name
+  deployment_name = var.goog_cm_deployment_name
   project_id      = var.project_id
   region          = var.region
   secondary_ranges = {
@@ -38,10 +38,10 @@ module "network-kevinmcw" {
 
 module "gpunets" {
   source                  = "./modules/embedded/modules/network/multivpc"
-  deployment_name         = var.deployment_name
+  deployment_name         = var.goog_cm_deployment_name
   global_ip_address_range = "192.169.0.0/16"
   network_count           = 8
-  network_name_prefix     = "${var.deployment_name}-gpunet"
+  network_name_prefix     = "${var.goog_cm_deployment_name}-gpunet"
   project_id              = var.project_id
   region                  = var.region
   subnetwork_cidr_suffix  = 24
@@ -50,7 +50,7 @@ module "gpunets" {
 module "gke_cluster" {
   source                  = "./modules/embedded/modules/scheduler/gke-cluster"
   additional_networks     = flatten([module.gpunets.additional_networks])
-  deployment_name         = var.deployment_name
+  deployment_name         = var.goog_cm_deployment_name
   enable_private_endpoint = false
   labels                  = var.labels
   master_authorized_networks = [{

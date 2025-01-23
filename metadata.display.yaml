@@ -14,6 +14,9 @@ spec:
   ui:
     input:
       variables:
+        goog_cm_deployment_name:
+          name: goog_cm_deployment_name
+          title: Goog Cm Deployment Name
         project_id:
           name: project_id
           title: Project Id
