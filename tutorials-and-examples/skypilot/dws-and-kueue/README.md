@@ -82,7 +82,7 @@ Server Version: v1.30.6-gke.1596000
 ```
 If not you can change the version in terraform with the  `kubectl_version` variable
 ## Install and configure Kueue
-1. Install Kueue from the official manifest. Note that --server-side switch . Without it the client cannot render the CRDs because of annotation size limitations.
+1. Install Kueue from the official manifest. Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations.
 ```bash
 VERSION=v0.7.0
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
@@ -182,7 +182,7 @@ Note: The following clouds were disabled because they were not included in allow
   ✔ Kubernetes
 ```
 ## Configure and Run SkyPilot Job
-For SkyPilot to create pods with the necessary pod config we need to add the following config to train_dws.yaml.
+For SkyPilot to create pods with the necessary pod config we need to add the following config to `train_dws.yaml`.
 ```yaml
 experimental:
   config_overrides:
@@ -268,10 +268,10 @@ This section details how to fine-tune Gemma 2B for SQL generation on GKE Autopil
  - A GKE cluster configured with SkyPilot
  - HuggingFace account with access to Gemma model
 
-###Fine-tuning Implementation
+### Fine-tuning Implementation
 The [finetune.py](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/finetune.yaml) script uses QLoRA with 4-bit quantization to fine-tune Gemma 2B on SQL generation tasks.
 
-###Configure GCS Storage Access
+### Configure GCS Storage Access
 The infrastructure Terraform configuration in [main.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/main.tf) includes Workload Identity and GCS bucket setup:
 ```
 module "skypilot-workload-identity" {
@@ -289,7 +289,7 @@ module "skypilot-workload-identity" {
 }
 
 ```
-1. 1.  Get project and service account details
+1. Get project and service account details
 ```
 terraform output project_id
 terraform output service_account
@@ -311,10 +311,10 @@ kubectl annotate serviceaccount skypilot-service-account --namespace default iam
 ```
 terraform output model_bucket_name
 ```
-5. Update gcsfuse configuration in finetune.yaml and sever.yaml
+5. Update gcsfuse configuration in `finetune.yaml` and `sever.yaml`
 Replace the [BUCKET_NAME](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/finetune.yaml#L27)
 
-###Fine-tune the Model
+### Fine-tune the Model
 1. Set up HuggingFace access:
 Finetune script needs a HuggingFace token and to sign the licence consent agreement. Follow instructions on the following link: Get access to the [model](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#model-access)
 ```
@@ -336,8 +336,8 @@ Loading checkpoint shards: 100%|██████████| 2/2 [00:07<00:00
 ✓ Job finished (status: SUCCEEDED).
 ```
 
-###Serve the Model
-Next, run the finetuned model with the serve.yaml and serve cli
+### Serve the Model
+Next, run the finetuned model with the `serve.yaml` and serve cli
 ```
 sky serve up serve.yaml
 ```
@@ -408,7 +408,7 @@ terraform destroy -var-file=your_environment.tfvar
 ```
 ## Troubleshooting
 
-1.If Kueue install gives the error:
+1. If Kueue install gives the error:
 ```
 the CustomResourceDefinition "workloads.kueue.x-k8s.io" is invalid: metadata.annotations: Too long: must have at most 262144 bytes
 ```
@@ -435,7 +435,7 @@ Hint: sky show-gpus to list available accelerators.
 ```
 Make sure you added `autoscaling: gke` to the sky config in step [Install SkyPilot](#install-skypilot)
 
-5. Permission denied when trying to write to the mounted gcsfuse volume.
+4. Permission denied when trying to write to the mounted gcsfuse volume.
 
 Make sure you added `uid=1000,gid=1000` to the `mountOptions:` YAML inside of the task yaml file. SkyPilot by default uses 1000 gid and uid
 ```
