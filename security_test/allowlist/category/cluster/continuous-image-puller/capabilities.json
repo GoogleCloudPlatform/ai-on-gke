@@ -1,0 +1,17 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "pause"
+    },
+    "message": "container \"pause\" in DaemonSet \"continuous-image-puller\" does not drop all capabilities in its securityContext. See go/gke-shipshape#capabilities for more details",
+    "policyName": "capabilities",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "DaemonSet",
+      "name": "continuous-image-puller",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

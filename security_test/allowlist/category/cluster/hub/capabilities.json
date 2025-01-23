@@ -1,0 +1,17 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "hub"
+    },
+    "message": "container \"hub\" in Deployment \"hub\" does not drop all capabilities in its securityContext. See go/gke-shipshape#capabilities for more details",
+    "policyName": "capabilities",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "hub",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

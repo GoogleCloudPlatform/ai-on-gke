@@ -1,0 +1,129 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "configmaps",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "Role \"kuberay-operator-leader-election\" has rbac rule for resource: \"configmaps.\" with verb \"update\" that must specify a resourceName.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "kuberay-operator-leader-election",
+      "namespace": "gke-ray-system",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "configmaps",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "Role \"kuberay-operator-leader-election\" has rbac rule for resource: \"configmaps.\" with verb \"patch\" that must specify a resourceName.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "kuberay-operator-leader-election",
+      "namespace": "gke-ray-system",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "configmaps",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "Role \"kuberay-operator-leader-election\" has rbac rule for resource: \"configmaps.\" with verb \"delete\" that must specify a resourceName.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "kuberay-operator-leader-election",
+      "namespace": "gke-ray-system",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "configmaps/status",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "Role \"kuberay-operator-leader-election\" has rbac rule for resource \"configmaps/status.\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "kuberay-operator-leader-election",
+      "namespace": "gke-ray-system",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "configmaps/status",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "Role \"kuberay-operator-leader-election\" has rbac rule for resource \"configmaps/status.\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "kuberay-operator-leader-election",
+      "namespace": "gke-ray-system",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "configmaps/status",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "Role \"kuberay-operator-leader-election\" has rbac rule for resource \"configmaps/status.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "kuberay-operator-leader-election",
+      "namespace": "gke-ray-system",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "coordination.k8s.io",
+      "resource": "leases",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "Role \"kuberay-operator-leader-election\" has rbac rule for resource: \"leases.coordination.k8s.io\" with verb \"update\" that must specify a resourceName.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "kuberay-operator-leader-election",
+      "namespace": "gke-ray-system",
+      "version": "v1"
+    }
+  }
+]
