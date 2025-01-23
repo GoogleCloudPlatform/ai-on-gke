@@ -1,10 +1,8 @@
-# Fine-tune gemma-2-9b and track as an experiment is MLFlow
+# Fine-tune gemma-2-9b and track as an experiment in MLFlow
 Data scientists often run a lot of experiments and it's essential to be sure that the best run won't be lost in numerous experiments. MLFlow helps to track experiments, datasets, metrics, and other data. GKE clusters can provide a lot of resources on demand.
 
-In this tutorial, we will demonstrate how to deploy MLFlow on GKE cluster and set it up for seamless model deployment.
-
 ## The tutorial overview
-In this tutorial we will fine-tune gemma2-9b using LoRA as an experiment in MLFlow. We will deploy MLFlow on a GKE cluster and set up MLFlow to store artifacts inside a GCS bucket. In the end, we will deploy a fine-tuned model using KServe.
+In this tutorial we will fine-tune gemma-2-9b using LoRA as an experiment in MLFlow. We will deploy MLFlow on a GKE cluster and set up MLFlow to store artifacts inside a GCS bucket. In the end, we will deploy a fine-tuned model using KServe.
 
 ## Before you begin
 Ensure you have a GCP project with a billing account. Enable the following APIs for your project:
@@ -18,7 +16,7 @@ gcloud kubectl
 terraform
 helm
 ```
-CLI. If you previously installed the gcloud CLI, get the latest version by running `gcloud components update`
+If you previously installed the gcloud CLI, get the latest version by running `gcloud components update`
 
 ## Set up
 If you don’t have a GCP project, you have to create one. Ensure that your project has access to GKE.
@@ -33,55 +31,49 @@ Run `cd terraform-gke-cluster` and adjust in the `example_environments.tfvars` f
 - `project_id` – your GCP project id.
 - `cluster_name` – any name for your cluster.
 - `kubernetes_namespace` – any GKE environment variable namespace.
+
 Run these commands to create your GKE cluster:
 ```bash
 terraform init
-terraform plan -var-file=example_environments.tfvars  # verify is it okay
-terraform apply -var-file=example_environments.tfvars # print 'yes' when asked
+terraform plan -var-file=example_environment.tfvars  # verify is it okay
+terraform apply -var-file=example_environment.tfvars # print 'yes' when asked
 ```
 
 After about 10-15 minutes your cluster will be ready to go. When the cluster is ready, run this command to get your GKE cluster access token:
 ```bash
 export KUBECONFIG=~/tutorial_gke_access_token.kube
-export REGION="<REGION>"
-export PROJECT_ID="<PROJECT_ID>"
-export CLUSTER_NAME="<CLUSTER_NAME>"
+export REGION=us-central1
+export PROJECT_ID=<PROJECT_ID>
+export CLUSTER_NAME=<CLUSTER_NAME>
 gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION --project $PROJECT_ID
 ```
+
+The last command connects your current terminal session to the GKE cluster and saves kubectl settings in `KUBECONFIG` path.
+
 At this point, you have your terminal session with set up kubectl. The next step is KServe installation on your GKE cluster. You can follow the official guide [here](https://kserve.github.io/website/master/admin/serverless/serverless/).
 
+>Note: in step 1, the  “[Knative Serving install guide](https://knative.dev/docs/admin/install/serving/install-serving-with-yaml/)” actually also includes the steps to install the networking layer, and it actually prefers Kourier over Istio.
+
 ## Install MLFlow
-Go to the `mlflow-configuration` directory. We will use the helm to install MLFlow. Use [This chart](https://artifacthub.io/packages/helm/bitnami/mlflow) to install MLFlow with necessary configuration.
+Go to the `mlflow-configuration` directory. We will use the helm to install MLFlow. Use [This chart](https://artifacthub.io/packages/helm/bitnami/mlflow) to install  MLFlow with necessary configuration.
 
-Since we want to access our model from MLFlow UI and deploy it using KServe easily, we need to specify environment variables for MLFlow so it could use GCS bucket as artifact storage. Go to the Google Cloud Console and create a GCS bucket. Then create a key for the service account used by your cluster and save it in your current working directory as `credentials.json`.
-
-You can find your the cluster service account email by running this command:
-```bash
-gcloud container clusters describe $CLUSTER_NAME \
-  --region $REGION \
-  --format="value(nodeConfig.serviceAccount)"
-```
-
-Run this command to create a secret inside your GKE cluster:
-```bash
-kubectl create secret generic gcs-credentials --from-file=gcloud-application-credentials.json=./credentials.json
-```
-
-Don’t forget to give your service account permissions to access your GCS bucket. We also need to provide read-only access to the Artifact Registry to be able to pull Docker images to create a fine-tuning job. To access and create data in a GCS bucket should be enough `Storage Object User` role.
-
-And go to Artifact Registry to create a new repository. Give `Artifact Reader` permission for the GKE cluster service account
+Since we want to access our model from MLFlow UI and deploy it using KServe easily, we need to specify environment variables for MLFlow so it could use GCS bucket as artifact storage. Go to the Google Cloud Console and create a GCS bucket.
 
 Before installing the MLFlow chart, we need to adjust `values.yaml` so MLFlow could interact with the GCS bucket. Adjust the following values:
-- <BUCKET_NAME> – your bucket name
-- <PROJECT_ID> – your GCP project id
+- `<BUCKET_NAME>` – your bucket name.
 
-Install the MLFlow chart
+Install the MLFlow chart:
 ```bash
 helm install my-mlflow-release oci://registry-1.docker.io/bitnamicharts/mlflow -f values.yaml
 ```
 
 The result of this command will show you how to access MLFlow UI. The output should look similar to this:
 ```log
+Pulled: registry-1.docker.io/bitnamicharts/mlflow:2.3.1
+Digest: sha256:a9fb6ade4f8b8f4d7e36a8bd45f174dd55f4d0818c246b91bfc99570cd923450
+NAME: my-mlflow-release
+LAST DEPLOYED: Tue Jan 14 13:38:02 2025
+NAMESPACE: default
 ...
 1. Get the running pods
     kubectl get pods --namespace default -l "app.kubernetes.io/name=mlflow,app.kubernetes.io/instance=my-mlflow-release"
@@ -100,7 +92,21 @@ To access your MLflow site from outside the cluster follow the steps below:
 
    kubectl port-forward --namespace default svc/my-mlflow-release-tracking 80:80 &
    echo "MLflow URL: http://127.0.0.1//"
+
+2. Open a browser and access MLflow using the obtained URL.
+3. Login with the following credentials below to see your blog:
 ...
+```
+
+This chart created some service accounts for our MLFlow (you can view them by running `kubectl get serviceaccounts`). In particular, `my-mlflow-release-tracking` is used by the MLFlow tracking server. We need to give this service account a read permission to view all experiments in the GCS bucket. Replace the following variables and run the command below to give the permission:
+- `<BUCKET_NAME>`: the GCS bucket’s name that you just created.
+- `<PROJECT_NUMBER>`: your GCP project’s number.
+- `<PROJECT_ID>`: your GCP project’s ID.
+```bash
+gcloud storage buckets add-iam-policy-binding gs://<BUCKET_NAME> \
+    --role=roles/storage.objectViewer \
+    --member=principal://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/my-mlflow-release-tracking \
+    --condition=None
 ```
 
 Let’s check our MLFlow tracking server via UI. We can port forward MLFlow tracking service by running the command below. This process runs in background due to the `&` sign. You can stop the process by killing it (the PID is printed after running the port-forwarding command).
@@ -108,13 +114,11 @@ Let’s check our MLFlow tracking server via UI. We can port forward MLFlow trac
 kubectl port-forward --namespace default svc/my-mlflow-release-tracking 8080:80 &
 ```
 
-The above command will create a process that forwards ports to MLFlow tracking server. This process runs in background due to the & sign. You can stop the process by killing it (the PID is printed after running the port-forwarding command).
-
-Check your MLFlow UI at http://127.0.0.1:8080. You should be able to see the MLFlow UI like this:
+Check your MLFlow UI at `http://127.0.0.1:8080`. You should be able to see the MLFlow UI like this:
 ![alt text](./imgs/img0.png)
 
 ## Fine-tune gemma2-9b using LoRA
-Before we start our fine-tuning job, we need to create a kubernetes secret with a huggingface API token and accept the Google license to be able to download the model weights. Go to the google/gemma-2-9b and accept the license. Then run the commands below to create huggingface secret:
+Go to the `finetune` directory. Before we start our fine-tuning job, we need to create a kubernetes secret with a huggingface API token and accept the Google license to be able to download the model weights. Go to the [google/gemma-2-9b](https://huggingface.co/google/gemma-2-9b) and accept the license. Then run the commands below to create huggingface secret:
 ```bash
 export HF_TOKEN=<HF_TOKEN>
 kubectl create secret generic hf-secret \
@@ -123,10 +127,10 @@ kubectl create secret generic hf-secret \
 ```
 
 Now we can use MLFlow to track our fine-tuning process as an MLFlow experiment. To do so, we will define several files:
-- cloudbuild.yaml to use build and push Docker image to Artifact Registry
-- Dockerfile for containerization
-- finetune.yaml file for GKE cluster job
-- finetune.py for fine-tuning
+- `cloudbuild.yaml` to use build and push Docker image to Artifact Registry
+- `Dockerfile` for containerization
+- `finetune.yaml` file for GKE cluster job
+- `finetune.py` for fine-tuning
 
 Create an Artifact Registry Docker Repository by running the following command:
 ```bash
@@ -135,6 +139,25 @@ gcloud artifacts repositories create gemma \
     --repository-format=docker \
     --location=us \
     --description="Gemma Repo"
+```
+
+We need to provide read-only access to the `Artifact Registry` to be able to pull Docker images to create a fine-tuning job. Replace the following variables and run the following command to give the access:
+- `<SERVICE_ACCOUNT_EMAIL>`: email of your GKE cluster service account.
+
+Get your GKE cluster’s service account email by running:
+```bash
+gcloud container clusters describe $CLUSTER_NAME \
+  --region $REGION \
+  --format="value(nodeConfig.serviceAccount)"
+```
+
+And give the permission:
+```bash
+gcloud artifacts repositories add-iam-policy-binding gemma \
+    --project="${PROJECT_ID}" \
+    --location="us" \
+    --member="serviceAccount:<SERVICE_ACCOUNT_EMAIL>" \
+    --role="roles/artifactregistry.reader"
 ```
 
 Now we can build our Docker image for a fine-tuning job. Run the command below:
@@ -151,9 +174,25 @@ ID                                    CREATE_TIME                DURATION  SOURC
 ```
 
 In the `finetune.yaml` file you can see the crucial MLFlow environment variables:
-- `MLFLOW_URI`: for connecting to the MLFlow tracking server. We set it to `http://my-mlflow-release-5-tracking:80`, which is internal GKE cluster URI.
+- `MLFLOW_URI`: for connecting to the MLFlow tracking server. We set it to `http://my-mlflow-release-5-tracking:80`, which is an internal GKE cluster URI.
 - `MLFLOW_ARTIFACT_URI`: for connecting experiments to our GCS bucket. You should specify it like `gs://<BUCKET_NAME>/<ANY_EXISTING_PATH>`.
 - `MLFLOW_EXPERIMENT_NAME`: this is an experiment name. If you want to start a fine-tuning job as a new experiment, then change this variable.
+
+Our `finetune.py` script is using MLFlow to save experiment artifacts in the `MLFLOW_ARTIFACT_URI` path. In the finetune.yaml file you can see that we are using the default service account, so we need to give the GKE cluster’s service account a user permission to save the artifacts. Replace the following variables and run the command below to give the permission:
+- `<BUCKET_NAME>`: the GCS bucket’s name that you just created.
+- `<PROJECT_NUMBER>`: your GCP project’s number.
+- `<PROJECT_ID>`: your GCP project’s ID.
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://<BUCKET_NAME> \
+    --role=roles/storage.objectUser \
+    --member=principal://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/default \
+    --condition=None
+```
+
+Then, inside the `finetune.yaml` file, replace the following variables:
+- `<PROJECT_ID>`: with your project ID.
+- `<YOU_BUCKET_PATH>`: with your GCS bucket path.
 
 Then run this command to create fine-tuning job:
 ```bash
@@ -169,7 +208,8 @@ After the status of your pod is Running, you can check the running logs via this
 ```bash
 kubectl logs <POD_NAME> -f
 ```
-The output should look like this:
+
+After about 15 minutes you should be able to see fine-tuning logs. The output should look like this:
 ```log
 {'loss': 0.8569, 'grad_norm': 1.615104079246521, 'learning_rate': 1.0277984159122733e-07, 'epoch': 0.99}
 {'loss': 0.8612, 'grad_norm': 2.9606473445892334, 'learning_rate': 8.391511416816489e-09, 'epoch': 1.0}
@@ -180,7 +220,7 @@ Loading checkpoint shards: 100%|██████████| 3/3 [00:03<00:00
 🧪 View experiment at: http://my-mlflow-release-tracking:80/#/experiments/1
 ```
 
-Or you can go to your MLFlow and check metrics.
+Or you can go to your MLFlow and check metrics.The whole fine-tuning experiment should take about 26 minutes.
 
 ## Model registry
 After the fine-tuning job is finished, you can check the result in MLFlow UI.
@@ -198,34 +238,30 @@ Now you have registered an ML model in MLFlow!
 ## Deployment
 Go to the `deploy-gemma2` directory. In this section we will use KServe to deploy our fine-tuned model. Before deployment, we have to prepare the environment for the mlserver. Since [seldonio/mlserver](https://hub.docker.com/r/seldonio/mlserver/tags)'s libraries might be outdated, we can provide our custom environment with libraries that we need (you can read more detail [here](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver)).
 
-First of all, we have to give our default service account additional permissions, in order to use [gcsfuse](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver) for mounting our custom environment. Run the commands below:
-```bash
-gcloud storage buckets add-iam-policy-binding gs://dima_mlflow_artifact_storage \
-    --member "principal://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/default" \
-    --role "roles/storage.objectAdmin"
-
-gcloud storage buckets add-iam-policy-binding gs://dima_mlflow_artifact_storage \
-    --member "principal://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/default" \
-    --role "roles/storage.admin"
-```
-
 You can see that we have a `conda-configs` directory. Inside this directory is a `yaml` file that will be used to create our custom environment. Create a configmap with this `environment.yaml` by running this command below:
 ```bash
 kubectl create configmap conda-requirements --from-file=conda-configs
 ```
 
-Before you run environment creation job, you need to adjust values in the `create-tarball.yaml` and `deploy.yaml`:
-- <YOUR_BUCKET_NAME> – you should paste your bucket name here.
+Before you run environment creation job, you need to adjust values in the `create-tarball.yaml` and deploy.yaml:
+- `<YOUR_BUCKET_NAME>` – you should paste your bucket name here.
 
 Now we can run our environment creation job:
 ```bash
 kubectl apply -f create-tarball.yaml
 ```
 
+You can check the progress of the tarball creation by running the following command:
+```bash
+kubectl logs <POR_NAME> -f
+```
+
 After the job is done, you can see that your bucket now has `mlflow-gemma2-env.tar.gz` tarball. We will use it in the deploy.yaml.
 Change the following variables in the `deploy.yaml` file:
 - `<PATH_TO_YOUR_MODEL>` – you can find the path in the MLFlow UI (it should look like `gs://<BUCKET_NAME>/asdf12345/artifacts/model`).
 - `<YOUR_BUCKET_NAME>` – your bucket name that should be mounted via gcsfuse to install your conda environment.
+
+Run the command below:
 ```bash
 kubectl apply -f deploy.yaml
 ```
@@ -259,7 +295,7 @@ curl -v \
 ```
 
 The output should be like this:
-```json
+```log
 {
   "model_name": "gemma-2-9b-finetuned-1",
   "id": "d0d248ea-1b4b-42a0-bf96-14b95819daac",
@@ -278,7 +314,7 @@ The output should be like this:
         "content_type": "str"
       },
       "data": [
-        "Question: What is the total number of attendees with age over 30 at kubecon eu? Context: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\nContext: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\nAnswer:"
+        "Question: What is the total number of attendees with age over 30 at kubecon \"eu\"? Context: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\nAnswer: SELECT COUNT(*) FROM attendees WHERE age > 30 AND kubecon = \"eu\""
       ]
     }
   ]
@@ -289,6 +325,25 @@ The output should be like this:
 To clean up, you need to go to the `terraform-gke-cluster` directory and run the following command:
 ```bash
 terraform destroy -var-file=example_environment.tfvars
+```
+
+Remove all permissions that you gave during this tutorial:
+```bash
+gcloud storage buckets remove-iam-policy-binding gs://<BUCKET_NAME> \
+    --role=roles/storage.objectViewer \
+    --member=principal://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/my-mlflow-release-tracking \
+    --condition=None
+
+gcloud storage buckets remove-iam-policy-binding gs://<BUCKET_NAME> \
+    --role=roles/storage.objectUser \
+    --member=principal://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/default \
+    --condition=None
+
+gcloud artifacts repositories remove-iam-policy-binding gemma \
+    --project="${PROJECT_ID}" \
+    --location="us" \
+    --member="serviceAccount:<SERVICE_ACCOUNT>" \
+    --role="roles/artifactregistry.reader"
 ```
 
 And delete your GCS bucket where you stored everything during the guide.
