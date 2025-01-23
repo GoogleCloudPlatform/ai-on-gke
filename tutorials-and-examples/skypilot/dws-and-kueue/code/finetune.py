@@ -246,7 +246,7 @@ base_model = AutoModelForCausalLM.from_pretrained(
 model = PeftModel.from_pretrained(base_model, new_model)
 model = model.merge_and_unload()
 
-#Save model to disk
+# Save model to disk
 model.save_pretrained(output_dir)
-#Save the tokenizer to disk
+# Save the tokenizer to disk
 tokenizer.save_pretrained(output_dir)
