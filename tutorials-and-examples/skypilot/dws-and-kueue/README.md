@@ -81,7 +81,8 @@ Server Version: v1.30.6-gke.1596000
 ```
 If not, you can change the version in Terraform with the  `kubectl_version` variable
 ## Install and configure Kueue
-1. Install Kueue from the official manifest. Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations.
+1. Install Kueue from the official manifest.\
+Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations.
 ```bash
 VERSION=v0.7.0
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
@@ -154,7 +155,8 @@ kubectl config get-contexts
 # Find the context name, for example: 
 gke_${PROJECT_NAME}_us-central1-c_demo-us-central1
 ```
-5. Create a config for SkyPilot at `~/.sky/config.yaml` using the provided context. Make sure to add `autoscaler: gke` as this will allow SkyPilot to run a workload without GPUs provisioned. Also change `PROJECT_NAME` and  `CLUSTER_NAME` to values of the cluster created.
+5. Create a config for SkyPilot at `~/.sky/config.yaml` using the provided context.\
+Make sure to add `autoscaler: gke` as this will allow SkyPilot to run a workload without GPUs provisioned. Also change `PROJECT_NAME` and  `CLUSTER_NAME` to values of the cluster created.
 ```yaml
 allowed_clouds:
   - kubernetes
@@ -256,7 +258,8 @@ Cluster name: skypilot-dws
 ├── To stop the cluster:        sky stop skypilot-dws
 └── To teardown the cluster:    sky down skypilot-dws
 ```
-You can now ssh into the pod, run different workloads and experiment. 
+You can now ssh into the pod, run different workloads and experiment.
+
 ## Fine-tune and Serve Gemma 2B on GKE
 This section details how to fine-tune Gemma 2B for SQL generation on GKE Autopilot using SkyPilot. Model artifacts stored in Google Cloud Storage (GCS) bucket and shared across pods using [gcsfuse](https://cloud.google.com/storage/docs/cloud-storage-fuse/overview). The workflow separates training and serving into distinct pods, managed through [finetune.yaml](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/finetune.yaml) and [serve.yaml](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/serve.yaml).  We'll use two SkyPilot commands for this workflow:
  - `sky launch`: For running the fine-tuning job 
@@ -314,7 +317,8 @@ Replace the [BUCKET_NAME](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/
 
 ### Fine-tune the Model
 1. Set up HuggingFace access:
-Finetune script needs a HuggingFace token and to sign the licence consent agreement. Follow instructions on the following link: [Get access to the model](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#model-access)
+Finetune script needs a HuggingFace token and to sign the licence consent agreement.\
+Follow instructions on the following link: [Get access to the model](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#model-access)
 ```
 export HF_TOKEN=tokenvalue
 ```
