@@ -170,18 +170,18 @@ variable "additional_labels" {
 }
 
 variable "kubernetes_version" {
-  type    = string
+  type        = string
   description = "Set Kubernetes version"
-  default = "1.30"
+  default     = "1.30"
 }
 
 variable "create_gcs_bucket" {
-  type = bool
+  type        = bool
   description = "Wether to create a GCS bucket"
-  default = false
+  default     = false
 }
 
 variable "gcs_bucket" {
-  type = string
-  description = "Name for the created GCS bucket"  
+  type        = string
+  description = "Name for the created GCS bucket"
 }

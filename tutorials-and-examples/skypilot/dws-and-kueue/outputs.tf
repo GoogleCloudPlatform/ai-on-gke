@@ -27,11 +27,11 @@ output "project_id" {
 }
 
 output "service_account" {
-  value = data.google_service_account.gke_service_account.email
+  value       = data.google_service_account.gke_service_account.email
   description = "Service Account for the GKE cluster"
-  }
+}
 
 output "model_bucket_name" {
-  value = var.gcs_bucket
+  value       = var.gcs_bucket
   description = "Name of the GCS bucket that will store the model files"
 }

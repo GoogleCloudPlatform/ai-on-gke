@@ -13,16 +13,16 @@
 # limitations under the License.
 
 
-project_id = "skypilot_project"
-create_cluster = true
-cluster_name = "skypilot-test"
-cluster_location = "us-central1"
-enable_gpu = true
+project_id             = "skypilot_project"
+create_cluster         = true
+cluster_name           = "skypilot-test"
+cluster_location       = "us-central1"
+enable_gpu             = true
 create_service_account = false
-create_brand = false
-create_gcs_bucket = true
-gcs_bucket = "skypilot-model-bucket"
-release_channel = "stable"
+create_brand           = false
+create_gcs_bucket      = true
+gcs_bucket             = "skypilot-model-bucket"
+release_channel        = "stable"
 
 # For Autopilot clusters
 autopilot_cluster = true
