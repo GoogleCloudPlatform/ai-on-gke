@@ -293,7 +293,7 @@ module "skypilot-workload-identity" {
 terraform output project_id
 terraform output service_account
 ```
-2. Configure Workload Identity
+2. Configure Workload Identity\
 Run additional commands to connect the Google Cloud Service Account that was created with Terraform with Identity Federation enabled to be able to use gcsfuse.
 ```
 gcloud iam service-accounts add-iam-policy-binding SERVICE_ACCOUNT \
@@ -309,7 +309,7 @@ kubectl annotate serviceaccount skypilot-service-account --namespace default iam
 ```
 terraform output model_bucket_name
 ```
-5. Update gcsfuse configuration in `finetune.yaml` and `serve.yaml`
+5. Update gcsfuse configuration in `finetune.yaml` and `serve.yaml`\
 Replace the [BUCKET_NAME](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/finetune.yaml#L27)
 
 ### Fine-tune the Model
