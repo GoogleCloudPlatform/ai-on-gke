@@ -33,6 +33,7 @@ spec:
   - coveredResources: ["cpu", "memory", "nvidia.com/gpu", "ephemeral-storage"]
     flavors:
     - name: "default-flavor"
+      # WARNING: Adjust this value based on actual resource needs instead of "Infinite"
       resources:
       - name: "cpu"
         nominalQuota: 1000000000    # "Infinite" quota
