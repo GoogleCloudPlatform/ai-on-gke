@@ -79,7 +79,7 @@ Make sure you meet the minimum version requirements (1.30.3-gke.1451000 or later
 ```
 Server Version: v1.30.6-gke.1596000
 ```
-If not you can change the version in terraform with the  `kubectl_version` variable
+If not, you can change the version in Terraform with the  `kubectl_version` variable
 ## Install and configure Kueue
 1. Install Kueue from the official manifest. Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations.
 ```bash
@@ -109,7 +109,7 @@ kubectl apply -f kueue_resources.yaml
 Kueue should be up and running now. 
 
 ## Install SkyPilot
-1. Create a virtual environment.
+1. Create a python virtual environment.
 ```bash
 cd ~
 python -m venv skypilot-test
@@ -205,7 +205,7 @@ SkyPilot will wait in Launching state until the node is provisioned.
 ```
 ⚙︎ Launching on Kubernetes.
 ```
-In another terminal you can `kubectl get` pods and it will be in SchedulingGated state
+In another terminal, you can `kubectl get` pods and it will be in SchedulingGated state
 ```bash
 NAME                     READY   STATUS            RESTARTS   AGE
 skypilot-dws-00b5-head   0/1     SchedulingGated   0          44s
