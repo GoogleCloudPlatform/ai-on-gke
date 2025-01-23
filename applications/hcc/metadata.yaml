@@ -17,9 +17,9 @@ spec:
   content: {}
   interfaces:
     variables:
-      - name: deployment_name
+      - name: goog_cm_deployment_name
         varType: string
-        defaultValue: "gke-nemo"
+        defaultValue: ""
       - name: project_id
         description: GCP project id
         varType: string

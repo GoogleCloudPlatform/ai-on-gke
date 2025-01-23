@@ -14,15 +14,15 @@
   * limitations under the License.
   */
 
+variable "goog_cm_deployment_name" {
+  description = "The name of the deployment and VM instance."
+  type        = string
+}
+
 variable "authorized_cidr" {
   description = "Toolkit deployment variable: authorized_cidr"
   type        = string
   default     = "0.0.0.0/0"
-}
-
-variable "deployment_name" {
-  description = "Toolkit deployment variable: deployment_name"
-  type        = string
 }
 
 variable "reservation" {

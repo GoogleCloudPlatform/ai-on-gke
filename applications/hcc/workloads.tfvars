@@ -16,7 +16,7 @@
 
 authorized_cidr = "0.0.0.0/0"
 
-deployment_name = "a3plus-qss-test"
+goog_cm_deployment_name = "a3plus-qss-test"
 
 labels = {
   ghpc_blueprint  = "gke-a3-mega"
