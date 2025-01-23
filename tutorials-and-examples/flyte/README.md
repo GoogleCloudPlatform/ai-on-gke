@@ -214,14 +214,21 @@ At this point, the Flyte dashboard is not exposed to the internet. Let's access 
 
 ## Publish service to the internet
 
-First, create a static IP address for the Ingress:
+First, create a global static IP address for the Ingress:
 
 ```bash
 gcloud compute addresses create flyte --global --ip-version=IPV4
+```
+
+Get details about the created IP address and note the IP address:
+
+```bash
 gcloud compute addresses describe flyte --global
 ```
 
-Then, create a managed certificate for the domain you want to use:
+If you have a domain you want to use, go to your domain registrar and create an A record pointing to the IP address you just created. If you don't have a domain, but you want to test this setup, you can use the `sslip.io` service. In that case, use the domain `<cloud-ip-address>.sslip.io` where `<cloud-ip-address>` is the IP address you just created. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
+
+Now, create a managed certificate for the domain you want to use:
 
 ```yaml
 # managed-certificate.yaml
@@ -238,8 +245,6 @@ spec:
 ```bash
 kubectl apply -f managed-certificate.yaml
 ```
-
-If you don't have a domain, but you want to test this setup, you can leverage the `sslip.io` service. In that case, the domain would be `<your-static-ip>.sslip.io`. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
 
 In the final step, let's update the Helm values to enable the Ingress and use the IP address and certificate we created. Edit the `flyte.yaml` file and add the following:
 
@@ -260,15 +265,13 @@ Then, update the Helm release:
 helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
 ```
 
-After some time, the certificate should be provisioned and the application should be accessible via the domain you specified.
-
-You can check the certificate status by running:
+After some time, the certificate should be provisioned and the application should be accessible via the domain you specified. Note that the certificate provisioning may take some time. You can check the certificate status by running:
 
 ```bash
 kubectl get managedcertificate flyte-http
 ```
 
-Note that the certificate provisioning may take some time. Also, it's up to you to configure the DNS records to point to the static IP allocated for the Ingress in the first step of this section.
+When the status is `Active`, you should be able to access the Flyte dashboard via the domain you specified, the link would look like `https://<your-domain>/console`. If you get an SSL error, wait for a couple of minutes more.
 
 At this step, you should be able to access the Flyte dashboard via the domain you specified. The only thing left is to secure the application. Flyte supports OAuth2 and OpenId Connect authentication, there is a guide on how to configure it [here](https://docs.flyte.org/en/latest/deployment/configuration/auth_setup.html). In case you don't need authentication, consider using [Identity-Aware Proxy](https://cloud.google.com/iap/docs) to limit access to the dashboard. The next section will guide you through this process.
 
