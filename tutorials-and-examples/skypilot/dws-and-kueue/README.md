@@ -1,15 +1,15 @@
 # Efficient GPU Resource Management for ML Workloads using SkyPilot, Kueue on GKE
 
-This tutorial expands on the [SkyPilot Tutorial](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/tutorials-and-examples/skypilot) by leveraging [DWS](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler) with the help of an opensource project called [Kueue](https://kueue.sigs.k8s.io/)
-Different from the Skypilot tutorial, this guide shows how to use SkyPilot with Kueue on GKE to efficiently manage ML workloads with dynamic GPU provisioning.
+This tutorial expands on the [SkyPilot Tutorial](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/tutorials-and-examples/skypilot) by leveraging [Dynamic Workload Scheduler](https://cloud.google.com/blog/products/compute/introducing-dynamic-workload-scheduler) with the help of an open-source project called [Kueue](https://kueue.sigs.k8s.io/)
+Different from the SkyPilot tutorial, this guide shows how to use SkyPilot with Kueue on GKE to efficiently manage ML workloads with dynamic GPU provisioning.
 
 ## Overview
 This tutorial is designed for ML Platform engineers who plan to use SkyPilot to train or serve LLM models on Google Kubernetes Engine (GKE) while utilizing Dynamic Workload Scheduler (DWS) to acquire GPU resources as they become available. It covers installing Kueue and Skypilot, creating a GKE cluster with queue processing enabled GPU node pools, and deploying and running a LLM model. This setup enhances resource efficiency and reduces cost for ML workloads through dynamic GPU provisioning.
 
 ## Before you begin
-1. Ensure you have a gcp project with billing enabled and the GKE API.
-[How to enable billing](https://cloud.google.com/billing/v1/getting-started)
-And for the GKE API
+1. Ensure you have a gcp project with billing enabled and the GKE API activated.
+Learn how to [enable billing](https://cloud.google.com/billing/v1/getting-started) and activate the GKE API.
+You can use `gcloud` cli to activate GKE API.
 ```
 gcloud services enable container.googleapis.com
 ```
@@ -24,10 +24,10 @@ gcloud services enable container.googleapis.com
 
 ## Setting up your GKE cluster with Terraform
 We’ll use Terraform to provision:
-A GKE cluster ([Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) or [Standard](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-regional-cluster))
-GPU node pools (only for Standard clusters)
+- A GKE cluster ([Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) or [Standard](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-regional-cluster))
+- GPU node pools (only for Standard clusters)
 
-Create your environment configuration(.tfvar) file and edit based on  example_environment.tfvars. 
+1. Create your environment configuration(.tfvar) file and edit based on  example_environment.tfvars. 
 ```
 project_id = "skypilot-project"
 cluster_name = "skypilot-tutorial"
@@ -68,7 +68,6 @@ project_id = "skypilot-project"
 service_account = "tf-gke-skypilot-tutorial@skypilot-project.iam.gserviceaccount.com"
 ```
 3. Get kubernetes access
-Fetch the kubeconfig file by running:
 ```bash
 gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) --region $(terraform output -raw gke_cluster_location) --project $(terraform output -raw project_id)
 ```
@@ -269,7 +268,7 @@ This section details how to fine-tune Gemma 2B for SQL generation on GKE Autopil
  - HuggingFace account with access to Gemma model
 
 ### Fine-tuning Implementation
-The [finetune.py](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/finetune.yaml) script uses QLoRA with 4-bit quantization to fine-tune Gemma 2B on SQL generation tasks.
+The [finetune.py](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/code/finetune.py) script uses QLoRA with 4-bit quantization to fine-tune Gemma 2B on SQL generation tasks.
 
 ### Configure GCS Storage Access
 The infrastructure Terraform configuration in [main.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/main.tf) includes Workload Identity and GCS bucket setup:
@@ -302,7 +301,6 @@ gcloud iam service-accounts add-iam-policy-binding SERVICE_ACCOUNT \
           --member "serviceAccount:PROJECT_ID.svc.id.goog[default/skypilot-service-account]"
 ```
 This will create policy binding that will allow the kubernetes service account to impersonate the google service account. Also note that  `[default/skypilot-service-account]` is the kubernetes namespace and service account name that is deployed by SkyPilot by default. Change if you specifically changed SkyPilot configuration or used another namespace. 
-
 3. Annotate Kubernetes service account
 ```
 kubectl annotate serviceaccount skypilot-service-account --namespace default iam.gke.io/gcp-service-account=SERVICE_ACCOUNT
@@ -311,12 +309,12 @@ kubectl annotate serviceaccount skypilot-service-account --namespace default iam
 ```
 terraform output model_bucket_name
 ```
-5. Update gcsfuse configuration in `finetune.yaml` and `sever.yaml`
+5. Update gcsfuse configuration in `finetune.yaml` and `serve.yaml`
 Replace the [BUCKET_NAME](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/finetune.yaml#L27)
 
 ### Fine-tune the Model
 1. Set up HuggingFace access:
-Finetune script needs a HuggingFace token and to sign the licence consent agreement. Follow instructions on the following link: Get access to the [model](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#model-access)
+Finetune script needs a HuggingFace token and to sign the licence consent agreement. Follow instructions on the following link: [Get access to the model](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm#model-access)
 ```
 export HF_TOKEN=tokenvalue
 ```
@@ -423,7 +421,7 @@ Wait for endpoints for the kueue-webhook-service to be populated with the kubect
 kubectl -n kueue-system wait endpoints/kueue-webhook-service --for=jsonpath={.subsets}
 ```
 
-3. If skypilot refuses to start the cluster because there is no nodes that would satify the requirement for GPU
+3. If SkyPilot refuses to start the cluster because there is no nodes that would satify the requirement for GPU
 ```
 Task from YAML spec: train_dws.yaml
 No resource satisfying Kubernetes({'L4': 1}) on Kubernetes.
