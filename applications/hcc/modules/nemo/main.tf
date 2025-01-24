@@ -28,14 +28,15 @@ resource "helm_release" "nemo" {
     "${file("${path.module}/values.yaml")}"
   ]
 
+
+
   set {
     name  = "nemo_config"
-    value = "${file("${path.module}/llama3-70b-fp8.yaml")}"
+    value = "${file("${path.module}/${local.nccl_config}")}"
   }
 
   set {
     name = "workload.image"
-    # TODO: this needs to be a public image
     value = "us-central1-docker.pkg.dev/deeplearning-images/reproducibility/pytorch-gpu-nemo@sha256:7a84264e71f82f225be639dd20fcf9104c80936c0f4f38f94b88dfb60303c70e"
   }
 
@@ -46,6 +47,6 @@ resource "helm_release" "nemo" {
 
   set {
     name = "workload.gpus"
-    value = var.gpus
+    value = var.node_count * 8
   }
 }

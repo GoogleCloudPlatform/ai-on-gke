@@ -30,4 +30,9 @@ region = "us-east5"
 zone = "us-east5-a"
 
 checkpoint_bucket = "kevinmcw-llama-checkpoint"
-gpus = "64"
+node_count = 2
+recipe = "llama3.1_7b_nemo_pretraining"
+
+reservation = "qss-test-a3mega"
+reservation_block = ""
+placement_policy_name = ""
