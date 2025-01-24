@@ -24,6 +24,12 @@ spec:
         description: GCP project id
         varType: string
         required: true
+      - name: cluster_name
+        varType: string
+        defaultValue: "a3ultra-qss-{counter}"
+      - name: gpu_type
+        varType: string
+        defaultValue: "A3 Mega"
       - name: region
         varType: string
         required: true
