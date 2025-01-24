@@ -25,6 +25,21 @@ spec:
           name: deployment_name
           title: Deployment Name
           section: required_config
+        gpu_type:
+          name: gup_type
+          title: GPU Type
+          section: required_config
+          enumValueLabels:
+            - label: A3 Mega
+              value: "A3 Mega"
+            - label: A3 Ultra
+              value: "A3 Ultra"
+            - label: A4
+              value: "A4"
+        cluster_name:
+          name: cluster_name
+          title: Cluster Name
+          section: required_config
         region:
           name: region
           title: Cluster Region
@@ -36,7 +51,7 @@ spec:
               allowlisted_regions: ["us-central1","us-east5"]
         zone:
           name: cluster_region
-          title: Cluster Region
+          title: Cluster Zone 
           section: required_config
           xGoogleProperty:
             type: ET_GCE_ZONE
