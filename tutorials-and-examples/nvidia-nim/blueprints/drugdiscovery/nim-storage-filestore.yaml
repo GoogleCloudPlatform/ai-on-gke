@@ -1,0 +1,24 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nim-storage-filestore
+provisioner: filestore.csi.storage.gke.io
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+parameters:
+  tier: BASIC_SSD
+  network: default
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nim-storage-filestore
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: nim-storage-filestore
+  resources:
+    requests:
+      storage: 2.5Ti
+
