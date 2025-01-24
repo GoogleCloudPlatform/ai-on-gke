@@ -1,0 +1,16 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: controller-manager-metrics-monitor
+  namespace: kueue-system
+spec:
+  endpoints:
+    - path: /metrics
+      port: 8080
+      scheme: http
+      interval: 30s
+  selector:
+    matchLabels:
+      control-plane: controller-manager
