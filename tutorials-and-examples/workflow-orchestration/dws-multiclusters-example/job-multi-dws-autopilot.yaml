@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: dws-job-
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: dws-local-queue
+  annotations:
+    provreq.kueue.x-k8s.io/maxRunDurationSeconds: "600"
+spec:
+  ttlSecondsAfterFinished: 3600
+  parallelism: 3
+  completions: 3
+  suspend: true
+  template:
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "cloud.google.com/gke-queued"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: dummy-job
+          image: gcr.io/k8s-staging-perf-tests/sleep:v0.0.3
+          args: ["120s"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "100m"
+              memory: "100Mi"
+              nvidia.com/gpu: 1
+      restartPolicy: Never
