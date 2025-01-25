@@ -135,7 +135,8 @@ module "nemo" {
   source     = "./modules/nemo"
   cluster_id = module.gke_cluster.cluster_id
   checkpoint_bucket = var.checkpoint_bucket
-  gpus = 16 # TODO: populate this based on recipe type
+  recipe = var.recipe
+  node_count = var.node_count
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
   providers = {
     helm = helm
