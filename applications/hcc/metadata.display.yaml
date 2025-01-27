@@ -6,11 +6,11 @@ metadata:
     config.kubernetes.io/local-config: "true"
 spec:
   info:
-    title: Ray on GKE
+    title: HyperCompute Cluster on GKE 
     source:
       repo: https://github.com/GoogleCloudPlatform/ai-on-gke
       sourceType: git
-      dir: /applications/ray
+      dir: /applications/hcc
   ui:
     input:
       variables:
@@ -161,7 +161,7 @@ spec:
         - name: acknowledge
           title: Before you begin
           subtext: 
-                This solution deploys a sample <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/blob/release-1.1/applications/ray/README.md#ray-on-gke-templates"><i>Ray</i></a> application on GKE in your project.</br>
+                This solution deploys a sample <a href="https://cloud.google.com/ai-hypercomputer/docs/create/gke-ai-hypercompute"><i>HyperCompute Cluster</i></a> on GKE in your project.</br>
         - name: required_config
           title: Required configuration
     runtime:
