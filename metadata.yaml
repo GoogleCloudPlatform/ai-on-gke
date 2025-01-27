@@ -37,11 +37,6 @@ spec:
         varType: string
         required: true
         defaultValue: ""
-      - name: a4_zone
-        description: "Pick a Zone"
-        varType: string
-        required: true
-        defaultValue: ""
       - name: checkpoint_bucket
         varType: string
         required: true

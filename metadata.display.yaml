@@ -34,8 +34,6 @@ spec:
               value: "A3 Mega"
             - label: A3 Ultra
               value: "A3 Ultra"
-            - label: A4
-              value: "A4"
         a3_mega_zone:
           name: a3_mega_zone
           title: Location
@@ -44,7 +42,7 @@ spec:
             type: ET_GCE_ZONE
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_zone:
-              allowlisted_zones: ["us-central1-a", "us-east5-a"]
+              allowlisted_zones: ["asia-northeast1-b", "asia-southeast1-b", "asia-southeast1-c", "europe-west4-b", "europe-west4-c", "us-central1-a", "us-central1-b", "us-central1-c", "us-east4-a", "us-east4-b", "us-east4-c", "us-east5-a", "us-west1-a", "us-west1-b", "us-west4-a"]
           toggleUsingVariables:
             - variableName: gpu_type
               variableValues: ["A3 Mega"]
@@ -57,23 +55,10 @@ spec:
             type: ET_GCE_ZONE
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_zone:
-              allowlisted_zones: ["tba"]
+              allowlisted_zones: ["europe-west1-b"]
           toggleUsingVariables:
             - variableName: gpu_type
               variableValues: ["A3 Ultra"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
-        a4_zone:
-          name: a4_zone
-          title: Location
-          section: required_config
-          xGoogleProperty:
-            type: ET_GCE_ZONE
-            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
-            gce_zone:
-              allowlisted_zones: ["tba"]
-          toggleUsingVariables:
-            - variableName: gpu_type
-              variableValues: ["A4"]
               type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         checkpoint_bucket:
           name: checkpoint_bucket
