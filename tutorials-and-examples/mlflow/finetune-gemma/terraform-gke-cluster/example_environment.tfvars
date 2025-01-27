@@ -15,11 +15,11 @@
 
 ##common variables
 ## Need to pull this variables from tf output from previous platform stage
-project_id = "akvelon-gke-aieco"
+project_id = "<PROJECT_ID>"
 
 ## this is required for terraform to connect to GKE master and deploy workloads
 create_cluster   = true # this flag will create a new standard public gke cluster in default network
-cluster_name     = "dimadrogovoz-test-1"
+cluster_name     = "<CLUSTER_NAME>"
 cluster_location = "us-central1"
 
 #######################################################
@@ -27,7 +27,7 @@ cluster_location = "us-central1"
 #######################################################
 
 ## GKE environment variables
-kubernetes_namespace = "dimadrogovoz-ai-on-gke-1"
+kubernetes_namespace = "<KUBERNETES_NAMESPACE>"
 
 # Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
 # Set to false & update the variable `workload_identity_service_account` to use an existing IAM service account.

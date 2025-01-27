@@ -50,8 +50,6 @@ gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION --proje
 
 The last command connects your current terminal session to the GKE cluster and saves kubectl settings in `KUBECONFIG` path.
 
-At this point, you have your terminal session with set up kubectl. The next step is KServe installation on your GKE cluster. You can follow the official guide [here](https://kserve.github.io/website/master/admin/serverless/serverless/).
-
 >Note: in step 1, the  “[Knative Serving install guide](https://knative.dev/docs/admin/install/serving/install-serving-with-yaml/)” actually also includes the steps to install the networking layer, and it actually prefers Kourier over Istio.
 
 ## Install MLFlow
@@ -236,7 +234,32 @@ Now you have registered an ML model in MLFlow!
 ![alt text](./imgs/img4.png)
 
 ## Deployment
-Go to the `deploy-gemma2` directory. In this section we will use KServe to deploy our fine-tuned model. Before deployment, we have to prepare the environment for the mlserver. Since [seldonio/mlserver](https://hub.docker.com/r/seldonio/mlserver/tags)'s libraries might be outdated, we can provide our custom environment with libraries that we need (you can read more detail [here](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver)).
+
+Go to the `deploy-gemma2` directory. In this section we will use KServe to deploy our fine-tuned model.
+
+To install KServe, you can follow [the guide in our repo](https://github.com/volatilemolotov/ai-on-gke/blob/main/tutorials-and-examples/kserve/README.md#install-kserve). After the successful installation, we need to patch the deployment mode and create an ingress class.
+Run the command below:
+```bash
+kubectl patch configmap/inferenceservice-config -n kserve --type=strategic -p '{"data": {"deploy": "{\"defaultDeploymentMode\": \"RawDeployment\"}"}}'
+```
+
+The command above switches deployment mode from Serverless to RawDeployment, which bypasses Knative. RawDeployment mode directly manages Kubernetes resources for model deployment, which can offer more flexibility.
+
+Also install the ingress class by running this command:
+```bash
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1beta1
+kind: IngressClass
+metadata:
+  name: istio
+spec:
+  controller: istio.io/ingress-controller
+EOF
+```
+
+We need this class to be able to invoke the deployed model.
+
+Before deployment, we have to prepare the environment for the mlserver. Since [seldonio/mlserver](https://hub.docker.com/r/seldonio/mlserver/tags)'s libraries might be outdated, we can provide our custom environment with libraries that we need (you can read more detail [here](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver)).
 
 You can see that we have a `conda-configs` directory. Inside this directory is a `yaml` file that will be used to create our custom environment. Create a configmap with this `environment.yaml` by running this command below:
 ```bash
