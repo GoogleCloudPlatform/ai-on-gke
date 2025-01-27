@@ -65,6 +65,9 @@ spec:
       - name: placement_policy_name
         varType: string
         defaultValue: ""
+      - name: host_maintenance
+        varType: string
+        defaultValue: ""
       - name: additional_labels
         description: Additional labels to add to Kubernetes resources.
         varType: string
