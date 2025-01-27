@@ -24,20 +24,24 @@ spec:
         description: GCP project id
         varType: string
         required: true
-      - name: cluster_name
-        varType: string
-        defaultValue: "a3ultra-qss-{counter}"
       - name: gpu_type
         varType: string
-        defaultValue: "A3 Mega"
-      - name: region
-        varType: string
-        required: true
-        defaultValue: "us-east5"
-      - name: zone
+        defaultValue: ""
+      - name: a3_mega_zone
+        description: "Pick a Zone"
         varType: string
         required: true
         defaultValue: "us-east5-a"
+      - name: a3_ultra_zone
+        description: "Pick a Zone"
+        varType: string
+        required: true
+        defaultValue: ""
+      - name: a4_zone
+        description: "Pick a Zone"
+        varType: string
+        required: true
+        defaultValue: ""
       - name: checkpoint_bucket
         varType: string
         required: true
@@ -49,7 +53,10 @@ spec:
         varType: string
         required: true
         defaultValue: ""
-      - name: reservation
+      - name: consumption_model
+        varType: string
+        defaultValue: ""
+      - name: reservation_name
         varType: string
         defaultValue: ""
       - name: reservation_block

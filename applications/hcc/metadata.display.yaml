@@ -26,7 +26,7 @@ spec:
           title: Deployment Name
           section: required_config
         gpu_type:
-          name: gup_type
+          name: gpu_type
           title: GPU Type
           section: required_config
           enumValueLabels:
@@ -36,28 +36,45 @@ spec:
               value: "A3 Ultra"
             - label: A4
               value: "A4"
-        cluster_name:
-          name: cluster_name
-          title: Cluster Name
-          section: required_config
-        region:
-          name: region
-          title: Cluster Region
-          section: required_config
-          xGoogleProperty:
-            type: ET_GCE_REGION
-            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
-            gce_region:
-              allowlisted_regions: ["us-central1","us-east5"]
-        zone:
-          name: cluster_region
-          title: Cluster Zone 
+        a3_mega_zone:
+          name: a3_mega_zone
+          title: Location
           section: required_config
           xGoogleProperty:
             type: ET_GCE_ZONE
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_zone:
               allowlisted_zones: ["us-central1-a", "us-east5-a"]
+          toggleUsingVariables:
+            - variableName: gpu_type
+              variableValues: ["A3 Mega"]
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+        a3_ultra_zone:
+          name: a3_ultra_zone
+          title: Location
+          section: required_config
+          xGoogleProperty:
+            type: ET_GCE_ZONE
+            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+            gce_zone:
+              allowlisted_zones: ["tba"]
+          toggleUsingVariables:
+            - variableName: gpu_type
+              variableValues: ["A3 Ultra"]
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+        a4_zone:
+          name: a4_zone
+          title: Location
+          section: required_config
+          xGoogleProperty:
+            type: ET_GCE_ZONE
+            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+            gce_zone:
+              allowlisted_zones: ["tba"]
+          toggleUsingVariables:
+            - variableName: gpu_type
+              variableValues: ["A4"]
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         checkpoint_bucket:
           name: checkpoint_bucket
           title: Checkpoint bucket
@@ -70,7 +87,7 @@ spec:
           section: required_config
         recipe:
           name: recipe
-          title: Deployment Options 
+          title: Deployment options 
           section: required_config
           enumValueLabels:
             - label: GKE Cluster Only
@@ -83,18 +100,39 @@ spec:
               value: llama3.1-70b
             - label: GKE Cluster with Mixtral-8-7B pretraining benchmark
             - value: mixtral8-7b
-        reservation:
-          name: reservation
-          title: Reservation
+        consumption_model:
+          name: consumption_model
+          title: Consumption model
           section: required_config
+          enumValueLabels:
+            - label: "Reservation"
+              value: "Reservation"
+            - label: "On Demand"
+              value: "On Demand"
+        reservation_name:
+          name: reservation_name
+          title: Reservation Name 
+          section: required_config
+          toggleUsingVariables:
+            - variableName: consumption_model 
+              variableValues: ["Reservation"]
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         reservation_block:
           name: reservation_block
           title: Reservation Block
           section: required_config
+          toggleUsingVariables:
+            - variableName: consumption_model
+              variableValues: ["Reservation"]
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         placement_policy_name:
           name: placement_policy_name
           title: Placement Policy
           section: required_config
+          toggleUsingVariables:
+            - variableName: consumption_model
+              variableValues: ["Reservation"]
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         acknowledge:
           name: acknowledge
           title: Check to confirm you enabled Google APIs for your project with this command.
