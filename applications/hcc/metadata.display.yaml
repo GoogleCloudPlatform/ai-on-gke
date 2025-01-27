@@ -133,6 +133,19 @@ spec:
             - variableName: consumption_model
               variableValues: ["Reservation"]
               type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+        host_maintenance:
+          name: host_maintenance
+          title: Host Maintainance
+          section: required_config
+          enumValueLabels:
+            - label: "NONE"
+              value: "none"
+            - label: "PERIODIC"
+              value: "periodic"
+          toggleUsingVariables:
+            - variableName: consumption_model
+              variableValues: ["Reservation"]
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         acknowledge:
           name: acknowledge
           title: Check to confirm you enabled Google APIs for your project with this command.
