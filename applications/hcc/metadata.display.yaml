@@ -84,7 +84,7 @@ spec:
             - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
               value: llama3.1-70b
             - label: GKE Cluster with Mixtral-8-7B pretraining benchmark
-            - value: mixtral8-7b
+              value: mixtral8-7b
         consumption_model:
           name: consumption_model
           title: Consumption model
