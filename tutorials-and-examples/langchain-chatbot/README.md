@@ -50,12 +50,12 @@ This tutorial assumes you have the following:
 - A Google Cloud Platform account and project
 - The Google Cloud SDK (gcloud) installed and configured
 - The Kubernetes command-line tool (kubectl) installed and configured
-- A language model deployed on an OpenAI-compatible API
+- An instruction-tuned language model (e.g., instruction-tuned Gemma2 model) running on KServe or any other API that provides OpenAI-compatible interface (`v1/completion` and `v1/chat/completion` endpoints)
 - A Google Kubernetes Engine (GKE) to deploy the application
 - Optional: Docker installed on your local machine (if you want to build and run the application locally)
 - Optional: Terraform installed on your local machine (if you want to use the automated deployment)
 
-If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy your model on Google Kubernetes Engine (GKE). In that case feel free to use the same GK cluster to deploy the chatbot application.
+If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy your model on Google Kubernetes Engine (GKE). In that case feel free to use the same GKE cluster to deploy the chatbot application.
 
 ## Optional: Build and Run the Application Locally
 
