@@ -101,7 +101,7 @@ spec:
           toggleUsingVariables:
             - variableName: consumption_model 
               variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         reservation_block:
           name: reservation_block
           title: Reservation Block
@@ -109,7 +109,7 @@ spec:
           toggleUsingVariables:
             - variableName: consumption_model
               variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         placement_policy_name:
           name: placement_policy_name
           title: Placement Policy
@@ -117,7 +117,7 @@ spec:
           toggleUsingVariables:
             - variableName: consumption_model
               variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         host_maintenance:
           name: host_maintenance
           title: Host Maintainance
@@ -130,7 +130,7 @@ spec:
           toggleUsingVariables:
             - variableName: consumption_model
               variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         acknowledge:
           name: acknowledge
           title: Check to confirm you enabled Google APIs for your project with this command.
