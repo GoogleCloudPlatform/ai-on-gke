@@ -139,30 +139,46 @@ This section describes how to deploy the application manually. If you prefer an 
 
 ### Create Cloud SQL Instance
 
-On this step we will create a Cloud SQL instance and a database to store user messages. The database should be accessible from the GKE cluster where the application will be deployed. A good practice is to use a private IP address for the Cloud SQL instance. To do this, a VPC Peering connection needs to be established between the network of the GKE cluster and the Google-managed services network.
+In this step, we will create a Cloud SQL instance and a database to store user messages. The database should be accessible from the GKE cluster where the application will be deployed. We will use a private IP address for the Cloud SQL instance to ensure secure communication. To do this, a VPC Peering connection needs to be established between the network of the GKE cluster and the Google-managed services network.
+
+First, create an address range for VPC Peering in the GKE cluster network:
 
 ```bash
 NETWORK=<your-network-name>
 ADDRESS_RANGE=google-managed-services-${NETWORK}
 
-# Create address range for VPC Peering
-gcloud compute addresses create ${ADDRESS_RANGE} --network=${NETWORK} --global --purpose=VPC_PEERING --prefix-length=24
-
-# Create a VPC Peering connection with Google-managed services network
-gcloud services vpc-peerings connect --network=${NETWORK} --ranges=${ADDRESS_RANGE} --service=servicenetworking.googleapis.com
+gcloud compute addresses create ${ADDRESS_RANGE} \
+  --network=${NETWORK} \
+  --global \
+  --purpose=VPC_PEERING \
+  --prefix-length=24
 ```
 
-Once VPC Peering is established, create the Cloud SQL instance and database, and set the password for the `postgres` user:
+Then, create a VPC Peering connection with the Google-managed services network:
+
+```bash
+gcloud services vpc-peerings connect \
+  --network=${NETWORK} \
+  --ranges=${ADDRESS_RANGE} \
+  --service=servicenetworking.googleapis.com
+```
+
+Once VPC Peering is established, create the Cloud SQL instance with a private IP address and set the password for the `postgres` user:
 
 ```bash
 CLOUD_SQL_INSTANCE=langchain-chatbot
 DB_NAME=chat
 DB_PASSWORD=superpassword
 
-# Create Cloud SQL instance
-gcloud sql instances create ${CLOUD_SQL_INSTANCE} --database-version=POSTGRES_16 --edition=ENTERPRISE --region=us-central1 --tier=db-f1-micro --network=${NETWORK} --no-assign-ip --enable-google-private-path
+gcloud sql instances create ${CLOUD_SQL_INSTANCE} \
+  --database-version=POSTGRES_16 \
+  --edition=ENTERPRISE \
+  --region=us-central1 \
+  --tier=db-f1-micro \
+  --network=${NETWORK} \
+  --no-assign-ip \
+  --enable-google-private-path
 
-# Create database and set password for postgres user
 gcloud sql databases create ${DB_NAME} --instance=${CLOUD_SQL_INSTANCE}
 gcloud sql users set-password postgres --instance=${CLOUD_SQL_INSTANCE} --host=% --password=${DB_PASSWORD}
 ```
