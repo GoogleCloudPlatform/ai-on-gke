@@ -27,16 +27,21 @@ spec:
       - name: gpu_type
         varType: string
         defaultValue: ""
+      - name: region
+        description: "Pick a Region"
+        varType: string
+        required: true
+        defaultValue: "us-east5"
       - name: a3_mega_zone
         description: "Pick a Zone"
         varType: string
         required: true
         defaultValue: "us-east5-a"
-      - name: a3_ultra_zone
-        description: "Pick a Zone"
-        varType: string
-        required: true
-        defaultValue: ""
+          # - name: a3_ultra_zone
+          #   description: "Pick a Zone"
+          #   varType: string
+          #   required: true
+          #   defaultValue: "europe-west1-b"
       - name: checkpoint_bucket
         varType: string
         required: true
@@ -51,7 +56,7 @@ spec:
       - name: consumption_model
         varType: string
         defaultValue: ""
-      - name: reservation_name
+      - name: reservation
         varType: string
         defaultValue: ""
       - name: reservation_block

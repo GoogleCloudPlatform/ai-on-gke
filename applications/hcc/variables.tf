@@ -52,8 +52,8 @@ variable "region" {
   type        = string
 }
 
-variable "zone" {
-  description = "Toolkit deployment variable: zone"
+variable "a3_mega_zone" {
+  description = "Toolkit deployment variable: a3mega_zone"
   type        = string
 }
 
@@ -74,6 +74,11 @@ variable "placement_policy_name" {
 
 variable "recipe" {
   description = "Toolkit deployment variable: recipe"
+  type        = string
+}
+
+variable "host_maintenance" {
+  description = "Toolkit deployment variable: host_maintenance"
   type        = string
 }
 
