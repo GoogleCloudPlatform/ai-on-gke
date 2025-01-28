@@ -274,7 +274,11 @@ kubectl apply -n ${K8S_NAMESPACE} -f backendconfig.yaml
 kubectl annotate service chat -n ${K8S_NAMESPACE} beta.cloud.google.com/backend-config=chat-ui
 ```
 
-Finally, go to the IAP page in the GCP Console and add enable IAP for the application. Doint that, don't forget to add some principals (users, domains, etc.) to the allowlist.
+Finally, go to the IAP page in the GCP Console and enable IAP for the application. When enabling IAP, you need to specify which principals (users, groups, or domains) should be allowed or denied access. Common roles to consider include:
+
+- **Individual Users**: Add specific email addresses of users who should have access.
+- **Groups**: If you have a Google Group containing users who need access, add the group's email address.
+- **Domains**: If you want to allow all users from a specific domain (e.g., your organization), add the domain.
 
 Now, go to your domain again. You should be prompted to log in with your Google account to access the chatbot. Once logged in, you can start chatting with the chatbot. The chat history will persist between page reloads now as it's bound to your identity.
 
