@@ -46,7 +46,7 @@ spec:
           toggleUsingVariables:
             - variableName: gpu_type
               variableValues: ["A3 Mega"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         a3_ultra_zone:
           name: a3_ultra_zone
           title: Location
@@ -59,7 +59,7 @@ spec:
           toggleUsingVariables:
             - variableName: gpu_type
               variableValues: ["A3 Ultra"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         checkpoint_bucket:
           name: checkpoint_bucket
           title: Checkpoint bucket

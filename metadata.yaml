@@ -26,6 +26,7 @@ spec:
         required: true
       - name: gpu_type
         varType: string
+        required: true
         defaultValue: ""
       - name: a3_mega_zone
         description: "Pick a Zone"
