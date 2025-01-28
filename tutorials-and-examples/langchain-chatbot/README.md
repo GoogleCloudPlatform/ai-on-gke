@@ -69,17 +69,29 @@ docker network create langchain-chatbot
 docker run --rm --name postgres --network langchain-chatbot -e POSTGRES_PASSWORD=superpassword -d postgres
 ```
 
-Next, build and run the application:
+Next, ensure you have a language model endpoint running. If you have deployed the model using KServe on GKE, you can port-forward the model service to your local machine:
+
+```bash
+kubectl port-forward -n <model-namespace> svc/<model-service-name> 8000:80
+```
+
+Replace `<model-namespace>` and `<model-service-name>` with the appropriate values. This will make the model accessible at `http://localhost:8000`.
+
+Now, build and run the application:
 
 ```bash
 docker build -t langchain-chatbot app
 docker run --rm --name chatbot \
    --network langchain-chatbot -p 8501:8501 \
-   -e MODEL_BASE_URL=https://model.example.com/openai/v1/ \
+   -e MODEL_BASE_URL=http://localhost:8000/openai/v1/ \
    -e MODEL_NAME=gemma2 \
    -e DB_URI=postgresql://postgres:superpassword@postgres:5432/postgres \
    langchain-chatbot
 ```
+
+Navigate to `http://localhost:8501` in your browser to access the chatbot UI. You can start chatting with the chatbot, and the chat history will be stored in the local PostgreSQL database.
+
+If you're getting a 404 error in a chat box, it means the model is not accessible at the specified URL. Make sure the model is running and accessible at the correct URL.
 
 ## Optional: Provision GKE Cluster
 
