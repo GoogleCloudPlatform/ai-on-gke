@@ -228,7 +228,7 @@ Note that as we didn't configure authentication yet, application won't save the 
 
 ### Expose the application to the internet
 
-To make the application accessible from the internet, we need to create an Ingress resource. The Ingress will route traffic to the application and terminate SSL connections.
+To make the application accessible from the internet, we need to create an Ingress resource. An Ingress resource manages external access to the services in a Kubernetes cluster, typically HTTP. It provides load balancing, SSL termination, and name-based virtual hosting.
 
 First, create a static IP address for the Ingress:
 
@@ -237,7 +237,9 @@ gcloud compute addresses create langchain-chatbot \
   --global --ip-version=IPV4
 ```
 
-Wait until the static IP address is created, then go to your domain registrar and create an A record pointing to the static IP address.
+Wait until the static IP address is created. Next, go to your domain registrar and create an A record pointing to the static IP address. An A record maps a domain name to the IP address of a server hosting the domain.
+
+After creating the A record, wait for the DNS change to propagate. This can take anywhere from a few minutes to several hours, depending on your DNS provider.
 
 Next, update `managed-certificate.yaml` with your domain name and apply manifests for the Managed Certificate and Ingress:
 
@@ -252,7 +254,7 @@ It takes some time for the Managed Certificate to be provisioned. You can check 
 kubectl describe managedcertificate chat-cert -n ${K8S_NAMESPACE}
 ```
 
-After certificate is provisioned, you can access the application using your domain name. But for now it is not yet secured, nor it will save the chat history between page reloads. So let's fix that.
+After the certificate is provisioned, you can access the application using your domain name. But for now, it is not yet secured, nor will it save the chat history between page reloads. So let's fix that.
 
 ### Configure IAP for the application
 
