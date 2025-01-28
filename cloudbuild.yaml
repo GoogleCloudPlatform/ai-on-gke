@@ -461,7 +461,7 @@ substitutions:
   _REGION: us-east4
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
-  _BUILD_ID: "77884902"
+  _BUILD_ID: ${BUILD_ID:0:8}
   _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:cd45e6cd84e9a45462ddbca18c4731fd4e264d517ee98131eb5be4eb57691f44
 logsBucket: gs://ai-on-gke-build-logs
 options:
