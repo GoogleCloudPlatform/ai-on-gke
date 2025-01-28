@@ -56,7 +56,7 @@ This tutorial assumes you have the following:
 - Optional: Docker installed on your local machine (if you want to build and run the application locally)
 - Optional: Terraform installed on your local machine (if you want to use the automated deployment)
 
-If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy your model on Google Kubernetes Engine (GKE). In that case feel free to use the same GKE cluster to deploy the chatbot application.
+If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy the model on Google Kubernetes Engine (we recommend using the instruction tuned Gemma2 model). In that case feel free to use the same GKE cluster to deploy the chatbot application.
 
 ## Optional: Build and Run the Application Locally
 
