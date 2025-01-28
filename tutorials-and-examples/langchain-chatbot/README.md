@@ -18,6 +18,8 @@
   - [Configure IAP for the application](#configure-iap-for-the-application)
 - [Automated Deployment](#automated-deployment)
 - [Interaction with the Chatbot](#interaction-with-the-chatbot)
+  - [Basic Troubleshooting and Debugging Tips](#basic-troubleshooting-and-debugging-tips)
+  - [Common Errors and Resolutions](#common-errors-and-resolutions)
 - [Conclusion](#conclusion)
 
 ## Introduction
@@ -319,11 +321,51 @@ Finally, wait some time for the Managed Certificate to be provisioned and then y
 
 ## Interaction with the Chatbot
 
-Once the application is deployed, you can interact with the chatbot by visiting the URL of the application in your browser. If you are using Terraform, the URL will be provided as an output, but in any case it technically should be `https://<you-domain>/`. You will be prompted to log in with your Google account to access the chatbot.
+Once the application is deployed, you can interact with the chatbot by visiting the URL of the application in your browser. If you are using Terraform, the URL will be provided as an output, but in any case it technically should be `https://<your-domain>/`. You will be prompted to log in with your Google account to access the chatbot.
 
 Once logged in, you can start chatting with the chatbot. The chatbot will use the language model you specified to generate responses to your messages. The chat history will be stored in the PostgreSQL database, and you can view it by connecting to the database using a PostgreSQL client.
 
 The history is preserved across sessions, so you can continue the conversation where you left off. You can also clear the chat history using the appropriate button in the application.
+
+### Basic Troubleshooting and Debugging Tips
+
+If you encounter issues while interacting with the chatbot, here are some common troubleshooting steps.
+
+To inspect the logs of the application, use the following command:
+
+```bash
+kubectl logs -n <namespace> <pod-name>
+```
+
+Replace `<namespace>` with the namespace where the application is deployed and `<pod-name>` with the name of the pod. You can get the list of pods using:
+
+```bash
+kubectl get pods -n <namespace>
+```
+
+To check the status of the deployment and pods, use:
+
+```bash
+kubectl get deployments -n <namespace>
+kubectl get pods -n <namespace>
+```
+
+Ensure that the pods are in the `Running` state. If any pod is in the `CrashLoopBackOff` or `Error` state, inspect the logs for that pod to identify the issue.
+
+To get information about the Ingress resource, use:
+
+```bash
+kubectl describe ingress -n <namespace> <ingress-name>
+```
+
+Replace `<namespace>` with the namespace where the application is deployed and `<ingress-name>` with the name of the Ingress resource. This will provide details about the Ingress configuration and status.
+
+### Common Errors and Resolutions
+
+- **404 Error in Chat Box**: This means the model is not accessible at the specified URL. Ensure the model is running and accessible at the correct URL. Check the model service and port-forwarding configuration.
+- **502 Bad Gateway**: This indicates an issue with the backend service. Check the logs of the application and the status of the pods.
+- **IAP Authentication Issues**: Ensure that the OAuth client ID and secret are correctly configured. Verify that the IAP is enabled and the correct principals are allowed access.
+- **Database Connection Issues**: Ensure that the Cloud SQL instance is running and accessible from the GKE cluster. Check the database URI and credentials.
 
 ## Conclusion
 
