@@ -299,6 +299,11 @@ steps:
   args:
   - '-c'
   - |
+    mkdir -p security_test/scan_target/ && find . -mindepth 1 -maxdepth 1 -type d ! -name "security_test" -exec cp -r {} security_test/scan_target/ \;
+    mkdir -p /workspace/security_test/scan_target
+    # Exclude /workspace/security_test from the copy to avoid recursive issue
+    find . -mindepth 1 -maxdepth 1 ! -path "./security_test" -exec cp -r {} /workspace/security_test/scan_target/ \;
+    chown -R 65532:65532 /workspace/security_test/scan_target
     mkdir -p /workspace/security_test/allowlist
     cp security_test/config.yaml /workspace/security_test/config.yaml
     cp -r security_test/allowlist/* /workspace/security_test/allowlist/ || echo "Allowlist folder is empty or not found"
@@ -308,7 +313,7 @@ steps:
 # gcr.io/cloud-builders/docker is a special image: This image provided by Google Cloud contains the docker command-line tool, which is essential for executing Docker commands like docker build and docker run within your Cloud Build steps.
 # gcr.io/${_PROJECT_ID}/check_violations:latest is your application image: This image contains your security check tool and its dependencies. It's designed to be run, not to build or run other Docker images.
 - name: 'gcr.io/cloud-builders/docker'
-  id: 'run shipshape'
+  id: 'Run shipshape on cluster'
   args:
   - 'run'
   - '--network=cloudbuild'
@@ -322,13 +327,29 @@ steps:
   - '${_SHIPSHAPE_IMAGE}'
   - '--mode=cluster'
   - '--allowlist_folder=/workspace/security_test/allowlist'
-  - '--cluster_name=ml-${SHORT_SHA}-${_PR_NUMBER}-${_BUILD_ID}-cluster'
-  - '--project_id=$PROJECT_ID'
-  - '--location=${_REGION}'
   - '--kube_config_path=/root/.kube/config'
   - '--max_wait_duration=3000'
   - '--max_parallel=100'
   - '--cluster_scan_config_path=/workspace/security_test/config.yaml'
+  allowFailure: true
+  waitFor: ['Copy metadata']
+
+
+- id: 'Run Shipshape on helm'
+  name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'run'
+  - '--network=cloudbuild'
+  - '--rm'
+  - '-v'
+  - '/workspace/security_test/allowlist:/workspace/security_test/allowlist'
+  - '-v'
+  - '/workspace/security_test/scan_target:/workspace/security_test/scan_target'
+  - '${_SHIPSHAPE_IMAGE}'
+  - '--mode=helm'
+  - '--allowlist_folder=/workspace/security_test/allowlist'
+  - '--scan_path=/workspace/security_test/scan_target'
+  - '--max_wait_duration=60'
   allowFailure: true
   waitFor: ['Copy metadata']
 
@@ -358,7 +379,7 @@ steps:
     -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
     -auto-approve -no-color
   allowFailure: true
-  waitFor: ['run shipshape']
+  waitFor: ['Run shipshape on cluster', 'Run Shipshape on helm']
 
 - id: 'cleanup gke cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -441,7 +462,7 @@ substitutions:
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
-  _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:1f80ae746014330a3a83b5ee2fabeacf90fa488c4f0922072b628b95144f25c8
+  _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:cd45e6cd84e9a45462ddbca18c4731fd4e264d517ee98131eb5be4eb57691f44
 logsBucket: gs://ai-on-gke-build-logs
 options:
   substitutionOption: "ALLOW_LOOSE"
