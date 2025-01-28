@@ -6,6 +6,7 @@
   - [What is Identity Aware Proxy (IAP)](#what-is-identity-aware-proxy-iap)
 - [Prerequisites](#prerequisites)
 - [Optional: Build and Run the Application Locally](#optional-build-and-run-the-application-locally)
+- [Optional: Provision GKE Cluster](#optional-provision-gke-cluster)
 - [Prepare the Application for Deployment](#prepare-the-application-for-deployment)
   - [Create Google Container Registry (GCR)](#create-google-container-registry-gcr)
   - [Build the Application Using Cloud Build](#build-the-application-using-cloud-build)
@@ -78,6 +79,19 @@ docker run --rm --name chatbot \
    -e MODEL_NAME=gemma2 \
    -e DB_URI=postgresql://postgres:superpassword@postgres:5432/postgres \
    langchain-chatbot
+```
+
+## Optional: Provision GKE Cluster
+
+If you already have an inference service, but don't have a GKE cluster, you can follow these steps to create one.
+
+```bash
+gcloud container clusters create-auto langchain-chatbot-demo \
+  --location=us-central1 \
+  --workload-policies=allow-net-admin
+
+gcloud container clusters get-credentials langchain-chatbot-demo \
+  --region us-central1
 ```
 
 ## Prepare the Application for Deployment
