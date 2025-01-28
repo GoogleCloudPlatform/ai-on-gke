@@ -185,7 +185,22 @@ gcloud sql users set-password postgres --instance=${CLOUD_SQL_INSTANCE} --host=%
 
 ### Deploy the application to GKE
 
-Open `deployment.yaml` and replace the placeholders with the actual values. There are three pieces of information you need to provide: model base URL, model name, and database URI. Then, create a namespace and deploy the application:
+Open `deployment.yaml` and replace the placeholders with the actual values. There are three pieces of information you need to provide: model base URL, model name, and database URI. The model base URL should point to the OpenAI-compatible API serving the language model (in case of KServe running in the same GKE cluster, it will be `http://<model-service-name>.<model-namespace>:<model-service-port>/openai/v1/`). The model name should match the name of the model on the API. The database URI should follow the scheme `postgres://<username>:<password>@<host>:<port>/<database>`. It is recommended to use environment variables to store sensitive information such as database credentials. For example:
+
+```yaml
+env:
+  - name: MODEL_BASE_URL
+    value: "http://<model-base-url>"
+  - name: MODEL_NAME
+    value: "<model-name>"
+  - name: DB_URI
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: uri
+```
+
+Then, create a namespace and deploy the application:
 
 ```bash
 K8S_NAMESPACE=langchain-chatbot
