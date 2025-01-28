@@ -18,6 +18,7 @@ data "google_container_cluster" "gke_cluster" {
 }
 
 resource "helm_release" "nemo" {
+  count     = var.recipe == "gke-nccl" ? 0 : 1
   name      = "nemo"
   provider  = helm
   version     = "0.7.0"
@@ -49,4 +50,14 @@ resource "helm_release" "nemo" {
     name = "workload.gpus"
     value = var.node_count * 8
   }
+}
+
+resource "helm_release" "nccl_tests" {
+  count     = var.recipe == "gke-nccl" ? 1 : 0
+  name      = "nccl-tests"
+  provider  = helm
+  version   = "0.1.0"
+  chart     = "${path.module}/helm-charts/nccl-tests/"
+  namespace = "default"
+  reset_values = true
 }
