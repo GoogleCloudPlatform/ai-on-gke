@@ -97,7 +97,7 @@ module "a3_megagpu_pool" {
   local_ssd_count_ephemeral_storage = 16
   static_node_count = var.node_count
   taints            = []
-  zones             = [var.zone]
+  zones             = [var.a3_mega_zone]
   providers = {
     kubectl = kubectl
     http    = http

@@ -14,10 +14,11 @@
   * limitations under the License.
   */
 
-# output "instructions_gke_cluster" {
-#   description = "Generated output from module 'gke_cluster'"
-#   value       = module.gke_cluster.instructions
-# }
+output "gke_cluster" {
+  description = "Generated output from module 'gke_cluster'"
+  value       = "https://pantheon.corp.google.com/kubernetes/clusters/details/${var.region}/${var.goog_cm_deployment_name}"
+}
+
 # 
 # output "instructions_a3_megagpu_pool" {
 #   description = "Generated output from module 'a3_megagpu_pool'"
