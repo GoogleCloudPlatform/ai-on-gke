@@ -6,7 +6,7 @@ metadata:
     config.kubernetes.io/local-config: "true"
 spec:
   info:
-    title: HyperCompute Cluster on GKE 
+    title: HyperCompute Cluster on GKE
     source:
       repo: https://github.com/GoogleCloudPlatform/ai-on-gke
       sourceType: git
@@ -34,32 +34,41 @@ spec:
               value: "A3 Mega"
             - label: A3 Ultra
               value: "A3 Ultra"
+        region:
+          name: region
+          title: Region
+          section: required_config
+          xGoogleProperty:
+            type: ET_GCE_REGION
+            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+            gce_region:
+              allowlisted_regions: ["asia-northeast1", "asia-southeast1", "europe-west4", "us-central1", "us-east4", "us-east5", "us-west1", "us-west4-a"]
         a3_mega_zone:
           name: a3_mega_zone
-          title: Location
+          title: Zone
           section: required_config
           xGoogleProperty:
             type: ET_GCE_ZONE
             # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_zone:
               allowlisted_zones: ["asia-northeast1-b", "asia-southeast1-b", "asia-southeast1-c", "europe-west4-b", "europe-west4-c", "us-central1-a", "us-central1-b", "us-central1-c", "us-east4-a", "us-east4-b", "us-east4-c", "us-east5-a", "us-west1-a", "us-west1-b", "us-west4-a"]
-          toggleUsingVariables:
-            - variableName: gpu_type
-              variableValues: ["A3 Mega"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
-        a3_ultra_zone:
-          name: a3_ultra_zone
-          title: Location
-          section: required_config
-          xGoogleProperty:
-            type: ET_GCE_ZONE
-            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
-            gce_zone:
-              allowlisted_zones: ["europe-west1-b"]
-          toggleUsingVariables:
-            - variableName: gpu_type
-              variableValues: ["A3 Ultra"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+                #   toggleUsingVariables:
+                #     - variableName: gpu_type
+                #       variableValues: ["A3 Mega"]
+                #       type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+                # a3_ultra_zone:
+                #   name: a3_ultra_zone
+                #   title: Location
+                #   section: required_config
+                #   xGoogleProperty:
+                #     type: ET_GCE_ZONE
+                #     # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
+                #     gce_zone:
+                #       allowlisted_zones: ["europe-west1-b"]
+                #   toggleUsingVariables:
+                #     - variableName: gpu_type
+                #       variableValues: ["A3 Ultra"]
+                #       type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         checkpoint_bucket:
           name: checkpoint_bucket
           title: Checkpoint bucket
@@ -72,7 +81,7 @@ spec:
           section: required_config
         recipe:
           name: recipe
-          title: Deployment options 
+          title: Deployment options
           section: required_config
           enumValueLabels:
             - label: GKE Cluster Only
@@ -85,39 +94,39 @@ spec:
               value: llama3.1-70b
             - label: GKE Cluster with Mixtral-8-7B pretraining benchmark
               value: mixtral8-7b
-        consumption_model:
-          name: consumption_model
-          title: Consumption model
-          section: required_config
-          enumValueLabels:
-            - label: "Reservation"
-              value: "Reservation"
-            - label: "On Demand"
-              value: "On Demand"
-        reservation_name:
-          name: reservation_name
+                # consumption_model:
+                #   name: consumption_model
+                #   title: Consumption model
+                #   section: required_config
+                #   enumValueLabels:
+                #     - label: "Reservation"
+                #       value: "Reservation"
+                #     - label: "On Demand"
+                #       value: "On Demand"
+        reservation:
+          name: reservation
           title: Reservation Name 
           section: required_config
-          toggleUsingVariables:
-            - variableName: consumption_model 
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+            # toggleUsingVariables:
+            #   - variableName: consumption_model 
+            #     variableValues: ["Reservation"]
+            #     type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         reservation_block:
           name: reservation_block
           title: Reservation Block
           section: required_config
-          toggleUsingVariables:
-            - variableName: consumption_model
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+            # toggleUsingVariables:
+            #   - variableName: consumption_model
+            #     variableValues: ["Reservation"]
+            #     type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         placement_policy_name:
           name: placement_policy_name
           title: Placement Policy
           section: required_config
-          toggleUsingVariables:
-            - variableName: consumption_model
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+            # toggleUsingVariables:
+            #   - variableName: consumption_model
+            #     variableValues: ["Reservation"]
+            #     type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         host_maintenance:
           name: host_maintenance
           title: Host Maintainance
@@ -127,10 +136,10 @@ spec:
               value: "none"
             - label: "PERIODIC"
               value: "periodic"
-          toggleUsingVariables:
-            - variableName: consumption_model
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
+                # toggleUsingVariables:
+                #   - variableName: consumption_model
+                #     variableValues: ["Reservation"]
+                #     type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
         acknowledge:
           name: acknowledge
           title: Check to confirm you enabled Google APIs for your project with this command.
