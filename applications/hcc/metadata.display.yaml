@@ -36,7 +36,7 @@ spec:
               value: "A3 Ultra"
         a3_mega_zone:
           name: a3_mega_zone
-          title: Location
+          title: Location for A3 Mega
           section: required_config
           xGoogleProperty:
             type: ET_GCE_ZONE
@@ -49,7 +49,7 @@ spec:
               type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         a3_ultra_zone:
           name: a3_ultra_zone
-          title: Location
+          title: Location for A3 Ultra
           section: required_config
           xGoogleProperty:
             type: ET_GCE_ZONE
