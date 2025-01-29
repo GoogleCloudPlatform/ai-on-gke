@@ -172,7 +172,7 @@ ID                                    CREATE_TIME                DURATION  SOURC
 ```
 
 In the `finetune.yaml` file you can see the crucial MLFlow environment variables:
-- `MLFLOW_URI`: for connecting to the MLFlow tracking server. We set it to `http://my-mlflow-release-5-tracking:80`, which is an internal GKE cluster URI.
+- `MLFLOW_URI`: for connecting to the MLFlow tracking server. We set it to `http://my-mlflow-release-tracking:80`, which is an internal GKE cluster URI.
 - `MLFLOW_ARTIFACT_URI`: for connecting experiments to our GCS bucket. You should specify it like `gs://<BUCKET_NAME>/<ANY_EXISTING_PATH>`.
 - `MLFLOW_EXPERIMENT_NAME`: this is an experiment name. If you want to start a fine-tuning job as a new experiment, then change this variable.
 
@@ -190,7 +190,7 @@ gcloud storage buckets add-iam-policy-binding gs://<BUCKET_NAME> \
 
 Then, inside the `finetune.yaml` file, replace the following variables:
 - `<PROJECT_ID>`: with your project ID.
-- `<YOU_BUCKET_PATH>`: with your GCS bucket path.
+- `<YOUR_BUCKET_PATH>`: with your GCS bucket path.
 
 Then run this command to create fine-tuning job:
 ```bash
