@@ -22,7 +22,6 @@ create_service_account = false
 create_brand           = false
 create_gcs_bucket      = true
 gcs_bucket             = "skypilot-model-bucket"
-release_channel        = "stable"
 
 # For Autopilot clusters
 autopilot_cluster = true
