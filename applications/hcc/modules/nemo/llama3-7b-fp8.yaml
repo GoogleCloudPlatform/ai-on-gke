@@ -1,5 +1,5 @@
 run:
-  name: llama3-70b-fp8
+  name: llama3-7b-fp8
   results_dir:
   time_limit: 01:00:00
   dependency: singleton
@@ -13,7 +13,7 @@ trainer:
   max_epochs: null
   max_steps: 50
   max_time: 05:23:30:00
-  log_every_n_steps: 1
+  log_every_n_steps: 10
   val_check_interval: 400
   limit_val_batches: 5
   limit_test_batches: 5
@@ -49,18 +49,18 @@ model:
   moe_grouped_gemm: true
   moe_token_dispatcher_type: alltoall
   moe_aux_loss_coeff: 0.01
-  micro_batch_size: 4
-  global_batch_size: 8
+  micro_batch_size: 1
+  global_batch_size: 512
   rampup_batch_size: null
   tensor_model_parallel_size: 1
   pipeline_model_parallel_size: 1
   virtual_pipeline_model_parallel_size: null
-  context_parallel_size: null
+  context_parallel_size: 2
   encoder_seq_length: 8192
   max_position_embeddings: 8192
   num_layers: 32
   hidden_size: 4096
-  ffn_hidden_size: 11008
+  ffn_hidden_size: 14336
   num_attention_heads: 32
   init_method_std: 0.008944
   use_scaled_init_method: true
@@ -85,13 +85,13 @@ model:
   position_embedding_type: rope
   apply_rope_fusion: true
   rotary_percentage: 1.0
-  rotary_base: 1000000.0
+  rotary_base: 500000.0
   attention_type: multihead
   share_embeddings_and_output_weights: false
   overlap_p2p_comm: true
   batch_p2p_comm: false
   seq_len_interpolation_factor: null
-  num_query_groups: 32
+  num_query_groups: 8
   tokenizer:
     library: megatron
     type: GPT2BPETokenizer
@@ -124,7 +124,7 @@ model:
   activations_checkpoint_num_layers: null
   num_micro_batches_with_partial_activation_checkpoints: null
   activations_checkpoint_layers_per_pipeline: null
-  sequence_parallel: true
+  sequence_parallel: false
   transformer_engine: true
   fp8: true
   fp8_e4m3: false
@@ -183,3 +183,4 @@ model:
     data_prefix:
     - 1.0
     - /ssd/.cache/wikipedia-tokenized-for-gpt2
+
