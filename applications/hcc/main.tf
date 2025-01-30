@@ -18,6 +18,7 @@ data "google_client_config" "default" {}
 
 locals {
   subnetwork_name = "${var.goog_cm_deployment_name}-gke-net"
+  result_bucket_name = "${var.goog_cm_deployment_name}-result"
 }
 module "network-kevinmcw" {
   source          = "./modules/embedded/modules/network/vpc"
@@ -134,7 +135,7 @@ module "workload_manager_install" {
 module "nemo" {
   source     = "./modules/nemo"
   cluster_id = module.gke_cluster.cluster_id
-  checkpoint_bucket = var.checkpoint_bucket
+  checkpoint_bucket = local.result_bucket_name
   recipe = var.recipe
   node_count = var.node_count
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
@@ -144,3 +145,11 @@ module "nemo" {
   # The kueue install needs to finished completely or else the deployment of nemo workload throws error, thus adding the depends_on.
   depends_on = [module.workload_manager_install]
 }
+
+module "gcs" {
+  source     = "./modules/gcs"
+  project_id = var.project_id
+  region     = var.region
+  bucket_name     = local.result_bucket_name
+}
+

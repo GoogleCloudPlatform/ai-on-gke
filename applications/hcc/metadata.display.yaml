@@ -69,12 +69,6 @@ spec:
                 #     - variableName: gpu_type
                 #       variableValues: ["A3 Ultra"]
                 #       type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
-        checkpoint_bucket:
-          name: checkpoint_bucket
-          title: Checkpoint bucket
-          section: required_config
-          xGoogleProperty:
-            type: ET_GCS_BUCKET
         node_count:
           name: node_count
           title: Node Count

@@ -57,11 +57,6 @@ variable "a3_mega_zone" {
   type        = string
 }
 
-variable "checkpoint_bucket" {
-  description = "Toolkit deployment variable: checkpoint_bucket"
-  type        = string
-}
-
 variable "node_count" {
   description = "Toolkit deployment variable: node_count"
   type        = number

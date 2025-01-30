@@ -15,8 +15,13 @@
   */
 
 output "gke_cluster" {
-  description = "Generated output from module 'gke_cluster'"
+  description = "Link to GKE cluster"
   value       = "https://pantheon.corp.google.com/kubernetes/clusters/details/${var.region}/${var.goog_cm_deployment_name}"
+}
+
+output "result_bucket" {
+  description = "Link to result GCS bucket"
+  value       = "https://pantheon.corp.google.com/storage/browser/${local.result_bucket_name}"
 }
 
 # 

@@ -42,9 +42,6 @@ spec:
           #   varType: string
           #   required: true
           #   defaultValue: "europe-west1-b"
-      - name: checkpoint_bucket
-        varType: string
-        required: true
       - name: node_count
         varType: number
         required: true
