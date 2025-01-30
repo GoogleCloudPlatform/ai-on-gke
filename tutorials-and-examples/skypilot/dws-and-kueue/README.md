@@ -207,7 +207,7 @@ SkyPilot will wait in Launching state until the node is provisioned.
 ```
 ⚙︎ Launching on Kubernetes.
 ```
-In another terminal, you can `kubectl get` pods and it will be in SchedulingGated state
+In another terminal, you can `kubectl get pods` and it will be in SchedulingGated state
 ```bash
 NAME                     READY   STATUS            RESTARTS   AGE
 skypilot-dws-00b5-head   0/1     SchedulingGated   0          44s
