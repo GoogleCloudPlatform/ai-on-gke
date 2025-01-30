@@ -148,28 +148,6 @@ And verify again:
 ```bash
 sky check
 ```
-4. Find the context names
-```bash
-kubectl config get-contexts
-
-# Find the context name, for example: 
-gke_${PROJECT_NAME}_us-central1-c_demo-us-central1
-```
-5. Create a config for SkyPilot at `~/.sky/config.yaml` using the provided context.\
-Make sure to add `autoscaler: gke` as this will allow SkyPilot to run a workload without GPUs provisioned. Also change `PROJECT_NAME` and  `CLUSTER_NAME` to values of the cluster created.
-```yaml
-allowed_clouds:
-  - kubernetes
-kubernetes:
-  # Use the context's name
-  allowed_contexts:
-    - gke_${PROJECT_NAME}_europe-west1_${CLUSTER_NAME}
-  autoscaler: gke
-```
-And verify again:
-```bash
-sky check
-```
 And you should the the following output
 ```
   Kubernetes: enabled                              
