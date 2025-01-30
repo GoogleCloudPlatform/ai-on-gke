@@ -135,13 +135,13 @@ kubectl config get-contexts
 Create SkyPilot configuration. Add `autoscaler: gke` to enable SkyPilot to work with GKE's cluster autoscaling capabilities, allowing you to run workloads without pre-provisioned GPU nodes.
 ```
 # Create and edit ~/.sky/config.yaml
-# Change PROJECT_NAME and CLUSTER_NAME
+# Change PROJECT_NAME, LOCATION and CLUSTER_NAME
 allowed_clouds:
   - kubernetes
 kubernetes:
   # Use the context's name
   allowed_contexts:
-    - gke_${PROJECT_NAME}_europe-west1_${CLUSTER_NAME}
+    - gke_${PROJECT_NAME}_europe-${LOCATION}_${CLUSTER_NAME}
   autoscaler: gke
 ```
 And verify again:
