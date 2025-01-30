@@ -34,15 +34,6 @@ spec:
               value: "A3 Mega"
             - label: A3 Ultra
               value: "A3 Ultra"
-        region:
-          name: region
-          title: Region
-          section: required_config
-          xGoogleProperty:
-            type: ET_GCE_REGION
-            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
-            gce_region:
-              allowlisted_regions: ["asia-northeast1", "asia-southeast1", "europe-west4", "us-central1", "us-east4", "us-east5", "us-west1", "us-west4-a"]
         a3_mega_zone:
           name: a3_mega_zone
           title: Zone

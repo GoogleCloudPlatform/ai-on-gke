@@ -47,13 +47,8 @@ variable "project_id" {
   default     = ""
 }
 
-variable "region" {
-  description = "Toolkit deployment variable: region"
-  type        = string
-}
-
 variable "a3_mega_zone" {
-  description = "Toolkit deployment variable: a3mega_zone"
+  description = "Toolkit deployment variable: a3_mega_zone"
   type        = string
 }
 

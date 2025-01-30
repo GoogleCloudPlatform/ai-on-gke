@@ -27,11 +27,6 @@ spec:
       - name: gpu_type
         varType: string
         defaultValue: ""
-      - name: region
-        description: "Pick a Region"
-        varType: string
-        required: true
-        defaultValue: "us-east5"
       - name: a3_mega_zone
         description: "Pick a Zone"
         varType: string

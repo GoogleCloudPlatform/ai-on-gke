@@ -24,7 +24,7 @@ module "network-kevinmcw" {
   source          = "./modules/embedded/modules/network/vpc"
   deployment_name = var.goog_cm_deployment_name
   project_id      = var.project_id
-  region          = var.region
+  region          = local.region != null ? local.region : error("Cannot find region for zone")
   secondary_ranges = {
     (local.subnetwork_name) = [{
       ip_cidr_range = "10.4.0.0/14"
@@ -44,7 +44,7 @@ module "gpunets" {
   network_count           = 8
   network_name_prefix     = "${var.goog_cm_deployment_name}-gpunet"
   project_id              = var.project_id
-  region                  = var.region
+  region          = local.region != null ? local.region : error("Cannot find region for zone")
   subnetwork_cidr_suffix  = 24
 }
 
@@ -60,7 +60,8 @@ module "gke_cluster" {
   }]
   network_id           = module.network-kevinmcw.network_id
   project_id           = var.project_id
-  region               = var.region
+  region          = local.region != null ? local.region : error("Cannot find region for zone")
+  subnetwork_cidr_suffix  = 24
   subnetwork_self_link = module.network-kevinmcw.subnetwork_self_link
   providers = {
     kubectl = kubectl
@@ -149,7 +150,7 @@ module "nemo" {
 module "gcs" {
   source     = "./modules/gcs"
   project_id = var.project_id
-  region     = var.region
+  region          = local.region != null ? local.region : error("Cannot find region for zone")
   bucket_name     = local.result_bucket_name
 }
 
