@@ -34,15 +34,6 @@ spec:
               value: "A3 Mega"
             - label: A3 Ultra
               value: "A3 Ultra"
-        region:
-          name: region
-          title: Region
-          section: required_config
-          xGoogleProperty:
-            type: ET_GCE_REGION
-            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
-            gce_region:
-              allowlisted_regions: ["asia-northeast1", "asia-southeast1", "europe-west4", "us-central1", "us-east4", "us-east5", "us-west1", "us-west4-a"]
         a3_mega_zone:
           name: a3_mega_zone
           title: Zone
@@ -69,12 +60,6 @@ spec:
                 #     - variableName: gpu_type
                 #       variableValues: ["A3 Ultra"]
                 #       type: DISPLAY_VARIABLE_TOGGLE_TYPE_STRING
-        checkpoint_bucket:
-          name: checkpoint_bucket
-          title: Checkpoint bucket
-          section: required_config
-          xGoogleProperty:
-            type: ET_GCS_BUCKET
         node_count:
           name: node_count
           title: Node Count
@@ -89,11 +74,9 @@ spec:
             - label: GKE Cluster with NCCL Tests
               value: gke-nccl
             - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
-              value: llama3.1-7b
+              value: llama3.1_7b_nemo_pretraining
             - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
-              value: llama3.1-70b
-            - label: GKE Cluster with Mixtral-8-7B pretraining benchmark
-              value: mixtral8-7b
+              value: llama3.1_7b_nemo_pretraining
                 # consumption_model:
                 #   name: consumption_model
                 #   title: Consumption model

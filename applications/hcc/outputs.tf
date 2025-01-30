@@ -15,12 +15,12 @@
   */
 
 output "gke_cluster" {
-  description = "Generated output from module 'gke_cluster'"
-  value       = "https://pantheon.corp.google.com/kubernetes/clusters/details/${var.region}/${var.goog_cm_deployment_name}"
+  description = "Link to GKE cluster"
+  value       = "https://pantheon.corp.google.com/kubernetes/clusters/details/${local.region}/${var.goog_cm_deployment_name}"
 }
 
-# 
-# output "instructions_a3_megagpu_pool" {
-#   description = "Generated output from module 'a3_megagpu_pool'"
-#   value       = module.a3_megagpu_pool.instructions
-# }
+output "result_bucket" {
+  description = "Link to result GCS bucket"
+  value       = "https://pantheon.corp.google.com/storage/browser/${local.result_bucket_name}"
+}
+
