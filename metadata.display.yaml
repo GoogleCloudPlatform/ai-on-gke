@@ -6,7 +6,7 @@ metadata:
     config.kubernetes.io/local-config: "true"
 spec:
   info:
-    title: HyperCompute Cluster on GKE 
+    title: HyperCompute Cluster on GKE
     source:
       repo: https://github.com/GoogleCloudPlatform/ai-on-gke
       sourceType: git
@@ -72,7 +72,7 @@ spec:
           section: required_config
         recipe:
           name: recipe
-          title: Deployment options 
+          title: Deployment options
           section: required_config
           enumValueLabels:
             - label: GKE Cluster Only
@@ -80,11 +80,9 @@ spec:
             - label: GKE Cluster with NCCL Tests
               value: gke-nccl
             - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
-              value: llama3.1-7b
+              value: llama3.1_7b_nemo_pretraining
             - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
-              value: llama3.1-70b
-            - label: GKE Cluster with Mixtral-8-7B pretraining benchmark
-              value: mixtral8-7b
+              value: llama3.1_7b_nemo_pretraining
         consumption_model:
           name: consumption_model
           title: Consumption model
@@ -94,8 +92,8 @@ spec:
               value: "Reservation"
             - label: "On Demand"
               value: "On Demand"
-        reservation_name:
-          name: reservation_name
+        reservation:
+          name: reservation
           title: Reservation Name 
           section: required_config
           toggleUsingVariables:

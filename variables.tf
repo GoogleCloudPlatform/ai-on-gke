@@ -47,18 +47,8 @@ variable "project_id" {
   default     = ""
 }
 
-variable "region" {
-  description = "Toolkit deployment variable: region"
-  type        = string
-}
-
-variable "zone" {
-  description = "Toolkit deployment variable: zone"
-  type        = string
-}
-
-variable "checkpoint_bucket" {
-  description = "Toolkit deployment variable: checkpoint_bucket"
+variable "a3_mega_zone" {
+  description = "Toolkit deployment variable: a3_mega_zone"
   type        = string
 }
 
@@ -74,6 +64,11 @@ variable "placement_policy_name" {
 
 variable "recipe" {
   description = "Toolkit deployment variable: recipe"
+  type        = string
+}
+
+variable "host_maintenance" {
+  description = "Toolkit deployment variable: host_maintenance"
   type        = string
 }
 
