@@ -6,11 +6,11 @@ metadata:
     config.kubernetes.io/local-config: "true"
 spec:
   info:
-    title: Ray on GKE
+    title: HyperCompute Cluster on GKE 
     source:
       repo: https://github.com/GoogleCloudPlatform/ai-on-gke
       sourceType: git
-      dir: /applications/ray
+      dir: /applications/hcc
     actuationTool:
       flavor: Terraform
     description: {}
