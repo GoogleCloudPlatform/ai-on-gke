@@ -34,9 +34,6 @@ spec:
       - name: a3_ultra_zone
         varType: string
         defaultValue: ""
-      - name: checkpoint_bucket
-        varType: string
-        required: true
       - name: node_count
         varType: number
         required: true
