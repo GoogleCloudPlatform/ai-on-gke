@@ -7,50 +7,44 @@ This guide will show how to install Flyte on GKE using Helm. Deployment will use
 ## Before you begin
 
 1. Ensure you have a GCP project with billing enabled and have enabled the GKE API.
-   [How to enable billing](https://cloud.google.com/billing/v1/getting-started)
-   And for the GKE API:
 
-   ```bash
-   gcloud services enable container.googleapis.com
-   ```
+   * Follow [this link](https://cloud.google.com/billing/v1/getting-started) to learn how to enable billing for your project.
 
-2. Ensure you have the following tools installed on your workstation:
+   * GKE API can be enabled by running:
 
-   * [gcloud CLI](https://cloud.google.com/sdk/docs/install)
+     `gcloud services enable container.googleapis.com`
+
+1. Ensure you have the following tools installed on your workstation:
+
+   * [gcloud](https://cloud.google.com/sdk/docs/install)
    * [kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
    * [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
 ## Setting up your GKE cluster with Terraform
 
-We’ll use Terraform to provision:
+Let's start with setting up the infrastructure using Terraform. The Terraform configuration will create an [Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) or [Standard](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-regional-cluster) GKE cluster with GPU node pools (only for Standard clusters).
 
-* A GKE cluster ([Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) or [Standard](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-regional-cluster))
-* GPU node pools (only for Standard clusters)
+1. Create variables file for Terraform.
 
-Create your environment configuration (.tfvars) file and edit based on example_environment.tfvars.
+   Copy the `example_environment.tfvars` file to a new file, e.g., `your_environment.tfvars`, and fill `project_id` and `cluster_name` with your values. You can also adjust any other parameters as you need.
 
-```hcl
-project_id = "flyte-project"
-cluster_name = "flyte-tutorial"
-autopilot_cluster = true  # Set to false for Standard cluster
-```
+   ```hcl
+   project_id = "flyte-project"
+   cluster_name = "flyte-tutorial"
+   autopilot_cluster = true  # Set to false for Standard    cluster
+   ```
 
-1. Initialize the modules:
+2. Initialize and apply the Terraform configuration.
 
    ```bash
    terraform init
-   ```
-
-2. Apply while referencing the `.tfvars` file we created:
-
-   ```bash
    terraform apply -var-file=your_environment.tfvars
    ```
 
-   And you should see your resources created:
+   After the Terraform apply finishes, you should see output similar to the following:
 
    ```text
-   Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+   Apply complete! [...]
 
    Outputs:
 
@@ -65,19 +59,16 @@ autopilot_cluster = true  # Set to false for Standard cluster
    ```
 
 3. Get Kubernetes access.
-   Fetch the kubeconfig file by running:
+
+   Run the following command to get the credentials for the GKE cluster:
 
    ```bash
    gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) --region $(terraform output -raw gke_cluster_location) --project $(terraform output -raw project_id)
    ```
 
-4. Get the deployed service account name by running:
+4. Bind the Google Service Account (GSA) to the Kubernetes Service Account (KSA):
 
-   ```bash
-   terraform output service_account
-   ```
-
-5. Use the service account name to create an IAM policy binding to enable workload identity:
+   The Flyte Helm chart will deploy a Kubernetes Service Account (KSA) named `flyte-backend-flyte-binary` in the `default` namespace. To allow this KSA to access Google Cloud resources, it needs to be bound to the Google Service Account (GSA) created by Terraform. Use the following command, replacing SERVICE_ACCOUNT with the email address of the GSA from the Terraform output (use `terraform output service_account` to get it again) and PROJECT_ID with your Google Cloud project ID:
 
    ```bash
    gcloud iam service-accounts add-iam-policy-binding SERVICE_ACCOUNT \
@@ -85,102 +76,25 @@ autopilot_cluster = true  # Set to false for Standard cluster
      --member "serviceAccount:PROJECT_ID.svc.id.goog[default/flyte-backend-flyte-binary]"
    ```
 
-   Where `flyte-backend-flyte-binary` is the Kubernetes service account that the Flyte Helm chart deploys by default.
+5. Configure Flyte Helm values.
 
-6. Change all instances of `<FLYTE_IAM_SA_EMAIL>` in the included flyte.yaml Helm values file to the same service account from step 4.
+   Open the `flyte.yaml` file and replace the placeholders with the values from the Terraform output:
 
-   ```yaml
-   inline:
-     # This section automates the IAM Role annotation for the default KSA on each project namespace to enable IRSA
-     # Learn more: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
-     cluster_resources:
-       customData:
-       - production:
-         - defaultIamServiceAccount:
-             value: <FLYTE_IAM_SA_EMAIL>
-       - staging:
-         - defaultIamServiceAccount:
-             value: <FLYTE_IAM_SA_EMAIL>
-       - development:
-         - defaultIamServiceAccount:
-             value: <FLYTE_IAM_SA_EMAIL>
-   ...
-   # serviceAccount Configure Flyte ServiceAccount
-   serviceAccount:
-     # create Create ServiceAccount for Flyte
-     create: true
-     # Automates annotation of default flyte-binary KSA. Make sure to bind the KSA to the GSA: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to
-     annotations:
-       iam.gke.io/gcp-service-account: <FLYTE_IAM_SA_EMAIL>
-   ```
+   * replace `<FLYTE_IAM_SA_EMAIL>` with the service account email (4 occurrences)
+   * replace `<PROJECT_NAME>` with the project ID (1 occurrence)
+   * replace `<BUCKET_NAME>` with the bucket name (2 occurrences)
+   * replace `<CLOUDSQL_IP>`, `<CLOUDSQL_USERNAME>`, `<CLOUDSQL_PASSWORD>` and `<CLOUDSQL_DBNAME>` with corresponding values (1 occurrence each; use `terraform output cloudsql_password` to get the password)
 
-7. Get the Cloud SQL username and password:
+6. Install Flyte using Helm.
 
    ```bash
-   $ terraform output cloudsql_ip
-   "10.59.0.3"
-   $ terraform output cloudsql_user
-   "flytepg"
-   $ terraform output cloudsql_password
-   "password"
+   helm install flyte-backend flyte-binary \
+     --repo https://flyteorg.github.io/flyte \
+     --namespace default \
+     --values flyte.yaml
    ```
 
-   and replace the values inside the flyte.yaml values file:
-
-   ```yaml
-   configuration:
-     # database Specify configuration for Flyte's database connection
-     database:
-       # username Name for user to connect to database as
-       username: flytepg
-       # password Password to connect to database with
-       # If set, a Secret will be created with this value and mounted to Flyte pod
-       password: "password"
-       # host Hostname of database instance
-       host: 10.59.0.3
-       # dbname Name of database to use
-       dbname: flytepg
-   ```
-
-8. Get the bucket name:
-
-   ```bash
-   $ terraform output bucket_name
-   "flyte-bucket"
-   ```
-
-   and replace the values in the values file:
-
-   ```yaml
-   storage:
-     # metadataContainer Bucket to store Flyte metadata
-     metadataContainer: "flyte-bucket"
-     # userDataContainer Bucket to store Flyte user data
-     userDataContainer: "flyte-bucket"
-     # provider Object store provider (Supported values: s3, gcs)
-     provider: gcs
-     # providerConfig Additional object store provider-specific configuration
-     providerConfig:
-       # gcs Provider configuration for GCS object store
-       gcs:
-         # project Google Cloud project in which bucket resides
-         project: "flyte-project"
-   ```
-
-9. Add the Flyte Helm repo:
-
-   ```bash
-   helm repo add flyteorg https://flyteorg.github.io/flyte
-   ```
-
-10. Install Flyte using Helm and the flyte.yaml values file:
-
-   ```bash
-   helm install flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
-   ```
-
-   After Helm finishes deploying the resources, wait for the pods to be in the `Running` state.
-   Note that in the case of an Autopilot cluster, it may take significant time. You can use this command to track the progress:
+   After Helm finishes deploying the resources, wait for the pods to be in the `Running` state. Note that in the case of an Autopilot cluster, it may take significant time. You can use this command to track the progress:
 
    ```bash
    kubectl get pods -n default -w
