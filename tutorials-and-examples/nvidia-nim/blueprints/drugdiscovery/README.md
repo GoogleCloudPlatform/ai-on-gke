@@ -108,8 +108,8 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
 8. **Port Forwarding (for local testing):**  These commands forward the service ports to your local machine for testing.
 
-   > [!IMPORTANT]
-   > It is assumed that the local ports 8010-8012 are available. If they are unavailable, do update them below and in the curl statements in following step.
+> [!NOTE]
+> It is assumed that the local ports 8010-8012 are available. If they are unavailable, do update them below and in the curl statements in following step.
 
     ```bash
 
@@ -164,8 +164,8 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
 10. **Test end to end:**
 
-    > [!NOTE]
-    > If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
+> [!NOTE]
+> If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
 
     ```bash
 
