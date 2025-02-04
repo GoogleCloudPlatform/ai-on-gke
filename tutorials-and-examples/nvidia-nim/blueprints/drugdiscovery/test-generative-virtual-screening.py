@@ -1,8 +1,8 @@
 import requests
 
-AF2_HOST = "http://localhost:<replace with port number>"
-MOLMIM_HOST = "http://localhost:<replace with port number>"
-DIFFDOCK_HOST = "http://localhost:<replace with port number>"
+AF2_HOST = "http://localhost:8010"
+MOLMIM_HOST = "http://localhost:8011"
+DIFFDOCK_HOST = "http://localhost:8012"
 
 
 def check_readiness(service_name, url):

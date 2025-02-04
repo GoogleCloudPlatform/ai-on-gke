@@ -8,10 +8,16 @@ This guide outlines the steps to deploy NVIDIA's NIM blueprint for [Generative V
 * **Project:**  A Google Cloud project with billing enabled.
 * **NGC API Key:** An API key from NVIDIA NGC.
 * **kubectl:**  kubectl command-line tool installed and configured.
+* **NVIDIA GPUs:**  NVIDIA A100 80GB(3) GPU preferred in the same region / zone.
 
 Clone the repo before proceeding further:
-`git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
-`cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery`
+
+```bash
+
+git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
+
+```
 
 ## Deployment Steps
 
@@ -39,7 +45,7 @@ Clone the repo before proceeding further:
     gcloud container clusters create "${CLUSTER_NAME}" \
       --project="${PROJECT_ID}" \
       --num-nodes=1 --location="${ZONE}" \
-      --machine-type=e2-standard-16 \
+      --machine-type="e2-standard-2" \
       --addons=GcpFilestoreCsiDriver
   
     ```
@@ -77,7 +83,7 @@ Clone the repo before proceeding further:
 
     ```
 
-6. **Create NGC Secret:** Creates the secret for pulling images from NVIDIA NGC.  **Important:** Replace the placeholder API key with your actual NGC API Key.
+6. **Create NGC API Key Secret:** Creates secrets for pulling images from NVIDIA NGC and pods that need the API key at startup.
 
     ```bash
 
@@ -86,6 +92,9 @@ Clone the repo before proceeding further:
       --docker-password="${NGC_API_KEY}" \
       --docker-server="nvcr.io"
     
+    k create secret generic ngc-api-key \
+      --from-literal=NGC_API_KEY="${NGC_API_KEY}"
+
     ```
 
 7. **Deploy BioNeMo Services:** Deploy AlphaFold2, MolMIM, and DiffDock.
@@ -97,22 +106,25 @@ Clone the repo before proceeding further:
 
     ```
 
-8. **Port Forwarding (for local testing):**  These commands forward the service ports to your local machine for testing. Replace the pod names with the actual names of your deployed pods.
+8. **Port Forwarding (for local testing):**  These commands forward the service ports to your local machine for testing.
+
+   > [!IMPORTANT]
+   > It is assumed that the local ports 8010-8012 are available. If they are unavailable, do update them below and in the curl statements in following step.
 
     ```bash
 
     POD_BIONEMO_ALPHAFOLD=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^alphafold2')
-    k port-forward pod/$POD_BIONEMO_ALPHAFOLD :8000
+    k port-forward pod/$POD_BIONEMO_ALPHAFOLD 8010:8000
 
     POD_BIONEMO_MOLMIM=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^molmim')
-    k port-forward pod/$POD_BIONEMO_MOLMIM :8000
+    k port-forward pod/$POD_BIONEMO_MOLMIM 8011:8000
     
     POD_BIONEMO_DIFFDOCK=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^diffdock')
-    k port-forward pod/$POD_BIONEMO_DIFFDOCK :8000
+    k port-forward pod/$POD_BIONEMO_DIFFDOCK 8012:8000
   
     ```
 
-9. **Test Deployments:**  Use `curl` or other tools to test the deployed services by sending requests to the forwarded ports.  Examples are provided in the `dev.sh` file.
+9. **Test Deployments:**  Use `curl` or other tools to test the deployed services by sending requests to the forwarded ports. Examples are provided in the `dev.sh` file.
 
     ```bash
   
@@ -121,7 +133,7 @@ Clone the repo before proceeding further:
     --max-time 900 \
     -X POST \
     -i \
-    "http://localhost:62921/protein-structure/alphafold2/predict-structure-from-sequence" \
+    "http://localhost:8010/protein-structure/alphafold2/predict-structure-from-sequence" \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
@@ -146,12 +158,14 @@ Clone the repo before proceeding further:
       "min_similarity": 0.7,
       "iterations": 10
     }' \
-    "http://localhost:49530/generate"
+    "http://localhost:8011/generate"
   
     ```
 
 10. **Test end to end:**
-    Update the AF2_HOST, MOLMIM_HOST and DIFFDOCK_HOST variables with port numbers in `test-generative-virtual-screening.py` file.
+
+    > [!NOTE]
+    > If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
 
     ```bash
 
@@ -170,6 +184,7 @@ Clone the repo before proceeding further:
    ```bash
 
    k delete secret secret-nvcr
+   k delete secret ngc-api-key
    k delete -f nim-bionemo-generative-virtual-screening.yaml
    k delete -f nim-storage-filestore.yaml
    gcloud container clusters delete "${CLUSTER_NAME}" --location="${ZONE}"

@@ -27,7 +27,7 @@ spec:
         - name: NGC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: ngc-api-key  # Replace with your actual secret name
+              name: ngc-api-key
               key: NGC_API_KEY
         - name: NIM_CACHE_PATH
           value: /data
@@ -76,7 +76,7 @@ spec:
         - name: NGC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: ngc-api-key  # Replace with your actual secret name
+              name: ngc-api-key
               key: NGC_API_KEY
         - name: NIM_CACHE_PATH
           value: /data
@@ -121,7 +121,7 @@ spec:
         - name: NGC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: ngc-api-key  # Replace with your actual secret name
+              name: ngc-api-key
               key: NGC_API_KEY
         - name: NVIDIA_VISIBLE_DEVICES
           value: "0"  # Set the default value here
@@ -177,13 +177,3 @@ spec:
   - protocol: TCP
     port: 8083
     targetPort: 8000
-
----
-# Create a Secret to hold the NGC API key
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ngc-api-key
-type: Opaque
-stringData:
-  NGC_API_KEY: <NGC API Key>
