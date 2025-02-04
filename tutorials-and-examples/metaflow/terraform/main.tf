@@ -139,10 +139,3 @@ provider "kubectl" {
   }
 }
 
-
-
-
-
-
-
-

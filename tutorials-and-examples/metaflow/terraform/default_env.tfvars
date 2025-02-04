@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project_id            = "akvelon-gke-aieco"
+project_id            = <project_id>
 default_resource_name = "metaflow-tutorial-tf"
 
 cluster_name      = "" # Leave empty to use the default name (default_resource_name) 
