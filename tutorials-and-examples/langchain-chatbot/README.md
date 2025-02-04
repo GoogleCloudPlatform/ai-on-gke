@@ -24,7 +24,9 @@
 
 ## Introduction
 
-It is important to make AI models accessible to end-users through applications that provide a user-friendly interface.
+It is crucial to make AI models accessible to end-users through applications that offer a user-friendly interface. A well-designed UI ensures that users can interact with the AI model intuitively and efficiently. Additionally, users should be able to rely on the application to perform as expected every time they use it, meaning the application must be reliable and free from frequent errors or downtime. By focusing on consistency, reliability and predictability of the application, we can ensure that AI models are not only accessible but also valuable and dependable tools for end-users.
+
+By leveraging LangChain, Streamlit, Google Kubernetes Engine, and Cloud SQL for PostgreSQL, we can achieve the goals of accessibility, reliability, and consistency. LangChain simplifies the integration of language models, allowing us to build robust AI-powered applications. Streamlit provides an intuitive and interactive user interface, making it easy for users to interact with the chatbot. GKE offers a scalable and managed environment to deploy the application, ensuring high availability and performance. Cloud SQL for PostgreSQL provides a reliable and secure database solution to store user messages, ensuring data persistence and consistency across sessions.
 
 In this tutorial, you will learn how to deploy a chatbot application using [LangChain](https://python.langchain.com/) and [Streamlit](https://streamlit.io/) on Google Cloud Platform (GCP).
 
