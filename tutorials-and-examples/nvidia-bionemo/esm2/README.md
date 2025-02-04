@@ -106,13 +106,13 @@ k get persistentvolumeclaim fileserver -o yaml | grep phase:
 
 The output should show `phase: Bound` when the Filestore instance is ready.
 
-7. Kickoff the training job. The training job will automatically create ./results and store the checkpoints under esm2 in the Filestore mounted earlier under `/mnt/data`.
+8. Kickoff the training job. The training job will automatically create ./results and store the checkpoints under esm2 in the Filestore mounted earlier under `/mnt/data`.
 
 ```bash
 k apply -f esm2-training.yaml
 ```
 
-8. Port Forwarding (for TensorBoard):
+9. Port Forwarding (for TensorBoard):
 
 > [!NOTE]
 > It is assumed that the local port 8000 is available. If the post is unavailable, do update below to an available port.
@@ -124,7 +124,7 @@ k port-forward pod/$POD_BIONEMO_TRAINING 8000:6006
 
 ```
 
-9. View Tensorboard logs
+10. View Tensorboard logs
 
 On your local machine: Browse to <<http://localhost:8000/#timeseries> and see the loss curves as show below
 
