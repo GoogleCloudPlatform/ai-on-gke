@@ -6,7 +6,7 @@
   - [What is Identity Aware Proxy (IAP)](#what-is-identity-aware-proxy-iap)
 - [Prerequisites](#prerequisites)
 - [Optional: Build and Run the Application Locally](#optional-build-and-run-the-application-locally)
-- [Optional: Provision GKE Cluster](#optional-provision-gke-cluster)
+- [Provision GKE Cluster](#provision-gke-cluster)
 - [Prepare the Application for Deployment](#prepare-the-application-for-deployment)
   - [Create Google Container Registry (GCR)](#create-google-container-registry-gcr)
   - [Build the Application Using Cloud Build](#build-the-application-using-cloud-build)
@@ -26,11 +26,11 @@
 
 It is important to make AI models accessible to end-users through applications that provide a user-friendly interface.
 
-In this tutorial, you will learn how to deploy a chatbot application using LangChain and Streamlit on Google Cloud Platform (GCP).
+In this tutorial, you will learn how to deploy a chatbot application using [LangChain](https://python.langchain.com/) and [Streamlit](https://streamlit.io/) on Google Cloud Platform (GCP).
 
-The application can be used to interact with any language model served on an OpenAI-compatible API; for example, you can use the Gemma2 model deployed on Google Kubernetes Engine (GKE) using Kserve, as described in the [Kserve README](../kserve/README.md).
+The application can be used to interact with any language model served on an OpenAI-compatible API. For example, you can use the Gemma2 model deployed on Google Kubernetes Engine (GKE) using [Kserve](https://kserve.github.io/website/). This means you're not locked into a single provider and have the flexibility to choose the best model for your needs.
 
-The application will be deployed on GCP using Terraform and secured with Identity Aware Proxy (IAP).
+The application will be deployed on GCP and secured with Identity Aware Proxy (IAP). You have the option to follow manual deployment instructions or use Terraform for an automated setup.
 
 Finally, it will use user identity provided by IAP and store each user's messages in a Cloud SQL PostgreSQL database.
 
@@ -44,17 +44,17 @@ Streamlit is an open-source app framework used to create interactive web applica
 
 ### What is Identity Aware Proxy (IAP)
 
-Identity Aware Proxy (IAP) is a Google Cloud service that provides secure access to applications running on GCP. It allows you to control access to your applications based on user identity, ensuring that only authorized users can access your resources. You can learn more about IAP [here](https://cloud.google.com/iap).
+[Identity Aware Proxy (IAP)](https://cloud.google.com/iap) is a Google Cloud service that provides secure access to applications running on GCP. It allows you to control access to your applications based on user identity, ensuring that only authorized users can access your resources.
 
 ## Prerequisites
 
 This tutorial assumes you have the following:
 
-- A Google Cloud Platform account and project
-- The Google Cloud SDK (gcloud) installed and configured
-- The Kubernetes command-line tool (kubectl) installed and configured
+- A [Google Cloud Platform](https://cloud.google.com/) account and project
+- The [Google Cloud CLI](https://cloud.google.com/sdk/docs/install-sdk) (gcloud) installed and configured
+- The [Kubernetes command-line tool](https://kubernetes.io/docs/tasks/tools/#kubectl) (kubectl) installed and configured
 - An instruction-tuned language model (e.g., instruction-tuned Gemma2 model) running on KServe or any other API that provides OpenAI-compatible interface (`v1/completion` and `v1/chat/completion` endpoints)
-- A Google Kubernetes Engine (GKE) to deploy the application
+- A Google Kubernetes Engine (GKE) cluster to host the application (tested on an autopilot cluster, but any type of cluster can be used; no specific limitations)
 - Optional: Docker installed on your local machine (if you want to build and run the application locally)
 - Optional: Terraform installed on your local machine (if you want to use the automated deployment)
 
@@ -62,7 +62,9 @@ If you don't have a GKE cluster and a model deployed on it, you can follow the i
 
 ## Optional: Build and Run the Application Locally
 
-You can optionally set up a local PostgreSQL instance to test the application locally.
+Running the application locally allows you to quickly preview the application and catch possible configuration issues, such as incorrect model base URI, before deploying the application to the cloud.
+
+However, running the application locally requires Docker to be installed on your machine. If you don't have Docker installed, but want to proceed with the local build and run, you can follow the instructions on the [Docker website](https://docs.docker.com/get-docker/).
 
 Start by creating a network, then run the PostgreSQL container:
 
@@ -95,18 +97,27 @@ Navigate to `http://localhost:8501` in your browser to access the chatbot UI. Yo
 
 If you're getting a 404 error in a chat box, it means the model is not accessible at the specified URL. Make sure the model is running and accessible at the correct URL.
 
-## Optional: Provision GKE Cluster
+## Provision GKE Cluster
 
-If you already have an inference service, but don't have a GKE cluster, you can follow these steps to create one.
+This section describes how to create an [autopilot GKE cluster](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) using the Google Cloud CLI. An autopilot cluster is a fully managed Kubernetes cluster that automatically adjusts the resources based on the workload requirements. It is a good choice for running any type of workload as it provides a balance between cost and performance.
+
+If you already have a GKE cluster that you want to use to host the chatbot application, you can skip this section and proceed to the next one. If you previously followed the [Kserve README](../kserve/README.md) to deploy the model, you can use the same GKE cluster to deploy the chatbot application, and you don't need to create a new cluster, so you can skip this section as well.
+
+The command below creates an autopilot GKE cluster named `langchain-chatbot-demo` in the `us-central1` region. You can adjust the region and cluster name as needed.
 
 ```bash
 gcloud container clusters create-auto langchain-chatbot-demo \
-  --location=us-central1 \
-  --workload-policies=allow-net-admin
+  --location=us-central1
+```
 
+After the cluster is created, you need to configure `kubectl` to connect to the cluster:
+
+```bash
 gcloud container clusters get-credentials langchain-chatbot-demo \
   --region us-central1
 ```
+
+This will set up the necessary credentials and configuration for kubectl to interact with your new GKE cluster.
 
 ## Prepare the Application for Deployment
 
