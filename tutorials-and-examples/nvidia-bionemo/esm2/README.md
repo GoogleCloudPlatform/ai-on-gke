@@ -1,12 +1,12 @@
-# Training and Fine-tuning ESM2 LLM on GKE using BioNeMo Framework 2.0
+# Pretraining and Fine-tuning ESM-2 LLM on GKE using BioNeMo Framework 2.0
 
-This repo walks through setting up a Google Cloud GKE environment to train ESM2 (Evolutionary Scale Modeling) using NVIDIA BioNeMo Framework 2.0
+This repo walks through setting up a Google Cloud GKE environment to train ESM-2 (Evolutionary Scale Modeling) using NVIDIA BioNeMo Framework 2.0
 
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
-  - [Training](#training)
+  - [Pretraining](#pretraining)
   - [Fine-tuning](#fine-tuning)
 - [Cleanup](#cleanup)
 
@@ -108,12 +108,12 @@ k get persistentvolumeclaim fileserver -o yaml | grep phase:
 
 The output should show `phase: Bound` when the Filestore instance is ready.
 
-## Training
+## Pretraining
 
-8. Kickoff the training job. The training job will automatically create ./results and store the checkpoints under esm2 in the Filestore mounted earlier under `/mnt/data`.
+8. Kickoff the pretraining job. The job will automatically create ./results and store the checkpoints under esm2 in the Filestore mounted earlier under `/mnt/data`.
 
 ```bash
-k apply -f esm2-training.yaml
+k apply -f esm2-pretraining.yaml
 ```
 
 9. Port Forwarding (for TensorBoard):
@@ -139,7 +139,7 @@ On your local machine: Browse to <<http://localhost:8000/#timeseries> and see th
 11. Start the fine-tuning job. The results will be written to a .pt file
 
 ```bash
-k apply -f esm2-finetunine.yaml
+k apply -f esm2-finetuning.yaml
 k get pods
 k exec -it <pod-name> -- bash
 
@@ -156,7 +156,7 @@ To delete the cluster and all associated resources:
 
 ```bash
 k delete -f esm2-finetuning.yaml
-k delete -f esm2-training.yaml
+k delete -f esm2-pretraining.yaml
 k delete -f create-mount-fs.yaml
 
 gcloud container clusters delete "${CLUSTER_NAME}" --location="${ZONE}" --quiet
