@@ -248,7 +248,7 @@ The command above switches deployment mode from Serverless to RawDeployment, whi
 Also install the ingress class by running this command:
 ```bash
 kubectl apply -f - <<EOF
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
   name: istio
@@ -359,7 +359,7 @@ gcloud storage buckets remove-iam-policy-binding gs://<BUCKET_NAME> \
 
 gcloud storage buckets remove-iam-policy-binding gs://<BUCKET_NAME> \
     --role=roles/storage.objectUser \
-    --member=principal://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/default \
+    --member=principal://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/<PROJECT_ID>.svc.id.goog/subject/ns/default/sa/default \
     --condition=None
 
 gcloud artifacts repositories remove-iam-policy-binding gemma \
