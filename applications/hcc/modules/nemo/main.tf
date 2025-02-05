@@ -60,4 +60,8 @@ resource "helm_release" "nccl_tests" {
   chart     = "${path.module}/helm-charts/nccl-tests/"
   namespace = "default"
   reset_values = true
+  set {
+    name = "workload.gcsBucketForDataCataPath"
+    value = var.checkpoint_bucket
+  }
 }
