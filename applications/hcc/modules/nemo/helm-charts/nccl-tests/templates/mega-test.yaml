@@ -1,177 +1,195 @@
-apiVersion: v1
-kind: Service
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
 metadata:
-  name:  nccl-host-1
+  name: nccl-test
 spec:
-  selector:
-    name:  nccl-host-1
-  clusterIP: None
----
+  suspend: False
+  network:
+    enableDNSHostnames: true
+  replicatedJobs:
+    - name: w
+      template:
+        metadata:
+          labels:
+            jobset.sigs.k8s.io/jobset-name: nccl-test
+        spec:
+          parallelism: 2
+          completions: 2
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: nccl-host-2
-spec:
-  selector:
-    name: nccl-host-2
-  clusterIP: None
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nccl-test-host-1
-  labels:
-    name: nccl-host-1
-    tcpxo: daemon 
-spec:
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-          - key: tcpxo
-            operator: In
-            values:
-            - daemon
-        topologyKey: "kubernetes.io/hostname"
-  hostname: host1
-  subdomain: nccl-host-1
-  hostNetwork: true
-  dnsPolicy: ClusterFirstWithHostNet
-  containers:
-    - name: tcpxo-daemon
-      image: us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/tcpgpudmarxd-dev:v1.0.13_1
-      imagePullPolicy: Always
-      command: ["/bin/sh", "-c"]
-      args:
-        - |
-          set -ex
-          chmod 755 /fts/entrypoint_rxdm_container.sh
-          /fts/entrypoint_rxdm_container.sh --num_hops=2 --num_nics=8 --uid= --alsologtostderr
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - name: nvidia-install-dir-host
-          mountPath: /usr/local/nvidia
-      env:
-        - name: LD_LIBRARY_PATH
-          value: /usr/local/nvidia/lib64
-    - name: nccl-test
-      image: us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/nccl-plugin-gpudirecttcpx-dev:v1.0.7
-      imagePullPolicy: Always
-      command:
-        - /bin/sh
-        - -c
-        - |
-          cat >/scripts/allgather.sh <<EOF
-          #!/bin/bash
-          /scripts/init_ssh.sh \${@};
-          pushd /scripts;
-          /scripts/gen_hostfiles.sh \${@};
-          popd;
-          BENCHMARK=all_gather_perf NHOSTS=2 NCCL_LIB_DIR="${LD_LIBRARY_PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" /scripts/demo-run-nccl-test-tcpxo-via-mpi.sh
-          EOF
-          chmod +x /scripts/allgather.sh
-          service ssh restart;
-          sleep infinity;
-      env:
-        - name: LD_LIBRARY_PATH
-          value: /usr/local/nvidia/lib64
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - name: nvidia-install-dir-host
-          mountPath: /usr/local/nvidia
-        - name: shared-memory
-          mountPath: /dev/shm
-      resources:
-        limits:
-          nvidia.com/gpu: 8
-  volumes:
-    - name: nvidia-install-dir-host
-      hostPath:
-        path: /home/kubernetes/bin/nvidia
-    - name: shared-memory
-      emptyDir:
-        medium: "Memory"
-        sizeLimit: 1Gi
+          template:
+            metadata:
+              annotations:
+                devices.gke.io/container.tcpxo-daemon: |+
+                  - path: /dev/nvidia0
+                  - path: /dev/nvidia1
+                  - path: /dev/nvidia2
+                  - path: /dev/nvidia3
+                  - path: /dev/nvidia4
+                  - path: /dev/nvidia5
+                  - path: /dev/nvidia6
+                  - path: /dev/nvidia7
+                  - path: /dev/nvidiactl
+                  - path: /dev/nvidia-uvm
+                  - path: /dev/dmabuf_import_helper
+                networking.gke.io/default-interface: 'eth0'
+                networking.gke.io/interfaces: |
+                  [
+                    {"interfaceName":"eth0","network":"default"},
+                    {"interfaceName":"eth1","network":"vpc1"},
+                    {"interfaceName":"eth2","network":"vpc2"},
+                    {"interfaceName":"eth3","network":"vpc3"},
+                    {"interfaceName":"eth4","network":"vpc4"},
+                    {"interfaceName":"eth5","network":"vpc5"},
+                    {"interfaceName":"eth6","network":"vpc6"},
+                    {"interfaceName":"eth7","network":"vpc7"},
+                    {"interfaceName":"eth8","network":"vpc8"}
+                  ]
+            spec:
+              restartPolicy: Never
+              nodeSelector:
+                cloud.google.com/gke-nodepool: a3-megagpu-8g-a3megagpupool
+              tolerations:
+              - key: cloud.google.com/gke-queued
+                effect: NoSchedule
+                value: "true"
+              - key: "nvidia.com/gpu"
+                operator: "Exists"
+                effect: "NoSchedule"
+              setHostnameAsFQDN: true
+              volumes:
+              - name: nvidia
+                hostPath:
+                  path: /home/kubernetes/bin/nvidia/lib64
+              - name: shared-memory
+                emptyDir:
+                  medium: "Memory"
+                  sizeLimit: 1Gi
+              - name: sys
+                hostPath:
+                  path: /sys
+              - name: proc-sys
+                hostPath:
+                  path: /proc/sys
+              - name: aperture-devices
+                hostPath:
+                  path: /dev/aperture_devices
+              - name: workload-terminated-volume
+                emptyDir: {}
+              containers:
+                - name: tcpxo-daemon
+                  image: us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/tcpgpudmarxd-dev:v1.0.13_1
+                  imagePullPolicy: Always
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      set -ex
+                      chmod 755 /fts/entrypoint_rxdm_container.sh
+                      /fts/entrypoint_rxdm_container.sh --num_hops=2 --num_nics=8 --uid= --alsologtostderr &
+                      while [ ! -e "/semaphore/workload_terminated" ]; do sleep 10; done
+                        pkill -e "^"tcpgpudmarxd || true
+                        sleep 15
+                      exit 0
+                  securityContext:
+                    capabilities:
+                      add:
+                        - NET_ADMIN
+                        - NET_BIND_SERVICE
+                  volumeMounts:
+                    - name: nvidia
+                      mountPath: /usr/local/nvidia/lib64
+                    - name: sys
+                      mountPath: /hostsysfs
+                    - name: proc-sys
+                      mountPath: /hostprocsysfs
+                    - name: workload-terminated-volume
+                      mountPath: /semaphore
+                  env:
+                    - name: LD_LIBRARY_PATH
+                      value: /usr/local/nvidia/lib64
+                - name: nccl-test
+                  image: us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/nccl-plugin-gpudirecttcpx-dev:v1.0.7
+                  imagePullPolicy: Always
+                  command:
+                    - bash
+                    - -c
+                    - |
+                      set -x
 
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nccl-test-host-2
-  labels:
-    name: nccl-host-2
-    tcpxo: daemon
-spec:
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-          - key: tcpxo
-            operator: In
-            values:
-            - daemon
-        topologyKey: "kubernetes.io/hostname"
-  hostname: host2
-  subdomain: nccl-host-2
-  hostNetwork: true
-  dnsPolicy: ClusterFirstWithHostNet
-  containers:
-    - name: tcpxo-daemon
-      image: us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/tcpgpudmarxd-dev:v1.0.13_1
-      imagePullPolicy: Always
-      command: ["/bin/sh", "-c"]
-      args:
-        - |
-          set -ex
-          chmod 755 /fts/entrypoint_rxdm_container.sh
-          /fts/entrypoint_rxdm_container.sh --num_hops=2 --num_nics=8 --uid= --alsologtostderr
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - name: nvidia-install-dir-host
-          mountPath: /usr/local/nvidia
-      env:
-        - name: LD_LIBRARY_PATH
-          value: /usr/local/nvidia/lib64
-    - name: nccl-test
-      image: us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/nccl-plugin-gpudirecttcpx-dev:v1.0.7
-      imagePullPolicy: Always
-      command:
-        - /bin/sh
-        - -c
-        - |
-          cat >/scripts/allgather.sh <<EOF
-          #!/bin/bash
-          /scripts/init_ssh.sh \${@};
-          pushd /scripts;
-          /scripts/gen_hostfiles.sh \${@};
-          popd;
-          BENCHMARK=all_gather_perf NHOSTS=2 NCCL_LIB_DIR="${LD_LIBRARY_PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" /scripts/demo-run-nccl-test-tcpxo-via-mpi.sh
-          EOF
-          chmod +x /scripts/allgather.sh
-          service ssh restart;
-          sleep infinity;
-      env:
-        - name: LD_LIBRARY_PATH
-          value: /usr/local/nvidia/lib64
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - name: shared-memory
-          mountPath: /dev/shm
-      resources:
-        limits:
-          nvidia.com/gpu: 8
-  volumes:
-    - name: nvidia-install-dir-host
-      hostPath:
-        path: /home/kubernetes/bin/nvidia
-    - name: shared-memory
-      emptyDir:
-        medium: "Memory"
-        sizeLimit: 1Gi
+                      function on_script_completion {
+                        # Note: This semaphore is used to terminate the TCPx side-car
+                        touch /semaphore/workload_terminated
+                      }
+                      trap on_script_completion EXIT
+
+                      # Install ping
+                      apt update -y
+                      apt install -y iputils-ping
+
+                      # Start sshd
+                      /scripts/container_entry.sh daemon &
+
+                      # Get helper variables to form all hostnames
+                      export POSTFIX=$(hostname | cut -d . -f 2-)
+                      export WORKERS_BASENAME=$(hostname | cut -d . -f 1 | rev | cut -d - -f 2- | rev )
+                      export NODE_RANK=$JOB_COMPLETION_INDEX
+
+                      # For every worker, wait till online and add to hostfile
+                      for i in `seq 0 $(($N_NODES-1))`; do
+                        OTHER=${WORKERS_BASENAME}-${i}.${POSTFIX}
+                        until ssh -p 222 -o StrictHostKeyChecking=no $OTHER hostname; do
+                          echo Waiting for ${OTHER}...
+                          sleep 10
+                        done
+                        echo ${OTHER} port=222 slots=8 | tee -a /tmp/hostfile;
+                      done
+
+                      cat /tmp/hostfile
+
+                      # Launch from head node
+                      if [[ "${NODE_RANK}" -eq "0" ]]; then
+                        mpirun --mca orte_keep_fqdn_hostnames 1 --mca btl tcp,self --mca btl_tcp_if_include eth0 --allow-run-as-root \
+                          -np $(( ${GPU_PER_NODE} * ${N_NODES} )) \
+                          --hostfile "/tmp/hostfile" \
+                          -x NCCL_DEBUG_FILE="/tmp/${BENCHMARK}"-%h-%p.log \
+                          -x NCCL_TOPO_DUMP_FILE="/tmp/${BENCHMARK}"_topo.txt \
+                          -x NCCL_GRAPH_DUMP_FILE="/tmp/${BENCHMARK}"_graph.txt \
+                          -x LD_LIBRARY_PATH -x PATH \
+                          -x NCCL_DEBUG=INFO -x NCCL_DEBUG_SUBSYS=INIT,NET \
+                          -x NCCL_TESTS_SPLIT_MASK="${NCCL_TESTS_SPLIT_MASK:-0x0}" \
+                          -x NCCL_FASTRAK_LLCM_DEVICE_DIRECTORY="${NCCL_FASTRAK_LLCM_DEVICE_DIRECTORY}" \
+                          -x NCCL_LIB_DIR="${LD_LIBRARY_PATH}" \
+                          taskset -c 32-63 /scripts/demo_mpi_entry_with_config_profile.sh "${BENCHMARK}" \
+                            -b 8 -e 8G -f 2 -g 1 -w 5 --iters 20 2>&1 | \
+                          tee "/tmp/${BENCHMARK}_nh${N_NODES}_ng${GPU_PER_NODE}_i${RUN_ITERS}.txt"
+                      else
+                        while ping -c 1 ${WORKERS_BASENAME}-0.${POSTFIX}; do
+                        sleep 5
+                      done
+                      fi
+                      exit 0
+                  env:
+                    - name: LD_LIBRARY_PATH
+                      value: /usr/local/nvidia/lib64
+                    - name: NCCL_FASTRAK_LLCM_DEVICE_DIRECTORY
+                      value: /dev/aperture_devices
+                    - name: BENCHMARK
+                      value: all_gather_perf
+                    - name: N_NODES
+                      value: "2"
+                    - name: GPU_PER_NODE
+                      value: "8"
+                  volumeMounts:
+                    - name: nvidia
+                      mountPath: /usr/local/nvidia/lib64
+                    - name: shared-memory
+                      mountPath: /dev/shm
+                    - name: aperture-devices
+                      mountPath: /dev/aperture_devices
+                    - name: workload-terminated-volume
+                      mountPath: /semaphore
+                  resources:
+                    limits:
+                      nvidia.com/gpu: 8
+  failurePolicy:
+    maxRestarts: 0
+
