@@ -1,4 +1,4 @@
-# Training ESM2 LLM on GKE using BioNeMo Framework 2.0
+# Training and Fine-tuning ESM2 LLM on GKE using BioNeMo Framework 2.0
 
 This repo walks through setting up a Google Cloud GKE environment to train ESM2 (Evolutionary Scale Modeling) using NVIDIA BioNeMo Framework 2.0
 
@@ -6,6 +6,8 @@ This repo walks through setting up a Google Cloud GKE environment to train ESM2 
 
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
+  - [Training](#training)
+  - [Fine-tuning](#fine-tuning)
 - [Cleanup](#cleanup)
 
 ## Prerequisites
@@ -106,6 +108,8 @@ k get persistentvolumeclaim fileserver -o yaml | grep phase:
 
 The output should show `phase: Bound` when the Filestore instance is ready.
 
+## Training
+
 8. Kickoff the training job. The training job will automatically create ./results and store the checkpoints under esm2 in the Filestore mounted earlier under `/mnt/data`.
 
 ```bash
@@ -130,11 +134,28 @@ On your local machine: Browse to <<http://localhost:8000/#timeseries> and see th
 
 [<img src="images/tensorboard-results.png" width="750"/>](HighLevelArch)
 
+## Fine-tuning
+
+11. Start the fine-tuning job. The results will be written to a .pt file
+
+```bash
+k apply -f esm2-finetunine.yaml
+k get pods
+k exec -it <pod-name> -- bash
+
+#Copy contents of finetuning.py into the pod
+touch finetuning.py
+vi finetuning.py
+#paste contents into the file
+python3 finetuning.py
+```
+
 ## Cleanup
 
 To delete the cluster and all associated resources:
 
 ```bash
+k delete -f esm2-finetuning.yaml
 k delete -f esm2-training.yaml
 k delete -f create-mount-fs.yaml
 
