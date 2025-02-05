@@ -1,3 +1,6 @@
+{{ $timestamp := now | unixEpoch }}
+
+{{- $root := . -}}
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
@@ -19,6 +22,7 @@ spec:
           template:
             metadata:
               annotations:
+                gke-gcsfuse/volumes: "true"
                 devices.gke.io/container.tcpxo-daemon: |+
                   - path: /dev/nvidia0
                   - path: /dev/nvidia1
@@ -75,6 +79,11 @@ spec:
                   path: /dev/aperture_devices
               - name: workload-terminated-volume
                 emptyDir: {}
+              - name: gcs-fuse
+                csi:
+                  driver: gcsfuse.csi.storage.gke.io
+                  volumeAttributes:
+                    bucketName: "{{ $root.Values.workload.gcsBucketForDataCataPath }}"
               containers:
                 - name: tcpxo-daemon
                   image: us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/tcpgpudmarxd-dev:v1.0.13_1
@@ -159,8 +168,8 @@ spec:
                           -x NCCL_FASTRAK_LLCM_DEVICE_DIRECTORY="${NCCL_FASTRAK_LLCM_DEVICE_DIRECTORY}" \
                           -x NCCL_LIB_DIR="${LD_LIBRARY_PATH}" \
                           taskset -c 32-63 /scripts/demo_mpi_entry_with_config_profile.sh "${BENCHMARK}" \
-                            -b 8 -e 8G -f 2 -g 1 -w 5 --iters 20 2>&1 | \
-                          tee "/tmp/${BENCHMARK}_nh${N_NODES}_ng${GPU_PER_NODE}_i${RUN_ITERS}.txt"
+                            -b 8 -e 8G -f 2 -g 1 -w 5 --iters $RUN_ITERS 2>&1 | \
+                          tee "/gcs/${BENCHMARK}_nh${N_NODES}_ng${GPU_PER_NODE}_i${RUN_ITERS}_t${JOB_TIMESTAMP}.txt"
                       else
                         while ping -c 1 ${WORKERS_BASENAME}-0.${POSTFIX}; do
                         sleep 5
@@ -174,10 +183,14 @@ spec:
                       value: /dev/aperture_devices
                     - name: BENCHMARK
                       value: all_gather_perf
+                    - name: RUN_ITERS
+                      value: "20"
                     - name: N_NODES
                       value: "2"
                     - name: GPU_PER_NODE
                       value: "8"
+                    - name: JOB_TIMESTAMP
+                      value: "{{ $timestamp }}"
                   volumeMounts:
                     - name: nvidia
                       mountPath: /usr/local/nvidia/lib64
@@ -187,6 +200,8 @@ spec:
                       mountPath: /dev/aperture_devices
                     - name: workload-terminated-volume
                       mountPath: /semaphore
+                    - name: gcs-fuse
+                      mountPath: /gcs
                   resources:
                     limits:
                       nvidia.com/gpu: 8

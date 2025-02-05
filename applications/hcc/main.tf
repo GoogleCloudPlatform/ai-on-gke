@@ -62,6 +62,7 @@ module "gke_cluster" {
   project_id           = var.project_id
   region          = local.region != null ? local.region : error("Cannot find region for zone")
   subnetwork_self_link = module.network-kevinmcw.subnetwork_self_link
+  enable_gcsfuse_csi   = true
   providers = {
     kubectl = kubectl
     http    = http
