@@ -1,4 +1,4 @@
-{{- if eq gpuType "A3 Mega" }}
+{{- if eq var.gpuType "A3 Mega" }}
 {{ $timestamp := now | unixEpoch }}
 
 {{- $root := . -}}
