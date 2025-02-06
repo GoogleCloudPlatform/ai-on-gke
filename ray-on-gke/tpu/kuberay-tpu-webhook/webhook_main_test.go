@@ -778,6 +778,7 @@ func Test_ExtractRayCluster(t *testing.T) {
 
 func Test_GenDNSHostnames(t *testing.T) {
 	tests := map[string]struct {
+		clusterName       string
 		replicaIndex      int
 		numOfHosts        int32
 		expectedHostnames string
@@ -785,6 +786,7 @@ func Test_GenDNSHostnames(t *testing.T) {
 	}{
 		"genDNSHostnames with NumOfHosts == 0": {
 			// a workergroup can't have NumOfHosts set to 0 so this should error out
+			clusterName:   "test-cluster",
 			replicaIndex:  0,
 			numOfHosts:    int32(0),
 			expectedError: errors.New("workerGroupSpec NumOfHosts not set"),
@@ -792,12 +794,14 @@ func Test_GenDNSHostnames(t *testing.T) {
 		"genDNSHostnames with NumOfHosts == 1": {
 			// Single-host worker group, should return a single DNS hostname. This function will
 			// never be called for single-host groups, but we don't necessarily want it to error if it does.
+			clusterName:       "test-cluster",
 			replicaIndex:      0,
 			numOfHosts:        int32(1),
 			expectedHostnames: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", headlessServiceSuffix),
 		},
 		"genDNSHostnames with NumOfHosts > 1": {
 			// multi-host worker group, should return a string list of DNS hostnames for the given replica
+			clusterName:  "test-cluster",
 			replicaIndex: 1,
 			numOfHosts:   int32(4),
 			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", headlessServiceSuffix),
@@ -806,12 +810,21 @@ func Test_GenDNSHostnames(t *testing.T) {
 				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", headlessServiceSuffix),
 			}, ","),
 		},
+		"genDNSHostnames with long RayCluster name": {
+			// Multi-host worker group in a RayCluster with a name that will be truncated
+			clusterName:  "long-raycluster-name-to-be-truncated",
+			replicaIndex: 1,
+			numOfHosts:   int32(2),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "aycluster-name-to-be-truncated", headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "aycluster-name-to-be-truncated", headlessServiceSuffix),
+			}, ","),
+		},
 	}
 
 	// validate that genDNSHostnames correctly returns a string list of DNS addressable hostnames
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			hostnames, err := genDNSHostnames(tc.numOfHosts, "test-group", "test-cluster", "test-namespace", tc.replicaIndex)
+			hostnames, err := genDNSHostnames(tc.numOfHosts, "test-group", tc.clusterName, "test-namespace", tc.replicaIndex)
 			if err != nil {
 				assert.Equal(t, tc.expectedError, err)
 			} else {
@@ -823,21 +836,15 @@ func Test_GenDNSHostnames(t *testing.T) {
 
 func Test_InjectHostnames(t *testing.T) {
 	tests := map[string]struct {
-		numOfHosts        int
+		clusterName       string
 		groupName         string
 		expectedSubdomain string
 		expectedHostnames string
 	}{
-		"injectHostnames for single-host worker group": {
-			// should create a patch to set the subdomain and a single TPU_WORKER_HOSTNAMES DNS hostname
-			numOfHosts:        1,
-			groupName:         "test-group-name",
-			expectedSubdomain: fmt.Sprintf("%s-%s", "test-cluster", headlessServiceSuffix),
-			expectedHostnames: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", headlessServiceSuffix),
-		},
 		"injectHostnames for multi-host worker group": {
-			// should create a patch to set the subdomain and TPU_WORKER_HOSTNAMES for all hosts
-			numOfHosts:        1,
+			// Should create a patch to set the subdomain and TPU_WORKER_HOSTNAMES for all hosts.
+			// This function is only called for multi-host TPU worker groups.
+			clusterName:       "test-cluster",
 			groupName:         "test-group-name",
 			expectedSubdomain: fmt.Sprintf("%s-%s", "test-cluster", headlessServiceSuffix),
 			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", headlessServiceSuffix),
@@ -846,21 +853,33 @@ func Test_InjectHostnames(t *testing.T) {
 				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", headlessServiceSuffix),
 			}, ","),
 		},
+		"injectHostnames for multi-host worker group with truncated service name": {
+			// Should create a patch to set the subdomain and TPU_WORKER_HOSTNAMES for all hosts, with the
+			// correct subdomain truncated to match the created service name.
+			clusterName:       "extremely-long-test-raycluster-name",
+			groupName:         "test-group-name",
+			expectedSubdomain: fmt.Sprintf("%s-%s", "mely-long-test-raycluster-name", headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "mely-long-test-raycluster-name", headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "mely-long-test-raycluster-name", headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "mely-long-test-raycluster-name", headlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "mely-long-test-raycluster-name", headlessServiceSuffix),
+			}, ","),
+		},
 	}
 
 	// check that a valid subdomain and TPU_WORKER_HOSTNAMES are injected into the Pod
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			testPod := getTestTPUWorker("test-cluster", "test-group", "test-namespace", "tpu-v4-podslice", "2x2x1", "4")
+			testPod := getTestTPUWorker(tc.clusterName, tc.groupName, "test-namespace", "tpu-v4-podslice", "2x2x2", "4")
 			expectedEnv := []corev1.EnvVar{corev1.EnvVar{Name: "TPU_WORKER_HOSTNAMES", Value: tc.expectedHostnames}}
-			expectedPatches := []patch{}
-			injectHostnames("test-cluster", tc.expectedHostnames, "/spec/containers/0/env", testPod.Spec.Containers[0], &expectedPatches)
+			patches := []patch{}
+			injectHostnames(tc.clusterName, tc.expectedHostnames, "/spec/containers/0/env", testPod.Spec.Containers[0], &patches)
 			// check subdomain patch
-			assert.Equal(t, "/spec/subdomain", expectedPatches[0]["path"])
-			assert.Equal(t, tc.expectedSubdomain, expectedPatches[0]["value"])
+			assert.Equal(t, "/spec/subdomain", patches[0]["path"])
+			assert.Equal(t, tc.expectedSubdomain, patches[0]["value"])
 			// check hostnames patch
-			assert.Equal(t, "/spec/containers/0/env", expectedPatches[1]["path"])
-			assert.Equal(t, expectedEnv, expectedPatches[1]["value"])
+			assert.Equal(t, "/spec/containers/0/env", patches[1]["path"])
+			assert.Equal(t, expectedEnv, patches[1]["value"])
 		})
 	}
 }
@@ -1461,6 +1480,29 @@ func Test_MutatePod(t *testing.T) {
 					assert.Equal(t, expectedNamePatch, patches[6]["value"])
 				}
 			}
+		})
+	}
+}
+
+func Test_GenerateHeadlessServiceName(t *testing.T) {
+	tests := map[string]struct {
+		testRayClusterName  string
+		expectedServiceName string
+	}{
+		"RayCluster name + headless-worker-svc is less than 50 chars, no truncation": {
+			testRayClusterName:  "test-raycluster",                     // 15 chars
+			expectedServiceName: "test-raycluster-headless-worker-svc", // 35 chars
+		},
+		"RayCluster name + headless-worker-svc is more than 50 chars, name is truncated": {
+			testRayClusterName:  "extremely-long-test-raycluster-name",                // 35 chars
+			expectedServiceName: "mely-long-test-raycluster-name-headless-worker-svc", // 50 chars
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			serviceName := generateHeadlessServiceName(tc.testRayClusterName)
+			assert.Equal(t, tc.expectedServiceName, serviceName)
 		})
 	}
 }
