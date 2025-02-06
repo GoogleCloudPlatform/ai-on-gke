@@ -1,8 +1,10 @@
 package cloud
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"math"
 	"net/http"
 	"strconv"
@@ -15,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -78,22 +81,33 @@ type GKE struct {
 func (g *GKE) NodePoolLabelKey() string { return GKENodePoolNameLabel }
 
 func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
-	name, err := podToNodePoolName(p)
+	np, err := g.nodePoolForPod(p)
 	if err != nil {
-		return err
+		return fmt.Errorf("determining node pool for pod: %w", err)
 	}
 
-	exists, err := g.nodePoolExists(name)
+	existingNPState, err := g.checkExistingNodePool(np)
 	if err != nil {
 		return fmt.Errorf("checking if node pool exists: %w", err)
 	}
-	if exists {
+	switch existingNPState {
+	case nodePoolStateNotExists:
+		// Create the node pool.
+	case nodePoolStateExistsAndMatches:
 		return nil
-	}
-
-	np, err := g.nodePoolForPod(name, p)
-	if err != nil {
-		return fmt.Errorf("determining node pool for pod: %w", err)
+	case nodePoolStateExistsAndNotMatches:
+		// Recreate the node pool.
+		const why = "existing node pool did not match pod and needed to be recreated"
+		if err := g.DeleteNodePool(np.Name, p, why); err != nil {
+			return fmt.Errorf("failed to delete node pool: %s: %w", why, err)
+		}
+		// Allow another reconcile cycle to create the new node pool.
+		return ErrNodePoolDeletedToBeRecreated
+	case nodePoolStateExistsAndStopping:
+		// Node pool is stopping, so we need to wait for it to be deleted before creating a new one.
+		return ErrNodePoolStopping
+	default:
+		return fmt.Errorf("unexpected node pool state: %v", existingNPState)
 	}
 
 	req := &containerv1beta1.CreateNodePoolRequest{
@@ -105,11 +119,11 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 	// Node Pool will occur at the same time. The result is an error:
 	// "do: googleapi: Error 400: Cluster is running incompatible operation ..."
 	// To avoid a bunch of failed requests, we dedeuplicate here.
-	if _, inProgress := g.inProgressCreatesNPName.Load(name); inProgress {
-		return fmt.Errorf("creation ongoing for node pool name: %v: %w", name, ErrDuplicateRequest)
+	if _, inProgress := g.inProgressCreatesNPName.Load(np.Name); inProgress {
+		return fmt.Errorf("creation ongoing for node pool name: %v: %w", np.Name, ErrDuplicateRequest)
 	}
-	g.inProgressCreatesNPName.Store(name, struct{}{})
-	defer g.inProgressCreatesNPName.Delete(name)
+	g.inProgressCreatesNPName.Store(np.Name, struct{}{})
+	defer g.inProgressCreatesNPName.Delete(np.Name)
 
 	// A restarting JobSet will trigger a new Node Pool creation.
 	// The current creation attempt might overlap with the previous one,
@@ -126,22 +140,22 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 
 	// Get JobSet this pod is part of from the pod labels and log it.
 	jobSetName := p.Labels[jobset.JobSetNameKey]
-	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationStarted, "Starting creation of Node Pool %s (size = %v) for JobSet %s because %s", name, np.InitialNodeCount, jobSetName, why)
+	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationStarted, "Starting creation of Node Pool %s (size = %v) for JobSet %s because %s", np.Name, np.InitialNodeCount, jobSetName, why)
 	log.Info(fmt.Sprintf("creating node pool %s for jobset %s", np.Name, jobSetName))
 
 	call := g.Service.Projects.Locations.Clusters.NodePools.Create(g.ClusterContext.ClusterName(), req)
 	op, err := call.Do()
 	if err != nil {
-		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Request to create Node Pool %s failed: %v.", name, err)
+		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Request to create Node Pool %s failed: %v.", np.Name, err)
 		return fmt.Errorf("do: %w", err)
 	}
 
 	if err := waitForGkeOp(g.Service, g.ClusterContext, op); err != nil {
-		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Operation to create Node Pool %s failed: %v.", name, err)
+		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Operation to create Node Pool %s failed: %v.", np.Name, err)
 		return fmt.Errorf("waiting for operation: %w", err)
 	}
 
-	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationSucceeded, "Successfully created Node Pool %s.", name)
+	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationSucceeded, "Successfully created Node Pool %s.", np.Name)
 
 	return nil
 }
@@ -220,24 +234,60 @@ func (g *GKE) DeleteNodePool(name string, eventObj client.Object, why string) er
 }
 
 var ErrNodePoolStopping = errors.New("node pool stopping")
+var ErrNodePoolDeletedToBeRecreated = errors.New("node pool deleted to be recreated")
 
-func (g *GKE) nodePoolExists(name string) (bool, error) {
-	call := g.Service.Projects.Locations.Clusters.NodePools.Get(g.ClusterContext.NodePoolName(name))
-	np, err := call.Do()
+type nodePoolState int
+
+const (
+	nodePoolStateUnknown nodePoolState = iota
+	nodePoolStateNotExists
+	nodePoolStateExistsAndMatches
+	nodePoolStateExistsAndNotMatches
+	nodePoolStateExistsAndStopping
+)
+
+func (g *GKE) checkExistingNodePool(desired *containerv1beta1.NodePool) (nodePoolState, error) {
+	call := g.Service.Projects.Locations.Clusters.NodePools.Get(g.ClusterContext.NodePoolName(desired.Name))
+	existing, err := call.Do()
 	if err == nil {
-		return true, nil
+		match, err := nodePoolsMatch(desired, existing)
+		if err != nil {
+			return nodePoolStateUnknown, fmt.Errorf("comparing node pools: %w", err)
+		}
+		if match {
+			return nodePoolStateExistsAndMatches, nil
+		} else {
+			return nodePoolStateExistsAndNotMatches, nil
+		}
 	}
 	if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
-		return false, nil
+		return nodePoolStateNotExists, nil
 	}
-	if np.Status == "STOPPING" {
-		return false, ErrNodePoolStopping
+	if existing.Status == "STOPPING" {
+		return nodePoolStateExistsAndStopping, nil
 	}
 
-	return false, err
+	return nodePoolStateUnknown, err
 }
 
-func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.NodePool, error) {
+func nodePoolsMatch(desired, existing *containerv1beta1.NodePool) (bool, error) {
+	desiredHash, err := nodePoolHash(desired)
+	if err != nil {
+		return false, fmt.Errorf("hashing node pool: %w", err)
+	}
+	if existing.Config != nil && existing.Config.Labels != nil {
+		existingHash, ok := existing.Config.Labels[LabelNodePoolHash]
+		if !ok {
+			// Avoid recreating node pool if hash is missing.
+			// Node pool was likely provisioned by a legacy version of the provisioner.
+			return true, nil
+		}
+		return existingHash == desiredHash, nil
+	}
+	return true, nil
+}
+
+func (g *GKE) nodePoolForPod(p *corev1.Pod) (*containerv1beta1.NodePool, error) {
 	ref := metav1.GetControllerOf(p)
 	if ref == nil {
 		// TODO: Allow for standalone Pods?
@@ -410,7 +460,12 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		diskType = g.ClusterContext.NodeDiskType
 	}
 
-	return &containerv1beta1.NodePool{
+	name, err := podToNodePoolName(p)
+	if err != nil {
+		return nil, err
+	}
+
+	np := &containerv1beta1.NodePool{
 		Name: name,
 		Config: &containerv1beta1.NodeConfig{
 			ServiceAccount: nodeServiceAccount,
@@ -443,7 +498,14 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		},
 		MaxPodsConstraint: &containerv1beta1.MaxPodsConstraint{MaxPodsPerNode: maxPodsPerNode},
 		NetworkConfig:     networkConfig,
-	}, nil
+	}
+
+	hash, err := nodePoolHash(np)
+	if err != nil {
+		return nil, fmt.Errorf("hashing node pool: %w", err)
+	}
+	np.Config.Labels[LabelNodePoolHash] = hash
+	return np, nil
 }
 
 func sumTPURequests(p *corev1.Pod) (int, error) {
@@ -567,4 +629,14 @@ func getAnnotation(p *corev1.Pod, key string) string {
 		return ""
 	}
 	return p.Annotations[key]
+}
+
+func nodePoolHash(np *containerv1beta1.NodePool) (string, error) {
+	h := fnv.New32a()
+	jsn, err := json.Marshal(np)
+	if err != nil {
+		return "", err
+	}
+	h.Write(jsn)
+	return rand.SafeEncodeString(fmt.Sprint(h.Sum32())), nil
 }
