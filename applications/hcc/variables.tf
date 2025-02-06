@@ -22,7 +22,6 @@ variable "goog_cm_deployment_name" {
 variable "authorized_cidr" {
   description = "Toolkit deployment variable: authorized_cidr"
   type        = string
-  default     = "0.0.0.0/0"
 }
 
 variable "reservation" {
@@ -38,13 +37,11 @@ variable "reservation_block" {
 variable "labels" {
   description = "Toolkit deployment variable: labels"
   type        = any
-  default     = {}
 }
 
 variable "project_id" {
   description = "Toolkit deployment variable: project_id"
   type        = string
-  default     = ""
 }
 
 variable "a3_mega_zone" {
@@ -58,7 +55,7 @@ variable "a3_ultra_zone" {
 }
 
 variable "node_count" {
-  description = "Toolkit deployment variable: node_count"
+  description = "Toolkit deployment variable: static_node_count"
   type        = number
 }
 

@@ -1,0 +1,46 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: run-nvidia-smi-434f
+  labels:
+    ghpc_blueprint: gke-a3-ultra
+    ghpc_deployment: gke-a3-ultra-danjuan-1
+    ghpc_module: gke-job-template
+    ghpc_role: compute
+spec:
+  parallelism: 2
+  completions: 2
+  completionMode: Indexed
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                - a3-ultragpu-8g-a3-ultragpu-pool
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Equal
+        value: "present"
+        effect: NoSchedule
+      containers:
+      - name: run-nvidia-smi-container
+        image: nvidia/cuda:11.0.3-runtime-ubuntu20.04
+        command:
+        - "nvidia-smi"
+        
+        resources:
+          limits:
+            # GPUs should only be specified as limits
+            # https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
+            nvidia.com/gpu: 8
+          requests:
+            # cpu request attempts full node per pod
+            cpu: 6910m
+      restartPolicy: Never
+  backoffLimit: 0
