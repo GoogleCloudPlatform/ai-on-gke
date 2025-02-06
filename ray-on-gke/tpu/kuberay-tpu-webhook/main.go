@@ -33,6 +33,7 @@ import (
 	"time"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
+	utils "github.com/ray-project/kuberay/ray-operator/controllers/ray/utils"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -244,16 +245,26 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 	return &rayCluster, nil
 }
 
+// generateHeadlessServiceName returns the expected TPU headless service name for a RayCluster
+func generateHeadlessServiceName(clusterName string) string {
+	serviceName := fmt.Sprintf("%s-%s", clusterName, headlessServiceSuffix)
+
+	// Apply the same truncation as in the RayCluster controller when generating the headless service
+	// name. This is to maintain the up-to 63 char compatibility guarantee for hostnames (RFC 1123).
+	return utils.CheckName(serviceName)
+}
+
 // genDNSHostnames returns list of DNS hostnames for TPU VM hosts as a string
 func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, namespace string, replicaIndex int) (string, error) {
 	if numOfHosts == 0 {
 		err := errors.New("workerGroupSpec NumOfHosts not set")
 		return "", err
 	}
+	headlessServiceName := generateHeadlessServiceName(clusterName)
 	hostNames := make([]string, numOfHosts)
-	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.headless-worker-svc
+	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.{CLUSTER_NAME}-headless-worker-svc
 	for j := 0; j < int(numOfHosts); j++ {
-		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s-%s", groupName, replicaIndex, j, clusterName, headlessServiceSuffix)
+		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s", groupName, replicaIndex, j, headlessServiceName)
 	}
 	klog.V(1).InfoS("genDNSHostnames", "RayCluster", namespace+"/"+clusterName, "NumOfHosts", numOfHosts, "Replica Index", replicaIndex)
 	return strings.Join(hostNames, ","), nil
@@ -268,7 +279,7 @@ func injectHostnames(clusterName string, hostNames string, envPath string, conta
 		Value: hostNames,
 	}
 	subdomainPatch["path"] = subdomainPath
-	subdomainPatch["value"] = fmt.Sprintf("%s-%s", clusterName, headlessServiceSuffix)
+	subdomainPatch["value"] = generateHeadlessServiceName(clusterName)
 	// create new EnvVar array if container.Env is empty, and append hostnames if not
 	if len(container.Env) == 0 {
 		hostNamesPatch["path"] = envPath
@@ -678,7 +689,7 @@ func (t *TPUWebhookServer) mutatePod(admissionReview *admissionv1.AdmissionRevie
 					return nil, err
 				}
 				klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "TPU_WORKER_HOSTNAMES", hostnames)
-				klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", clusterName+"-"+headlessServiceSuffix)
+				klog.V(1).InfoS("mutatePod", "RayCluster", namespace+"/"+clusterName, "subdomain", generateHeadlessServiceName(clusterName))
 				injectHostnames(clusterName, hostnames, path, container, &patches)
 			}
 			// inject TPU_WORKER_ID
