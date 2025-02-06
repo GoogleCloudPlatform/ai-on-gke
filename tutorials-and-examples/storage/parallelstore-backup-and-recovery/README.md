@@ -46,10 +46,19 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 kubeclt apply -f ./pstore-sa.yaml
 ```
 
+##### Bind the GCP SA and GKE SA
+
 ```
 gcloud iam service-accounts add-iam-policy-binding pstore-sa@$PROJECT_ID.iam.gserviceaccount.com \
     --role roles/iam.workloadIdentityUser \
     --member "serviceAccount:$PROJECT_ID.svc.id.goog[default/pstore-sa]"
+```
+
+##### Annotate the GKE SA with GCP SA
+
+```
+kubectl annotate serviceaccount pstore-sa \
+    --namespace default \ iam.gke.io/gcp-service-account=pstore-sa@my-project.iam.gserviceaccount.com
 ```
 
 #### Grant permission to ParallelStore Agent Service Account
@@ -58,7 +67,7 @@ gcloud iam service-accounts add-iam-policy-binding pstore-sa@$PROJECT_ID.iam.gse
 
 ```
 gcloud storage buckets add-iam-policy-binding $GCS_BUCKET \
-  --member=serviceAccount:service-$PROJECT_ID@gcp-sa-parallelstore.iam.gserviceaccount.com \
+  --member=serviceAccount:service-$PROJECT_NUMBER@gcp-sa-parallelstore.iam.gserviceaccount.com \
   --role=roles/storage.admin 
 ```
 
