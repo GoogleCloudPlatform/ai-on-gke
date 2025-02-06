@@ -208,4 +208,4 @@ spec:
                       nvidia.com/gpu: 8
   failurePolicy:
     maxRestarts: 0
-
+{{- end }}
