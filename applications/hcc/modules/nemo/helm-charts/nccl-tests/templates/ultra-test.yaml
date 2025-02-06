@@ -1,3 +1,4 @@
+{{- if eq gpuType "ultra" }}
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
@@ -209,3 +210,4 @@ spec:
                   nvidia.com/gpu: 8
                 requests:
                   nvidia.com/gpu: 8
+{{- end }}

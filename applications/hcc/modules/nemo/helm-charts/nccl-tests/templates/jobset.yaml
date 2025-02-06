@@ -1,7 +1,0 @@
-# {{- if eq gpuType "A3 Mega" }}
-# {{ include "mega-config" . }}
-# {{- end }}
-
-# {{- if eq gpuType "A3 Ultra" }}
-# {{ include "ultra-config" . }}
-# {{- end }}
