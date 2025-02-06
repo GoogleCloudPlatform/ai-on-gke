@@ -1,17 +1,3 @@
-# Copyright 2024 Google Inc. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
@@ -26,9 +12,10 @@ spec:
   - name: w
     template:
       spec:
-        parallelism: {{.Values.replicaCount }}
-        completions: {{.Values.replicaCount }}
-
+        # parallelism: {{.Values.replicaCount }}
+        # completions: {{.Values.replicaCount }}
+        parallelism: 2
+        completions: 2
         template:
           metadata:
             annotations:
@@ -129,8 +116,8 @@ spec:
               securityContext:
                 privileged: true
               env:
-              - name: N_NODES
-                value: "{{.Values.numNodes}}"
+              # - name: N_NODES
+              #   value: "{{.Values.numNodes}}"
               - name: MY_NODE_NAME
                 valueFrom:
                   fieldRef:
@@ -144,8 +131,8 @@ spec:
               - -c
               - |
                 set -x
-                # export N_NODES=2
-                export N_NODES="{{.Values.numNodes}}"
+                export N_NODES=2
+                # export N_NODES="{{.Values.numNodes}}"
                 
                 echo "Starting workload container on ${MY_NODE_NAME} for $N_NODES benchmark"
 
