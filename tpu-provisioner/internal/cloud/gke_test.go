@@ -232,94 +232,6 @@ func TestPodToNodePoolName(t *testing.T) {
 	}
 }
 
-func buildPod(additionalLabels map[string]string, additionalAnnotations map[string]string, selector map[string]string, podSpec *v1.PodSpec) *corev1.Pod {
-	trueVar := true
-	labels := map[string]string{
-		"batch.kubernetes.io/controller-uid":        "8484279a-de52-4ca1-b01e-130fbded30fb",
-		"batch.kubernetes.io/job-name":              "jobset-test-job-1-0",
-		"controller-uid":                            "8484279a-de52-4ca1-b01e-130fbded30fb",
-		"job-name":                                  "jobset-test-job-1-0",
-		"jobset.sigs.k8s.io/job-index":              "0",
-		"jobset.sigs.k8s.io/job-key":                "random-key",
-		"jobset.sigs.k8s.io/jobset-name":            "jobset-test",
-		"jobset.sigs.k8s.io/replicatedjob-name":     "job-1",
-		"jobset.sigs.k8s.io/replicatedjob-replicas": "1",
-		"jobset.sigs.k8s.io/restart-attempt":        "0",
-	}
-	for k, v := range additionalLabels {
-		labels[k] = v
-	}
-
-	annotations := map[string]string{
-		"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
-		"batch.kubernetes.io/job-completion-index":    "0",
-		"jobset.sigs.k8s.io/job-index":                "0",
-		"jobset.sigs.k8s.io/job-key":                  "random-key",
-		"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
-		"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
-		"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
-		"jobset.sigs.k8s.io/restart-attempt":          "0",
-	}
-	for k, v := range additionalAnnotations {
-		annotations[k] = v
-	}
-
-	if podSpec == nil {
-		podSpec = &v1.PodSpec{
-			NodeSelector: map[string]string{
-				"cloud.google.com/gke-tpu-accelerator": "tpu-v5p-slice",
-				"cloud.google.com/gke-tpu-topology":    "8x16x16",
-			},
-			Containers: []v1.Container{
-				{
-					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
-							"google.com/tpu": resource.MustParse("4"),
-						},
-						Limits: v1.ResourceList{
-							"google.com/tpu": resource.MustParse("4"),
-						},
-					},
-				},
-			},
-		}
-	}
-
-	pod := &v1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Pod",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: annotations,
-			Labels:      labels,
-			Finalizers:  []string{"batch.kubernetes.io/job-tracking"},
-			Name:        "job-test-6gfwq",
-			Namespace:   "default",
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         "batch/v1",
-					Kind:               "Job",
-					UID:                "8484279a-de52-4ca1-b01e-130fbded30fb",
-					Name:               "jobset-test-job-1-0",
-					Controller:         &trueVar,
-					BlockOwnerDeletion: &trueVar,
-				},
-			},
-			GenerateName:    "jobset-test-job-1-0-0-",
-			ResourceVersion: "70731715",
-			UID:             "f6a99195-268e-4b68-91de-22e75f9100bc",
-		},
-		Spec: *podSpec,
-	}
-	if selector != nil {
-		for k, v := range selector {
-			pod.Spec.NodeSelector[k] = v
-		}
-	}
-	return pod
-}
-
 func TestNodePoolForPod(t *testing.T) {
 	tests := []struct {
 		desc                  string
@@ -790,4 +702,92 @@ func TestNodePoolForPod(t *testing.T) {
 			}
 		})
 	}
+}
+
+func buildPod(additionalLabels map[string]string, additionalAnnotations map[string]string, selector map[string]string, podSpec *v1.PodSpec) *corev1.Pod {
+	trueVar := true
+	labels := map[string]string{
+		"batch.kubernetes.io/controller-uid":        "8484279a-de52-4ca1-b01e-130fbded30fb",
+		"batch.kubernetes.io/job-name":              "jobset-test-job-1-0",
+		"controller-uid":                            "8484279a-de52-4ca1-b01e-130fbded30fb",
+		"job-name":                                  "jobset-test-job-1-0",
+		"jobset.sigs.k8s.io/job-index":              "0",
+		"jobset.sigs.k8s.io/job-key":                "random-key",
+		"jobset.sigs.k8s.io/jobset-name":            "jobset-test",
+		"jobset.sigs.k8s.io/replicatedjob-name":     "job-1",
+		"jobset.sigs.k8s.io/replicatedjob-replicas": "1",
+		"jobset.sigs.k8s.io/restart-attempt":        "0",
+	}
+	for k, v := range additionalLabels {
+		labels[k] = v
+	}
+
+	annotations := map[string]string{
+		"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
+		"batch.kubernetes.io/job-completion-index":    "0",
+		"jobset.sigs.k8s.io/job-index":                "0",
+		"jobset.sigs.k8s.io/job-key":                  "random-key",
+		"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
+		"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
+		"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
+		"jobset.sigs.k8s.io/restart-attempt":          "0",
+	}
+	for k, v := range additionalAnnotations {
+		annotations[k] = v
+	}
+
+	if podSpec == nil {
+		podSpec = &v1.PodSpec{
+			NodeSelector: map[string]string{
+				"cloud.google.com/gke-tpu-accelerator": "tpu-v5p-slice",
+				"cloud.google.com/gke-tpu-topology":    "8x16x16",
+			},
+			Containers: []v1.Container{
+				{
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							"google.com/tpu": resource.MustParse("4"),
+						},
+						Limits: v1.ResourceList{
+							"google.com/tpu": resource.MustParse("4"),
+						},
+					},
+				},
+			},
+		}
+	}
+
+	pod := &v1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Pod",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: annotations,
+			Labels:      labels,
+			Finalizers:  []string{"batch.kubernetes.io/job-tracking"},
+			Name:        "job-test-6gfwq",
+			Namespace:   "default",
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         "batch/v1",
+					Kind:               "Job",
+					UID:                "8484279a-de52-4ca1-b01e-130fbded30fb",
+					Name:               "jobset-test-job-1-0",
+					Controller:         &trueVar,
+					BlockOwnerDeletion: &trueVar,
+				},
+			},
+			GenerateName:    "jobset-test-job-1-0-0-",
+			ResourceVersion: "70731715",
+			UID:             "f6a99195-268e-4b68-91de-22e75f9100bc",
+		},
+		Spec: *podSpec,
+	}
+	if selector != nil {
+		for k, v := range selector {
+			pod.Spec.NodeSelector[k] = v
+		}
+	}
+	return pod
 }
