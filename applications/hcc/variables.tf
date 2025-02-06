@@ -22,7 +22,6 @@ variable "goog_cm_deployment_name" {
 variable "authorized_cidr" {
   description = "Toolkit deployment variable: authorized_cidr"
   type        = string
-  default     = "0.0.0.0/0"
 }
 
 variable "reservation" {
@@ -38,13 +37,11 @@ variable "reservation_block" {
 variable "labels" {
   description = "Toolkit deployment variable: labels"
   type        = any
-  default     = {}
 }
 
 variable "project_id" {
   description = "Toolkit deployment variable: project_id"
   type        = string
-  default     = ""
 }
 
 variable "a3_mega_zone" {
@@ -52,8 +49,13 @@ variable "a3_mega_zone" {
   type        = string
 }
 
+variable "a3_ultra_zone" {
+  description = "Toolkit deployment variable: a3_ultra_zone"
+  type        = string
+}
+
 variable "node_count" {
-  description = "Toolkit deployment variable: node_count"
+  description = "Toolkit deployment variable: static_node_count"
   type        = number
 }
 
@@ -72,3 +74,22 @@ variable "host_maintenance" {
   type        = string
 }
 
+variable "system_node_pool_disk_size_gb" {
+  description = "Toolkit deployment variable: system_node_pool_disk_size_gb"
+  type        = number
+}
+
+variable "a3ultra_node_pool_disk_size_gb" {
+  description = "Toolkit deployment variable: a3ultra_node_pool_disk_size_gb"
+  type        = number
+}
+
+variable "mglru_disable_path" {
+  description = "Toolkit deployment variable: mglru_disable_path"
+  type        = string
+}
+
+variable "nccl_installer_path" {
+  description = "Toolkit deployment variable: nccl_installer_path"
+  type        = string
+}

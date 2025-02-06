@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,20 @@
  * limitations under the License.
 */
 
-## Required variables:
-#  guest_accelerator
-#  machine_type
+variable "machine_type" {
+  description = "Machine type to use for the instance creation"
+  type        = string
+}
+
+variable "guest_accelerator" {
+  description = "List of the type and count of accelerator cards attached to the instance."
+  type = list(object({
+    type  = string,
+    count = number
+  }))
+  default  = []
+  nullable = false
+}
 
 locals {
   # example state; terraform will ignore diffs if last element of URL matches
@@ -38,6 +49,7 @@ locals {
     "a2-ultragpu-8g" = { type = "nvidia-a100-80gb", count = 8 },
     "a3-highgpu-8g"  = { type = "nvidia-h100-80gb", count = 8 },
     "a3-megagpu-8g"  = { type = "nvidia-h100-mega-80gb", count = 8 },
+    "a3-ultragpu-8g" = { type = "nvidia-h200-141gb", count = 8 },
     "g2-standard-4"  = { type = "nvidia-l4", count = 1 },
     "g2-standard-8"  = { type = "nvidia-l4", count = 1 },
     "g2-standard-12" = { type = "nvidia-l4", count = 1 },
@@ -47,11 +59,25 @@ locals {
     "g2-standard-48" = { type = "nvidia-l4", count = 4 },
     "g2-standard-96" = { type = "nvidia-l4", count = 8 },
   }
-  generated_guest_accelerator = try([local.accelerator_machines[var.machine_type]], [{ count = 0, type = "" }])
+  generated_guest_accelerator = try([local.accelerator_machines[var.machine_type]], [])
 
   # Select in priority order:
   # (1) var.guest_accelerator if not empty
   # (2) local.generated_guest_accelerator if not empty
   # (3) default to empty list if both are empty
-  guest_accelerator = try(coalescelist(var.guest_accelerator, local.generated_guest_accelerator), [{ count = 0, type = "" }])
+  guest_accelerator = try(coalescelist(var.guest_accelerator, local.generated_guest_accelerator), [])
+}
+
+output "guest_accelerator" {
+  description = "Sanitized list of the type and count of accelerator cards attached to the instance."
+  value       = local.guest_accelerator
+}
+
+output "machine_type_guest_accelerator" {
+  description = "List of the type and count of accelerator cards attached to the specified machine type."
+  value       = local.generated_guest_accelerator
+}
+
+terraform {
+  required_version = ">= 1.3"
 }

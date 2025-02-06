@@ -16,24 +16,30 @@
 
 authorized_cidr = "0.0.0.0/0"
 
-goog_cm_deployment_name = "a3plus-qss-test"
+goog_cm_deployment_name = "a3ultra-qss-test-danjuan-3"
 
 labels = {
-  ghpc_blueprint  = "gke-a3-mega"
-  ghpc_deployment = "a3plus-qss-test"
+  ghpc_blueprint  = "gke-a3-ultra"
+  ghpc_deployment = "a3ultra-qss-test-danjuan-3"
 }
 
 project_id = "supercomputer-testing"
 
-region = "us-east5"
+#a3_mega_zone = "us-east5-a"
+a3_mega_zone = ""
+a3_ultra_zone = "europe-west1-b"
 
-a3_mega_zone = "us-east5-a"
-
-checkpoint_bucket = "kevinmcw-llama-checkpoint"
+#checkpoint_bucket = "kevinmcw-llama-checkpoint"
 node_count = 2
 recipe = "gke-nccl"
 
-reservation = "qss-test-a3mega"
+reservation = "supercomputer-testing-gsc-asq-fr/reservationBlocks/supercomputer-testing-gsc-asq-fr-block-0001"
 reservation_block = ""
 placement_policy_name = ""
 host_maintenance = ""
+
+a3ultra_node_pool_disk_size_gb = 100
+system_node_pool_disk_size_gb = 200
+
+mglru_disable_path = "mglru-disable.yaml"
+nccl_installer_path = "nccl-installer.yaml"

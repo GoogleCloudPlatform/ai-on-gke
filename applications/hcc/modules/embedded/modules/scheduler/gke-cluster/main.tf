@@ -20,6 +20,14 @@ locals {
 }
 
 locals {
+  upgrade_settings = {
+    strategy        = var.upgrade_settings.strategy
+    max_surge       = coalesce(var.upgrade_settings.max_surge, 0)
+    max_unavailable = coalesce(var.upgrade_settings.max_unavailable, 1)
+  }
+}
+
+locals {
   dash             = var.prefix_with_deployment_name && var.name_suffix != "" ? "-" : ""
   prefix           = var.prefix_with_deployment_name ? var.deployment_name : ""
   name_maybe_empty = "${local.prefix}${local.dash}${var.name_suffix}"
@@ -37,10 +45,37 @@ locals {
 
   # multi networking needs enabled Dataplane v2
   derived_enable_dataplane_v2 = coalesce(var.enable_dataplane_v2, local.derived_enable_multi_networking)
+
+  default_monitoring_component = [
+    "SYSTEM_COMPONENTS",
+    "POD",
+    "DAEMONSET",
+    "DEPLOYMENT",
+    "STATEFULSET",
+    "STORAGE",
+    "HPA",
+    "CADVISOR",
+    "KUBELET"
+  ]
+
+  default_logging_component = [
+    "SYSTEM_COMPONENTS",
+    "WORKLOADS"
+  ]
 }
 
 data "google_project" "project" {
   project_id = var.project_id
+}
+
+data "google_container_engine_versions" "version_prefix_filter" {
+  provider       = google-beta
+  location       = var.cluster_availability_type == "ZONAL" ? var.zone : var.region
+  version_prefix = var.version_prefix
+}
+
+locals {
+  master_version = var.min_master_version != null ? var.min_master_version : data.google_container_engine_versions.version_prefix_filter.latest_master_version
 }
 
 resource "google_container_cluster" "gke_cluster" {
@@ -48,15 +83,14 @@ resource "google_container_cluster" "gke_cluster" {
 
   project         = var.project_id
   name            = local.name
-  location        = var.region
+  location        = var.cluster_availability_type == "ZONAL" ? var.zone : var.region
   resource_labels = local.labels
-
+  networking_mode = var.networking_mode
   # decouple node pool lifecycle from cluster life cycle
   remove_default_node_pool = true
   initial_node_count       = 1 # must be set when remove_default_node_pool is set
 
-  # Sets default to false so terraform deletion is not prevented
-  deletion_protection = false
+  deletion_protection = var.deletion_protection
 
   network    = var.network_id
   subnetwork = var.subnetwork_self_link
@@ -75,7 +109,7 @@ resource "google_container_cluster" "gke_cluster" {
   }
 
   private_ipv6_google_access = var.enable_private_ipv6_google_access ? "PRIVATE_IPV6_GOOGLE_ACCESS_TO_GOOGLE" : null
-
+  default_max_pods_per_node  = var.default_max_pods_per_node
   master_auth {
     client_certificate_config {
       issue_client_certificate = false
@@ -135,7 +169,7 @@ resource "google_container_cluster" "gke_cluster" {
   release_channel {
     channel = var.release_channel
   }
-  min_master_version = var.min_master_version
+  min_master_version = local.master_version
 
   maintenance_policy {
     daily_maintenance_window {
@@ -165,6 +199,12 @@ resource "google_container_cluster" "gke_cluster" {
     gce_persistent_disk_csi_driver_config {
       enabled = var.enable_persistent_disk_csi
     }
+    dns_cache_config {
+      enabled = var.enable_node_local_dns_cache
+    }
+    parallelstore_csi_driver_config {
+      enabled = var.enable_parallelstore_csi
+    }
   }
 
   timeouts {
@@ -172,23 +212,43 @@ resource "google_container_cluster" "gke_cluster" {
     update = var.timeout_update
   }
 
+  node_config {
+    shielded_instance_config {
+      enable_secure_boot          = var.system_node_pool_enable_secure_boot
+      enable_integrity_monitoring = true
+    }
+  }
+
   lifecycle {
     # Ignore all changes to the default node pool. It's being removed after creation.
     ignore_changes = [
-      node_config
+      node_config,
+      min_master_version,
     ]
     precondition {
-      condition     = !(!coalesce(var.enable_dataplane_v2, true) && local.derived_enable_multi_networking)
+      condition     = var.default_max_pods_per_node == null || var.networking_mode == "VPC_NATIVE"
+      error_message = "default_max_pods_per_node does not work on `routes-based` clusters, that don't have IP Aliasing enabled."
+    }
+    precondition {
+      condition     = coalesce(var.enable_dataplane_v2, true) || !local.derived_enable_multi_networking
       error_message = "'enable_dataplane_v2' cannot be false when enabling multi networking."
     }
     precondition {
-      condition     = !(!coalesce(var.enable_multi_networking, true) && length(var.additional_networks) > 0)
+      condition     = coalesce(var.enable_multi_networking, true) || length(var.additional_networks) == 0
       error_message = "'enable_multi_networking' cannot be false when using multivpc module, which passes additional_networks."
     }
   }
 
-  logging_service    = "logging.googleapis.com/kubernetes"
-  monitoring_service = "monitoring.googleapis.com/kubernetes"
+  monitoring_config {
+    enable_components = var.enable_dcgm_monitoring ? concat(local.default_monitoring_component, ["DCGM"]) : local.default_monitoring_component
+    managed_prometheus {
+      enabled = true
+    }
+  }
+
+  logging_config {
+    enable_components = local.default_logging_component
+  }
 }
 
 # We define explicit node pools, so that it can be modified without
@@ -197,17 +257,21 @@ resource "google_container_node_pool" "system_node_pools" {
   provider = google-beta
   count    = var.system_node_pool_enabled ? 1 : 0
 
-  project = var.project_id
-  name    = var.system_node_pool_name
-  cluster = google_container_cluster.gke_cluster.self_link
+  project  = var.project_id
+  name     = var.system_node_pool_name
+  cluster  = var.cluster_reference_type == "NAME" ? google_container_cluster.gke_cluster.name : google_container_cluster.gke_cluster.self_link
+  location = var.cluster_availability_type == "ZONAL" ? var.zone : var.region
+  version  = local.master_version
+
   autoscaling {
     total_min_node_count = var.system_node_pool_node_count.total_min_nodes
     total_max_node_count = var.system_node_pool_node_count.total_max_nodes
   }
 
   upgrade_settings {
-    max_surge       = 1
-    max_unavailable = 0
+    strategy        = local.upgrade_settings.strategy
+    max_surge       = local.upgrade_settings.max_surge
+    max_unavailable = local.upgrade_settings.max_unavailable
   }
 
   management {
@@ -221,6 +285,8 @@ resource "google_container_node_pool" "system_node_pools" {
     service_account = var.service_account_email
     oauth_scopes    = var.service_account_scopes
     machine_type    = var.system_node_pool_machine_type
+    disk_size_gb    = var.system_node_pool_disk_size_gb
+    disk_type       = var.system_node_pool_disk_type
 
     dynamic "taint" {
       for_each = var.system_node_pool_taints
@@ -264,19 +330,25 @@ resource "google_container_node_pool" "system_node_pools" {
     ignore_changes = [
       node_config[0].labels,
       node_config[0].taint,
+      version,
     ]
+    precondition {
+      condition     = contains(["SURGE"], local.upgrade_settings.strategy)
+      error_message = "Only SURGE strategy is supported"
+    }
+    precondition {
+      condition     = local.upgrade_settings.max_unavailable >= 0
+      error_message = "max_unavailable should be set to 0 or greater"
+    }
+    precondition {
+      condition     = local.upgrade_settings.max_surge >= 0
+      error_message = "max_surge should be set to 0 or greater"
+    }
+    precondition {
+      condition     = local.upgrade_settings.max_unavailable > 0 || local.upgrade_settings.max_surge > 0
+      error_message = "At least one of max_unavailable or max_surge must greater than 0"
+    }
   }
-}
-
-### TODO: remove this after Terraform support for GKE Parallelstore CSI is added. ###
-###       Instead use addons_config above to enable the CSI                       ###
-resource "null_resource" "enable_parallelstore_csi" {
-  count = var.enable_parallelstore_csi == true ? 1 : 0
-
-  provisioner "local-exec" {
-    command = "gcloud container clusters update ${local.name} --location=${var.region} --project=${var.project_id} --update-addons=ParallelstoreCsiDriver=ENABLED"
-  }
-  depends_on = [google_container_node_pool.system_node_pools] # avoid cluster operation conflict
 }
 
 data "google_client_config" "default" {}
@@ -290,7 +362,7 @@ provider "kubernetes" {
 module "workload_identity" {
   count   = var.configure_workload_identity_sa ? 1 : 0
   source  = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  version = "29.0.0"
+  version = "~> 34.0"
 
   use_existing_gcp_sa = true
   name                = "workload-identity-k8-sa"
@@ -316,19 +388,16 @@ module "kubectl_apply" {
       {
         source = "${path.module}/templates/gke-network-paramset.yaml.tftpl",
         template_vars = {
-          name            = "vpc${idx + 1}",
+          name            = network_info.subnetwork,
           network_name    = network_info.network
-          subnetwork_name = network_info.subnetwork
+          subnetwork_name = network_info.subnetwork,
+          device_mode     = strcontains(upper(network_info.nic_type), "RDMA") ? "RDMA" : "NetDevice"
         }
       },
       {
         source        = "${path.module}/templates/network-object.yaml.tftpl",
-        template_vars = { name = "vpc${idx + 1}" }
+        template_vars = { name = network_info.subnetwork }
       }
     ]
   ])
-  providers = {
-    kubectl = kubectl
-    http    = http
-  }
 }

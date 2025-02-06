@@ -35,7 +35,7 @@ def test_gen_topology_conf_empty():
     assert open(cfg.output_dir + "/cloud_topology.conf").read() == PRELUDE + "\n"
 
 
-@mock.patch("util.TPU")
+@mock.patch("tpu.TPU.make")
 def test_gen_topology_conf(tpu_mock):
     cfg = TstCfg(
         nodeset_tpu={
@@ -50,12 +50,12 @@ def test_gen_topology_conf(tpu_mock):
         output_dir=tempfile.mkdtemp(),
     )
 
-    def tpu_se(ns: TstNodeset) -> TstTPU:
-        if ns.nodeset_name == "bold":
+    def tpu_se(ns: str, lkp) -> TstTPU:
+        if ns == "bold":
             return TstTPU(vmcount=3)
-        if ns.nodeset_name == "slim":
+        if ns == "slim":
             return TstTPU(vmcount=1)
-        raise AssertionError(f"unexpected TPU name: '{ns.nodeset_name}'")
+        raise AssertionError(f"unexpected TPU name: '{ns}'")
 
     tpu_mock.side_effect = tpu_se
 
@@ -119,10 +119,12 @@ def test_gen_topology_conf(tpu_mock):
         "SwitchName=s1_1 Nodes=m22-slim-[0-2]"]
     assert list(compressed.render_conf_lines()) == want_compressed
 
-    assert conf.gen_topology_conf(lkp) == True
+    upd, summary = conf.gen_topology_conf(lkp)
+    assert upd == True
     want_written = PRELUDE + "\n".join(want_compressed) + "\n\n"
     assert open(cfg.output_dir + "/cloud_topology.conf").read() == want_written
 
+    summary.dump(lkp)
     summary_got = json.loads(open(cfg.output_dir + "/cloud_topology.summary.json").read())
     
     assert summary_got == {
@@ -154,31 +156,45 @@ def test_gen_topology_conf_update():
     lkp.instances = lambda: {} # no instances
 
     # initial generation - reconfigure
-    assert conf.gen_topology_conf(lkp) == True
+    upd, sum = conf.gen_topology_conf(lkp)
+    assert upd == True
+    sum.dump(lkp)
 
     # add node: node_count_static 2 -> 3 - reconfigure
     lkp.cfg.nodeset["c"].node_count_static = 3
-    assert conf.gen_topology_conf(lkp) == True
+    upd, sum = conf.gen_topology_conf(lkp)
+    assert upd == True
+    sum.dump(lkp)
 
     # remove node: node_count_static 3 -> 2  - no reconfigure
     lkp.cfg.nodeset["c"].node_count_static = 2
-    assert conf.gen_topology_conf(lkp) == False
+    upd, sum = conf.gen_topology_conf(lkp)
+    assert upd == False
+    # don't dump
 
     # set empty physicalHost - no reconfigure
     lkp.instances = lambda: { n.name: n for n in [TstInstance("m22-green-0", physicalHost="")]}
-    assert conf.gen_topology_conf(lkp) == False
+    upd, sum = conf.gen_topology_conf(lkp)
+    assert upd == False
+    # don't dump
 
     # set physicalHost - reconfigure
     lkp.instances = lambda: { n.name: n for n in [TstInstance("m22-green-0", physicalHost="/a/b/c")]}
-    assert conf.gen_topology_conf(lkp) == True
+    upd, sum = conf.gen_topology_conf(lkp)
+    assert upd == True
+    sum.dump(lkp)
 
     # change physicalHost - reconfigure
     lkp.instances = lambda: { n.name: n for n in [TstInstance("m22-green-0", physicalHost="/a/b/z")]}
-    assert conf.gen_topology_conf(lkp) == True
+    upd, sum = conf.gen_topology_conf(lkp)
+    assert upd == True
+    sum.dump(lkp)
 
     # shut down node - no reconfigure
     lkp.instances = lambda: {}
-    assert conf.gen_topology_conf(lkp) == False
+    upd, sum = conf.gen_topology_conf(lkp)
+    assert upd == False
+    # don't dump
 
 
 @pytest.mark.parametrize(
