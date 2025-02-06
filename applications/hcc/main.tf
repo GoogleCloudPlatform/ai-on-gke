@@ -29,6 +29,7 @@ locals {
 }
 
 module "gke-a3-ultra-net-0" {
+  #count = var.gpu_type == "A3 Ultra"? 1 : 0
   source          = "./modules/embedded/modules/network/vpc"
   deployment_name = var.goog_cm_deployment_name
   firewall_rules = [{
@@ -66,6 +67,7 @@ module "gke-a3-ultra-net-0" {
 }
 
 module "gke-a3-ultra-net-1" {
+  #count = var.gpu_type == "A3 Ultra"? 1 : 0
   source          = "./modules/embedded/modules/network/vpc"
   deployment_name = var.goog_cm_deployment_name
   firewall_rules = [{
@@ -94,6 +96,7 @@ module "gke-a3-ultra-net-1" {
 }
 
 module "gke-a3-ultra-rdma-net" {
+  #count = var.gpu_type == "A3 Ultra"? 1 : 0
   source               = "./modules/embedded/modules/network/gpu-rdma-vpc"
   deployment_name      = var.goog_cm_deployment_name
   mtu                  = 8896
@@ -111,6 +114,7 @@ module "gke-a3-ultra-rdma-net" {
 }
 
 module "a3-ultragpu-cluster" {
+#  count = var.gpu_type == "A3 Ultra"? 1 : 0
   source                  = "./modules/embedded/modules/scheduler/gke-cluster"
   additional_networks     = concat([{ network = module.gke-a3-ultra-net-1.network_name, subnetwork = module.gke-a3-ultra-net-1.subnetwork_name, subnetwork_project = var.project_id, nic_type = "GVNIC", queue_count = null, network_ip = null, stack_type = null, access_config = [{ nat_ip = null, public_ptr_domain_name = null, network_tier = null }], ipv6_access_config = [], alias_ip_range = [] }], module.gke-a3-ultra-rdma-net.subnetwork_interfaces_gke)
   deployment_name         = var.goog_cm_deployment_name
@@ -138,9 +142,14 @@ module "a3-ultragpu-cluster" {
   system_node_pool_taints       = []
   version_prefix                = "1.31."
   zone                          = local.zone
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 module "a3-ultragpu-pool" {
+#  count = var.gpu_type == "A3 Ultra"? 1 : 0
   source              = "./modules/embedded/modules/compute/gke-node-pool"
   additional_networks = concat([{ network = module.gke-a3-ultra-net-1.network_name, subnetwork = module.gke-a3-ultra-net-1.subnetwork_name, subnetwork_project = var.project_id, nic_type = "GVNIC", queue_count = null, network_ip = null, stack_type = null, access_config = [{ nat_ip = null, public_ptr_domain_name = null, network_tier = null }], ipv6_access_config = [], alias_ip_range = [] }], module.gke-a3-ultra-rdma-net.subnetwork_interfaces_gke)
   auto_upgrade        = true
@@ -167,12 +176,20 @@ module "a3-ultragpu-pool" {
   }
   static_node_count = var.node_count
   zones             = [local.zone]
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 module "topology-aware-scheduler-install" {
   source     = "./modules/embedded/community/modules/compute/gke-topology-scheduler"
   cluster_id = module.a3-ultragpu-cluster.cluster_id
   project_id = var.project_id
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 module "workload-manager-install" {
@@ -192,6 +209,10 @@ module "workload-manager-install" {
     version = "v0.10.0"
   }
   project_id = var.project_id
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }
 
 module "job-template" {

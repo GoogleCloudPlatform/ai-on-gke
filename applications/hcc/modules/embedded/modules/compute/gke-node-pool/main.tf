@@ -385,4 +385,9 @@ module "kubectl_apply" {
       }
     ]
   ])
+
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }

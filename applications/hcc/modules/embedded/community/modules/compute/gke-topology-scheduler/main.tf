@@ -24,4 +24,9 @@ module "kubectl_apply" {
     { source = "${path.module}/manifests/label-nodes-daemon.yaml" },
     { source = "${path.module}/manifests/schedule-daemon.yaml" }
   ]
+
+  providers = {
+    kubectl = kubectl
+    http    = http
+  }
 }

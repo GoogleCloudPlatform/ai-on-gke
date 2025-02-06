@@ -74,6 +74,11 @@ variable "host_maintenance" {
   type        = string
 }
 
+variable "gpu_type" {
+  description = "Toolkit deployment variable: gpu_type"
+  type        = string
+} 
+
 variable "system_node_pool_disk_size_gb" {
   description = "Toolkit deployment variable: system_node_pool_disk_size_gb"
   type        = number
