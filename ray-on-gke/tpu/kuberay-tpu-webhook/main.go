@@ -33,6 +33,7 @@ import (
 	"time"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
+	utils "github.com/ray-project/kuberay/ray-operator/controllers/ray/utils"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -250,12 +251,7 @@ func generateHeadlessServiceName(clusterName string) string {
 
 	// Apply the same truncation as in the RayCluster controller when generating the headless service
 	// name. This is to maintain the up-to 63 char compatibility guarantee for hostnames (RFC 1123).
-	maxLength := 50
-	if len(serviceName) > maxLength {
-		// shorten the name
-		offset := int(math.Abs(float64(maxLength) - float64(len(serviceName))))
-		serviceName = serviceName[offset:]
-	}
+	serviceName = utils.CheckName(serviceName)
 	return serviceName
 }
 
