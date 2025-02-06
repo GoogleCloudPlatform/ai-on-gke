@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 	container "google.golang.org/api/container/v1beta1"
 	containerv1beta1 "google.golang.org/api/container/v1beta1"
 	v1 "k8s.io/api/core/v1"
@@ -266,7 +267,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -309,7 +310,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
 				PlacementPolicy:   &container.PlacementPolicy{},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
 		},
@@ -339,7 +340,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -368,7 +369,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -398,7 +399,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -431,7 +432,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -458,7 +459,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -484,7 +485,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -515,7 +516,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -541,7 +542,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -573,7 +574,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -605,7 +606,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
@@ -632,7 +633,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 				NetworkConfig: &container.NodeNetworkConfig{
@@ -674,7 +675,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 				NetworkConfig: &container.NodeNetworkConfig{
@@ -698,10 +699,17 @@ func TestNodePoolForPod(t *testing.T) {
 				ClusterContext: tc.gkeContext,
 			}
 			pod := buildPod(tc.additionalLabels, tc.additionalAnnotations, tc.selector, tc.podSpec)
-			got, err := gke.nodePoolForPod("test-pool", pod)
+			got, err := gke.nodePoolForPod(pod)
 			if err != nil {
 				t.Errorf("Got error: %v", err)
 			}
+
+			// Populating a hash in test cases is a hassle, so we will just check for existance.
+			gotHash := got.Config.Labels[LabelNodePoolHash]
+			t.Logf("Node pool hash: %s", gotHash)
+			require.NotEmpty(t, gotHash, "Node pool hash should be populated")
+			delete(got.Config.Labels, LabelNodePoolHash)
+
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("TestNodePoolForPod() return unexpected node pool, diff (-want +got): \n%s", diff)
 			}
