@@ -398,9 +398,9 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		nodeServiceAccount = sa
 	}
 
-	// placement policy is only valid in GKE if it's a multi-node topology
+	// placement policy is only valid in GKE for non "1t" shapes
 	placementPolicy := &containerv1beta1.PlacementPolicy{}
-	if nodeCount > 1 {
+	if !strings.HasSuffix(machineType, "1t") {
 		placementPolicy.TpuTopology = tpuTopo
 		placementPolicy.Type = "COMPACT"
 	}

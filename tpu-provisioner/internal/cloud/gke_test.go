@@ -63,6 +63,11 @@ func Test_tpuTopologyToNodeCount(t *testing.T) {
 			count: 2,
 		},
 		{
+			accel: "tpu-v6e-slice",
+			topo:  "1x1",
+			count: 1,
+		},
+		{
 			accel: "not-an-accel",
 			topo:  "2x4",
 			err:   true,
