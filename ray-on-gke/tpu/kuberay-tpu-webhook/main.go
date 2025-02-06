@@ -251,8 +251,7 @@ func generateHeadlessServiceName(clusterName string) string {
 
 	// Apply the same truncation as in the RayCluster controller when generating the headless service
 	// name. This is to maintain the up-to 63 char compatibility guarantee for hostnames (RFC 1123).
-	serviceName = utils.CheckName(serviceName)
-	return serviceName
+	return utils.CheckName(serviceName)
 }
 
 // genDNSHostnames returns list of DNS hostnames for TPU VM hosts as a string
