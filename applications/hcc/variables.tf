@@ -88,13 +88,3 @@ variable "a3ultra_node_pool_disk_size_gb" {
   description = "Toolkit deployment variable: a3ultra_node_pool_disk_size_gb"
   type        = number
 }
-
-variable "mglru_disable_path" {
-  description = "Toolkit deployment variable: mglru_disable_path"
-  type        = string
-}
-
-variable "nccl_installer_path" {
-  description = "Toolkit deployment variable: nccl_installer_path"
-  type        = string
-}

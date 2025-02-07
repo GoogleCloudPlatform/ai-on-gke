@@ -14,16 +14,6 @@
   * limitations under the License.
   */
 
-output "instructions_a3-ultragpu-cluster" {
-  description = "Generated output from module 'a3-ultragpu-cluster'"
-  value       = module.a3-ultragpu-cluster.instructions
-}
-
-output "instructions_a3-ultragpu-pool" {
-  description = "Generated output from module 'a3-ultragpu-pool'"
-  value       = module.a3-ultragpu-pool.instructions
-}
-
 output "gke_cluster" {
   description = "Link to GKE cluster"
   value       = "https://pantheon.corp.google.com/kubernetes/clusters/details/${local.region}/${var.goog_cm_deployment_name}"
@@ -34,7 +24,14 @@ output "result_bucket" {
   value       = "https://pantheon.corp.google.com/storage/browser/${local.result_bucket_name}"
 }
 
-output "instructions_job-template" {
-  description = "Generated output from module 'job-template'"
-  value       = module.job-template.instructions
+output "machine_type" {
+  value       = var.gpu_type
+}
+
+output "zone" {
+  value       = local.zone
+}
+
+output "gke-a3-ultra-net-0" {
+  value       = module.gke-a3-ultra-net-0
 }

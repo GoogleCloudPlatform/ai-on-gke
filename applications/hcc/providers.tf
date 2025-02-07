@@ -27,9 +27,23 @@ provider "google-beta" {
 }
 
 provider "kubectl" {
-  host                   = module.a3-ultragpu-cluster.gke_endpoint
+  host                   = local.gke_cluster_endpoint
   token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(module.a3-ultragpu-cluster.gke_ca_cert)
+  cluster_ca_certificate = base64decode(local.gke_cluster_ca_cert)
   load_config_file       = false
   apply_retry_count      = 15 # Terraform may apply resources in parallel, leading to potential dependency issues. This retry mechanism ensures that if a resource's dependencies aren't ready, Terraform will attempt to apply it again.
+}
+
+provider "kubernetes" {
+  host                   = local.gke_cluster_endpoint
+  cluster_ca_certificate = base64decode(local.gke_cluster_ca_cert)
+  token                  = data.google_client_config.default.access_token
+} 
+
+provider "helm" {
+  kubernetes {
+    host                   = local.gke_cluster_endpoint
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(local.gke_cluster_ca_cert)
+  }
 }
