@@ -1,6 +1,7 @@
 # Chatbot Application with LangChain, Persistent Storage and IAP
 
 - [Introduction](#introduction)
+  - [Architecture overview](#architecture-overview)
   - [What is LangChain](#what-is-langchain)
   - [What is Streamlit](#what-is-streamlit)
   - [What is Identity Aware Proxy (IAP)](#what-is-identity-aware-proxy-iap)
@@ -8,14 +9,14 @@
 - [Optional: Build and Run the Application Locally](#optional-build-and-run-the-application-locally)
 - [Provision GKE Cluster](#provision-gke-cluster)
 - [Prepare the Application for Deployment](#prepare-the-application-for-deployment)
-  - [Create Google Container Registry (GCR)](#create-google-container-registry-gcr)
-  - [Build the Application Using Cloud Build](#build-the-application-using-cloud-build)
-  - [Enable IAP and create OAuth client](#enable-iap-and-create-oauth-client)
+  - [1. Create Google Container Registry (GCR)](#1-create-google-container-registry-gcr)
+  - [2. Build the Application Using Cloud Build](#2-build-the-application-using-cloud-build)
+  - [3. Enable IAP and create OAuth client](#3-enable-iap-and-create-oauth-client)
 - [Manual Deployment](#manual-deployment)
-  - [Create Cloud SQL Instance](#create-cloud-sql-instance)
-  - [Deploy the application to GKE](#deploy-the-application-to-gke)
-  - [Expose the application to the internet](#expose-the-application-to-the-internet)
-  - [Configure IAP for the application](#configure-iap-for-the-application)
+  - [1. Create Cloud SQL Instance](#1-create-cloud-sql-instance)
+  - [2. Deploy the application to GKE](#2-deploy-the-application-to-gke)
+  - [3. Expose the application to the internet](#3-expose-the-application-to-the-internet)
+  - [4. Configure IAP for the application](#4-configure-iap-for-the-application)
 - [Automated Deployment](#automated-deployment)
 - [Interaction with the Chatbot](#interaction-with-the-chatbot)
   - [Basic Troubleshooting and Debugging Tips](#basic-troubleshooting-and-debugging-tips)
@@ -30,11 +31,15 @@ By leveraging LangChain, Streamlit, Google Kubernetes Engine, and Cloud SQL for 
 
 In this tutorial, you will learn how to deploy a chatbot application using [LangChain](https://python.langchain.com/) and [Streamlit](https://streamlit.io/) on Google Cloud Platform (GCP).
 
-The application can be used to interact with any language model served on an OpenAI-compatible API. For example, you can use the Gemma2 model deployed on Google Kubernetes Engine (GKE) using [Kserve](https://kserve.github.io/website/). This means you're not locked into a single provider and have the flexibility to choose the best model for your needs.
+The application can be used to interact with any language model served on an OpenAI-compatible API. For example, you can use the Gemma2 model deployed on Google Kubernetes Engine using [Kserve](https://kserve.github.io/website/). This means you're not locked into a single provider and have the flexibility to choose the best model for your needs.
 
 The application will be deployed on GCP and secured with Identity Aware Proxy (IAP). You have the option to follow manual deployment instructions or use Terraform for an automated setup.
 
 Finally, it will use user identity provided by IAP and store each user's messages in a Cloud SQL PostgreSQL database.
+
+### Architecture overview
+
+![Architecture](infrastructure-diagram.png)
 
 ### What is LangChain
 
@@ -123,7 +128,7 @@ This will set up the necessary credentials and configuration for kubectl to inte
 
 ## Prepare the Application for Deployment
 
-### Create Google Container Registry (GCR)
+### 1. Create Google Container Registry (GCR)
 
 Enable the Artifact Registry API and create a Docker repository:
 
@@ -134,7 +139,7 @@ gcloud artifacts repositories create langchain-chatbot \
    --location=us-central1
 ```
 
-### Build the Application Using Cloud Build
+### 2. Build the Application Using Cloud Build
 
 Edit `cloudbuild.yaml` to reference the newly created repository, then submit the build:
 
@@ -142,7 +147,7 @@ Edit `cloudbuild.yaml` to reference the newly created repository, then submit th
 gcloud builds submit app
 ```
 
-### Enable IAP and create OAuth client
+### 3. Enable IAP and create OAuth client
 
 Before securing the application with Identity-Aware Proxy (IAP), ensure that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
 
@@ -152,7 +157,7 @@ Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://c
 
 This section describes how to deploy the application manually. If you prefer an automated deployment, refer to the next section.
 
-### Create Cloud SQL Instance
+### 1. Create Cloud SQL Instance
 
 In this step, we will create a Cloud SQL instance and a database to store user messages. The database should be accessible from the GKE cluster where the application will be deployed. We will use a private IP address for the Cloud SQL instance to ensure secure communication. To do this, a VPC Peering connection needs to be established between the network of the GKE cluster and the Google-managed services network.
 
@@ -198,7 +203,7 @@ gcloud sql databases create ${DB_NAME} --instance=${CLOUD_SQL_INSTANCE}
 gcloud sql users set-password postgres --instance=${CLOUD_SQL_INSTANCE} --host=% --password=${DB_PASSWORD}
 ```
 
-### Deploy the application to GKE
+### 2. Deploy the application to GKE
 
 Open `deployment.yaml` and replace the placeholders with the actual values. There are three pieces of information you need to provide: model base URL, model name, and database URI. The model base URL should point to the OpenAI-compatible API serving the language model (in case of KServe running in the same GKE cluster, it will be `http://<model-service-name>.<model-namespace>:<model-service-port>/openai/v1/`). The model name should match the name of the model on the API. The database URI should follow the scheme `postgres://<username>:<password>@<host>:<port>/<database>`. It is recommended to use environment variables to store sensitive information such as database credentials. For example:
 
@@ -241,7 +246,7 @@ Now navigate to `http://localhost:8501` in your browser and you should see the i
 
 Note that as we didn't configure authentication yet, application won't save the chat history between page reloads but you can still test the chatbot functionality.
 
-### Expose the application to the internet
+### 3. Expose the application to the internet
 
 To make the application accessible from the internet, we need to create an Ingress resource. An Ingress resource manages external access to the services in a Kubernetes cluster, typically HTTP. It provides load balancing, SSL termination, and name-based virtual hosting.
 
@@ -271,7 +276,7 @@ kubectl describe managedcertificate chat-cert -n ${K8S_NAMESPACE}
 
 After the certificate is provisioned, you can access the application using your domain name. But for now, it is not yet secured, nor will it save the chat history between page reloads. So let's fix that.
 
-### Configure IAP for the application
+### 4. Configure IAP for the application
 
 Start with creating a secret with OAuth client credentials (replace placeholders with your actual values obtained from the OAuth client creation):
 
