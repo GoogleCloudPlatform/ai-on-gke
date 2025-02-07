@@ -14,13 +14,6 @@
   * limitations under the License.
   */
 
-terraform {
-  backend "gcs" {
-    bucket = "danjuan-qss-poc-testing"
-    prefix = "gke-a3-ultra/gke-a3-ultra-danjuan-1/primary"
-  }
-}
-
 data "google_client_config" "default" {}
 
 locals {
@@ -232,7 +225,7 @@ module "a3-ultragpu-cluster" {
   region                        = local.region
   release_channel               = "RAPID"
   subnetwork_self_link          = module.gke-a3-ultra-net-0[0].subnetwork_self_link
-  system_node_pool_disk_size_gb = var.system_node_pool_disk_size_gb
+  system_node_pool_disk_size_gb = 200
   system_node_pool_machine_type = "e2-standard-16"
   system_node_pool_taints       = []
   version_prefix                = "1.31."
@@ -250,7 +243,7 @@ module "a3-ultragpu-pool" {
   additional_networks = concat([{ network = module.gke-a3-ultra-net-1[0].network_name, subnetwork = module.gke-a3-ultra-net-1[0].subnetwork_name, subnetwork_project = var.project_id, nic_type = "GVNIC", queue_count = null, network_ip = null, stack_type = null, access_config = [{ nat_ip = null, public_ptr_domain_name = null, network_tier = null }], ipv6_access_config = [], alias_ip_range = [] }], module.gke-a3-ultra-rdma-net[0].subnetwork_interfaces_gke)
   auto_upgrade        = true
   cluster_id          = local.gke_cluster_id
-  disk_size_gb        = var.a3ultra_node_pool_disk_size_gb
+  disk_size_gb        = 100
   disk_type           = "hyperdisk-balanced"
   gke_version         = local.gke_cluster_version
   guest_accelerator = [{

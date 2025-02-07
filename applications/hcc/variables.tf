@@ -78,13 +78,3 @@ variable "gpu_type" {
   description = "Toolkit deployment variable: gpu_type"
   type        = string
 } 
-
-variable "system_node_pool_disk_size_gb" {
-  description = "Toolkit deployment variable: system_node_pool_disk_size_gb"
-  type        = number
-}
-
-variable "a3ultra_node_pool_disk_size_gb" {
-  description = "Toolkit deployment variable: a3ultra_node_pool_disk_size_gb"
-  type        = number
-}

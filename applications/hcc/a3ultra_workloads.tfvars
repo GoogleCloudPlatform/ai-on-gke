@@ -14,12 +14,26 @@
   * limitations under the License.
   */
 
-output "gke_cluster" {
-  description = "Link to GKE cluster"
-  value       = "https://pantheon.corp.google.com/kubernetes/clusters/details/${local.region}/${var.goog_cm_deployment_name}"
+authorized_cidr = "0.0.0.0/0"
+
+goog_cm_deployment_name = "a3ultra-qss-test-danjuan-3"
+
+labels = {
+  ghpc_blueprint  = "gke-a3-ultra"
+  ghpc_deployment = "a3ultra-qss-test-danjuan-3"
 }
 
-output "result_bucket" {
-  description = "Link to result GCS bucket"
-  value       = "https://pantheon.corp.google.com/storage/browser/${local.result_bucket_name}"
-}
+project_id = "supercomputer-testing"
+
+a3_mega_zone = ""
+a3_ultra_zone = "europe-west1-b"
+
+node_count = 2
+recipe = "gke-nccl"
+
+reservation = "supercomputer-testing-gsc-asq-fr/reservationBlocks/supercomputer-testing-gsc-asq-fr-block-0001"
+reservation_block = ""
+placement_policy_name = ""
+host_maintenance = ""
+
+gpu_type = "A3 Ultra"
