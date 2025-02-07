@@ -14,13 +14,6 @@
   * limitations under the License.
   */
 
-terraform {
-  backend "gcs" {
-    bucket = "danjuan-qss-poc-testing"
-    prefix = "gke-a3-ultra/gke-a3-ultra-danjuan-1/primary"
-  }
-}
-
 data "google_client_config" "default" {}
 
 locals {

@@ -25,7 +25,6 @@ labels = {
 
 project_id = "supercomputer-testing"
 
-<<<<<<< HEAD:applications/hcc/a3mega_workloads.tfvars
 a3_mega_zone = "us-east5-a"
 a3_ultra_zone = ""
 
