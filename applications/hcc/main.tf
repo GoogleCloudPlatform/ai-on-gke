@@ -37,7 +37,7 @@ module "gke-a3-mega-net" {
   count = var.gpu_type == "A3 Mega"? 1 : 0
   source          = "./modules/embedded/modules/network/vpc"
   deployment_name = var.goog_cm_deployment_name
-  project_id   = var.project_id
+  project_id      = var.project_id
   region          = local.region != null ? local.region : error("Cannot find region for zone")
   secondary_ranges = {
     (local.subnetwork_name) = [{

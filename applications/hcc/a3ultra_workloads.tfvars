@@ -27,11 +27,14 @@ project_id = "supercomputer-testing"
 
 a3_mega_zone = ""
 a3_ultra_zone = "europe-west1-b"
+#a3_ultra_zone = ""
 
 node_count = 2
 recipe = "gke-nccl"
 
 reservation = "supercomputer-testing-gsc-asq-fr/reservationBlocks/supercomputer-testing-gsc-asq-fr-block-0001"
+#reservation = "supercomputer-testing-gsc-asq-fr"
+#reservation = "qss-test-a3mega"
 reservation_block = ""
 placement_policy_name = ""
 host_maintenance = ""
