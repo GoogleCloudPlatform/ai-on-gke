@@ -41,7 +41,7 @@ metadata:
 spec:
   kubeConfig:
     locationType: Secret
-    location: worker-eu-west4-secret
+    location: worker-europe-west4-secret
 ---
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: MultiKueueCluster

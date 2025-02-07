@@ -21,7 +21,7 @@ set -o pipefail
 KUEUE_VERSION=v0.10.0
 KFLOW_VERSION=v1.8.0
 regions=("europe-west4" "asia-southeast1" "us-east4" "europe-west4")
-kubeconfigs=("manager-europe-west4" "worker-asia-southeast1" "worker-us-east4" "worker-eu-west4")
+kubeconfigs=("manager-europe-west4" "worker-asia-southeast1" "worker-us-east4" "worker-europe-west4")
 PROJECT_ID=$(gcloud config get-value project)
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
 PREFIX_MANAGER="man"
