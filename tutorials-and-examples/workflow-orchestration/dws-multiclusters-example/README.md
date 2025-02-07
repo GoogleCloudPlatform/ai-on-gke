@@ -17,10 +17,9 @@ This repository contains the following files:
 ### Create Clusters
 
 ```
-cd tf
-terraform init
-terraform plan
-terraform apply -var project_id=<YOUR PROJECT ID>
+terraform -chdir=tf init
+terraform -chdir=tf plan
+terraform -chdir=tf apply -var project_id=<YOUR PROJECT ID>
 ```
 
 ### Install Kueue
@@ -70,4 +69,12 @@ kubectl get workloads.kueue.x-k8s.io -o jsonpath='{range .items[*]}{.status.admi
 ```
 
 In the output message, you can find where the job is scheduled#
+
+### Destroy resources
+
+
+```
+terraform -chdir=tf destroy -var project_id=<YOUR PROJECT ID>
+```
+
 
