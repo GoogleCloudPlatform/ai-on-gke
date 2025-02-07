@@ -12,19 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "cluster" {
-  value = module.gke
-}
-
-output "endpoint" {
-  value = module.gke.endpoint
-}
-
-output "ca_certificate" {
-  value = module.gke.ca_certificate
-}
-
-
-output "service_account" {
-  value = module.gke.service_account
-}
+# terraform {
+#   backend "gcs" {
+#     bucket = "BUCKET_NAME"
+#     prefix = "terraform/state"
+#   }
+# }
