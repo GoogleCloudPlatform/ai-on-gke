@@ -26,8 +26,8 @@ data "google_client_config" "default" {}
 locals {
   subnetwork_name = "${var.goog_cm_deployment_name}-gke-net"
   result_bucket_name = "${var.goog_cm_deployment_name}-result"
-  gke_cluster_id = "${module.a3-ultragpu-cluster[0].cluster_id}"
-  gke_cluster_version = "${module.a3-ultragpu-cluster[0].gke_version}"
+  gke_cluster_id = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].cluster_id}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].cluster_id}" : error("Only A3 Mega and A3 Ultra are supported")
+  gke_cluster_version = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].gke_version}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].gke_version}" : error("Only A3 Mega and A3 Ultra are supported")
 
   gke_cluster_endpoint = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].gke_endpoint}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].gke_endpoint}" : error("Only A3 Mega and A3 Ultra are supported")
   gke_cluster_ca_cert = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].gke_ca_cert}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].gke_ca_cert}" : error("Only A3 Mega and A3 Ultra are supported")
@@ -89,8 +89,8 @@ module "a3_megagpu_pool" {
   count = var.gpu_type == "A3 Mega"? 1 : 0
   source                    = "./modules/embedded/modules/compute/gke-node-pool"
   additional_networks       = flatten([module.gke-a3-mega-gpunets[0].additional_networks])
-  cluster_id                = module.a3-megagpu-cluster[0].cluster_id
-  gke_version               = module.a3-megagpu-cluster[0].gke_version
+  cluster_id                = local.gke_cluster_id
+  gke_version               = local.gke_cluster_version
   # host_maintenance_interval = "PERIODIC"
   internal_ghpc_module_id   = "a3_megagpu_pool"
   labels                    = var.labels
