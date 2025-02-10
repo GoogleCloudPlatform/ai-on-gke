@@ -235,7 +235,91 @@ Now you have registered an ML model in MLFlow!
 
 ## Deployment
 
-Go to the `deploy-gemma2` directory. In this section we will use KServe to deploy our fine-tuned model.
+In this section we have two subsections that describes a simple deployment and a production like. If you want to just check the model result, you should follow to the [Simple deployment](###Simple-deployment) section. If you want to deploy your fine-tuned model using KServe, follow the [KServe deployment](KServe-deployment) section.
+
+### Simple deployment
+
+Go to the `deploy-gemma2/simple` directory. In this directory you can see the following files:
+- `cloudbuild.yaml`: helps us to create and submit a deployment Docker image.
+- `deploy.yaml`: creates deployment and service to invoke our fine-tuned model.
+- `main.py`: defines a simple FastAPI application with a single API endpoint `predict`.
+- `requirements.txt`: defines FastAPI dependencies.
+
+To deploy our model, we need to create a new repository in artifact registry. Run the commands below:
+```bash
+gcloud artifacts repositories create gemma-deployment \
+    --project=${PROJECT_ID} \
+    --repository-format=docker \
+    --location=us \
+    --description="Gemma Deployment Repo"
+```
+
+And give your GKE cluster service account read access by running:
+```bash
+gcloud artifacts repositories add-iam-policy-binding gemma-deployment \
+    --project="${PROJECT_ID}" \
+    --location="us" \
+    --member="serviceAccount:<SERVICE_ACCOUNT_EMAIL>" \
+    --role="roles/artifactregistry.reader"
+```
+
+Run this command to submit a deployment Docker image to your repository:
+```bash
+gcloud builds submit .
+```
+
+After the command is completed, edit the following variables in `deploy.yaml` file:
+- `<PROJECT_ID>`: your project ID.
+- `<YOUR_BUCKET_NAME>`: your bucket where you store the fine-tuned model.
+- `<MLFLOW_RUN_ID>`: the MLFLow experiments's ID.
+
+And run the following command to deploy the model:
+```bash
+kubectl apply -f deploy.yaml
+```
+
+To check status of your deployment, find your pod name by running `kubectl get pods` and then run this command to check the logs:
+```bash
+kubectl logs <POD_NAME> -f
+```
+
+You can consider your deployment seccessful and ready to use when your logs look like this:
+```log
+Loading checkpoint shards: 100%|██████████| 35/35 [00:52<00:00,  1.49s/it]
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:11434 (Press CTRL+C to quit)
+```
+
+Run this command to forward the port for your service:
+```bash
+kubectl port-forward svc/gemma2-9b-finetuned-service 8081:11434
+```
+
+And go to the `http://127.0.0.1:8081/docs`. Here you should be able to invoke your model. For example, for input:
+```log
+Question: What is the total number of attendees with age over 30 at kubecon \"eu\"? Context: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\nAnswer:
+```
+
+The output should look like this:
+```log
+SELECT COUNT(*) FROM attendees WHERE age > 30 AND kubecon = \"eu\"
+```
+
+#### Clean up
+Remove the artifact registry permission:
+```bash
+gcloud artifacts repositories remove-iam-policy-binding gemma-deployment \
+    --project="${PROJECT_ID}" \
+    --location="us" \
+    --member="serviceAccount:<SERVICE_ACCOUNT_EMAIL>" \
+    --role="roles/artifactregistry.reader"
+```
+
+### KServe deployment
+
+Go to the `deploy-gemma2/kserve` directory. In this section we will use KServe to deploy our fine-tuned model.
 
 To install KServe, you can follow [the guide in our repo](https://github.com/volatilemolotov/ai-on-gke/blob/main/tutorials-and-examples/kserve/README.md#install-kserve). After the successful installation, we need to patch the deployment mode and create an ingress class.
 Run the command below:
@@ -369,4 +453,4 @@ gcloud artifacts repositories remove-iam-policy-binding gemma \
     --role="roles/artifactregistry.reader"
 ```
 
-And delete your GCS bucket where you stored everything during the guide.
+Delete your GCS bucket where you stored everything during the guide and Artifact registry repo `gemma`.
