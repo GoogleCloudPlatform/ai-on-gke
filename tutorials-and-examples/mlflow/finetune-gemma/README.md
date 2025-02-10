@@ -53,7 +53,7 @@ The last command connects your current terminal session to the GKE cluster and s
 >Note: in step 1, the  “[Knative Serving install guide](https://knative.dev/docs/admin/install/serving/install-serving-with-yaml/)” actually also includes the steps to install the networking layer, and it actually prefers Kourier over Istio.
 
 ## Install MLFlow
-Go to the `mlflow-configuration` directory. We will use the helm to install MLFlow. Use [This chart](https://artifacthub.io/packages/helm/bitnami/mlflow) to install  MLFlow with necessary configuration.
+Go to the `mlflow-configuration` directory. We will use the helm to install MLFlow.
 
 Since we want to access our model from MLFlow UI and deploy it using KServe easily, we need to specify environment variables for MLFlow so it could use GCS bucket as artifact storage. Go to the Google Cloud Console and create a GCS bucket.
 
