@@ -57,7 +57,7 @@ Go to the `mlflow-configuration` directory. We will use the helm to install MLFl
 
 Since we want to access our model from MLFlow UI and deploy it using KServe easily, we need to specify environment variables for MLFlow so it could use GCS bucket as artifact storage. Go to the Google Cloud Console and create a GCS bucket.
 
-Before installing the MLFlow chart, we need to adjust `values.yaml` so MLFlow could interact with the GCS bucket. Adjust the following values:
+Before installing the MLFlow [chart](https://artifacthub.io/packages/helm/bitnami/mlflow), we need to adjust `values.yaml` so MLFlow could interact with the GCS bucket. Adjust the following values:
 - `<BUCKET_NAME>` – your bucket name.
 
 Install the MLFlow chart:
