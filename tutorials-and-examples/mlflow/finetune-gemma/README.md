@@ -235,7 +235,7 @@ Now you have registered an ML model in MLFlow!
 
 ## Deployment
 
-In this section we have two subsections that describes a simple deployment and a production like. If you want to just check the model result, you should follow to the `Simple deployment` section. If you want to deploy your fine-tuned model using KServe, follow the `KServe deployment` section.
+In this section we have two subsections that describe a simple deployment and a production like. If you want to just check the model result, you should follow the `Simple deployment` section. If you want to deploy your fine-tuned model using KServe, follow the `KServe deployment` section.
 
 ### Simple deployment
 
@@ -245,7 +245,7 @@ Go to the `deploy-gemma2/simple` directory. In this directory you can see the fo
 - `main.py`: defines a simple FastAPI application with a single API endpoint `predict`.
 - `requirements.txt`: defines FastAPI dependencies.
 
-To deploy our model, we need to create a new repository in artifact registry. Run the commands below:
+To deploy our model, we need to create a new repository in the artifact registry. Run the commands below:
 ```bash
 gcloud artifacts repositories create gemma-deployment \
     --project=${PROJECT_ID} \
