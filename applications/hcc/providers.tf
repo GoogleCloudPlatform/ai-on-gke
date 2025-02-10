@@ -17,27 +17,33 @@
 provider "google" {
   project = var.project_id
   region  = local.region
+  zone    = local.zone
 }
 
 provider "google-beta" {
   project = var.project_id
   region  = local.region
-}
-
-provider "helm" {
-  kubernetes {
-    # host                   = "https://${data.google_container_cluster.gke_cluster.endpoint}"
-    host                   = module.gke_cluster.gke_endpoint
-    token                  = data.google_client_config.default.access_token
-    cluster_ca_certificate = base64decode(module.gke_cluster.gke_ca_cert)
-  }
+  zone    = local.zone
 }
 
 provider "kubectl" {
-  host                   = module.gke_cluster.gke_endpoint
+  host                   = local.gke_cluster_endpoint
   token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(module.gke_cluster.gke_ca_cert)
+  cluster_ca_certificate = base64decode(local.gke_cluster_ca_cert)
   load_config_file       = false
   apply_retry_count      = 15 # Terraform may apply resources in parallel, leading to potential dependency issues. This retry mechanism ensures that if a resource's dependencies aren't ready, Terraform will attempt to apply it again.
 }
 
+provider "kubernetes" {
+  host                   = local.gke_cluster_endpoint
+  cluster_ca_certificate = base64decode(local.gke_cluster_ca_cert)
+  token                  = data.google_client_config.default.access_token
+} 
+
+provider "helm" {
+  kubernetes {
+    host                   = local.gke_cluster_endpoint
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(local.gke_cluster_ca_cert)
+  }
+}

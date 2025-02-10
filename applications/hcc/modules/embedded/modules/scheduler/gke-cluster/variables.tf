@@ -41,6 +41,12 @@ variable "region" {
   type        = string
 }
 
+variable "zone" {
+  description = "Zone for a zonal cluster."
+  default     = null
+  type        = string
+}
+
 variable "network_id" {
   description = "The ID of the GCE VPC network to host the cluster given in the format: `projects/<project_id>/global/networks/<network_name>`."
   type        = string
@@ -83,6 +89,12 @@ variable "min_master_version" {
   description = "The minimum version of the master. If unset, the cluster's version will be set by GKE to the version of the most recent official release."
   type        = string
   default     = null
+}
+
+variable "version_prefix" {
+  description = "If provided, Terraform will only return versions that match the string prefix. For example, `1.31.` will match all `1.31` series releases. Since this is just a string match, it's recommended that you append a `.` after minor versions to ensure that prefixes such as `1.3` don't match versions like `1.30.1-gke.10` accidentally."
+  type        = string
+  default     = "1.31."
 }
 
 variable "maintenance_start_time" {
@@ -133,6 +145,18 @@ variable "enable_parallelstore_csi" {
   default     = false
 }
 
+variable "enable_dcgm_monitoring" {
+  description = "Enable GKE to collect DCGM metrics"
+  type        = bool
+  default     = false
+}
+
+variable "enable_node_local_dns_cache" {
+  description = "Enable GKE NodeLocal DNSCache addon to improve DNS lookup latency"
+  type        = bool
+  default     = false
+}
+
 variable "system_node_pool_enabled" {
   description = "Create a system node pool."
   type        = bool
@@ -161,6 +185,18 @@ variable "system_node_pool_machine_type" {
   description = "Machine type for the system node pool."
   type        = string
   default     = "e2-standard-4"
+}
+
+variable "system_node_pool_disk_size_gb" {
+  description = "Size of disk for each node of the system node pool."
+  type        = number
+  default     = 100
+}
+
+variable "system_node_pool_disk_type" {
+  description = "Disk type for each node of the system node pool."
+  type        = string
+  default     = null
 }
 
 variable "system_node_pool_taints" {
@@ -332,4 +368,66 @@ variable "additional_networks" {
       subnetwork_range_name = string
     }))
   }))
+}
+
+variable "cluster_reference_type" {
+  description = "How the google_container_node_pool.system_node_pools refers to the cluster. Possible values are: {SELF_LINK, NAME}"
+  default     = "SELF_LINK"
+  type        = string
+  nullable    = false
+  validation {
+    condition     = contains(["SELF_LINK", "NAME"], var.cluster_reference_type)
+    error_message = "`cluster_reference_type` must be one of {SELF_LINK, NAME}"
+  }
+}
+
+variable "cluster_availability_type" {
+  description = "Type of cluster availability. Possible values are: {REGIONAL, ZONAL}"
+  default     = "REGIONAL"
+  type        = string
+  nullable    = false
+  validation {
+    condition     = contains(["REGIONAL", "ZONAL"], var.cluster_availability_type)
+    error_message = "`cluster_availability_type` must be one of {REGIONAL, ZONAL}"
+  }
+}
+
+variable "default_max_pods_per_node" {
+  description = "The default maximum number of pods per node in this cluster."
+  type        = number
+  default     = null
+}
+
+variable "networking_mode" {
+  description = "Determines whether alias IPs or routes will be used for pod IPs in the cluster. Options are VPC_NATIVE or ROUTES. VPC_NATIVE enables IP aliasing. The default is VPC_NATIVE."
+  type        = string
+  default     = "VPC_NATIVE"
+}
+
+variable "deletion_protection" {
+  description = <<-EOT
+  "Determines if the cluster can be deleted by gcluster commands or not".
+  To delete a cluster provisioned with deletion_protection set to true, you must first set it to false and apply the changes.
+  Then proceed with deletion as usual.
+  EOT
+  type        = bool
+  default     = false
+}
+
+variable "upgrade_settings" {
+  description = <<-EOT
+  Defines gke cluster upgrade settings. It is highly recommended that you define all max_surge and max_unavailable.
+  If max_surge is not specified, it would be set to a default value of 0.
+  If max_unavailable is not specified, it would be set to a default value of 1.  
+  EOT
+  type = object({
+    strategy        = string
+    max_surge       = optional(number)
+    max_unavailable = optional(number)
+  })
+  default = {
+    strategy        = "SURGE"
+    max_surge       = 0
+    max_unavailable = 1
+  }
 }

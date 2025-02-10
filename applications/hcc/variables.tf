@@ -52,6 +52,11 @@ variable "a3_mega_zone" {
   type        = string
 }
 
+variable "a3_ultra_zone" {
+  description = "Toolkit deployment variable: a3_ultra_zone"
+  type        = string
+}
+
 variable "node_count" {
   description = "Toolkit deployment variable: node_count"
   type        = number
@@ -72,3 +77,7 @@ variable "host_maintenance" {
   type        = string
 }
 
+variable "gpu_type" {
+  description = "Toolkit deployment variable: gpu_type"
+  type        = string
+} 
