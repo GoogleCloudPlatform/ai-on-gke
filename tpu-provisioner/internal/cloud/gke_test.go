@@ -8,7 +8,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/require"
 	container "google.golang.org/api/container/v1beta1"
 	containerv1beta1 "google.golang.org/api/container/v1beta1"
 	v1 "k8s.io/api/core/v1"
@@ -707,7 +706,9 @@ func TestNodePoolForPod(t *testing.T) {
 			// Populating a hash in test cases is a hassle, so we will just check for existance.
 			gotHash := got.Config.Labels[LabelNodePoolHash]
 			t.Logf("Node pool hash: %s", gotHash)
-			require.NotEmpty(t, gotHash, "Node pool hash should be populated")
+			if gotHash == "" {
+				t.Errorf("Node pool hash should be populated")
+			}
 			delete(got.Config.Labels, LabelNodePoolHash)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
@@ -803,4 +804,103 @@ func buildPod(additionalLabels map[string]string, additionalAnnotations map[stri
 		}
 	}
 	return pod
+}
+
+func Test_nodePoolSelectiveHash(t *testing.T) {
+	cases := []struct {
+		name        string
+		A           *containerv1beta1.NodePool
+		B           *containerv1beta1.NodePool
+		expSameHash bool
+	}{
+		{
+			name:        "two empty",
+			A:           &containerv1beta1.NodePool{Config: &container.NodeConfig{}},
+			B:           &containerv1beta1.NodePool{Config: &container.NodeConfig{}},
+			expSameHash: true,
+		},
+		{
+			name: "different machine type",
+			A: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					MachineType: "ct5p-hightpu-4t",
+				},
+			},
+			B: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					MachineType: "ct5p-hightpu-8t",
+				},
+			},
+			expSameHash: false,
+		},
+		{
+			name: "different labels",
+			A: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					MachineType: "ct5p-hightpu-4t",
+					Labels: map[string]string{
+						"a": "b",
+					},
+				},
+			},
+			B: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					MachineType: "ct5p-hightpu-4t",
+					Labels: map[string]string{
+						"a": "c",
+					},
+				},
+			},
+			expSameHash: false,
+		},
+		{
+			name: "non hashed upgrade settings",
+			A: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					MachineType: "ct5p-hightpu-4t",
+					Labels: map[string]string{
+						"a": "b",
+						"c": "d",
+					},
+				},
+				UpgradeSettings: &container.UpgradeSettings{
+					MaxSurge: 1,
+				},
+			},
+			B: &containerv1beta1.NodePool{
+				Config: &container.NodeConfig{
+					MachineType: "ct5p-hightpu-4t",
+					Labels: map[string]string{
+						"a": "b",
+						"c": "d",
+					},
+				},
+				UpgradeSettings: &container.UpgradeSettings{
+					MaxSurge: 2,
+				},
+			},
+			expSameHash: true,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			hashA, err := nodePoolSelectiveHash(c.A)
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			hashB, err := nodePoolSelectiveHash(c.B)
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			if c.expSameHash {
+				if hashA != hashB {
+					t.Errorf("Expected same hash, got %s and %s", hashA, hashB)
+				}
+			} else {
+				if hashA == hashB {
+					t.Errorf("Expected different hash, got %s", hashA)
+				}
+			}
+		})
+	}
 }

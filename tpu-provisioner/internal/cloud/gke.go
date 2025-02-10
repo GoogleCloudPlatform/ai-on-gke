@@ -271,7 +271,7 @@ func (g *GKE) checkExistingNodePool(desired *containerv1beta1.NodePool) (nodePoo
 }
 
 func nodePoolsMatch(desired, existing *containerv1beta1.NodePool) (bool, error) {
-	desiredHash, err := nodePoolHash(desired)
+	desiredHash, err := nodePoolSelectiveHash(desired)
 	if err != nil {
 		return false, fmt.Errorf("hashing node pool: %w", err)
 	}
@@ -492,7 +492,7 @@ func (g *GKE) nodePoolForPod(p *corev1.Pod) (*containerv1beta1.NodePool, error) 
 		NetworkConfig:     networkConfig,
 	}
 
-	hash, err := nodePoolHash(np)
+	hash, err := nodePoolSelectiveHash(np)
 	if err != nil {
 		return nil, fmt.Errorf("hashing node pool: %w", err)
 	}
@@ -623,9 +623,25 @@ func getAnnotation(p *corev1.Pod, key string) string {
 	return p.Annotations[key]
 }
 
-func nodePoolHash(np *containerv1beta1.NodePool) (string, error) {
+// nodePoolSelectiveHash attempts to hash information specific to workload requirements.
+// A selective approach is taken to avoid overzealous node pool recreation under circumstances
+// where values might change due to a config or code change in the provisioner.
+// Example scenario where selective hashing is useful:
+// 1. Provisioner is updated to include new upgrade settings.
+// 2. Some node pool goes into a repairing state.
+// 3. The workload Pod goes into an unschedulable state.
+// 4. The code path for ensuring a matching node pool exists is executed.
+func nodePoolSelectiveHash(np *containerv1beta1.NodePool) (string, error) {
 	h := fnv.New32a()
-	jsn, err := json.Marshal(np)
+	npToHash := &containerv1beta1.NodePool{
+		Config: &containerv1beta1.NodeConfig{
+			Spot:        np.Config.Spot,
+			Labels:      np.Config.Labels,
+			Taints:      np.Config.Taints,
+			MachineType: np.Config.MachineType,
+		},
+	}
+	jsn, err := json.Marshal(npToHash)
 	if err != nil {
 		return "", err
 	}
