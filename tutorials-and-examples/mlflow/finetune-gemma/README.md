@@ -235,7 +235,7 @@ Now you have registered an ML model in MLFlow!
 
 ## Deployment
 
-In this section we have two subsections that describes a simple deployment and a production like. If you want to just check the model result, you should follow to the [Simple deployment](###Simple-deployment) section. If you want to deploy your fine-tuned model using KServe, follow the [KServe deployment](KServe-deployment) section.
+In this section we have two subsections that describes a simple deployment and a production like. If you want to just check the model result, you should follow to the `Simple deployment` section. If you want to deploy your fine-tuned model using KServe, follow the `KServe deployment` section.
 
 ### Simple deployment
 
