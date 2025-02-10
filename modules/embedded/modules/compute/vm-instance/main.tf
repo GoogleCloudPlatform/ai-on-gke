@@ -19,7 +19,16 @@ locals {
   labels = merge(var.labels, { ghpc_module = "vm-instance", ghpc_role = "compute" })
 }
 
+module "gpu" {
+  source = "../../internal/gpu-definition"
+
+  machine_type      = var.machine_type
+  guest_accelerator = var.guest_accelerator
+}
+
 locals {
+  guest_accelerator = module.gpu.guest_accelerator
+
   native_fstype = []
   startup_script = local.startup_from_network_storage != null ? (
   { startup-script = local.startup_from_network_storage }) : {}
@@ -39,7 +48,7 @@ locals {
   # compact_placement : true when placement policy is provided and collocation set; false if unset
   compact_placement = try(var.placement_policy.collocation, null) != null
 
-  gpu_attached = contains(["a2", "g2"], local.machine_family) || (length([for ga in local.guest_accelerator : ga if ga.count > 0]) > 0)
+  gpu_attached = contains(["a2", "g2"], local.machine_family) || length(local.guest_accelerator) > 0
 
   # both of these must be false if either compact placement or preemptible/spot instances are used
   # automatic restart is tolerant of GPUs while on host maintenance is not
@@ -239,7 +248,14 @@ resource "google_compute_instance" "compute_vm" {
     scopes = var.service_account_scopes
   }
 
-  guest_accelerator = local.guest_accelerator
+  dynamic "guest_accelerator" {
+    for_each = local.guest_accelerator
+    content {
+      count = guest_accelerator.value.count
+      type  = guest_accelerator.value.type
+    }
+  }
+
   scheduling {
     on_host_maintenance = local.on_host_maintenance
     automatic_restart   = local.automatic_restart
@@ -251,6 +267,17 @@ resource "google_compute_instance" "compute_vm" {
     for_each = local.set_threads_per_core ? [1] : []
     content {
       threads_per_core = local.threads_per_core # relies on threads_per_core_calc.tf
+    }
+  }
+
+  dynamic "reservation_affinity" {
+    for_each = var.reservation_name == "" ? [] : [1]
+    content {
+      type = "SPECIFIC_RESERVATION"
+      specific_reservation {
+        key    = "compute.googleapis.com/reservation-name"
+        values = [var.reservation_name]
+      }
     }
   }
 

@@ -23,4 +23,3 @@ output "result_bucket" {
   description = "Link to result GCS bucket"
   value       = "https://pantheon.corp.google.com/storage/browser/${local.result_bucket_name}"
 }
-

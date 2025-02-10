@@ -16,20 +16,18 @@
 
 authorized_cidr = "0.0.0.0/0"
 
-goog_cm_deployment_name = "a3plus-qss-test"
+goog_cm_deployment_name = "a3mega-qss-test-danjuan-3"
 
 labels = {
   ghpc_blueprint  = "gke-a3-mega"
-  ghpc_deployment = "a3plus-qss-test"
+  ghpc_deployment = "a3mega-qss-test-danjuan-3"
 }
 
 project_id = "supercomputer-testing"
 
-region = "us-east5"
-
 a3_mega_zone = "us-east5-a"
+a3_ultra_zone = ""
 
-checkpoint_bucket = "kevinmcw-llama-checkpoint"
 node_count = 2
 recipe = "gke-nccl"
 
@@ -37,3 +35,5 @@ reservation = "qss-test-a3mega"
 reservation_block = ""
 placement_policy_name = ""
 host_maintenance = ""
+
+gpu_type = "A3 Mega"
