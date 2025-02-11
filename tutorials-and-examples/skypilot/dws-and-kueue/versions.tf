@@ -12,19 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "cluster" {
-  value = module.gke
-}
-
-output "endpoint" {
-  value = module.gke.endpoint
-}
-
-output "ca_certificate" {
-  value = module.gke.ca_certificate
-}
-
-
-output "service_account" {
-  value = module.gke.service_account
+terraform {
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+    }
+    google-beta = {
+      source = "hashicorp/google-beta"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.8.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.18.1"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "0.11.1"
+    }
+  }
 }
