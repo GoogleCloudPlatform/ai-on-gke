@@ -20,6 +20,10 @@ This guide will show how to install Flyte on GKE using Helm. Deployment will use
    * [kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
    * [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
+## Architecture overview
+
+![Architecture overview](./img/architecture-overview.png)
+
 ## Setting up your GKE cluster with Terraform
 
 Let's start with setting up the infrastructure using Terraform. The Terraform configuration will create an [Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) or [Standard](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-regional-cluster) GKE cluster with GPU node pools (only for Standard clusters).
