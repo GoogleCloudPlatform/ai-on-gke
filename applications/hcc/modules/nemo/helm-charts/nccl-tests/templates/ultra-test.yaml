@@ -33,8 +33,7 @@ spec:
                     {"interfaceName":"eth5","network":"vpc5"},
                     {"interfaceName":"eth6","network":"vpc6"},
                     {"interfaceName":"eth7","network":"vpc7"},
-                    {"interfaceName":"eth8","network":"vpc8"},
-                    {"interfaceName":"eth9","network":"vpc9"}
+                    {"interfaceName":"eth8","network":"vpc8"}
                   ]
             spec:
               activeDeadlineSeconds: 3600
@@ -54,7 +53,7 @@ spec:
                 csi:
                   driver: gcsfuse.csi.storage.gke.io
                   volumeAttributes:
-                    bucketName: "gke-33-result"
+                    bucketName: "{{ $root.Values.workload.gcsBucketForDataCataPath }}"
               - name: gib
                 hostPath:
                   path: /home/kubernetes/bin/gib
