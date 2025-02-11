@@ -37,7 +37,7 @@ for request_rate in $(echo $REQUEST_RATES | tr ',' ' '); do
     num_prompts=$(awk "BEGIN {print int($request_rate * $BENCHMARK_TIME_SECONDS)}")
   fi
   echo "TOTAL prompts: $num_prompts"  # Output: 8
-  PYTHON_OPTS="$PYTHON_OPTS --save-json-results --host=$IP  --port=$PORT --dataset=$PROMPT_DATASET_FILE --tokenizer=$TOKENIZER --request-rate=$request_rate --backend=$BACKEND --num-prompts=$num_prompts --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH --file-prefix=$FILE_PREFIX --models=$MODELS"
+  PYTHON_OPTS="$PYTHON_OPTS --save-json-results --host=$IP  --port=$PORT --dataset=$PROMPT_DATASET_FILE --tokenizer=$TOKENIZER --request-rate=$request_rate --backend=$BACKEND --num-prompts=$num_prompts --max-input-length=$INPUT_LENGTH --max-output-length=$OUTPUT_LENGTH --file-prefix=$FILE_PREFIX --models=$MODELS --namespace=$NAMESPACE --pm-job=$PM_JOB"
   if [[ "$OUTPUT_BUCKET" ]]; then
     PYTHON_OPTS="$PYTHON_OPTS --output-bucket=$OUTPUT_BUCKET"
   fi
