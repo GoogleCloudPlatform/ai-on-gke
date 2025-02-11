@@ -20,7 +20,6 @@ spec:
       - name: gemma2-9b-finetuned
         image: us-docker.pkg.dev/<PROJECT_ID>/gemma-deployment/finetune-gemma-mlflow:1.0.0
         command: ["/bin/bash", "-c", "--"]
-        args: ['uvicorn main:app --host 0.0.0.0 --port 11434']
         env:
         - name: MODEL_PATH
           value: "/data/artifacts/<MLFLOW_RUN_ID>/artifacts/model/"

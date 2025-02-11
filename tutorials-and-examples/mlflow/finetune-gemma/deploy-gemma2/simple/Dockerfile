@@ -19,4 +19,4 @@ ENV PYTHONUNBUFFERED 1
 
 EXPOSE 11434
 
-# CMD python3 /finetune.py --device cuda
+CMD ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "11434"]
