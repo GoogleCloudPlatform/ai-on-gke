@@ -18,7 +18,7 @@ data "google_client_config" "default" {}
 
 locals {
   subnetwork_name = "${var.goog_cm_deployment_name}-gke-net"
-  result_bucket_name = "${var.goog_cm_deployment_name}-result"
+  result_bucket_name = "${var.project_id}-${var.goog_cm_deployment_name}-result"
   gke_cluster_id = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].cluster_id}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].cluster_id}" : error("Only A3 Mega and A3 Ultra are supported")
   gke_cluster_version = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].gke_version}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].gke_version}" : error("Only A3 Mega and A3 Ultra are supported")
 
