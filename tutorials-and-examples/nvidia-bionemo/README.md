@@ -2,7 +2,7 @@
 
 #### Pretraining ESM-2
 
-- [Pretraining ESM-2 LLM on GKE using BioNeMo Framework 2.0](./esm2/README.md#pretraining)
+- [Pretraining ESM-2 LLM on GKE using BioNeMo Framework 2.0](./pretraining/README.md)
 
 #### Fine-turning ESM-2
 
