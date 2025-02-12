@@ -1,0 +1,13 @@
+[
+  {
+    "message": "pod in Deployment \"mistral-7b-instruct\" must set securityContext.seccompProfile.type to value RuntimeDefault",
+    "policyName": "seccompprofile",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "mistral-7b-instruct",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

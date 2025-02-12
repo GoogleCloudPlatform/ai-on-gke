@@ -1,0 +1,13 @@
+[
+  {
+    "message": "pod in DaemonSet \"continuous-image-puller\" must set securityContext.seccompProfile.type to value RuntimeDefault",
+    "policyName": "seccompprofile",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "DaemonSet",
+      "name": "continuous-image-puller",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

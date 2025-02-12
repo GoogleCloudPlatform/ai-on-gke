@@ -1,0 +1,1454 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "batch",
+      "resource": "jobs",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"jobs.batch\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "batch",
+      "resource": "jobs",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"jobs.batch\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "batch",
+      "resource": "jobs",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"jobs.batch\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "batch",
+      "resource": "jobs",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"jobs.batch\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "coordination.k8s.io",
+      "resource": "leases",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource: \"leases.coordination.k8s.io\" with verb \"update\" that must specify a resourceName.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "deletecollection"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods.\" with verb \"deletecollection\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods.\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods/proxy",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods/proxy.\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods/proxy",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods/proxy.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods/proxy",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods/proxy.\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods/status",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods/status.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods/status",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods/status.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods/status",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods/status.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods/status",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"pods/status.\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "serviceaccounts",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"serviceaccounts.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "serviceaccounts",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"serviceaccounts.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services.\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services.\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services/proxy",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services/proxy.\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services/proxy",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services/proxy.\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services/proxy",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services/proxy.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services/proxy",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services/proxy.\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services/status",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services/status.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "services/status",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"services/status.\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "extensions",
+      "resource": "ingresses",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.extensions\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "extensions",
+      "resource": "ingresses",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.extensions\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "extensions",
+      "resource": "ingresses",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.extensions\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "extensions",
+      "resource": "ingresses",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.extensions\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "networking.k8s.io",
+      "resource": "ingresses",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.networking.k8s.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "networking.k8s.io",
+      "resource": "ingresses",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.networking.k8s.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "networking.k8s.io",
+      "resource": "ingresses",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.networking.k8s.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "networking.k8s.io",
+      "resource": "ingresses",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"ingresses.networking.k8s.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "list"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"list\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "watch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"watch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters/finalizers",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters/finalizers.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters/status",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters/status.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters/status",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters/status.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters/status",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayclusters/status.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "list"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"list\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs",
+      "verbs": [
+        "watch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs.ray.io\" with verb \"watch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs/finalizers",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs/finalizers.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs/status",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs/status.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs/status",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs/status.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayjobs/status",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayjobs/status.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices.ray.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices.ray.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "list"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices.ray.io\" with verb \"list\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices",
+      "verbs": [
+        "watch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices.ray.io\" with verb \"watch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices/finalizers",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices/finalizers.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices/status",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices/status.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices/status",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices/status.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayservices/status",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rayservices/status.ray.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "rbac.authorization.k8s.io",
+      "resource": "rolebindings",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rolebindings.rbac.authorization.k8s.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "rbac.authorization.k8s.io",
+      "resource": "rolebindings",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"rolebindings.rbac.authorization.k8s.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "rbac.authorization.k8s.io",
+      "resource": "roles",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"roles.rbac.authorization.k8s.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "rbac.authorization.k8s.io",
+      "resource": "roles",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"roles.rbac.authorization.k8s.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "rbac.authorization.k8s.io",
+      "resource": "roles",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"roles.rbac.authorization.k8s.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "route.openshift.io",
+      "resource": "routes",
+      "verbs": [
+        "create"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"routes.route.openshift.io\" with verb \"create\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "route.openshift.io",
+      "resource": "routes",
+      "verbs": [
+        "delete"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"routes.route.openshift.io\" with verb \"delete\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "route.openshift.io",
+      "resource": "routes",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"routes.route.openshift.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "route.openshift.io",
+      "resource": "routes",
+      "verbs": [
+        "list"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"routes.route.openshift.io\" with verb \"list\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "route.openshift.io",
+      "resource": "routes",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"routes.route.openshift.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "route.openshift.io",
+      "resource": "routes",
+      "verbs": [
+        "update"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"routes.route.openshift.io\" with verb \"update\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "route.openshift.io",
+      "resource": "routes",
+      "verbs": [
+        "watch"
+      ]
+    },
+    "message": "ClusterRole \"kuberay-operator\" has rbac rule for resource \"routes.route.openshift.io\" with verb \"watch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "kuberay-operator",
+      "version": "v1"
+    }
+  }
+]

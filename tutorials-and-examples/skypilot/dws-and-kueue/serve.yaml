@@ -1,0 +1,46 @@
+service:
+  readiness_probe: /health
+  replicas: 1
+
+# Configuration needed for GCSFuse to mount bucket for model storage and for Kueue to configure max time in queue
+experimental:
+  config_overrides:
+    kubernetes:
+      pod_config:
+        metadata:
+          annotations:
+              gke-gcsfuse/volumes: "true"
+              provreq.kueue.x-k8s.io/maxRunDurationSeconds: "3600"
+        spec:
+          containers:
+            - volumeMounts:
+              - name: gcsfuse-test
+                mountPath: /data
+                readOnly: false
+          volumes:
+            - name: gcsfuse-test
+              csi:
+                driver: gcsfuse.csi.storage.gke.io
+                volumeAttributes:
+                  bucketName: BUCKET_NAME
+                  mountOptions: "implicit-dirs,uid=1000,gid=1000"
+      provision_timeout: 900
+
+# Fields below describe each replica.
+resources:
+  ports: 8081
+  accelerators: L4:1
+  labels:
+    kueue.x-k8s.io/queue-name: dws-local-queue
+
+setup: |
+  conda create -n vllm python=3.9 -y
+  conda activate vllm
+  pip install vllm
+
+run: |
+  conda activate vllm
+  python -m vllm.entrypoints.api_server \
+    --tensor-parallel-size $SKYPILOT_NUM_GPUS_PER_NODE \
+    --host 0.0.0.0 --port 8081 \
+    --model "/data/models/gemma-2b-sql-finetuned"
