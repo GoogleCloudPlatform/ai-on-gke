@@ -9,7 +9,7 @@
 - [Optional: Build and Run the Application Locally](#optional-build-and-run-the-application-locally)
 - [Provision GKE Cluster](#provision-gke-cluster)
 - [Prepare the Application for Deployment](#prepare-the-application-for-deployment)
-  - [1. Create Google Container Registry (GCR)](#1-create-google-container-registry-gcr)
+  - [1. Create Google Artifact Registry](#1-create-google-artifact-registry)
   - [2. Build the Application Using Cloud Build](#2-build-the-application-using-cloud-build)
   - [3. Enable IAP and create OAuth client](#3-enable-iap-and-create-oauth-client)
 - [Manual Deployment](#manual-deployment)
@@ -25,17 +25,15 @@
 
 ## Introduction
 
-It is crucial to make AI models accessible to end-users through applications that offer a user-friendly interface. A well-designed UI ensures that users can interact with the AI model intuitively and efficiently. Additionally, users should be able to rely on the application to perform as expected every time they use it, meaning the application must be reliable and free from frequent errors or downtime. By focusing on consistency, reliability and predictability of the application, we can ensure that AI models are not only accessible but also valuable and dependable tools for end-users.
-
-By leveraging LangChain, Streamlit, Google Kubernetes Engine, and Cloud SQL for PostgreSQL, we can achieve the goals of accessibility, reliability, and consistency. LangChain simplifies the integration of language models, allowing us to build robust AI-powered applications. Streamlit provides an intuitive and interactive user interface, making it easy for users to interact with the chatbot. GKE offers a scalable and managed environment to deploy the application, ensuring high availability and performance. Cloud SQL for PostgreSQL provides a reliable and secure database solution to store user messages, ensuring data persistence and consistency across sessions.
-
 In this tutorial, you will learn how to deploy a chatbot application using [LangChain](https://python.langchain.com/) and [Streamlit](https://streamlit.io/) on Google Cloud Platform (GCP).
 
-The application can be used to interact with any language model served on an OpenAI-compatible API. For example, you can use the Gemma2 model deployed on Google Kubernetes Engine using [Kserve](https://kserve.github.io/website/). This means you're not locked into a single provider and have the flexibility to choose the best model for your needs.
+Creating accessible, reliable, and secure applications is crucial for making AI models valuable for end-users. We achieve this by leveraging LangChain, Streamlit, Google Kubernetes Engine, and Cloud SQL for PostgreSQL. LangChain simplifies the integration of language models, allowing us to build robust AI-powered applications. Streamlit provides an intuitive and interactive user interface, making it easy for users to interact with the chatbot. GKE offers a scalable and managed environment to deploy the application, ensuring high availability and performance. Cloud SQL for PostgreSQL provides a reliable and secure database solution to store user messages, ensuring data persistence and consistency across sessions.
+
+The chatbot application can be used to interact with any language model served on an OpenAI-compatible API. For example, you can use the Gemma2 model deployed on Google Kubernetes Engine using [Kserve](https://kserve.github.io/website/). This means you're not locked into a single provider and have the flexibility to choose the best model for your needs.
 
 The application will be deployed on GCP and secured with Identity Aware Proxy (IAP). You have the option to follow manual deployment instructions or use Terraform for an automated setup.
 
-Finally, it will use user identity provided by IAP and store each user's messages in a Cloud SQL PostgreSQL database.
+Finally, the application will use user identity provided by IAP and store each user's messages in a Cloud SQL PostgreSQL database.
 
 ### Architecture overview
 
@@ -60,12 +58,13 @@ This tutorial assumes you have the following:
 - A [Google Cloud Platform](https://cloud.google.com/) account and project
 - The [Google Cloud CLI](https://cloud.google.com/sdk/docs/install-sdk) (gcloud) installed and configured
 - The [Kubernetes command-line tool](https://kubernetes.io/docs/tasks/tools/#kubectl) (kubectl) installed and configured
-- An instruction-tuned language model (e.g., instruction-tuned Gemma2 model) running on KServe or any other API that provides OpenAI-compatible interface (`v1/completion` and `v1/chat/completion` endpoints)
-- A Google Kubernetes Engine (GKE) cluster to host the application (tested on an autopilot cluster, but any type of cluster can be used; no specific limitations)
+- An instruction-tuned language model running on KServe or any other API that provides OpenAI-compatible interface (`v1/completion` and `v1/chat/completion` endpoints)
+  - You can follow the instructions in the [Kserve README](../kserve/README.md) to deploy the model on Google Kubernetes Engine (we recommend using the instruction tuned Gemma2 model)
+- A Google Kubernetes Engine (GKE) cluster to host the application
+  - Tested on an Autopilot cluster, but any type of cluster can be used
+  - This can be the same cluster that the language model is deployed on
 - Optional: Docker installed on your local machine (if you want to build and run the application locally)
 - Optional: Terraform installed on your local machine (if you want to use the automated deployment)
-
-If you don't have a GKE cluster and a model deployed on it, you can follow the instructions provided in the [Kserve README](../kserve/README.md) to deploy the model on Google Kubernetes Engine (we recommend using the instruction tuned Gemma2 model). In that case feel free to use the same GKE cluster to deploy the chatbot application.
 
 ## Optional: Build and Run the Application Locally
 
@@ -128,7 +127,7 @@ This will set up the necessary credentials and configuration for kubectl to inte
 
 ## Prepare the Application for Deployment
 
-### 1. Create Google Container Registry (GCR)
+### 1. Create Google Artifact Registry
 
 Enable the Artifact Registry API and create a Docker repository:
 
@@ -155,7 +154,7 @@ Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://c
 
 ## Manual Deployment
 
-This section describes how to deploy the application manually. If you prefer an automated deployment, refer to the next section.
+This section describes how to deploy the application manually. If you prefer an automated deployment, refer to the next section on Terraform [automated deployment](#automated-deployment).
 
 ### 1. Create Cloud SQL Instance
 
@@ -244,20 +243,31 @@ kubectl port-forward -n ${K8S_NAMESPACE} svc/chat 8501:80
 
 Now navigate to `http://localhost:8501` in your browser and you should see the interface of the application.
 
-Note that as we didn't configure authentication yet, application won't save the chat history between page reloads but you can still test the chatbot functionality.
+Note that as we didn't configure authentication yet, the application won't save the chat history between page reloads but you can still test the chatbot functionality.
 
 ### 3. Expose the application to the internet
 
-To make the application accessible from the internet, we need to create an Ingress resource. An Ingress resource manages external access to the services in a Kubernetes cluster, typically HTTP. It provides load balancing, SSL termination, and name-based virtual hosting.
+To make the application accessible from the internet, we need to create an Ingress resource. It manages external access to the services in a Kubernetes cluster, provides load balancing, TLS termination and name-based virtual hosting.
 
-First, create a static IP address for the Ingress:
+First, create a static IPV4 address for the Ingress:
 
 ```bash
 gcloud compute addresses create langchain-chatbot \
   --global --ip-version=IPV4
 ```
 
-Wait until the static IP address is created. Next, go to your domain registrar and create an A record pointing to the static IP address. An A record maps a domain name to the IP address of a server hosting the domain.
+Wait until it's provisioned. You can check the status using:
+
+```bash
+gcloud compute addresses describe flyte --global
+```
+
+When it's ready, you will see the IP address value in the output.
+
+Now you need a domain name that points to this IP address. We need it to provision a Managed Certificate to secure the communication between the client and the server using HTTPS. You can use any domain name you own or use a service like `sslip.io` for testing purposes.
+
+- In the case of a real domain, you need to create an A record pointing to the static IP address you just created; go to your domain registrar, create the record and wait for the DNS change to propagate (it can take up to 24 hours).
+- In case of `sslip.io`, use the domain `<cloud-ip-address>.sslip.io` where `<cloud-ip-address>` is the IP address value you got from the previous step; you don't have to manage DNS records nor wait for them to propagate in this case so it's a good option for a quick test.
 
 After creating the A record, wait for the DNS change to propagate. This can take anywhere from a few minutes to several hours, depending on your DNS provider.
 
