@@ -1,4 +1,4 @@
-# Chatbot Application with LangChain, Persistent Storage and IAP
+# Deploying a Persistent Chatbot on Google Cloud Platform with LangChain, Streamlit and IAP
 
 - [Introduction](#introduction)
   - [Architecture overview](#architecture-overview)
