@@ -19,7 +19,6 @@ spec:
       containers:
       - name: gemma2-9b-finetuned
         image: us-docker.pkg.dev/<PROJECT_ID>/gemma-deployment/finetune-gemma-mlflow:1.0.0
-        command: ["/bin/bash", "-c", "--"]
         env:
         - name: MODEL_PATH
           value: "/data/artifacts/<MLFLOW_RUN_ID>/artifacts/model/"

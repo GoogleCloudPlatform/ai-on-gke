@@ -10,4 +10,9 @@ model = mlflow.transformers.load_model(MODEL_PATH)
 
 @app.get("/predict")
 async def predict(message: str):
-    return model.predict(message)
+    return model(
+        message,
+        max_new_tokens=64,
+        return_full_text=False,
+        repetition_penalty=1.
+    )

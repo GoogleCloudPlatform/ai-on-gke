@@ -7,6 +7,7 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
     TrainingArguments,
+    pipeline,
 )
 from peft import LoraConfig, PeftModel
 
@@ -248,8 +249,15 @@ with mlflow.start_run() as run:
     model = PeftModel.from_pretrained(base_model, new_model)
     model = model.merge_and_unload()
 
+    generation_pipeline = pipeline(
+        task="text-generation",
+        model=model,
+        tokenizer=tokenizer,
+    )
+
     mlflow.log_params(peft_config.to_dict())
     mlflow.transformers.log_model(
-        transformers_model={"model": model, "tokenizer": tokenizer},
+        transformers_model=generation_pipeline,
         artifact_path="model",  # This is a relative path to save model files within MLflow run
+        prompt_template="{prompt}"
     )

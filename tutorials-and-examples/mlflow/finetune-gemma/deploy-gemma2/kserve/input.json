@@ -4,7 +4,7 @@
       "name": "args",
       "shape": [1],
       "datatype": "BYTES",
-      "data": ["Question: What is the total number of attendees with age over 30 at kubecon \"eu\"? Context: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\nAnswer:"]
+      "data": ["Question: What is the total number of attendees with age over 30 at kubecon \"eu\"?\nContext: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\n\nAnswer:"]
     }
   ]
 }
