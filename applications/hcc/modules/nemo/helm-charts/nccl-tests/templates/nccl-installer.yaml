@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+{{- if eq var.gpuType "A3 Ultra" }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -93,3 +93,4 @@ spec:
       containers:
       - image: "gke.gcr.io/pause:3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
         name: pause
+{{- end }}
