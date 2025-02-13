@@ -325,6 +325,10 @@ Go to the `terraform` directory, make a copy of `terraform.tfvars.example` and a
 - `k8s_app_image` - the name and tag of the Docker image built previously
 - `support_email`, `oauth_client_id`, `oauth_client_secret` and `members_allowlist` - for IAP configuration
 
+Additionally, you can specify the `domain` variable, which is the domain name for the ingress resource and SSL certificate. The default value is `{IP_ADDRESS}.sslip.io`, which uses the `sslip.io` service to map the IP address to a domain name.
+
+The complete list of variables and their descriptions can be found in `variables.tf`. You can adjust the values as needed.
+
 Make sure you have configured `google` and `kubernetes` providers either by setting the environment variables or using the `provider` blocks in the configuration.
 
 Initialize and apply the Terraform configuration to set up the necessary infrastructure.
@@ -343,7 +347,7 @@ It will do the following:
 
 When the Terraform run completes, it will output the public IP address and the URL of the application.
 
-Make sure that IP address is associated with the domain you specified as the `domain_name` variable in the Terraform configuration. If not, go to your domain registrar and create an A record pointing to the IP address.
+Make sure that the IP address is associated with the domain you specified as the `domain` variable in the Terraform configuration. If you used a real domain name, go to your domain registrar and create an A record pointing to the IP address. If you used the default `{IP_ADDRESS}.sslip.io`, no additional configuration is needed.
 
 Finally, wait some time for the Managed Certificate to be provisioned and then you can access the application using your domain name.
 
