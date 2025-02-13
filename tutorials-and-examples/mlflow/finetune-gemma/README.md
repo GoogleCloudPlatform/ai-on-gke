@@ -299,12 +299,12 @@ kubectl port-forward svc/gemma2-9b-finetuned-service 8081:11434
 
 And go to the `http://127.0.0.1:8081/docs`. Here you should be able to invoke your model. For example, for input:
 ```log
-Question: What is the total number of attendees with age over 30 at kubecon \"eu\"? Context: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\nAnswer:
+Question: What is the total number of attendees with age over 30 at kubecon "eu"?\nContext: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\n\nAnswer:
 ```
 
 The output should look like this:
 ```log
-SELECT COUNT(*) FROM attendees WHERE age > 30 AND kubecon = \"eu\"
+SELECT COUNT(*) FROM attendees WHERE age > 30 AND kubecon = "eu"
 ```
 
 #### Clean up
@@ -421,7 +421,7 @@ The output should be like this:
         "content_type": "str"
       },
       "data": [
-        "Question: What is the total number of attendees with age over 30 at kubecon \"eu\"? Context: CREATE TABLE attendees (name VARCHAR, age INTEGER, kubecon VARCHAR)\nAnswer: SELECT COUNT(*) FROM attendees WHERE age > 30 AND kubecon = \"eu\""
+        "SELECT COUNT(*) FROM attendees WHERE age > 30 AND kubecon = \"eu\""
       ]
     }
   ]
