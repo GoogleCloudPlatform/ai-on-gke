@@ -16,11 +16,11 @@
 
 authorized_cidr = "0.0.0.0/0"
 
-goog_cm_deployment_name = "a3ultra-qss-test-danjuan-3"
+goog_cm_deployment_name = "a3ultra-qss-test"
 
 labels = {
   ghpc_blueprint  = "gke-a3-ultra"
-  ghpc_deployment = "a3ultra-qss-test-danjuan-3"
+  ghpc_deployment = "a3ultra-qss-test"
 }
 
 project_id = "supercomputer-testing"

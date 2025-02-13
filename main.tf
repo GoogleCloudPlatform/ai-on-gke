@@ -272,6 +272,7 @@ module "a3-ultragpu-pool" {
 }
 
 module "topology-aware-scheduler-install" {
+  count = var.gpu_type == "A3 Ultra"? 0 : 1
   source     = "./modules/embedded/community/modules/compute/gke-topology-scheduler"
   cluster_id = local.gke_cluster_id
   project_id = var.project_id
@@ -290,6 +291,11 @@ module "workload-manager-install" {
   }
   kueue = {
     install = true
+    config_path = "./modules/embedded/modules/management/kubectl-apply/templates/kueue-configuration.yaml.tftpl"
+    config_template_vars = {
+      node_pool_name = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].node_pool_name : null
+      num_gpus       = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].static_gpu_count : null
+    }
     version = "v0.10.0"
   }
   project_id = var.project_id
