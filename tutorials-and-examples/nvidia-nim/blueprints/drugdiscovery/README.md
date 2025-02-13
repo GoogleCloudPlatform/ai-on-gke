@@ -113,7 +113,7 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
      ```
 
-   > [!NOTE]
+   > NOTE:
    > The AlphaFold2 NIM requires downloading a large dataset and related files, and then loading the model for inference. This process can take typically between 1.5 hrs and 2 hours. Please be patient while the deployment completes.
   
    You can check the pods are in `Running` status: `k get pods` should list 3 pods: `alphafold2-`, `diffdock-` and `molmim-`.
@@ -124,9 +124,9 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
    |`diffdock-bb-bb` | 1/1 | Running | 0 |
    |`molmim-cc-cc` | 1/1 | Running | 0 |
 
-8. **Port Forwarding (for local testing):**  The below commands forward the service ports to your local machine for testing. You will need a terminal to run these.
+8. **Port Forwarding (for local testing):**  The below commands forward the service ports to your local machine for testing. You will need a terminal to run these
 
-   > [!NOTE]
+   > NOTE:
    > It is assumed that the local ports 8010-8012 are available. If they are unavailable, do update them below and in the curl statements in following step.
 
     ```bash
@@ -182,7 +182,7 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
 10. **Test end to end:** The test for protein folding, molecule generation and protein docking might take about 5-8 mins to run
 
-   > [!NOTE]
+   > NOTE:
    > If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
 
    ```bash
