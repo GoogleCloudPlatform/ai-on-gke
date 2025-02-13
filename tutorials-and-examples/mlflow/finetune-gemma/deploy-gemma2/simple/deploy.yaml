@@ -21,7 +21,7 @@ spec:
         image: us-docker.pkg.dev/<PROJECT_ID>/gemma-deployment/finetune-gemma-mlflow:1.0.0
         env:
         - name: MODEL_PATH
-          value: "/data/artifacts/<MLFLOW_RUN_ID>/artifacts/model/"
+          value: "/data/<MLFLOW_RUN_ID>/artifacts/model/"
         ports:
         - containerPort: 11434
         volumeMounts:
