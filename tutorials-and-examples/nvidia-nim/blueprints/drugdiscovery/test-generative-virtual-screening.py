@@ -5,26 +5,12 @@ MOLMIM_HOST = "http://localhost:8011"
 DIFFDOCK_HOST = "http://localhost:8012"
 
 
-def check_readiness(service_name, url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for bad status codes
-        print(f"{service_name} readiness check successful at {url}.")
-        return True
-    except requests.exceptions.RequestException as e:
-        print(f"{service_name} readiness check failed: {e}")
-        return False
-
-
-check_readiness("AlphaFold2", f"{AF2_HOST}/v1/health/ready")
-check_readiness("MolMIM", f"{MOLMIM_HOST}/v1/health/ready")
-check_readiness("DiffDock", f"{DIFFDOCK_HOST}/v1/health/ready")
-
-
 ## AlphaFold2 NIM
 protein_sequence = "MVPSAGQLALFALGIVLAACQALENSTSPLSADPPVAAAVVSHFNDCPDSHTQFCFHGTCRFLVQEDKPACVCHSGYVGARCEHADLLAVVAASQKKQAITALVVVSIVALAVLIITCVLIHCCQVRKHCEWCRALICRHEKPSALLKGRTACCHSETVV"
 
-print("Protein folding with AlphaFold2...")  # Progress update
+print(
+    "Protein folding with AlphaFold2 (this will take about 10 minutes)..."
+)  # Progress update
 try:
     af2_response = requests.post(
         f"{AF2_HOST}/protein-structure/alphafold2/predict-structure-from-sequence",
@@ -35,7 +21,7 @@ try:
     )
     af2_response.raise_for_status()  # Check for HTTP errors
     folded_protein = af2_response.json()[0]
-    print("Protein folding successfully.")  # Progress update
+    print("Protein folding successful.")  # Progress update
 
 except requests.exceptions.RequestException as e:
     print(f"AlphaFold2 request failed: {e}")
@@ -71,7 +57,7 @@ try:
 
     generated_ligands = "\n".join([v["smiles"] for v in molmim_response["generated"]])
     print(generated_ligands)
-    print("Molecular generation successfully.")  # Progress update
+    print("Molecular generation successful.")  # Progress update
 
 except requests.exceptions.RequestException as e:
     print(f"MolMIM request failed: {e}")

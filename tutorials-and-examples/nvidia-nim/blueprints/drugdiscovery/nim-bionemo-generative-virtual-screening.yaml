@@ -18,6 +18,12 @@ spec:
         image: nvcr.io/nim/deepmind/alphafold2:2.1.0
         securityContext:
           runAsUser: 0
+        readinessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 6300
+          periodSeconds: 10
         ports:
         - containerPort: 8000
         volumeMounts:
@@ -67,6 +73,12 @@ spec:
         image: nvcr.io/nim/nvidia/molmim:1.0.0
         securityContext:
           runAsUser: 0
+        readinessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 300
+          periodSeconds: 10
         ports:
         - containerPort: 8000
         volumeMounts:
@@ -112,6 +124,12 @@ spec:
         image: nvcr.io/nim/mit/diffdock:2.0
         securityContext:
           runAsUser: 0
+        readinessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 300
+          periodSeconds: 10
         ports:
         - containerPort: 8000
         volumeMounts:

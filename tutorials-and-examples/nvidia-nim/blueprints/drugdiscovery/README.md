@@ -1,6 +1,6 @@
 # Generative Virtual Screening for Drug Discovery on GKE
 
-This guide outlines the steps to deploy NVIDIA's NIM blueprint for [Generative Virtual screening for Drug Discovery](https://build.nvidia.com/nvidia/generative-virtual-screening-for-drug-discovery) on a Google Kubernetes Engine (GKE) cluster. Three NIMs - AlphaFold2, MolMIM & DiffDock are used to demonstrate Protein folding, molecular generation and protein docking.
+This guide outlines the steps to deploy NVIDIA's NIM blueprint for [Generative Virtual screening for Drug Discovery](https://build.nvidia.com/nvidia/generative-virtual-screening-for-drug-discovery) on a Google Kubernetes Engine (GKE) cluster. Three NIMs - AlphaFold2, MolMIM & DiffDock are used to demonstrate Protein folding, Molecular generation and Protein docking.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
     export CLUSTER_NAME="gke-nimbp-genscr"
     export NODE_POOL_NAME="gke-nimbp-genscr-np"
     export ZONE="<GCP zone>" #us-east5-b
-    export MACHINE_TYPE= "<GCP machine type>" #"a2-ultragpu-1g"
+    export MACHINE_TYPE="<GCP machine type>" #"a2-ultragpu-1g"
     export ACCELERATOR_TYPE="<GPU Type>" #"nvidia-a100-80gb"
     export ACCELERATOR_COUNT="1"
     export NODE_POOL_NODES=3
@@ -63,7 +63,7 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
         --accelerator="type=${ACCELERATOR_TYPE},count=${ACCELERATOR_COUNT},gpu-driver-version=LATEST" \
         --placement-type="COMPACT" \
         --disk-type="pd-ssd" \
-        --disk-size="500GB"
+        --disk-size="200GB"
     
     ```
 
@@ -102,29 +102,47 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
     ```bash
 
     k create -f nim-storage-filestore.yaml
-    k create -f nim-bionemo-generative-virtual-screening.yaml 
 
     ```
+  
+    The creation and mounting of filestore might take few minutes.
 
-8. **Port Forwarding (for local testing):**  These commands forward the service ports to your local machine for testing.
+     ```bash
+    
+    k create -f nim-bionemo-generative-virtual-screening.yaml 
 
-> [!NOTE]
-> It is assumed that the local ports 8010-8012 are available. If they are unavailable, do update them below and in the curl statements in following step.
+     ```
+
+   > [!NOTE]
+   > The AlphaFold2 NIM requires downloading a large dataset and related files, and then loading the model for inference. This process can take typically between 1.5 hrs and 2 hours. Please be patient while the deployment completes.
+  
+   You can check the pods are in `Running` status: `k get pods` should list 3 pods: `alphafold2-`, `diffdock-` and `molmim-`.
+
+   | NAME | READY | STATUS | RESTARTS |
+   |---|---|---|---|
+   |`alphafold2-aa-aa` | 1/1 | Running | 0 |
+   |`diffdock-bb-bb` | 1/1 | Running | 0 |
+   |`molmim-cc-cc` | 1/1 | Running | 0 |
+
+8. **Port Forwarding (for local testing):**  The below commands forward the service ports to your local machine for testing. You will need a terminal to run these.
+
+   > [!NOTE]
+   > It is assumed that the local ports 8010-8012 are available. If they are unavailable, do update them below and in the curl statements in following step.
 
     ```bash
 
     POD_BIONEMO_ALPHAFOLD=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^alphafold2')
-    k port-forward pod/$POD_BIONEMO_ALPHAFOLD 8010:8000
+    k port-forward pod/$POD_BIONEMO_ALPHAFOLD 8010:8000 &
 
     POD_BIONEMO_MOLMIM=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^molmim')
-    k port-forward pod/$POD_BIONEMO_MOLMIM 8011:8000
+    k port-forward pod/$POD_BIONEMO_MOLMIM 8011:8000 &
     
     POD_BIONEMO_DIFFDOCK=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^diffdock')
-    k port-forward pod/$POD_BIONEMO_DIFFDOCK 8012:8000
+    k port-forward pod/$POD_BIONEMO_DIFFDOCK 8012:8000 &
   
     ```
 
-9. **Test Deployments:**  Use `curl` or other tools to test the deployed services by sending requests to the forwarded ports. Examples are provided in the `dev.sh` file.
+9. **Test Deployments:**  In a new terminal, Use `curl` or other tools to test the deployed services by sending requests to the forwarded ports. Examples are provided in the `dev.sh` file.
 
     ```bash
   
@@ -159,23 +177,26 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
       "iterations": 10
     }' \
     "http://localhost:8011/generate"
-  
+
     ```
 
-10. **Test end to end:**
+10. **Test end to end:** The test for protein folding, molecule generation and protein docking might take about 5-8 mins to run
 
-> [!NOTE]
-> If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
+   > [!NOTE]
+   > If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
 
-    ```bash
+   ```bash
 
     python3 -m venv venv
+
     source venv/bin/activate
+
     pip3 install requests
     python3 test-generative-virtual-screening.py
+
     deactivate
 
-    ```
+   ```
 
 ## Cleanup
 
