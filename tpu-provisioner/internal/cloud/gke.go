@@ -3,6 +3,7 @@ package cloud
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -397,6 +398,13 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		nodeServiceAccount = sa
 	}
 
+	// placement policy is only valid in GKE for non "1t" shapes
+	placementPolicy := &containerv1beta1.PlacementPolicy{}
+	if !strings.HasSuffix(machineType, "1t") {
+		placementPolicy.TpuTopology = tpuTopo
+		placementPolicy.Type = "COMPACT"
+	}
+
 	return &containerv1beta1.NodePool{
 		Name: name,
 		Config: &containerv1beta1.NodeConfig{
@@ -417,10 +425,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		},
 		InitialNodeCount: int64(nodeCount),
 		Locations:        []string{g.ClusterContext.NodeZone},
-		PlacementPolicy: &containerv1beta1.PlacementPolicy{
-			TpuTopology: tpuTopo,
-			Type:        "COMPACT",
-		},
+		PlacementPolicy:  placementPolicy,
 		Management: &containerv1beta1.NodeManagement{
 			AutoRepair:  true,
 			AutoUpgrade: false,
@@ -501,7 +506,7 @@ func tpuTopologyToNodeCount(accelerator, topo string) (int, error) {
 		product *= x
 	}
 
-	return product / 4, nil
+	return int(math.Ceil(float64(product) / 4)), nil
 }
 
 // tpuMachineType takes an accelerator type (from nodeSelector) and a TPU request
