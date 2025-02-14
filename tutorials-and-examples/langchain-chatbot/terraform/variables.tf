@@ -26,6 +26,7 @@ variable "app_name" {
 variable "k8s_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
+  default = "default"
 }
 
 variable "k8s_app_image" {

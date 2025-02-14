@@ -1,4 +1,4 @@
-# Deploying a Persistent Chatbot on Google Cloud Platform with LangChain, Streamlit and IAP
+# Deploying a Persistent Chatbot on Google Cloud Platform with LangChain, Streamlit, and IAP
 
 - [Introduction](#introduction)
   - [Architecture overview](#architecture-overview)
@@ -87,7 +87,7 @@ kubectl port-forward -n <model-namespace> svc/<model-service-name> 8000:80
 
 Replace `<model-namespace>` and `<model-service-name>` with the appropriate values. This will make the model accessible at `http://localhost:8000`.
 
-Now, build and run the application:
+Now, from within the ai-on-gke/tutorials-and-examples/langchain-chatbot directory, build and run the application:
 
 ```bash
 docker build -t langchain-chatbot app
@@ -107,7 +107,7 @@ If you're getting a 404 error in a chat box, it means the model is not accessibl
 
 This section describes how to create an [autopilot GKE cluster](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) using the Google Cloud CLI. An autopilot cluster is a fully managed Kubernetes cluster that automatically adjusts the resources based on the workload requirements. It is a good choice for running any type of workload as it provides a balance between cost and performance.
 
-If you already have a GKE cluster that you want to use to host the chatbot application, you can skip this section and proceed to the next one. If you previously followed the [Kserve README](../kserve/README.md) to deploy the model, you can use the same GKE cluster to deploy the chatbot application, and you don't need to create a new cluster, so you can skip this section as well.
+If you already have a GKE cluster that you want to use to host the chatbot application, you can skip this section and proceed to [Prepare the Application for Deployment](#prepare-the-application-for-deployment). If you previously followed the [Kserve README](../kserve/README.md) to deploy the model, you can use the same GKE cluster to deploy the chatbot application, and you don't need to create a new cluster, so you can skip this section as well.
 
 The command below creates an autopilot GKE cluster named `langchain-chatbot-demo` in the `us-central1` region. You can adjust the region and cluster name as needed.
 
@@ -140,10 +140,10 @@ gcloud artifacts repositories create langchain-chatbot \
 
 ### 2. Build the Application Using Cloud Build
 
-Edit `cloudbuild.yaml` to reference the newly created repository, then submit the build:
+Use the `cloudbuild.yaml` file to build and push the application image to the "langchain-chatbot" artifact registry repository created in the last step. From within the ai-on-gke/tutorials-and-examples/langchain-chatbot directory run:
 
 ```bash
-gcloud builds submit app
+gcloud builds submit app --substitutions=REPO_NAME="langchain-chatbot"
 ```
 
 ### 3. Enable IAP and create OAuth client
@@ -316,7 +316,7 @@ Now, go to your domain again. You should be prompted to log in with your Google 
 
 Instead of manually following the steps above, you can use Terraform to automate the deployment of the application.
 
-Go to the `terraform` directory, make a copy of `terraform.tfvars.example` and adjust the variables for the Terraform configuration. The minimum required variables are:
+Go to the `terraform` directory, make a copy of `terraform.tfvars.example`, name the copy `terraform.tfvars`, and adjust the variables for the Terraform configuration. The minimum required variables are:
 
 - `project_id` - your GCP project ID
 - `model_base_url` and `model_name` - where to find the model
@@ -329,7 +329,7 @@ Additionally, you can specify the `domain` variable, which is the domain name fo
 
 The complete list of variables and their descriptions can be found in `variables.tf`. You can adjust the values as needed.
 
-Make sure you have configured `google` and `kubernetes` providers either by setting the environment variables or using the `provider` blocks in the configuration.
+Make sure you have configured `google` and `kubernetes` providers either by setting the environment variables or using the `provider` blocks in the `versions.tf` configuration.
 
 Initialize and apply the Terraform configuration to set up the necessary infrastructure.
 
