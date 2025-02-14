@@ -93,7 +93,8 @@ Now, from within the ai-on-gke/tutorials-and-examples/langchain-chatbot director
 docker build -t langchain-chatbot app
 docker run --rm --name chatbot \
    --network langchain-chatbot -p 8501:8501 \
-   -e MODEL_BASE_URL=http://localhost:8000/openai/v1/ \
+   --add-host=host.docker.internal:$(hostname -I | awk '{print $1}') \
+   -e MODEL_BASE_URL=http://host.docker.internal:8000/openai/v1/ \
    -e MODEL_NAME=gemma2 \
    -e DB_URI=postgresql://postgres:superpassword@postgres:5432/postgres \
    langchain-chatbot
