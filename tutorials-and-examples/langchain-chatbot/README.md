@@ -323,7 +323,7 @@ Go to the `terraform` directory, make a copy of `terraform.tfvars.example`, name
 - `model_base_url` and `model_name` - where to find the model
 - `db_network` - the network from which the Cloud SQL instance will be accessible; it should be the same network as the GKE cluster
 - `k8s_namespace` - existing namespace in your GKE cluster where the application will be deployed
-- `k8s_app_image` - the name and tag of the Docker image built previously
+- `k8s_app_image` - the full name of the Docker image in the Artifact Registry (e.g., `us-central1-docker.pkg.dev/my-project/langchain-chatbot/app:latest`)
 - `support_email`, `oauth_client_id`, `oauth_client_secret` and `members_allowlist` - for IAP configuration
 
 Additionally, you can specify the `domain` variable, which is the domain name for the ingress resource and SSL certificate. The default value is `{IP_ADDRESS}.sslip.io`, which uses the `sslip.io` service to map the IP address to a domain name.
