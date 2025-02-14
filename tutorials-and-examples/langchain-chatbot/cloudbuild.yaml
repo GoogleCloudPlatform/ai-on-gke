@@ -17,6 +17,6 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'pull', 'python:3.9-slim' ]
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/vpolikarpov-langchain-chatbot/app:latest', '.' ]
+  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/app:latest', '.' ]
 images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/app:latest'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/app:latest'

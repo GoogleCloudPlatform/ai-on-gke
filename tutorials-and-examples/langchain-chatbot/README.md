@@ -143,7 +143,7 @@ gcloud artifacts repositories create langchain-chatbot \
 Use the `cloudbuild.yaml` file to build and push the application image to the "langchain-chatbot" artifact registry repository created in the last step. From within the ai-on-gke/tutorials-and-examples/langchain-chatbot directory run:
 
 ```bash
-gcloud builds submit app --substitutions=REPO_NAME="langchain-chatbot"
+gcloud builds submit app --substitutions=_REPO_NAME="langchain-chatbot"
 ```
 
 ### 3. Enable IAP and create OAuth client
