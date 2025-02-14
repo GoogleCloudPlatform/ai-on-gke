@@ -34,23 +34,23 @@ kubernetes_namespace = "<KUBERNETES_NAMESPACE>"
 create_service_account = false
 
 #DISABLE IAP
-create_brand = false
+create_brand           = false
 ray_dashboard_add_auth = false
 
 autopilot_cluster = false
 
-gpu_pools = [ {
-    name               = "gpu-pool-l4-2"
-    machine_type       = "a2-highgpu-1g"
-    autoscaling        = true
-    min_count          = 1
-    max_count          = 3
-    disk_size_gb       = 100
-    disk_type          = "pd-balanced"
-    enable_gcfs        = true
-    accelerator_count  = 1
-    accelerator_type   = "nvidia-tesla-a100"
-    gpu_driver_version = "DEFAULT"
-  } ]
+gpu_pools = [{
+  name               = "gpu-pool-l4-2"
+  machine_type       = "a2-highgpu-1g"
+  autoscaling        = true
+  min_count          = 1
+  max_count          = 3
+  disk_size_gb       = 100
+  disk_type          = "pd-balanced"
+  enable_gcfs        = true
+  accelerator_count  = 1
+  accelerator_type   = "nvidia-tesla-a100"
+  gpu_driver_version = "DEFAULT"
+}]
 
 enable_gpu = true
