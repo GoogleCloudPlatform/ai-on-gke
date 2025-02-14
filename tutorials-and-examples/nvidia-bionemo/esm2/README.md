@@ -16,13 +16,17 @@ This repo walks through setting up a Google Cloud GKE environment to pretrain ES
 - **Project:**  A Google Cloud project with billing enabled.
 - **Permissions:**  Sufficient permissions to create GKE clusters and other related resources.
 - **kubectl:** kubectl command-line tool installed and configured.
-- **NVIDIA GPUs:**  NVIDIA A100 80GB(3) GPU preferred in the same region / zone.
+- **NVIDIA GPUs:** One of the below GPUs should work
+  - [NVIDIA L4 GPU (2)](https://cloud.google.com/compute/docs/gpus#l4-gpus)
+  - [NVIDIA A100 80GB (1) GPU](https://cloud.google.com/compute/docs/gpus#a100-gpus)
+  - [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
 
 Clone the repo before proceeding further:
 
   ```bash
 
   git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+ 
   cd ai-on-gke/tutorials-and-examples/nvidia-bionemo/esm2
 
   ```
@@ -49,10 +53,10 @@ Replace "your-project-id" with your actual project ID.
    export NP_CPU_MACHTYPE="e2-standard-2" # e.g., e2-standard-2
 
    export NP_NAME="gpu-bionemo-np"
-   export NP_GPU_MACHTYPE="your-gpu-machine-type"    # e.g., a2-ultragpu-1g
-   export ACCELERATOR_TYPE="your-accelerator-type" # e.g., nvidia-a100-80gb
-   export ACCELERATOR_COUNT="1" # Or higher, as needed
-   export NODE_POOL_NODES=1 # Or higher, as needed
+   export NP_GPU_MACHTYPE="your-gpu-machine-type"    # e.g., g2-standard-24 (L4) or a2-ultragpu-1g (A100 80GB)
+   export ACCELERATOR_TYPE="your-accelerator-type" # e.g., nvidia-l4 (L4) OR nvidia-a100-80gb (A100 80GB)
+   export ACCELERATOR_COUNT="1" # e.g., 2 (L4) OR 1 (A100 80GB)
+   export NODE_POOL_NODES=1
 
    ```
 
@@ -84,6 +88,7 @@ Adjust the zone, machine type, accelerator type, count, and number of nodes as p
     --placement-type="COMPACT" \
     --disk-type="pd-ssd" \
     --disk-size="300GB"
+  
    ```
 
 This creates a node pool specifically for GPU workloads.
@@ -151,7 +156,7 @@ The output should show `phase: Bound` when the instance is ready.
 
    POD_BIONEMO_TRAINING=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^bionemo-training')
 
-   k port-forward pod/$POD_BIONEMO_TRAINING 8000:6006
+   k port-forward pod/$POD_BIONEMO_TRAINING 8000:6006 &
 
    ```
 
@@ -161,7 +166,7 @@ On your local machine: Browse to localhost:8000/#timeseries and see the loss cur
 
 [<img src="images/tensorboard-results.png" width="750"/>](HighLevelArch)
 
-11. One the logs are viewed, you could delete the pretraining job
+11. Upon viewing logs, you could delete the pretraining job
 
     ```bash
 
@@ -173,7 +178,7 @@ On your local machine: Browse to localhost:8000/#timeseries and see the loss cur
 
 In this step you will be fine-tuning and subsequently inferencing using the generated .pt file.
 
-12. Start the fine-tuning job. The results will be written to a .pt file. The location of the file will be displayed and it can be copied to the mounted filestore.
+12. Start the fine-tuning job. The results will be written to a .pt file. The location of the file will be displayed and copied to the mounted filestore.
 
     ```bash
 
@@ -198,7 +203,7 @@ In this step you will be fine-tuning and subsequently inferencing using the gene
 
     Inference completed successfully.
     Inference result: tensor([...], dtype=torch.bfloat16)
-    Result .pt file copied to /mnt/data/esm2/resultspredictions__rank_0.pt
+    Result .pt file copied to /mnt/data/esm2/results/predictions__rank_0.pt
 
     ```
 
