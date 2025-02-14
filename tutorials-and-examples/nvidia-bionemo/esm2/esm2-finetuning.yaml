@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bionemo-finetuning
+spec:
+  template:
+    spec:
+      containers:
+      - name: finetuning
+        image: nvcr.io/nvidia/clara/bionemo-framework:2.3
+        command: ["/bin/bash", "-c"]
+        args:
+        - |-
+          nvidia-smi
+
+          DATA_DIR=/mnt/data
+          download_bionemo_data esm2/650m:2.0 --source ngc
+
+          sleep infinity
+          
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: fileserver
+          mountPath: /mnt/data
+      volumes:
+      - name: fileserver
+        persistentVolumeClaim:
+          claimName: fileserver
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
