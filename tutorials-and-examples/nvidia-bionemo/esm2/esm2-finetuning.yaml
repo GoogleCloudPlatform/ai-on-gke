@@ -7,8 +7,7 @@ spec:
     spec:
       containers:
       - name: finetuning
-        # image: nvcr.io/nvidia/clara/bionemo-framework:2.1
-        image: nvcr.io/nvidia/clara/bionemo-framework:nightly
+        image: nvcr.io/nvidia/clara/bionemo-framework:2.3
         command: ["/bin/bash", "-c"]
         args:
         - |-

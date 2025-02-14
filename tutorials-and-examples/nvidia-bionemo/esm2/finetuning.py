@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-import sys
 import os
-import shutil
 import pandas as pd
 import subprocess
 import torch
-
+import re
 import warnings
+import shutil
 
 from bionemo.core.data.load import load
 
@@ -27,76 +26,19 @@ print(checkpoint_path)
 
 print("Entering regression ...")
 
-artificial_sequence_data = [
-    "TLILGWSDKLGSLLNQLAIANESLGGGTIAVMAERDKEDMELDIGKMEFDFKGTSVI",
-    "LYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
-    "GRFNVWLGGNESKIRQVLKAVKEIGVSPTLFAVYEKN",
-    "DELTALGGLLHDIGKPVQRAGLYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
-    "KLGSLLNQLAIANESLGGGTIAVMAERDKEDMELDIGKMEFDFKGTSVI",
-    "LFGAIGNAISAIHGQSAVEELVDAFVGGARISSAFPYSGDTYYLPKP",
-    "LGGLLHDIGKPVQRAGLYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
-    "LYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
-    "ISAIHGQSAVEELVDAFVGGARISSAFPYSGDTYYLPKP",
-    "SGSKASSDSQDANQCCTSCEDNAPATSYCVECSEPLCETCVEAHQRVKYTKDHTVRSTGPAKT",
-]
 
-data = [(seq, len(seq) / 100.0) for seq in artificial_sequence_data]
-
-# Save the DataFrame to a CSV file
-df = pd.DataFrame(data, columns=["sequences", "labels"])
-data_path = os.path.join(work_dir, "regression_data.csv")
-df.to_csv(data_path, index=False)
-
-
-def run_finetune_esm2(checkpoint_path, data_path, work_dir):
+def run_finetune_esm2():
     """Runs the finetune_esm2 command using subprocess."""
 
-    command = [
-        "finetune_esm2",  # Note: this must be in your system's PATH
-        "--restore-from-checkpoint-path",
-        checkpoint_path,
-        "--train-data-path",
-        data_path,
-        "--valid-data-path",
-        data_path,
-        "--config-class",
-        "ESM2FineTuneSeqConfig",
-        "--dataset-class",
-        "InMemorySingleValueDataset",
-        "--task-type",
-        "regression",
-        "--experiment-name",
-        "regression",
-        "--num-steps",
-        "50",
-        "--num-gpus",
-        "1",
-        "--val-check-interval",
-        "10",
-        "--log-every-n-steps",
-        "10",
-        "--encoder-frozen",
-        "--lr",
-        "5e-3",
-        "--lr-multiplier",
-        "1e2",
-        "--scale-lr-layer",
-        "regression_head",
-        "--result-dir",
-        work_dir,
-        "--micro-batch-size",
-        "2",
-        "--num-gpus",
-        "1",  # Repeated – you might want to remove one
-        "--precision",
-        "bf16-mixed",
-    ]
+    command = ["python", "-m", "bionemo.esm2.model.finetune.train"]
 
     try:
-        result = subprocess.run(
-            command, check=True, capture_output=True, text=True
-        )  # Capture stdout/stderr
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
         print("finetune_esm2 output:\n", result.stdout)
+        match = re.search(r"checkpoint stored at (.*)", result.stdout)
+        checkpoint_path = match.group(1).strip()
+        print(f"Checkpoint path: {checkpoint_path}")
+        return checkpoint_path
 
     except subprocess.CalledProcessError as e:
         print(f"finetune_esm2 failed with return code: {e.returncode}")
@@ -107,32 +49,44 @@ def run_finetune_esm2(checkpoint_path, data_path, work_dir):
     return True
 
 
-def run_infer_esm2(checkpoint_path, data_path, results_path):
+def run_infer_esm2(work_dir, checkpoint_path, results_path):
     """Runs the infer_esm2 command using subprocess."""
 
+    artificial_sequence_data = [
+        "TLILGWSDKLGSLLNQLAIANESLGGGTIAVMAERDKEDMELDIGKMEFDFKGTSVI",
+        "LYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
+        "GRFNVWLGGNESKIRQVLKAVKEIGVSPTLFAVYEKN",
+        "DELTALGGLLHDIGKPVQRAGLYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
+        "KLGSLLNQLAIANESLGGGTIAVMAERDKEDMELDIGKMEFDFKGTSVI",
+        "LFGAIGNAISAIHGQSAVEELVDAFVGGARISSAFPYSGDTYYLPKP",
+        "LGGLLHDIGKPVQRAGLYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
+        "LYSGDHSTQGARFLRDLAENTGRAEYELLSLF",
+        "ISAIHGQSAVEELVDAFVGGARISSAFPYSGDTYYLPKP",
+        "SGSKASSDSQDANQCCTSCEDNAPATSYCVECSEPLCETCVEAHQRVKYTKDHTVRSTGPAKT",
+    ]
+
+    df = pd.DataFrame(artificial_sequence_data, columns=["sequences"])
+
+    # Save the DataFrame to a CSV file
+    data_path = os.path.join(work_dir, "sequences.csv")
+    df.to_csv(data_path, index=False)
+
     command = [
-        "infer_esm2",  # Must be in your system's PATH
+        "infer_esm2",
         "--checkpoint-path",
         checkpoint_path,
-        "--config-class",
-        "ESM2FineTuneSeqConfig",
         "--data-path",
         data_path,
         "--results-path",
         results_path,
-        "--micro-batch-size",
-        "3",
-        "--num-gpus",
-        "1",
-        "--precision",
-        "bf16-mixed",
-        "--include-embeddings",
-        "--include-input-ids",
+        "--config-class",
+        "ESM2FineTuneSeqConfig",
     ]
 
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         print("infer_esm2 output:\n", result.stdout)
+        return True
 
     except subprocess.CalledProcessError as e:
         print(f"infer_esm2 failed with return code: {e.returncode}")
@@ -142,30 +96,26 @@ def run_infer_esm2(checkpoint_path, data_path, results_path):
     return True
 
 
-if run_finetune_esm2(checkpoint_path, data_path, work_dir):
+checkpoint_path = run_finetune_esm2()
+if checkpoint_path is not None:
     print("finetune_esm2 completed successfully.")
+
+    results_path = work_dir
+
+    print("Starting Inference ...")
+    if run_infer_esm2(work_dir, checkpoint_path, results_path):
+        print("Inference completed successfully.")
+        results_path = f"{results_path}/predictions__rank_0.pt"
+        results = torch.load(results_path)
+        print(f"Inference result: {results["regression_output"]}")
+
+        filestore_path = "/mnt/data/esm2/results"
+        os.makedirs(filestore_path, exist_ok=True)
+        shutil.copy2(results_path, filestore_path)
+        print(f"Result .pt file copied to {filestore_path}predictions__rank_0.pt")
+
+    else:
+        print("Inference failed.")
+
 else:
-    # Handle the error condition if the command failed
-    pass  # Or take other appropriate action
-
-# Create a DataFrame
-df = pd.DataFrame(artificial_sequence_data, columns=["sequences"])
-
-# Save the DataFrame to a CSV file
-data_path = os.path.join(work_dir, "sequences.csv")
-df.to_csv(data_path, index=False)
-
-checkpoint_path = f"{work_dir}/regression/dev/checkpoints/checkpoint-step=49-consumed_samples=100.0-last"
-results_path = f"{work_dir}/token_level_classification/infer/"
-
-if run_infer_esm2(checkpoint_path, data_path, results_path):
-    print("infer_esm2 completed successfully.")
-else:
-    print("infer_esm2 failed.")  # Or handle the error as needed
-
-
-results = torch.load(f"{results_path}predictions__rank_0.pt")
-
-for key, val in results.items():
-    if val is not None:
-        print(f"{key}\t{val.shape}")
+    print("finetune_esm2 failed.")
