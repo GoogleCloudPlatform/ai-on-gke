@@ -1,0 +1,181 @@
+{{- if eq var.gpuType "A3 Ultra" }}
+{{ $timestamp := now | unixEpoch }}
+
+{{- $root := . -}}
+
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: nccl-test
+spec:
+  ttlSecondsAfterFinished: 1200
+  suspend: False
+  network:
+    enableDNSHostnames: true
+  replicatedJobs:
+    - name: nccl-test
+      template:
+        spec:
+          parallelism: 2
+          completions: 2
+          template:
+            metadata:
+              annotations:
+                "helm.sh/hook": post-install
+                "helm.sh/hook-weight": "1" 
+                "helm.sh/hook-delete-policy": hook-succeeded
+                gke-gcsfuse/volumes: "true"
+                networking.gke.io/default-interface: 'eth0'
+                networking.gke.io/interfaces: |
+                  [
+                    {"interfaceName":"eth0","network":"default"},
+                    {"interfaceName":"eth1","network":"vpc1"},
+                    {"interfaceName":"eth2","network":"vpc2"},
+                    {"interfaceName":"eth3","network":"vpc3"},
+                    {"interfaceName":"eth4","network":"vpc4"},
+                    {"interfaceName":"eth5","network":"vpc5"},
+                    {"interfaceName":"eth6","network":"vpc6"},
+                    {"interfaceName":"eth7","network":"vpc7"},
+                    {"interfaceName":"eth8","network":"vpc8"}
+                  ]
+            spec:
+              activeDeadlineSeconds: 3600
+              restartPolicy: Never
+              nodeSelector:
+                cloud.google.com/gke-accelerator: nvidia-h200-141gb
+              tolerations:
+              - key: cloud.google.com/gke-queued
+                effect: NoSchedule
+                value: "true"
+              - key: "nvidia.com/gpu"
+                operator: "Exists"
+                effect: "NoSchedule"
+              setHostnameAsFQDN: true
+              volumes:
+              - name: gcs-fuse
+                csi:
+                  driver: gcsfuse.csi.storage.gke.io
+                  volumeAttributes:
+                    bucketName: "{{ $root.Values.workload.gcsBucketForDataCataPath }}"
+              - name: gib
+                hostPath:
+                  path: /home/kubernetes/bin/gib
+              - name: nvidia
+                hostPath:
+                  path: /home/kubernetes/bin/nvidia
+              - name: lib64
+                hostPath:
+                  path: /lib64
+              - name: shared-memory
+                emptyDir:
+                  medium: "Memory"
+                  sizeLimit: 250Gi
+              schedulingGates:
+              - name: "gke.io/topology-aware-auto-nccl-test"
+              containers:
+              - name: nccl-test
+                stdin: true
+                tty: true
+                image: us-docker.pkg.dev/gce-ai-infra/gpudirect-gib/nccl-plugin-gib-diagnostic:v1.0.3
+                securityContext:
+                  privileged: true
+                env:
+                - name: JOB_TIMESTAMP
+                  value: "{{ $timestamp }}"
+                - name: BENCHMARK
+                  value: all_gather_perf
+                - name: MY_NODE_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+                - name: RUN_ITERS
+                  value: "20"
+                - name: OMPI_ALLOW_RUN_AS_ROOT
+                  value: "1"
+                - name: OMPI_ALLOW_RUN_AS_ROOT_CONFIRM
+                  value: "1"
+                - name: N_NODES
+                  value: "2"
+                - name: LD_LIBRARY_PATH
+                  value: /usr/local/nvidia/lib64
+                command:
+                - bash
+                - -c
+                - |
+
+                  set -x
+
+                  echo "Starting workload container on ${MY_NODE_NAME} for $N_NODES benchmark"
+                  # # Install ping
+                  apt update -y
+                  apt install -y iputils-ping
+
+                  # Start sshd
+                  /scripts/container_entry.sh daemon &
+
+                  # Get helper variables to form all hostnames
+                  export POSTFIX=$(hostname | cut -d . -f 2-)
+                  export WORKERS_BASENAME=$(hostname | cut -d . -f 1 | rev | cut -d - -f 2- | rev )
+                  export NODE_RANK=$JOB_COMPLETION_INDEX
+
+                  # For every worker, wait till online and add to hostfile
+                  for i in `seq 0 $(($N_NODES-1))`; do
+                    OTHER=${WORKERS_BASENAME}-${i}.${POSTFIX}
+                    until ssh -p 222 -o StrictHostKeyChecking=no $OTHER hostname; do
+                      echo Waiting for ${OTHER}...
+                      sleep 10
+                    done
+                    echo ${OTHER} port=222 slots=8 | tee -a /tmp/hostfile;
+                  done
+
+                  cat /tmp/hostfile
+
+                  # Launch from head node
+                  if [[ "${NODE_RANK}" -eq "0" ]]; then
+
+                      # World Level = 0x0, Rail Aligned = 0x7
+                      export NCCL_TESTS_SPLIT_MASK="0x0";
+
+                      # Force use of libnccl-gib
+                      export NCCL_NET=gIB
+
+                      # Set all the correct libnccl-gib environment variables
+                      source /usr/local/gib/scripts/set_nccl_env.sh
+
+                      # Get all relevant NCCL / env vars to pass to all workers
+                      ENV_VARS=$(echo ${!NCCL*} ${!OMPI*} LD_LIBRARY_PATH PATH | sed 's/ / -x /g')
+
+                      mpirun --hostfile /tmp/hostfile \
+                        -x $ENV_VARS  \
+                        -mca plm_rsh_no_tree_spawn 1 \
+                        --mca orte_keep_fqdn_hostnames 1 \
+                        --mca btl self,tcp \
+                        --mca btl_tcp_if_include eth0 \
+                        --bind-to none \
+                        --mca plm_rsh_agent "ssh -q -o LogLevel=ERROR -o StrictHostKeyChecking=no -p 222" \
+                        /third_party/nccl-tests/build/${BENCHMARK} -b 1K -e 8G -f 2 -g 1 -w 5 --iters ${RUN_ITERS} -c 1 2>&1 | \
+                          tee "/gcs/${BENCHMARK}_nh${N_NODES}_i${RUN_ITERS}_t${JOB_TIMESTAMP}.txt"
+
+                  else
+                      while ping -c 1 ${WORKERS_BASENAME}-0.${POSTFIX}; do
+                      sleep 5
+                  done
+                  fi
+
+                  exit 0
+                volumeMounts:
+                - name: nvidia
+                  mountPath: /usr/local/nvidia
+                - name: gib
+                  mountPath: /usr/local/gib
+                - name: shared-memory
+                  mountPath: /dev/shm
+                - name: gcs-fuse
+                  mountPath: /gcs
+                resources:
+                  limits:
+                    nvidia.com/gpu: 8
+                  requests:
+                    nvidia.com/gpu: 8
+              restartPolicy: Never
+{{- end }}
