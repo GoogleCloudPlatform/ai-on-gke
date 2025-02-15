@@ -1,3 +1,4 @@
+{{- if eq var.gpuType "A3 Mega" }}
 {{ $timestamp := now | unixEpoch }}
 
 {{- $root := . -}}
@@ -207,4 +208,4 @@ spec:
                       nvidia.com/gpu: 8
   failurePolicy:
     maxRestarts: 0
-
+{{- end }}
