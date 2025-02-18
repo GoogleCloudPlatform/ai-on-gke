@@ -59,3 +59,14 @@ output "service_account" {
 output "private_cluster" {
   value = var.private_cluster
 }
+
+
+output "service_account" {
+  value = var.create_cluster && var.autopilot_cluster && var.private_cluster ? module.private-gke-autopilot-cluster[0].cluster.service_account : (
+    var.create_cluster && !var.autopilot_cluster && var.private_cluster ? module.private-gke-standard-cluster[0].cluster.service_account : (
+      var.create_cluster && var.autopilot_cluster && !var.private_cluster ? module.public-gke-autopilot-cluster[0].cluster.service_account : (
+        var.create_cluster && !var.autopilot_cluster && !var.private_cluster ? module.public-gke-standard-cluster[0].cluster.service_account :
+  "")))
+  sensitive  = true
+  depends_on = [module.private-gke-autopilot-cluster, module.private-gke-standard-cluster, module.public-gke-autopilot-cluster, module.public-gke-standard-cluster]
+}
