@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bionemo-finetuning-config
+  namespace: bionemo-training
+data:
+  training-params: |
+    --precision=bf16-mixed
+    --num-gpus 1
+    --micro-batch-size 2
+    --num-steps 50
+    --val-check-interval 10
+    --log-every-n-steps 10
+    --encoder-frozen
+    --lr 5e-3
+    --lr-multiplier 1e2
+    --scale-lr-layer regression_head

@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bionemo-finetuning
+  namespace: bionemo-training
+spec:
+  template:
+    spec:
+      containers:
+      - name: finetuning
+        image: nvcr.io/nvidia/clara/bionemo-framework:2.1
+        command: ["/bin/bash"]
+        args: ["/scripts/start.sh"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: bionemo-storage
+          mountPath: /workspace/bionemo2
+          subPath: finetuning
+        - name: bionemo-storage
+          mountPath: /workspace/bionemo2/results
+          subPath: tensorboard-logs
+        - name: config-volume
+          mountPath: /config
+        - name: script-volume
+          mountPath: /scripts
+        - name: finetuning-script
+          mountPath: /workspace/scripts
+      volumes:
+      - name: bionemo-storage
+        persistentVolumeClaim:
+          claimName: bionemo-filestore
+      - name: config-volume
+        configMap:
+          name: bionemo-finetuning-config
+      - name: script-volume
+        configMap:
+          name: bionemo-finetuning-startup
+          defaultMode: 0777
+      - name: finetuning-script
+        configMap:
+          name: finetuning-script
+          defaultMode: 0777
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"

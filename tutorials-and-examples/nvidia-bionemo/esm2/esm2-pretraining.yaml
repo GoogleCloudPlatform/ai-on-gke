@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: training
-        image: nvcr.io/nvidia/clara/bionemo-framework:2.3
+        image: nvcr.io/nvidia/clara/bionemo-framework:2.1
         command: ["/bin/bash", "-c"]
         args:
         - |-
@@ -22,7 +22,7 @@ spec:
 
           /sbin/ldconfig
 
-          train_esm2 \
+          python scripts/protein/esm2/esm2_pretrain.py \
             --train-cluster-path ${DATA_DIR}/2024_03_sanity/train_clusters_sanity.parquet \
             --train-database-path ${DATA_DIR}/2024_03_sanity/train_sanity.db \
             --valid-cluster-path ${DATA_DIR}/2024_03_sanity/valid_clusters.parquet \
@@ -45,7 +45,6 @@ spec:
           tensorboard --logdir /workspace/bionemo2/results/lightning_logs &
 
           sleep infinity
-
         resources:
           limits:
             nvidia.com/gpu: 1

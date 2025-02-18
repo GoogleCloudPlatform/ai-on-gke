@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bionemo-finetuning-e2e-test
+spec:
+  template:
+    spec:
+      containers:
+      - name: e2e-test
+        image: nvcr.io/nvidia/clara/bionemo-framework:2.1
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          # Run minimal finetuning job
+          python /workspace/bionemo2/finetuning.py \
+            --num-steps 10 \
+            --val-check-interval 5 \
+            --micro-batch-size 1
+          
+          # Check for training artifacts
+          if [ ! -d "/workspace/bionemo2/results/lightning_logs" ]; then
+            echo "Training artifacts not found"
+            exit 1
+          fi
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: bionemo-storage
+          mountPath: /workspace/bionemo2
+          subPath: finetuning
+      restartPolicy: Never
