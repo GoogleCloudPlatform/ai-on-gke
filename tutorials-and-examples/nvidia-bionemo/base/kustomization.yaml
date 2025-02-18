@@ -5,6 +5,6 @@ resources:
 - namespace.yaml
 - storage/storage-class.yaml
 - storage/pvcs.yaml
-- monitoring/tensorboard-deployment.yaml
-- monitoring/tensorboard-service.yaml
-- monitoring/rbac.yaml
+# - monitoring/tensorboard-deployment.yaml
+# - monitoring/tensorboard-service.yaml
+# - monitoring/rbac.yaml

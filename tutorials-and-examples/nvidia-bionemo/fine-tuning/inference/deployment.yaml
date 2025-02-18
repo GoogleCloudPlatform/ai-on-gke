@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: bionemo-training
+  name: esm2-inference
+  labels:
+    app: esm2-inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esm2-inference
+  template:
+    metadata:
+      labels:
+        app: esm2-inference
+    spec:
+      serviceAccountName: esm2-inference-sa
+      containers:
+      - name: inference
+        image: us-central1-docker.pkg.dev/qwiklabs-asl-04-3b17716b7f5f/qwiklabs-asl-04-3b17716b7f5f/esm2-inference:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: MODEL_PATH
+          value: "/app/model"
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: "4Gi"
+            cpu: "2"
+          requests:
+            nvidia.com/gpu: 1
+            memory: "2Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/model
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: bionemo-filestore
+          readOnly: true
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: esm2-inference
+spec:
+  selector:
+    app: esm2-inference
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  type: ClusterIP

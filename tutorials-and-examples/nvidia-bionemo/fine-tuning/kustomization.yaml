@@ -1,12 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: bionemo-training  
 resources:
 - ../base
-- configmaps/training-config.yaml
-- configmaps/startup-script.yaml
+- inference/deployment.yaml
 - job.yaml
 
 configMapGenerator:
 - name: finetuning-script
+  behavior: create  
   files:
   - finetuning.py
