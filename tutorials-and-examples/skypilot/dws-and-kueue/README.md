@@ -123,8 +123,6 @@ pip install -U "skypilot[kubernetes]"
 # Verify the installation
 sky -v
 ```
-Note: If using Autopilot GKE cluster please install nightly version of skypilot `skypilot-nightly[kubernetes]`
-
 3. Find the context names
 ```bash
 kubectl config get-contexts
@@ -435,8 +433,6 @@ When running `sky serve` on Autopilot cluster GKE Warden rejects the pods
 ```
 "kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"admission webhook \"warden-validating.common-webhooks.networking.gke.io\" denied the request: GKE Warden rejected the request because it violates one or more constraints.\nViolations details: {\"[denied by autogke-gpu-limitation]\":[\"The toleration with key 'nvidia.com/gpu' and operator 'Exists' cannot be specified if the pod does not request to use GPU in Autopilot.\"
 ```
-Update SkyPilot to a nightly release using 
-```
-pip install -U "skypilot-nightly[kubernetes]"
-```
+Update SkyPilot to version 0.8.0 and above. 
+
 [More Details](https://github.com/skypilot-org/skypilot/issues/4542)
