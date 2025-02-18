@@ -19,6 +19,7 @@ This guide will show how to install Flyte on GKE using Helm. Deployment will use
    * [gcloud](https://cloud.google.com/sdk/docs/install)
    * [kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
    * [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+   * [helm](https://helm.sh/docs/intro/install/)
 
 ## Architecture overview
 
