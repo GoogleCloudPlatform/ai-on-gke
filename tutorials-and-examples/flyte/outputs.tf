@@ -10,7 +10,7 @@ output "gke_cluster_location" {
 
 output "project_id" {
   value       = var.project_id
-  description = "GKE cluster location"
+  description = "GCP project ID"
 }
 
 output "bucket_name" {
@@ -25,16 +25,16 @@ output "service_account" {
 
 output "cloudsql_ip" {
   value       = google_sql_database_instance.flyte_storage.private_ip_address
-  description = "Ip of cloudsql"
+  description = "IP address of the Cloud SQL instance"
 }
 
 output "cloudsql_user" {
   value       = var.cloudsql_user
-  description = "Username for the cloudsql database"
+  description = "Name of the user in the CloudSQL instance"
 }
 
 output "cloudsql_password" {
   sensitive   = true
   value       = random_password.db_password.result
-  description = "Password for the Cloud SQL database"
+  description = "Password for the user in the CloudSQL instance"
 }
