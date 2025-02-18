@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/${_IMAGE_REPO_NAME}/llamaindex-rag-demo:latest', '.' ]
+images:
+- 'us-docker.pkg.dev/$PROJECT_ID/${_IMAGE_REPO_NAME}/llamaindex-rag-demo:latest'
