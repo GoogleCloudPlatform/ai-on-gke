@@ -28,6 +28,11 @@ output "cloudsql_ip" {
   description = "IP address of the Cloud SQL instance"
 }
 
+output "cloudsql_database" {
+  value       = google_sql_database.flyte_storage.name
+  description = "Name of the database in the CloudSQL instance"
+}
+
 output "cloudsql_user" {
   value       = var.cloudsql_user
   description = "Name of the user in the CloudSQL instance"
