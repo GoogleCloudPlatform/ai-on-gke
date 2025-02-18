@@ -89,7 +89,7 @@ resource "kubernetes_deployment" "inference_deployment" {
           }
         }
         container {
-          image = "us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310"
+          image = "ghcr.io/huggingface/text-generation-inference:1.4.3"
           name  = "mistral-7b-instruct"
 
           port {
@@ -130,7 +130,9 @@ resource "kubernetes_deployment" "inference_deployment" {
             mount_path = "/dev/shm"
             name       = "dshm"
           }
-
+          # mountPath is set to /data as it's the path where the HF_HOME environment
+          # variable points to in the TGI container image i.e. where the downloaded model from the Hub will be
+          # stored
           volume_mount {
             mount_path = "/data"
             name       = "data"

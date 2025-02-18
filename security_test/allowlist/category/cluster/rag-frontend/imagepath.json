@@ -1,0 +1,34 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "image": "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:ec0e7b1ce6d0f9570957dd7fb3dcf0a16259cba915570846b356a17d6e377c59",
+      "containerName": "rag-frontend"
+    },
+    "message": "container \"rag-frontend\" in Deployment \"rag-frontend\" has an image \"us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:ec0e7b1ce6d0f9570957dd7fb3dcf0a16259cba915570846b356a17d6e377c59\" with an invalid path. See go/gke-shipshape#imagepath for valid image paths.",
+    "policyName": "imagepath",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "rag-frontend",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "cloud-sql-proxy",
+      "image": "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0"
+    },
+    "message": "container \"cloud-sql-proxy\" in Deployment \"rag-frontend\" has an image \"gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0\" with an invalid path. See go/gke-shipshape#imagepath for valid image paths.",
+    "policyName": "imagepath",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "rag-frontend",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

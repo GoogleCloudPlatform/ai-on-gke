@@ -3,6 +3,7 @@ package cloud
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,6 +43,7 @@ const (
 	V4PodSliceAccelerator  = "tpu-v4-podslice"
 	V5ePodSliceAccelerator = "tpu-v5-lite-podslice"
 	V5pPodSliceAccelerator = "tpu-v5p-slice"
+	V6eSliceAccelerator    = "tpu-v6e-slice"
 
 	// Resource type labels
 	GoogleTPUResource = "google.com/tpu"
@@ -323,11 +325,18 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 
 	if !g.ClusterContext.ForceOnDemand {
 		if resName, ok := p.Spec.NodeSelector["cloud.google.com/reservation-name"]; ok {
+			var resVal string
+			resProj, ok := p.Spec.NodeSelector["cloud.google.com/reservation-project"]
+			if ok {
+				resVal = fmt.Sprintf("projects/%s/reservations/%s", resProj, resName)
+			} else {
+				resVal = resName
+			}
 			reservation = &containerv1beta1.ReservationAffinity{
 				ConsumeReservationType: "SPECIFIC_RESERVATION",
 				Key:                    "compute.googleapis.com/reservation-name",
 				Values: []string{
-					resName,
+					resVal,
 				},
 			}
 		}
@@ -355,10 +364,51 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		}
 	}
 
+	var networkConfig *containerv1beta1.NodeNetworkConfig
+	var additionalNodeNetworks []*containerv1beta1.AdditionalNodeNetworkConfig
+	// additional-node-networks: "vpc1:subnet1, vpc2:subnet2"
+	additionalNodeNetworksCSV := g.ClusterContext.NodeAdditionalNetworks
+	if getAnnotation(p, AnnotationAdditionalNodeNetworks) != "" {
+		additionalNodeNetworksCSV = getAnnotation(p, AnnotationAdditionalNodeNetworks)
+	}
+	for _, pair := range strings.Split(additionalNodeNetworksCSV, ",") {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+
+		netAndSubnet := strings.SplitN(pair, ":", 2)
+		if len(netAndSubnet) != 2 {
+			return nil, fmt.Errorf("invalid additional network annotation: %v", pair)
+		}
+
+		additionalNodeNetworks = append(additionalNodeNetworks, &containerv1beta1.AdditionalNodeNetworkConfig{
+			Network:    strings.TrimSpace(netAndSubnet[0]),
+			Subnetwork: strings.TrimSpace(netAndSubnet[1]),
+		})
+	}
+	if len(additionalNodeNetworks) > 0 {
+		networkConfig = &containerv1beta1.NodeNetworkConfig{
+			AdditionalNodeNetworkConfigs: additionalNodeNetworks,
+		}
+	}
+
+	nodeServiceAccount := g.ClusterContext.NodeServiceAccount
+	if sa, ok := p.Annotations[AnnotationNodeServiceAccount]; ok {
+		nodeServiceAccount = sa
+	}
+
+	// placement policy is only valid in GKE for non "1t" shapes
+	placementPolicy := &containerv1beta1.PlacementPolicy{}
+	if !strings.HasSuffix(machineType, "1t") {
+		placementPolicy.TpuTopology = tpuTopo
+		placementPolicy.Type = "COMPACT"
+	}
+
 	return &containerv1beta1.NodePool{
 		Name: name,
 		Config: &containerv1beta1.NodeConfig{
-			ServiceAccount: g.ClusterContext.NodeServiceAccount,
+			ServiceAccount: nodeServiceAccount,
 			ShieldedInstanceConfig: &containerv1beta1.ShieldedInstanceConfig{
 				EnableIntegrityMonitoring: true,
 				EnableSecureBoot:          g.ClusterContext.NodeSecureBoot,
@@ -375,10 +425,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		},
 		InitialNodeCount: int64(nodeCount),
 		Locations:        []string{g.ClusterContext.NodeZone},
-		PlacementPolicy: &containerv1beta1.PlacementPolicy{
-			TpuTopology: tpuTopo,
-			Type:        "COMPACT",
-		},
+		PlacementPolicy:  placementPolicy,
 		Management: &containerv1beta1.NodeManagement{
 			AutoRepair:  true,
 			AutoUpgrade: false,
@@ -387,6 +434,7 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 			MaxSurge: 1,
 		},
 		MaxPodsConstraint: &containerv1beta1.MaxPodsConstraint{MaxPodsPerNode: maxPodsPerNode},
+		NetworkConfig:     networkConfig,
 	}, nil
 }
 
@@ -438,7 +486,7 @@ func tpuTopologyToNodeCount(accelerator, topo string) (int, error) {
 	switch accelerator {
 	case V4PodSliceAccelerator, V5pPodSliceAccelerator:
 		expectedDims = 3
-	case V5ePodSliceAccelerator:
+	case V5ePodSliceAccelerator, V6eSliceAccelerator:
 		expectedDims = 2
 	default:
 		return 0, fmt.Errorf("invalid accelerator: %v", accelerator)
@@ -458,7 +506,7 @@ func tpuTopologyToNodeCount(accelerator, topo string) (int, error) {
 		product *= x
 	}
 
-	return product / 4, nil
+	return int(math.Ceil(float64(product) / 4)), nil
 }
 
 // tpuMachineType takes an accelerator type (from nodeSelector) and a TPU request
@@ -475,6 +523,8 @@ func tpuMachineType(accel string, tpuRequest int) (string, error) {
 		return fmt.Sprintf("ct5lp-hightpu-%vt", tpuRequest), nil
 	case V5pPodSliceAccelerator: // v5p
 		return fmt.Sprintf("ct5p-hightpu-%vt", tpuRequest), nil
+	case V6eSliceAccelerator: // v6e
+		return fmt.Sprintf("ct6e-standard-%vt", tpuRequest), nil
 	}
 
 	return "", fmt.Errorf("invalid accelerator: %v", accel)

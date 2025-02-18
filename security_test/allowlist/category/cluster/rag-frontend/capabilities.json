@@ -1,0 +1,32 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "rag-frontend"
+    },
+    "message": "container \"rag-frontend\" in Deployment \"rag-frontend\" does not drop all capabilities in its securityContext. See go/gke-shipshape#capabilities for more details",
+    "policyName": "capabilities",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "rag-frontend",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "cloud-sql-proxy"
+    },
+    "message": "container \"cloud-sql-proxy\" in Deployment \"rag-frontend\" does not drop all capabilities in its securityContext. See go/gke-shipshape#capabilities for more details",
+    "policyName": "capabilities",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "rag-frontend",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

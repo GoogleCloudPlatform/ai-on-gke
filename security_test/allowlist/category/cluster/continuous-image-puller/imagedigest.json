@@ -1,0 +1,34 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "image-pull-singleuser",
+      "image": "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:sample-public-image-v1.1-rag"
+    },
+    "message": "container \"image-pull-singleuser\" in DaemonSet \"continuous-image-puller\" has an image \"us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:sample-public-image-v1.1-rag\" with no digest; valid image format: image[:tag]@sha256:\u003cdigest\u003e",
+    "policyName": "imagedigest",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "DaemonSet",
+      "name": "continuous-image-puller",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "pause",
+      "image": "registry.k8s.io/pause:3.9"
+    },
+    "message": "container \"pause\" in DaemonSet \"continuous-image-puller\" has an image \"registry.k8s.io/pause:3.9\" with no digest; valid image format: image[:tag]@sha256:\u003cdigest\u003e",
+    "policyName": "imagedigest",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "DaemonSet",
+      "name": "continuous-image-puller",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

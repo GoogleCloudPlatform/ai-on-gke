@@ -27,7 +27,6 @@ from transformers import PreTrainedTokenizerBase
 from google.protobuf.timestamp_pb2 import Timestamp
 
 MIN_SEQ_LEN = 4
-CLIENT_TIMEOUT_SEC = 3 * 60 * 60
 NEW_TEXT_KEY = "\nOutput:\n"
 PROMETHEUS_PORT = 9090
 
@@ -148,6 +147,7 @@ async def send_stream_request(
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
     model: str,
+    timeout: float,
 ) -> Tuple[Tuple[int, int, float], float, Dict[str, int]]:
   """Sends stream request to server"""
   request_start_time = time.time()
@@ -179,7 +179,7 @@ async def send_stream_request(
   ttft = 0.0
   st = time.perf_counter()
   output = ""
-  timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+  timeout = aiohttp.ClientTimeout(total=timeout)
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session:
     try:
       async with session.post(api_url, headers=headers, json=pload, ssl=False) as response:
@@ -249,6 +249,7 @@ async def send_request(
     tokenizer: PreTrainedTokenizerBase,
     sax_model: str,
     model: str,
+    timeout: float,
 ) -> Tuple[Tuple[int, int, float], float, Dict[str, int]]:
   """Sends request to server."""
   request_start_time = time.time()
@@ -322,7 +323,7 @@ async def send_request(
     raise ValueError(f"Unknown backend: {backend}")
 
   # Set client timeout to be 3 hrs.
-  timeout = aiohttp.ClientTimeout(total=CLIENT_TIMEOUT_SEC)
+  timeout = aiohttp.ClientTimeout(total=timeout)
   async with aiohttp.ClientSession(timeout=timeout,trust_env=True,trace_configs=[trace_config]) as session:
     while True:
       try:
@@ -426,6 +427,7 @@ async def benchmark(
             tokenizer,
             args.sax_model,
             model,
+            args.request_timeout,
         )
       )
     else: 
@@ -442,6 +444,7 @@ async def benchmark(
           tokenizer,
           args.sax_model,
           model,
+          args.request_timeout,
         )
       )
     tasks.append(task)
@@ -553,15 +556,30 @@ def save_json_results(args: argparse.Namespace, benchmark_result, server_metrics
   with open(file_name, "w", encoding="utf-8") as outfile:
     json.dump(final_json, outfile)
   if gcs_bucket is not None:
-    gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
-    print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
+    try:
+      gcs_bucket.blob(f"{args.output_bucket_filepath}/{file_name}").upload_from_filename(file_name)
+      print(f"File {file_name} uploaded to gs://{args.output_bucket}/{args.output_bucket_filepath}")
+    except google.cloud.exceptions.NotFound:
+      print(f"GS Bucket (gs://{args.output_bucket}) does not exist")
 
 def metrics_to_scrape(backend: str) -> List[str]:
   # Each key in the map is a metric, it has a corresponding 'stats' object
   # It must be populated on the outputs 'metrics' field as 'key':'stats'
   # If a value is specified for a given key, it will be populated on the outputs `summary_stats.stats` field as 'value':'stats' as well.
   if backend == "vllm":
-    return ["vllm:gpu_cache_usage_perc", "vllm:num_requests_waiting"]
+    return [
+      "vllm:gpu_cache_usage_perc", 
+      "vllm:num_requests_waiting",
+      "vllm:num_requests_running",
+      "vllm:num_requests_swapped",
+      "vllm:time_to_first_token_seconds",
+      "vllm:time_per_output_token_seconds",
+      "vllm:request_queue_time_seconds",
+      "vllm:request_inference_time_seconds",
+      "vllm:request_prompt_tokens",
+      "vllm:request_generation_tokens",
+      "vllm:iteration_tokens_total",
+    ]
   elif backend == "jetstream":
     return [
       "jetstream_slots_used_percentage",
@@ -830,6 +848,12 @@ if __name__ == "__main__":
     "--stream-request", 
     action="store_true",
     help="Whether to stream the request. Needed for TTFT metric",
+  )
+  parser.add_argument(
+    "--request-timeout", 
+    type=float,
+    default=(3.0 * 60.0 * 60.0),
+    help="Individual request timeout",
   )
   parser.add_argument(
       "--tokenizer",

@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "chp",
+      "image": "quay.io/jupyterhub/configurable-http-proxy:4.6.1"
+    },
+    "message": "container \"chp\" in Deployment \"proxy\" has an image \"quay.io/jupyterhub/configurable-http-proxy:4.6.1\" with no digest specified. Unable to find digest from registry.",
+    "policyName": "sbom",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "proxy",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

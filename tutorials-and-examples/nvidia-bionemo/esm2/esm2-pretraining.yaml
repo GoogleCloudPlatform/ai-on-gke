@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bionemo-training
+spec:
+  template:
+    spec:
+      containers:
+      - name: training
+        image: nvcr.io/nvidia/clara/bionemo-framework:2.3
+        command: ["/bin/bash", "-c"]
+        args:
+        - |-
+          nvidia-smi
+
+          DATA_DIR=/mnt/data
+          download_bionemo_data esm2/testdata_esm2_pretrain:2.0 --source ngc
+
+          mv /root/.cache/bionemo/006911f92bbc0ded7ea302bbdbfab4c694b409e699c32fd49de1c527a99dba3e-2024_03_sanity.tar.gz.untar/2024_03_sanity $DATA_DIR
+
+          export PATH=$PATH:/usr/local/nvidia/lib64/
+
+          /sbin/ldconfig
+
+          train_esm2 \
+            --train-cluster-path ${DATA_DIR}/2024_03_sanity/train_clusters_sanity.parquet \
+            --train-database-path ${DATA_DIR}/2024_03_sanity/train_sanity.db \
+            --valid-cluster-path ${DATA_DIR}/2024_03_sanity/valid_clusters.parquet \
+            --valid-database-path ${DATA_DIR}/2024_03_sanity/validation.db \
+            --precision="bf16-mixed" \
+            --num-gpus 1 \
+            --num-nodes 1 \
+            --num-steps 100 \
+            --val-check-interval 25 \
+            --max-seq-length 1024 \
+            --limit-val-batches 2 \
+            --micro-batch-size 2 \
+            --num-layers 33 \
+            --hidden-size 1280 \
+            --num-attention-head 20 \
+            --ffn-hidden-size 5120 \
+            --tensor-model-parallel-size 1 \
+            --create-tensorboard-logger
+
+          tensorboard --logdir /workspace/bionemo2/results/lightning_logs &
+
+          sleep infinity
+
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: fileserver
+          mountPath: /mnt/data
+      volumes:
+      - name: fileserver
+        persistentVolumeClaim:
+          claimName: fileserver
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
