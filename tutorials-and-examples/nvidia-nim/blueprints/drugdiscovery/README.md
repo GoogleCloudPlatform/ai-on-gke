@@ -8,16 +8,20 @@ This guide outlines the steps to deploy NVIDIA's NIM blueprint for [Generative V
 * **Project:**  A Google Cloud project with billing enabled.
 * **NGC API Key:** An API key from NVIDIA NGC.
 * **kubectl:**  kubectl command-line tool installed and configured.
-* **NVIDIA GPUs:**  NVIDIA A100 80GB(3) GPU preferred in the same region / zone.
+* **NVIDIA GPUs:** One of the below GPUs should work
+  * [NVIDIA L4 GPU (4)](https://cloud.google.com/compute/docs/gpus#l4-gpus)
+  * [NVIDIA A100 80GB (1) GPU](https://cloud.google.com/compute/docs/gpus#a100-gpus)
+  * [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
 
 Clone the repo before proceeding further:
 
-```bash
+   ```bash
 
-git clone https://github.com/GoogleCloudPlatform/ai-on-gke
-cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
+   git clone https://github.com/GoogleCloudPlatform/ai-on-gke
 
-```
+   cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
+
+  ```
 
 ## Deployment Steps
 
@@ -30,10 +34,10 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
     export CLUSTER_NAME="gke-nimbp-genscr"
     export NODE_POOL_NAME="gke-nimbp-genscr-np"
     export ZONE="<GCP zone>" #us-east5-b
-    export MACHINE_TYPE="<GCP machine type>" #"a2-ultragpu-1g"
-    export ACCELERATOR_TYPE="<GPU Type>" #"nvidia-a100-80gb"
-    export ACCELERATOR_COUNT="1"
-    export NODE_POOL_NODES=3
+    export MACHINE_TYPE="<GCP machine type>" # e.g., g2-standard-48 (L4) or a2-ultragpu-1g (A100 80GB)
+    export ACCELERATOR_TYPE="<GPU Type>" # e.g., nvidia-l4 (L4) or nvidia-a100-80gb (A100 80GB)
+    export ACCELERATOR_COUNT="1" # e.g., 4 (L4) or 1 (A100 80GB)
+    export NODE_POOL_NODES=3 # e.g., 1 (L4) or 3 (A100 80GB)
     export NGC_API_KEY="<NGC API Key>"
 
     ```
@@ -50,7 +54,7 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
   
     ```
 
-3. **Create GPU Node Pool:** This creates a node pool with GPU machines optimized for BioNeMo workloads.
+3. **Create GPU Node Pool:** This creates a node pool with GPU machines optimized for running the NIMs.
 
     ```bash
 
@@ -97,7 +101,7 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
     ```
 
-7. **Deploy BioNeMo Services:** Deploy AlphaFold2, MolMIM, and DiffDock.
+7. **Deploy Blueprint:** Deploy AlphaFold2, MolMIM, and DiffDock.
 
     ```bash
 
@@ -109,12 +113,12 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
      ```bash
     
-    k create -f nim-bionemo-generative-virtual-screening.yaml 
+    k create -f nim-bp-generative-virtual-screening.yaml
 
      ```
 
    > NOTE:
-   > The AlphaFold2 NIM requires downloading a large dataset and related files, and then loading the model for inference. This process can take typically between 1.5 hrs and 2 hours. Please be patient while the deployment completes.
+   > The AlphaFold2 NIM requires downloading supporting data from NGC. This process can take typically around 2-3 hours. Alternatively, you could copy the downloaded data into a persistent disk like NFS or Google Cloud storage bucket and use for future inference in few minutes. [Steps](#cache-alphafold2-data) outlined below.
   
    You can check the pods are in `Running` status: `k get pods` should list 3 pods: `alphafold2-`, `diffdock-` and `molmim-`.
 
@@ -131,14 +135,14 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
     ```bash
 
-    POD_BIONEMO_ALPHAFOLD=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^alphafold2')
-    k port-forward pod/$POD_BIONEMO_ALPHAFOLD 8010:8000 &
+    POD_NIM_ALPHAFOLD=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^alphafold2')
+    k port-forward pod/$POD_NIM_ALPHAFOLD 8010:8000 &
 
-    POD_BIONEMO_MOLMIM=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^molmim')
-    k port-forward pod/$POD_BIONEMO_MOLMIM 8011:8000 &
+    POD_NIM_MOLMIM=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^molmim')
+    k port-forward pod/$POD_NIM_MOLMIM 8011:8000 &
     
-    POD_BIONEMO_DIFFDOCK=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^diffdock')
-    k port-forward pod/$POD_BIONEMO_DIFFDOCK 8012:8000 &
+    POD_NIM_DIFFDOCK=$(k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep '^diffdock')
+    k port-forward pod/$POD_NIM_DIFFDOCK 8012:8000 &
   
     ```
 
@@ -180,12 +184,12 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
     ```
 
-10. **Test end to end:** The test for protein folding, molecule generation and protein docking might take about 5-8 mins to run
+10. **Test end to end:** The test for protein folding, molecule generation and protein docking might take about 5-8 mins to run.
 
-   > NOTE:
-   > If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
+    > NOTE:
+    > If the port numbers were changed earlier, then update the `AF2_HOST`, `MOLMIM_HOST`, `DIFFDOCK_HOST` variables with port numbers in `test-generative-virtual-screening.py` file.
 
-   ```bash
+    ```bash
 
     python3 -m venv venv
 
@@ -196,7 +200,7 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
     deactivate
 
-   ```
+    ```
 
 ## Cleanup
 
@@ -206,8 +210,22 @@ cd ai-on-gke/tutorials-and-examples/nvidia-nim/blueprints/drugdiscovery
 
    k delete secret secret-nvcr
    k delete secret ngc-api-key
-   k delete -f nim-bionemo-generative-virtual-screening.yaml
+   k delete -f nim-bp-generative-virtual-screening.yaml
    k delete -f nim-storage-filestore.yaml
    gcloud container clusters delete "${CLUSTER_NAME}" --location="${ZONE}"
+
+   ```
+
+## Cache AlphaFold2 data
+
+1. Create a GCS bucket `gs://nim-bp-alphafold2-cache-{project-number}`
+
+2. Copy contents (`/data/ngc/hub/models--nim--deepmind--alphafold2-data`) to the bucket `gs://nim-bp-alphafold2-cache/ngc/hub/models--nim--deepmind--alphafold2-data/`
+
+3. For future inference, copy the contents into the mounted NFS volume before deploying the blueprint (step 7). If the destination page is changed, you need to update the volume mount path (nim-bp-generative-virtual-screening.yaml) in `alphafold2` containers.
+
+   ```bash
+
+   gcloud storage cp -r gs://nim-bp-alphafold2-cache/ngc/hub/models--nim--deepmind--alphafold2-data/ /data/ngc/hub/
 
    ```
