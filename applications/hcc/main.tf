@@ -243,7 +243,6 @@ module "a3-ultragpu-pool" {
   additional_networks = concat([{ network = module.gke-a3-ultra-net-1[0].network_name, subnetwork = module.gke-a3-ultra-net-1[0].subnetwork_name, subnetwork_project = var.project_id, nic_type = "GVNIC", queue_count = null, network_ip = null, stack_type = null, access_config = [{ nat_ip = null, public_ptr_domain_name = null, network_tier = null }], ipv6_access_config = [], alias_ip_range = [] }], module.gke-a3-ultra-rdma-net[0].subnetwork_interfaces_gke)
   auto_upgrade        = true
   cluster_id          = local.gke_cluster_id
-  disk_size_gb        = 100
   disk_type           = "hyperdisk-balanced"
   gke_version         = local.gke_cluster_version
   guest_accelerator = [{
@@ -262,7 +261,8 @@ module "a3-ultragpu-pool" {
     specific_reservations = [{
       name = var.reservation
     }]
-  }
+  } 
+  local_ssd_count_ephemeral_storage = 32
   static_node_count = var.node_count
   zones             = [local.zone]
   providers = {
