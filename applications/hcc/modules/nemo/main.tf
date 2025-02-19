@@ -29,8 +29,6 @@ resource "helm_release" "nemo" {
     "${file("${path.module}/values.yaml")}"
   ]
 
-
-
   set {
     name  = "nemo_config"
     value = "${file("${path.module}/${local.nccl_config}")}"
@@ -44,11 +42,6 @@ resource "helm_release" "nemo" {
   set {
     name = "workload.gcsBucketForDataCataPath"
     value = var.checkpoint_bucket
-  }
-
-  set {
-    name = "workload.gpuType"
-    value = var.gpu_type
   }
 
   set {
@@ -68,5 +61,10 @@ resource "helm_release" "nccl_tests" {
   set {
     name = "workload.gcsBucketForDataCataPath"
     value = var.checkpoint_bucket
+  }
+
+  set {
+    name = "workload.gpuType"
+    value = var.gpu_type
   }
 }
