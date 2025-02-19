@@ -186,3 +186,17 @@ resource "google_sql_user" "users" {
   instance = google_sql_database_instance.flyte_storage.name
   password = random_password.db_password.result
 }
+
+resource "local_sensitive_file" "flyte_helm_values" {
+  count = var.render_helm_values ? 1 : 0
+  content = templatefile("${path.module}/values.yaml.tpl", {
+    CLOUDSQL_USERNAME  = var.cloudsql_user,
+    CLOUDSQL_PASSWORD  = random_password.db_password.result,
+    CLOUDSQL_IP        = google_sql_database_instance.flyte_storage.private_ip_address,
+    CLOUDSQL_DBNAME    = google_sql_database.flyte_storage.name,
+    BUCKET_NAME        = var.gcs_bucket,
+    PROJECT_ID         = var.project_id,
+    FLYTE_IAM_SA_EMAIL = data.google_service_account.gke_service_account.email
+  })
+  filename = "${path.module}/flyte.yaml"
+}

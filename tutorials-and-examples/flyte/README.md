@@ -75,12 +75,12 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
 
 4. Configure Flyte Helm values.
 
-   Open the `flyte.yaml` file and replace the placeholders with the values from the Terraform output:
+   Make a copy of the `flyte.yaml.tpl` file and name it `flyte.yaml`. Open the `flyte.yaml` file and replace the placeholders with the values from the Terraform output:
 
-   * replace `<FLYTE_IAM_SA_EMAIL>` with the service account email (4 occurrences)
-   * replace `<PROJECT_NAME>` with the project ID (1 occurrence)
-   * replace `<BUCKET_NAME>` with the bucket name (2 occurrences)
-   * replace `<CLOUDSQL_IP>`, `<CLOUDSQL_USERNAME>`, `<CLOUDSQL_PASSWORD>` and `<CLOUDSQL_DBNAME>` with corresponding values (1 occurrence each; use `terraform output cloudsql_password` to get the password)
+   * replace `${FLYTE_IAM_SA_EMAIL}` with the service account email (4 occurrences)
+   * replace `${PROJECT_ID}` with the project ID (3 occurrences)
+   * replace `${BUCKET_NAME}` with the bucket name (2 occurrences)
+   * replace `${CLOUDSQL_IP}`, `${CLOUDSQL_DBNAME}`, `${CLOUDSQL_USERNAME}` and `${CLOUDSQL_PASSWORD}` with corresponding values (1 occurrence each; use `terraform output cloudsql_password` to get the password)
 
 5. Install Flyte to the GKE cluster using Helm.
 

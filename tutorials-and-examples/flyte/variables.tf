@@ -162,7 +162,8 @@ variable "db_tier" {
   description = "Tier for the database instance"
   default     = "db-f1-micro"
 }
-variable "cloudsql_user"{
+
+variable "cloudsql_user" {
   type        = string
   description = "Username for the cloudsql database"
   default     = "flytepg"
@@ -190,4 +191,10 @@ variable "db_instance_name" {
   type        = string
   description = "Name of the database instance"
   default     = "flytepg"
+}
+
+variable "render_helm_values" {
+  type        = bool
+  description = "Render values.yaml for helm chart"
+  default     = false
 }

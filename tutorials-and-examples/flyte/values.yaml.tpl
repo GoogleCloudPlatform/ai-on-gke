@@ -3,20 +3,21 @@ configuration:
   # database Specify configuration for Flyte's database connection
   database:
     # username Name for user to connect to database as
-    username: <CLOUDSQL_USERNAME>
+    username: "${CLOUDSQL_USERNAME}"
     # password Password to connect to database with
     # If set, a Secret will be created with this value and mounted to Flyte pod
-    password: <CLOUDSQL_PASSWORD>
+    password: >-
+      ${CLOUDSQL_PASSWORD}
     # host Hostname of database instance
-    host: <CLOUDSQL_IP>
+    host: "${CLOUDSQL_IP}"
     # dbname Name of database to use
-    dbname: <CLOUDSQL_DBNAME>
+    dbname: "${CLOUDSQL_DBNAME}"
   # storage Specify configuration for object store
   storage:
     # metadataContainer Bucket to store Flyte metadata
-    metadataContainer: <BUCKET_NAME>
+    metadataContainer: "${BUCKET_NAME}"
     # userDataContainer Bucket to store Flyte user data
-    userDataContainer: <BUCKET_NAME>
+    userDataContainer: "${BUCKET_NAME}"
     # provider Object store provider (Supported values: s3, gcs)
     provider: gcs
     # providerConfig Additional object store provider-specific configuration
@@ -24,7 +25,7 @@ configuration:
       # gcs Provider configuration for GCS object store
       gcs:
         # project Google Cloud project in which bucket resides
-        project: <PROJECT_NAME>
+        project: "${PROJECT_ID}"
   # logging Specify configuration for logs emitted by Flyte
   logging:
     # level Set the log level
@@ -35,7 +36,7 @@ configuration:
       stackdriver:
         enabled: true
         templateUri: |
-          "https://console.cloud.google.com/logs/query;query=resource.labels.namespace_name%3D%22{{.namespace}}%22%0Aresource.labels.pod_name%3D%22{{.podName}}%22%0Aresource.labels.container_name%3D%22{{.containerName}}%22?project=<GCP_PROJECT_ID>&angularJsUrl=%2Flogs%2Fviewer%3Fproject%3D<GCP_PROJECT_ID>"
+          "https://console.cloud.google.com/logs/query;query=resource.labels.namespace_name%3D%22{{.namespace}}%22%0Aresource.labels.pod_name%3D%22{{.podName}}%22%0Aresource.labels.container_name%3D%22{{.containerName}}%22?project=${PROJECT_ID}&angularJsUrl=%2Flogs%2Fviewer%3Fproject%3D${PROJECT_ID}"
   # auth Specify configuration for Flyte authentication
   auth:
     # enabled Enable Flyte authentication
@@ -69,13 +70,13 @@ configuration:
       customData:
       - production:
         - defaultIamServiceAccount:
-            value: <FLYTE_IAM_SA_EMAIL>
+            value: "${FLYTE_IAM_SA_EMAIL}"
       - staging:
         - defaultIamServiceAccount:
-            value: <FLYTE_IAM_SA_EMAIL>
+            value: "${FLYTE_IAM_SA_EMAIL}"
       - development:
         - defaultIamServiceAccount:
-            value: <FLYTE_IAM_SA_EMAIL>
+            value: "${FLYTE_IAM_SA_EMAIL}"
     plugins:
       k8s:
         inject-finalizer: true
@@ -140,7 +141,7 @@ serviceAccount:
   create: true
   #Automates annotation of default flyte-binary KSA. Make sure to bind the KSA to the GSA: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to
   annotations:
-    iam.gke.io/gcp-service-account: <FLYTE_IAM_SA_EMAIL>
+    iam.gke.io/gcp-service-account: "${FLYTE_IAM_SA_EMAIL}"
 # rbac Configure Kubernetes RBAC for Flyte
 rbac:
   # create Create ClusterRole and ClusterRoleBinding resources
