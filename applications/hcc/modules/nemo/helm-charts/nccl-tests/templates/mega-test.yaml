@@ -1,7 +1,6 @@
-{{- if eq $root.Values.workload.gpuType "A3 Mega" }}
+{{- $root := . -}} {{- if eq $root.Values.workload.gpuType "A3 Mega" }}
 {{ $timestamp := now | unixEpoch }}
 
-{{- $root := . -}}
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
