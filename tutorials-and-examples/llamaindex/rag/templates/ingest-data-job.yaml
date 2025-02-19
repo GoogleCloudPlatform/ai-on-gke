@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: llamaindex-ingest-data
+spec:
+  template:
+    metadata:
+      labels:
+        name: ingest-data
+      annotations:
+        gke-gcsfuse/volumes: 'true'
+    spec:
+      serviceAccount: ${SERVICE_ACCOUNT_NAME}
+      containers:
+      - name: ingest-data
+        image:  ${IMAGE_NAME} 
+        imagePullPolicy: Always
+        command: ["python3", "cmd/ingest_data.py"]
+        env:
+        - name: REDIS_HOST
+          value: redis-stack-service
+        - name: REDIS_PORT
+          value: "6379"
+        - name: INPUT_DIR
+          value: /datalake
+        volumeMounts:
+        - name: datalake
+          mountPath: /datalake
+      volumes:
+      - name: datalake
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: ${GCSFUSE_BUCKET_NAME}
+            mountOptions: implicit-dirs,only-dir=datalake
+      restartPolicy: Never
+  backoffLimit: 4
