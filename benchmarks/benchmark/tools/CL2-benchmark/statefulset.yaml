@@ -21,7 +21,6 @@ spec:
   # needs to be set for the DNS label to be based on pod name rather than its IP address
   # https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id
   serviceName: headless-service-0
-  automountServiceAccountToken: false
   template:
     metadata:
       labels:
@@ -33,6 +32,7 @@ spec:
       priorityClassName: {{$PriorityClass}}
       nodeSelector:
         worker-node-pool: "true"
+      automountServiceAccountToken: false
       containers:
       - env:
         - name: ENV_VAR
