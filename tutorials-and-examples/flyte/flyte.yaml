@@ -104,6 +104,7 @@ configuration:
         default-for-task-types:
           - container: container
           - container_array: K8S-ARRAY
+          - sidecar: sidecar
 
 # clusterResourceTemplates Specify templates for Kubernetes resources that should be created for new Flyte projects
 clusterResourceTemplates:
