@@ -47,6 +47,11 @@ resource "helm_release" "nemo" {
   }
 
   set {
+    name = "workload.gpuType"
+    value = var.gpu_type
+  }
+
+  set {
     name = "workload.gpus"
     value = var.node_count * 8
   }
