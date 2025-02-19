@@ -312,6 +312,7 @@ module "nemo" {
   checkpoint_bucket = local.result_bucket_name
   recipe = var.recipe
   node_count = var.node_count
+  gpu_type = var.gpu_type
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
   providers = {
     helm = helm
