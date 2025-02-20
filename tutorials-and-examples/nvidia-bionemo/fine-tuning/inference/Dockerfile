@@ -7,9 +7,10 @@ RUN pip install --no-cache-dir \
     transformers \
     fastapi \
     uvicorn \
-    pydantic \
+    numpy \
+    sentencepiece \
     protobuf \
-    sentencepiece
+    fair-esm
 
 WORKDIR /app
 COPY inference_server.py .
