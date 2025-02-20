@@ -14,6 +14,14 @@ variable "recipe" {
   }
 }
 
+variable "gpu_type" {
+  type = string
+  validation {
+    condition     = contains(["A3 Mega", "A3 Ultra"], var.gpu_type)
+    error_message = "Invalid gpu value. Must be one of: A3 Mega, A3 Ultra."
+  }
+}
+
 variable "node_count" {
   type = number
 }

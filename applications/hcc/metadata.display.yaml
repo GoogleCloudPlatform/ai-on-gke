@@ -3,7 +3,7 @@ kind: BlueprintMetadata
 metadata:
   name: ai-on-gke-display
   annotations:
-    config.kubernetes.io/local-config: "true"
+    config.kubernetes.io/local-config: 'true'
 spec:
   info:
     title: HyperCompute Cluster on GKE
@@ -30,36 +30,60 @@ spec:
           title: GPU Type
           section: required_config
           enumValueLabels:
-            - label: A3 Mega
-              value: "A3 Mega"
-            - label: A3 Ultra
-              value: "A3 Ultra"
+          - label: A3 Mega
+            value: A3 Mega
+          - label: A3 Ultra
+            value: A3 Ultra
         a3_mega_zone:
           name: a3_mega_zone
           title: Location for A3 Mega
           section: required_config
           xGoogleProperty:
             type: ET_GCE_ZONE
-            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_zone:
-              allowlisted_zones: ["asia-northeast1-b", "asia-southeast1-b", "asia-southeast1-c", "europe-west4-b", "europe-west4-c", "us-central1-a", "us-central1-b", "us-central1-c", "us-east4-a", "us-east4-b", "us-east4-c", "us-east5-a", "us-west1-a", "us-west1-b", "us-west4-a"]
+              allowlisted_zones:
+              - asia-northeast1-b
+              - asia-southeast1-b
+              - asia-southeast1-c
+              - australia-southeast1-c
+              - europe-west1-b
+              - europe-west1-c
+              - europe-west3-c
+              - europe-west4-b
+              - europe-west4-c
+              - us-central1-c
+              - us-central1-a
+              - us-central1-b
+              - us-east4-c
+              - us-east4-b
+              - us-east4-a
+              - us-east5-a
+              - us-east7-b
+              - us-west1-b
+              - us-west1-a
+              - us-west4-a
           toggleUsingVariables:
-            - variableName: gpu_type
-              variableValues: ["A3 Mega"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: gpu_type
+            variableValues:
+            - A3 Mega
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         a3_ultra_zone:
           name: a3_ultra_zone
           title: Location for A3 Ultra
           section: required_config
           xGoogleProperty:
             type: ET_GCE_ZONE
-            # specified regions have L4 & T4 GPUs https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-tools
             gce_zone:
-              allowlisted_zones: ["europe-west1-b"]
+              allowlisted_zones:
+              - europe-west1-b
+              - us-east5-a
+              - us-east7-c
+              - us-west1-c
           toggleUsingVariables:
-            - variableName: gpu_type
-              variableValues: ["A3 Ultra"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: gpu_type
+            variableValues:
+            - A3 Ultra
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         node_count:
           name: node_count
           title: Node Count
@@ -69,90 +93,110 @@ spec:
           title: Deployment options
           section: required_config
           enumValueLabels:
-            - label: GKE Cluster Only
-              value: gke
-            - label: GKE Cluster with NCCL Tests
-              value: gke-nccl
-            - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
-              value: llama3.1_7b_nemo_pretraining
-            - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
-              value: llama3.1_7b_nemo_pretraining
+          - label: GKE Cluster Only
+            value: gke
+          - label: GKE Cluster with NCCL Tests
+            value: gke-nccl
+          - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
+            value: llama3.1_7b_nemo_pretraining
+          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
+            value: llama3.1_7b_nemo_pretraining
         consumption_model:
           name: consumption_model
           title: Consumption model
           section: required_config
           enumValueLabels:
-            - label: "Reservation"
-              value: "Reservation"
-            - label: "On Demand"
-              value: "On Demand"
+          - label: Reservation
+            value: Reservation
+          - label: On Demand
+            value: On Demand
         reservation:
           name: reservation
-          title: Reservation Name 
+          title: Reservation Name
           section: required_config
           toggleUsingVariables:
-            - variableName: consumption_model 
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: consumption_model
+            variableValues:
+            - Reservation
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         reservation_block:
           name: reservation_block
           title: Reservation Block
           section: required_config
           toggleUsingVariables:
-            - variableName: consumption_model
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: consumption_model
+            variableValues:
+            - Reservation
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         placement_policy_name:
           name: placement_policy_name
           title: Placement Policy
           section: required_config
           toggleUsingVariables:
-            - variableName: consumption_model
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: consumption_model
+            variableValues:
+            - Reservation
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         host_maintenance:
           name: host_maintenance
           title: Host Maintainance
           section: required_config
           enumValueLabels:
-            - label: "NONE"
-              value: "none"
-            - label: "PERIODIC"
-              value: "periodic"
+          - label: NONE
+            value: none
+          - label: PERIODIC
+            value: periodic
           toggleUsingVariables:
-            - variableName: consumption_model
-              variableValues: ["Reservation"]
-              type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: consumption_model
+            variableValues:
+            - Reservation
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         acknowledge:
           name: acknowledge
-          title: Check to confirm you enabled Google APIs for your project with this command.
+          title: Check to confirm you enabled Google APIs for your project with this
+            command.
           section: acknowledge
-          subtext: |
-                  <pre>
-                    <code style="background: #f4f4f4;border: 1px solid #ddd; border-left: 3px solid #3367d6; color: #6d6868; font-size: 12px; max-width: 100%; padding: 0.5em 0.5em; display: inline; line-height: 45px;">gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com</code>
-                  </pre>
+          subtext: "<pre>\n  <code style=\"background: #f4f4f4;border: 1px solid #ddd;\
+            \ border-left: 3px solid #3367d6; color: #6d6868; font-size: 12px; max-width:\
+            \ 100%; padding: 0.5em 0.5em; display: inline; line-height: 45px;\">gcloud\
+            \ services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com</code>\n\
+            </pre>\n"
           enumValueLabels:
-            - label: Confirm that all prerequisites have been met.
-              value: "true"
+          - label: Confirm that all prerequisites have been met.
+            value: 'true'
       sections:
-        - name: acknowledge
-          title: Before you begin
-          subtext: 
-                This solution deploys a sample <a href="https://cloud.google.com/ai-hypercomputer/docs/create/gke-ai-hypercompute"><i>HyperCompute Cluster</i></a> on GKE in your project.</br>
-        - name: required_config
-          title: Required configuration
+      - name: acknowledge
+        title: Before you begin
+        subtext: This solution deploys a sample <a href="https://cloud.google.com/ai-hypercomputer/docs/create/gke-ai-hypercompute"><i>HyperCompute
+          Cluster</i></a> on GKE in your project.</br>
+      - name: required_config
+        title: Required configuration
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-        - heading: Connect to Ray Cluster
-          description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265). Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a> to install ray and submit jobs.
-        - heading: View Job Status in Ray Dashboard
-          description: |-
-            <p>
-            1&#41; If IAP is disabled, open the ray dashboard via the <b>OPEN IN WEB PREVIEW</b> button in the port forwarding page.</br>
-            </p>
-            <p>
-            2&#41; If IAP is enabled, click the <b>Launch Ray Dashboard</b> button and log in with your organization's credentials. Troubleshooting access issues:</br>
-            &emsp;&#x2022; SSL or cert errors indicate the cert is provisioning which takes up to 20 minutes.</br>
-            &emsp;&#x2022; If you're unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google Cloud Platform IAP</a>, select the <b>ray-cluster-kuberay-head-svc</b> service and add the user with the role <b>IAP-secured Web App User</b>.
-            </p>
+      - heading: Connect to Ray Cluster
+        description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate
+          <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265).
+          Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a>
+          to install ray and submit jobs.
+      - heading: View Job Status in Ray Dashboard
+        description: '<p>
+
+          1&#41; If IAP is disabled, open the ray dashboard via the <b>OPEN IN WEB
+          PREVIEW</b> button in the port forwarding page.</br>
+
+          </p>
+
+          <p>
+
+          2&#41; If IAP is enabled, click the <b>Launch Ray Dashboard</b> button and
+          log in with your organization''s credentials. Troubleshooting access issues:</br>
+
+          &emsp;&#x2022; SSL or cert errors indicate the cert is provisioning which
+          takes up to 20 minutes.</br>
+
+          &emsp;&#x2022; If you''re unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google
+          Cloud Platform IAP</a>, select the <b>ray-cluster-kuberay-head-svc</b> service
+          and add the user with the role <b>IAP-secured Web App User</b>.
+
+          </p>'
