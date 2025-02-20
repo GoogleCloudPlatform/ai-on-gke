@@ -198,30 +198,37 @@ func main() {
 			"podToNodeLabels", cfg.GCPPodToNodeLabels,
 		)
 
+		clusterCtx := cloud.GKEContext{
+			ProjectID:               cfg.GCPProjectID,
+			ClusterLocation:         cfg.GCPClusterLocation,
+			Cluster:                 cfg.GCPCluster,
+			NodeZone:                cfg.GCPZone,
+			NodeServiceAccount:      cfg.GCPNodeServiceAccount,
+			NodeAdditionalNetworks:  cfg.GCPNodeAdditionalNetworks,
+			NodeSecondaryDisk:       cfg.GCPNodeSecondaryDisk,
+			NodeTags:                cfg.GCPNodeTags,
+			NodeDiskType:            cfg.GCPNodeDiskType,
+			NodeConfidentialStorage: cfg.GCPNodeConfidentialStorage,
+			NodeBootDiskKMSKey:      cfg.GCPNodeBootDiskKMSKey,
+			PodToNodeLabels:         cfg.GCPPodToNodeLabels,
+			NodeSecureBoot:          cfg.GCPNodeSecureBoot,
+			ForceOnDemand:           cfg.GCPForceOnDemand,
+		}
+
 		containers, err := containerv1beta1.NewService(context.Background() /*, option.WithCredentials(creds)*/)
 		if err != nil {
 			setupLog.Error(err, "unable to create gke client")
 			os.Exit(1)
 		}
+		nodePoolsService := &cloud.GKENodePoolService{
+			ClusterContext: clusterCtx,
+			Service:        containers,
+		}
+
 		provider = &cloud.GKE{
-			Service: containers,
-			ClusterContext: cloud.GKEContext{
-				ProjectID:               cfg.GCPProjectID,
-				ClusterLocation:         cfg.GCPClusterLocation,
-				Cluster:                 cfg.GCPCluster,
-				NodeZone:                cfg.GCPZone,
-				NodeServiceAccount:      cfg.GCPNodeServiceAccount,
-				NodeAdditionalNetworks:  cfg.GCPNodeAdditionalNetworks,
-				NodeSecondaryDisk:       cfg.GCPNodeSecondaryDisk,
-				NodeTags:                cfg.GCPNodeTags,
-				NodeDiskType:            cfg.GCPNodeDiskType,
-				NodeConfidentialStorage: cfg.GCPNodeConfidentialStorage,
-				NodeBootDiskKMSKey:      cfg.GCPNodeBootDiskKMSKey,
-				PodToNodeLabels:         cfg.GCPPodToNodeLabels,
-				NodeSecureBoot:          cfg.GCPNodeSecureBoot,
-				ForceOnDemand:           cfg.GCPForceOnDemand,
-			},
-			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
+			NodePools:      nodePoolsService,
+			ClusterContext: clusterCtx,
+			Recorder:       mgr.GetEventRecorderFor("tpu-provisioner"),
 		}
 	case "mock":
 		provider = &cloud.Mock{}
