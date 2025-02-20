@@ -22,16 +22,6 @@ create_cluster   = true # this flag will create a new standard public gke cluste
 cluster_name     = "flyte-test"
 cluster_location = "us-central1"
 
-#######################################################
-####    APPLICATIONS
-#######################################################
-# Creates a google service account & k8s service account & configures workload identity with appropriate permissions.
-# Set to false & update the variable `workload_identity_service_account` to use an existing IAM service account.
-create_service_account = false
-
-#DISABLE IAP
-create_brand = false
-
 autopilot_cluster = true
 enable_gpu = true
 

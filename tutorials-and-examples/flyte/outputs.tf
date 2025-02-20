@@ -1,5 +1,5 @@
 output "gke_cluster_name" {
-  value       = local.cluster_name
+  value       = var.cluster_name
   description = "GKE cluster name"
 }
 

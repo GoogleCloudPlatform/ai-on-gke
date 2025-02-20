@@ -25,35 +25,13 @@ variable "cluster_location" {
   type = string
 }
 
-variable "cluster_membership_id" {
-  type        = string
-  description = "require to use connectgateway for private clusters, default: cluster_name"
-  default     = ""
-}
-
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default     = "ai-on-gke"
-}
-variable "create_service_account" {
-  type        = bool
-  description = "Creates a google IAM service account & k8s service account & configures workload identity"
-  default     = true
-}
-
-variable "workload_identity_service_account" {
-  type        = string
-  description = "Google Cloud IAM service account for authenticating with GCP services for GCS"
-  default     = "sky-sa"
+  default     = "default"
 }
 
 variable "enable_gpu" {
-  type    = bool
-  default = false
-}
-
-variable "enable_tpu" {
   type    = bool
   default = false
 }
@@ -148,25 +126,6 @@ variable "gpu_pools" {
     accelerator_type   = "nvidia-l4"
     gpu_driver_version = "DEFAULT"
   }]
-}
-
-variable "goog_cm_deployment_name" {
-  type    = string
-  default = ""
-}
-
-# Ray-dashboard IAP settings
-variable "create_brand" {
-  type        = bool
-  description = "Create Brand OAuth Screen"
-  default     = false
-}
-
-variable "additional_labels" {
-  // string is used instead of map(string) since blueprint metadata does not support maps.
-  type        = string
-  description = "Additional labels to add to Kubernetes resources."
-  default     = "created-by=ai-on-gke,ai.gke.io=ray"
 }
 
 variable "kubernetes_version" {
