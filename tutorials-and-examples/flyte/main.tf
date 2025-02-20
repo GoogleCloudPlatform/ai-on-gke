@@ -62,20 +62,20 @@ module "infra" {
   source = "github.com/GoogleCloudPlatform/ai-on-gke/infrastructure"
   count  = var.create_cluster ? 1 : 0
 
-  project_id        = var.project_id
-  cluster_name      = var.cluster_name
-  cluster_location  = var.cluster_location
-  autopilot_cluster = var.autopilot_cluster
-  private_cluster   = var.private_cluster
-  create_network    = true
-  network_name      = "flyte"
-  subnetwork_name   = "flyte"
-  cpu_pools         = var.cpu_pools
-  enable_gpu        = var.enable_gpu
-  gpu_pools         = var.gpu_pools
-  ray_addon_enabled = true
-  depends_on        = [module.project-services]
-  kubernetes_version = var.kubernetes_version
+  project_id                = var.project_id
+  cluster_name              = var.cluster_name
+  cluster_location          = var.cluster_location
+  autopilot_cluster         = var.autopilot_cluster
+  private_cluster           = var.private_cluster
+  create_network            = true
+  network_name              = "flyte"
+  subnetwork_name           = "flyte"
+  cpu_pools                 = var.cpu_pools
+  enable_gpu                = var.enable_gpu
+  gpu_pools                 = var.gpu_pools
+  ray_addon_enabled         = true
+  depends_on                = [module.project-services]
+  kubernetes_version        = var.kubernetes_version
   subnetwork_private_access = true
 }
 
