@@ -73,17 +73,7 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
      --project $(terraform output -raw project_id)
    ```
 
-4. Bind the Google Service Account (GSA) to the Kubernetes Service Account (KSA):
-
-   The Flyte Helm chart will deploy a Kubernetes Service Account (KSA) named `flyte-backend-flyte-binary` in the `default` namespace. To allow this KSA to access Google Cloud resources, it needs to be bound to the Google Service Account (GSA) created by Terraform. Use the following command, replacing SERVICE_ACCOUNT with the email address of the GSA from the Terraform output (use `terraform output service_account` to get it again) and PROJECT_ID with your Google Cloud project ID:
-
-   ```bash
-   gcloud iam service-accounts add-iam-policy-binding SERVICE_ACCOUNT \
-     --role roles/iam.workloadIdentityUser \
-     --member "serviceAccount:PROJECT_ID.svc.id.goog[default/flyte-backend-flyte-binary]"
-   ```
-
-5. Configure Flyte Helm values.
+4. Configure Flyte Helm values.
 
    Open the `flyte.yaml` file and replace the placeholders with the values from the Terraform output:
 
@@ -92,7 +82,7 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
    * replace `<BUCKET_NAME>` with the bucket name (2 occurrences)
    * replace `<CLOUDSQL_IP>`, `<CLOUDSQL_USERNAME>`, `<CLOUDSQL_PASSWORD>` and `<CLOUDSQL_DBNAME>` with corresponding values (1 occurrence each; use `terraform output cloudsql_password` to get the password)
 
-6. Install Flyte using Helm.
+5. Install Flyte using Helm.
 
    ```bash
    helm install flyte-backend flyte-binary \
