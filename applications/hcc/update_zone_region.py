@@ -3,6 +3,7 @@ from google.auth import exceptions as auth_exceptions
 from google.cloud import compute_v1
 import yaml
 import json
+import argparse
 
 def list_regions_with_zones(project_id):
   """Lists all regions and their zones within a GCP project.
@@ -151,7 +152,10 @@ def update_blueprint_metadata(project_id, machine_type, blueprint_file="metadata
     print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-  project_id = "supercomputer-testing"
-  write_zone_to_region_map_to_json(project_id)
-  update_blueprint_metadata(project_id, "a3-megagpu-8g")
-  update_blueprint_metadata(project_id, "a3-ultragpu-8g")
+  # project_id = "supercomputer-testing" 
+  parser = argparse.ArgumentParser(description="Update blueprint metadata with available zones and regions for given machine types.")
+  parser.add_argument("--project_id", required=True, help="Your Google Cloud project ID.") 
+  args = parser.parse_args()
+  write_zone_to_region_map_to_json(args.project_id)
+  update_blueprint_metadata(args.project_id, "a3-megagpu-8g")
+  update_blueprint_metadata(args.project_id, "a3-ultragpu-8g")
