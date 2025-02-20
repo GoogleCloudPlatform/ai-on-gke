@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-debug
+  namespace: bionemo-training
+spec:
+  containers:
+  - name: debug
+    image: ubuntu
+    command: ["sleep", "infinity"]
+    volumeMounts:
+    - name: bionemo-storage
+      mountPath: /mnt/data
+  volumes:
+  - name: bionemo-storage
+    persistentVolumeClaim:
+      claimName: bionemo-filestore

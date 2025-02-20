@@ -7,7 +7,9 @@ RUN pip install --no-cache-dir \
     transformers \
     fastapi \
     uvicorn \
-    pydantic
+    pydantic \
+    protobuf \
+    sentencepiece
 
 WORKDIR /app
 COPY inference_server.py .
@@ -18,7 +20,7 @@ USER model
 
 EXPOSE 8000
 
-ENV MODEL_PATH=/app/model
+ENV MODEL_PATH=/mnt/data/model
+ENV CUDA_LAUNCH_BLOCKING=1
 
-# Run the application
 CMD ["uvicorn", "inference_server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

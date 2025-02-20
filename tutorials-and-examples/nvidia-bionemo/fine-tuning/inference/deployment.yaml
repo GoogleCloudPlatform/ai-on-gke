@@ -18,13 +18,13 @@ spec:
       serviceAccountName: esm2-inference-sa
       containers:
       - name: inference
-        image: us-central1-docker.pkg.dev/qwiklabs-asl-04-3b17716b7f5f/qwiklabs-asl-04-3b17716b7f5f/esm2-inference:latest
+        image: us-central1-docker.pkg.dev/qwiklabs-asl-03-1f567ae6332a/qwiklabs-asl-03-1f567ae6332a/esm2-inference:latest
         ports:
         - containerPort: 8000
           name: http
         env:
         - name: MODEL_PATH
-          value: "/app/model"
+          value: "/mnt/data/model"
         resources:
           limits:
             nvidia.com/gpu: 1
@@ -36,7 +36,7 @@ spec:
             cpu: "500m"
         volumeMounts:
         - name: model-storage
-          mountPath: /app/model
+          mountPath: /mnt/data
           readOnly: true
         livenessProbe:
           httpGet:

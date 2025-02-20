@@ -4,10 +4,9 @@ namespace: bionemo-training
 resources:
 - ../base
 - inference/deployment.yaml
-- job.yaml
+# - job.yaml
 
 configMapGenerator:
 - name: finetuning-script
-  behavior: create  
   files:
   - finetuning.py
