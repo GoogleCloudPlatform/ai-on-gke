@@ -27,17 +27,19 @@ spec:
           section: required_config
         gpu_type:
           name: gpu_type
-          title: GPU Type
+          title: Accelerator machine type
           section: required_config
+          subtext: Select the accelerator machine type.
           enumValueLabels:
-          - label: A3 Mega
+          - label: "A3 Mega, NVIDIA H100 80GB MEGA: a3-megagpu-8g"
             value: A3 Mega
-          - label: A3 Ultra
+          - label: "A3 Ultra, NVIDIA H200 141GB: a3-ultragpu-8g"
             value: A3 Ultra
         a3_mega_zone:
           name: a3_mega_zone
-          title: Location for A3 Mega
+          title: Cluster zone
           section: required_config
+          subtext: Select from locations with available accelerators. If you have a reservation, select the zone where your reservation is located.
           xGoogleProperty:
             type: ET_GCE_ZONE
             gce_zone:
@@ -69,8 +71,9 @@ spec:
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         a3_ultra_zone:
           name: a3_ultra_zone
-          title: Location for A3 Ultra
+          title: Cluster zone
           section: required_config
+          subtext: Select from locations with available accelerators. If you have a reservation, select the zone where your reservation is located.
           xGoogleProperty:
             type: ET_GCE_ZONE
             gce_zone:
@@ -84,35 +87,17 @@ spec:
             variableValues:
             - A3 Ultra
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-        node_count:
-          name: node_count
-          title: Node Count
-          section: required_config
-        recipe:
-          name: recipe
-          title: Deployment options
-          section: required_config
-          enumValueLabels:
-          - label: GKE Cluster Only
-            value: gke
-          - label: GKE Cluster with NCCL Tests
-            value: gke-nccl
-          - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
-            value: llama3.1_7b_nemo_pretraining
-          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
-            value: llama3.1_7b_nemo_pretraining
         consumption_model:
           name: consumption_model
-          title: Consumption model
+          title: Consumption options 
           section: required_config
+          subtext: For optimal performance with distributed AI workloads, reserve densely allocated accelerator capacity. See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption options</i></a> for more details.</br>
           enumValueLabels:
           - label: Reservation
             value: Reservation
-          - label: On Demand
-            value: On Demand
         reservation:
           name: reservation
-          title: Reservation Name
+          title: Reservation name
           section: required_config
           toggleUsingVariables:
           - variableName: consumption_model
@@ -121,25 +106,33 @@ spec:
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         reservation_block:
           name: reservation_block
-          title: Reservation Block
+          title: Reservation block
           section: required_config
           toggleUsingVariables:
           - variableName: consumption_model
             variableValues:
             - Reservation
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: gpu_type
+            variableValues:
+            - A3 Ultra
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         placement_policy_name:
           name: placement_policy_name
-          title: Placement Policy
+          title: Placement policy
           section: required_config
           toggleUsingVariables:
           - variableName: consumption_model
             variableValues:
             - Reservation
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: gpu_type
+            variableValues:
+            - A3 Mega
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         host_maintenance:
           name: host_maintenance
-          title: Host Maintainance
+          title: Host maintainance
           section: required_config
           enumValueLabels:
           - label: NONE
@@ -150,6 +143,70 @@ spec:
           - variableName: consumption_model
             variableValues:
             - Reservation
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+        recipe:
+          name: recipe
+          title: Solution deployment option
+          section: required_config
+          subtext: Select your deployment option.
+          enumValueLabels:
+          - label: GKE Cluster Only
+            value: gke
+          - label: GKE Cluster with NCCL Test
+            value: gke-nccl
+          - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
+            value: llama3.1_7b_nemo_pretraining
+          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
+            value: llama3.1_70b_nemo_pretraining
+        node_count_gke:
+          name: node_count_gke
+          title: Node count
+          section: required_config
+          subtext: Please enter a value >= 0. If using a reservation, ensure that your reservation has the required capacity.
+          toggleUsingVariables:
+          - variableName: recipe
+            variableValues:
+            - gke
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+        node_count_gke_nccl:
+          name: node_count_gke_nccl
+          title: Node count
+          section: required_config
+          subtext: Please enter a value >= 2. If using a reservation, ensure that your reservation has the required capacity.
+          toggleUsingVariables:
+          - variableName: recipe
+            variableValues:
+            - gke-nccl
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+        node_count_llama_3_7b:
+          name: node_count_llama_3_7b
+          title: Node count
+          section: required_config
+          subtext: Some benchmarks require a minimum number of nodes. If using a reservation, ensure that your reservation has the required capacity
+          enumValueLabels:
+            - label: 2
+              value: 2
+            - label: 4
+              value: 4
+          toggleUsingVariables:
+          - variableName: recipe
+            variableValues:
+            - llama3.1_7b_nemo_pretraining
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+        node_count_llama_3_70b:
+          name: node_count_llama_3_70b
+          title: Node count
+          section: required_config
+          subtext: Some benchmarks require a minimum number of nodes. If using a reservation, ensure that your reservation has the required capacity
+          enumValueLabels:
+            - label: 32
+              value: 32
+            - label: 40
+              value: 40
+          toggleUsingVariables:
+          - variableName: recipe
+            variableValues:
+            - llama3.1_70b_nemo_pretraining
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         acknowledge:
           name: acknowledge
@@ -168,7 +225,7 @@ spec:
       - name: acknowledge
         title: Before you begin
         subtext: This solution deploys a sample <a href="https://cloud.google.com/ai-hypercomputer/docs/create/gke-ai-hypercompute"><i>HyperCompute
-          Cluster</i></a> on GKE in your project.</br>
+          Cluster</i></a> with GKE in your project to run AI/ML and HPC workloads.</br>
       - name: required_config
         title: Required configuration
     runtime:

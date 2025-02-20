@@ -107,7 +107,7 @@ module "a3_megagpu_pool" {
     }
   )
   local_ssd_count_ephemeral_storage = 16
-  static_node_count = var.node_count
+  static_node_count = local.node_count
   taints            = []
   zones             = [var.a3_mega_zone]
   providers = {
@@ -263,7 +263,7 @@ module "a3-ultragpu-pool" {
     }]
   } 
   local_ssd_count_ephemeral_storage = 32
-  static_node_count = var.node_count
+  static_node_count = local.node_count
   zones             = [local.zone]
   providers = {
     kubectl = kubectl
@@ -311,7 +311,7 @@ module "nemo" {
   cluster_id = local.gke_cluster_id
   checkpoint_bucket = local.result_bucket_name
   recipe = var.recipe
-  node_count = var.node_count
+  node_count = local.node_count
   gpu_type = var.gpu_type
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
   providers = {
