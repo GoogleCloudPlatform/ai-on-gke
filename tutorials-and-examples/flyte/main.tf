@@ -96,6 +96,7 @@ locals {
   private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
   enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
   helm_release_fullname = strcontains(var.helm_release_name, "flyte-binary") ? var.helm_release_name : "${var.helm_release_name}-flyte-binary"
+  flyte_domains         = ["development", "staging", "production"]
 }
 
 module "gcs" {
@@ -108,30 +109,34 @@ module "gcs" {
 # We assign the 'storage.admin' role to the service account to allow Flyte to get information about the GCS bucket
 # Consider using a more restrictive role in production
 resource "google_storage_bucket_iam_binding" "gke_service_account_bucket_object_admin" {
-  for_each = toset([
-    "roles/storage.admin"
-  ])
-
   bucket = var.gcs_bucket
-  role   = each.key
+  role   = "roles/storage.admin"
   members = [
     data.google_service_account.gke_service_account.member,
   ]
+  depends_on = [module.gcs]
 }
 
-module "workload-identity" {
-  source = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+resource "google_project_iam_member" "workload_identity_sa_bindings" {
+  project = "akvelon-gke-aieco"
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = data.google_service_account.gke_service_account.member
+}
 
-  name       = local.helm_release_fullname
-  namespace  = var.kubernetes_namespace
-  project_id = var.project_id
-  roles      = ["roles/iam.serviceAccountTokenCreator"]
+resource "google_service_account_iam_member" "main" {
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${data.google_service_account.gke_service_account.email}"
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.kubernetes_namespace}/${local.helm_release_fullname}]"
+}
 
-  use_existing_gcp_sa = true
-  gcp_sa_name         = data.google_service_account.gke_service_account.name
+resource "google_service_account_iam_member" "project-domains" {
+  for_each = toset([
+    for v in setproduct(var.flyte_projects, local.flyte_domains) : "${v[0]}-${v[1]}/default"
+  ])
 
-  use_existing_k8s_sa = true
-  annotate_k8s_sa     = false
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${data.google_service_account.gke_service_account.email}"
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[${each.key}]"
 }
 
 resource "random_password" "csql_root_password" {

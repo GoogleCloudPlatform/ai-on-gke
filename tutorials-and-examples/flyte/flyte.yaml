@@ -106,6 +106,14 @@ configuration:
           - container_array: K8S-ARRAY
           - sidecar: sidecar
 
+flyte-core-components:
+  admin:
+    seedProjects:
+      - flytesnacks
+    seedProjectsWithDetails:
+      - name: flytesnacks
+        description: Default project setup.
+
 # clusterResourceTemplates Specify templates for Kubernetes resources that should be created for new Flyte projects
 clusterResourceTemplates:
   # inline Specify additional cluster resource templates, to be merged with the base configuration

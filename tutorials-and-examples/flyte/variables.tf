@@ -37,6 +37,12 @@ variable "helm_release_name" {
   default     = "flyte-backend"
 }
 
+variable "flyte_projects" {
+  type        = list(string)
+  description = "List of Flyte projects"
+  default     = ["flytesnacks"]
+}
+
 variable "enable_gpu" {
   type    = bool
   default = false
