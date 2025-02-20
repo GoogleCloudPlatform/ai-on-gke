@@ -91,10 +91,11 @@ data "google_service_account" "gke_service_account" {
 }
 
 locals {
-  endpoint                          = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
-  ca_certificate                    = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
-  private_cluster                   = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
-  enable_autopilot                  = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
+  endpoint              = var.create_cluster ? "https://${module.infra[0].endpoint}" : "https://${data.google_container_cluster.default[0].endpoint}"
+  ca_certificate        = var.create_cluster ? base64decode(module.infra[0].ca_certificate) : base64decode(data.google_container_cluster.default[0].master_auth[0].cluster_ca_certificate)
+  private_cluster       = var.create_cluster ? var.private_cluster : data.google_container_cluster.default[0].private_cluster_config.0.enable_private_endpoint
+  enable_autopilot      = var.create_cluster ? var.autopilot_cluster : data.google_container_cluster.default[0].enable_autopilot
+  helm_release_fullname = strcontains(var.helm_release_name, "flyte-binary") ? var.helm_release_name : "${var.helm_release_name}-flyte-binary"
 }
 
 module "gcs" {
@@ -104,24 +105,31 @@ module "gcs" {
   bucket_name = var.gcs_bucket
 }
 
-resource "google_storage_bucket_iam_binding" "allow_gke_to_bucket" {
+# We assign the 'storage.admin' role to the service account to allow Flyte to get information about the GCS bucket
+# Consider using a more restrictive role in production
+resource "google_storage_bucket_iam_binding" "gke_service_account_bucket_object_admin" {
+  for_each = toset([
+    "roles/storage.admin"
+  ])
+
   bucket = var.gcs_bucket
-  role = "roles/storage.admin"
+  role   = each.key
   members = [
     data.google_service_account.gke_service_account.member,
   ]
 }
 
-module "flyte-workload-identity" {
-  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  name                = "flyte-backend-flyte-binary"
-  namespace           = "default"
-  project_id          = var.project_id
-  roles               = ["roles/storage.admin", "roles/compute.admin"]
-  cluster_name        = module.infra[0].cluster_name
-  location            = var.cluster_location
+module "workload-identity" {
+  source = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+
+  name       = local.helm_release_fullname
+  namespace  = var.kubernetes_namespace
+  project_id = var.project_id
+  roles      = ["roles/iam.serviceAccountTokenCreator"]
+
   use_existing_gcp_sa = true
-  gcp_sa_name         = data.google_service_account.gke_service_account.email
+  gcp_sa_name         = data.google_service_account.gke_service_account.name
+
   use_existing_k8s_sa = true
   annotate_k8s_sa     = false
 }

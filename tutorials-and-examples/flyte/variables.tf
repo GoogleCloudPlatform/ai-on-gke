@@ -31,6 +31,12 @@ variable "kubernetes_namespace" {
   default     = "default"
 }
 
+variable "helm_release_name" {
+  type        = string
+  description = "Helm release name"
+  default     = "flyte-backend"
+}
+
 variable "enable_gpu" {
   type    = bool
   default = false
