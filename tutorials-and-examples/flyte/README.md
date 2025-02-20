@@ -68,7 +68,9 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
    Run the following command to get the credentials for the GKE cluster:
 
    ```bash
-   gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) --region $(terraform output -raw gke_cluster_location) --project $(terraform output -raw project_id)
+   gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) \
+     --region $(terraform output -raw gke_cluster_location) \
+     --project $(terraform output -raw project_id)
    ```
 
 4. Bind the Google Service Account (GSA) to the Kubernetes Service Account (KSA):
