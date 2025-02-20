@@ -152,7 +152,6 @@ def update_blueprint_metadata(project_id, machine_type, blueprint_file="metadata
     print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-  # project_id = "supercomputer-testing" 
   parser = argparse.ArgumentParser(description="Update blueprint metadata with available zones and regions for given machine types.")
   parser.add_argument("--project_id", required=True, help="Your Google Cloud project ID.") 
   args = parser.parse_args()
