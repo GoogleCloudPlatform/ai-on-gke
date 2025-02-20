@@ -1,19 +1,134 @@
 package cloud
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/google/go-cmp/cmp"
 	container "google.golang.org/api/container/v1beta1"
 	containerv1beta1 "google.golang.org/api/container/v1beta1"
+	"google.golang.org/api/googleapi"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
+
+func TestEnsureNodePoolForPod(t *testing.T) {
+	svc := &mockGKEService{
+		nodePools: make(map[string]*containerv1beta1.NodePool),
+	}
+	clusterCtx := GKEContext{
+		ProjectID:              "test-project",
+		ClusterLocation:        "us-east5",
+		Cluster:                "test-cluster",
+		NodeZone:               "us-east5-a",
+		NodeServiceAccount:     "test-sa@test-project.iam.gserviceaccount.com",
+		NodeAdditionalNetworks: "",
+		NodeSecondaryDisk:      "test-disk",
+		NodeTags:               []string{"foo", "bar"},
+		PodToNodeLabels:        nil,
+		NodeSecureBoot:         true,
+		ForceOnDemand:          false,
+	}
+	rec := &mockEventRecorder{}
+	gke := &GKE{
+		NodePools:      svc,
+		ClusterContext: clusterCtx,
+		Recorder:       rec,
+	}
+
+	cases := []struct {
+		name          string
+		pod           *corev1.Pod
+		expNPCreation bool
+		expNPDeletion bool
+	}{
+		{ /* TODO */ },
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			npName, err := podToNodePoolName(c.pod)
+			if err != nil {
+				t.Fatalf("podToNodePoolName(): %v", err)
+			}
+			svc.creates = make(map[string]int)
+			svc.deletes = make(map[string]int)
+			if err := gke.EnsureNodePoolForPod(c.pod, "test"); err != nil {
+				t.Fatalf("EnsureNodePoolForPod(%v): %v", c.pod.Name, err)
+			}
+
+			if c.expNPCreation {
+				if svc.creates[npName] != 1 {
+					t.Fatalf("expected create for node pool %q, got none", npName)
+				}
+				if svc.deletes[npName] != 1 {
+					t.Fatalf("expected delete for node pool %q, got none", npName)
+				}
+			}
+		})
+	}
+}
+
+type mockEventRecorder struct{}
+
+func (r *mockEventRecorder) Event(object runtime.Object, eventtype, reason, message string) {}
+func (r *mockEventRecorder) Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{}) {
+}
+func (r *mockEventRecorder) AnnotatedEventf(object runtime.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{}) {
+}
+
+type mockGKEService struct {
+	creates   map[string]int
+	deletes   map[string]int
+	nodePools map[string]*containerv1beta1.NodePool
+}
+
+func (g *mockGKEService) Get(ctx context.Context, name string) (*containerv1beta1.NodePool, error) {
+	np, ok := g.nodePools[name]
+	if !ok {
+		return nil, &googleapi.Error{
+			Code: http.StatusNotFound,
+		}
+	}
+	return np, nil
+}
+
+func (g *mockGKEService) List(ctx context.Context) (*containerv1beta1.ListNodePoolsResponse, error) {
+	var resp containerv1beta1.ListNodePoolsResponse
+	for _, np := range g.nodePools {
+		resp.NodePools = append(resp.NodePools, np)
+	}
+	return &resp, nil
+}
+
+func (g *mockGKEService) Create(ctx context.Context, req *containerv1beta1.CreateNodePoolRequest, callbacks OpCallbacks) error {
+	_, alreadyExists := g.nodePools[req.NodePool.Name]
+	if alreadyExists {
+		return &googleapi.Error{
+			Code: http.StatusConflict,
+		}
+	}
+	g.nodePools[req.NodePool.Name] = req.NodePool
+	return nil
+}
+
+func (g *mockGKEService) Delete(ctx context.Context, name string, callbacks OpCallbacks) error {
+	_, ok := g.nodePools[name]
+	if !ok {
+		return &googleapi.Error{
+			Code: http.StatusNotFound,
+		}
+	}
+	delete(g.nodePools, name)
+	return nil
+}
 
 func Test_tpuTopologyToNodeCount(t *testing.T) {
 	cases := []struct {

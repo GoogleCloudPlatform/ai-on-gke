@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -68,7 +69,7 @@ const (
 var _ Provider = &GKE{}
 
 type GKE struct {
-	Service        *containerv1beta1.Service
+	NodePools      NodePoolService
 	ClusterContext GKEContext
 
 	Recorder record.EventRecorder
@@ -86,7 +87,7 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 		return fmt.Errorf("determining node pool for pod: %w", err)
 	}
 
-	existingNPState, err := g.checkExistingNodePool(np)
+	existingNPState, err := g.checkExistingNodePool(context.TODO(), np)
 	if err != nil {
 		return fmt.Errorf("checking if node pool exists: %w", err)
 	}
@@ -143,19 +144,19 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationStarted, "Starting creation of Node Pool %s (size = %v) for JobSet %s because %s", np.Name, np.InitialNodeCount, jobSetName, why)
 	log.Info(fmt.Sprintf("creating node pool %s for jobset %s", np.Name, jobSetName))
 
-	call := g.Service.Projects.Locations.Clusters.NodePools.Create(g.ClusterContext.ClusterName(), req)
-	op, err := call.Do()
-	if err != nil {
-		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Request to create Node Pool %s failed: %v.", np.Name, err)
-		return fmt.Errorf("do: %w", err)
+	if err := g.NodePools.Create(context.TODO(), req, OpCallbacks{
+		ReqFailure: func(err error) {
+			g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Request to create Node Pool %s failed: %v.", np.Name, err)
+		},
+		OpFailure: func(err error) {
+			g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Operation to create Node Pool %s failed: %v.", np.Name, err)
+		},
+		Success: func() {
+			g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationSucceeded, "Successfully created Node Pool %s.", np.Name)
+		},
+	}); err != nil {
+		return err
 	}
-
-	if err := waitForGkeOp(g.Service, g.ClusterContext, op); err != nil {
-		g.Recorder.Eventf(p, corev1.EventTypeWarning, EventNodePoolCreationFailed, "Operation to create Node Pool %s failed: %v.", np.Name, err)
-		return fmt.Errorf("waiting for operation: %w", err)
-	}
-
-	g.Recorder.Eventf(p, corev1.EventTypeNormal, EventNodePoolCreationSucceeded, "Successfully created Node Pool %s.", np.Name)
 
 	return nil
 }
@@ -163,10 +164,9 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 func (g *GKE) ListNodePools() ([]NodePoolRef, error) {
 	var refs []NodePoolRef
 
-	resp, err := g.Service.Projects.Locations.Clusters.NodePools.List(g.ClusterContext.ClusterName()).Do()
+	resp, err := g.NodePools.List(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("listing node pools: %w", err)
-
 	}
 
 	for _, np := range resp.NodePools {
@@ -213,22 +213,22 @@ func (g *GKE) DeleteNodePool(name string, eventObj client.Object, why string) er
 	defer g.inProgressDeletesNPName.Delete(name)
 
 	g.Recorder.Eventf(eventObj, corev1.EventTypeNormal, EventNodePoolDeletionStarted, "Starting deletion of Node Pool %s because %s", name, why)
-	op, err := g.Service.Projects.Locations.Clusters.Delete(g.ClusterContext.NodePoolName(name)).Do()
-	if err != nil {
-		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+	if err := g.NodePools.Delete(context.TODO(), name, OpCallbacks{
+		NotFound: func() {
 			g.Recorder.Eventf(eventObj, corev1.EventTypeNormal, EventNodePoolNotFound, "Node pool not found - ignoring deletion attempt.", name)
-			return nil
-		}
-		g.Recorder.Eventf(eventObj, corev1.EventTypeWarning, EventNodePoolDeletionFailed, "Request to delete Node Pool %s failed: %v.", name, err)
-		return fmt.Errorf("deleting node pool %q: %w", name, err)
-	}
-
-	if err := waitForGkeOp(g.Service, g.ClusterContext, op); err != nil {
-		g.Recorder.Eventf(eventObj, corev1.EventTypeWarning, EventNodePoolDeletionFailed, "Operation to delete Node Pool %s failed: %v.", name, err)
+		},
+		ReqFailure: func(err error) {
+			g.Recorder.Eventf(eventObj, corev1.EventTypeWarning, EventNodePoolDeletionFailed, "Request to delete Node Pool %s failed: %v.", name, err)
+		},
+		OpFailure: func(err error) {
+			g.Recorder.Eventf(eventObj, corev1.EventTypeWarning, EventNodePoolDeletionFailed, "Operation to delete Node Pool %s failed: %v.", name, err)
+		},
+		Success: func() {
+			g.Recorder.Eventf(eventObj, corev1.EventTypeNormal, EventNodePoolDeletionSucceeded, "Successfully deleted Node Pool %s.", name)
+		},
+	}); err != nil {
 		return err
 	}
-
-	g.Recorder.Eventf(eventObj, corev1.EventTypeNormal, EventNodePoolDeletionSucceeded, "Successfully deleted Node Pool %s.", name)
 
 	return nil
 }
@@ -246,9 +246,8 @@ const (
 	nodePoolStateExistsAndStopping
 )
 
-func (g *GKE) checkExistingNodePool(desired *containerv1beta1.NodePool) (nodePoolState, error) {
-	call := g.Service.Projects.Locations.Clusters.NodePools.Get(g.ClusterContext.NodePoolName(desired.Name))
-	existing, err := call.Do()
+func (g *GKE) checkExistingNodePool(ctx context.Context, desired *containerv1beta1.NodePool) (nodePoolState, error) {
+	existing, err := g.NodePools.Get(ctx, desired.Name)
 	if err == nil {
 		match, err := nodePoolsMatch(desired, existing)
 		if err != nil {
