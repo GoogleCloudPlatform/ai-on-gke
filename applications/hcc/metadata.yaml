@@ -34,7 +34,11 @@ spec:
       - name: a3_ultra_zone
         varType: string
         defaultValue: ""
-      - name: consumption_model
+      - name: a3_mega_consumption_model
+        varType: string
+        required: true
+        defaultValue: ""
+      - name: a3_ultra_consumption_model
         varType: string
         required: true
         defaultValue: ""
@@ -45,9 +49,6 @@ spec:
         varType: string
         defaultValue: ""
       - name: placement_policy_name
-        varType: string
-        defaultValue: ""
-      - name: host_maintenance
         varType: string
         defaultValue: ""
       - name: recipe

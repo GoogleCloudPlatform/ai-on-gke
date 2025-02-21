@@ -87,20 +87,42 @@ spec:
             variableValues:
             - A3 Ultra
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-        consumption_model:
-          name: consumption_model
+        a3_mega_consumption_model:
+          name: a3_mega_consumption_model
           title: Consumption options 
           section: required_config
           subtext: For optimal performance with distributed AI workloads, reserve densely allocated accelerator capacity. See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption options</i></a> for more details.</br>
           enumValueLabels:
           - label: Reservation
             value: Reservation
+          toggleUsingVariables:
+          - variableName: gpu_type
+            variableValues:
+            - A3 Mega
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+        a3_ultra_consumption_model:
+          name: a3_ultra_consumption_model
+          title: Consumption options
+          section: required_config
+          subtext: For optimal performance with distributed AI workloads, reserve densely allocated accelerator capacity. See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption options</i></a> for more details.</br>
+          enumValueLabels:
+          - label: Reservation
+            value: Reservation
+          toggleUsingVariables:
+          - variableName: gpu_type
+            variableValues:
+            - A3 Ultra
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         reservation:
           name: reservation
           title: Reservation name
           section: required_config
           toggleUsingVariables:
-          - variableName: consumption_model
+          - variableName: a3_mega_consumption_model
+            variableValues:
+            - Reservation
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: a3_ultra_consumption_model
             variableValues:
             - Reservation
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
@@ -109,38 +131,16 @@ spec:
           title: Reservation block
           section: required_config
           toggleUsingVariables:
-          - variableName: consumption_model
+          - variableName: a3_ultra_consumption_model
             variableValues:
             - Reservation
-            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-          - variableName: gpu_type
-            variableValues:
-            - A3 Ultra
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         placement_policy_name:
           name: placement_policy_name
           title: Placement policy
           section: required_config
           toggleUsingVariables:
-          - variableName: consumption_model
-            variableValues:
-            - Reservation
-            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-          - variableName: gpu_type
-            variableValues:
-            - A3 Mega
-            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-        host_maintenance:
-          name: host_maintenance
-          title: Host maintainance
-          section: required_config
-          enumValueLabels:
-          - label: NONE
-            value: none
-          - label: PERIODIC
-            value: periodic
-          toggleUsingVariables:
-          - variableName: consumption_model
+          - variableName: a3_mega_consumption_model
             variableValues:
             - Reservation
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED

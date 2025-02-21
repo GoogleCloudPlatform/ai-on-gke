@@ -87,11 +87,6 @@ variable "recipe" {
   type        = string
 }
 
-variable "host_maintenance" {
-  description = "Toolkit deployment variable: host_maintenance"
-  type        = string
-}
-
 variable "gpu_type" {
   description = "Toolkit deployment variable: gpu_type"
   type        = string
