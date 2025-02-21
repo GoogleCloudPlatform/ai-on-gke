@@ -60,21 +60,25 @@ variable "a3_ultra_zone" {
 variable "node_count_gke" {
   description = "Toolkit deployment variable: node_count_gke"
   type        = number
+  default     = 0
 }
 
 variable "node_count_gke_nccl" {
   description = "Toolkit deployment variable: node_count_gke_nccl"
   type        = number
+  default     = 2
 }
 
 variable "node_count_llama_3_7b" {
   description = "Toolkit deployment variable: node_count_llama_3_7b"
   type        = number
+  default     = 2
 }
 
 variable "node_count_llama_3_70b" {
   description = "Toolkit deployment variable: node_count_llama_3_70b"
   type        = number
+  default     = 32
 }
 
 variable "placement_policy_name" {

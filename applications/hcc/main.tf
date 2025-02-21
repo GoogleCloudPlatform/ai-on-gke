@@ -291,7 +291,7 @@ module "workload-manager-install" {
   }
   kueue = {
     install = true
-    config_path = "./modules/embedded/modules/management/kubectl-apply/templates/kueue-configuration.yaml.tftpl"
+    config_path = var.gpu_type == "A3 Ultra" ? "./modules/embedded/modules/management/kubectl-apply/templates/kueue-configuration.yaml.tftpl" : null
     config_template_vars = {
       node_pool_name = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].node_pool_name : null
       num_gpus       = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].static_gpu_count : null
