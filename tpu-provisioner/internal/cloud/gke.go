@@ -632,10 +632,21 @@ func getAnnotation(p *corev1.Pod, key string) string {
 // 4. The code path for ensuring a matching node pool exists is executed.
 func nodePoolSelectiveHash(np *containerv1beta1.NodePool) (string, error) {
 	h := fnv.New32a()
+	var labels map[string]string
+	if np.Config.Labels != nil {
+		labels = make(map[string]string, len(np.Config.Labels))
+		for k, v := range np.Config.Labels {
+			// Exclude the label that tracks the hash.
+			if k == LabelNodePoolHash {
+				continue
+			}
+			labels[k] = v
+		}
+	}
 	npToHash := &containerv1beta1.NodePool{
 		Config: &containerv1beta1.NodeConfig{
 			Spot:        np.Config.Spot,
-			Labels:      np.Config.Labels,
+			Labels:      labels,
 			Taints:      np.Config.Taints,
 			MachineType: np.Config.MachineType,
 		},
