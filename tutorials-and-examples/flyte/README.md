@@ -82,7 +82,7 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
    * replace `<BUCKET_NAME>` with the bucket name (2 occurrences)
    * replace `<CLOUDSQL_IP>`, `<CLOUDSQL_USERNAME>`, `<CLOUDSQL_PASSWORD>` and `<CLOUDSQL_DBNAME>` with corresponding values (1 occurrence each; use `terraform output cloudsql_password` to get the password)
 
-5. Install Flyte using Helm.
+5. Install Flyte to the GKE cluster using Helm.
 
    ```bash
    helm install flyte-backend flyte-binary \
@@ -103,18 +103,17 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
 
 At this point, the Flyte dashboard is not exposed to the internet. Let's access it using Kubernetes port forwarding.
 
-1. Get the service name and port:
+1. List the services and find the service name for the Flyte HTTP service:
 
    ```bash
    $ kubectl get svc
-   NAME                                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
-   flyte-backend-flyte-binary-grpc      ClusterIP   34.118.237.187   <none>        8089/TCP   4h17m
-   flyte-backend-flyte-binary-http      ClusterIP   34.118.226.45    <none>        8088/TCP   4h17m
-   flyte-backend-flyte-binary-webhook   ClusterIP   34.118.237.19    <none>        443/TCP    4h17m
-   kubernetes                           ClusterIP   34.118.224.1     <none>        443/TCP    5h17m
+   NAME                                 TYPE        CLUSTER-IP       PORT(S)
+   flyte-backend-flyte-binary-grpc      ClusterIP   34.118.237.187   8089/TCP
+   flyte-backend-flyte-binary-http      ClusterIP   34.118.226.45    8088/TCP
+   flyte-backend-flyte-binary-webhook   ClusterIP   34.118.237.19    443/TCP
    ```
 
-2. Use kubectl port-forward to do the actual forwarding:
+2. Use `kubectl port-forward` command to forward the Flyte HTTP service to your local machine:
 
    ```bash
    $ kubectl port-forward svc/flyte-backend-flyte-binary-http 8088:8088
@@ -122,8 +121,98 @@ At this point, the Flyte dashboard is not exposed to the internet. Let's access 
    Forwarding from [::1]:8088 -> 8088
    ```
 
-3. Access <http://localhost:8088/console>
+   We recommend running this command in a separate terminal window or tab.
+
+3. Open <http://localhost:8088/console> in your browser to access the Flyte dashboard.
+   You should see the following screen:
    ![alt text](./img/flyte_dashboard.png)
+
+   If you experience issues accessing the dashboard, make sure the pods are running and the port forwarding is set up correctly.
+
+## Install Flyte CLI and run a sample workflow
+
+1. First, create a virtual environment. The following commands will create a virtual environment in the `venv` directory and activate it:
+
+   ```bash
+   python3 -m virtualenv venv
+   source venv/bin/activate
+   ```
+
+2. Install Flytekit using pip:
+
+   ```bash
+   pip install flytekit
+   ```
+
+3. Install flytectl.
+   Go to the [releases page](https://github.com/flyteorg/flyte/releases), find the latest release for the `flytectl` binary, and download the one for your operating system. Unpack the archive, move the binary to a directory in your PATH, and make it executable. The actual commands may vary depending on the operating system and the version of the binary.
+
+   For example, on Linux x86_64:
+
+   ```bash
+   curl -L -o /tmp/flytectl.tar.gz https://github.com/flyteorg/flyte/releases/download/${VERSION}/flytectl_Linux_x86_64.tar.gz
+   tar -xvf /tmp/flytectl.tar.gz
+   sudo install flytectl /usr/local/bin/flytectl
+   ```
+
+   In the above commands, replace `${VERSION}` with the actual release tag.
+
+4. Start port forwarding for the Flyte GRPC service:
+
+   ```bash
+   kubectl port-forward svc/flyte-backend-flyte-binary-grpc 8089:8089
+   ```
+
+   We recommend running this command in a separate terminal window or tab.
+
+5. Configure Flyte CLI to use backend running on the GKE cluster through port forwarding:
+
+   ```bash
+   flytectl config init --insecure --host localhost:8089
+   ```
+
+   If you get a connection error, make sure the port forwarding is set up correctly.
+
+   If you see the message `Init flytectl config file at ...`, the configuration was successful.
+
+6. Initialize a new Flyte project using the hello-world template:
+
+   ```bash
+   pyflyte init --template hello-world hello-world
+   cd hello-world
+   ```
+
+7. Run the sample workflow in the Flyte cluster:
+
+   ```bash
+   pyflyte run --remote example.py hello_world_wf
+   ```
+
+   By default it runs the workflow in the `flytesnacks` project, in the `development` domain. You can change the project and domain using the `--project` and `--domain` flags.
+
+8. Now Flyte will run the workflow on the GKE cluster. You can check the status of the workflow in the Flyte dashboard (ensure that port forwarding for the HTTP service is still active).
+   You can also check the status using the `flytectl` CLI:
+
+   ```bash
+   flytectl get execution -p flytesnacks -d development
+   ```
+
+   Note the execution ID and wait for the execution to complete. If it fails, check the logs of the pod running the workflow:
+
+   ```bash
+   kubectl get pods -n flytesnacks-development
+   kubectl logs -n flytesnacks-development <pod-name>
+   ```
+
+   In the second command above, replace `<pod-name>` with the actual name of the pod obtained from the first command.
+
+9. To view the details of the workflow execution, including inputs and outputs, run:
+
+   ```bash
+   flytectl get execution -p flytesnacks -d development --details <execution-id>
+   ```
+
+   Replace `<execution-id>` with the actual execution ID.
 
 ## Publish service to the internet
 
