@@ -256,12 +256,17 @@ module "a3-ultragpu-pool" {
   labels                  = var.labels
   machine_type            = "a3-ultragpu-8g"
   project_id              = var.project_id
-  reservation_affinity = {
-    consume_reservation_type = "SPECIFIC_RESERVATION"
-    specific_reservations = [{
-      name = var.reservation
-    }]
-  } 
+  reservation_affinity = (var.reservation != "" ? {
+      consume_reservation_type = "SPECIFIC_RESERVATION"
+      specific_reservations = [{
+	name = var.reservation_block == "" ? "${var.reservation}" : "${var.reservation}/reservationBlocks/${var.reservation_block}"
+        project = var.project_id
+      }]
+    } : {
+      consume_reservation_type = "NO_RESERVATION"
+      specific_reservations    = []
+    }
+  )
   local_ssd_count_ephemeral_storage = 32
   static_node_count = local.node_count
   zones             = [local.zone]
