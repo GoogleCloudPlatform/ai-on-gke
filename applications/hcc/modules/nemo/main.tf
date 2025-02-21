@@ -3,6 +3,7 @@ locals {
   cluster_name     = local.cluster_id_parts[5]
   cluster_location = local.cluster_id_parts[3]
   project_id       = local.cluster_id_parts[1]
+  machine_type     = var.gpu_type == "A3 Mega" ? "a3mega" : var.gpu_type == "A3 Ultra" ? "a3ultra" : error("Only A3 Mega and A3 Ultra are supported") 
 }
 
 data "google_client_config" "default" {}
@@ -22,7 +23,7 @@ resource "helm_release" "nemo" {
   name      = "nemo"
   provider  = helm
   version     = "0.7.0"
-  chart     = "${path.module}/helm-charts/nemo-training/"
+  chart     = "${path.module}/helm-charts/nemo-training/${local.machine_type}"
   namespace = "default"
   reset_values = true
   values = [

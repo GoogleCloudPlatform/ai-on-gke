@@ -1,0 +1,326 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{ $timestamp := now | unixEpoch }}
+{{ $jobSuffix := randAlphaNum 4 | lower }}
+{{ $jobuuid := uuidv4 }}
+
+{{ $nodes := div .Values.workload.gpus 8 | max 1 }}
+{{ $gpusPerNode := min .Values.workload.gpus 8 }}
+
+{{- $root := . -}}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}"
+  namespace: default
+  labels:
+  {{- if $root.Values.queue }}
+    kueue.x-k8s.io/queue-name: "{{ $root.Values.queue }}"
+  {{- end }}
+spec:
+  {{- if $root.Values.queue }}
+  suspend: true
+  {{- end }}
+  parallelism: {{ $nodes }}
+  completions: {{ $nodes }}
+  backoffLimit: 0
+  completionMode: Indexed
+  ttlSecondsAfterFinished: 43200
+  template:
+    metadata:
+      annotations:
+        {{- if and (eq $root.Values.tasSettings.useLegacyTAS false)  $root.Values.queue $root.Values.tasSettings.topologyRequest }}
+          {{- toYaml .Values.tasSettings.topologyRequest | nindent 8 }}
+        {{- end }}
+        kubectl.kubernetes.io/default-container: megatron
+        {{- if $root.Values.volumes.gcsMounts }}
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+        gke-gcsfuse/ephemeral-storage-limit: "0"
+        {{- end }}
+        {{- if not $root.Values.network.hostNetwork }}
+        networking.gke.io/default-interface: "eth0"
+        networking.gke.io/interfaces: |
+        {{- if $root.Values.network.subnetworks }}
+          [
+            {{- range $i, $subnetwork := $root.Values.network.subnetworks }}
+            {"interfaceName":"eth{{ $i }}","network":"{{ $subnetwork }}"}{{ eq $i 9 | ternary "" ","}}
+            {{- end }}
+          ]
+        {{- else }}
+          [
+            {"interfaceName":"eth0","network":"default"},
+            {"interfaceName":"eth1","network":"{{ $root.Values.clusterName }}-sub-1"},
+            {{- range  $i := until 8 }}
+            {"interfaceName":"eth{{ add 2 $i }}","network":"{{ $root.Values.clusterName }}-rdma-sub-{{ $i }}"}{{ eq $i 7 | ternary "" ","}}
+            {{- end }}
+          ]
+        {{- end }}
+        {{- end }}
+    spec:
+      {{- if $root.Values.tasSettings.useLegacyTAS }}
+      schedulingGates:
+      - name: "gke.io/topology-aware-auto-scheduling"
+      {{- end }}
+      {{- if $root.Values.network.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      subdomain: "{{.Release.Name}}"
+      restartPolicy: Never
+      {{ if $root.Values.targetNodes }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                {{- range $hostname := $root.Values.targetNodes }}
+                - {{ $hostname }}
+                {{- end }}
+      {{ end }}
+      tolerations:
+      - operator: "Exists"
+        key: nvidia.com/gpu
+      - operator: "Exists"
+        key: cloud.google.com/impending-node-termination
+      volumes:
+      {{ if $root.Values.network.gibVersion }}
+      - name: gib
+        emptyDir: {}
+      {{ end }}
+
+      - name: workload-configuration
+        configMap:
+          name: "{{.Release.Name}}"
+      - name: local-ssd
+        hostPath:
+          path: /mnt/stateful_partition/kube-ephemeral-ssd
+      - name: shared-memory
+        emptyDir:
+          medium: "Memory"
+          sizeLimit: 250Gi
+
+      {{- range $gcs := $root.Values.volumes.gcsMounts }}
+      - name: "{{ $gcs.bucketName }}"
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: "{{ $gcs.bucketName }}"
+      {{- end}}
+
+      initContainers:
+      {{ if $root.Values.network.gibVersion }}
+      - name: nccl-plugin-installer
+        image: {{ $root.Values.network.gibVersion }}
+        imagePullPolicy: Always
+        args:
+        - |
+          set -ex
+          /scripts/container_entry.sh install --install-nccl
+          cp -R /var/lib/gib/lib64/. /target/usr/local/gib/lib64
+          cp -R /var/lib/gib/. /target/usr/local/gib
+        command:
+        - /bin/sh
+        - -c
+
+        volumeMounts:
+        - mountPath: /target/usr/local/gib
+          name: gib
+
+      {{ end}}
+      {{ if $root.Values.gcsDownload }}
+      - name: training-data-downloader
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli
+        volumeMounts:
+        - name: local-ssd
+          mountPath: "{{ $root.Values.volumes.ssdMountPath }}"
+        {{- range $gcs := $root.Values.volumes.gcsMounts }}
+        - name: "{{ $gcs.bucketName }}"
+          mountPath: "{{ $gcs.mountPath }}"
+        {{- end }}
+        env:
+        - name: GCS_DATA_SOURCE
+          value: "{{ $root.Values.gcsDownload.source }}"
+        - name: GCS_DATA_TARGET
+          value: "{{ $root.Values.gcsDownload.target }}"
+        command:
+          - /bin/sh
+          - -c
+          - |
+            echo "Caching training data from $GCS_DATA_SOURCE to $GCS_DATA_TARGET"
+            mkdir -p $GCS_DATA_TARGET
+            SECONDS=0
+            gcloud storage rsync \
+              --recursive \
+              $GCS_DATA_SOURCE $GCS_DATA_TARGET
+            duration=$SECONDS
+            echo "Transferred or synchronized $GCS_DATA_SOURCE to $GCS_DATA_TARGET in $duration seconds."
+      {{ end }}
+
+      containers:
+      - name: megatron
+        image: "{{ $root.Values.workload.image }}"
+        imagePullPolicy: Always
+        {{- if $root.Values.network.hostNetwork }}
+        securityContext:
+          privileged: true
+        {{- end }}
+        env:
+        - name: JOB_IDENTIFIER
+          value: "{{ .Release.Name }}-{{ $timestamp }}-{{ $jobSuffix }}"
+        - name: JOB_TIMESTAMP
+          value: "{{ $timestamp }}"
+        - name: JOB_UUID
+          value: "{{ $jobuuid }}"
+        - name: JOB_ORCHESTRATOR
+          value: "gke"
+        - name: SSD_MOUNT_PATH
+          value: "{{ $root.Values.volumes.ssdMountPath }}"
+
+        # The following settings are specific to the Torch distributed launcher:
+        - name: TORCH_DISTRIBUTED_TARGET
+          value: "{{ $root.Values.workload.torchDistributedTarget }}"
+        - name: TORCH_DISTRIBUTED_TRACING
+          value: "ALL"
+        - name: MASTER_ADDR
+          value: "{{.Release.Name}}-0.{{.Release.Name}}.default.svc.cluster.local"
+        - name: MASTER_PORT
+          value: "6002"
+        - name: WORLD_SIZE
+          value: "{{ $root.Values.workload.gpus }}"
+        - name: NNODES
+          value: "{{ $nodes }}"
+        - name: GPUS_PER_NODE
+          value: "{{ $gpusPerNode }}"
+        - name: GLOO_SOCKET_IFNAME
+          value: "eth0"
+        - name: LD_LIBRARY_PATH
+          value: /usr/local/gib/lib64
+
+        # The following is needed to prevent send-receive stalling execution
+        - name: NVTE_FWD_LAYERNORM_SM_MARGIN
+          value: "8"
+        - name: NVTE_BWD_LAYERNORM_SM_MARGIN
+          value: "8"
+
+        # Additional NCCL settings
+        {{- range $environment_variable := $root.Values.network.ncclSettings }}
+        - name: {{ $environment_variable.name }}
+          value: "{{ $environment_variable.value }}"
+        {{- end }}
+
+        # GCS mount points
+        {{- range $index, $gcs := $root.Values.volumes.gcsMounts }}
+        - name: "GCS_MOUNT_PATH_{{ $index }}"
+          value: "{{ $gcs.mountPath }}"
+        {{- end }}
+
+        # NeMo Experiment Manager settings
+        - name: EXPERIMENT_NAME
+          value: "{{ $root.Values.workload.experiment_name }}"
+        - name: EXPERIMENT_DIR
+          value: "{{ $root.Values.workload.experiment_dir }}"
+
+        command:
+        - bash
+        - -c
+        - |
+          echo "Pod on $(hostname --fqdn) is running"
+          echo "Pod is assigned job index of $JOB_COMPLETION_INDEX"
+          echo "Job ID is $JOB_IDENTIFIER"
+
+          echo "Running nvidia-smi"
+          nvidia-smi
+
+          ldconfig $LD_LIBRARY_PATH
+          echo "Added $LD_LIBRARY_PATH to ldconfig:"
+          ldconfig -p | grep libcuda | sed 's/^/  /'
+
+          echo "Local SSD contents (path $SSD_MOUNT_PATH):"; ls $SSD_MOUNT_PATH | sed 's/^/  /'
+
+          {{ if $root.Values.network.gibVersion }}
+          echo "Setting NCCL environment variables"
+          cat /usr/local/gib/scripts/set_nccl_env.sh
+          source /usr/local/gib/scripts/set_nccl_env.sh
+          {{ end }}
+
+          echo "Downloading GPT vocabulary files"
+          wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-vocab.json &&\
+          wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-merges.txt
+
+          echo "NeMo configuration file:"
+          cat /etc/workload-configuration/nemo-configuration.yaml | sed 's/^/| /'
+          echo ""
+
+          touch /workspace/workload_arguments.txt
+          echo "Detected the following additional workload arguments:"
+          {{- range $root.Values.workload.arguments }}
+          echo "{{ . }}" | tee -a /workspace/workload_arguments.txt
+          {{- end }}
+
+          export NODE_RANK=$JOB_COMPLETION_INDEX
+          echo "Launching Torch distributed as node rank $NODE_RANK out of $NNODES nodes"
+          echo "Job logs will go to ${EXPERIMENT_DIR}/${EXPERIMENT_NAME}/$JOB_IDENTIFIER/."
+
+          mkdir -p "${GCS_MOUNT_PATH_0}/index_mapping_dir"
+
+          sleep 10 # <- Allow some time for service to boot
+
+          OMP_NUM_THREADS=12 torchrun \
+          --nproc-per-node="$GPUS_PER_NODE" \
+          --nnodes="$NNODES" \
+          --node_rank="$NODE_RANK" \
+          --rdzv_id="$JOB_IDENTIFIER" \
+          --master_addr="$MASTER_ADDR" \
+          --master_port="$MASTER_PORT" \
+          ${TORCH_DISTRIBUTED_TARGET} \
+          --config-path="/etc/workload-configuration" \
+          --config-name="nemo-configuration.yaml" \
+          +trainer.num_nodes="$NNODES" \
+          ++exp_manager.name="$EXPERIMENT_NAME" \
+          +exp_manager.version="$JOB_IDENTIFIER" \
+          +exp_manager.exp_dir="$EXPERIMENT_DIR" \
+          +exp_manager.dllogger_logger_kwargs.json_file="${EXPERIMENT_DIR}/${EXPERIMENT_NAME}/$JOB_IDENTIFIER/dllogger/rank-$NODE_RANK/dllogger.json" \
+          {{- range $root.Values.workload.arguments }}
+          {{ . }} \
+          {{- end }}
+
+          echo "Pod on $(hostname --fqdn) is exiting"
+
+        volumeMounts:
+          {{ if $root.Values.network.gibVersion }}
+          - name: gib
+            mountPath: /usr/local/gib
+          {{ end }}
+          - name: workload-configuration
+            mountPath: /etc/workload-configuration
+          - name: shared-memory
+            mountPath: /dev/shm
+          - name: local-ssd
+            mountPath: "{{ $root.Values.volumes.ssdMountPath }}"
+
+          {{- range $gcs := $root.Values.volumes.gcsMounts }}
+          - name: "{{ $gcs.bucketName }}"
+            mountPath: "{{ $gcs.mountPath }}"
+          {{- end }}
+
+        resources:
+          limits:
+            nvidia.com/gpu: {{ $gpusPerNode }}
