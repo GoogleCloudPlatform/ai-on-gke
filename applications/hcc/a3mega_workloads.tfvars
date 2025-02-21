@@ -28,12 +28,11 @@ project_id = "supercomputer-testing"
 a3_mega_zone = "us-east5-a"
 a3_ultra_zone = ""
 
-node_count = 2
+node_count_gke_nccl = 2
 recipe = "gke-nccl"
 
 reservation = "qss-test-a3mega"
 reservation_block = ""
 placement_policy_name = ""
-host_maintenance = ""
 
 gpu_type = "A3 Mega"
