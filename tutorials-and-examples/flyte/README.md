@@ -214,15 +214,24 @@ At this point, the Flyte dashboard is not exposed to the internet. Let's access 
 
    Replace `<execution-id>` with the actual execution ID.
 
-## Publish service to the internet
+## Publish service to the internet and enable authentication
 
-First, create a global static IP address for the Ingress:
+The following section will show how to expose Flyte to the internet and enable authentication using Google OAuth. The overall process involves the following steps:
+
+1. Create a static IP address for the Ingress and configure DNS.
+2. Create a managed certificate.
+3. Register OAuth 2.0 client.
+4. Update the Helm values to enable Ingress and authentication.
+
+### 1. Create a static IP address for the Ingress and configure DNS
+
+Run the following command to create a global static IP address:
 
 ```bash
 gcloud compute addresses create flyte --global --ip-version=IPV4
 ```
 
-Get details about the created IP address and note the IP address:
+Get details about the created IP address and note the IP address value:
 
 ```bash
 gcloud compute addresses describe flyte --global
@@ -230,7 +239,9 @@ gcloud compute addresses describe flyte --global
 
 If you have a domain you want to use, go to your domain registrar and create an A record pointing to the IP address you just created. If you don't have a domain, but you want to test this setup, you can use the `sslip.io` service. In that case, use the domain `<cloud-ip-address>.sslip.io` where `<cloud-ip-address>` is the IP address you just created. The other advantage of using `sslip.io` is that you don't have to manage DNS records nor wait for them to propagate.
 
-Now, create a managed certificate for the domain you want to use:
+### 2. Create a managed certificate
+
+To create a managed certificate, you need to create a `ManagedCertificate` resource in the cluster. Put the following content in a file named `managed-certificate.yaml` and replace `<your-domain>` with the domain you want to use:
 
 ```yaml
 # managed-certificate.yaml
@@ -244,24 +255,77 @@ spec:
     - <your-domain>
 ```
 
+Then, apply the configuration:
+
 ```bash
 kubectl apply -f managed-certificate.yaml
 ```
 
-In the final step, let's update the Helm values to enable the Ingress and use the IP address and certificate we created. Edit the `flyte.yaml` file and add the following:
+### 3. Register OAuth 2.0 client
+
+Visit the [Credentials page](https://console.cloud.google.com/apis/credentials) and select "Create OAuth client ID" on the top of the page.
+
+When asked to choose the application type, select "Web application". In the "Authorized redirect URIs" section, add the following URI: `https://<your-domain>` (replace `<your-domain>` with the actual domain you are using).
+
+Note the client ID and client secret values. You will need them in the next step.
+
+### 4. Update Flyte configuration
+
+At this point, you should have a static IP address, a managed certificate, and an OAuth 2.0 client.
+
+To enable authentication you also need to generate a random password to be used internally by flytepropeller. You can use any password generator you like or run the following command:
+
+```bash
+openssl rand -base64 32
+```
+
+Also, you need a bcrypt hash of the password. You can generate it using the following command, replacing `<your-random-password>` with the password you generated:
+
+```bash
+pip install bcrypt && python -c 'import bcrypt; import base64; print(base64.b64encode(bcrypt.hashpw("<your-random-password>".encode("utf-8"), bcrypt.gensalt(6))))'
+```
+
+Now, when you have all the required values, let's update the `flyte.yaml` file.
+
+You need to update it in two places. First, extend the `configuration` section with `auth` configuration providing the OAuth 2.0 client ID and secret, and the client secret and its bcrypt hash you just generated. Also, add the domain you are using to the `authorizedUris` list:
+
+```yaml
+configuration:
+
+  # Other configuration here
+  # ...
+
+  auth:
+    enabled: true
+    oidc:
+      baseUrl: https://accounts.google.com
+      clientId: >-
+        <your-client-id>
+      clientSecret: >-
+        <your-client-secret>
+    internal:
+      clientSecret: >-
+        <your-random-password>
+      clientSecretHash: >-
+        <your-random-password-bcrypt-hash>
+
+    authorizedUris:
+      - https://<your-domain>
+```
+
+Second, add the following configuration to enable Ingress (here we reference the static IP address and the managed certificate we created earlier):
 
 ```yaml
 ingress:
   create: true
-  httpAnnotations:
+  separateGrpcIngress: false
+  commonAnnotations:
     kubernetes.io/ingress.global-static-ip-name: flyte
     networking.gke.io/managed-certificates: flyte-http
     kubernetes.io/ingress.class: "gce"
-  grpcAnnotations:
-    kubernetes.io/ingress.class: "gce-internal"
 ```
 
-Then, update the Helm release:
+Finally, apply the updated configuration by upgrading the Helm release:
 
 ```bash
 helm upgrade flyte-backend flyte-binary \
@@ -270,67 +334,13 @@ helm upgrade flyte-backend flyte-binary \
   --values flyte.yaml
 ```
 
-After some time, the certificate should be provisioned and the application should be accessible via the domain you specified. Note that the certificate provisioning may take some time. You can check the certificate status by running:
+Wait some time for the certificate to be provisioned and the Ingress to be created. You can check the status of the certificate by running:
 
 ```bash
 kubectl get managedcertificate flyte-http
 ```
 
-When the status is `Active`, you should be able to access the Flyte dashboard via the domain you specified, the link would look like `https://<your-domain>/console`. If you get an SSL error, wait for a couple of minutes more.
-
-At this step, you should be able to access the Flyte dashboard via the domain you specified. The only thing left is to secure the application. Flyte supports OAuth2 and OpenId Connect authentication, there is a guide on how to configure it [here](https://docs.flyte.org/en/latest/deployment/configuration/auth_setup.html). In case you don't need authentication, consider using [Identity-Aware Proxy](https://cloud.google.com/iap/docs) to limit access to the dashboard. The next section will guide you through this process.
-
-## Limit access to the Flyte dashboard using Identity-Aware Proxy
-
-Start by ensuring that the OAuth consent screen is configured. Go to the [IAP page](https://console.cloud.google.com/security/iap) and click "Configure consent screen" if prompted.
-
-Next, create an OAuth 2.0 client ID by visiting the [Credentials page](https://console.cloud.google.com/apis/credentials) and selecting "Create OAuth client ID". Use the "Web application" type and proceed with the creation. Use the Client ID and secret to create a Secret in the Kubernetes cluster:
-
-```bash
-kubectl create secret generic flyte-http-oauth \
-  --from-literal=client_id=<your-oauth-client-id> \
-  --from-literal=client_secret=<your-oauth-client-secret>
-```
-
-Then go back to the [Credentials page](https://console.cloud.google.com/apis/credentials), click on the OAuth 2.0 client ID you created, and add the redirect URI as follows: `https://iap.googleapis.com/v1/oauth/clientIds/<CLIENT_ID>:handleRedirect` (replace `<CLIENT_ID>` with the actual client ID).
-
-Create a BackendConfig resource that will enable IAP for the HTTP service:
-
-```yaml
-# backendconfig.yaml
----
-apiVersion: cloud.google.com/v1
-kind: BackendConfig
-metadata:
-  name: flyte-http
-spec:
-  iap:
-    enabled: true
-    oauthclientCredentials:
-      secretName: flyte-http-oauth
-```
-
-```bash
-kubectl apply -f backendconfig.yaml
-```
-
-Next, update the Helm chart values for the HTTP Service to use the BackendConfig by adding the following to the `flyte.yaml` file:
-
-```yaml
-service:
-  httpAnnotations:
-    beta.cloud.google.com/backend-config: flyte-http
-```
-
-Then, update the Helm release again:
-
-```bash
-helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
-```
-
-Finally, go to the [IAP page](https://console.cloud.google.com/security/iap) in the GCP Console and enable IAP for the corresponding resource (it might have a name like `default/flyte-backend-flyte-binary-http`). After some time, the dashboard should be accessible only to authenticated users. To grant access to the dashboard, click "Add Principal" on the right panel and select the IAP-secured Web App User role.
-
-When the changes propagate, try to access the dashboard again. You should be redirected to the Google login page, and after successful authentication, you should be able to access the Flyte dashboard again.
+When the status is `Active`, you should be able to access the Flyte dashboard via the domain you specified, the link would look like `https://<your-domain>/console`. If you get an SSL error, wait for a couple of minutes more. You should be prompted to log in using your Google account. After successful authentication, you should be able to access the Flyte dashboard. Note that in the bottom left corner, you should see the button with your initials, which indicates that you are logged in.
 
 ## Cleanup
 
