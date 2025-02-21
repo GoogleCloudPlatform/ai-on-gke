@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -12,16 +13,16 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	container "google.golang.org/api/container/v1beta1"
-	containerv1beta1 "google.golang.org/api/container/v1beta1"
 	"google.golang.org/api/googleapi"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
 
 func TestEnsureNodePoolForPod(t *testing.T) {
 	svc := &mockGKEService{
-		nodePools: make(map[string]*containerv1beta1.NodePool),
+		creates:   make(map[string]int),
+		deletes:   make(map[string]int),
+		nodePools: make(map[string]*container.NodePool),
 	}
 	clusterCtx := GKEContext{
 		ProjectID:              "test-project",
@@ -45,30 +46,81 @@ func TestEnsureNodePoolForPod(t *testing.T) {
 
 	cases := []struct {
 		name          string
-		pod           *corev1.Pod
+		pod           podBuild
 		expNPCreation bool
 		expNPDeletion bool
 	}{
-		{ /* TODO */ },
+		{
+			name:          "simple creation",
+			pod:           podBuild{},
+			expNPCreation: true,
+		},
+		{
+			name:          "duplicate pod",
+			pod:           podBuild{},
+			expNPCreation: false,
+		},
+		{
+			name: "same pod - with spot now",
+			pod: podBuild{
+				additionalSelector: map[string]string{
+					"cloud.google.com/gke-spot": "true",
+				},
+			},
+			expNPCreation: false,
+			expNPDeletion: true,
+		},
+		{
+			name: "same pod - with spot - 2nd pass",
+			pod: podBuild{
+				additionalSelector: map[string]string{
+					"cloud.google.com/gke-spot": "true",
+				},
+			},
+			expNPCreation: true,
+			expNPDeletion: false,
+		},
+		{
+			name: "different jobset",
+			pod: podBuild{
+				jobsetNameSuffix: "-2",
+			},
+			expNPCreation: true,
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			npName, err := podToNodePoolName(c.pod)
+			pod := buildPod(c.pod)
+			npName, err := podToNodePoolName(pod)
 			if err != nil {
 				t.Fatalf("podToNodePoolName(): %v", err)
 			}
-			svc.creates = make(map[string]int)
-			svc.deletes = make(map[string]int)
-			if err := gke.EnsureNodePoolForPod(c.pod, "test"); err != nil {
-				t.Fatalf("EnsureNodePoolForPod(%v): %v", c.pod.Name, err)
+
+			createsBefore := svc.creates[npName]
+			deletesBefore := svc.deletes[npName]
+
+			err = gke.EnsureNodePoolForPod(pod, "test")
+			if c.expNPDeletion {
+				if !errors.Is(err, ErrNodePoolDeletedToBeRecreated) {
+					t.Fatalf("expected ErrNodePoolDeletedToBeRecreated, got: %v", err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("EnsureNodePoolForPod(%v): %v", pod.Name, err)
+				}
 			}
 
+			createsAfter := svc.creates[npName]
+			deletesAfter := svc.deletes[npName]
+
 			if c.expNPCreation {
-				if svc.creates[npName] != 1 {
+				if createsAfter-createsBefore != 1 {
 					t.Fatalf("expected create for node pool %q, got none", npName)
 				}
-				if svc.deletes[npName] != 1 {
+			}
+			if c.expNPDeletion {
+				if deletesAfter-deletesBefore != 1 {
 					t.Fatalf("expected delete for node pool %q, got none", npName)
 				}
 			}
@@ -87,10 +139,10 @@ func (r *mockEventRecorder) AnnotatedEventf(object runtime.Object, annotations m
 type mockGKEService struct {
 	creates   map[string]int
 	deletes   map[string]int
-	nodePools map[string]*containerv1beta1.NodePool
+	nodePools map[string]*container.NodePool
 }
 
-func (g *mockGKEService) Get(ctx context.Context, name string) (*containerv1beta1.NodePool, error) {
+func (g *mockGKEService) Get(ctx context.Context, name string) (*container.NodePool, error) {
 	np, ok := g.nodePools[name]
 	if !ok {
 		return nil, &googleapi.Error{
@@ -100,15 +152,15 @@ func (g *mockGKEService) Get(ctx context.Context, name string) (*containerv1beta
 	return np, nil
 }
 
-func (g *mockGKEService) List(ctx context.Context) (*containerv1beta1.ListNodePoolsResponse, error) {
-	var resp containerv1beta1.ListNodePoolsResponse
+func (g *mockGKEService) List(ctx context.Context) (*container.ListNodePoolsResponse, error) {
+	var resp container.ListNodePoolsResponse
 	for _, np := range g.nodePools {
 		resp.NodePools = append(resp.NodePools, np)
 	}
 	return &resp, nil
 }
 
-func (g *mockGKEService) Create(ctx context.Context, req *containerv1beta1.CreateNodePoolRequest, callbacks OpCallbacks) error {
+func (g *mockGKEService) Create(ctx context.Context, req *container.CreateNodePoolRequest, callbacks OpCallbacks) error {
 	_, alreadyExists := g.nodePools[req.NodePool.Name]
 	if alreadyExists {
 		return &googleapi.Error{
@@ -116,6 +168,7 @@ func (g *mockGKEService) Create(ctx context.Context, req *containerv1beta1.Creat
 		}
 	}
 	g.nodePools[req.NodePool.Name] = req.NodePool
+	g.creates[req.NodePool.Name]++
 	return nil
 }
 
@@ -127,6 +180,7 @@ func (g *mockGKEService) Delete(ctx context.Context, name string, callbacks OpCa
 		}
 	}
 	delete(g.nodePools, name)
+	g.deletes[name]++
 	return nil
 }
 
@@ -354,17 +408,14 @@ func TestPodToNodePoolName(t *testing.T) {
 
 func TestNodePoolForPod(t *testing.T) {
 	tests := []struct {
-		desc                  string
-		gkeContext            GKEContext
-		additionalLabels      map[string]string
-		additionalAnnotations map[string]string
-		selector              map[string]string
-		podSpec               *v1.PodSpec
-		want                  *containerv1beta1.NodePool
+		desc       string
+		gkeContext GKEContext
+		pod        podBuild
+		want       *container.NodePool
 	}{
 		{
 			desc: "simple case",
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -388,25 +439,14 @@ func TestNodePoolForPod(t *testing.T) {
 		},
 		{
 			desc: "simple case 1x1 topology",
-			podSpec: &v1.PodSpec{
-				NodeSelector: map[string]string{
+			pod: podBuild{
+				selector: map[string]string{
 					"cloud.google.com/gke-tpu-accelerator": "tpu-v5-lite-podslice",
 					"cloud.google.com/gke-tpu-topology":    "1x1",
 				},
-				Containers: []v1.Container{
-					{
-						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
-								"google.com/tpu": resource.MustParse("1"),
-							},
-							Limits: v1.ResourceList{
-								"google.com/tpu": resource.MustParse("1"),
-							},
-						},
-					},
-				},
+				tpuResource: "1",
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -430,10 +470,12 @@ func TestNodePoolForPod(t *testing.T) {
 		},
 		{
 			desc: "spot",
-			selector: map[string]string{
-				"cloud.google.com/gke-spot": "true",
+			pod: podBuild{
+				additionalSelector: map[string]string{
+					"cloud.google.com/gke-spot": "true",
+				},
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -462,10 +504,12 @@ func TestNodePoolForPod(t *testing.T) {
 		{
 			desc:       "spot with forced on demand",
 			gkeContext: GKEContext{ForceOnDemand: true},
-			selector: map[string]string{
-				"cloud.google.com/gke-spot": "true",
+			pod: podBuild{
+				additionalSelector: map[string]string{
+					"cloud.google.com/gke-spot": "true",
+				},
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -489,9 +533,11 @@ func TestNodePoolForPod(t *testing.T) {
 			},
 		},
 		{
-			desc:     "pod with reservation selector",
-			selector: map[string]string{"cloud.google.com/reservation-name": "tpu-rsv"},
-			want: &containerv1beta1.NodePool{
+			desc: "pod with reservation selector",
+			pod: podBuild{
+				additionalSelector: map[string]string{"cloud.google.com/reservation-name": "tpu-rsv"},
+			},
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -520,11 +566,13 @@ func TestNodePoolForPod(t *testing.T) {
 		},
 		{
 			desc: "pod with cross-project reservation selector",
-			selector: map[string]string{
-				"cloud.google.com/reservation-name":    "tpu-rsv",
-				"cloud.google.com/reservation-project": "tpu-rsv-project",
+			pod: podBuild{
+				additionalSelector: map[string]string{
+					"cloud.google.com/reservation-name":    "tpu-rsv",
+					"cloud.google.com/reservation-project": "tpu-rsv-project",
+				},
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -552,10 +600,12 @@ func TestNodePoolForPod(t *testing.T) {
 			},
 		},
 		{
-			desc:       "pod with reservation selector but on demand is forced",
-			selector:   map[string]string{"cloud.google.com/reservation-name": "tpu-rsv"},
+			desc: "pod with reservation selector but on demand is forced",
+			pod: podBuild{
+				additionalSelector: map[string]string{"cloud.google.com/reservation-name": "tpu-rsv"},
+			},
 			gkeContext: GKEContext{ForceOnDemand: true},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -579,9 +629,11 @@ func TestNodePoolForPod(t *testing.T) {
 			},
 		},
 		{
-			desc:     "pod with disabling ICI resiliency selector",
-			selector: map[string]string{"cloud.google.com/gke-tpu-ici-resiliency": "false"},
-			want: &containerv1beta1.NodePool{
+			desc: "pod with disabling ICI resiliency selector",
+			pod: podBuild{
+				additionalSelector: map[string]string{"cloud.google.com/gke-tpu-ici-resiliency": "false"},
+			},
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -607,7 +659,7 @@ func TestNodePoolForPod(t *testing.T) {
 		{
 			desc:       "pod with secondary boot disk",
 			gkeContext: GKEContext{NodeSecondaryDisk: "projects/my-gcp-project/global/images/my-disk-image"},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -619,7 +671,7 @@ func TestNodePoolForPod(t *testing.T) {
 					},
 					MachineType:            "ct5p-hightpu-4t",
 					ShieldedInstanceConfig: &container.ShieldedInstanceConfig{EnableIntegrityMonitoring: true},
-					SecondaryBootDisks: []*containerv1beta1.SecondaryBootDisk{
+					SecondaryBootDisks: []*container.SecondaryBootDisk{
 						{
 							DiskImage: "projects/my-gcp-project/global/images/my-disk-image",
 							Mode:      "CONTAINER_IMAGE_CACHE",
@@ -636,9 +688,11 @@ func TestNodePoolForPod(t *testing.T) {
 			},
 		},
 		{
-			desc:     "pod with location hint node selector",
-			selector: map[string]string{"cloud.google.com/gke-location-hint": "test-location-hint"},
-			want: &containerv1beta1.NodePool{
+			desc: "pod with location hint node selector",
+			pod: podBuild{
+				additionalSelector: map[string]string{"cloud.google.com/gke-location-hint": "test-location-hint"},
+			},
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -666,11 +720,13 @@ func TestNodePoolForPod(t *testing.T) {
 			gkeContext: GKEContext{
 				PodToNodeLabels: []string{"should-be-copied"},
 			},
-			additionalLabels: map[string]string{
-				"should-be-copied":     "val-a",
-				"should-not-be-copied": "val-b",
+			pod: podBuild{
+				additionalLabels: map[string]string{
+					"should-be-copied":     "val-a",
+					"should-not-be-copied": "val-b",
+				},
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -695,14 +751,16 @@ func TestNodePoolForPod(t *testing.T) {
 		},
 		{
 			desc: "labels to copy from pod to node by annotation",
-			additionalLabels: map[string]string{
-				"copy-me":      "val-x",
-				"dont-copy-me": "val-y",
+			pod: podBuild{
+				additionalLabels: map[string]string{
+					"copy-me":      "val-x",
+					"dont-copy-me": "val-y",
+				},
+				additionalAnnotations: map[string]string{
+					"tpu-provisioner.cloud.google.com/copy-labels": "copy-me",
+				},
 			},
-			additionalAnnotations: map[string]string{
-				"tpu-provisioner.cloud.google.com/copy-labels": "copy-me",
-			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -730,7 +788,7 @@ func TestNodePoolForPod(t *testing.T) {
 			gkeContext: GKEContext{
 				NodeAdditionalNetworks: "network-1:subnet-1, network-2:subnet-2",
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -769,10 +827,12 @@ func TestNodePoolForPod(t *testing.T) {
 			gkeContext: GKEContext{
 				NodeAdditionalNetworks: "should-be-overriden-1:should-be-overriden-2",
 			},
-			additionalAnnotations: map[string]string{
-				"tpu-provisioner.cloud.google.com/additional-node-networks": "network-1:subnet-1, network-2:subnet-2",
+			pod: podBuild{
+				additionalAnnotations: map[string]string{
+					"tpu-provisioner.cloud.google.com/additional-node-networks": "network-1:subnet-1, network-2:subnet-2",
+				},
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -844,7 +904,7 @@ func TestNodePoolForPod(t *testing.T) {
 			gke := &GKE{
 				ClusterContext: tc.gkeContext,
 			}
-			pod := buildPod(tc.additionalLabels, tc.additionalAnnotations, tc.selector, tc.podSpec)
+			pod := buildPod(tc.pod)
 			got, err := gke.nodePoolForPod(pod)
 			if err != nil {
 				t.Errorf("Got error: %v", err)
@@ -865,70 +925,60 @@ func TestNodePoolForPod(t *testing.T) {
 	}
 }
 
-func buildPod(additionalLabels map[string]string, additionalAnnotations map[string]string, selector map[string]string, podSpec *v1.PodSpec) *corev1.Pod {
+type podBuild struct {
+	jobsetNameSuffix      string
+	additionalLabels      map[string]string
+	additionalAnnotations map[string]string
+	selector              map[string]string
+	additionalSelector    map[string]string
+	tpuResource           string
+}
+
+func buildPod(b podBuild) *corev1.Pod {
 	trueVar := true
-	labels := map[string]string{
-		"batch.kubernetes.io/controller-uid":        "8484279a-de52-4ca1-b01e-130fbded30fb",
-		"batch.kubernetes.io/job-name":              "jobset-test-job-1-0",
-		"controller-uid":                            "8484279a-de52-4ca1-b01e-130fbded30fb",
-		"job-name":                                  "jobset-test-job-1-0",
-		"jobset.sigs.k8s.io/job-index":              "0",
-		"jobset.sigs.k8s.io/job-key":                "random-key",
-		"jobset.sigs.k8s.io/jobset-name":            "jobset-test",
-		"jobset.sigs.k8s.io/replicatedjob-name":     "job-1",
-		"jobset.sigs.k8s.io/replicatedjob-replicas": "1",
-		"jobset.sigs.k8s.io/restart-attempt":        "0",
-	}
-	for k, v := range additionalLabels {
-		labels[k] = v
-	}
 
-	annotations := map[string]string{
-		"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
-		"batch.kubernetes.io/job-completion-index":    "0",
-		"jobset.sigs.k8s.io/job-index":                "0",
-		"jobset.sigs.k8s.io/job-key":                  "random-key",
-		"jobset.sigs.k8s.io/jobset-name":              "jobset-test",
-		"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
-		"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
-		"jobset.sigs.k8s.io/restart-attempt":          "0",
-	}
-	for k, v := range additionalAnnotations {
-		annotations[k] = v
-	}
-
-	if podSpec == nil {
-		podSpec = &v1.PodSpec{
-			NodeSelector: map[string]string{
-				"cloud.google.com/gke-tpu-accelerator": "tpu-v5p-slice",
-				"cloud.google.com/gke-tpu-topology":    "8x16x16",
-			},
-			Containers: []v1.Container{
-				{
-					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
-							"google.com/tpu": resource.MustParse("4"),
-						},
-						Limits: v1.ResourceList{
-							"google.com/tpu": resource.MustParse("4"),
-						},
-					},
-				},
-			},
+	if b.selector == nil {
+		b.selector = map[string]string{
+			"cloud.google.com/gke-tpu-accelerator": "tpu-v5p-slice",
+			"cloud.google.com/gke-tpu-topology":    "8x16x16",
 		}
 	}
 
-	pod := &v1.Pod{
+	if b.tpuResource == "" {
+		b.tpuResource = "4"
+	}
+
+	pod := &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Pod",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Annotations: annotations,
-			Labels:      labels,
-			Finalizers:  []string{"batch.kubernetes.io/job-tracking"},
-			Name:        "job-test-6gfwq",
-			Namespace:   "default",
+			Annotations: map[string]string{
+				"alpha.jobset.sigs.k8s.io/exclusive-topology": "cloud.google.com/gke-nodepool",
+				"batch.kubernetes.io/job-completion-index":    "0",
+				"jobset.sigs.k8s.io/job-index":                "0",
+				"jobset.sigs.k8s.io/job-key":                  "random-key",
+				"jobset.sigs.k8s.io/jobset-name":              "jobset-test" + b.jobsetNameSuffix,
+				"jobset.sigs.k8s.io/replicatedjob-name":       "job-1",
+				"jobset.sigs.k8s.io/replicatedjob-replicas":   "1",
+				"jobset.sigs.k8s.io/restart-attempt":          "0",
+			},
+			Labels: map[string]string{
+				"batch.kubernetes.io/controller-uid":        "8484279a-de52-4ca1-b01e-130fbded30fb",
+				"batch.kubernetes.io/job-name":              "jobset-test-job-1-0",
+				"controller-uid":                            "8484279a-de52-4ca1-b01e-130fbded30fb",
+				"job-name":                                  "jobset-test-job-1-0",
+				"jobset.sigs.k8s.io/job-index":              "0",
+				"jobset.sigs.k8s.io/job-key":                "random-key",
+				"jobset.sigs.k8s.io/jobset-name":            "jobset-test" + b.jobsetNameSuffix,
+				"jobset.sigs.k8s.io/replicatedjob-name":     "job-1",
+				"jobset.sigs.k8s.io/replicatedjob-replicas": "1",
+				"jobset.sigs.k8s.io/restart-attempt":        "0",
+			},
+			Finalizers: []string{"batch.kubernetes.io/job-tracking"},
+			Name:       "job-test-6gfwq",
+			Namespace:  "default",
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         "batch/v1",
@@ -943,37 +993,57 @@ func buildPod(additionalLabels map[string]string, additionalAnnotations map[stri
 			ResourceVersion: "70731715",
 			UID:             "f6a99195-268e-4b68-91de-22e75f9100bc",
 		},
-		Spec: *podSpec,
+		Spec: corev1.PodSpec{
+			NodeSelector: b.selector,
+			Containers: []corev1.Container{
+				{
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							"google.com/tpu": resource.MustParse(b.tpuResource),
+						},
+						Limits: corev1.ResourceList{
+							"google.com/tpu": resource.MustParse(b.tpuResource),
+						},
+					},
+				},
+			},
+		},
 	}
-	if selector != nil {
-		for k, v := range selector {
-			pod.Spec.NodeSelector[k] = v
-		}
+
+	for k, v := range b.additionalAnnotations {
+		pod.Annotations[k] = v
 	}
+	for k, v := range b.additionalLabels {
+		pod.Labels[k] = v
+	}
+	for k, v := range b.additionalSelector {
+		pod.Spec.NodeSelector[k] = v
+	}
+
 	return pod
 }
 
 func Test_nodePoolSelectiveHash(t *testing.T) {
 	cases := []struct {
 		name        string
-		A           *containerv1beta1.NodePool
-		B           *containerv1beta1.NodePool
+		A           *container.NodePool
+		B           *container.NodePool
 		expSameHash bool
 	}{
 		{
 			name:        "two empty",
-			A:           &containerv1beta1.NodePool{Config: &container.NodeConfig{}},
-			B:           &containerv1beta1.NodePool{Config: &container.NodeConfig{}},
+			A:           &container.NodePool{Config: &container.NodeConfig{}},
+			B:           &container.NodePool{Config: &container.NodeConfig{}},
 			expSameHash: true,
 		},
 		{
 			name: "different machine type",
-			A: &containerv1beta1.NodePool{
+			A: &container.NodePool{
 				Config: &container.NodeConfig{
 					MachineType: "ct5p-hightpu-4t",
 				},
 			},
-			B: &containerv1beta1.NodePool{
+			B: &container.NodePool{
 				Config: &container.NodeConfig{
 					MachineType: "ct5p-hightpu-8t",
 				},
@@ -982,7 +1052,7 @@ func Test_nodePoolSelectiveHash(t *testing.T) {
 		},
 		{
 			name: "different labels",
-			A: &containerv1beta1.NodePool{
+			A: &container.NodePool{
 				Config: &container.NodeConfig{
 					MachineType: "ct5p-hightpu-4t",
 					Labels: map[string]string{
@@ -990,7 +1060,7 @@ func Test_nodePoolSelectiveHash(t *testing.T) {
 					},
 				},
 			},
-			B: &containerv1beta1.NodePool{
+			B: &container.NodePool{
 				Config: &container.NodeConfig{
 					MachineType: "ct5p-hightpu-4t",
 					Labels: map[string]string{
@@ -1002,7 +1072,7 @@ func Test_nodePoolSelectiveHash(t *testing.T) {
 		},
 		{
 			name: "non hashed upgrade settings",
-			A: &containerv1beta1.NodePool{
+			A: &container.NodePool{
 				Config: &container.NodeConfig{
 					MachineType: "ct5p-hightpu-4t",
 					Labels: map[string]string{
@@ -1014,7 +1084,7 @@ func Test_nodePoolSelectiveHash(t *testing.T) {
 					MaxSurge: 1,
 				},
 			},
-			B: &containerv1beta1.NodePool{
+			B: &container.NodePool{
 				Config: &container.NodeConfig{
 					MachineType: "ct5p-hightpu-4t",
 					Labels: map[string]string{
