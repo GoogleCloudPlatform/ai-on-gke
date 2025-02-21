@@ -14,12 +14,15 @@
   * limitations under the License.
   */
 
-output "gke_cluster" {
-  description = "Link to GKE cluster"
-  value       = "https://pantheon.corp.google.com/kubernetes/clusters/details/${local.region}/${var.goog_cm_deployment_name}"
+output "result_bucket_name" {
+  value       = "${local.result_bucket_name}"
 }
 
-output "result_bucket" {
-  description = "Link to result GCS bucket"
-  value       = "https://pantheon.corp.google.com/storage/browser/${local.result_bucket_name}"
+output "gke_cluster_name" {
+  value       = "${var.goog_cm_deployment_name}"
 }
+
+output "gke_cluster_location" {
+  value       = "${local.region}"
+}
+
