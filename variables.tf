@@ -57,8 +57,23 @@ variable "a3_ultra_zone" {
   type        = string
 }
 
-variable "node_count" {
-  description = "Toolkit deployment variable: node_count"
+variable "node_count_gke" {
+  description = "Toolkit deployment variable: node_count_gke"
+  type        = number
+}
+
+variable "node_count_gke_nccl" {
+  description = "Toolkit deployment variable: node_count_gke_nccl"
+  type        = number
+}
+
+variable "node_count_llama_3_7b" {
+  description = "Toolkit deployment variable: node_count_llama_3_7b"
+  type        = number
+}
+
+variable "node_count_llama_3_70b" {
+  description = "Toolkit deployment variable: node_count_llama_3_70b"
   type        = number
 }
 
@@ -69,11 +84,6 @@ variable "placement_policy_name" {
 
 variable "recipe" {
   description = "Toolkit deployment variable: recipe"
-  type        = string
-}
-
-variable "host_maintenance" {
-  description = "Toolkit deployment variable: host_maintenance"
   type        = string
 }
 

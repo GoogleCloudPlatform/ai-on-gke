@@ -34,17 +34,11 @@ spec:
       - name: a3_ultra_zone
         varType: string
         defaultValue: ""
-      - name: node_count
-        varType: number
-        required: true
-        defaultValue: 2
-      - name: recipe
+      - name: a3_mega_consumption_model
         varType: string
-        required: true
         defaultValue: ""
-      - name: consumption_model
+      - name: a3_ultra_consumption_model
         varType: string
-        required: true
         defaultValue: ""
       - name: reservation
         varType: string
@@ -55,9 +49,22 @@ spec:
       - name: placement_policy_name
         varType: string
         defaultValue: ""
-      - name: host_maintenance
+      - name: recipe
         varType: string
+        required: true
         defaultValue: ""
+      - name: node_count_gke
+        varType: number
+        defaultValue: 0
+      - name: node_count_gke_nccl
+        varType: number
+        defaultValue: 2
+      - name: node_count_llama_3_7b
+        varType: number
+        defaultValue: 2
+      - name: node_count_llama_3_70b
+        varType: number
+        defaultValue: 32
       - name: additional_labels
         description: Additional labels to add to Kubernetes resources.
         varType: string
