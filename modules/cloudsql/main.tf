@@ -20,12 +20,11 @@ resource "random_password" "pwd" {
 module "cloudsql" {
   source              = "terraform-google-modules/sql-db/google//modules/postgresql"
   project_id          = var.project_id
-  version             = "20.0.0"
   name                = var.instance_name
-  database_version    = "POSTGRES_15"
+  database_version    = "POSTGRES_17"
   region              = var.region
   deletion_protection = false
-  tier                = "db-f1-micro"
+  tier                = "db-custom-1-3840"
 
   database_deletion_policy = "ABANDON"
   user_deletion_policy     = "ABANDON"
