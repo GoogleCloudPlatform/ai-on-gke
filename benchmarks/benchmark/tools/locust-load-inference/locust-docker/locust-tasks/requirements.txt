@@ -24,7 +24,7 @@ pyzmq==25.0.0
 requests==2.31.0
 roundrobin==0.0.2
 six==1.16.0
-transformers==4.39.3
+transformers==4.48.0
 typing_extensions==4.1.1
 urllib3==1.26.18
 Werkzeug==3.0.3
