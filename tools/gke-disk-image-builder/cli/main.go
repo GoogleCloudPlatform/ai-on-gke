@@ -56,7 +56,8 @@ func main() {
 	diskType := flag.String("disk-type", "pd-ssd", "disk type to generate the disk image")
 	diskSizeGb := flag.Int64("disk-size-gb", 60, "disk size to unpack container images")
 	gcpOAuth := flag.String("gcp-oauth", "", "path to GCP service account credential file")
-	imagePullAuth := flag.String("image-pull-auth", "None", "auth mechanism to pull the container image, valid values: [None, ServiceAccountToken].\nNone means that the images are publically available and no authentication is required to pull them.\nServiceAccountToken means the service account oauth token will be used to pull the images.\nFor more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications")
+	imagePullAuth := flag.String("image-pull-auth", "None", "auth mechanism to pull the container image, valid values: [None, ServiceAccountToken,UserPassword].\nNone means that the images are publically available and no authentication is required to pull them.\nServiceAccountToken means the service account oauth token will be used to pull the images.\nUserPassword means the user password from parameter <mage-pull-user> will be used to pull the images.\nFor more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications")
+	imagePullUser := flag.String("image-pull-user", "None", "set user:password if your image registry is non public access ")
 	timeout := flag.String("timeout", "20m", "Default timout for each step, defaults to 20m")
 	network := flag.String("network", "default", "VPC network to be used by GCE resources used for disk image creation.")
 	subnet := flag.String("subnet", "default", "subnet to be used by GCE resources used for disk image creation.")
@@ -95,8 +96,10 @@ func main() {
 		auth = builder.None
 	case "ServiceAccountToken":
 		auth = builder.ServiceAccountToken
+	case "UserPassword":
+		auth = "UserPassword"
 	default:
-		log.Panicf("Please specify a valid value for the flag --image-pull-auth, valid values are [None, ServiceAccountToken]")
+		log.Panicf("Please specify a valid value for the flag --image-pull-auth, valid values are [None, ServiceAccountToken, UserPassword]")
 	}
 
 	req := builder.Request{
@@ -116,6 +119,7 @@ func main() {
 		ContainerImages:       containerImages,
 		Timeout:               td,
 		ImagePullAuth:         auth,
+		ImagePullUser:         *imagePullUser,
 		ImageLabels:           imageLabels,
 		StoreSnapshotCheckSum: *storeSnapshotCheckSum,
 	}
