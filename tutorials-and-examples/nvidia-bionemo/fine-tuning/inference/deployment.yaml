@@ -18,7 +18,7 @@ spec:
       serviceAccountName: esm2-inference-sa
       containers:
       - name: inference
-        image: us-central1-docker.pkg.dev/qwiklabs-asl-03-1f567ae6332a/qwiklabs-asl-03-1f567ae6332a/esm2-inference:latest
+        image: esm2-inference-image
         ports:
         - containerPort: 8000
           name: http

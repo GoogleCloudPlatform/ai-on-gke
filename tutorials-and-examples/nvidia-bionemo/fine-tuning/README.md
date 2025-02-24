@@ -1,6 +1,6 @@
-# Training ESM2 LLM on GKE using BioNeMo Framework 2.0
+# Fine-Tuning ESM2 LLM on GKE using BioNeMo Framework 2.0
 
-This samples walks through setting up a Google Cloud GKE environment to train ESM2 (Evolutionary Scale Modeling) using NVIDIA BioNeMo Framework 2.0
+This sample walks through setting up a Google Cloud GKE environment to fine-tune ESM2 (Evolutionary Scale Modeling) using NVIDIA BioNeMo Framework 2.0
 
 ## Table of Contents
 
@@ -13,6 +13,8 @@ This samples walks through setting up a Google Cloud GKE environment to train ES
 - **GCloud SDK:** Ensure you have the Google Cloud SDK installed and configured.
 - **Project:**  A Google Cloud project with billing enabled.
 - **Permissions:**  Sufficient permissions to create GKE clusters and other related resources.
+
+**Note**: Google Cloud shell is recommended to run this sample.
 
 ## Setup
 
@@ -27,9 +29,10 @@ Replace "your-project-id" with your actual project ID.
 2. Set Environment Variables:
 
 ```bash
-export PROJECT_ID="your-project-id"
+export PROJECT_ID=${DEVSHELL_PROJECT_ID}
+export PUBLIC_REPOSITORY=$PROJECT_ID
 export REGION=us-central1
-export ZONE=us-central1-a
+export ZONE=us-central1-b
 export CLUSTER_NAME=bionemo-demo
 export NODE_POOL_MACHINE_TYPE=a2-highgpu-2g
 export CLUSTER_MACHINE_TYPE=e2-standard-4
@@ -75,38 +78,122 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
 --location="${ZONE}"
 ```
 
-6. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
+6. Create an Artifact Registry to store container images
 
 ```bash
-alias k=kubectl
-
-k apply -k pretraining/
+gcloud artifacts repositories create ${PUBLIC_REPOSITORY} \          
+--repository-format=docker --location=${REGION}
 ```
 
-7. Port Forwarding (for TensorBoard):
-
-List PODs and ensure tensorboard POD is under `READY` status
+7. Create service account to allow GKE to pull images
 
 ```bash
-k get pods -n bionemo-training
+gcloud iam service-accounts create esm2-inference-gsa \
+    --project=$PROJECT_ID
+```
+
+7. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
+
+```bash
+kubectl create namespace bionemo-training
+
+kubectl create serviceaccount esm2-inference-sa -n bionemo-training
+```
+
+8. Create identity binding
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding esm2-inference-gsa@${PROJECT_ID}.iam.gserviceaccount.com --role="roles/iam.workloadIdentityUser" --member="serviceAccount:${PROJECT_ID}.svc.id.goog[bionemo-training/esm2-inference-sa]"
 ```
 
 ```bash
-k port-forward -n bionemo-training svc/tensorboard-service 8080:6006
+kubectl annotate serviceaccount esm2-inference-sa -n bionemo-training iam.gke.io/gcp-service-account=esm2-inference-gsa@$PROJECT_ID.iam.gserviceaccount.com
+```
+Note: this requires workload identity to be configured at the cluster level.
+
+9. Launch fine-tuning job
+
+make sure you are in this directory
+
+```bash
+cd tutorials-and-examples/nvidia-bionemo/
 ```
 
-9. View Tensorboard logs
+then apply the kustomize file
 
-On your local machine: Browse to <http://localhost:8080> port forward from above step timeseries and see the loss curves as show below
+```bash
+kubectl apply -k fine-tunig/job
+```
 
-[<img src="./images/tensorboard-results.png" width="750"/>](HighLevelArch)
+11. build and push inference server docker image 
+
+```bash
+docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inference:latest fine-tuning/inference/.
+```
+
+```bash
+docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inference:latest
+```
+
+10. Launch inference deployment
+
+ensure job status is `completed` by running:
+
+```bash
+kubectl get job esm2-finetuning -n bionemo-training
+```
+
+```bash
+envsubst < fine-tuning/inference/kustomization.yaml | sponge fine-tuning/inference/kustomization.yaml
+```
+
+```bash
+kubectl apply -k fine-tuning/inference
+```
+
+11. Port Forwarding (for inference):
+
+List deployment PODs 
+
+```bash
+kubectl get pods -l app=esm2-inference -n bionemo-training
+```
+
+```bash
+kubectl port-forward -n bionemo-training svc/esm2-inference 8080:80
+```
+
+in a separate shell window, run:
+
+```bash
+curl -X POST http://localhost:8080/predict \
+  -H "Content-Type: application/json" \
+  -d '{"sequence": "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"}'
+```
 
 ## Cleanup
 
 To delete the cluster and all associated resources:
 
 ```bash
-k delete -k pretraining/
+kubectl delete namespace --background=cascade
+```
 
+```bash
 gcloud container clusters delete "${CLUSTER_NAME}" --location="${ZONE}" --quiet
+```
+
+```bash
+gcloud artifacts repositories delete ${PUBLIC_REPOSITORY} \
+    --location=${REGION} \
+    --quiet
+```
+
+```bash
+gcloud iam service-accounts delete esm2-inference-gsa@${PROJECT_ID}.iam.gserviceaccount.com \
+    --quiet
+```
+
+```bash
+docker rmi ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inference:latest
 ```
