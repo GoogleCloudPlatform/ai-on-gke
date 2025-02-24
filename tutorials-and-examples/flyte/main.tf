@@ -68,8 +68,8 @@ module "infra" {
   autopilot_cluster         = var.autopilot_cluster
   private_cluster           = var.private_cluster
   create_network            = true
-  network_name              = "flyte"
-  subnetwork_name           = "flyte"
+  network_name              = var.network_name
+  subnetwork_name           = var.subnetwork_name
   cpu_pools                 = var.cpu_pools
   enable_gpu                = var.enable_gpu
   gpu_pools                 = var.gpu_pools
@@ -149,13 +149,13 @@ resource "random_password" "db_password" {
 }
 
 data "google_compute_network" "network" {
-  name       = "flyte"
+  name       = var.network_name
   depends_on = [module.infra]
 }
 
 resource "google_sql_database_instance" "flyte_storage" {
   project          = var.project_id
-  name             = "flytepg"
+  name             = var.db_instance_name
   database_version = "POSTGRES_16"
   region           = var.cluster_location
   root_password    = random_password.csql_root_password.result
@@ -177,7 +177,7 @@ resource "google_sql_database_instance" "flyte_storage" {
 
 resource "google_sql_database" "flyte_storage" {
   project  = var.project_id
-  name     = "flytepg"
+  name     = var.database_name
   instance = google_sql_database_instance.flyte_storage.name
 }
 

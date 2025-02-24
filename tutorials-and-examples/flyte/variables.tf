@@ -167,3 +167,27 @@ variable "cloudsql_user"{
   description = "Username for the cloudsql database"
   default     = "flytepg"
 }
+
+variable "network_name" {
+  type        = string
+  description = "Name of the network"
+  default     = "flyte"
+}
+
+variable "subnetwork_name" {
+  type        = string
+  description = "Name of the subnetwork"
+  default     = "flyte"
+}
+
+variable "database_name" {
+  type        = string
+  description = "Name of the database"
+  default     = "flytepg"
+}
+
+variable "db_instance_name" {
+  type        = string
+  description = "Name of the database instance"
+  default     = "flytepg"
+}
