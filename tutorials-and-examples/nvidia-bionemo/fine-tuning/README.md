@@ -81,8 +81,7 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
 6. Create an Artifact Registry to store container images
 
 ```bash
-gcloud artifacts repositories create ${PUBLIC_REPOSITORY} \          
---repository-format=docker --location=${REGION}
+gcloud artifacts repositories create ${PUBLIC_REPOSITORY} --repository-format=docker --location=${REGION}
 ```
 
 7. Create service account to allow GKE to pull images
@@ -92,7 +91,7 @@ gcloud iam service-accounts create esm2-inference-gsa \
     --project=$PROJECT_ID
 ```
 
-7. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
+8. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
 
 ```bash
 kubectl create namespace bionemo-training
@@ -100,7 +99,7 @@ kubectl create namespace bionemo-training
 kubectl create serviceaccount esm2-inference-sa -n bionemo-training
 ```
 
-8. Create identity binding
+9. Create identity binding
 
 ```bash
 gcloud iam service-accounts add-iam-policy-binding esm2-inference-gsa@${PROJECT_ID}.iam.gserviceaccount.com --role="roles/iam.workloadIdentityUser" --member="serviceAccount:${PROJECT_ID}.svc.id.goog[bionemo-training/esm2-inference-sa]"
@@ -111,7 +110,7 @@ kubectl annotate serviceaccount esm2-inference-sa -n bionemo-training iam.gke.io
 ```
 Note: this requires workload identity to be configured at the cluster level.
 
-9. Launch fine-tuning job
+10. Launch fine-tuning job
 
 make sure you are in this directory
 
@@ -122,7 +121,7 @@ cd tutorials-and-examples/nvidia-bionemo/
 then apply the kustomize file
 
 ```bash
-kubectl apply -k fine-tunig/job
+kubectl apply -k fine-tuning/job
 ```
 
 11. build and push inference server docker image 
@@ -135,13 +134,15 @@ docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2
 docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inference:latest
 ```
 
-10. Launch inference deployment
+12. Launch inference deployment
 
-ensure job status is `completed` by running:
+ensure job status is `Complete` by running:
 
 ```bash
 kubectl get job esm2-finetuning -n bionemo-training
 ```
+
+Ensure environment variables `REGION`, `PROJECT_ID`, and `PUBLIC_REPOSITORY` are fully set.
 
 ```bash
 envsubst < fine-tuning/inference/kustomization.yaml | sponge fine-tuning/inference/kustomization.yaml
@@ -151,7 +152,7 @@ envsubst < fine-tuning/inference/kustomization.yaml | sponge fine-tuning/inferen
 kubectl apply -k fine-tuning/inference
 ```
 
-11. Port Forwarding (for inference):
+13. Port Forwarding (for inference):
 
 List deployment PODs 
 
@@ -176,7 +177,7 @@ curl -X POST http://localhost:8080/predict \
 To delete the cluster and all associated resources:
 
 ```bash
-kubectl delete namespace --background=cascade
+kubectl delete namespace bionemo-training --cascade=background
 ```
 
 ```bash
