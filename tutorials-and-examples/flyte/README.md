@@ -97,6 +97,8 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
    kubectl get pods -n default -w
    ```
 
+   In case of any issues, you can check the logs of the pods using `kubectl logs <pod-name> -n default`. Then, after changing the values, you can update the Helm release using `helm upgrade` command with the same arguments as the `helm install` command.
+
 ## Access the Flyte Dashboard
 
 At this point, the Flyte dashboard is not exposed to the internet. Let's access it using Kubernetes port forwarding.
