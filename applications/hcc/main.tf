@@ -84,7 +84,7 @@ module "a3_megagpu_pool" {
   additional_networks       = flatten([module.gke-a3-mega-gpunets[0].additional_networks])
   cluster_id                = local.gke_cluster_id
   gke_version               = local.gke_cluster_version
-  # host_maintenance_interval = "PERIODIC"
+  host_maintenance_interval = "PERIODIC"
   internal_ghpc_module_id   = "a3_megagpu_pool"
   labels                    = var.labels
   machine_type              = "a3-megagpu-8g"
