@@ -175,7 +175,10 @@ ingress:
 Then, update the Helm release:
 
 ```bash
-helm upgrade flyte-backend flyteorg/flyte-binary --namespace default --values flyte.yaml
+helm upgrade flyte-backend flyte-binary \
+  --repo https://flyteorg.github.io/flyte \
+  --namespace default \
+  --values flyte.yaml
 ```
 
 After some time, the certificate should be provisioned and the application should be accessible via the domain you specified. Note that the certificate provisioning may take some time. You can check the certificate status by running:
