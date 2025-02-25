@@ -73,7 +73,3 @@ resource "kubectl_manifest" "argo_workflows" {
   yaml_body          = each.value
   depends_on         = [kubernetes_namespace.argo, module.argo_executor_workload_identity]
 }
-
-
-
-

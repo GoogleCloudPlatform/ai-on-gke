@@ -17,7 +17,7 @@ terraform {
 
   required_providers {
     kubectl = {
-      source = "gavinbunney/kubectl"
+      source  = "gavinbunney/kubectl"
       version = ">= 1.7.0"
     }
   }
@@ -124,11 +124,11 @@ provider "kubernetes" {
 
 provider "kubectl" {
   alias                  = "metaflow"
-  apply_retry_count      = 15
+  apply_retry_count      = 1
   host                   = local.host
   token                  = data.google_client_config.default.access_token
   cluster_ca_certificate = var.private_cluster ? "" : base64decode(module.gke_cluster.ca_certificate)
-  load_config_file       = true
+  load_config_file       = false
 
   dynamic "exec" {
     for_each = var.private_cluster ? [1] : []
