@@ -28,8 +28,6 @@ configuration:
         project: "${PROJECT_ID}"
   # logging Specify configuration for logs emitted by Flyte
   logging:
-    # level Set the log level
-    level: 5
     # plugins Specify additional logging plugins
     plugins:
       # stackdriver Configure logging plugin to have logs visible in StackDriver
@@ -37,30 +35,6 @@ configuration:
         enabled: true
         templateUri: |
           "https://console.cloud.google.com/logs/query;query=resource.labels.namespace_name%3D%22{{.namespace}}%22%0Aresource.labels.pod_name%3D%22{{.podName}}%22%0Aresource.labels.container_name%3D%22{{.containerName}}%22?project=${PROJECT_ID}&angularJsUrl=%2Flogs%2Fviewer%3Fproject%3D${PROJECT_ID}"
-  # auth Specify configuration for Flyte authentication
-  auth:
-    # enabled Enable Flyte authentication
-    enabled: false
-    # oidc OIDC configuration for Flyte authentication
-    oidc:
-      # baseUrl URL for OIDC provider
-      baseUrl: ""
-      # clientId Flyte application client ID
-      clientId: ""
-      # clientSecret Flyte application client secret
-      clientSecret: ""
-    # internal Configuration for internal authentication
-    # The settings for internal still need to be defined if you wish to use an external auth server
-    # These credentials are used during communication between the FlyteAdmin and Propeller microservices
-    internal:
-      # clientId Client ID for internal authentication - set to flytepropeller or external auth server
-      clientId: flytepropeller
-      # clientSecret Client secret for internal authentication
-      clientSecret: ""
-      # clientSecretHash Bcrypt hash of clientSecret
-      clientSecretHash: ""
-    # authorizedUris Set of URIs that clients are allowed to visit the service on
-    authorizedUris: []
 
   # inline Specify additional configuration or overrides for Flyte, to be merged with the base configuration
   inline:
@@ -94,18 +68,6 @@ configuration:
       cache:
         max_size_mbs: 10
         target_gc_percent: 100
-    tasks:
-      task-plugins:
-        enabled-plugins:
-          - container
-          - sidecar
-          - K8S-ARRAY #used for MapTasks
-          - agent-service
-          - echo
-        default-for-task-types:
-          - container: container
-          - container_array: K8S-ARRAY
-          - sidecar: sidecar
 
 flyte-core-components:
   admin:
