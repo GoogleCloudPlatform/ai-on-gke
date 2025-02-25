@@ -1,0 +1,13 @@
+[
+  {
+    "message": "pod in Deployment \"proxy\" must set securityContext.seccompProfile.type to value RuntimeDefault",
+    "policyName": "seccompprofile",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "proxy",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "image": "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0",
+      "containerName": "cloud-sql-proxy"
+    },
+    "message": "container \"cloud-sql-proxy\" in Deployment \"rag-frontend\" has an image \"gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0\" with no digest; valid image format: image[:tag]@sha256:\u003cdigest\u003e",
+    "policyName": "imagedigest",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "rag-frontend",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

@@ -100,7 +100,7 @@ steps:
     echo "pass" > /workspace/user_result.txt
 
     chmod +x /workspace/scripts/ci/wait_for_pods.sh
-    /workspace/scripts/ci/wait_for_pods.sh ml-$SHORT_SHA-$_BUILD_ID-ray 3000
+    /workspace/scripts/ci/wait_for_pods.sh ml-$SHORT_SHA-$_BUILD_ID-ray 3600
 
     kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID-ray --for=condition=Ready --timeout=1200s
     # Ray head's readinessProbe is not probing the head service today. Therefore the wait for ready above is not reliable.
@@ -278,6 +278,81 @@ steps:
   allowFailure: true
   waitFor: ['create gke cluster']
 
+- id: 'Generate Kubeconfig'
+  name: 'gcr.io/cloud-builders/gcloud'
+  env:
+  - 'KUBECONFIG=/workspace/kubeconfig'
+  - 'USE_GKE_GCLOUD_AUTH_PLUGIN=False'
+  args:
+  - 'container'
+  - 'clusters'
+  - 'get-credentials'
+  - 'ml-${SHORT_SHA}-${_PR_NUMBER}-${_BUILD_ID}-cluster'
+  - '--region=${_REGION}'
+  - '--project=$PROJECT_ID'
+  allowFailure: true
+  waitFor: ['test rag']
+
+- id: 'Copy metadata'
+  name: 'ubuntu'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    mkdir -p security_test/scan_target/ && find . -mindepth 1 -maxdepth 1 -type d ! -name "security_test" -exec cp -r {} security_test/scan_target/ \;
+    mkdir -p /workspace/security_test/scan_target
+    # Exclude /workspace/security_test from the copy to avoid recursive issue
+    find . -mindepth 1 -maxdepth 1 ! -path "./security_test" -exec cp -r {} /workspace/security_test/scan_target/ \;
+    chown -R 65532:65532 /workspace/security_test/scan_target
+    mkdir -p /workspace/security_test/allowlist
+    cp security_test/config.yaml /workspace/security_test/config.yaml
+    cp -r security_test/allowlist/* /workspace/security_test/allowlist/ || echo "Allowlist folder is empty or not found"
+  allowFailure: true
+  waitFor: ['Generate Kubeconfig']
+
+# gcr.io/cloud-builders/docker is a special image: This image provided by Google Cloud contains the docker command-line tool, which is essential for executing Docker commands like docker build and docker run within your Cloud Build steps.
+# gcr.io/${_PROJECT_ID}/check_violations:latest is your application image: This image contains your security check tool and its dependencies. It's designed to be run, not to build or run other Docker images.
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Run shipshape on cluster'
+  args:
+  - 'run'
+  - '--network=cloudbuild'
+  - '--rm'
+  - '-v'
+  - '/workspace/security_test/allowlist:/workspace/security_test/allowlist'
+  - '-v'
+  - '/workspace/security_test/config.yaml:/workspace/security_test/config.yaml'
+  - '-v'
+  - '/workspace/kubeconfig:/root/.kube/config'
+  - '${_SHIPSHAPE_IMAGE}'
+  - '--mode=cluster'
+  - '--allowlist_folder=/workspace/security_test/allowlist'
+  - '--kube_config_path=/root/.kube/config'
+  - '--max_wait_duration=3000'
+  - '--max_parallel=100'
+  - '--cluster_scan_config_path=/workspace/security_test/config.yaml'
+  allowFailure: true
+  waitFor: ['Copy metadata']
+
+
+- id: 'Run Shipshape on helm'
+  name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'run'
+  - '--network=cloudbuild'
+  - '--rm'
+  - '-v'
+  - '/workspace/security_test/allowlist:/workspace/security_test/allowlist'
+  - '-v'
+  - '/workspace/security_test/scan_target:/workspace/security_test/scan_target'
+  - '${_SHIPSHAPE_IMAGE}'
+  - '--mode=helm'
+  - '--allowlist_folder=/workspace/security_test/allowlist'
+  - '--scan_path=/workspace/security_test/scan_target'
+  - '--max_wait_duration=60'
+  allowFailure: true
+  waitFor: ['Copy metadata']
+
 - id: 'cleanup rag'
   name: 'gcr.io/$PROJECT_ID/terraform'
   entrypoint: 'bash'
@@ -304,7 +379,7 @@ steps:
     -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
     -auto-approve -no-color
   allowFailure: true
-  waitFor: ['test rag']
+  waitFor: ['Run shipshape on cluster', 'Run Shipshape on helm']
 
 - id: 'cleanup gke cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -387,6 +462,7 @@ substitutions:
   _USER_NAME: github
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
+  _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:cd45e6cd84e9a45462ddbca18c4731fd4e264d517ee98131eb5be4eb57691f44
 logsBucket: gs://ai-on-gke-build-logs
 options:
   substitutionOption: "ALLOW_LOOSE"

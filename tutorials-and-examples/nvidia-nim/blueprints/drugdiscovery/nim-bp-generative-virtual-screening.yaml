@@ -1,0 +1,197 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alphafold2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alphafold2
+  template:
+    metadata:
+      labels:
+        app: alphafold2
+    spec:
+      containers:
+      - name: alphafold2
+        image: nvcr.io/nim/deepmind/alphafold2:2.1.0
+        securityContext:
+          runAsUser: 0
+        readinessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 6300
+          periodSeconds: 10
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: alphafold2-cache
+          mountPath: /data
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        - name: NIM_CACHE_PATH
+          value: /data
+        - name: NIM_MODEL_ORG
+          value: nim
+        - name: NIM_MODEL_TEAM
+          value: deepmind
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+      volumes:
+      - name: alphafold2-cache
+        persistentVolumeClaim:
+          claimName: nim-storage-filestore
+      imagePullSecrets:
+      - name: secret-nvcr
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: molmim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: molmim
+  template:
+    metadata:
+      labels:
+        app: molmim
+    spec:
+      containers:
+      - name: molmim
+        image: nvcr.io/nim/nvidia/molmim:1.0.0
+        securityContext:
+          runAsUser: 0
+        readinessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 300
+          periodSeconds: 10
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: molmim-cache
+          mountPath: /data
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        - name: NIM_CACHE_PATH
+          value: /data
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+      volumes:
+      - name: molmim-cache
+        persistentVolumeClaim:
+          claimName: nim-storage-filestore
+      imagePullSecrets:
+      - name: secret-nvcr
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: diffdock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: diffdock
+  template:
+    metadata:
+      labels:
+        app: diffdock
+    spec:
+      containers:
+      - name: diffdock
+        image: nvcr.io/nim/mit/diffdock:2.0
+        securityContext:
+          runAsUser: 0
+        readinessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 300
+          periodSeconds: 10
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: diffdock-cache
+          mountPath: /data
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "0"  # Set the default value here
+        - name: NIM_CACHE_PATH
+          value: /data
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+      imagePullSecrets:
+      - name: secret-nvcr
+      volumes:
+      - name: diffdock-cache
+        persistentVolumeClaim:
+          claimName: nim-storage-filestore
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alphafold2-service
+spec:
+  selector:
+    app: alphafold2
+  ports:
+  - protocol: TCP
+    port: 8081
+    targetPort: 8000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: diffdock-service
+spec:
+  selector:
+    app: diffdock
+  ports:
+  - protocol: TCP
+    port: 8082
+    targetPort: 8000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: molmim-service
+spec:
+  selector:
+    app: molmim
+  ports:
+  - protocol: TCP
+    port: 8083
+    targetPort: 8000

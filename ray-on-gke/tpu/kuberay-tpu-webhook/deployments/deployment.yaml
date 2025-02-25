@@ -64,7 +64,7 @@ spec:
     spec:
       serviceAccountName: kuberay-tpu-webhook
       containers:
-        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.1-gke.0
+        - image: us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook/tpu-webhook:v1.2.2-gke.1
           imagePullPolicy: Always
           name: kuberay-tpu-webhook
           args:

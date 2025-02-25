@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gemma2-9b-finetuned
+spec:
+  selector:
+    matchLabels:
+      app: gemma2-9b-finetuned
+  template:
+    metadata:
+      labels:
+        app: gemma2-9b-finetuned
+      annotations:
+        gke-gcsfuse/volumes: 'true'
+    spec:
+      serviceAccount: default
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-tesla-a100
+      containers:
+      - name: gemma2-9b-finetuned
+        image: us-docker.pkg.dev/<PROJECT_ID>/gemma-deployment/finetune-gemma-mlflow:1.0.0
+        env:
+        - name: MODEL_PATH
+          value: "/data/<MLFLOW_RUN_ID>/artifacts/model/"
+        ports:
+        - containerPort: 11434
+        volumeMounts:
+        - name: gemma2-9b-finetuned-data
+          mountPath: /data
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      volumes:
+      - name: gemma2-9b-finetuned-data
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: <YOUR_BUCKET_NAME>
+            mountOptions: "implicit-dirs"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gemma2-9b-finetuned-service
+spec:
+  selector:
+    app: gemma2-9b-finetuned
+  ports:
+  - protocol: TCP
+    port: 11434
+    targetPort: 11434

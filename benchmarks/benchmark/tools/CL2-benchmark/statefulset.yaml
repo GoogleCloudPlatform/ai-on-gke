@@ -1,0 +1,93 @@
+{{$CpuRequest := DefaultParam .CpuRequest "5m"}}
+{{$MemoryRequest := DefaultParam .MemoryRequest "20M"}}
+{{$podPayloadSize := DefaultParam .CL2_STATEFULSET_POD_PAYLOAD_SIZE 1024}}
+{{$SchedulerName := DefaultParam .CL2_SCHEDULER_NAME "default-scheduler"}}
+{{$PriorityClass := DefaultParam .PriorityClass "statefulset-priorityclass-0"}}
+{{$group := .group}}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{.Name}}
+  labels:
+    group: {{$group}}
+spec:
+  podManagementPolicy: Parallel
+  replicas: {{.Replicas}}
+  selector:
+    matchLabels:
+      name: {{.Name}}
+  # headless service name, assuming service.replicasPerNamespace=1
+  # needs to be set for the DNS label to be based on pod name rather than its IP address
+  # https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id
+  serviceName: headless-service-0
+  automountServiceAccountToken: false
+  template:
+    metadata:
+      labels:
+        name: {{.Name}}
+        group: {{$group}}
+        svc-headless: headless
+    spec:
+      schedulerName: {{$SchedulerName}}
+      priorityClassName: {{$PriorityClass}}
+      nodeSelector:
+        worker-node-pool: "true"
+      containers:
+      - env:
+        - name: ENV_VAR
+          value: {{RandData $podPayloadSize}}
+        image: us-docker.pkg.dev/gke-scalability-images/gcr.io/pause:latest
+        imagePullPolicy: IfNotPresent
+        name: {{.Name}}
+        ports:
+        - containerPort: 1328
+          hostPort: 1328
+        resources:
+          requests:
+            cpu: {{$CpuRequest}}
+            memory: {{$MemoryRequest}}
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        - mountPath: /pod-info
+          name: downward-api
+      # Add not-ready/unreachable tolerations for 15 minutes so that node
+      # failure doesn't trigger pod deletion.
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 900
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 900
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: dshm
+      - downwardAPI:
+          defaultMode: 420
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+            path: name
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.uid
+            path: uid
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.labels
+            path: labels
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.annotations
+            path: annotations
+        name: downward-api
