@@ -25,4 +25,3 @@ output "gke_cluster_name" {
 output "gke_cluster_location" {
   value       = "${local.region}"
 }
-
