@@ -12,14 +12,14 @@ This tutorial is designed for ML Platform engineers who plan to use Metaflow for
 2. Install argo workflows on GKE cluster  
 3. Install and configure Metaflow to work with argo workflows on GKE cluster  
 4. Fine-tune `gemma-2-9b` model and serve the resulting model from the GKE cluster.  
-5. Install Metaflow’s metadata service on the GKE cluster. More info can be found [here](https://docs.metaflow.org/getting-started/infrastructure). It is not a strong requirement, but it can be beneficial for collaboration and teamwork, because it provides a remote metadata service for Metaflow instead of storing it on a local machine.
+5. Install Metaflow’s Metadata Service on the GKE cluster (Optional but Recommended) – enable remote metadata storage to replace on local storage. While not required, this setup can enhance collaboration and teamwork by providing a centralized metadata repository. [Learn more here.](https://docs.metaflow.org/getting-started/infrastructure). 
 
 ## Filesystem structure
 
-* `finetune_inside_metaflow` \- folder with [Metaflow flow](https://docs.metaflow.org/metaflow/basics) that finetunes gemma2 model.  
-* `serve_model` \- Simple deployment manifest that will serve the resulting model in the same GKE cluster.  
-* `templates` \- folder with Kubernetes manifests that require additional processing to specify additional values that are not known from the start.   
-* `terraform` \- folder with terraform config that executes automated provisioning of required infrastructure resources.
+* `finetune_inside_metaflow/` \- folder with [Metaflow Flow](https://docs.metaflow.org/metaflow/basics) for fine-tuning the Gemma-2 model.  
+* `serve_model/` \- a simple deployment manifest for serving the fine-tuned model within the same GKE cluster.  
+* `templates/` \- folder with Kubernetes manifests that require additional processing to specify additional values that are not known from the start.   
+* `terraform/` \- folder with terraform config that executes automated provisioning of required infrastructure resources.
 
 # Before you begin
 
@@ -44,22 +44,21 @@ gcloud components update
 gcloud auth application-default login
 ```
 
+# Infrastructure Setup
 
 ## Create cluster and other resources
 
 In this section we will use `Terraform` to automate the creation of infrastructure resources. For more details how it is done please refer to the terraform config in the `terraform` folder.   
-By default it creates an Autopilot GKE cluster but it can be changed to standard by setting `autopilot_cluster = true`.
+By default it creates an Autopilot GKE cluster but it can be changed to standard by setting `autopilot_cluster = false`.
 
 It creates:
 
-* IAM service accounts:  
-    * for a cluster
-    * for a Metaflow metadata service Kubernetes  permissions (using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation))
-    * for Argo Workflows Kubernetes permissions (using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation))
-
+* Cluster IAM Service Account – manages permissions for the GKE cluster.
+* Metaflow Metadata Service IAM Service Account – grants Kubernetes permissions for Metaflow’s metadata service using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation)
+* Argo Workflows IAM Service Account – grants Kubernetes permissions for Argo Workflows using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation)
 * [CloudSQL](https://cloud.google.com/sql/docs/introduction) instance for Metaflow metadata database  
 * GCS bucket for Metaflow’s artifact storage  
-* [Artifact registry](https://cloud.google.com/artifact-registry/docs/overview) as a storage for an image for fine-tuning 
+* [Artifact registry](https://cloud.google.com/artifact-registry/docs/overview) – stores container images for the fine-tuning process.
 
 
 
@@ -76,7 +75,7 @@ cd terraform
 
 Other values can be changed, if needed, but can be left with default values.
 
-3. Optional. You can use a GCS bucket as a storage for a Terraform state.  [Create a bucket](https://cloud.google.com/storage/docs/creating-buckets#command-line) manually and then uncomment the content of the file `terraform/backend.tf` and specify your bucket:
+3. (Optional) For better state management and collaboration, you can configure Terraform to store its state in a GCS bucket instead of keeping it locally.  [Create a bucket](https://cloud.google.com/storage/docs/creating-buckets#command-line) manually and then uncomment the content of the file `terraform/backend.tf` and specify your bucket:
 
 ```
 terraform {
@@ -131,10 +130,11 @@ project_id = "akvelon-gke-aieco"
 gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) --region $(terraform output -raw gke_cluster_location) --project $(terraform output -raw project_id)
 ```
 
+# Metaflow Configuration
 
-## Deploy metadata service
+## Deploy Metadata Service
 
-There’s no official deployment manifests or guides, so we provide our own Kubernetes manifests:
+This tutorial includes two Kubernetes manifests for Metaflow Metadata service:
 
 - [*Metadata-service*](https://github.com/Netflix/metaflow-service) \- keeps track of metadata.   
 - [*UI-service*](https://github.com/Netflix/metaflow-service/tree/master/services/ui_backend_service) \- A backend instance that provides web UI to track existing flows.
@@ -261,6 +261,7 @@ Here:
 * `image_name` : image that was previously built and pushed to our registry  
 * `new_model:`  Name of a resulting model.
 
+# Model Fine-tuning and Serving 
 
 ## Fine-tune the model
 
