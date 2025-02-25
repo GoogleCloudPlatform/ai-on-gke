@@ -2,9 +2,9 @@
 
 This Python script updates zones and regions in a metadata YAML file and a JSON file based on the availability of specific Google Compute Engine (GCE) machine types in a given Google Cloud Project. It provides two main functionalities:
 
-1. **Updating Zones in YAML:** It updates the `allowlisted_zones` field in a YAML file (e.g., `metadata.display.yaml`) for specified machine types (e.g., "a3-megagpu-8g", "a3-ultragpu-8g"). This ensures that the YAML file only includes zones where the specified machine types are currently available.
+1. **Updating Zones in YAML:** It updates the `allowlisted_zones` field in a YAML file (`metadata.display.yaml`) for specified machine types (e.g., "a3-megagpu-8g", "a3-ultragpu-8g"). 
 
-2. **Generating Zone-to-Region Mapping:** It generates a JSON file (e.g., `zone_to_region.json`) that provides a mapping between zones and their corresponding regions in your GCP project. This can be useful for various automation and analysis tasks.
+2. **Generating Zone-to-Region Mapping:** It generates a JSON file (e.g., `zone_to_region.json`) that provides a mapping between zones and their corresponding regions in your GCP project. The main reason why we need `zone_to_region.json` is for region lookup in [region.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/qss-poc/applications/hcc/region.tf#L2).
 
 The script uses the Google Cloud Compute Engine API to retrieve information about regions, zones, and machine type availability. It leverages the `google-cloud-compute` and `PyYAML` libraries for interacting with the API and processing YAML files.
 
