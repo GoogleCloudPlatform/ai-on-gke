@@ -91,6 +91,9 @@ func (g *GKE) EnsureNodePoolForPod(p *corev1.Pod, why string) error {
 	if err != nil {
 		return fmt.Errorf("checking if node pool exists: %w", err)
 	}
+	log.Info("Checked existing node pool state",
+		"nodePoolName", np.Name, "existingNodePoolState", existingNPState.String(),
+	)
 	switch existingNPState {
 	case nodePoolStateNotExists:
 		// Create the node pool.
@@ -237,6 +240,21 @@ var ErrNodePoolStopping = errors.New("node pool stopping")
 var ErrNodePoolDeletedToBeRecreated = errors.New("node pool deleted to be recreated")
 
 type nodePoolState int
+
+func (s nodePoolState) String() string {
+	switch s {
+	case nodePoolStateNotExists:
+		return "NotExists"
+	case nodePoolStateExistsAndMatches:
+		return "ExistsAndMatches"
+	case nodePoolStateExistsAndNotMatches:
+		return "ExistsAndNotMatches"
+	case nodePoolStateExistsAndStopping:
+		return "ExistsAndStopping"
+	default:
+		return "Unknown"
+	}
+}
 
 const (
 	nodePoolStateUnknown nodePoolState = iota
