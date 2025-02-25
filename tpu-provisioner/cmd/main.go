@@ -94,9 +94,9 @@ func main() {
 		GCPForceOnDemand bool `envconfig:"GCP_FORCE_ON_DEMAND" default:"false"`
 
 		// NodeMinLifespan is the amount of time that should pass between a Node object
-		// creation and a cleanup of that Node. This needs to be long enough to allow
-		// the node to become Ready and for a pending Pod to be scheduled on it.
-		NodeMinLifespan time.Duration `envconfig:"NODE_MIN_LIFESPAN" default:"3m"`
+		// creation and a cleanup of that Node. This is mostly irrelevant now that JobSet
+		// existance is checked before deleting a NodePool.
+		NodeMinLifespan time.Duration `envconfig:"NODE_MIN_LIFESPAN" default:"10s"`
 
 		NodepoolDeletionDelay time.Duration `envconfig:"NODEPOOL_DELETION_DELAY" default:"30s"`
 
