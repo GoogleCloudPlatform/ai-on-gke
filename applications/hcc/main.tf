@@ -323,7 +323,8 @@ module "nemo" {
     helm = helm
   }
   # The kueue install needs to finished completely or else the deployment of nemo workload throws error, thus adding the depends_on.
-  depends_on = [module.workload-manager-install]
+  # The some workload depends on the k8s network created in the cluster module and will fail on delete without explicitely define the depends_on.
+  depends_on = [module.workload-manager-install, module.a3-megagpu-cluster, module.a3-ultragpu-cluster]
 }
 
 module "gcs" {
