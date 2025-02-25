@@ -25,14 +25,17 @@ labels = {
 
 project_id = "supercomputer-testing"
 
-a3_mega_zone = "us-east5-a"
+a3_mega_zone = "australia-southeast1-c"
 a3_ultra_zone = ""
 
-node_count_gke_nccl = 2
-recipe = "gke-nccl"
-
-reservation = "qss-test-a3mega"
-reservation_block = ""
-placement_policy_name = ""
-
 gpu_type = "A3 Mega"
+
+reservation = "hcc-a3mega"
+reservation_block = ""
+placement_policy_name = "kevinmcw-test"
+
+recipe = "gke-nccl"
+node_count_gke_nccl = 2
+node_count_gke = 0
+node_count_llama_3_70b = 0
+node_count_llama_3_7b = 0
