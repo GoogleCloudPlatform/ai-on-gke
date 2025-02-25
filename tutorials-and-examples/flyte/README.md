@@ -214,14 +214,15 @@ At this point, the Flyte dashboard is not exposed to the internet. Let's access 
 
    Replace `<execution-id>` with the actual execution ID.
 
-## Publish service to the internet and enable authentication
+## Publish service to the Internet
 
-The following section will show how to expose Flyte to the internet and enable authentication using Google OAuth. The overall process involves the following steps:
+The following section will guide you through exposing Flyte dashboard and gRPC service to the Internet. As gRPC protocol works over HTTP/2 that in turn requires TLS, we will also need to create a certificate for flyte-backend itself. We will use a self-signed certificate for this purpose. So the steps are:
 
 1. Create a static IP address for the Ingress and configure DNS.
-2. Create a managed certificate.
-3. Register OAuth 2.0 client.
-4. Update the Helm values to enable Ingress and authentication.
+2. Create a managed certificate for the Ingress.
+3. Create a self-signed certificate for flyte-backend.
+4. Update Helm configuration to use the self-signed certificate.
+5. Create Ingress resource for Flyte.
 
 ### 1. Create a static IP address for the Ingress and configure DNS
 
@@ -249,7 +250,7 @@ To create a managed certificate, you need to create a `ManagedCertificate` resou
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: flyte-http
+  name: flyte
 spec:
   domains:
     - <your-domain>
@@ -261,7 +262,145 @@ Then, apply the configuration:
 kubectl apply -f managed-certificate.yaml
 ```
 
-### 3. Register OAuth 2.0 client
+### 3. Create a self-signed certificate for flyte-backend
+
+Now, let's create a self-signed certificate for flyte-backend. If you have `openssl` installed, you can generate a self-signed certificate using the following command:
+
+```bash
+openssl req -newkey rsa:2048 -nodes -keyout private_key.pem -x509 -days 3650 -out public_certificate.pem -subj /CN=flyte-backend/ -addext "subjectAltName = IP:127.0.0.1,DNS:0.0.0.0:8088,DNS:localhost,DNS:flyte-backend"
+```
+
+Alternatively, you can use any other tool you like to generate the certificate. It's important to include the `subjectAltName` (`SAN`) extension with the `DNS:0.0.0.0:8088` value (though it's not a valid domain name) because the flyte binary uses that address internally and the certificate must be valid for it. All other values are optional and can be adjusted to your needs or left as they are. The CN value is not important and can be anything.
+
+Next, create a Kubernetes secret with the certificate:
+
+```bash
+kubectl create secret tls flyte-backend-grpc-tls --cert=public_certificate.pem --key=private_key.pem
+```
+
+### 4. Update Flyte configuration
+
+Now, update the `flyte.yaml` file to configure Flyte to use the self-signed certificate. First, insert the following configuration to configure the deployment to mount the secret with the self-signed certificate and configure the probes to use HTTPS:
+
+```yaml
+deployment:
+  # Mount the secret with the self-signed certificate
+  extraVolumes:
+    - name: tls-certs
+      secret:
+        secretName: flyte-backend-grpc-tls
+  extraVolumeMounts:
+    - name: tls-certs
+      mountPath: /etc/flyte/tls
+      readOnly: true
+  # Configure probe to use HTTPS
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /healthcheck
+      port: http
+      scheme: HTTPS
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /healthcheck
+      port: http
+      scheme: HTTPS
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+service:
+  commonAnnotations:
+    cloud.google.com/app-protocols: '{"http":"HTTP2"}'
+```
+
+Then, insert the following configuration to adjust the configuration of the Flyte binary to enable TLS using the self-signed certificate:
+
+```yaml
+configuration:
+  # ...
+  # Other configuration here
+  # ...
+
+  inline:
+    # ...
+    # Other configuration here
+    # ...
+
+    # Fix admin server endpoint configuration
+    admin:
+      endpoint: localhost:8088
+      insecure: false
+      caCertFilePath: /etc/flyte/tls/tls.crt
+    # Enable TLS
+    server:
+      security:
+        secure: true
+        ssl:
+          certificateFile: /etc/flyte/tls/tls.crt
+          keyFile: /etc/flyte/tls/tls.key
+```
+
+Finally, apply the updated configuration by upgrading the Helm release:
+
+```bash
+helm upgrade flyte-backend flyte-binary \
+  --repo https://flyteorg.github.io/flyte \
+  --namespace default \
+  --values flyte.yaml
+```
+
+### 5. Create Ingress resource for Flyte
+
+Finally, create an Ingress resource to expose the Flyte dashboard and gRPC service to the Internet. Put the following content in a file named `ingress.yaml` and apply the configuration:
+
+```yaml
+# ingress.yaml
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: flyte
+    networking.gke.io/managed-certificates: flyte
+  name: flyte-backend-flyte-binary-http
+spec:
+  defaultBackend:
+    service:
+      name: flyte-backend-flyte-binary-http
+      port:
+        number: 8088
+```
+
+```bash
+kubectl apply -f ingress.yaml
+```
+
+Wait some time for the certificate to be provisioned and the Load Balancer to be created. You can check the status of the certificate by running:
+
+```bash
+kubectl get managedcertificate flyte
+```
+
+When the status is `Active`, you should be able to access the Flyte dashboard via the domain you specified, the link would look like `https://<your-domain>/console`. If you get an SSL error, wait for a couple of minutes more and try again.
+
+Also, you should be able to use the `flytectl` CLI without port forwarding and `insecure` flag. To do that, update the `flytectl` configuration:
+
+```bash
+flytectl config init --host https://<your-domain>
+```
+
+Try sheduling a new execution using the `pyflyte` CLI as we did before and check the status using the `flytectl` CLI (`flytectl get execution -p flytesnacks -d development`) or the Flyte dashboard (`https://<your-domain>/console`).
+
+## Enable authentication using Google OAuth
+
+### 1. Register OAuth 2.0 client
 
 Visit the [Credentials page](https://console.cloud.google.com/apis/credentials) and select "Create OAuth client ID" on the top of the page.
 
@@ -269,7 +408,7 @@ When asked to choose the application type, select "Web application". In the "Aut
 
 Note the client ID and client secret values. You will need them in the next step.
 
-### 4. Update Flyte configuration
+### 2. Update Flyte configuration
 
 At this point, you should have a static IP address, a managed certificate, and an OAuth 2.0 client.
 
@@ -285,13 +424,11 @@ Also, you need a bcrypt hash of the password. You can generate it using the foll
 pip install bcrypt && python -c 'import bcrypt; import base64; print(base64.b64encode(bcrypt.hashpw("<your-random-password>".encode("utf-8"), bcrypt.gensalt(6))))'
 ```
 
-Now, when you have all the required values, let's update the `flyte.yaml` file.
-
-You need to update it in two places. First, extend the `configuration` section with `auth` configuration providing the OAuth 2.0 client ID and secret, and the client secret and its bcrypt hash you just generated. Also, add the domain you are using to the `authorizedUris` list:
+Now, let's update the `flyte.yaml` file. Add (or update) the `configuration.auth` section by providing the OAuth 2.0 client ID and secret, and the client secret and its bcrypt hash you just generated. Also, add the domain you are using to the `authorizedUris` list:
 
 ```yaml
 configuration:
-
+  # ...
   # Other configuration here
   # ...
 
@@ -299,30 +436,13 @@ configuration:
     enabled: true
     oidc:
       baseUrl: https://accounts.google.com
-      clientId: >-
-        <your-client-id>
-      clientSecret: >-
-        <your-client-secret>
+      clientId: <your-client-id>
+      clientSecret: <your-client-secret>
     internal:
-      clientSecret: >-
-        <your-random-password>
-      clientSecretHash: >-
-        <your-random-password-bcrypt-hash>
+      clientSecret: <your-random-password>
+      clientSecretHash: <your-random-password-bcrypt-hash>
 
-    authorizedUris:
-      - https://<your-domain>
-```
-
-Second, add the following configuration to enable Ingress (here we reference the static IP address and the managed certificate we created earlier):
-
-```yaml
-ingress:
-  create: true
-  separateGrpcIngress: false
-  commonAnnotations:
-    kubernetes.io/ingress.global-static-ip-name: flyte
-    networking.gke.io/managed-certificates: flyte-http
-    kubernetes.io/ingress.class: "gce"
+    authorizedUris: [ https://<your-domain> ]
 ```
 
 Finally, apply the updated configuration by upgrading the Helm release:
@@ -334,13 +454,7 @@ helm upgrade flyte-backend flyte-binary \
   --values flyte.yaml
 ```
 
-Wait some time for the certificate to be provisioned and the Ingress to be created. You can check the status of the certificate by running:
-
-```bash
-kubectl get managedcertificate flyte-http
-```
-
-When the status is `Active`, you should be able to access the Flyte dashboard via the domain you specified, the link would look like `https://<your-domain>/console`. If you get an SSL error, wait for a couple of minutes more. You should be prompted to log in using your Google account. After successful authentication, you should be able to access the Flyte dashboard. Note that in the bottom left corner, you should see the button with your initials, which indicates that you are logged in.
+Now, when you access the Flyte dashboard, you should be prompted to log in using your Google account. After successful authentication, you should be able to access the Flyte dashboard. Note that in the bottom left corner, you should see the button with your initials, which indicates that you are logged in.
 
 ## Cleanup
 
