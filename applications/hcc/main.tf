@@ -84,7 +84,7 @@ module "a3_megagpu_pool" {
   additional_networks       = flatten([module.gke-a3-mega-gpunets[0].additional_networks])
   cluster_id                = local.gke_cluster_id
   gke_version               = local.gke_cluster_version
-  # host_maintenance_interval = "PERIODIC"
+  host_maintenance_interval = "PERIODIC"
   internal_ghpc_module_id   = "a3_megagpu_pool"
   labels                    = var.labels
   machine_type              = "a3-megagpu-8g"
@@ -256,12 +256,17 @@ module "a3-ultragpu-pool" {
   labels                  = var.labels
   machine_type            = "a3-ultragpu-8g"
   project_id              = var.project_id
-  reservation_affinity = {
-    consume_reservation_type = "SPECIFIC_RESERVATION"
-    specific_reservations = [{
-      name = var.reservation
-    }]
-  } 
+  reservation_affinity = (var.reservation != "" ? {
+      consume_reservation_type = "SPECIFIC_RESERVATION"
+      specific_reservations = [{
+	name = var.reservation_block == "" ? "${var.reservation}" : "${var.reservation}/reservationBlocks/${var.reservation_block}"
+        project = var.project_id
+      }]
+    } : {
+      consume_reservation_type = "NO_RESERVATION"
+      specific_reservations    = []
+    }
+  )
   local_ssd_count_ephemeral_storage = 32
   static_node_count = local.node_count
   zones             = [local.zone]
@@ -318,7 +323,8 @@ module "nemo" {
     helm = helm
   }
   # The kueue install needs to finished completely or else the deployment of nemo workload throws error, thus adding the depends_on.
-  depends_on = [module.workload-manager-install]
+  # The some workload depends on the k8s network created in the cluster module and will fail on delete without explicitely define the depends_on.
+  depends_on = [module.workload-manager-install, module.a3-megagpu-cluster, module.a3-ultragpu-cluster]
 }
 
 module "gcs" {
