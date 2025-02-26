@@ -297,7 +297,7 @@ kubectl apply -n ${K8S_NAMESPACE} -f ingress.yaml
 It takes some time for the Managed Certificate to be provisioned. You can check the status of the certificate using:
 
 ```bash
-kubectl describe managedcertificate chat-cert -n ${K8S_NAMESPACE}
+kubectl describe managedcertificate chat-ui -n ${K8S_NAMESPACE}
 ```
 
 After the certificate is provisioned, you can access the application using your domain name. But for now, it is not yet secured, nor will it save the chat history between page reloads. So let's fix that.
@@ -316,7 +316,7 @@ kubectl create secret generic chat-ui-oauth \
 Then, create a BackendConfig resource to configure IAP and update the Service resource to use the BackendConfig:
 
 ```bash
-kubectl apply -n ${K8S_NAMESPACE} -f backendconfig.yaml
+kubectl apply -n ${K8S_NAMESPACE} -f backend-config.yaml
 kubectl annotate service chat -n ${K8S_NAMESPACE} beta.cloud.google.com/backend-config=chat-ui
 ```
 
