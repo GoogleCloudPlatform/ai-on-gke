@@ -69,6 +69,9 @@ sudo apt-get --yes install jq
 echo Fetching OAuth token...
 ACCESS_TOKEN=$(curl -sSf -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token | jq -r '.access_token')
 
+#init user password
+USER_PASSWORD=""
+
 function remove_snapshot_views() {
   echo Removing the previously created snapshot views...
   views=($(sudo ctr -n k8s.io snapshot list | grep "View" | sed 's/ \{1,\}/,/g'))
@@ -87,8 +90,10 @@ function pull_images() {
       sudo ctr -n k8s.io image pull --hosts-dir "/etc/containerd/certs.d" $param
     elif [ "$OAUTH_MECHANISM" == "serviceaccounttoken" ]; then
       sudo ctr -n k8s.io image pull --hosts-dir "/etc/containerd/certs.d" --user "oauth2accesstoken:$ACCESS_TOKEN" $param
+    elif [ "$OAUTH_MECHANISM" == "userpassword" ]; then
+      sudo ctr -n k8s.io image pull --hosts-dir "/etc/containerd/certs.d" --user $USER_PASSWORD $param
     else
-      echo "Unknown OAuth mechanism, expected 'None' or 'ServiceAccountToken' but got '$OAUTH_MECHANISM'".
+      echo "Unknown OAuth mechanism, expected 'None' or 'ServiceAccountToken' or 'UserPassword' but got '$OAUTH_MECHANISM'".
       exit 1
     fi
     if [ $? -ne 0 ]; then
@@ -191,6 +196,11 @@ function unpack() {
   OAUTH_MECHANISM=$(echo "$1" | tr '[:upper:]' '[:lower:]')
   shift
 
+  # Store image auth user and password in variable
+  if [ "$OAUTH_MECHANISM" == "userpassword" ]; then
+    USER_PASSWORD=$(echo "$1")
+    shift
+  fi
   # Pull all the given images.
   pull_images $@
 
