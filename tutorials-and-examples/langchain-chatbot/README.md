@@ -266,7 +266,7 @@ gcloud compute addresses create langchain-chatbot \
 Wait until it's provisioned. You can check the status using:
 
 ```bash
-gcloud compute addresses describe flyte --global
+gcloud compute addresses describe langchain-chatbot --global
 ```
 
 When it's ready, you will see the IP address value in the output.
