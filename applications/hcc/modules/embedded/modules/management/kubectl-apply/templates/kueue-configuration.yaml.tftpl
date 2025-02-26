@@ -26,7 +26,7 @@ spec:
 kind: ResourceFlavor
 apiVersion: kueue.x-k8s.io/v1beta1
 metadata:
-  name: "a3-kueue-tas"
+  name: "kueue-tas"
 spec:
   nodeLabels:
     cloud.google.com/gke-nodepool: ${node_pool_name}
@@ -39,13 +39,13 @@ spec:
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: ClusterQueue
 metadata:
-  name: "a3-kueue"
+  name: "kueue"
 spec:
   namespaceSelector: {} # match all.
   resourceGroups:
   - coveredResources: ["nvidia.com/gpu"]
     flavors:
-    - name: "a3-kueue-tas"
+    - name: "kueue-tas"
       resources:
       - name: "nvidia.com/gpu"
         nominalQuota: ${num_gpus}
@@ -54,6 +54,6 @@ apiVersion: kueue.x-k8s.io/v1beta1
 kind: LocalQueue
 metadata:
   namespace: "default"
-  name: "a3-kueue-user-queue"
+  name: "user-queue"
 spec:
-  clusterQueue: "a3-kueue"
+  clusterQueue: "kueue"

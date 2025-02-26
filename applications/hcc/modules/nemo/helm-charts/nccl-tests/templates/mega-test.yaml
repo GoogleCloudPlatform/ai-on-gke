@@ -7,7 +7,7 @@ metadata:
   name: nccl-test
   namespace: default
   labels:
-    kueue.x-k8s.io/queue-name: a3-kueue-user-queue
+    kueue.x-k8s.io/queue-name: user-queue
 spec:
   suspend: False
   network:
