@@ -284,10 +284,8 @@ name: langchain-chatbot
 
 Now you need a domain name that points to this IP address. We need it to provision a Managed Certificate to secure the communication between the client and the server using HTTPS. You can use any domain name you own or use a service like `sslip.io` for testing purposes.
 
-- In the case of a real domain, you need to create an A record pointing to the static IP address you just created; go to your domain registrar, create the record and wait for the DNS change to propagate (it can take up to 24 hours).
+- In the case of a real domain, you need to create an A record pointing to the static IP address you just created; go to your domain registrar, create the record, and wait for the DNS change to propagate. This can take anywhere from a few minutes to several hours, depending on your DNS provider.
 - In case of `sslip.io`, use the domain `<address>.sslip.io` using the gcloud compute address from the previous step. You don't have to manage DNS records nor wait for them to propagate in this case, so it's a good option for a quick test.
-
-After creating the A record, wait for the DNS change to propagate. This can take anywhere from a few minutes to several hours, depending on your DNS provider.
 
 Next, update `managed-certificate.yaml` with your domain name and apply manifests for the Managed Certificate and Ingress:
 
