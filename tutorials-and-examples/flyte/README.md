@@ -408,23 +408,23 @@ When asked to choose the application type, select "Web application". In the "Aut
 
 Note the client ID and client secret values. You will need them in the next step.
 
-### 2. Update Flyte configuration
+### 2. Generate a random internal secret
 
-At this point, you should have a static IP address, a managed certificate, and an OAuth 2.0 client.
-
-To enable authentication you also need to generate a random password to be used internally by flytepropeller. You can use any password generator you like or run the following command:
+To enable authentication you also need to generate a random secret to be used internally by flytepropeller. You can use any password generator you like or run the following command:
 
 ```bash
 openssl rand -base64 32
 ```
 
-Also, you need a bcrypt hash of the password. You can generate it using the following command, replacing `<your-random-password>` with the password you generated:
+Also, you need a bcrypt hash of the secret. You can generate it using the following command, replacing `<random-secret>` with the secret you generated:
 
 ```bash
-pip install bcrypt && python -c 'import bcrypt; import base64; print(base64.b64encode(bcrypt.hashpw("<your-random-password>".encode("utf-8"), bcrypt.gensalt(6))))'
+pip install bcrypt && python -c 'import bcrypt; import base64; print(base64.b64encode(bcrypt.hashpw("<random-secret>".encode("utf-8"), bcrypt.gensalt(6))))'
 ```
 
-Now, let's update the `flyte.yaml` file. Add (or update) the `configuration.auth` section by providing the OAuth 2.0 client ID and secret, and the client secret and its bcrypt hash you just generated. Also, add the domain you are using to the `authorizedUris` list:
+### 3. Update Flyte configuration
+
+Now, update the `flyte.yaml` file. Add the `configuration.auth` section, providing the OAuth 2.0 client ID and secret, and the internal secret and its bcrypt hash you just generated. Also, add the domain you are using to the `authorizedUris` list:
 
 ```yaml
 configuration:
@@ -436,11 +436,11 @@ configuration:
     enabled: true
     oidc:
       baseUrl: https://accounts.google.com
-      clientId: <your-client-id>
-      clientSecret: <your-client-secret>
+      clientId: <oauth-client-id>
+      clientSecret: <oauth-client-secret>
     internal:
-      clientSecret: <your-random-password>
-      clientSecretHash: <your-random-password-bcrypt-hash>
+      clientSecret: <random-secret>
+      clientSecretHash: <random-secret-bcrypt-hash>
 
     authorizedUris: [ https://<your-domain> ]
 ```
@@ -455,6 +455,10 @@ helm upgrade flyte-backend flyte-binary \
 ```
 
 Now, when you access the Flyte dashboard, you should be prompted to log in using your Google account. After successful authentication, you should be able to access the Flyte dashboard. Note that in the bottom left corner, you should see the button with your initials, which indicates that you are logged in.
+
+Authentication for CLI tools will be handled automatically, so you don't need to do anything else to enable it.
+
+And that's it! You have successfully deployed Flyte on GKE, exposed the dashboard and gRPC service to the Internet, and enabled authentication using Google OAuth.
 
 ## Cleanup
 
