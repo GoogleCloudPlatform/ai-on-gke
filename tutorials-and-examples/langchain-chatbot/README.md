@@ -205,7 +205,13 @@ gcloud sql users set-password postgres --instance=${CLOUD_SQL_INSTANCE} --host=%
 
 ### 2. Deploy the application to GKE
 
-Open `deployment.yaml` and replace the placeholders with the actual values. There are three pieces of information you need to provide: model base URL, model name, and database URI. The model base URL should point to the OpenAI-compatible API serving the language model (in case of KServe running in the same GKE cluster, it will be `http://<model-service-name>.<model-namespace>:<model-service-port>/openai/v1/`). The model name should match the name of the model on the API. The database URI should follow the scheme `postgres://<username>:<password>@<host>:<port>/<database>`. It is recommended to use environment variables to store sensitive information such as database credentials. For example:
+Open `deployment.yaml` and replace the placeholders with the actual values. There are three pieces of information you need to provide: model base URL, model name, and database URI.
+
+The model base URL should point to the OpenAI-compatible API serving the language model (in case of KServe running in the same GKE cluster, it will be `http://<model-service-name>.<model-namespace>:<model-service-port>/openai/v1/`). The model name should match the name of the model on the API.
+
+The database URI should follow the scheme `postgres://<username>:<password>@<host>:<port>/<database>`. The `host` can be obtained from the Cloud SQL instance details: `gcloud sql instances describe langchain-chatbot --format='value(ipAddresses[0].ipAddress)'`, the `port` is `5432`, the `username` is `postgres`, and the `database` is the name of the database you created (it's `chat` if you stick to the instructions above).
+
+It is recommended to use environment variables to store sensitive information such as database credentials. For example:
 
 ```yaml
 env:
