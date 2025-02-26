@@ -18,7 +18,7 @@ spec:
             gke-parallelstore/memory-limit: "0"
             gke-parallelstore/volumes: "true"
         spec:
-          serviceAccountName: pstore-sa
+          serviceAccountName: parallelstore-sa
           containers:
           - name: pstore-backup
             image: google/cloud-sdk:slim
@@ -61,7 +61,7 @@ spec:
               fi
 
               # Delete the old files from PStore if requested
-              # This will NOT delete the folder with the latest modification timestamp
+              # This will not delete the folder with the latest modification timestamp
               if $DELETE_AFTER_BACKUP && [ "$error" == "" ]; then
                 find $PSTORE_MOUNT_PATH/$SOURCE_PARALLELSTORE_PATH -type d -mindepth 1 |
                   while read dir; do
@@ -74,25 +74,25 @@ spec:
                   done
               fi
             env:
-            - name: PSTORE_MOUNT_PATH # mount path of the Parallelstore Instance, should match the volumeMount defined for this container
-              value: "/datacached"
-            - name: PSTORE_NAME # name of the Parallelstore Instance that need backup
-              value: "chdu-checkpoints-ps"
-            - name: PSTORE_LOCATION # location/zone of the Parallelstore Instance that need backup
-              value: "us-central1-a"
-            - name: SOURCE_PARALLELSTORE_PATH # absolut path from the PStore instance, WITHOUT volume mount path
-              value: "/nemo-experiments/user-model-workload-ps-64-2025-01-23-18-22-31/checkpoints/"
+            - name: PSTORE_MOUNT_PATH # mount path of the Parallelstore instance, should match the volumeMount defined for this container
+              value: "PSTORE_MOUNT_PATH"
+            - name: PSTORE_NAME # name of the Parallelstore instance that need backup
+              value: "PSTORE_NAME"
+            - name: PSTORE_LOCATION # location/zone of the Parallelstore instance that need backup
+              value: "PSTORE_LOCATION"
+            - name: SOURCE_PARALLELSTORE_PATH # absolute path from the PStore instance, without volume mount path
+              value: "SOURCE_PARALLELSTORE_PATH"
             - name: DESTINATION_GCS_URI # GCS bucket uri used for storing backups, starting with "gs://"
-              value: "gs://chdu-checkpoints-gcs/checkpoints/"
+              value: "DESTINATION_GCS_URI"
             - name: DELETE_AFTER_BACKUP # will delete old data from Parallelstore if true
-              value: "true"
+              value: "DELETE_AFTER_BACKUP"
             volumeMounts:
-            - mountPath: /datacached # should match the value of env var PSTORE_MOUNT_PATH
-              name: pstore-cached
+            - mountPath: PSTORE_MOUNT_PATH # should match the value of env var PSTORE_MOUNT_PATH
+              name: PSTORE_PV_NAME
           dnsPolicy: ClusterFirst
           restartPolicy: OnFailure
           terminationGracePeriodSeconds: 30
           volumes:
-          - name: pstore-cached
+          - name: PSTORE_PV_NAME
             persistentVolumeClaim:
-              claimName: parallelstore-pvc-cached
+              claimName: PSTORE_PVC_NAME
