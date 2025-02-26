@@ -159,7 +159,7 @@ This section describes how to deploy the application manually. If you prefer an 
 
 ### 1. Create Cloud SQL Instance
 
-In this step, we will create a Cloud SQL instance and a database to store user messages. The database should be accessible from the GKE cluster where the application will be deployed. We will use a private IP address for the Cloud SQL instance to ensure secure communication. To do this, a VPC Peering connection needs to be established between the network of the GKE cluster and the Google-managed services network.
+In this step, we will create a Cloud SQL instance and a database to store user messages. The database should be accessible from the GKE cluster where the application will be deployed. We will use a private IP address for the Cloud SQL instance to ensure secure communication. To do this, a VPC Peering connection needs to be established between the network of the GKE cluster and the Google-managed services network. The other option is to use a [Cloud SQL proxy](https://cloud.google.com/sql/docs/postgres/connect-auth-proxy), but it's not covered in this tutorial.
 
 First, create an address range for VPC Peering in the GKE cluster network:
 
