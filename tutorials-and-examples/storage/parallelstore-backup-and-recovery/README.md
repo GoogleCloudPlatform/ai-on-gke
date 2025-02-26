@@ -6,12 +6,6 @@
 
 Follow the instructions in [Create and connect to a Parallelstore instance from Google Kubernetes Engine](https://cloud.google.com/parallelstore/docs/connect-from-kubernetes-engine) to create a GKE cluster with Parallelstore enabled.
 
-### [WIP] (Optional) Deploy a training workload that uses Parallelstore for training data and saving checkpoints
-
-There is an existing effort to publish new [gpu-receipts](https://github.com/AI-Hypercomputer/gpu-recipes/tree/main) that use Parallelstore as storage for training data and checkpoints. The plan is to merge it into the [current receipts for Llama 70b Nemo pretraining on GKE](https://github.com/AI-Hypercomputer/gpu-recipes/tree/main/training/a3mega/llama-3.1-70b/nemo-pretraining-gke) and become publicly available.
-
-* [WIP]https://source.corp.google.com/h/aaie-internal-sandbox/experimental/+/main:davidsotomora/example-workload/training/a3mega/llama-3.1-70b/nemo-pretraining-gke/README.md
-
 ### Connect to your GKE cluster
 
 ```
@@ -25,7 +19,7 @@ Your GKE CronJob needs **roles/parallelstore.admin** and **roles/storage.admin**
 #### Create GCP Service Account IAM SA
 
 ```
-gcloud iam service-accounts create pstore-sa \
+gcloud iam service-accounts create parallelstore-sa \
     --project=$PROJECT_ID
 ```
 
@@ -33,32 +27,32 @@ gcloud iam service-accounts create pstore-sa \
 
 ```
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-   --member "serviceAccount:pstore-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+   --member "serviceAccount:parallelstore-sa@$PROJECT_ID.iam.gserviceaccount.com" \
    --role "roles/parallelstore.admin" 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-   --member "serviceAccount:pstore-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+   --member "serviceAccount:parallelstore-sa@$PROJECT_ID.iam.gserviceaccount.com" \
    --role "roles/storage.admin"
 ```
 
 #### Create GKE Service Account and allow it to impersonate GCP Service Account
 
 ```
-kubeclt apply -f ./pstore-sa.yaml
+kubeclt apply -f ./parallelstore-sa.yaml
 ```
 
 ##### Bind the GCP SA and GKE SA
 
 ```
-gcloud iam service-accounts add-iam-policy-binding pstore-sa@$PROJECT_ID.iam.gserviceaccount.com \
+gcloud iam service-accounts add-iam-policy-binding parallelstore-sa@$PROJECT_ID.iam.gserviceaccount.com \
     --role roles/iam.workloadIdentityUser \
-    --member "serviceAccount:$PROJECT_ID.svc.id.goog[default/pstore-sa]"
+    --member "serviceAccount:$PROJECT_ID.svc.id.goog[default/parallelstore-sa]"
 ```
 
 ##### Annotate the GKE SA with GCP SA
 
 ```
-kubectl annotate serviceaccount pstore-sa \
-    --namespace default \ iam.gke.io/gcp-service-account=pstore-sa@my-project.iam.gserviceaccount.com
+kubectl annotate serviceaccount parallelstore-sa \
+    --namespace default \ iam.gke.io/gcp-service-account=parallelstore-sa@my-project.iam.gserviceaccount.com
 ```
 
 #### Grant permission to ParallelStore Agent Service Account
@@ -85,7 +79,7 @@ Update the below Variable base on your workload set up and deploy the Cronjob to
 
 * PSTORE_LOCATION: `e.g. "us-central1-a"` ***The location/zone of the Parallelstore Instance that need backup***
 
-* SOURCE_PARALLELSTORE_PATH: `e.g. "/nemo-experiments/user-model-workload-ps-64/checkpoints/". ***The absolute path from the PStore instance, WITHOUT volume mount path, must start with “/”***
+* SOURCE_PARALLELSTORE_PATH: `e.g. "/nemo-experiments/user-model-workload-ps-64/checkpoints/". ***The absolute path from the Parallelstore instance, WITHOUT volume mount path, must start with “/”***
 
 * DESTINATION_GCS_URI: `e.g. "gs://checkpoints-gcs/checkpoints/"` ***The GCS bucket path URI to a Cloud Storage bucket, or a path within a bucket, using the format "gs://<bucket_name>/<optional_path_inside_bucket>"***
 
@@ -94,7 +88,6 @@ Update the below Variable base on your workload set up and deploy the Cronjob to
 ```
 kubeclt apply -f ./ps-to-gcs-backup.yaml
 ```
-
 
 ## Data Recovery
 
@@ -115,7 +108,7 @@ CAPACITY_GB ***Storage capacity of the instance in GB, value from 12000 to 10000
 
 * SOURCE_GCS_PATH: ***The GCS bucket path URI to a Cloud Storage bucket, or a path within a bucket, using the format "gs://<bucket_name>/<optional_path_inside_bucket>"***
 
-* DESTINATION_PARALLELSTORE_URI: ***The absolute path from the PStore instance, WITHOUT volume mount path, must start with “/”***
+* DESTINATION_PARALLELSTORE_URI: ***The absolute path from the Parallelstore instance, WITHOUT volume mount path, must start with “/”***
 
 #### Create a new Parallelstore Instance
 ```
