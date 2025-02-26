@@ -314,42 +314,40 @@ steps:
 # gcr.io/${_PROJECT_ID}/check_violations:latest is your application image: This image contains your security check tool and its dependencies. It's designed to be run, not to build or run other Docker images.
 - name: 'gcr.io/cloud-builders/docker'
   id: 'Run shipshape on cluster'
+  entrypoint: 'bash'
   args:
-  - 'run'
-  - '--network=cloudbuild'
-  - '--rm'
-  - '-v'
-  - '/workspace/security_test/allowlist:/workspace/security_test/allowlist'
-  - '-v'
-  - '/workspace/security_test/config.yaml:/workspace/security_test/config.yaml'
-  - '-v'
-  - '/workspace/kubeconfig:/root/.kube/config'
-  - '${_SHIPSHAPE_IMAGE}'
-  - '--mode=cluster'
-  - '--allowlist_folder=/workspace/security_test/allowlist'
-  - '--kube_config_path=/root/.kube/config'
-  - '--max_wait_duration=3000'
-  - '--max_parallel=100'
-  - '--cluster_scan_config_path=/workspace/security_test/config.yaml'
+  - '-c'
+  - |
+    docker run \
+    --network=cloudbuild \
+    --rm \
+    -v /workspace/security_test/allowlist:/workspace/security_test/allowlist \
+    -v /workspace/security_test/config.yaml:/workspace/security_test/config.yaml \
+    -v /workspace/kubeconfig:/root/.kube/config \
+    ${_SHIPSHAPE_IMAGE} \
+    --mode=cluster \
+    --allowlist_folder=/workspace/security_test/allowlist \
+    --kube_config_path=/root/.kube/config \
+    --max_wait_duration=3000 \
+    --max_parallel=100 \
+    --cluster_scan_config_path=/workspace/security_test/config.yaml \
+    2>&1 | tee /workspace/shipshape_on_cluster.txt 2>&1
   allowFailure: true
   waitFor: ['Copy metadata']
 
 
 - id: 'Run Shipshape on helm'
   name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
   args:
-  - 'run'
-  - '--network=cloudbuild'
-  - '--rm'
-  - '-v'
-  - '/workspace/security_test/allowlist:/workspace/security_test/allowlist'
-  - '-v'
-  - '/workspace/security_test/scan_target:/workspace/security_test/scan_target'
-  - '${_SHIPSHAPE_IMAGE}'
-  - '--mode=helm'
-  - '--allowlist_folder=/workspace/security_test/allowlist'
-  - '--scan_path=/workspace/security_test/scan_target'
-  - '--max_wait_duration=60'
+  - '-c'
+  - |
+    docker run --network=cloudbuild --rm -v \
+    /workspace/security_test/allowlist:/workspace/security_test/allowlist \
+    -v /workspace/security_test/scan_target:/workspace/security_test/scan_target \
+    ${_SHIPSHAPE_IMAGE} --mode=helm --allowlist_folder=/workspace/security_test/allowlist \
+    --scan_path=/workspace/security_test/scan_target --max_wait_duration=60 \
+    2>&1 | tee /workspace/shipshape_on_helm.txt 2>&1
   allowFailure: true
   waitFor: ['Copy metadata']
 
@@ -455,6 +453,16 @@ steps:
       echo "rag prompt test failed"
       exit 1
     fi
+    
+    if grep -q "Validation failed" /workspace/shipshape_on_cluster.txt; then
+      echo "Shipshape on cluster scan validation failed, please check the log. knowledge share slides: go/shipshape-ai-on-gke-slide"
+      exit 1
+    fi
+    
+    if grep -q "Validation failed" /workspace/shipshape_on_helm.txt; then
+      echo "Shipshape on helm scan validation failed, please check the log. knowledge share slides: go/shipshape-ai-on-gke-slide"
+      exit 1
+    fi
   waitFor: ['cleanup gke cluster']
 
 substitutions:
@@ -463,10 +471,10 @@ substitutions:
   _AUTOPILOT_CLUSTER: "false"
   _BUILD_ID: ${BUILD_ID:0:8}
   _SHIPSHAPE_IMAGE: us-docker.pkg.dev/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent/k8ssecurityvalidation-agent@sha256:cd45e6cd84e9a45462ddbca18c4731fd4e264d517ee98131eb5be4eb57691f44
-logsBucket: gs://ai-on-gke-build-logs
 options:
   substitutionOption: "ALLOW_LOOSE"
   machineType: "E2_HIGHCPU_8"
+  logging: CLOUD_LOGGING_ONLY
 timeout: 5400s
 availableSecrets:
   secretManager:
