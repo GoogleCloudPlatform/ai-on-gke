@@ -5,6 +5,9 @@ apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
   name: nccl-test
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
 spec:
   ttlSecondsAfterFinished: 1200
   suspend: False
@@ -19,6 +22,7 @@ spec:
           template:
             metadata:
               annotations:
+                kueue.x-k8s.io/podset-preferred-topology: "kubernetes.io/hostname"
                 "helm.sh/hook": post-install
                 "helm.sh/hook-weight": "1" 
                 "helm.sh/hook-delete-policy": hook-succeeded
@@ -40,7 +44,7 @@ spec:
               activeDeadlineSeconds: 3600
               restartPolicy: Never
               nodeSelector:
-                cloud.google.com/gke-accelerator: nvidia-h200-141gb
+                cloud.google.com/gke-nodepool: a3-ultragpu-8g-a3-ultragpu-pool
               tolerations:
               - key: cloud.google.com/gke-queued
                 effect: NoSchedule
@@ -68,8 +72,14 @@ spec:
                 emptyDir:
                   medium: "Memory"
                   sizeLimit: 250Gi
+              - name: sys
+                hostPath:
+                  path: /sys
+              - name: proc-sys
+                hostPath:
+                  path: /proc/sys
               containers:
-              - name: nccl-test
+              - name: nccl
                 stdin: true
                 tty: true
                 image: us-docker.pkg.dev/gce-ai-infra/gpudirect-gib/nccl-plugin-gib-diagnostic:v1.0.3
@@ -98,11 +108,14 @@ spec:
                 - bash
                 - -c
                 - |
-
                   set -x
-
+                  export N_NODES=$N_NODES
                   echo "Starting workload container on ${MY_NODE_NAME} for $N_NODES benchmark"
-                  # # Install ping
+
+                  # Load all the cuda libs
+                  /sbin/ldconfig
+
+                  # Install ping
                   apt update -y
                   apt install -y iputils-ping
 
@@ -173,5 +186,4 @@ spec:
                     nvidia.com/gpu: 8
                   requests:
                     nvidia.com/gpu: 8
-              restartPolicy: Never
 {{- end }}

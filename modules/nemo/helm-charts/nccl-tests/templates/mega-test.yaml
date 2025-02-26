@@ -5,6 +5,9 @@ apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
   name: nccl-test
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
 spec:
   suspend: False
   network:
@@ -22,6 +25,7 @@ spec:
           template:
             metadata:
               annotations:
+                kueue.x-k8s.io/podset-preferred-topology: "kubernetes.io/hostname"
                 gke-gcsfuse/volumes: "true"
                 devices.gke.io/container.tcpxo-daemon: |+
                   - path: /dev/nvidia0
