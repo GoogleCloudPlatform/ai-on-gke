@@ -154,10 +154,11 @@ spec:
             value: gke
           - label: GKE Cluster with NCCL Test
             value: gke-nccl
-          - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
-            value: llama3.1_7b_nemo_pretraining
-          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
-            value: llama3.1_70b_nemo_pretraining
+          # Temorarily disable GPU recipe options
+          # - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
+          #   value: llama3.1_7b_nemo_pretraining
+          # - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
+          #   value: llama3.1_70b_nemo_pretraining
         node_count_gke:
           name: node_count_gke
           title: Node count
@@ -231,29 +232,14 @@ spec:
     runtime:
       outputMessage: Deployment can take several minutes to complete.
       suggestedActions:
-      - heading: Connect to Ray Cluster
-        description: Connect to Ray Cluster, scroll to <b>Ports</b> section and initiate
-          <b>PORT FORWARDING</b> (Run in Cloud Shell) to the ray dashboard (port 8265).
-          Open another terminal and follow these <a href="https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke#install-ray">instructions</a>
-          to install ray and submit jobs.
-      - heading: View Job Status in Ray Dashboard
-        description: '<p>
+      - heading: View and understand benchmark results
+        description: If you chose a benchmark as your deployment option, view the progress of your benchmark.
+          Once your benchmark workload completes, view and download the results from the results storage bucket.
+          <a href="https://github.com/AI-Hypercomputer/gpu-recipes">Learn about the benchmark and results</a>.
+      - heading: Schedule workloads
+        description: Use Topology Aware Scheduling with Kueue, a Kubernetes system that manages quotas and how jobs should consume them. <a href="https://cloud.google.com/ai-hypercomputer/docs/workloads/schedule-gke-workloads-tas">Learn how to schedule workloads</a>
+      - heading: Manage your cluster
+        description: GKE provides tools to perform maintenance on nodes, upgrade your cluster to the latest software versions, and report faulty nodes to Google Cloud Support. <a href="https://cloud.google.com/ai-hypercomputer/docs/manage/manage-gke-clusters">Learn how to manage your cluster</a>
+      - heading: Monitor your VMs and clusters
+        description: Use GPU metrics to monitor the performance of your VMs, GPUs, and network, and to ensure the health and stability of your clusters. Prebuilt dashboards and visualizations make it easy to identify and troubleshoot bottlenecks. <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/dcgm-metrics">Learn how to collect and view metrics</a>
 
-          1&#41; If IAP is disabled, open the ray dashboard via the <b>OPEN IN WEB
-          PREVIEW</b> button in the port forwarding page.</br>
-
-          </p>
-
-          <p>
-
-          2&#41; If IAP is enabled, click the <b>Launch Ray Dashboard</b> button and
-          log in with your organization''s credentials. Troubleshooting access issues:</br>
-
-          &emsp;&#x2022; SSL or cert errors indicate the cert is provisioning which
-          takes up to 20 minutes.</br>
-
-          &emsp;&#x2022; If you''re unable to login, go to <a href="https://console.cloud.google.com/security/iap">Google
-          Cloud Platform IAP</a>, select the <b>ray-cluster-kuberay-head-svc</b> service
-          and add the user with the role <b>IAP-secured Web App User</b>.
-
-          </p>'
