@@ -183,7 +183,7 @@ gcloud services vpc-peerings connect \
   --service=servicenetworking.googleapis.com
 ```
 
-Once VPC Peering is established, create the Cloud SQL instance with a private IP address and set the password for the `postgres` user:
+Once VPC Peering is established, create the Cloud SQL instance with a private IP address; it may take about 10 minutes to create the instance. When it's ready, create a database and set the password for the `postgres` user:
 
 ```bash
 CLOUD_SQL_INSTANCE=langchain-chatbot
