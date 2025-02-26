@@ -9,8 +9,8 @@ variable "checkpoint_bucket" {
 variable "recipe" {
   type = string
   validation {
-    condition     = contains(["llama3.1_7b_nemo_pretraining", "llama3.1_70b_nemo_pretraining", "gke-nccl"], var.recipe)
-    error_message = "Invalid recipe value. Must be one of: llama3.1_7b_nemo_pretraining, llama3.1_70b_nemo_pretraining."
+    condition     = contains(["llama3.1_7b_nemo_pretraining", "llama3.1_70b_nemo_pretraining", "gke-nccl", "gke"], var.recipe)
+    error_message = "Invalid recipe value. Must be one of: [\"llama3.1_7b_nemo_pretraining\", \"llama3.1_70b_nemo_pretraining\", \"gke-nccl\", \"gke\"]."
   }
 }
 
