@@ -68,8 +68,6 @@ spec:
                 emptyDir:
                   medium: "Memory"
                   sizeLimit: 250Gi
-              schedulingGates:
-              - name: "gke.io/topology-aware-auto-nccl-test"
               containers:
               - name: nccl-test
                 stdin: true
