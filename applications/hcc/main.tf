@@ -24,6 +24,8 @@ locals {
 
   gke_cluster_endpoint = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].gke_endpoint}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].gke_endpoint}" : error("Only A3 Mega and A3 Ultra are supported")
   gke_cluster_ca_cert = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].gke_ca_cert}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].gke_ca_cert}" : error("Only A3 Mega and A3 Ultra are supported")
+  gpu_pool_name = var.gpu_type == "A3 Mega" ? "${module.a3_megagpu_pool[0].node_pool_name}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-pool[0].node_pool_name}" : error("Only A3 Mega and A3 Ultra are supported")
+  num_gpus = var.gpu_type == "A3 Mega" ? "${module.a3_megagpu_pool[0].static_gpu_count}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-pool[0].static_gpu_count}" : error("Only A3 Mega and A3 Ultra are supported")
 }
 
 module "gke-a3-mega-net" {
@@ -276,16 +278,16 @@ module "a3-ultragpu-pool" {
   }
 }
 
-module "topology-aware-scheduler-install" {
-  count = var.gpu_type == "A3 Ultra"? 0 : 1
-  source     = "./modules/embedded/community/modules/compute/gke-topology-scheduler"
-  cluster_id = local.gke_cluster_id
-  project_id = var.project_id
-  providers = {
-    kubectl = kubectl
-    http    = http
-  }
-}
+# module "topology-aware-scheduler-install" {
+#   count = var.gpu_type == "A3 Ultra"? 0 : 1
+#   source     = "./modules/embedded/community/modules/compute/gke-topology-scheduler"
+#   cluster_id = local.gke_cluster_id
+#   project_id = var.project_id
+#   providers = {
+#     kubectl = kubectl
+#     http    = http
+#   }
+# }
 
 module "workload-manager-install" {
   source = "./modules/embedded/modules/management/kubectl-apply"
@@ -296,10 +298,14 @@ module "workload-manager-install" {
   }
   kueue = {
     install = true
-    config_path = var.gpu_type == "A3 Ultra" ? "./modules/embedded/modules/management/kubectl-apply/templates/kueue-configuration.yaml.tftpl" : null
+    config_path = "./modules/embedded/modules/management/kubectl-apply/templates/kueue-configuration.yaml.tftpl"
+    # config_template_vars = {
+    #   node_pool_name = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].node_pool_name : module.a3_megagpu_pool[0].node_pool_name
+    #   num_gpus       = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].static_gpu_count : module.a3_megagpu_pool[0].static_gpu_count
+    # }
     config_template_vars = {
-      node_pool_name = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].node_pool_name : null
-      num_gpus       = var.gpu_type == "A3 Ultra" ? module.a3-ultragpu-pool[0].static_gpu_count : null
+      node_pool_name = local.gpu_pool_name
+      num_gpus       = local.num_gpus
     }
     version = "v0.10.0"
   }
