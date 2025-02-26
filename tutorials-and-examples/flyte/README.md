@@ -404,7 +404,7 @@ Try sheduling a new execution using the `pyflyte` CLI as we did before and check
 
 Visit the [Credentials page](https://console.cloud.google.com/apis/credentials) and select "Create OAuth client ID" on the top of the page.
 
-When asked to choose the application type, select "Web application". In the "Authorized redirect URIs" section, add the following URI: `https://<your-domain>` (replace `<your-domain>` with the actual domain you are using).
+When asked to choose the application type, select "Web application". In the "Authorized redirect URIs" section, add the following URI: `https://<your-domain>/callback` (replace `<your-domain>` with the actual domain you are using).
 
 Note the client ID and client secret values. You will need them in the next step.
 
