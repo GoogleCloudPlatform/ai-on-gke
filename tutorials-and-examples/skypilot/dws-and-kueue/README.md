@@ -81,12 +81,13 @@ Server Version: v1.30.6-gke.1596000
 ```
 If not, you can change the version in Terraform with the  `kubectl_version` variable
 ## Install and configure Kueue
-1. Install Kueue from the official manifest.\
+1. Install [Kueue](https://kueue.sigs.k8s.io/) from the official manifest.\
 Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations.
 ```bash
-VERSION=v0.7.0
+VERSION=v0.10.2
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
 ```
+For more configuration options visit [Kueue's installation guide](https://kueue.sigs.k8s.io/docs/installation/).
 2. Configure Kueue for pod provisioning by patching the Kueue configmap.
 ```bash
 # Extract and patch the config
@@ -140,7 +141,7 @@ allowed_clouds:
 kubernetes:
   # Use the context's name
   allowed_contexts:
-    - gke_${PROJECT_NAME}_europe-${LOCATION}_${CLUSTER_NAME}
+    - gke_${PROJECT_NAME}_${LOCATION}_${CLUSTER_NAME}
   autoscaler: gke
 ```
 And verify again:
@@ -251,7 +252,7 @@ This section details how to fine-tune Gemma 2B for SQL generation on GKE Autopil
 The [finetune.py](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/code/finetune.py) script uses QLoRA with 4-bit quantization to fine-tune Gemma 2B on SQL generation tasks.
 
 ### Configure GCS Storage Access
-The infrastructure Terraform configuration in [main.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/skypilot_dws_kueue/tutorials-and-examples/skypilot/dws-and-kueue/main.tf) includes Workload Identity and GCS bucket setup:
+The infrastructure Terraform configuration in [main.tf](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/tutorials-and-examples/skypilot/dws-and-kueue/main.tf) includes Workload Identity and GCS bucket setup:
 ```
 module "skypilot-workload-identity" {
   source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
@@ -409,7 +410,7 @@ No resource satisfying Kubernetes({'L4': 1}) on Kubernetes.
 sky.exceptions.ResourcesUnavailableError: Kubernetes cluster does not contain any instances satisfying the request: 1x Kubernetes({'L4': 1}).
 To fix: relax or change the resource requirements.
 
-Hint: sky show-gpus to list available accelerators.
+Hint: sky show-gpus --cloud kubernetes to list available accelerators.
       sky check to check the enabled clouds.
 ```
 Make sure you added `autoscaling: gke` to the sky config in step [Install SkyPilot](#install-skypilot)

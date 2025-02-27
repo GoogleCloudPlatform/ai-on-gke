@@ -106,7 +106,7 @@ If you encounter an error, please consult the [offical documentation](https://do
 
 You can find the available GPUs in a GKE cluster.
 ```bash
-sky show-gpus
+sky show-gpus --cloud kubernetes 
 ```
 
 3. Find the context names
