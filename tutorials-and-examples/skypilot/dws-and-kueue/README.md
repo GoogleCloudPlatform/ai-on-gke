@@ -409,8 +409,8 @@ No resource satisfying Kubernetes({'L4': 1}) on Kubernetes.
 sky.exceptions.ResourcesUnavailableError: Kubernetes cluster does not contain any instances satisfying the request: 1x Kubernetes({'L4': 1}).
 To fix: relax or change the resource requirements.
 
-Hint: sky show-gpus --cloud kubernetes to list available accelerators.
-      sky check to check the enabled clouds.
+Hint: `sky show-gpus --cloud kubernetes` to list available accelerators.
+      `sky check` to check the enabled clouds.
 ```
 Make sure you added `autoscaling: gke` to the sky config in step [Install SkyPilot](#install-skypilot)
 
