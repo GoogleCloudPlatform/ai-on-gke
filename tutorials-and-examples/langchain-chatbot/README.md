@@ -294,7 +294,7 @@ kubectl apply -n ${K8S_NAMESPACE} -f managed-certificate.yaml
 kubectl apply -n ${K8S_NAMESPACE} -f ingress.yaml
 ```
 
-It takes some time for the Managed Certificate to be provisioned. You can check the status of the certificate using:
+It takes some time (usually 10-20 minutes) for the Managed Certificate to be provisioned. You can check the status of the certificate using:
 
 ```bash
 kubectl describe managedcertificate chat-ui -n ${K8S_NAMESPACE}
