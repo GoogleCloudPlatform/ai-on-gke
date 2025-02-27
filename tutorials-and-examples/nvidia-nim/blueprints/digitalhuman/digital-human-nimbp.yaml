@@ -1,0 +1,204 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dighum-llama3-8b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dighum-llama3-8b
+  template:
+    metadata:
+      labels:
+        app: dighum-llama3-8b
+    spec:
+      containers:
+      - name: dighum-llama3-8b
+        image: nvcr.io/nim/meta/llama3-8b-instruct:1.0.3
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            nvidia.com/gpu: 2
+          limits:
+            nvidia.com/gpu: 2
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm            
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        - name: NIM_PEFT_REFRESH_INTERVAL
+          value: "3600"
+        securityContext:
+          runAsUser: 0
+        livenessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 20
+          periodSeconds: 10
+          failureThreshold: 100
+      imagePullSecrets:
+      - name: secret-nvcr
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 20Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dighum-llama3-8b-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: dighum-llama3-8b
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000 # The container still listens on 8000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dighum-embedqa-e5v5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dighum-embedqa-e5v5
+  template:
+    metadata:
+      labels:
+        app: dighum-embedqa-e5v5
+    spec:
+      containers:
+      - name: dighum-embedqa-e5v5
+        image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:1.0.1
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm            
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        securityContext:
+          runAsUser: 0
+        livenessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 20
+          periodSeconds: 10
+          failureThreshold: 100
+      imagePullSecrets:
+      - name: secret-nvcr
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dighum-embedqa-e5v5-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: dighum-embedqa-e5v5
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dighum-rerankqa-mistral4bv3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dighum-rerankqa-mistral4bv3
+  template:
+    metadata:
+      labels:
+        app: dighum-rerankqa-mistral4bv3
+    spec:
+      containers:
+      - name: dighum-rerankqa-mistral4bv3
+        image: nvcr.io/nim/nvidia/nv-rerankqa-mistral-4b-v3:1.0.1
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm            
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        securityContext:
+          runAsUser: 0
+        livenessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 20
+          periodSeconds: 10
+          failureThreshold: 100
+      imagePullSecrets:
+      - name: secret-nvcr
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dighum-rerankqa-mistral4bv3-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: dighum-rerankqa-mistral4bv3
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
