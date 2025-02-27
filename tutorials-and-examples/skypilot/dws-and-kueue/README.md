@@ -82,12 +82,11 @@ Server Version: v1.30.6-gke.1596000
 If not, you can change the version in Terraform with the  `kubectl_version` variable
 ## Install and configure Kueue
 1. Install [Kueue](https://kueue.sigs.k8s.io/) from the official manifest.\
-Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations.
+Note that `--server-side` switch . Without it the client cannot render the CRDs because of annotation size limitations. For more configuration options visit [Kueue's installation guide](https://kueue.sigs.k8s.io/docs/installation/).
 ```bash
 VERSION=v0.10.2
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
 ```
-For more configuration options visit [Kueue's installation guide](https://kueue.sigs.k8s.io/docs/installation/). \
 2. Configure Kueue for pod provisioning by patching the Kueue configmap.
 ```bash
 # Extract and patch the config
