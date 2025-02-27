@@ -87,7 +87,7 @@ Note that `--server-side` switch . Without it the client cannot render the CRDs 
 VERSION=v0.10.2
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
 ```
-For more configuration options visit [Kueue's installation guide](https://kueue.sigs.k8s.io/docs/installation/).
+For more configuration options visit [Kueue's installation guide](https://kueue.sigs.k8s.io/docs/installation/). \
 2. Configure Kueue for pod provisioning by patching the Kueue configmap.
 ```bash
 # Extract and patch the config
