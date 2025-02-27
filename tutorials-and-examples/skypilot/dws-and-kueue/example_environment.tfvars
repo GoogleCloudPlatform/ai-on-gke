@@ -27,7 +27,7 @@ gcs_bucket             = "skypilot-model-bucket"
 autopilot_cluster = true
 
 # For Standard clusters, configure GPU node pools:
-#autopilot_cluster = false
+# autopilot_cluster = false
 
 #  If using Standard cluster please uncomment the
 #  following gpu_pools block to enable queued_provisioning
