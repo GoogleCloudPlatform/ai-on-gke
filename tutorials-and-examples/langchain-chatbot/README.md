@@ -207,7 +207,7 @@ gcloud sql users set-password postgres --instance=${CLOUD_SQL_INSTANCE} --host=%
 
 Open `deployment.yaml` and replace the placeholders with the actual values. There are three pieces of information you need to provide: model base URL, model name, and database URI.
 
-The model base URL should point to the OpenAI-compatible API serving the language model (if you followed the instructions from the [Kserve README](../kserve/README.md), the model base URL will be something like `http://huggingface-gemma2.kserve-test.33.44.55.66.sslip.io/openai/v1` if the model is running on a separate GKE cluster, or `http://huggingface-gemma2.kserve-test.svc.cluster.local/openai/v1` in case of the model running in the same GKE cluster). The model name should match the name of the model on the API.
+The model base URL should point to the OpenAI-compatible API serving the language model and the model name should match the name of the model in the API. If you followed the instructions from the [Kserve README](../kserve/README.md), the model base URL will be something like `http://huggingface-gemma2.kserve-test.33.44.55.66.sslip.io/openai/v1` if the model is running on a separate GKE cluster, or `http://huggingface-gemma2.kserve-test.svc.cluster.local/openai/v1` in case of the model running in the same GKE cluster, and the model name is `gemma2`.
 
 The database URI should follow the scheme `postgres://<username>:<password>@<host>:<port>/<database>`. The `host` can be obtained from the Cloud SQL instance details: `gcloud sql instances describe langchain-chatbot --format='value(ipAddresses[0].ipAddress)'`, the `port` is `5432`, the `username` is `postgres`, and the `database` is the name of the database you created (it's `chat` if you stick to the instructions above).
 
