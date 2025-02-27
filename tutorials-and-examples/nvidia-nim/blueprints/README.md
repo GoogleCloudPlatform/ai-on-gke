@@ -8,3 +8,10 @@ Here you will find the NVIDIA NIM Blueprints that can be provisioned to run on G
    - DiffDock
 
    You can follow the detailed steps [here](./drugdiscovery/README.md).
+
+2. [Digital Human for Customer Service](https://build.nvidia.com/nvidia/digital-humans-for-customer-service) uses 3 NIMs.
+   - AlphaFold2
+   - MolMIM
+   - DiffDock
+
+   You can follow the detailed steps [here](./digitalhuman/README.md).

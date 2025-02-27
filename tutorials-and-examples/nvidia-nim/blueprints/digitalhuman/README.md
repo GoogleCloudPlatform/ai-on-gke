@@ -87,7 +87,13 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
     ```
 
-    The NIM deployment takes about 10-15mins for it to be complete.
+    The NIM deployment takes upto 15mins for it to be complete. You can check the pods are in `Running` status: `k get pods` should list 3 pods: `nv-embed2qa-`, `nv-rerankqa-` and `llama3-`.
+
+    | NAME | READY | STATUS | RESTARTS |
+    |---|---|---|---|
+    |`dighum-embedqa-e5v5-aa-bb` | 1/1 | Running | 0 |
+    |`dighum-rerankqa-mistral4bv3-cc-cc` | 1/1 | Running | 0 |
+    |`dighum-llama3-8b-bb-cc` | 1/1 | Running | 0 |
 
 4. **Access NIM endpoints**
 
