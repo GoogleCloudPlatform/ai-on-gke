@@ -28,8 +28,13 @@ project_id = "supercomputer-testing"
 a3_mega_zone = ""
 a3_ultra_zone = "europe-west1-b"
 
-node_count_gke_nccl = 2
-recipe = "gke-nccl"
+node_count_gke_nccl = 0
+node_count_gke = 0
+node_count_llama_3_70b = 32
+node_count_llama_3_7b = 2
+
+#recipe = "gke-nccl"
+recipe = "llama3.1_7b_nemo_pretraining"
 
 reservation = "supercomputer-testing-gsc-asq-fr/reservationBlocks/supercomputer-testing-gsc-asq-fr-block-0001"
 reservation_block = ""

@@ -310,6 +310,7 @@ module "nemo" {
   recipe = var.recipe
   node_count = local.node_count
   gpu_type = var.gpu_type
+  queue = module.workload-manager-install.kueue_name
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
   providers = {
     helm = helm

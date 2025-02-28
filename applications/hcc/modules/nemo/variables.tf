@@ -25,3 +25,7 @@ variable "gpu_type" {
 variable "node_count" {
   type = number
 }
+
+variable "queue" {
+  type = string
+}
