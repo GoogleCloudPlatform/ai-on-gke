@@ -33,7 +33,7 @@ import (
 	"time"
 
 	ray "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
-	utils "github.com/ray-project/kuberay/ray-operator/controllers/ray/utils"
+	"github.com/ray-project/kuberay/ray-operator/controllers/ray/utils"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -73,9 +73,6 @@ var (
 	certPath        = "/etc/kuberay-tpu-webhook/tls/tls.crt"
 	keyPath         = "/etc/kuberay-tpu-webhook/tls/tls.key"
 	tpuResourceName = corev1.ResourceName("google.com/tpu")
-
-	// headless svc will be of the form: {kuberay-cluster-name}-headless-worker-svc
-	headlessServiceSuffix = "headless-worker-svc"
 
 	// Flag arguments.
 	BindAddr       string
@@ -247,7 +244,7 @@ func extractRayCluster(admissionReview *admissionv1.AdmissionReview) (*ray.RayCl
 
 // generateHeadlessServiceName returns the expected TPU headless service name for a RayCluster
 func generateHeadlessServiceName(clusterName string) string {
-	serviceName := fmt.Sprintf("%s-%s", clusterName, headlessServiceSuffix)
+	serviceName := fmt.Sprintf("%s-%s", clusterName, utils.HeadlessServiceSuffix)
 
 	// Apply the same truncation as in the RayCluster controller when generating the headless service
 	// name. This is to maintain the up-to 63 char compatibility guarantee for hostnames (RFC 1123).
@@ -262,7 +259,7 @@ func genDNSHostnames(numOfHosts int32, groupName string, clusterName string, nam
 	}
 	headlessServiceName := generateHeadlessServiceName(clusterName)
 	hostNames := make([]string, numOfHosts)
-	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.{CLUSTER_NAME}-headless-worker-svc
+	// Host names will be of the form {WORKER_GROUP_NAME}-{REPLICA_INDEX}-{HOST_INDEX}.{CLUSTER_NAME}-headless
 	for j := 0; j < int(numOfHosts); j++ {
 		hostNames[j] = fmt.Sprintf("%s-%d-%d.%s", groupName, replicaIndex, j, headlessServiceName)
 	}
