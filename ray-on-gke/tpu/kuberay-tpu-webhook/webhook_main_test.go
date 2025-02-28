@@ -797,17 +797,17 @@ func Test_GenDNSHostnames(t *testing.T) {
 			clusterName:       "test-cluster",
 			replicaIndex:      0,
 			numOfHosts:        int32(1),
-			expectedHostnames: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", headlessServiceSuffix),
+			expectedHostnames: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", utils.HeadlessServiceSuffix),
 		},
 		"genDNSHostnames with NumOfHosts > 1": {
 			// multi-host worker group, should return a string list of DNS hostnames for the given replica
 			clusterName:  "test-cluster",
 			replicaIndex: 1,
 			numOfHosts:   int32(4),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", utils.HeadlessServiceSuffix),
 			}, ","),
 		},
 		"genDNSHostnames with long RayCluster name": {
@@ -815,8 +815,8 @@ func Test_GenDNSHostnames(t *testing.T) {
 			clusterName:  "long-raycluster-name-to-be-truncated",
 			replicaIndex: 1,
 			numOfHosts:   int32(2),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "aycluster-name-to-be-truncated", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "aycluster-name-to-be-truncated", headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "aycluster-name-to-be-truncated", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "aycluster-name-to-be-truncated", utils.HeadlessServiceSuffix),
 			}, ","),
 		},
 	}
@@ -846,11 +846,11 @@ func Test_InjectHostnames(t *testing.T) {
 			// This function is only called for multi-host TPU worker groups.
 			clusterName:       "test-cluster",
 			groupName:         "test-group-name",
-			expectedSubdomain: fmt.Sprintf("%s-%s", "test-cluster", headlessServiceSuffix),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", headlessServiceSuffix),
+			expectedSubdomain: fmt.Sprintf("%s-%s", "test-cluster", utils.HeadlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", utils.HeadlessServiceSuffix),
 			}, ","),
 		},
 		"injectHostnames for multi-host worker group with truncated service name": {
@@ -858,11 +858,11 @@ func Test_InjectHostnames(t *testing.T) {
 			// correct subdomain truncated to match the created service name.
 			clusterName:       "extremely-long-test-raycluster-name",
 			groupName:         "test-group-name",
-			expectedSubdomain: fmt.Sprintf("%s-%s", "mely-long-test-raycluster-name", headlessServiceSuffix),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "mely-long-test-raycluster-name", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "mely-long-test-raycluster-name", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "mely-long-test-raycluster-name", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "mely-long-test-raycluster-name", headlessServiceSuffix),
+			expectedSubdomain: fmt.Sprintf("%s-%s", "mely-long-test-raycluster-name", utils.HeadlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "mely-long-test-raycluster-name", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "mely-long-test-raycluster-name", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "mely-long-test-raycluster-name", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "mely-long-test-raycluster-name", utils.HeadlessServiceSuffix),
 			}, ","),
 		},
 	}
@@ -1154,7 +1154,7 @@ func Test_GetEnvironmentVariable(t *testing.T) {
 	}
 	workerHostnames := corev1.EnvVar{
 		Name:  "TPU_WORKER_HOSTNAMES",
-		Value: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", headlessServiceSuffix),
+		Value: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", utils.HeadlessServiceSuffix),
 	}
 	podContainer.Env = []corev1.EnvVar{workerID, workerName, workerHostnames}
 
@@ -1179,7 +1179,7 @@ func Test_GetEnvironmentVariable(t *testing.T) {
 			// returns TPU_WORKER_HOSTNAMES env var value
 			variableName:  "TPU_WORKER_HOSTNAMES",
 			container:     podContainer,
-			expectedValue: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", headlessServiceSuffix),
+			expectedValue: fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", utils.HeadlessServiceSuffix),
 		},
 	}
 
@@ -1369,10 +1369,10 @@ func Test_MutatePod(t *testing.T) {
 			expectedWorkerID:   "0",
 			expectedReplicaID:  0,
 			expectedWorkerName: fmt.Sprintf("%s-%d", "test-group", 0),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 1, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 2, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 3, "test-cluster", headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 1, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 2, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 3, "test-cluster", utils.HeadlessServiceSuffix),
 			}, ","),
 			expectedReplicaLabel: fmt.Sprintf("%s-%d", "test-group", 0),
 		},
@@ -1386,10 +1386,10 @@ func Test_MutatePod(t *testing.T) {
 			expectedWorkerID:   "3",
 			expectedReplicaID:  0,
 			expectedWorkerName: fmt.Sprintf("%s-%d", "test-group", 0),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 1, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 2, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 3, "test-cluster", headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 0, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 1, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 2, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 0, 3, "test-cluster", utils.HeadlessServiceSuffix),
 			}, ","),
 			expectedReplicaLabel: fmt.Sprintf("%s-%d", "test-group", 0),
 		},
@@ -1403,10 +1403,10 @@ func Test_MutatePod(t *testing.T) {
 			expectedWorkerID:   "0",
 			expectedReplicaID:  1,
 			expectedWorkerName: fmt.Sprintf("%s-%d", "test-group", 1),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", utils.HeadlessServiceSuffix),
 			}, ","),
 			expectedReplicaLabel: fmt.Sprintf("%s-%d", "test-group", 1),
 		},
@@ -1420,10 +1420,10 @@ func Test_MutatePod(t *testing.T) {
 			expectedWorkerID:   "1",
 			expectedReplicaID:  1,
 			expectedWorkerName: fmt.Sprintf("%s-%d", "test-group", 1),
-			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", headlessServiceSuffix),
-				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", headlessServiceSuffix),
+			expectedHostnames: strings.Join([]string{fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 0, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 1, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 2, "test-cluster", utils.HeadlessServiceSuffix),
+				fmt.Sprintf("%s-%d-%d.%s-%s", "test-group", 1, 3, "test-cluster", utils.HeadlessServiceSuffix),
 			}, ","),
 			expectedReplicaLabel: fmt.Sprintf("%s-%d", "test-group", 1),
 		},
@@ -1474,7 +1474,7 @@ func Test_MutatePod(t *testing.T) {
 					expectedHostnamesPatch := []interface{}([]interface{}{map[string]interface{}{"name": "TPU_WORKER_HOSTNAMES", "value": tc.expectedHostnames}})
 					assert.Equal(t, tc.expectedReplicaLabel, patches[0]["value"])
 					assert.Equal(t, fmt.Sprintf("%s-%s", tc.expectedReplicaLabel, tc.expectedWorkerID), patches[1]["value"])
-					assert.Equal(t, fmt.Sprintf("%s-%s", "test-cluster", headlessServiceSuffix), patches[3]["value"])
+					assert.Equal(t, fmt.Sprintf("%s-%s", "test-cluster", utils.HeadlessServiceSuffix), patches[3]["value"])
 					assert.Equal(t, expectedHostnamesPatch, patches[4]["value"])
 					assert.Equal(t, expectedIDPatch, patches[5]["value"])
 					assert.Equal(t, expectedNamePatch, patches[6]["value"])
@@ -1489,13 +1489,13 @@ func Test_GenerateHeadlessServiceName(t *testing.T) {
 		testRayClusterName  string
 		expectedServiceName string
 	}{
-		"RayCluster name + headless-worker-svc is less than 50 chars, no truncation": {
-			testRayClusterName:  "test-raycluster",                     // 15 chars
-			expectedServiceName: "test-raycluster-headless-worker-svc", // 35 chars
+		"RayCluster name + -{HEADLESS_SERVICE_SUFFIX} is less than 50 chars, no truncation": {
+			testRayClusterName:  "test-raycluster",          // 15 chars
+			expectedServiceName: utils.CheckName(fmt.Sprintf("%s-%s", "test-raycluster", utils.HeadlessServiceSuffix)),
 		},
-		"RayCluster name + headless-worker-svc is more than 50 chars, name is truncated": {
-			testRayClusterName:  "extremely-long-test-raycluster-name",                // 35 chars
-			expectedServiceName: "mely-long-test-raycluster-name-headless-worker-svc", // 50 chars
+		"RayCluster name + -{HEADLESS_SERVICE_SUFFIX} is more than 50 chars, name is truncated": {
+			testRayClusterName:  "extremely-really-really-long-test-raycluster-name",  // 49 chars
+			expectedServiceName: utils.CheckName(fmt.Sprintf("%s-%s", "extremely-really-really-long-test-raycluster-name", utils.HeadlessServiceSuffix)),
 		},
 	}
 
