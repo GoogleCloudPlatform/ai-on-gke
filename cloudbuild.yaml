@@ -342,11 +342,16 @@ steps:
   args:
   - '-c'
   - |
-    docker run --network=cloudbuild --rm -v \
-    /workspace/security_test/allowlist:/workspace/security_test/allowlist \
+    docker run \
+    --network=cloudbuild \
+    --rm \
+    -v /workspace/security_test/allowlist:/workspace/security_test/allowlist \
     -v /workspace/security_test/scan_target:/workspace/security_test/scan_target \
-    ${_SHIPSHAPE_IMAGE} --mode=helm --allowlist_folder=/workspace/security_test/allowlist \
-    --scan_path=/workspace/security_test/scan_target --max_wait_duration=60 \
+    ${_SHIPSHAPE_IMAGE} \
+    --mode=helm \
+    --allowlist_folder=/workspace/security_test/allowlist \
+    --scan_path=/workspace/security_test/scan_target \
+    --max_wait_duration=60 \
     2>&1 | tee /workspace/shipshape_on_helm.txt 2>&1
   allowFailure: true
   waitFor: ['Copy metadata']
