@@ -115,6 +115,8 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
     ```
 
+    [Click here if you need HTTPS endpoints](https.md)
+
 ## Tear down
 
 5. **Tear down the environment**
