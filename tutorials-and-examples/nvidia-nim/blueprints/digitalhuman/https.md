@@ -20,7 +20,7 @@ Deploying HTTPS endpoints for the digital human blueprint on GKE.
 
     ```bash
 
-    export NIMS=”dighum-embedqa-e5v5 dighum-llama3-8b dighum-rerankqa-mistral4bv3”
+    export NIMS="dighum-embedqa-e5v5 dighum-llama3-8b dighum-rerankqa-mistral4bv3"
     export DOMAIN=<DOMAIN>
 
     ```
@@ -139,5 +139,5 @@ done
     for service in $SERVICES; do
       kubectl delete svc ${service}
     done
-    
+
     ```
