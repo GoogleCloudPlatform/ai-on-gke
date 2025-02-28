@@ -42,9 +42,9 @@ spec:
   template:
     metadata:
       annotations:
-        {{- if and (eq $root.Values.tasSettings.useLegacyTAS false)  $root.Values.queue $root.Values.tasSettings.topologyRequest }}
-          {{- toYaml .Values.tasSettings.topologyRequest | nindent 8 }}
-        {{- end }}
+        {{- if $root.Values.queue }}
+        kueue.x-k8s.io/podset-preferred-topology: {{ $root.Values.podsetPreferredTopology }}
+        {{- end}}
         kubectl.kubernetes.io/default-container: megatron
         {{- if $root.Values.volumes.gcsMounts }}
         gke-gcsfuse/volumes: "true"
@@ -64,18 +64,13 @@ spec:
         {{- else }}
           [
             {"interfaceName":"eth0","network":"default"},
-            {"interfaceName":"eth1","network":"{{ $root.Values.clusterName }}-sub-1"},
-            {{- range  $i := until 8 }}
-            {"interfaceName":"eth{{ add 2 $i }}","network":"{{ $root.Values.clusterName }}-rdma-sub-{{ $i }}"}{{ eq $i 7 | ternary "" ","}}
+            {{- range  $i := until 9 }}
+            {"interfaceName":"eth{{ add 1 $i }}","network":"vpc{{ add 1 $i }}"}{{ eq $i 8 | ternary "" ","}}
             {{- end }}
           ]
         {{- end }}
         {{- end }}
     spec:
-      {{- if $root.Values.tasSettings.useLegacyTAS }}
-      schedulingGates:
-      - name: "gke.io/topology-aware-auto-scheduling"
-      {{- end }}
       {{- if $root.Values.network.hostNetwork }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
