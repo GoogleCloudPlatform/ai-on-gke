@@ -49,11 +49,6 @@ resource "helm_release" "nemo" {
     name = "volumes.gcsMounts[0].bucketName"
     value = var.checkpoint_bucket
   }
-  
-  set {
-    name = "clusterName"
-    value = local.cluster_name
-  }
 
   set {
     name = "queue"
