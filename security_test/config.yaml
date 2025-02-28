@@ -37,7 +37,7 @@ ignoredObjects:
 - Group: ".*"
   Kind: ".*"
   Version: ".*"
-  Namespace: "^(kube-system|kube-public|kube-node-lease|gke-(gmp-system.*|managed-.*|gmp-public))$"
+  Namespace: "^(kube-system|kube-public|kube-node-lease|gke-(gmp-system.*|managed-.*|gmp-public)|gmp-system.*)$"
   Name: ".*"
 
 # ClusterRoles (system-related or not security-relevant)
@@ -67,3 +67,4 @@ ignoredObjects:
   Version: "v1"
   Namespace: "default"
   Name: "^default$"
+
