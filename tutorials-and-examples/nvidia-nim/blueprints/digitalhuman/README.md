@@ -17,7 +17,7 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 - **NGC API Key:** An API key from NVIDIA NGC. Please read the prerequisites to access this key [here](https://github.com/NVIDIA-AI-Blueprints/digital-human/blob/main/README.md#prerequisites)
 - **kubectl:**  kubectl command-line tool installed and configured.
 - **NVIDIA GPUs:** One of the below GPUs should work
-  - [NVIDIA L4 GPU (4)](https://cloud.google.com/compute/docs/gpus#l4-gpus)
+  - [NVIDIA L4 GPU (8)](https://cloud.google.com/compute/docs/gpus#l4-gpus)
   - [NVIDIA A100 80GB (1) GPU](https://cloud.google.com/compute/docs/gpus#a100-gpus)
   - [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
 
@@ -33,10 +33,10 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
     export ZONE="us-west4-a"            # e.g., us-west4-a
     export NP_CPU_MACHTYPE="e2-standard-2" # e.g., e2-standard-2
-    export NP_GPU_MACHTYPE="g2-standard-48" # e.g., a2-ultragpu-1g
+    export NP_GPU_MACHTYPE="g2-standard-96" # e.g., a2-ultragpu-1g
 
     export ACCELERATOR_TYPE="nvidia-l4"     # e.g., nvidia-a100-80gb
-    export ACCELERATOR_COUNT="4"            # Or higher, as needed
+    export ACCELERATOR_COUNT="8"            # Or higher, as needed
     export NODE_POOL_NODES=1                # Or higher, as needed
 
     export NGC_API_KEY="<NGC API Key>"
@@ -62,7 +62,7 @@ Deploying the digital human blueprint based on few NIMs on GKE.
       --accelerator="type=${ACCELERATOR_TYPE},count=${ACCELERATOR_COUNT},gpu-driver-version=LATEST" \
       --placement-type="COMPACT" \
       --disk-type="pd-ssd" \
-      --disk-size="200GB"
+      --disk-size="300GB"
 
     ```
 
@@ -87,13 +87,17 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
     ```
 
-    The NIM deployment takes upto 15mins for it to be complete. You can check the pods are in `Running` status: `k get pods` should list 3 pods: `nv-embed2qa-`, `nv-rerankqa-` and `llama3-`.
+    The NIM deployment takes upto 15mins for it to be complete. You can check the pods are in `Running` status: `k get pods` should list below pods.
 
     | NAME | READY | STATUS | RESTARTS |
     |---|---|---|---|
-    |`dighum-embedqa-e5v5-aa-bb` | 1/1 | Running | 0 |
-    |`dighum-rerankqa-mistral4bv3-cc-cc` | 1/1 | Running | 0 |
-    |`dighum-llama3-8b-bb-cc` | 1/1 | Running | 0 |
+    |`dighum-embedqa-e5v5-aa-aa` | 1/1 | Running | 0 |
+    |`dighum-rerankqa-mistral4bv3-bb-bb` | 1/1 | Running | 0 |
+    |`dighum-llama3-8b-cc-cc` | 1/1 | Running | 0 |
+    |`dighum-audio2face-3d-dd-dd` | 1/1 | Running | 0 |
+    |`dighum-fastpitch-tts-ee-ee` | 1/1 | Running | 0 |
+    |`dighum-maxine-audio2face-2d-ff-ff` | 1/1 | Running | 0 |
+    |`dighum-parakeet-asr-1-1b-gg-gg` | 1/1 | Running | 0 |
 
 4. **Access NIM endpoints**
 

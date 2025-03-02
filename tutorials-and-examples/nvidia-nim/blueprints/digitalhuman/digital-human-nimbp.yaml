@@ -19,12 +19,12 @@ spec:
         - containerPort: 8000
         resources:
           requests:
-            nvidia.com/gpu: 2
+            nvidia.com/gpu: 1
           limits:
-            nvidia.com/gpu: 2
+            nvidia.com/gpu: 1
         volumeMounts:
           - name: dshm
-            mountPath: /dev/shm            
+            mountPath: /dev/shm
         env:
         - name: NGC_API_KEY
           valueFrom:
@@ -33,8 +33,6 @@ spec:
               key: NGC_API_KEY
         - name: NIM_PEFT_REFRESH_INTERVAL
           value: "3600"
-        securityContext:
-          runAsUser: 0
         livenessProbe:
           httpGet:
             path: /v1/health/ready
@@ -84,7 +82,8 @@ spec:
     spec:
       containers:
       - name: dighum-embedqa-e5v5
-        image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:1.0.1
+        # image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:1.0.1
+        image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:latest
         ports:
         - containerPort: 8000
         resources:
@@ -94,15 +93,13 @@ spec:
             nvidia.com/gpu: 1
         volumeMounts:
           - name: dshm
-            mountPath: /dev/shm            
+            mountPath: /dev/shm
         env:
         - name: NGC_API_KEY
           valueFrom:
             secretKeyRef:
               name: ngc-api-key
               key: NGC_API_KEY
-        securityContext:
-          runAsUser: 0
         livenessProbe:
           httpGet:
             path: /v1/health/ready
@@ -162,15 +159,327 @@ spec:
             nvidia.com/gpu: 1
         volumeMounts:
           - name: dshm
-            mountPath: /dev/shm            
+            mountPath: /dev/shm
         env:
         - name: NGC_API_KEY
           valueFrom:
             secretKeyRef:
               name: ngc-api-key
               key: NGC_API_KEY
+        livenessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 20
+          periodSeconds: 10
+          failureThreshold: 100
+      imagePullSecrets:
+      - name: secret-nvcr
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 20Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dighum-rerankqa-mistral4bv3-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: dighum-rerankqa-mistral4bv3
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dighum-parakeet-asr-1-1b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dighum-parakeet-asr-1-1b
+  template:
+    metadata:
+      labels:
+        app: dighum-parakeet-asr-1-1b
+    spec:
+      containers:
+      - name: dighum-parakeet-asr-1-1b
+        image: nvcr.io/nim/nvidia/riva-asr:1.3.0
+        ports:
+        - containerPort: 9000
+          name: http
+        - containerPort: 50051
+          name: grpc
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        - name: NIM_HTTP_API_PORT
+          value: "9000"
+        - name: NIM_GRPC_API_PORT
+          value: "50051"
+        - name: NIM_TAGS_SELECTOR
+          value: "name=parakeet-1-1b-ctc-riva-en-us,mode=str"
+        livenessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 9000
+          initialDelaySeconds: 10
+          timeoutSeconds: 20
+          periodSeconds: 10
+          failureThreshold: 100
+      imagePullSecrets:
+      - name: secret-nvcr
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dighum-parakeet-asr-1-1b-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: dighum-parakeet-asr-1-1b
+  ports:
+  - protocol: TCP
+    name: http
+    port: 9000
+    targetPort: 9000
+  - protocol: TCP
+    name: grpc
+    port: 50051
+    targetPort: 50051
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dighum-fastpitch-tts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dighum-fastpitch-tts
+  template:
+    metadata:
+      labels:
+        app: dighum-fastpitch-tts
+    spec:
+      containers:
+      - name: dighum-fastpitch-tts
+        image: nvcr.io/nim/nvidia/riva-tts:1.3.0
+        ports:
+        - containerPort: 9000
+          name: http
+        - containerPort: 50051
+          name: grpc
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        - name: NIM_HTTP_API_PORT
+          value: "9000"
+        - name: NIM_GRPC_API_PORT
+          value: "50051"
+        - name: NIM_TAGS_SELECTOR
+          value: "name=fastpitch-hifigan-en-us"
+        livenessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 9000
+          initialDelaySeconds: 10
+          timeoutSeconds: 20
+          periodSeconds: 10
+          failureThreshold: 100
+      imagePullSecrets:
+      - name: secret-nvcr
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dighum-fastpitch-tts-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: dighum-fastpitch-tts
+  ports:
+  - protocol: TCP
+    name: http
+    port: 9000
+    targetPort: 9000
+  - protocol: TCP
+    name: grpc
+    port: 50051
+    targetPort: 50051
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dighum-audio2face-3d
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dighum-audio2face-3d
+  template:
+    metadata:
+      labels:
+        app: dighum-audio2face-3d
+    spec:
+      hostNetwork: true
+      containers:
+      - name: dighum-audio2face-3d
+        image: nvcr.io/nim/nvidia/audio2face-3d:1.2
         securityContext:
-          runAsUser: 0
+          privileged: true
+        ports:
+        - containerPort: 9000
+          name: http
+        - containerPort: 50051
+          name: grpc
+        resources:
+          requests:
+            nvidia.com/gpu: 2
+          limits:
+            nvidia.com/gpu: 2
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        # - name: NIM_MANIFEST_PROFILE
+        #   value: "default"
+        - name: NIM_DISABLE_MODEL_DOWNLOAD
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /v1/health/ready
+            port: 9000
+          initialDelaySeconds: 10
+          timeoutSeconds: 20
+          periodSeconds: 10
+          failureThreshold: 100
+      imagePullSecrets:
+      - name: secret-nvcr
+      nodeSelector:
+        cloud.google.com/gke-gpu: "true"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: dighum-audio2face-3d-lb
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: dighum-audio2face-3d
+#   ports:
+#   - protocol: TCP
+#     name: http
+#     port: 9000
+#     targetPort: 9000
+#   - protocol: TCP
+#     name: grpc
+#     port: 50051
+#     targetPort: 50051
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dighum-maxine-audio2face-2d
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dighum-maxine-audio2face-2d
+  template:
+    metadata:
+      labels:
+        app: dighum-maxine-audio2face-2d
+    spec:
+      containers:
+      - name: dighum-maxine-audio2face-2d
+        image: nvcr.io/nim/nvidia/maxine-audio2face-2d:latest
+        # securityContext:
+        #   privileged: true
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 8001
+          name: ws
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+        env:
+        - name: NGC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ngc-api-key
+              key: NGC_API_KEY
+        - name: NIM_HTTP_API_PORT
+          value: "8000"
         livenessProbe:
           httpGet:
             path: /v1/health/ready
@@ -193,12 +502,17 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dighum-rerankqa-mistral4bv3-lb
+  name: dighum-maxine-audio2face-2d-lb
 spec:
   type: LoadBalancer
   selector:
-    app: dighum-rerankqa-mistral4bv3
+    app: dighum-maxine-audio2face-2d
   ports:
   - protocol: TCP
-    port: 80
+    name: http
+    port: 8000
     targetPort: 8000
+  - protocol: TCP
+    name: ws
+    port: 8001
+    targetPort: 8001
