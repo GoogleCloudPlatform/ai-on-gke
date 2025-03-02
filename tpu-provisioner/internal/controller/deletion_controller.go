@@ -18,8 +18,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 )
@@ -128,7 +130,7 @@ func (r *DeletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// the loop early.
 	// Log the fact we are not deleting at a high verbosity level to avoid polluting logs but
 	// allow for improved debugability.
-	lg.V(5).Info("Node pool %s for JobSet %s is still in use, not deleting", nodePoolName, jobSetName)
+	lg.V(5).Info("Node pool for JobSet is still in use, not deleting", "nodePoolName", nodePoolName, "jobSetName", jobSetName)
 	return ctrl.Result{}, nil
 }
 
@@ -147,6 +149,7 @@ func (r *DeletionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Node{}).
+		Watches(&corev1.Pod{}, handler.EnqueueRequestsFromMapFunc(handler.MapFunc(nodeForPod))).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: r.Concurrency,
 		}).
@@ -166,6 +169,16 @@ func (r *DeletionReconciler) deleteNodePool(ctx context.Context, node *corev1.No
 		}
 	}
 	return ctrl.Result{}, nil
+}
+
+func nodeForPod(ctx_ context.Context, obj client.Object) []reconcile.Request {
+	pod := obj.(*corev1.Pod)
+	if nodeName := pod.Spec.NodeName; nodeName != "" {
+		return []reconcile.Request{
+			{NamespacedName: types.NamespacedName{Name: nodeName}},
+		}
+	}
+	return []reconcile.Request{}
 }
 
 // nodeManagedByProvisioner returns true if the given node is managed by the
