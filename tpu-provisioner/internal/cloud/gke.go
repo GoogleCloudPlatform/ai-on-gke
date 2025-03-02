@@ -405,6 +405,11 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 		placementPolicy.Type = "COMPACT"
 	}
 
+	var diskType string
+	if g.ClusterContext.NodeDiskType != "" {
+		diskType = g.ClusterContext.NodeDiskType
+	}
+
 	return &containerv1beta1.NodePool{
 		Name: name,
 		Config: &containerv1beta1.NodeConfig{
@@ -416,12 +421,15 @@ func (g *GKE) nodePoolForPod(name string, p *corev1.Pod) (*containerv1beta1.Node
 			Tags: g.ClusterContext.NodeTags,
 			// NOTE: vendor/ was manually updated to include the field because
 			// it was not currently available at the time of writing:
-			SecondaryBootDisks:  secondaryDisks,
-			MachineType:         machineType,
-			ReservationAffinity: reservation,
-			Labels:              labels,
-			Spot:                spot,
-			Taints:              taints,
+			SecondaryBootDisks:        secondaryDisks,
+			MachineType:               machineType,
+			ReservationAffinity:       reservation,
+			Labels:                    labels,
+			Spot:                      spot,
+			Taints:                    taints,
+			BootDiskKmsKey:            g.ClusterContext.NodeBootDiskKMSKey,
+			DiskType:                  diskType,
+			EnableConfidentialStorage: g.ClusterContext.NodeConfidentialStorage,
 		},
 		InitialNodeCount: int64(nodeCount),
 		Locations:        []string{g.ClusterContext.NodeZone},
