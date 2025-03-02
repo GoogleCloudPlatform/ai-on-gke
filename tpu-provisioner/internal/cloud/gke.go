@@ -671,10 +671,10 @@ func nodePoolSelectiveHash(np *containerv1beta1.NodePool) (string, error) {
 	}
 	npToHash := &containerv1beta1.NodePool{
 		Config: &containerv1beta1.NodeConfig{
-			Spot:        np.Config.Spot,
-			Labels:      labels,
-			Taints:      np.Config.Taints,
-			MachineType: np.Config.MachineType,
+			Spot:                np.Config.Spot,
+			Labels:              labels,
+			MachineType:         np.Config.MachineType,
+			ReservationAffinity: np.Config.ReservationAffinity,
 		},
 	}
 	jsn, err := json.Marshal(npToHash)
