@@ -320,7 +320,7 @@ kubectl apply -n ${K8S_NAMESPACE} -f backend-config.yaml
 kubectl annotate service chat -n ${K8S_NAMESPACE} beta.cloud.google.com/backend-config=chat-ui
 ```
 
-Finally, go to the IAP page in the GCP Console and enable IAP for the application. Then, click on the checkbox next to the application and on the panel that appears on the right, click "Add Principal". Here you can specify which principals (users, groups, or domains) should be allowed or denied access. Common roles to consider include:
+Finally, go to the IAP page in the GCP Console and enable IAP for the application. Then, click on the checkbox next to the application and on the panel that appears on the right, click "Add Principal". Here you can specify which principals (users, groups, or domains) should be allowed or denied access. In order to grant principal access, add it to the list and assign the "IAP-secured Web App User" role. Consider the following types of principals:
 
 - **Individual Users**: Add specific email addresses of users who should have access.
 - **Groups**: If you have a Google Group containing users who need access, add the group's email address.
