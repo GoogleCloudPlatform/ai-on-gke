@@ -9,7 +9,7 @@ spec:
     maxRestarts: 3
   replicatedJobs:
   - name: workers
-    replicas: 3 # set to number of node pools
+    replicas: 1 # set to number of node pools
     template:
       spec: 
         backoffLimit: 0
@@ -21,8 +21,15 @@ spec:
           spec:
             restartPolicy: Never
             nodeSelector:
-              cloud.google.com/gke-tpu-accelerator: tpu-v4-podslice
+              cloud.google.com/gke-tpu-accelerator: tpu-v5p-slice
               cloud.google.com/gke-tpu-topology: 2x2x2
+              cloud.google.com/gke-spot: "true"
+              abc: xyz
+            tolerations:
+            - key: cloud.google.com/gke-spot
+              operator: Equal
+              value: "true"
+              effect: NoSchedule
             containers:
             - name: tpu-job
               image: python:3.8
@@ -31,11 +38,8 @@ spec:
               securityContext:
                 privileged: true
               command:
-              - bash
-              - -c
-              - |
-                pip install 'jax[tpu]' -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
-                python -c 'import jax; print("TPU cores:", jax.device_count())'
+              - "sleep"
+              - "600"
               resources:
                 requests:
                   google.com/tpu: 4
