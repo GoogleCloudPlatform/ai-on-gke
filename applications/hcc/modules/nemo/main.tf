@@ -68,4 +68,9 @@ resource "helm_release" "nccl_tests" {
     name = "workload.gpuType"
     value = var.gpu_type
   }
+
+  set {
+    name = "workload.node_count"
+    value = var.node_count
+  }
 }

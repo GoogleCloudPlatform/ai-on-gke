@@ -7,7 +7,7 @@ metadata:
   name: nccl-test
   namespace: default
   labels:
-    kueue.x-k8s.io/queue-name: user-queue
+    kueue.x-k8s.io/queue-name: "{{ $root.Values.queue }}"
 spec:
   suspend: False
   network:
@@ -19,8 +19,8 @@ spec:
           labels:
             jobset.sigs.k8s.io/jobset-name: nccl-test
         spec:
-          parallelism: 2
-          completions: 2
+          parallelism: {{$root.Values.workload.node_count}}
+          completions: {{$root.Values.workload.node_count}}
 
           template:
             metadata:
@@ -190,7 +190,7 @@ spec:
                     - name: RUN_ITERS
                       value: "20"
                     - name: N_NODES
-                      value: "2"
+                      value: "{{$root.Values.workload.node_count}}"
                     - name: GPU_PER_NODE
                       value: "8"
                     - name: JOB_TIMESTAMP
