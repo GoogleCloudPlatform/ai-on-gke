@@ -26,13 +26,13 @@ metadata:
   name: "{{ .Release.Name }}"
   namespace: default
   labels:
-  {{- if $root.Values.queue }}
+  # {{- if $root.Values.queue }}
     kueue.x-k8s.io/queue-name: "{{ $root.Values.queue }}"
-  {{- end }}
+  # {{- end }}
 spec:
-  {{- if $root.Values.queue }}
+  # {{- if $root.Values.queue }}
   suspend: true
-  {{- end }}
+  # {{- end }}
   parallelism: {{ $nodes }}
   completions: {{ $nodes }}
   completionMode: Indexed
@@ -40,6 +40,7 @@ spec:
   template:
    metadata:
     annotations:
+      kueue.x-k8s.io/podset-preferred-topology: "kubernetes.io/hostname"
       kubectl.kubernetes.io/default-container: megatron
       {{- if $root.Values.volumes.gcsMounts }}
       gke-gcsfuse/volumes: "true"

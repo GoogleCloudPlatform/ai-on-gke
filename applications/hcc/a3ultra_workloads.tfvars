@@ -31,8 +31,8 @@ a3_ultra_zone = "europe-west1-b"
 node_count_gke_nccl = 2
 recipe = "gke-nccl"
 
-reservation = "supercomputer-testing-gsc-asq-fr/reservationBlocks/supercomputer-testing-gsc-asq-fr-block-0001"
-reservation_block = ""
+reservation = "supercomputer-testing-gsc-asq-fr"
+reservation_block = "supercomputer-testing-gsc-asq-fr-block-0001"
 placement_policy_name = ""
 
 gpu_type = "A3 Ultra"
