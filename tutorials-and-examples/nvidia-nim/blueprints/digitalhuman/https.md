@@ -134,7 +134,7 @@ done
 
     ```bash
 
-    SERVICES=$(k get svc | awk '{print $1}' | grep -v NAME | grep '^dighum')
+    SERVICES=$(k get svc | awk '{print $1}' | grep -v NAME | grep '^dighum.*-lb$')
 
     for service in $SERVICES; do
       kubectl delete svc ${service}
