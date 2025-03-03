@@ -48,7 +48,7 @@ print_inference_server_unknown() {
 check_gsbucket() {
     BUCKET_NAME=$1
     if [ -z $BUCKET_NAME ]; then
-        echo "BUCKET_NAME is empty, please provide a GSBucket"
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): BUCKET_NAME is empty, please provide a GSBucket"
         exit 1
     fi
 }
@@ -56,7 +56,7 @@ check_gsbucket() {
 check_model_path() {
     MODEL_PATH=$1
     if [ -z $MODEL_PATH ]; then
-        echo "MODEL_PATH is empty, please provide the model path"
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): MODEL_PATH is empty, please provide the model path"
         exit 1
     fi
 }
@@ -70,10 +70,10 @@ download_kaggle_checkpoint() {
 
     mkdir -p /data/${MODEL_NAME}_${VARIATION_NAME}
     kaggle models instances versions download ${MODEL_PATH} --untar -p /data/${MODEL_NAME}_${VARIATION_NAME}
-    echo -e "\nCompleted extraction to /data/${MODEL_NAME}_${VARIATION_NAME}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed extraction to /data/${MODEL_NAME}_${VARIATION_NAME}"
 
     gcloud storage rsync --recursive --no-clobber /data/${MODEL_NAME}_${VARIATION_NAME} gs://${BUCKET_NAME}/base/${MODEL_NAME}_${VARIATION_NAME}
-    echo -e "\nCompleted copy of data to gs://${BUCKET_NAME}/base/${MODEL_NAME}_${VARIATION_NAME}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed copy of data to gs://${BUCKET_NAME}/base/${MODEL_NAME}_${VARIATION_NAME}"
 }
 
 download_huggingface_checkpoint() {
@@ -88,7 +88,7 @@ download_huggingface_checkpoint() {
     huggingface-cli login --token $(cat ${HUGGINGFACE_TOKEN_DIR}/HUGGINGFACE_TOKEN)
     huggingface-cli download ${MODEL_PATH} --local-dir ${INPUT_CKPT_DIR_LOCAL}
 
-    echo "Completed downloading model ${MODEL_PATH}"
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): Completed downloading model ${MODEL_PATH}"
 
     if [[ $MODEL_NAME == *"llama"* ]]; then
         if [[ $MODEL_NAME == "llama-2" ]]; then
@@ -106,12 +106,12 @@ download_huggingface_checkpoint() {
             --local-dir ${INPUT_CKPT_DIR_LOCAL}
         fi
     else
-        echo -e "Unclear of tokenizer.model for ${MODEL_NAME}. May have to manually upload."
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Unclear of tokenizer.model for ${MODEL_NAME}. May have to manually upload."
     fi
 }
 
 download_meta_checkpoint() {
-    echo "Downloading checkpoint $MODEL_PATH from Meta..."
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): Downloading checkpoint $MODEL_PATH from Meta..."
     META_URL=$1
     MODEL_PATH=$2
     echo -e "$META_URL" | llama download --source meta --model-id $MODEL_PATH
@@ -128,30 +128,23 @@ convert_maxtext_checkpoint() {
     QUANTIZE_TYPE=$8
     QUANTIZE_WEIGHTS=$9
 
-    echo -e "\nbucket name=${BUCKET_NAME}"
-    echo -e "\nmodel path=${MODEL_PATH}"
-    echo -e "\nmodel name=${MODEL_NAME}"
-    echo -e "\nversion=${VERSION}"
-    echo -e "\noutput ckpt dir=${OUTPUT_CKPT_DIR}"
-    echo -e "\nhuggingface=${HUGGINGFACE}"
-    echo -e "\nurl=${META_URL}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Bucket name=${BUCKET_NAME}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model path=${MODEL_PATH}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model name=${MODEL_NAME}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Version=${VERSION}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Output ckpt dir=${OUTPUT_CKPT_DIR}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Huggingface=${HUGGINGFACE}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Meta url=${META_URL}"
 
     if [ -z $VERSION ]; then
         VERSION=main
     fi
 
-    git clone https://github.com/google/maxtext.git
-
-    # checkout stable MaxText commit
-    cd maxtext
-    git checkout ${VERSION}
-    python3 -m pip install -r requirements.txt
-
     if [[ $VERSION == "jetstream-v0.2.2" || $VERSION == "jetstream-v0.2.1" || $VERSION == "jetstream-v0.2.0" ]]; then
         pip3 install orbax-checkpoint==0.5.20
     fi
 
-    echo -e "\nCloned MaxText repository and completed installing requirements"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Cloned MaxText repository and completed installing requirements"
 
     if [[ $MODEL_PATH == *"gemma"* ]]; then
         download_kaggle_checkpoint "$BUCKET_NAME" "$MODEL_PATH"
@@ -162,21 +155,21 @@ convert_maxtext_checkpoint() {
         --base_model_path gs://${BUCKET_NAME}/base/${MODEL_NAME}_${VARIATION_NAME}/${VARIATION_NAME} \
         --maxtext_model_path=${OUTPUT_CKPT_DIR_SCANNED} \
         --model_size ${MODEL_SIZE}
-        echo -e "\nCompleted conversion of checkpoint to gs://${BUCKET_NAME}/final/scanned/${MODEL_NAME}_${VARIATION_NAME}"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed conversion of checkpoint to gs://${BUCKET_NAME}/final/scanned/${MODEL_NAME}_${VARIATION_NAME}"
 
         MAXTEXT_MODEL_NAME=${MODEL_NAME}-${MODEL_SIZE}
 
     elif [[ $MODEL_PATH == *"Llama"* ]]; then
 
         if [ $HUGGINGFACE == "True" ]; then
-            echo "Checkpoint weights are from HuggingFace"
+            echo "$(date '+%Y-%m-%d %H:%M:%S'): Checkpoint weights are from HuggingFace"
             download_huggingface_checkpoint "$MODEL_PATH" "$MODEL_NAME"
 
         else
-            echo "Checkpoint weights are from Meta, use llama CLI"
+            echo "$(date '+%Y-%m-%d %H:%M:%S'): Checkpoint weights are from Meta, use llama CLI"
 
             if [ -z $META_URL ]; then
-                echo "META_URL is empty, please provide the Meta url by visiting https://www.llama.com/llama-downloads/ and agreeing to the Terms and Conditions."
+                echo "$(date '+%Y-%m-%d %H:%M:%S'): META_URL is empty, please provide the Meta url by visiting https://www.llama.com/llama-downloads/ and agreeing to the Terms and Conditions."
                 exit 1
             fi
             echo "META_URL: $META_URL"
@@ -186,7 +179,7 @@ convert_maxtext_checkpoint() {
             download_meta_checkpoint "$META_URL" "$MODEL_PATH"
         fi
 
-        echo "Setting model size for $MODEL_PATH"
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): Setting model size for $MODEL_PATH"
         if [[ $MODEL_NAME == "llama-2" ]]; then
             TOKENIZER="assets/tokenizer.llama2"
             if [[ $MODEL_PATH == *"7B"* ]] || [[ $MODEL_PATH == *"7b"* ]]; then
@@ -196,7 +189,7 @@ convert_maxtext_checkpoint() {
             elif [[ $MODEL_PATH == *"70B"* ]] || [[ $MODEL_PATH == *"70b"* ]]; then
                 MODEL_SIZE="llama2-70b"
             else
-                echo -e "\nUnclear llama2 model: $MODEL_PATH"
+                echo -e "Unclear llama2 model: $MODEL_PATH"
             fi
 
         elif [[ $MODEL_NAME == "llama-3" ]]; then
@@ -206,7 +199,7 @@ convert_maxtext_checkpoint() {
             elif [[ $MODEL_PATH == *"70B"* ]] || [[ $MODEL_PATH == *"70b"* ]]; then
                 MODEL_SIZE="llama3-70b"
             else
-                echo -e "\nUnclear llama3 model: $MODEL_PATH"
+                echo -e "Unclear llama3 model: $MODEL_PATH"
             fi
 
         elif [[ $MODEL_NAME == "llama-3.1" ]]; then
@@ -218,7 +211,7 @@ convert_maxtext_checkpoint() {
             elif [[ $MODEL_PATH == *"405B"* ]] || [[ $MODEL_PATH == *"405b"* ]]; then
                 MODEL_SIZE="llama3.1-405b"
             else
-                echo -e "\nUnclear llama3.1 model: $MODEL_PATH"
+                echo -e "Unclear llama3.1 model: $MODEL_PATH"
             fi
         
         elif [[ $MODEL_NAME == "llama-3.3" ]]; then
@@ -226,43 +219,60 @@ convert_maxtext_checkpoint() {
             if [[ $MODEL_PATH == *"70B"* ]] || [[ $MODEL_PATH == *"70b"* ]]; then
                 MODEL_SIZE="llama3.3-70b"
             else
-                echo -e "\nUnclear llama3.3 model: $MODEL_PATH"
+                echo -e "Unclear llama3.3 model: $MODEL_PATH"
             fi
 
         else
-            echo -e "\nUnclear llama model"
+            echo -e "Unclear llama model"
         fi
 
-        echo "Model size for $MODEL_PATH is $MODEL_SIZE"
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): Model size for $MODEL_PATH is $MODEL_SIZE"
 
+        OUTPUT_CKPT_DIR_SCANNED=${OUTPUT_CKPT_DIR}/bf16/scanned
         OUTPUT_CKPT_DIR_UNSCANNED=${OUTPUT_CKPT_DIR}/bf16
         TOKENIZER_PATH=${INPUT_CKPT_DIR_LOCAL}/tokenizer.model
+        RUN_NAME="unscanned"
 
-        pip3 install torch
-        echo -e "\ninput dir=${INPUT_CKPT_DIR_LOCAL}"
-        echo -e "\nmaxtext model path=${OUTPUT_CKPT_DIR_UNSCANNED}"
-        echo -e "\nmodel path=${MODEL_PATH}"
-        echo -e "\nmodel size=${MODEL_SIZE}"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Input directory=${INPUT_CKPT_DIR_LOCAL}"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Maxtext model path=${OUTPUT_CKPT_DIR_SCANNED}"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model path=${MODEL_PATH}"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model size=${MODEL_SIZE}"
 
         export JAX_PLATFORMS=cpu
         cd /maxtext/
-        python3 MaxText/llama_ckpt_conversion_inference_only.py \
+
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Beginning conversion of scanned checkpoint to ${OUTPUT_CKPT_DIR_SCANNED}/0/items"
+
+        python3 MaxText/llama_or_mistral_ckpt.py \
         --base-model-path ${INPUT_CKPT_DIR_LOCAL} \
-        --maxtext-model-path ${OUTPUT_CKPT_DIR_UNSCANNED} \
+        --maxtext-model-path ${OUTPUT_CKPT_DIR_SCANNED} \
         --model-size ${MODEL_SIZE}
-        echo -e "\nCompleted conversion of checkpoint to ${OUTPUT_CKPT_DIR_UNSCANNED}/0/items"
 
-        gcloud storage cp ${TOKENIZER_PATH} ${OUTPUT_CKPT_DIR_UNSCANNED}
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed conversion of scanned checkpoint to ${OUTPUT_CKPT_DIR_SCANNED}/0/items"
+        
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Beginning conversion of from scanned checkpoint ${OUTPUT_CKPT_DIR_SCANNED}/0/items to unscanned checkpoint ${OUTPUT_CKPT_DIR_UNSCANNED}/${RUN_NAME}"
+        
+        python3 MaxText/generate_param_only_checkpoint.py \
+        MaxText/configs/base.yml \
+        async_checkpointing=false \
+        base_output_directory=${OUTPUT_CKPT_DIR_UNSCANNED} \
+        load_parameters_path=${OUTPUT_CKPT_DIR_SCANNED}/0/items \
+        run_name=${RUN_NAME} \
+        model_name=${MODEL_SIZE} \
+        force_unroll=true \
+        weight_dtype=bfloat16 \
+        opt_type=sgd
 
-        touch commit_success.txt
-        gcloud storage cp commit_success.txt ${OUTPUT_CKPT_DIR_UNSCANNED}/0/items
+        OUTPUT_CKPT_DIR_UNSCANNED=${OUTPUT_CKPT_DIR_UNSCANNED}/${RUN_NAME}/checkpoints
+
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed unscanning checkpoint to ${OUTPUT_CKPT_DIR_UNSCANNED}/0/items"
 
         LOAD_PARAMS_PATH="${OUTPUT_CKPT_DIR_UNSCANNED}/0/items"
 
         if [ -z $QUANTIZE_WEIGHTS ]; then
             QUANTIZE_WEIGHTS="False"
         fi
-        echo -e "Quantize weights: ${QUANTIZE_WEIGHTS}"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Quantize weights: ${QUANTIZE_WEIGHTS}"
         VALID_QUANTIZATIONS=("int8" "int8w" "int4w" "intmp" "fp8")
         if [ $QUANTIZE_WEIGHTS == "True" ]; then
             # quantize_type is required, the default is bf16
@@ -271,7 +281,9 @@ convert_maxtext_checkpoint() {
                 if [ $QUANTIZE_TYPE == "$quantization" ]; then
                     VALID="True"
                     SAVE_QUANT_PARAMS_PATH="${OUTPUT_CKPT_DIR}/${QUANTIZE_TYPE}"
-                    python3 MaxText/decode.py \
+
+                    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Beginning quantizing model ${MODEL_SIZE} with ${QUANTIZE_TYPE} and parameter path ${LOAD_PARAMS_PATH}"
+                    python3 MaxText/load_and_quantize_checkpoint.py \
                     MaxText/configs/base.yml \
                     tokenizer_path=${TOKENIZER} \
                     load_parameters_path=${LOAD_PARAMS_PATH} \
@@ -287,24 +299,25 @@ convert_maxtext_checkpoint() {
                     attention=dot_product \
                     quantization=${QUANTIZE_TYPE} \
                     save_quantized_params_path=${SAVE_QUANT_PARAMS_PATH} \
-                    async_checkpointing=false \
-                    quantize_only=true
+                    async_checkpointing=false
+
+                    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed quantizing model ${MODEL_SIZE} with ${QUANTIZE_TYPE} to ${SAVE_QUANT_PARAMS_PATH}"
                 fi
             done
             if [ $VALID == "False" ]; then
-                echo -e "Quantize weights was True but an invalid quantization was provided: $QUANTIZE_TYPE. Valid quantizations: $VALID_QUANTIZATIONS"
+                echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Quantize weights was True but an invalid quantization was provided: $QUANTIZE_TYPE. Valid quantizations: $VALID_QUANTIZATIONS"
             fi
         fi
 
     else
-        echo -e "\nUnclear model"
+        echo -e "Unclear model"
     fi
 
     if [[ $MODEL_PATH == *"gemma"* ]]; then
         RUN_NAME=0
 
         python3 MaxText/generate_param_only_checkpoint.py MaxText/configs/base.yml force_unroll=true model_name=${MAXTEXT_MODEL_NAME} async_checkpointing=false run_name=${RUN_NAME} load_parameters_path=${OUTPUT_CKPT_DIR_SCANNED}/0/items base_output_directory=${OUTPUT_CKPT_DIR_UNSCANNED}
-        echo -e "\nCompleted unscanning checkpoint to ${OUTPUT_CKPT_DIR_UNSCANNED}/${RUN_NAME}/checkpoints/0/items"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed unscanning checkpoint to ${OUTPUT_CKPT_DIR_UNSCANNED}/${RUN_NAME}/checkpoints/0/items"
     fi
 }
 
@@ -319,7 +332,7 @@ convert_pytorch_checkpoint() {
     PYTORCH_VERSION=$8
 
     if [ -z $PYTORCH_VERSION ]; then
-        PYTORCH_VERSION=jetstream-v0.2.3
+        PYTORCH_VERSION=main
     fi
 
     CKPT_PATH="$(echo ${INPUT_CKPT_DIR} | awk -F'gs://' '{print $2}')"
@@ -335,9 +348,9 @@ convert_pytorch_checkpoint() {
     cd /jetstream-pytorch
     git checkout ${PYTORCH_VERSION}
     bash install_everything.sh
-    echo -e "\nCloned JetStream PyTorch repository and completed installing requirements"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Cloned JetStream PyTorch repository and completed installing requirements"
 
-    echo -e "\nRunning conversion script to convert model weights. This can take a couple minutes..."
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Running conversion script to convert model weights. This can take a couple minutes..."
 
     if [ $HUGGINGFACE == "True" ]; then
         echo "Checkpoint weights are from HuggingFace"
@@ -363,7 +376,7 @@ convert_pytorch_checkpoint() {
     # 3. quantize_weights = True, we run and specify quantize_type
     # We can use the same command for case #1 and #2, since both have quantize_weights set without needing to specify quantize_type
 
-    echo -e "\n quantize weights: ${QUANTIZE_WEIGHTS}"
+    echo -e "quantize weights: ${QUANTIZE_WEIGHTS}"
     if [ $QUANTIZE_WEIGHTS == "True" ]; then 
         # quantize_type is required, it will be set to the default value if not turned on
         if [ -n $QUANTIZE_TYPE ]; then
@@ -385,13 +398,13 @@ convert_pytorch_checkpoint() {
         --from_hf=${HUGGINGFACE}
     fi
     
-    echo -e "\nCompleted conversion of checkpoint to ${OUTPUT_CKPT_DIR_LOCAL}"
-    echo -e "\nUploading converted checkpoint from local path ${OUTPUT_CKPT_DIR_LOCAL} to GSBucket ${OUTPUT_CKPT_DIR}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed conversion of checkpoint to ${OUTPUT_CKPT_DIR_LOCAL}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Uploading converted checkpoint from local path ${OUTPUT_CKPT_DIR_LOCAL} to GSBucket ${OUTPUT_CKPT_DIR}"
     
 
     gcloud storage cp -r ${OUTPUT_CKPT_DIR_LOCAL}/* ${OUTPUT_CKPT_DIR}
     gcloud storage cp ${TOKENIZER_PATH} ${OUTPUT_CKPT_DIR}
-    echo -e "\nCompleted uploading converted checkpoint from local path ${OUTPUT_CKPT_DIR_LOCAL} to GSBucket ${OUTPUT_CKPT_DIR}"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Completed uploading converted checkpoint from local path ${OUTPUT_CKPT_DIR_LOCAL} to GSBucket ${OUTPUT_CKPT_DIR}"
 }
 
 CMD_ARGS=$(getopt -o "xb:s:m:n:h:t:q:v:i:o:u:" --long "bucket_name:,inference_server:,model_name:,
@@ -418,7 +431,7 @@ while true; do
     esac
 done
 
-echo "Inference server is ${INFERENCE_SERVER}"
+echo "$(date '+%Y-%m-%d %H:%M:%S'): Inference server is ${INFERENCE_SERVER}"
 
 case ${INFERENCE_SERVER} in 
 

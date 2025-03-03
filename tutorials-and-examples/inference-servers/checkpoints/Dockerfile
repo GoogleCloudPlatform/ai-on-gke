@@ -36,10 +36,16 @@ RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyri
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
 RUN apt -y update && apt install -y google-cloud-cli
 
+RUN git clone https://github.com/AI-Hypercomputer/maxtext.git && \
+cd /maxtext && \
+bash setup.sh
+
 RUN pip install kaggle && \
 pip install huggingface_hub[cli] && \
 pip install google-jetstream && \
-pip install llama-stack
+pip install llama-stack && \
+pip install torch && \
+pip install grain-nightly==0.0.10
 
 COPY checkpoint_converter.sh /usr/bin/
 RUN chmod +x /usr/bin/checkpoint_converter.sh

@@ -33,7 +33,7 @@ Now you can use it in a [Kubernetes job](../jetstream/maxtext/single-host-infere
 - -n, --model_name: [string] The model name, Model name, ex. llama-2, llama-3, gemma.
 - -q, --quantize_weights: [bool] The checkpoint is to be quantized. (Optional) (default=False)
 - -t, --quantize_type: [string] The type of quantization. Availabe quantize type: {"int8", "int4"} x {"per_channel", "blockwise"}. (Optional) (default=int8_per_channel)
-- -v, --version: [string] The version of repository to override, ex. jetstream-v0.2.2, jetstream-v0.2.3. (Optional) (default=jetstream-v0.2.3)
+- -v, --version: [string] The version of repository to override, ex. jetstream-v0.2.2, jetstream-v0.2.3. (Optional) (default=main)
 - -i, --input_directory: [string] The input directory, likely a GSBucket path. (Optional)
 - -o, --output_directory: [string] The output directory, likely a GSBucket path.
 - -h, --huggingface: [bool] The model is from Hugging Face. (Optional) (default=False)
