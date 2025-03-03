@@ -271,7 +271,7 @@ spec:
   ports:
   - protocol: TCP
     name: http
-    port: 9000
+    port: 80
     targetPort: 9000
   - protocol: TCP
     name: grpc
@@ -351,7 +351,7 @@ spec:
   ports:
   - protocol: TCP
     name: http
-    port: 9000
+    port: 80
     targetPort: 9000
   - protocol: TCP
     name: grpc
@@ -510,7 +510,7 @@ spec:
   ports:
   - protocol: TCP
     name: http
-    port: 8000
+    port: 80
     targetPort: 8000
   - protocol: TCP
     name: ws

@@ -52,7 +52,7 @@ Deploying the digital human blueprint based on few NIMs on GKE.
       --location="${ZONE}" \
       --machine-type="${NP_CPU_MACHTYPE}" \
       --gateway-api=standard \
-      --addons=GcpFilestoreCsiDriver
+      --addons=GcpFilestoreCsiDriver,HttpLoadBalancing
 
     gcloud container node-pools create "${NP_NAME}" \
       --cluster="${CLUSTER_NAME}" \
