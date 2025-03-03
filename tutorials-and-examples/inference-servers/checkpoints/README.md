@@ -5,43 +5,36 @@ The `checkpoint_entrypoint.sh` script overviews how to convert your inference ch
 Build the checkpoint conversion Dockerfile
 ```
 docker build -t inference-checkpoint .
-docker tag inference-checkpoint gcr.io/${PROJECT_ID}/inference-checkpoint:latest
-docker push gcr.io/${PROJECT_ID}/inference-checkpoint:latest
+docker tag inference-checkpoint ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/jetstream/inference-checkpoint:latest
+docker push ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/jetstream/inference-checkpoint:latest
 ```
 
 Now you can use it in a [Kubernetes job](../jetstream/maxtext/single-host-inference/checkpoint-job.yaml) and pass the following arguments
 
 ## Jetstream + MaxText
 ```
-- -s=INFERENCE_SERVER
-- -b=BUCKET_NAME
-- -m=MODEL_PATH
-- -v=VERSION (Optional)
+-b, --bucket_name: [string] The GSBucket name to store checkpoints, without gs://.
+-s, --inference_server: [string] The name of the inference server that serves your model. (Optional) (default=jetstream-maxtext)
+-m, --model_path: [string] The model path.
+-n, --model_name: [string] The model name.
+-h, --huggingface: [bool] The model is from Hugging Face. (Optional) (default=False)
+-t, --quantize_type: [string] The type of quantization. (Optional)
+-q, --quantize_weights: [bool] The checkpoint is to be quantized. (Optional) (default=False)
+-i, --input_directory: [string] The input directory, likely a GSBucket path.
+-o, --output_directory: [string] The output directory, likely a GSBucket path.
+-u, --meta_url: [string] The url from Meta. (Optional)
+-v, --version: [string] The version of repository. (Optional) (default=main)
 ```
 
 ## Jetstream + Pytorch/XLA
 ```
-- -s=INFERENCE_SERVER
-- -m=MODEL_PATH
-- -n=MODEL_NAME
-- -q=QUANTIZE_WEIGHTS (Optional) (default=False)
-- -t=QUANTIZE_TYPE (Optional) (default=int8_per_channel)
-- -v=VERSION (Optional) (default=jetstream-v0.2.3)
-- -i=INPUT_DIRECTORY (Optional)
-- -o=OUTPUT_DIRECTORY
-- -h=HUGGINGFACE (Optional) (default=False)
-```
-
-## Argument descriptions:
-```
-b) BUCKET_NAME: (str) GSBucket, without gs://
-s) INFERENCE_SERVER: (str) Inference server, ex. jetstream-maxtext, jetstream-pytorch
-m) MODEL_PATH: (str) Model path, varies depending on inference server and location of base checkpoint
-n) MODEL_NAME: (str) Model name, ex. llama-2, llama-3, gemma
-h) HUGGINGFACE: (bool) Checkpoint is from HuggingFace.
-q) QUANTIZE_WEIGHTS: (str) Whether to quantize weights
-t) QUANTIZE_TYPE: (str) Quantization type, QUANTIZE_WEIGHTS must be set to true. Availabe quantize type: {"int8", "int4"} x {"per_channel", "blockwise"},
-v) VERSION: (str) Version of inference server to override, ex. jetstream-v0.2.2, jetstream-v0.2.3
-i) INPUT_DIRECTORY: (str) Input checkpoint directory, likely a GSBucket path
-o) OUTPUT_DIRECTORY: (str) Output checkpoint directory, likely a GSBucket path
+- -s, --inference_server: [string] The name of the inference server that serves your model.
+- -m, --model_path: [string] The model path.
+- -n, --model_name: [string] The model name, Model name, ex. llama-2, llama-3, gemma.
+- -q, --quantize_weights: [bool] The checkpoint is to be quantized. (Optional) (default=False)
+- -t, --quantize_type: [string] The type of quantization. Availabe quantize type: {"int8", "int4"} x {"per_channel", "blockwise"}. (Optional) (default=int8_per_channel)
+- -v, --version: [string] The version of repository to override, ex. jetstream-v0.2.2, jetstream-v0.2.3. (Optional) (default=main)
+- -i, --input_directory: [string] The input directory, likely a GSBucket path. (Optional)
+- -o, --output_directory: [string] The output directory, likely a GSBucket path.
+- -h, --huggingface: [bool] The model is from Hugging Face. (Optional) (default=False)
 ```
