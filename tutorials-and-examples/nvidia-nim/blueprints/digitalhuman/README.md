@@ -4,11 +4,11 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Setup](#setup)
-  - Create Cluster
-  - Deploy NIMs
-- [Cleanup](#tear-down)
+- [Digital Human for Customer Service on GKE](#digital-human-for-customer-service-on-gke)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Tear down](#tear-down)
 
 ## Prerequisites
 
@@ -51,6 +51,7 @@ Deploying the digital human blueprint based on few NIMs on GKE.
       --num-nodes="1" \
       --location="${ZONE}" \
       --machine-type="${NP_CPU_MACHTYPE}" \
+      --gateway-api=standard \
       --addons=GcpFilestoreCsiDriver
 
     gcloud container node-pools create "${NP_NAME}" \
@@ -117,6 +118,8 @@ Deploying the digital human blueprint based on few NIMs on GKE.
     done
 
     ```
+
+    [Click here if you need HTTPS endpoints](https.md)
 
 ## Tear down
 
