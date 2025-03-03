@@ -79,13 +79,23 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
 
 ```bash
 alias k=kubectl
+```
 
+make sure you are in this directory
+
+```bash
+cd tutorials-and-examples/nvidia-bionemo/
+```
+
+then run:
+
+```bash
 k apply -k pretraining/
 ```
 
 7. Port Forwarding (for TensorBoard):
 
-List PODs and ensure tensorboard POD is under `READY` status
+List PODs and ensure tensorboard POD is under `Running` status
 
 ```bash
 k get pods -n bionemo-training
@@ -97,7 +107,9 @@ k port-forward -n bionemo-training svc/tensorboard-service 8080:6006
 
 9. View Tensorboard logs
 
-On your local machine: Browse to <http://localhost:8080> port forward from above step timeseries and see the loss curves as show below
+On your local machine: Browse to <http://localhost:8080> port forward from above step timeseries and see the loss curves as show below.
+
+>Note: tensorboard dashboards will take some time to show up as the bioenemo job takes a few minutes to kick off. Then, the full plots will show up once the job's POD is under `COMPLETED` status.
 
 [<img src="./images/tensorboard-results.png" width="750"/>](HighLevelArch)
 

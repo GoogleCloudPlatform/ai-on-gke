@@ -29,7 +29,7 @@ Replace "your-project-id" with your actual project ID.
 2. Set Environment Variables:
 
 ```bash
-export PROJECT_ID=${DEVSHELL_PROJECT_ID}
+export PROJECT_ID="your-project-id"
 export PUBLIC_REPOSITORY=$PROJECT_ID
 export REGION=us-central1
 export ZONE=us-central1-b
@@ -54,7 +54,8 @@ gcloud container clusters create ${CLUSTER_NAME} \
     --location=${ZONE} \
     --addons=GcpFilestoreCsiDriver \
     --machine-type=${CLUSTER_MACHINE_TYPE} \
-    --num-nodes=1
+    --num-nodes=1 \
+    --workload-pool=${PROJECT_ID}.svc.id.goog
 ```
 
 4. Create GPU Node Pool:
@@ -66,7 +67,7 @@ gcloud container node-pools create gpupool \
     --cluster=${CLUSTER_NAME} \
     --machine-type=${NODE_POOL_MACHINE_TYPE} \
     --num-nodes=1 \
-    --accelerator type=${GPU_TYPE},count=${GPU_COUNT},gpu-driver-version=latest 
+    --accelerator type=${GPU_TYPE},count=${GPU_COUNT},gpu-driver-version=latest
 ```
 
 This creates a node pool specifically for GPU workloads.
@@ -159,6 +160,8 @@ List deployment PODs
 ```bash
 kubectl get pods -l app=esm2-inference -n bionemo-training
 ```
+
+Once the inference POD is under `Running` status, run:
 
 ```bash
 kubectl port-forward -n bionemo-training svc/esm2-inference 8080:80
