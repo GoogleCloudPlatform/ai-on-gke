@@ -7,7 +7,7 @@ metadata:
   name: nccl-test
   namespace: default
   labels:
-    kueue.x-k8s.io/queue-name: user-queue
+    kueue.x-k8s.io/queue-name: "{{ $root.Values.queue }}"
 spec:
   ttlSecondsAfterFinished: 1200
   suspend: False
@@ -17,8 +17,8 @@ spec:
     - name: nccl-test
       template:
         spec:
-          parallelism: 2
-          completions: 2
+          parallelism: {{$root.Values.workload.node_count}}
+          completions: {{$root.Values.workload.node_count}}
           template:
             metadata:
               annotations:
@@ -101,7 +101,7 @@ spec:
                 - name: OMPI_ALLOW_RUN_AS_ROOT_CONFIRM
                   value: "1"
                 - name: N_NODES
-                  value: "2"
+                  value: "{{$root.Values.workload.node_count}}"
                 - name: LD_LIBRARY_PATH
                   value: /usr/local/nvidia/lib64
                 command:
