@@ -43,6 +43,8 @@ const (
 	// ServiceAccountToken means that the script must use the oauth access token of the service account.
 	// For more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications
 	ServiceAccountToken ImagePullAuthMechanism = "ServiceAccountToken"
+
+	String ImagePullAuthMechanism = "UserPassword"
 )
 
 // Request contains the required input for the disk image generation.
@@ -62,6 +64,7 @@ type Request struct {
 	ContainerImages       []string
 	Timeout               time.Duration
 	ImagePullAuth         ImagePullAuthMechanism
+	ImagePullUser         string
 	ImageLabels           []string
 	ServiceAccount        string
 	StoreSnapshotCheckSum bool
@@ -82,6 +85,9 @@ func buildDiskStartupScript(req Request) (*os.File, error) {
 	}
 	images := strings.Join(req.ContainerImages, " ")
 	flags := fmt.Sprintf("\n\nunpack %t %s %s", req.StoreSnapshotCheckSum, req.ImagePullAuth, images)
+  if req.ImagePullAuth == "UserPassword" {
+      flags = fmt.Sprintf("\n\nunpack %t %s %s %s", req.StoreSnapshotCheckSum, req.ImagePullAuth,req.ImagePullUser, images)
+  }
 	if _, err = concreteStartupScript.Write([]byte(flags)); err != nil {
 		return nil, fmt.Errorf("umable to create concrete startup script: %v", err)
 	}
