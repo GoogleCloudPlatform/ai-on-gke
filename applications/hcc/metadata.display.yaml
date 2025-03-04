@@ -179,6 +179,8 @@ spec:
             value: llama3.1_70b_nemo_pretraining
           - label: GKE Cluster with Llama-3.1-70B pretraining benchmark using MaxText
             value: llama3.1_70b_maxtext_pretraining
+          - label: GKE Cluster with Mixtral-8-70B pretraining benchmark using NeMo
+            value: mixtral8_70b_nemo_pretraining
           toggleUsingVariables:
           - variableName: gpu_type
             variableValues:
@@ -254,6 +256,7 @@ spec:
             variableValues:
             - llama3.1_70b_nemo_pretraining
             - llama3.1_70b_maxtext_pretraining
+            - mixtral8_70b_nemo_pretraining
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         acknowledge:
           name: acknowledge
