@@ -9,8 +9,8 @@ This tutorial is designed for ML Platform engineers who plan to use Metaflow for
 ## What will you learn
 
 1. Provision required infrastructure automatically (using Terraform). The GKE Autopilot cluster is used by default.  
-2. Install argo workflows on GKE cluster  
-3. Install and configure Metaflow to work with argo workflows on GKE cluster  
+2. Install [Argo Workflows](https://argoproj.github.io/workflows/) on GKE cluster  
+3. Install and configure Metaflow to work with Argo Workflows on GKE cluster  
 4. Fine-tune `gemma-2-9b` model and serve the resulting model from the GKE cluster.  
 5. Install Metaflow’s Metadata Service on the GKE cluster (Optional but Recommended) – enable remote metadata storage to replace on local storage. While not required, this setup can enhance collaboration and teamwork by providing a centralized metadata repository. [Learn more here.](https://docs.metaflow.org/getting-started/infrastructure). 
 
@@ -124,7 +124,7 @@ project_id = "akvelon-gke-aieco"
 
 ```
 
-7. Connect the cluster:
+7. Configure your kubectl context:
 
 ```
 gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) --region $(terraform output -raw gke_cluster_location) --project $(terraform output -raw project_id)
@@ -165,13 +165,13 @@ kubectl apply -f ../gen/metaflow-ui.yaml
 kubectl rollout status deployment/metaflow-ui
 ```
 
-5. Open new terminal and forward port so the Metaflow is able to connect remote metadata service:
+5. Open new terminal and forward the metadata service port. Keep this terminal running to ensure connection to a remote metadata service:
 
 ```
 kubectl port-forward svc/metaflow-metadata-svc 8080:8080
 ```
 
-6. Open new terminal and forward port for UI:
+6. Open new terminal and forward port for UI. Keep this terminal running to ensure connection to a Metaflow UI service:
 
 ```
 kubectl port-forward svc/metaflow-ui-svc 8083:8083
@@ -229,9 +229,9 @@ More on Metaflow configuration values:
 | METAFLOW\_KUBERNETES\_DISK | Sets disk size for a container for metaflow run. The default value of this option is too big for Autopilot GKE cluster, so we decrease it to 2048 |
 
 
-## Build image for fine-tuning
+## Build the fine-tuning container image
 
-The model fine tuning process requires a specific environment that we will build as a container image. The dockerfile can be found in `finetune_inside_metaflow/image/Dockerfile`. 
+The model fine-tuning process requires a dedicated environment, which we will encapsulate in a container image. The dockerfile can be found in `finetune_inside_metaflow/image/Dockerfile`. 
 
 1. Build the image using [Cloud Build](https://cloud.google.com/build/docs/overview) and push it to the newly created repository. That may take some time:
 
@@ -346,7 +346,7 @@ class FinetuneFlow(FlowSpec):
 </details>
 
 
-5. Open new terminal and forward port for argo-workflows server. It has to be left running so you can access argo-workflows UI:
+5. Open new terminal and forward port for argo-workflows server. Keep this terminal running to ensure uninterrupted access to the argo-workflows UI.
 
 ```
 kubectl -n argo port-forward svc/argo-server 2746:2746
@@ -366,11 +366,19 @@ Wait until the fine-tuning process is completed and a new model is uploaded to t
 
 NOTE: There may be temporary warnings about insufficient cluster resources, but they should be eventually resolved in a few minutes.
 
-You can also have a look at the Metaflow UI at http://localhost:8083/ and see that our Flow is present there.
+You can open the Metaflow UI at http://localhost:8083/ to monitor the execution details of your Metaflow flows.
+
+Note: this UI does not display the model upload status to HuggingFace
+
 ![metaflow-ui](https://github.com/user-attachments/assets/0e1b9a91-5175-4237-a777-94866170a7c2)
 
+8. Go to your [Hugging Face](https://huggingface.co/) profile to verify that the fine-tuned model has been uploaded:
 
-## Deploy a resulting model
+![huggingface](https://github.com/user-attachments/assets/b67d0632-a12b-4195-b651-62181256ac5e)
+
+
+
+## Serve the Fine-Tuned Model on GKE
 
 1. Replace the placeholder for your HuggingFace handle and run this command. 
 
@@ -446,5 +454,5 @@ rm -rf .venv finetune_flow_config.json
 ## Troubleshooting
 
 * In case of usage of this guide by multiple people at the same time, consider renaming resource names in the `default_env.tfvars` to avoid name collisions.  
-* Some operations over the autopilot cluster can hang and complete only after the initial scale up event.  
+* Some operations over the autopilot cluster can hang and complete once the initial scale-up event has finished.  
 * Sometimes access to the network through `kubectl port-forward` stops working and restarting the command can solve the problem.
