@@ -21,8 +21,8 @@
 
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'pull', 'docker.io/rayproject/ray:2.43.0-py312' ]
+  args: [ 'pull', 'docker.io/rayproject/ray:2.43.0-py310' ]
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py312', '.' ]
+  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py310', '.' ]
 images:
-- 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py312'
+- 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py310'

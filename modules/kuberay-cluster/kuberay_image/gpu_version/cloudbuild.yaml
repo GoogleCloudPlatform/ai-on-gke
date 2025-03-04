@@ -23,8 +23,8 @@ steps:
   entrypoint: 'bash'
   args: ['-c', 'ls -la']
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'pull', 'docker.io/rayproject/ray:2.43.0-py312-gpu' ]
+  args: [ 'pull', 'docker.io/rayproject/ray:2.43.0-py310-gpu' ]
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py312-gpu', '.' ]
+  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py310-gpu', '.' ]
 images:
-- 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py312-gpu'
+- 'us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/ray-image:2.43.0-py310-gpu'
