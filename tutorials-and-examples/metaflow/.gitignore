@@ -1,0 +1,7 @@
+.venv/
+.metaflow/
+metaflow.*.*/
+finetune_inside_metaflow/.metaflow/
+finetune_inside_metaflow/metaflow.*.*/
+finetune_flow_config.json
+gen

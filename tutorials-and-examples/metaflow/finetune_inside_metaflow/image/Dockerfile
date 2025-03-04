@@ -1,10 +1,10 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "cluster" {
-  value = module.gke
-}
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
 
-output "endpoint" {
-  value = module.gke.endpoint
-}
+RUN apt-get update && \
+    apt-get -y --no-install-recommends install python3-dev gcc python3-pip git && \
+    rm -rf /var/lib/apt/lists/*
 
-output "ca_certificate" {
-  value = module.gke.ca_certificate
-}
+ADD requirements.txt /tmp/requirements.txt
 
-output "service_account" {
-  value = module.gke.service_account
-}
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+
+RUN rm /tmp/requirements.txt
+
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
+
+ENV PYTHONUNBUFFERED=1
