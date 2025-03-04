@@ -19,6 +19,9 @@
 # change the target image repository and tag accordingly, and then
 # run `gcloud builds submit --config cloudbuild.yaml .` in directory
 steps:
+- name: 'ubuntu'  # Or another image with 'ls'
+  entrypoint: 'bash'
+  args: ['-c', 'ls -la']
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'pull', 'docker.io/rayproject/ray:2.43.0-py312-gpu' ]
 - name: 'gcr.io/cloud-builders/docker'
