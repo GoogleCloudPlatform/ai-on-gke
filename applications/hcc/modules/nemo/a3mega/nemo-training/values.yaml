@@ -13,6 +13,7 @@ workload:
     # gpus: 64 # This should be one of: [128, 256]
     # image: "us-west1-docker.pkg.dev/supercomputer-testing/kevinmcw-repo/nemo_workload:24.07"
     #   gcsBucketForDataCataPath: "kevinmcw-llama-checkpoint"
+    image: "us-central1-docker.pkg.dev/deeplearning-images/reproducibility/pytorch-gpu-nemo@sha256:7a84264e71f82f225be639dd20fcf9104c80936c0f4f38f94b88dfb60303c70e"
 
 network:
   stack: "tcpxo"

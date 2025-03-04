@@ -144,7 +144,26 @@ spec:
             variableValues:
             - Reservation
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-        recipe:
+        a3mega_recipe:
+          name: recipe
+          title: Solution deployment option
+          section: required_config
+          subtext: Select your deployment option. 
+          enumValueLabels:
+          - label: GKE Cluster Only 
+            value: gke
+          - label: GKE Cluster with NCCL Test
+            value: gke-nccl
+          - label: GKE Cluster with Llama-3.1-7B pretraining benchmark using NeMo
+            value: llama3.1_7b_nemo_pretraining
+          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark using NeMo
+            value: llama3.1_70b_nemo_pretraining
+          toggleUsingVariables:
+          - variableName: gpu_type
+            variableValues:
+            - A3 Mega
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+        a3ultra_recipe:
           name: recipe
           title: Solution deployment option
           section: required_config
@@ -154,17 +173,28 @@ spec:
             value: gke
           - label: GKE Cluster with NCCL Test
             value: gke-nccl
-          - label: GKE Cluster with Llama-3.1-7B pretraining benchmark
+          - label: GKE Cluster with Llama-3.1-7B pretraining benchmark using NeMo
             value: llama3.1_7b_nemo_pretraining
-          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark
+          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark using NeMo
             value: llama3.1_70b_nemo_pretraining
+          - label: GKE Cluster with Llama-3.1-70B pretraining benchmark using MaxText
+            value: llama3.1_70b_maxtext_pretraining
+          toggleUsingVariables:
+          - variableName: gpu_type
+            variableValues:
+            - A3 Ultra 
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         node_count_gke:
           name: node_count_gke
           title: Node count
           section: required_config
           subtext: Please enter a value >= 0. If using a reservation, ensure that your reservation has the required capacity.
           toggleUsingVariables:
-          - variableName: recipe
+          - variableName: a3mega_recipe
+            variableValues:
+            - gke
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: a3ultra_recipe
             variableValues:
             - gke
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
@@ -174,7 +204,11 @@ spec:
           section: required_config
           subtext: Please enter a value >= 2. If using a reservation, ensure that your reservation has the required capacity.
           toggleUsingVariables:
-          - variableName: recipe
+          - variableName: a3mega_recipe
+            variableValues:
+            - gke-nccl
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: a3ultra_recipe
             variableValues:
             - gke-nccl
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
@@ -189,7 +223,11 @@ spec:
             - label: 4
               value: 4
           toggleUsingVariables:
-          - variableName: recipe
+          - variableName: a3mega_recipe
+            variableValues:
+            - llama3.1_7b_nemo_pretraining
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: a3ultra_recipe
             variableValues:
             - llama3.1_7b_nemo_pretraining
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
@@ -199,14 +237,23 @@ spec:
           section: required_config
           subtext: Some benchmarks require a minimum number of nodes. If using a reservation, ensure that your reservation has the required capacity
           enumValueLabels:
+            - label: 8
+              value: 8
+            - label: 16
+              value: 16
+            - label: 24
+              value: 24
             - label: 32
               value: 32
-            - label: 40
-              value: 40
           toggleUsingVariables:
-          - variableName: recipe
+          - variableName: a3mega_recipe
             variableValues:
             - llama3.1_70b_nemo_pretraining
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+          - variableName: a3ultra_recipe
+            variableValues:
+            - llama3.1_70b_nemo_pretraining
+            - llama3.1_70b_maxtext_pretraining
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         acknowledge:
           name: acknowledge

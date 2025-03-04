@@ -1,0 +1,342 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{ $timestamp := now | unixEpoch }}
+{{ $jobSuffix := randAlphaNum 4 | lower }}
+{{ $jobuuid := uuidv4 }}
+
+{{ $nodes := div .Values.workload.gpus 8 | max 1 }}
+{{ $gpusPerNode := min .Values.workload.gpus 8 }}
+
+{{- $root := . -}}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}"
+  namespace: default
+  labels:
+  {{- if $root.Values.queue }}
+    kueue.x-k8s.io/queue-name: "{{ $root.Values.queue }}"
+  {{- end }}
+spec:
+  {{- if $root.Values.queue }}
+  suspend: true
+  {{- end }}
+  parallelism: {{ $nodes }}
+  completions: {{ $nodes }}
+  backoffLimit: 0
+  completionMode: Indexed
+  ttlSecondsAfterFinished: 43200
+  template:
+    metadata:
+      annotations:
+        {{- if $root.Values.queue }}
+        kueue.x-k8s.io/podset-preferred-topology: {{ $root.Values.podsetPreferredTopology }}
+        {{- end}}
+        kubectl.kubernetes.io/default-container: workload
+        {{- if $root.Values.volumes.gcsMounts }}
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+        gke-gcsfuse/ephemeral-storage-limit: "0"
+        {{- end}}
+        {{- if not $root.Values.network.hostNetwork }}
+        networking.gke.io/default-interface: "eth0"
+        networking.gke.io/interfaces: |
+        {{- if $root.Values.network.subnetworks }}
+          [
+            {{- range $i, $subnetwork := $root.Values.network.subnetworks }}
+            {"interfaceName":"eth{{ $i }}","network":"{{ $subnetwork }}"}{{ eq $i 9 | ternary "" ","}}
+            {{- end }}
+          ]
+        {{- else }}
+          [
+            {"interfaceName":"eth0","network":"default"},
+            {{- range  $i := until 9 }}
+            {"interfaceName":"eth{{ add 1 $i }}","network":"vpc{{ add 1 $i }}"}{{ eq $i 8 | ternary "" ","}}
+            {{- end }}
+          ]
+        {{- end }}
+        {{- end }}
+    spec:
+      {{- if $root.Values.network.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      subdomain: "{{.Release.Name}}"
+      restartPolicy: Never
+      {{ if $root.Values.targetNodes }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                {{- range $hostname := $root.Values.targetNodes }}
+                - {{ $hostname }}
+                {{- end }}
+      {{ end }}
+      tolerations:
+      - operator: "Exists"
+        key: nvidia.com/gpu
+      - operator: "Exists"
+        key: cloud.google.com/impending-node-termination
+      volumes:
+      {{if not $root.Values.network.gibVersion }}
+      - name: library-dir-host
+        hostPath:
+          path: /home/kubernetes/bin/nvidia
+      {{ end }}
+      - name: gib
+      {{ if $root.Values.network.gibVersion }}
+        emptyDir: {}
+      {{ else }}
+        hostPath:
+          path: /home/kubernetes/bin/gib
+      {{ end }}
+      - name: workload-configuration
+        configMap:
+          name: "{{.Release.Name}}"
+      - name: local-ssd
+        hostPath:
+          path: /mnt/stateful_partition/kube-ephemeral-ssd
+      - name: shared-memory
+        emptyDir:
+          medium: "Memory"
+          sizeLimit: 250Gi
+      {{- range $pvc := $root.Values.volumes.pvcMounts }}
+      - name: "{{ $pvc.name }}"
+        persistentVolumeClaim:
+          claimName: "{{ $pvc.name }}-pvc"
+      {{- end }}
+
+      {{- range $gcs := $root.Values.volumes.gcsMounts }}
+      - name: "{{ $gcs.bucketName }}"
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: "{{ $gcs.bucketName }}"
+            mountOptions: "implicit-dirs,max-conns-per-host=0,metadata-cache:ttl-secs:-1,metadata-cache:stat-cache-max-size-mb:-1,metadata-cache:type-cache-max-size-mb:-1,file-cache:max-size-mb:-1,file-cache:cache-file-for-range-read:true,file-system:kernel-list-cache-ttl-secs:-1"
+      {{- end}}
+
+
+      initContainers:
+      {{ if $root.Values.network.gibVersion }}
+      - name: nccl-plugin-installer
+        image: {{ $root.Values.network.gibVersion }}
+        imagePullPolicy: Always
+        args:
+        - |
+          set -ex
+          /scripts/container_entry.sh install --install-nccl
+          cp -R /var/lib/gib/lib64/. /target/usr/local/gib/lib64
+          cp -R /var/lib/gib/. /target/usr/local/gib
+        command:
+        - /bin/sh
+        - -c
+
+        volumeMounts:
+        - mountPath: /target/usr/local/gib
+          name: gib
+
+      {{ end}}
+      {{ if $root.Values.gcsDownload }}
+      - name: training-data-downloader
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli
+        volumeMounts:
+        - name: local-ssd
+          mountPath: "{{ $root.Values.volumes.ssdMountPath }}"
+        {{- range $gcs := $root.Values.volumes.gcsMounts }}
+        - name: "{{ $gcs.bucketName }}"
+          mountPath: "{{ $gcs.mountPath }}"
+        {{- end }}
+        env:
+        - name: GCS_DATA_SOURCE
+          value: "{{ $root.Values.gcsDownload.source }}"
+        - name: GCS_DATA_TARGET
+          value: "{{ $root.Values.gcsDownload.target }}"
+        command:
+          - /bin/sh
+          - -c
+          - |
+            echo "Caching training data from $GCS_DATA_SOURCE to $GCS_DATA_TARGET"
+            mkdir -p $GCS_DATA_TARGET
+            SECONDS=0
+            gcloud storage rsync \
+              --recursive \
+              $GCS_DATA_SOURCE $GCS_DATA_TARGET
+            duration=$SECONDS
+            echo "Transferred or synchronized $GCS_DATA_SOURCE to $GCS_DATA_TARGET in $duration seconds."
+      {{ end }}
+
+      containers:
+      - name: workload
+        image: "{{ $root.Values.workload.image }}"
+        imagePullPolicy: Always
+        {{- if $root.Values.network.hostNetwork }}
+        securityContext:
+          privileged: true
+        {{- end }}
+        env:
+        - name: JOB_IDENTIFIER
+          value: "{{ .Release.Name }}-{{ $timestamp }}-{{ $jobSuffix }}"
+        - name: JOB_TIMESTAMP
+          value: "{{ $timestamp }}"
+        - name: JOB_UUID
+          value: "{{ $jobuuid }}"
+        - name: JOB_ORCHESTRATOR
+          value: "gke"
+        - name: SSD_MOUNT_PATH
+          value: "{{ $root.Values.volumes.ssdMountPath }}"
+        {{- with (first .Values.volumes.gcsMounts) }}
+        - name: GCS_BUCKET
+          value: {{ .bucketName }}
+        {{- end }}
+
+        # JAX-specific environment variables
+        - name: JAX_COORDINATOR_ADDRESS
+          value: "{{.Release.Name}}-0.{{.Release.Name}}.default.svc.cluster.local"
+        - name: JAX_COORDINATOR_PORT
+          value: "6002"
+        - name: TF_CPP_VMODULE
+          value: "profile_guided_latency_estimator=10"
+        - name: TF_CPP_MIN_LOG_LEVEL
+          value: "0"
+        - name: TF_CPP_MAX_LOG_LEVEL
+          value: "100"
+        - name: XLA_PYTHON_CLIENT_MEM_FRACTION
+          value: "0.92"
+        - name: CUDA_DEVICE_MAX_CONNECTIONS
+          value: "1"
+        - name: NVTE_FUSED_ATTN
+          value: "1"
+        - name: JAX_REMOVE_CUSTOM_PARTITIONING_PTR_FROM_CACHE_KEY
+          value: "true"
+        - name: JAX_ENABLE_PGLE
+          value: "false"
+
+
+        # Job Configuration
+        - name: NNODES
+          value: "{{ $nodes }}"
+        - name: GPUS_PER_NODE
+          value: "{{ $gpusPerNode }}"
+        - name: GLOO_SOCKET_IFNAME
+          value: "eth0"
+        - name: LD_LIBRARY_PATH
+          {{ if $root.Values.network.gibVersion }}
+          value: /usr/local/gib/lib64
+          {{ else }}
+          value: /usr/local/nvidia/lib64
+          {{ end }}
+
+        # XLA Flags
+        - name: XLA_FLAGS
+          valueFrom:
+            configMapKeyRef:
+              name: "{{ .Release.Name }}"
+              key: xla-flags
+
+
+        {{- range $environment_variable := $root.Values.network.otherSettings }}
+        - name: {{ $environment_variable.name }}
+          value: "{{ $environment_variable.value }}"
+        {{- end }}
+
+        command:
+        - bash
+        - -c
+        - |
+          echo "Pod on $(hostname --fqdn) is running"
+          echo "Pod is assigned job index of $JOB_COMPLETION_INDEX"
+          echo "Job ID is $JOB_IDENTIFIER"
+
+          echo "Running nvidia-smi"
+          nvidia-smi
+
+          ldconfig $LD_LIBRARY_PATH
+          echo "Added ${LD_LIBRARY_PATH} to ldconfig:"
+          ldconfig -p | grep libcuda | sed 's/^/  /'
+
+          echo "Contents of ${LD_LIBRARY_PATH}:"
+          ls ${LD_LIBRARY_PATH} | sed 's/^/  /'
+
+          touch $SSD_MOUNT_PATH/hello-from-$HOSTNAME.txt
+          echo "Local SSD contents (path $SSD_MOUNT_PATH):"; ls $SSD_MOUNT_PATH | sed 's/^/  /'
+
+          echo "Setting NCCL environment variables"
+          cat /usr/local/gib/scripts/set_nccl_env.sh
+          source /usr/local/gib/scripts/set_nccl_env.sh
+
+          echo "MaxText configuration file:"
+          cat /etc/workload-configuration/maxtext-configuration.yaml | sed 's/^/| /'
+          echo ""
+
+          echo "Detected the following additional workload arguments:"
+          {{- range $root.Values.workload.arguments }}
+          echo "{{ . }}"
+          {{- end }}
+
+          export NODE_RANK=$JOB_COMPLETION_INDEX
+          echo "Launching MaxText as node rank $NODE_RANK out of $NNODES nodes"
+
+          echo "XLA Flags: $XLA_FLAGS"
+
+          sleep 10 # <- Allow some time for service to boot
+
+          echo "Setting JAX_COORDINATOR_IP"
+          export JAX_COORDINATOR_IP=$(nslookup "$JAX_COORDINATOR_ADDRESS" 2>/dev/null | awk '/^Address: / { print $2 }' | head -n 1)
+          echo $JAX_COORDINATOR_IP
+
+          # Parsing Configuration
+          while IFS= read -r line || [[ -n "$line" ]]; \
+          do [[ -z "$line" ]] && continue; \
+          key=$(echo "$line" | cut -d':' -f1 | tr -d '[:space:]'); \
+          value=$(echo "$line" | cut -d':' -f2 | tr -d '[:space:]'); \
+          export OPTIONS+=("$key=$value"); \
+          done < /etc/workload-configuration/maxtext-configuration.yaml;
+          echo "===== MaxText Configuration ====="
+          echo ${OPTIONS[@]}
+          echo "================================="
+
+          python MaxText/train.py MaxText/configs/base.yml "${OPTIONS[@]}" \
+          base_output_directory=gs://${GCS_BUCKET}/maxtext \
+          run_name=${JOB_IDENTIFIER} \
+          steps={{ $root.Values.workload.steps }}
+
+          echo "Pod on $(hostname --fqdn) is exiting"
+
+        volumeMounts:
+          {{ if not $root.Values.network.gibVersion }}
+          - name: library-dir-host
+            mountPath: /usr/local/nvidia
+          {{ end }}
+          - name: gib
+            mountPath: /usr/local/gib
+          - name: workload-configuration
+            mountPath: /etc/workload-configuration
+          - name: shared-memory
+            mountPath: /dev/shm
+          - name: local-ssd
+            mountPath: "{{ $root.Values.volumes.ssdMountPath }}"
+          {{- range $gcs := $root.Values.volumes.gcsMounts }}
+          - name: "{{ $gcs.bucketName }}"
+            mountPath: "{{ $gcs.mountPath }}"
+          {{- end }}
+        resources:
+          limits:
+            nvidia.com/gpu: {{ $gpusPerNode }}

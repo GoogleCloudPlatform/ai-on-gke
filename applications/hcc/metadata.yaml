@@ -50,9 +50,11 @@ spec:
       - name: placement_policy_name
         varType: string
         defaultValue: ""
-      - name: recipe
+      - name: a3mega_recipe
         varType: string
-        required: true
+        defaultValue: ""
+      - name: a3ultra_recipe
+        varType: string
         defaultValue: ""
       - name: node_count_gke
         varType: number
