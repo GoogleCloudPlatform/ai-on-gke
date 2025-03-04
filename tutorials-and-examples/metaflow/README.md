@@ -48,8 +48,8 @@ gcloud auth application-default login
 
 ## Create cluster and other resources
 
-In this section we will use `Terraform` to automate the creation of infrastructure resources. For more details how it is done please refer to the terraform config in the `terraform` folder.   
-By default it creates an Autopilot GKE cluster but it can be changed to standard by setting `autopilot_cluster = false`.
+In this section we will use `Terraform` to automate the creation of infrastructure resources. For more details how it is done please refer to the terraform config in the `terraform/` folder.
+By default, the configuration provisions an Autopilot GKE cluster, but it can be changed to standard by setting `autopilot_cluster = false`.
 
 It creates:
 
@@ -136,8 +136,8 @@ gcloud container clusters get-credentials $(terraform output -raw gke_cluster_na
 
 This tutorial includes two Kubernetes manifests for Metaflow Metadata service:
 
-- [*Metadata-service*](https://github.com/Netflix/metaflow-service) \- keeps track of metadata.   
-- [*UI-service*](https://github.com/Netflix/metaflow-service/tree/master/services/ui_backend_service) \- A backend instance that provides web UI to track existing flows.
+- [*Metadata-service*](https://github.com/Netflix/metaflow-service) \- Keeps track of metadata.   
+- [*UI-service*](https://github.com/Netflix/metaflow-service/tree/master/services/ui_backend_service) \- Provides a backend instance that powers a web interface for monitoring active flows.
 
 The manifests are generated from templates in the `templates` directory and put in the `gen` directory.
 
@@ -364,7 +364,7 @@ kubectl -n argo port-forward svc/argo-server 2746:2746
 
 Wait until the fine-tuning process is completed and a new model is uploaded to the HuggingFace. It should take around 30 minutes to complete.
 
-NOTE: There may be temporary warnings about insufficient cluster resources, but they should be eventually resolved in a few minutes.
+Note: There may be temporary warnings about insufficient cluster resources, but they should be eventually resolved in a few minutes.
 
 You can open the Metaflow UI at http://localhost:8083/ to monitor the execution details of your Metaflow flows.
 

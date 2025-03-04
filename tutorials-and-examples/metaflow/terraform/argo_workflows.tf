@@ -53,10 +53,6 @@ resource "kubernetes_role_binding" "add_executer_role_to_sa" {
   depends_on = [module.argo_executor_workload_identity]
 }
 
-
-
-
-
 data "http" "argo_workflows_manifest" {
   url = "https://github.com/argoproj/argo-workflows/releases/download/v3.6.2/quick-start-minimal.yaml"
 }

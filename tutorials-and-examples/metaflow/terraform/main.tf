@@ -23,7 +23,6 @@ terraform {
   }
 }
 
-
 provider "google" {
   project = var.project_id
 }
@@ -99,7 +98,6 @@ module "gke_cluster" {
   ray_addon_enabled = false
   depends_on        = [module.custom_network]
 }
-
 
 locals {
   cluster_membership_id = var.cluster_membership_id == "" ? local.cluster_name : var.cluster_membership_id

@@ -23,7 +23,6 @@ resource "local_file" "metaflow-metadata-deployment-file" {
   filename = "${path.module}/../gen/metaflow-metadata.yaml"
 }
 
-
 resource "local_file" "metaflow-ui-deployment-file" {
   content = templatefile(
     "${path.module}/../templates/metaflow-ui.yaml",

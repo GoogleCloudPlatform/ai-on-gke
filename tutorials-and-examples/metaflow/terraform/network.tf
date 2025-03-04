@@ -17,7 +17,6 @@ locals {
   subnetwork_name = var.subnetwork_name != "" ? var.subnetwork_name : var.default_resource_name
 }
 
-
 module "custom_network" {
   source       = "../../../modules/gcp-network"
   project_id   = var.project_id

@@ -13,10 +13,10 @@
 # limitations under the License.
 
 
-#terraform {
-#  backend "gcs" {
-#    bucket = "<bucket_name>"
-#    prefix = "terraform/state/metaflow-tutorial"
-#  }
-#}
+# terraform {
+#   backend "gcs" {
+#     bucket = "<bucket_name>"
+#     prefix = "terraform/state/metaflow-tutorial"
+#   }
+# }
 

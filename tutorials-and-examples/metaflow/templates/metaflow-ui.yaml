@@ -67,4 +67,3 @@ spec:
   ports:
   - name: ui-port
     port: 8083
-

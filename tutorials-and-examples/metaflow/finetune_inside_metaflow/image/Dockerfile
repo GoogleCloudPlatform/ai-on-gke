@@ -24,8 +24,6 @@ RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 RUN rm /tmp/requirements.txt
 
-
 RUN ln -s /usr/bin/python3 /usr/local/bin/python
 
 ENV PYTHONUNBUFFERED=1
-
