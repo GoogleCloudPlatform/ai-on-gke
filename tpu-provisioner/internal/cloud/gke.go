@@ -267,7 +267,7 @@ const (
 func (g *GKE) checkExistingNodePool(ctx context.Context, desired *containerv1beta1.NodePool) (nodePoolState, error) {
 	existing, err := g.NodePools.Get(ctx, desired.Name)
 	if err == nil {
-		match, err := nodePoolsMatch(desired, existing)
+		match, err := nodePoolHashesMatch(desired, existing)
 		if err != nil {
 			return nodePoolStateUnknown, fmt.Errorf("comparing node pools: %w", err)
 		}
@@ -287,10 +287,10 @@ func (g *GKE) checkExistingNodePool(ctx context.Context, desired *containerv1bet
 	return nodePoolStateUnknown, err
 }
 
-func nodePoolsMatch(desired, existing *containerv1beta1.NodePool) (bool, error) {
-	desiredHash, err := nodePoolSelectiveHash(desired)
-	if err != nil {
-		return false, fmt.Errorf("hashing node pool: %w", err)
+func nodePoolHashesMatch(desired, existing *containerv1beta1.NodePool) (bool, error) {
+	desiredHash, ok := desired.Config.Labels[LabelNodePoolHash]
+	if !ok {
+		return false, fmt.Errorf("missing hash in desired node pool")
 	}
 	if existing.Config != nil && existing.Config.Labels != nil {
 		existingHash, ok := existing.Config.Labels[LabelNodePoolHash]
@@ -658,21 +658,16 @@ func getAnnotation(p *corev1.Pod, key string) string {
 // 4. The code path for ensuring a matching node pool exists is executed.
 func nodePoolSelectiveHash(np *containerv1beta1.NodePool) (string, error) {
 	h := fnv.New32a()
-	var labels map[string]string
-	if np.Config.Labels != nil {
-		labels = make(map[string]string, len(np.Config.Labels))
-		for k, v := range np.Config.Labels {
-			// Exclude the label that tracks the hash.
-			if k == LabelNodePoolHash {
-				continue
-			}
-			labels[k] = v
+	if np.Config != nil && np.Config.Labels != nil {
+		hash, ok := np.Config.Labels[LabelNodePoolHash]
+		if ok {
+			return hash, nil
 		}
 	}
 	npToHash := &containerv1beta1.NodePool{
 		Config: &containerv1beta1.NodeConfig{
 			Spot:                np.Config.Spot,
-			Labels:              labels,
+			Labels:              np.Config.Labels,
 			MachineType:         np.Config.MachineType,
 			ReservationAffinity: np.Config.ReservationAffinity,
 		},

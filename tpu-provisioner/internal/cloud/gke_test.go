@@ -873,7 +873,7 @@ func TestNodePoolForPod(t *testing.T) {
 				NodeDiskType:            "hyperdisk-balanced",
 				NodeBootDiskKMSKey:      "my-kms-key",
 			},
-			want: &containerv1beta1.NodePool{
+			want: &container.NodePool{
 				Config: &container.NodeConfig{
 					Labels: map[string]string{
 						"google.com/nodepool-manager":                 "tpu-provisioner",
@@ -893,7 +893,7 @@ func TestNodePoolForPod(t *testing.T) {
 				Locations:         []string{""},
 				Management:        &container.NodeManagement{AutoRepair: true, AutoUpgrade: false},
 				MaxPodsConstraint: &container.MaxPodsConstraint{MaxPodsPerNode: 15},
-				Name:              "test-pool",
+				Name:              "jobset-test-rando",
 				PlacementPolicy:   &container.PlacementPolicy{TpuTopology: "8x16x16", Type: "COMPACT"},
 				UpgradeSettings:   &container.UpgradeSettings{MaxSurge: 1},
 			},
