@@ -1,18 +1,16 @@
 # Fine-Tuning Gemma 2-9B on GKE using Metaflow and Argo Workflows
 
 This tutorial will provide instructions on how to deploy and use the [Metaflow](https://docs.metaflow.org/) framework on GKE (Google Kubernetes Engine) and operate AI/ML workloads using [Argo-Workflows](https://argo-workflows.readthedocs.io/en/latest/). 
+The tutorial is designed for ML Platform engineers who plan to use Metaflow for ML workloads on top of GKE by offloading resource-intensive tasks to a managed cluster.
 
 # Overview
 
-This tutorial is designed for ML Platform engineers who plan to use Metaflow for ML workloads on top of GKE by offloading resource-intensive tasks to a managed cluster.
-
-## What will you learn
-
-1. Provision required infrastructure automatically (using Terraform). The GKE Autopilot cluster is used by default.  
-2. Install [Argo Workflows](https://argoproj.github.io/workflows/) on GKE cluster  
-3. Install and configure Metaflow to work with Argo Workflows on GKE cluster  
-4. Fine-tune `gemma-2-9b` model and serve the resulting model from the GKE cluster.  
-5. Install Metaflow’s Metadata Service on the GKE cluster (Optional but Recommended) – enable remote metadata storage to replace on local storage. While not required, this setup can enhance collaboration and teamwork by providing a centralized metadata repository. [Learn more here](https://docs.metaflow.org/getting-started/infrastructure).
+* Terraform to set up infra (Install [Argo Workflows](https://argoproj.github.io/workflows/) on [GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview) cluster)
+* Deploy [Metaflow’s Metadata Service](https://docs.metaflow.org/getting-started/infrastructure)
+* Install and config Metaflow to work w Argo Worklfows 
+* Build the fine-tuning image using [Cloud Build](https://cloud.google.com/build/docs/overview)
+* Fine-tune the model using Metaflow and Argo Workflow and GKE 
+* Serve the model on GKE
 
 ## Filesystem structure
 
