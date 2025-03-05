@@ -32,8 +32,8 @@ resource "kubernetes_deployment" "app" {
       }
       spec {
         container {
-          name  = "app"
-          image = var.k8s_app_image
+          name              = "app"
+          image             = var.k8s_app_image
           image_pull_policy = "Always"
           env {
             name  = "MODEL_BASE_URL"
@@ -52,8 +52,8 @@ resource "kubernetes_deployment" "app" {
           }
           liveness_probe {
             http_get {
-              path = "/_stcore/health"
-              port = 8501
+              path   = "/_stcore/health"
+              port   = 8501
               scheme = "HTTP"
             }
             timeout_seconds = 1
@@ -61,8 +61,8 @@ resource "kubernetes_deployment" "app" {
           }
           readiness_probe {
             http_get {
-              path = "/_stcore/health"
-              port = 8501
+              path   = "/_stcore/health"
+              port   = 8501
               scheme = "HTTP"
             }
             timeout_seconds = 1
@@ -88,14 +88,14 @@ resource "kubernetes_deployment" "app" {
             run_as_user                = 1000
 
             capabilities {
-              drop = [ "ALL" ]
+              drop = ["ALL"]
             }
           }
         }
 
         security_context {
-          run_as_non_root = true
-          supplemental_groups = [ ]
+          run_as_non_root     = true
+          supplemental_groups = []
         }
       }
     }
