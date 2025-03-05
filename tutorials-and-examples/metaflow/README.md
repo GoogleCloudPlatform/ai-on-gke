@@ -5,18 +5,18 @@ The tutorial is designed for ML Platform engineers who plan to use Metaflow for 
 
 # Overview
 
-* Terraform to set up infra (Install [Argo Workflows](https://argoproj.github.io/workflows/) on [GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview) cluster)
-* Deploy [Metaflow’s Metadata Service](https://docs.metaflow.org/getting-started/infrastructure)
-* Install and config Metaflow to work w Argo Worklfows 
-* Build the fine-tuning image using [Cloud Build](https://cloud.google.com/build/docs/overview)
-* Fine-tune the model using Metaflow and Argo Workflow and GKE 
-* Serve the model on GKE
+1. Provision [GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview) cluster and install [Argo Workflows](https://argoproj.github.io/workflows/) using [Terraform](https://developer.hashicorp.com/terraform/intro).
+2. Deploy and configure [Metaflow’s Metadata Service](https://docs.metaflow.org/getting-started/infrastructure).
+3. Set up Metaflow to work with Argo Workflows.
+4. Build a fine-tuning image with [Cloud Build](https://cloud.google.com/build/docs/overview).
+5. Fine-tune the model using Metaflow and Argo Workflow and GKE.
+6. Deploy the fine-tuned model on GKE for inference.
 
 ## Filesystem structure
 
 * `finetune_inside_metaflow/` \- folder with [Metaflow Flow](https://docs.metaflow.org/metaflow/basics) for fine-tuning the Gemma-2 model.  
 * `serve_model/` \- a simple deployment manifest for serving the fine-tuned model within the same GKE cluster.  
-* `templates/` \- folder with Kubernetes manifests that require additional processing to specify additional values that are not known from the start.   
+* `metaflow/templates/` \- folder with Kubernetes manifests that require additional processing to specify additional values that are not known from the start.
 * `terraform/` \- folder with terraform config that executes automated provisioning of required infrastructure resources.
 
 # Before you begin
@@ -137,7 +137,7 @@ This tutorial includes two Kubernetes manifests for Metaflow Metadata service:
 - [*Metadata-service*](https://github.com/Netflix/metaflow-service) \- Keeps track of metadata.   
 - [*UI-service*](https://github.com/Netflix/metaflow-service/tree/master/services/ui_backend_service) \- Provides a backend instance that powers a web interface for monitoring active flows.
 
-The manifests are generated from templates in the `templates` directory and put in the `gen` directory.
+The manifests are generated from templates in the `metaflow/templates/` directory and put in the `gen` directory.
 
 1. Apply metadata service manifest:
 
@@ -395,7 +395,7 @@ kubectl create secret generic hf-token --from-literal=HF_TOKEN=${HF_TOKEN}
 
 
 ```
-kubectl apply -f serve_model/vllm_deplyment.yaml
+kubectl apply -f ../serve_model/vllm_deplyment.yaml
 ```
 
 4. Wait for deployment is completed. It may take some time:
