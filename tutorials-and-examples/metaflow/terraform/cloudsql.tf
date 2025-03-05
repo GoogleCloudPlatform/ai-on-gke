@@ -17,8 +17,6 @@ resource "random_password" "pwd" {
   special = false
 }
 
-
-
 locals {
   metaflow_database_name     = "metaflow-tutorial"
   metaflow_cloudsql_instance = var.metaflow_cloudsql_instance != "" ? var.metaflow_cloudsql_instance : var.default_resource_name
@@ -66,18 +64,6 @@ module "cloudsql" {
     },
   ]
   depends_on = [module.custom_network]
-}
-
-module "cloudsql_workload_identity" {
-  providers = {
-    kubernetes = kubernetes.metaflow
-  }
-  source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  name       = var.metaflow_kubernetes_service_account_name
-  namespace  = var.metaflow_kubernetes_namespace
-  roles      = ["roles/cloudsql.client"]
-  project_id = var.project_id
-  depends_on = [module.gke_cluster]
 }
 
 resource "kubernetes_secret" "secret" {

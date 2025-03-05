@@ -19,12 +19,20 @@ spec:
       - name: inference-server
         image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20240930_0945_RC00
         resources:
+          requests:
+            cpu: "4"
+            memory: "30Gi"
+            ephemeral-storage: "30Gi"
+            nvidia.com/gpu: "2"
           limits:
-            nvidia.com/gpu: "1"
+            cpu: "4"
+            memory: "30Gi"
+            ephemeral-storage: "30Gi"
+            nvidia.com/gpu: "2"
         command: ["python3", "-m", "vllm.entrypoints.api_server"]
         args:
         - --model=$(MODEL_ID)
-        - --tensor-parallel-size=1
+        - --tensor-parallel-size=2
         env:
         - name: MODEL_ID
           valueFrom:

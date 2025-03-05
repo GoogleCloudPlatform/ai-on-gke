@@ -128,8 +128,7 @@ max_seq_length = int(os.getenv("MAX_SEQ_LENGTH", "512"))
 # Pack multiple short examples in the same input sequence to increase efficiency
 packing = False
 
-# Load the entire model on the GPU 0
-device_map = {"": torch.cuda.current_device()}
+device_map = "auto"
 
 # Set limit to a positive number
 limit = int(os.getenv("DATASET_LIMIT", "5000"))

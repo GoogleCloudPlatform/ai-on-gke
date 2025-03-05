@@ -41,11 +41,11 @@ class FinetuneFlow(FlowSpec):
         image=finetune_flow_config.image_name,
         image_pull_policy="Always",
         cpu=2,
-        memory=1024,
+        memory=4096,
         # secret to huggingfase that has to be added as a Kubernetes secret
         secrets=["hf-token"],
         # specify required GPU settings
-        gpu=1,
+        gpu=2,
         node_selector={"cloud.google.com/gke-accelerator": "nvidia-l4"},
     )
     @retry
