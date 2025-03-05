@@ -282,7 +282,7 @@ HF_USERNAME="<your_username>"
 kubectl -n argo create secret generic hf-token --from-literal=HF_TOKEN=${HF_TOKEN}
 ```
 
-4. Create argo-workflows template from the metaflow fintuning script:
+4. Create argo-workflows template from the metaflow fine-tuning script:
 
 ```
 python3 ../finetune_inside_metaflow/finetune_gemma.py \
