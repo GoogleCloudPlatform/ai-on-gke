@@ -303,12 +303,14 @@ module "workload-manager-install" {
 
 # created by replicating the helm install in https://github.com/AI-Hypercomputer/gpu-recipes/tree/main/training/a3mega/llama-3-70b/nemo-pretraining-gke
 module "nemo" {
+  count = var.recipe != "gke"? 1 : 0
   source     = "./modules/nemo"
   cluster_id = local.gke_cluster_id
   checkpoint_bucket = local.result_bucket_name
   recipe = var.recipe
   node_count = local.node_count
   gpu_type = var.gpu_type
+  queue = module.workload-manager-install.kueue_name
   # Providers needs to be explicitely passed in when a depends_on is present in a module.
   providers = {
     helm = helm

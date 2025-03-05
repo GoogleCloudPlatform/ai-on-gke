@@ -43,6 +43,7 @@ spec:
       - name: reservation
         varType: string
         defaultValue: ""
+        required: true
       - name: reservation_block
         varType: string
         defaultValue: ""
