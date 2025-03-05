@@ -29,7 +29,6 @@ subnetwork_description = "Part of the Metaflow o GKE installation"
 
 service_account_name  = "" # Leave empty to use the default name
 bucket_name           = "" # Leave empty to use the default name
-image_repository_name = "" # Leave empty to use the default name
 
 metaflow_cloudsql_instance               = "" # Leave empty to use the default name
 metaflow_cloudsql_instance_region        = "us-central1"

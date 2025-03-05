@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from metaflow import FlowSpec, step, kubernetes, retry, environment, Config
+from metaflow import FlowSpec, step, kubernetes, retry, environment
 
+import constants
 
 class FinetuneFlow(FlowSpec):
-
-    # config file has to specify image name
-    finetune_flow_config = Config("config", default="flow_config.json")
 
     # specify environment variables required by the finetune process
     @environment(
@@ -38,7 +36,7 @@ class FinetuneFlow(FlowSpec):
 
     # specify kubernetes-specific options
     @kubernetes(
-        image=finetune_flow_config.image_name,
+        image=constants.FINETUNE_IMAGE_NAME,
         image_pull_policy="Always",
         cpu=2,
         memory=4096,
@@ -55,7 +53,7 @@ class FinetuneFlow(FlowSpec):
         import finetune
 
         finetune.finetune_and_upload_to_hf(
-            new_model=self.finetune_flow_config.new_model
+            new_model="finetunned-gemma2-9b"
         )
         self.next(self.end)
 

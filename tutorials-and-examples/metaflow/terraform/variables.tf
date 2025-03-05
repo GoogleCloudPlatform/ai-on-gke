@@ -41,10 +41,6 @@ variable "service_account_name" {
 variable "bucket_name" {
   type = string
 }
-variable "image_repository_name" {
-  type = string
-}
-
 variable "network_name" {
   type = string
 }

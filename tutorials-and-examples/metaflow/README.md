@@ -16,7 +16,7 @@ The tutorial is designed for ML Platform engineers who plan to use Metaflow for 
 
 * `finetune_inside_metaflow/` \- folder with [Metaflow Flow](https://docs.metaflow.org/metaflow/basics) for fine-tuning the Gemma-2 model.  
 * `serve_model/` \- a simple deployment manifest for serving the fine-tuned model within the same GKE cluster.  
-* `metaflow/templates/` \- folder with Kubernetes manifests that require additional processing to specify additional values that are not known from the start.
+* `metaflow/templates/` \- folder with Kubernetes manifests and other files that require additional processing to specify additional values that are not known from the start.
 * `terraform/` \- folder with terraform config that executes automated provisioning of required infrastructure resources.
 
 # Before you begin
@@ -236,31 +236,10 @@ The model fine-tuning process requires a dedicated environment, which we will en
 1. Build the image using [Cloud Build](https://cloud.google.com/build/docs/overview) and push it to the newly created repository. That may take some time:
 
 ```
-gcloud builds submit ../finetune_inside_metaflow/image \
-    --substitutions="_IMAGE_REGISTRY_NAME=$(terraform output -raw finetune_image_registry_name)" \
-    --config=../cloudbuild.yaml
+gcloud builds submit ../finetune_inside_metaflow/image --config=../cloudbuild.yaml
 ```
 
 *More details can be found in the `cloudbuild.yaml` file.*
-
-2. Create [config file](https://docs.metaflow.org/metaflow/configuring-flows/basic-configuration) that specifies previously built image to be used in the finetuning flow:  
-   
-
-```
-cat <<EOF > ../finetune_flow_config.json
-{
-"image_name":"us-docker.pkg.dev/$(terraform output -raw project_id)/$(terraform output -raw finetune_image_registry_name)/finetune:latest",
-"new_model": "finetunned-gemma2-9b"
-}
-EOF
-```
-
-	  
-Here:
-
-* `image_name` : image that was previously built and pushed to our registry  
-* `new_model:`  Name of a resulting model.
-
 
 ## Fine-tune the model
 
@@ -285,12 +264,8 @@ kubectl -n argo create secret generic hf-token --from-literal=HF_TOKEN=${HF_TOKE
 4. Create argo-workflows template from the metaflow fine-tuning script:
 
 ```
-python3 ../finetune_inside_metaflow/finetune_gemma.py \
---config config ../finetune_flow_config.json \
-argo-workflows create
+python3 ../finetune_inside_metaflow/finetune_gemma.py argo-workflows create
 ```
-
-We specify previously created config file `finetune_flow_config.json` by using the `--config` option.
 
 <details>
 
@@ -299,9 +274,6 @@ We specify previously created config file `finetune_flow_config.json` by using t
 
 ```
 class FinetuneFlow(FlowSpec):
-
-    # config file has to specify image name 
-    finetune_flow_config = Config("config", default="flow_config.json")
 
     # specify environment variables required by the finetune process
     @environment(vars={
@@ -319,22 +291,25 @@ class FinetuneFlow(FlowSpec):
 
     # specify kubernetes-specific options 
     @kubernetes(
-        image=finetune_flow_config.image_name,
+        image=constants.FINETUNE_IMAGE_NAME,
         image_pull_policy="Always",
         cpu=2,
-        memory=1024,
+        memory=4096,
         # secret to huggingfase that has to be added as a Kubernetes secret
         secrets=["hf-token"],
         # specify required GPU settings
-        gpu=1,
-        node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-a100"}
+        gpu=2,
+        node_selector={"cloud.google.com/gke-accelerator": "nvidia-l4"},
     )
     @retry
     @step
     def start(self):
         print("Start finetuning")
         import finetune
-        finetune.finetune_and_upload_to_hf(new_model=self.finetune_flow_config.new_model)
+
+        finetune.finetune_and_upload_to_hf(
+            new_model="finetunned-gemma2-9b"
+        )
         self.next(self.end)
 
     @step
@@ -441,13 +416,6 @@ The output should look like this:
 ```
 cd terraform 
 terraform destroy -var-file=default_env.tfvars
-rm -rf .venv finetune_flow_config.json 
-```
-
-2. Remove created files:
-
-```
-rm -rf .venv finetune_flow_config.json
 ```
 
 ## Troubleshooting

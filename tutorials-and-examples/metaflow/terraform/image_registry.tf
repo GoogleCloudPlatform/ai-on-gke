@@ -13,7 +13,7 @@
 # limitations under the License.
 
 locals {
-  image_repository_name = var.image_repository_name != "" ? var.image_repository_name : var.default_resource_name
+  image_repository_name = "metaflow-tutorial-tf"
 }
 
 resource "google_artifact_registry_repository" "image_repo" {

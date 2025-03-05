@@ -49,3 +49,13 @@ resource "local_file" "metaflow-ui-deployment-file" {
   )
   filename = "${path.module}/../gen/metaflow-ui.yaml"
 }
+
+resource "local_file" "finetune-constants-module-file" {
+  content = templatefile(
+    "${path.module}/../metaflow/templates/constants.py",
+    {
+      FINETUNE_IMAGE_NAME = "us-docker.pkg.dev/${var.project_id}/${local.image_repository_name}/finetune:latest",
+    }
+  )
+  filename = "${path.module}/../finetune_inside_metaflow/constants.py"
+}

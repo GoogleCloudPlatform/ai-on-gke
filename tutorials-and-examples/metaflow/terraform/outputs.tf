@@ -40,10 +40,6 @@ output "metaflow_datastore_bucket_name" {
   value = local.bucket_name
 }
 
-output "finetune_image_registry_name" {
-  value = local.image_repository_name
-}
-
 output "argo_workflows_k8s_sa_name" {
   value = var.metaflow_argo_workflows_sa_name
 }
