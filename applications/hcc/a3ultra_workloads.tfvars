@@ -37,7 +37,7 @@ node_count_llama_3_7b = 2
 recipe = "llama3.1_7b_nemo_pretraining"
 
 reservation = "supercomputer-testing-gsc-asq-fr"
-reservation_block = "supercomputer-testing-gsc-asq-fr-block-0001"
-placement_policy_name = ""
+reservation_block = ""
+placement_policy_name = "supercomputer-testing-gsc-asq-fr-block-0001"
 
 gpu_type = "A3 Ultra"
