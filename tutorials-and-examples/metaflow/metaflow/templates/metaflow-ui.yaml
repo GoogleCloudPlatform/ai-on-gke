@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metaflow-ui
+  labels:
+    app: metaflow-ui
+spec:
+  selector:
+    matchLabels:
+      app: metaflow-ui
+  template:
+    metadata:
+      labels:
+        app: metaflow-ui
+    spec:
+      serviceAccountName: "${SERVICE_ACCOUNT_NAME}"
+      containers:
+        - name: metaflow-ui
+          image: docker.io/netflixoss/metaflow_metadata_service
+          command: ["/opt/latest/bin/python3", "-m", "services.ui_backend_service.ui_server"]
+          env:
+            - name: MF_METADATA_DB_HOST
+              value: localhost
+            - name: MF_METADATA_DB_PORT
+              value: "5432"
+            - name: MF_METADATA_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: username
+            - name: MF_METADATA_DB_PSWD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: MF_METADATA_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: database
+          ports:
+            - containerPort: 8083
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+          args:
+            - "--private-ip"
+            - "--structured-logs"
+            - "--port=5432"
+            - "${CLOUDSQL_INSTANCE}"
+          securityContext:
+            runAsNonRoot: true
+          resources:
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metaflow-ui-svc
+spec:
+  selector:
+    app: metaflow-ui
+  ports:
+  - name: ui-port
+    port: 8083

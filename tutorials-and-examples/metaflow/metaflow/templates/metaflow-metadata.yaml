@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metaflow-metadata
+  labels:
+    app: metaflow-metadata
+spec:
+  selector:
+    matchLabels:
+      app: metaflow-metadata
+  template:
+    metadata:
+      labels:
+        app: metaflow-metadata
+    spec:
+      serviceAccountName: "${SERVICE_ACCOUNT_NAME}"
+      containers:
+        - name: metaflow-metadata
+          image: docker.io/netflixoss/metaflow_metadata_service
+          env:
+            - name: MF_METADATA_DB_HOST
+              value: localhost
+            - name: MF_METADATA_DB_PORT
+              value: "5432"
+            - name: MF_METADATA_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: username
+            - name: MF_METADATA_DB_PSWD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: MF_METADATA_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: database
+            - name: MF_METADATA_PORT
+              value: "8080"
+            - name: MF_METADATA_HOST
+              value: 0.0.0.0
+            - name: MF_MIGRATION_PORT
+              value: "8082"
+          ports:
+            - containerPort: 8080
+            - containerPort: 8082
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+          args:
+            - "--private-ip"
+            - "--structured-logs"
+            - "--port=5432"
+            - "${CLOUDSQL_INSTANCE}"
+          securityContext:
+            runAsNonRoot: true
+          resources:
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metaflow-metadata-svc
+spec:
+  selector:
+    app: metaflow-metadata
+  ports:
+  - name: metadata-port
+    port: 8080
+  - name: migration-port
+    port: 8082
