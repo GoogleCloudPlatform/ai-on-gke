@@ -3,9 +3,9 @@
     "details": {
       "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
       "containerName": "image-pull-singleuser",
-      "image": "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:sample-public-image-v1.1-rag"
+      "image": "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:v1.10"
     },
-    "message": "container \"image-pull-singleuser\" in DaemonSet \"continuous-image-puller\" has an image \"us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:sample-public-image-v1.1-rag\" that does not have a valid digest.",
+    "message": "container \"image-pull-singleuser\" in DaemonSet \"continuous-image-puller\" has an image \"us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:v1.10\" that does not have a valid digest.",
     "policyName": "imagefreshness",
     "resourceKey": {
       "group": "apps",

@@ -3,9 +3,9 @@
     "details": {
       "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
       "containerName": "image-pull-singleuser",
-      "image": "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:sample-public-image-v1.1-rag"
+      "image": "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:v1.10"
     },
-    "message": "container \"image-pull-singleuser\" in DaemonSet \"continuous-image-puller\" has an image \"us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:sample-public-image-v1.1-rag\" built from non-distroless base image \"Ubuntu 22.04.2 LTS\". See: go/gke-distroless for more details",
+    "message": "container \"image-pull-singleuser\" in DaemonSet \"continuous-image-puller\" has an image \"us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/jupyter-notebook-image:v1.10\" built from non-distroless base image \"Ubuntu 22.04.2 LTS\". See: go/gke-distroless for more details",
     "policyName": "distroless",
     "resourceKey": {
       "group": "apps",

@@ -1,5 +1,5 @@
-langchain==0.3.7
-ray==2.9.3 
+langchain==0.3.19
+ray==2.43.0
 datasets==2.18.0 
-sentence-transformers==2.5.1 
+sentence-transformers==3.4.1
 kaggle==1.6.6
