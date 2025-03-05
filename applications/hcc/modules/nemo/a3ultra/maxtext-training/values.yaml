@@ -24,7 +24,8 @@ volumes:
 
 workload:
   steps: 50
-  image: "us-central1-docker.pkg.dev/gke-ai-eco-dev/reproducibility/maxtext-benchmark@sha256:8fc5a3a94d0790e654f2fc6bbe2227464841ac1f78aadc43b2f5be34af87325b"
+#  image: "us-central1-docker.pkg.dev/gke-ai-eco-dev/reproducibility/maxtext-benchmark@sha256:8fc5a3a94d0790e654f2fc6bbe2227464841ac1f78aadc43b2f5be34af87325b"
+  image: "gcr.io/tpu-prod-env-multipod/maxtext_gpu_jax_stable_stack:2025-03-05"
 
 network:
   subnetworks[]:

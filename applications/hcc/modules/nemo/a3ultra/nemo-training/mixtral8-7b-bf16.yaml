@@ -169,7 +169,7 @@ model:
     parallel_attention: false
   data:
     data_impl: mock
-    splits_string: 90,8,2
+    splits_string: "90/8/2" 
     seq_length: 4096
     skip_warmup: true
     num_workers: 4
