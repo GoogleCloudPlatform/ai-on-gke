@@ -113,8 +113,11 @@ Deploying the digital human blueprint based on few NIMs on GKE.
       # Get external IP.
       EXTERNAL_IP=$(k get svc $service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
+      echo "----------------------------------"
       echo "Testing service: $service"
       curl http://${EXTERNAL_IP}/v1/health/ready
+      echo " "
+      echo "----------------------------------"
     done
 
     ```

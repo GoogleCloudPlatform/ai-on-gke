@@ -480,14 +480,14 @@ spec:
               key: NGC_API_KEY
         - name: NIM_HTTP_API_PORT
           value: "8000"
-        livenessProbe:
-          httpGet:
-            path: /v1/health/ready
-            port: 8000
-          initialDelaySeconds: 10
-          timeoutSeconds: 20
-          periodSeconds: 10
-          failureThreshold: 100
+        # livenessProbe:
+        #   httpGet:
+        #     path: /v1/health/ready
+        #     port: 8000
+        #   initialDelaySeconds: 10
+        #   timeoutSeconds: 20
+        #   periodSeconds: 10
+        #   failureThreshold: 100
       imagePullSecrets:
       - name: secret-nvcr
       nodeSelector:
