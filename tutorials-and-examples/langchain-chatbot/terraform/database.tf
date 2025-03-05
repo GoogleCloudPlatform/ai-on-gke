@@ -34,7 +34,7 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 
 resource "random_password" "db_password" {
   length  = 16
-  special = true
+  special = false
 }
 
 resource "google_sql_database_instance" "langchain_storage" {
