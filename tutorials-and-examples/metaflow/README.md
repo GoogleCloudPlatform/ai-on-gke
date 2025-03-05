@@ -1,4 +1,4 @@
-# Fine-Tuning Gemma 2-9B on GKE using Metaflow
+# Fine-Tuning Gemma 2-9B on GKE using Metaflow and Argo Workflows
 
 This tutorial will provide instructions on how to deploy and use the [Metaflow](https://docs.metaflow.org/) framework on GKE (Google Kubernetes Engine) and operate AI/ML workloads using [Argo-Workflows](https://argo-workflows.readthedocs.io/en/latest/). 
 
@@ -12,7 +12,7 @@ This tutorial is designed for ML Platform engineers who plan to use Metaflow for
 2. Install [Argo Workflows](https://argoproj.github.io/workflows/) on GKE cluster  
 3. Install and configure Metaflow to work with Argo Workflows on GKE cluster  
 4. Fine-tune `gemma-2-9b` model and serve the resulting model from the GKE cluster.  
-5. Install Metaflow’s Metadata Service on the GKE cluster (Optional but Recommended) – enable remote metadata storage to replace on local storage. While not required, this setup can enhance collaboration and teamwork by providing a centralized metadata repository. [Learn more here.](https://docs.metaflow.org/getting-started/infrastructure). 
+5. Install Metaflow’s Metadata Service on the GKE cluster (Optional but Recommended) – enable remote metadata storage to replace on local storage. While not required, this setup can enhance collaboration and teamwork by providing a centralized metadata repository. [Learn more here](https://docs.metaflow.org/getting-started/infrastructure).
 
 ## Filesystem structure
 
@@ -229,9 +229,11 @@ More on Metaflow configuration values:
 | METAFLOW\_KUBERNETES\_DISK | Sets disk size for a container for metaflow run. The default value of this option is too big for Autopilot GKE cluster, so we decrease it to 2048 |
 
 
+# Model Fine-tuning and Serving
+
 ## Build the fine-tuning container image
 
-The model fine-tuning process requires a dedicated environment, which we will encapsulate in a container image. The dockerfile can be found in `finetune_inside_metaflow/image/Dockerfile`. 
+The model fine-tuning process requires a dedicated environment, which we will encapsulate in a container image. The Dockerfile can be found in `finetune_inside_metaflow/image/Dockerfile`.
 
 1. Build the image using [Cloud Build](https://cloud.google.com/build/docs/overview) and push it to the newly created repository. That may take some time:
 
@@ -261,7 +263,6 @@ Here:
 * `image_name` : image that was previously built and pushed to our registry  
 * `new_model:`  Name of a resulting model.
 
-# Model Fine-tuning and Serving 
 
 ## Fine-tune the model
 

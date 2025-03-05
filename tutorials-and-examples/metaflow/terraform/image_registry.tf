@@ -31,5 +31,5 @@ resource "google_artifact_registry_repository_iam_binding" "binding" {
   members = [
     "serviceAccount:${module.gke_cluster.service_account}",
   ]
-  depends_on = ["google_artifact_registry_repository.image_repo", module.gke_cluster]
+  depends_on = [google_artifact_registry_repository.image_repo, module.gke_cluster]
 }

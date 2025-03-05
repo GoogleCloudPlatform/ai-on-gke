@@ -46,7 +46,7 @@ class FinetuneFlow(FlowSpec):
         secrets=["hf-token"],
         # specify required GPU settings
         gpu=1,
-        node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-a100"},
+        node_selector={"cloud.google.com/gke-accelerator": "nvidia-l4"},
     )
     @retry
     @step

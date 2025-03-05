@@ -11,7 +11,7 @@ spec:
     metadata:
       labels:
         app: gemma-server
-        ai.gke.io/model: gemma-2-9b-it
+        ai.gke.io/model: gemma-2-9b
         ai.gke.io/inference-server: vllm
         examples.ai.gke.io/source: user-guide
     spec:
@@ -44,7 +44,7 @@ spec:
         emptyDir:
             medium: Memory
       nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-tesla-a100
+        cloud.google.com/gke-accelerator: nvidia-l4
 ---
 apiVersion: v1
 kind: Service

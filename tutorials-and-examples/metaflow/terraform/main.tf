@@ -80,8 +80,8 @@ module "gke_cluster" {
   enable_gpu        = true
   gpu_pools = [
     {
-      name               = "gpu-pool-a100"
-      machine_type       = "a2-highgpu-1g"
+      name               = "gpu-pool-l4"
+      machine_type       = "g2-standard-24"
       node_locations     = "us-central1-a"
       autoscaling        = true
       min_count          = 1
@@ -91,7 +91,7 @@ module "gke_cluster" {
       enable_gcfs        = true
       logging_variant    = "DEFAULT"
       accelerator_count  = 1
-      accelerator_type   = "nvidia-tesla-a100"
+      accelerator_type   = "nvidia-l4"
       gpu_driver_version = "DEFAULT"
     }
   ]
