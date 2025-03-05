@@ -49,6 +49,11 @@ resource "helm_release" "nemo" {
     name = "workload.gpus"
     value = var.node_count * 8
   }
+
+  set {
+    name = "queue"
+    value = "user-queue"
+  }
 }
 
 resource "helm_release" "nccl_tests" {
@@ -72,5 +77,10 @@ resource "helm_release" "nccl_tests" {
   set {
     name = "workload.node_count"
     value = var.node_count
+  }
+
+  set {
+    name = "queue"
+    value = "user-queue"
   }
 }
