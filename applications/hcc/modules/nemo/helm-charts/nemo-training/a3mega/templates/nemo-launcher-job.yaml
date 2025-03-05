@@ -29,8 +29,6 @@ metadata:
     kueue.x-k8s.io/queue-name: "{{ $root.Values.queue }}"
 spec:
   suspend: true
-  # network:
-  #   enableDNSHostnames: true
   parallelism: {{ $nodes }}
   completions: {{ $nodes }}
   completionMode: Indexed
@@ -71,9 +69,6 @@ spec:
       key: nvidia.com/gpu
     - operator: "Exists"
       key: cloud.google.com/impending-node-termination
-    # - key: cloud.google.com/gke-queued
-    #   effect: NoSchedule
-    #   value: "true"
 
     volumes:
     {{ if eq $root.Values.targetPlatform "gke" }}
