@@ -82,8 +82,13 @@ variable "placement_policy_name" {
   type        = string
 }
 
-variable "recipe" {
-  description = "Toolkit deployment variable: recipe"
+variable "a3mega_recipe" {
+  description = "Toolkit deployment variable: a3mega_recipe"
+  type        = string
+}
+
+variable "a3ultra_recipe" {
+  description = "Toolkit deployment variable: a3ultra_recipe"
   type        = string
 }
 

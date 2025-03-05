@@ -12,24 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-podsetPreferredTopology: "kubernetes.io/hostname"
-
-volumes:
-  # The VM host path for SSDs is assumed at /mnt/stateful_partition/kube-ephemeral-ssd
-  ssdMountPath: "/ssd"
-
-  gcsMounts:
-    - bucketName:
-      mountPath: /gcs
-
-workload:
-  torchDistributedTarget: "/opt/NeMo/examples/nlp/language_modeling/megatron_gpt_pretraining.py"
-  experiment_dir: /gcs/nemo-experiments
-  experiment_name: "megatron_gpt"
-
-network:
-  gibVersion:
-  subnetworks[]:
-  ncclSettings:
-  - name: NCCL_DEBUG
-    value: "VERSION"
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}"
+spec:
+  clusterIP: None
+  selector:
+    job-name: "{{ .Release.Name }}"
