@@ -15,7 +15,7 @@
 # to build, run `gcloud builds submit --config cloudbuild.yaml .` in directory
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'pull', 'docker.io/jupyterhub/k8s-hub:3.0.0' ]
+  args: [ 'pull', 'docker.io/jupyterhub/k8s-hub:5.2.1' ]
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', '<Artifact Registry Repo Path>/<name of image>', '.' ]
 images:

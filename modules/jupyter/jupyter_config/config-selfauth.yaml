@@ -25,7 +25,7 @@ hub:
   image:
     name: us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class
     # This is the timestamp of the image, we should avoid using 'latest'
-    tag: '1710974014'
+    tag: '1741297709'
   labels:
     ${indent(4, chomp(jsonencode(additional_labels)))}
   config:
