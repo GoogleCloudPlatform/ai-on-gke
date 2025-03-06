@@ -51,7 +51,7 @@ module "iap_auth" {
 
 module "jupyterhub-workload-identity" {
   source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  version    = "30.0.0" # Pinning to a previous version as current version (30.1.0) showed inconsitent behaviour with workload identity service accounts
+  version    = "36.0.2"
   name       = var.workload_identity_service_account
   namespace  = var.namespace
   project_id = var.project_id
@@ -108,7 +108,7 @@ resource "helm_release" "jupyterhub" {
   create_namespace = true
   cleanup_on_fail  = "true"
   timeout          = 600
-  version          = "3.3.8"
+  version          = "4.1.0"
 
   values = var.autopilot_cluster ? [templatefile("${path.module}/jupyter_config/config-selfauth-autopilot.yaml", {
     password                          = var.add_auth ? "dummy" : random_password.generated_password[0].result
