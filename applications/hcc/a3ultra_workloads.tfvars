@@ -30,13 +30,19 @@ a3_ultra_zone = "europe-west1-b"
 
 node_count_gke_nccl = 0
 node_count_gke = 0
-node_count_llama_3_70b = 8
+node_count_nemo = 16
+node_count_maxtext = 16
 node_count_llama_3_7b = 2
 
-#a3ultra_recipe = "gke-nccl"
-#a3ultra_recipe = "llama3.1_7b_nemo_pretraining"
-#a3ultra_recipe = "llama3.1_70b_nemo_pretraining"
-a3ultra_recipe = "llama3.1_70b_maxtext_pretraining"
+# A3 Ultra recipe options:
+# - "gke"
+# - "gke-nccl"
+# - "llama3.1_7b_nemo_pretraining"
+# - "llama3.1_70b_nemo_pretraining"
+# - "llama3.1_70b_maxtext_pretraining"
+# - "mixtral8_7b_nemo_pretraining"
+# - "mixtral8_7b_maxtext_pretraining"
+a3ultra_recipe = "mixtral8_7b_maxtext_pretraining"
 a3mega_recipe=""
 
 reservation = "supercomputer-testing-gsc-asq-fr"

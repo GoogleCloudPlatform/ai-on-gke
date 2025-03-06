@@ -237,8 +237,8 @@ spec:
             variableValues:
             - llama3.1_7b_nemo_pretraining
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-        node_count_llama_3_70b:
-          name: node_count_llama_3_70b
+        node_count_nemo:
+          name: node_count_nemo
           title: Node count
           section: required_config
           subtext: Some benchmarks require a minimum number of nodes. If using a reservation, ensure that your reservation has the required capacity
@@ -260,8 +260,20 @@ spec:
           - variableName: a3ultra_recipe
             variableValues:
             - llama3.1_70b_nemo_pretraining
-            - llama3.1_70b_maxtext_pretraining
             - mixtral8_7b_nemo_pretraining
+            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
+        node_count_maxtext:
+          name: node_count_maxtext
+          title: Node count
+          section: required_config
+          subtext: Some benchmarks require a minimum number of nodes. If using a reservation, ensure that your reservation has the required capacity
+          enumValueLabels:
+            - label: 16
+              value: 16
+          toggleUsingVariables:
+          - variableName: a3ultra_recipe
+            variableValues:
+            - llama3.1_70b_maxtext_pretraining
             - mixtral8_7b_maxtext_pretraining
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         acknowledge:

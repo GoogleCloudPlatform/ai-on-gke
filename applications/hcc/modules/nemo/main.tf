@@ -27,7 +27,7 @@ resource "helm_release" "benchmark" {
   namespace = "default"
   reset_values = true
   values = [
-    "${file("${path.module}/${local.machine_type}/${local.model_type}/values.yaml")}"
+    "${file("${path.module}/${local.machine_type}/${local.model_type}/${local.values_file}")}"
   ]
 
   set {

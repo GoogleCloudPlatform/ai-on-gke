@@ -1,0 +1,50 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+podsetPreferredTopology: "kubernetes.io/hostname"
+
+volumes:
+  # The VM host path for SSDs is assumed at /mnt/stateful_partition/kube-ephemeral-ssd
+  ssdMountPath: "/ssd"
+
+  gcsMounts:
+    - bucketName:
+      mountPath: /gcs
+
+workload:
+  steps: 50
+  image: "us-central1-docker.pkg.dev/gke-ai-eco-dev/reproducibility/maxtext-benchmark@sha256:8fc5a3a94d0790e654f2fc6bbe2227464841ac1f78aadc43b2f5be34af87325b"
+#  image: "gcr.io/tpu-prod-env-multipod/maxtext_gpu_jax_stable_stack:2025-03-05"
+#  image: "gcr.io/tpu-prod-env-multipod/maxtext_gpu_stable_stack_nightly_jax:2025-02-21"
+
+network:
+  subnetworks[]:
+  ncclSettings:
+  - name: NCCL_DEBUG
+    value: "VERSION"
+
+xlaFlags: >-
+  --xla_gpu_enable_latency_hiding_scheduler=true
+  --xla_gpu_enable_triton_gemm=false
+  --xla_gpu_enable_command_buffer=""
+  --xla_gpu_all_reduce_combine_threshold_bytes=71303168
+  --xla_gpu_all_gather_combine_threshold_bytes=536870912
+  --xla_gpu_reduce_scatter_combine_threshold_bytes=134217728
+  --xla_gpu_enable_pipelined_all_gather=true
+  --xla_gpu_enable_pipelined_reduce_scatter=true
+  --xla_gpu_enable_pipelined_all_reduce=true
+  --xla_gpu_enable_while_loop_double_buffering=true
+  --xla_gpu_enable_all_gather_combine_by_dim=false
+  --xla_gpu_enable_reduce_scatter_combine_by_dim=false
+  --xla_disable_hlo_passes=rematerialization

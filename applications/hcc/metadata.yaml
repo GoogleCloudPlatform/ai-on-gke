@@ -65,9 +65,12 @@ spec:
       - name: node_count_llama_3_7b
         varType: number
         defaultValue: 2
-      - name: node_count_llama_3_70b
+      - name: node_count_nemo
         varType: number
-        defaultValue: 32
+        defaultValue: 16 
+      - name: node_count_maxtext
+        varType: number
+        defaultValue: 16
       - name: additional_labels
         description: Additional labels to add to Kubernetes resources.
         varType: string

@@ -1,6 +1,6 @@
 hardware: gpu
 dcn_data_parallelism: 2
-dcn_fsdp_parallelism: 16
+dcn_fsdp_parallelism: 8
 ici_fsdp_parallelism: 8
 per_device_batch_size: 2
 max_target_length: 8192

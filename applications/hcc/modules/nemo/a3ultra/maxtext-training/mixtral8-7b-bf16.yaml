@@ -35,7 +35,7 @@ mlpwi_0: device
 mlpwi_1: device
 mlpwo: device
 dcn_fsdp_parallelism: 2
-dcn_data_parallelism: 16
+dcn_data_parallelism: 8
 dcn_tensor_parallelism: 1
 dcn_pipeline_parallelism: 1
 ici_fsdp_parallelism: -1
