@@ -21,7 +21,7 @@ This tutorial will guide you through creating a robust Retrieval-Augmented Gener
 
 ## Demo application
 
-The demo application consist of following components:
+The demo application consists of following components:
 
 ### Data ingestion
 
@@ -135,7 +135,7 @@ Ensure you have a GCP project with a billing account.
 Ensure you have the following tools installed on your workstation:
 
 * [gcloud CLI](https://cloud.google.com/sdk/docs/install)  
-* [gcloud kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)  
+* [kubectl](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_kubectl)
 * [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)  (for an automated deployment)
 
 If you previously installed the gcloud CLI, get the latest version by running:
@@ -166,7 +166,7 @@ It creates:
 
 
 
-1. Go the the terraform directory:
+1. Go the terraform directory:
 
 ```
 cd terraform
@@ -358,7 +358,7 @@ spec:
       containers:
          ...
         image:  ${IMAGE_NAME}  # <- image name with the app that we have previously built
-        command: ["python3", "cmd/ingest_data.py"]   # <- run ingestion sctipt instead of a default entrypoint.
+        command: ["python3", "cmd/ingest_data.py"]   # <- run ingestion script instead of a default entrypoint.
         env:
          ...
         - name: INPUT_DIR # <- Make ingestion script look into mounted FUSE directory
@@ -427,7 +427,7 @@ spec:
           image:  ${IMAGE_NAME} # <- image name with the app that we have previously built
           ...
           env:
-- name: MODEL_NAME # <- LMM name to use, gemma2:9b in our case 
+- name: MODEL_NAME # <- LLM name to use, gemma2:9b in our case
 		  ...          
 - name: OLLAMA_SERVER_URL  # <- URL to connect to previously deployed Ollama server
               value: http://ollama-service:11434
@@ -477,5 +477,5 @@ terraform destroy -var-file=default_env.tfvars
 * There may be a temporary error in the pods, where we mount buckets by using FUSE. Normally, they should be resolved without any additional actions.
 
 ```
-MountVolume.SetUp failed for volume "rag-ingest-data" : kubernetes.io/csi: mounter.SetUpAt failed to get CSI client: driver name gcsfuse.csi.storage.gke.io not found in the list of registered CSI drivers
+MountVolume.SetUp failed for volume "datalake" : kubernetes.io/csi: mounter.SetUpAt failed to get CSI client: driver name gcsfuse.csi.storage.gke.io not found in the list of registered CSI drivers
 ```
