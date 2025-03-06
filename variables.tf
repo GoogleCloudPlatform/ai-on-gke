@@ -72,7 +72,7 @@ variable "node_count_llama_3_7b" {
   type        = number
 }
 
-variable "node_count_llama_nemo" {
+variable "node_count_nemo" {
   description = "Toolkit deployment variable: node_count_nemo"
   type        = number
 }
