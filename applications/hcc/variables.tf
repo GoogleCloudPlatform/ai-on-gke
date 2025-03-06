@@ -72,8 +72,13 @@ variable "node_count_llama_3_7b" {
   type        = number
 }
 
-variable "node_count_llama_3_70b" {
-  description = "Toolkit deployment variable: node_count_llama_3_70b"
+variable "node_count_llama_nemo" {
+  description = "Toolkit deployment variable: node_count_nemo"
+  type        = number
+}
+
+variable "node_count_maxtext" {
+  description = "Toolkit deployment variable: node_count_maxtext"
   type        = number
 }
 
@@ -82,8 +87,13 @@ variable "placement_policy_name" {
   type        = string
 }
 
-variable "recipe" {
-  description = "Toolkit deployment variable: recipe"
+variable "a3mega_recipe" {
+  description = "Toolkit deployment variable: a3mega_recipe"
+  type        = string
+}
+
+variable "a3ultra_recipe" {
+  description = "Toolkit deployment variable: a3ultra_recipe"
   type        = string
 }
 

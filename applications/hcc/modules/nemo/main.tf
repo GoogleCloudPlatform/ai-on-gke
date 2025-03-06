@@ -18,26 +18,26 @@ data "google_container_cluster" "gke_cluster" {
   location = local.cluster_location
 }
 
-resource "helm_release" "nemo" {
+resource "helm_release" "benchmark" {
   count     = var.recipe == "gke-nccl" ? 0 : 1
-  name      = "nemo"
+  name      = "benchmark"
   provider  = helm
   version     = "0.7.0"
-  chart     = "${path.module}/helm-charts/nemo-training/${local.machine_type}"
+  chart     = "${path.module}/helm-charts/training/${local.machine_type}/${local.model_type}"
   namespace = "default"
   reset_values = true
   values = [
-    "${file("${path.module}/${local.machine_type}/values.yaml")}"
+    "${file("${path.module}/${local.machine_type}/${local.model_type}/${local.values_file}")}"
   ]
 
   set {
     name  = "nemo_config"
-    value = "${file("${path.module}/${local.machine_type}/${local.nccl_config}")}"
+    value = "${file("${path.module}/${local.machine_type}/${local.model_type}/${local.nccl_config}")}"
   }
 
   set {
-    name = "workload.image"
-    value = local.workload_image
+    name  = "maxtext_config"
+    value = "${file("${path.module}/${local.machine_type}/${local.model_type}/${local.nccl_config}")}"
   }
 
   set {

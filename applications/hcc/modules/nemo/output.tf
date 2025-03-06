@@ -9,7 +9,3 @@ output "token_debug" {
 output "ca_debug" {
   value = base64decode(data.google_container_cluster.gke_cluster.master_auth[0].cluster_ca_certificate)
 }
-
-output "image_debug" {
-  value = local.workload_image
-}
