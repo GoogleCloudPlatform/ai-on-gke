@@ -1,3 +1,4 @@
+
 targetPlatform: "gke"
 
 volumes:
@@ -17,7 +18,7 @@ workload:
     # gpus: 64 # This should be one of: [128, 256]
     # image: "us-west1-docker.pkg.dev/supercomputer-testing/kevinmcw-repo/nemo_workload:24.07"
     #   gcsBucketForDataCataPath: "kevinmcw-llama-checkpoint"
-    image: "us-central1-docker.pkg.dev/deeplearning-images/reproducibility/pytorch-gpu-nemo:nemo24.07-A3U"
+  image: "us-central1-docker.pkg.dev/deeplearning-images/reproducibility/pytorch-gpu-nemo:nemo24.07-A3U"
 
 network:
   stack: "tcpxo"
