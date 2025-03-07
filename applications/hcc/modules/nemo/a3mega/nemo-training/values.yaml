@@ -4,6 +4,10 @@ volumes:
   # The VM host path for SSDs is assumed at /mnt/stateful_partition/kube-ephemeral-ssd
   ssdMountPath: "/ssd"
 
+  gcsMounts:
+    - bucketName:
+      mountPath: /gcs
+
 gcsDownload: # downloads or synchronizes contents of a GCS bucket folder on initialization
   source: "gs://nemo-megatron-demo/training-data/tokenized/bpe2gpt/wikipedia/" 
   target: "/ssd/.cache/"
