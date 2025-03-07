@@ -10,11 +10,12 @@ Here you will find the NVIDIA NIM Blueprints that can be provisioned to run on G
    You can follow the detailed steps [here](./drugdiscovery/README.md).
 
 2. [Digital Human for Customer Service](https://build.nvidia.com/nvidia/digital-humans-for-customer-service)
-   - nv-embedqa-e5-v5
-   - nv-rerankqa-mistral4b-v3
-   - Llama3-8b-instruct
-   - Parakeet-ctc-1.1b-asr
-   - FastPitch-hifigan-tts
    - Audio2face-3D
    - Audio2face-2D
+   - FastPitch-hifigan-tts
+   - Llama3-8b-instruct
+   - nv-embedqa-e5-v5
+   - nv-rerankqa-mistral4b-v3
+   - Parakeet-ctc-1.1b-asr
+  
    You can follow the detailed steps [here](./digitalhuman/README.md).
