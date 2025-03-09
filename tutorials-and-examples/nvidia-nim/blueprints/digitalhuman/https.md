@@ -62,80 +62,80 @@ Deploying HTTPS endpoints for the digital human blueprint on GKE.
 
 6. **Create k8s service, gateway and http-route and healthcheck**
   
-```bash
+    ```bash
 
-for NIM in ${NIMS}; do
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${NIM}-svc
-spec:
-  selector:
-    app: ${NIM}
-  ports:
-  - protocol: TCP
-    port: 8000
-    targetPort: 8000
----
-kind: Gateway
-apiVersion: gateway.networking.k8s.io/v1beta1
-metadata:
-  name: ${NIM}-gw
-spec:
-  gatewayClassName: gke-l7-global-external-managed
-  listeners:
-  - name: https
-    protocol: HTTPS
-    port: 443
-    tls:
-      mode: Terminate
-      options:
-        networking.gke.io/pre-shared-certs: ${NIM}-cert
-  addresses:
-  - type: NamedAddress
-    value: ${NIM}-ip
----
-kind: HTTPRoute
-apiVersion: gateway.networking.k8s.io/v1beta1
-metadata:
-  name: ${NIM}-httpr
-spec:
-  parentRefs:
-  - kind: Gateway
-    name: ${NIM}-gw
-  hostnames:
-  - "${NIM}.${DOMAIN}"
-  rules:
-  - backendRefs:
-    - name: ${NIM}-svc
-      port: 8000
----
-apiVersion: networking.gke.io/v1
-kind: HealthCheckPolicy
-metadata:
-  name: ${NIM}-hcheck
-spec:
-  default:
-    checkIntervalSec: 15
-    timeoutSec: 1
-    healthyThreshold: 1
-    unhealthyThreshold: 2
-    logConfig:
-      enabled: true
-    config:
-      type: TCP
-      httpHealthCheck:
-        port: 8000
-        requestPath: /v1/health/ready
-  targetRef:
-    group: ""
+    for NIM in ${NIMS}; do
+    kubectl apply -f - <<EOF
+    apiVersion: v1
     kind: Service
-    name: ${NIM}-svc
-EOF
-done
+    metadata:
+      name: ${NIM}-svc
+    spec:
+      selector:
+        app: ${NIM}
+      ports:
+      - protocol: TCP
+        port: 8000
+        targetPort: 8000
+    ---
+    kind: Gateway
+    apiVersion: gateway.networking.k8s.io/v1beta1
+    metadata:
+      name: ${NIM}-gw
+    spec:
+      gatewayClassName: gke-l7-global-external-managed
+      listeners:
+      - name: https
+        protocol: HTTPS
+        port: 443
+        tls:
+          mode: Terminate
+          options:
+            networking.gke.io/pre-shared-certs: ${NIM}-cert
+      addresses:
+      - type: NamedAddress
+        value: ${NIM}-ip
+    ---
+    kind: HTTPRoute
+    apiVersion: gateway.networking.k8s.io/v1beta1
+    metadata:
+      name: ${NIM}-httpr
+    spec:
+      parentRefs:
+      - kind: Gateway
+        name: ${NIM}-gw
+      hostnames:
+      - "${NIM}.${DOMAIN}"
+      rules:
+      - backendRefs:
+        - name: ${NIM}-svc
+          port: 8000
+    ---
+    apiVersion: networking.gke.io/v1
+    kind: HealthCheckPolicy
+    metadata:
+      name: ${NIM}-hcheck
+    spec:
+      default:
+        checkIntervalSec: 15
+        timeoutSec: 1
+        healthyThreshold: 1
+        unhealthyThreshold: 2
+        logConfig:
+          enabled: true
+        config:
+          type: TCP
+          httpHealthCheck:
+            port: 8000
+            requestPath: /v1/health/ready
+      targetRef:
+        group: ""
+        kind: Service
+        name: ${NIM}-svc
+    EOF
+    done
 
-```
+    ```
 
 *The certificate can take 15 minutes to be attached to the LB
 
