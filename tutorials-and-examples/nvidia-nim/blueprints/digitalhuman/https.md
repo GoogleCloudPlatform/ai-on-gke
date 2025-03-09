@@ -16,16 +16,29 @@ Deploying HTTPS endpoints for the digital human blueprint on GKE.
 
 ## Setup
 
-1. **Environment setup**: You'll set up several environment variables to make the following steps easier and more flexible. These variables store important information like cluster names, machine types, and API keys. You need to update the variable values to match your needs and context.
+1. **Cluster update**: You'll need to update the cluster by enabling GKE Gateway controller and addon for HTTP LoadBalancing
+    ```bash
+
+    gcloud container clusters update "${CLUSTER_NAME}" \
+      --location="${ZONE}"  \
+      --gateway-api=standard
+
+    gcloud container clusters update "${CLUSTER_NAME}" \
+      --location="${ZONE}"  \
+      --update-addons=HttpLoadBalancing=ENABLED
+
+    ```
+
+2. **Environment setup**: You'll set up a couple of environment variables to make the following steps easier and more flexible. These variables store important information like cluster names, machine types, and API keys. You need to update the variable values to match your needs and context.
 
     ```bash
 
-    export NIMS="dighum-embedqa-e5v5 dighum-llama3-8b dighum-rerankqa-mistral4bv3"
+    export NIMS="dighum-embedqa-e5v5 dighum-llama3-8b dighum-rerankqa-mistral4bv3 dighum-audio2face-3d dighum-fastpitch-tts dighum-maxine-audio2face-2d dighum-parakeet-asr-1-1b"
     export DOMAIN=<DOMAIN>
 
     ```
 
-2. **Static IP Reservation**:
+3. **Static IP Reservation**:
 
     ```bash
 
@@ -35,9 +48,9 @@ Deploying HTTPS endpoints for the digital human blueprint on GKE.
 
     ```
 
-3. **DNS**: Configure the DNS subdomains for each NIM. Our sub-domains for this example should be in this format <NIM>.<DOMAIN> (e.g. llama3-8b.example.com).
+4. **DNS**: Configure the DNS subdomains for each NIM. Our sub-domains for this example should be in this format <NIM>.<DOMAIN> (e.g. llama3-8b.example.com).
 
-4. **Creating the SSL Certs**
+5. **Creating the SSL Certs**
 
     ```bash
 
@@ -47,7 +60,7 @@ Deploying HTTPS endpoints for the digital human blueprint on GKE.
 
     ```
 
-5. **Create k8s service, gateway and http-route and healthcheck**
+6. **Create k8s service, gateway and http-route and healthcheck**
   
 ```bash
 

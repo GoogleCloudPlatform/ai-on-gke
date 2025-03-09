@@ -82,8 +82,7 @@ spec:
     spec:
       containers:
       - name: dighum-embedqa-e5v5
-        # image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:1.0.1
-        image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:latest
+        image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:1.0.1
         ports:
         - containerPort: 8000
         resources:
@@ -420,25 +419,6 @@ spec:
             medium: Memory
             sizeLimit: 16Gi
 
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: dighum-audio2face-3d-lb
-# spec:
-#   type: LoadBalancer
-#   selector:
-#     app: dighum-audio2face-3d
-#   ports:
-#   - protocol: TCP
-#     name: http
-#     port: 9000
-#     targetPort: 9000
-#   - protocol: TCP
-#     name: grpc
-#     port: 50051
-#     targetPort: 50051
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -457,8 +437,6 @@ spec:
       containers:
       - name: dighum-maxine-audio2face-2d
         image: nvcr.io/nim/nvidia/maxine-audio2face-2d:latest
-        # securityContext:
-        #   privileged: true
         ports:
         - containerPort: 8000
           name: http

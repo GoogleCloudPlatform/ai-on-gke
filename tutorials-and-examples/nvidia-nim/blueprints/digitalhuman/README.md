@@ -43,7 +43,7 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
     ```
 
-2. **GKE Cluster creation**:
+2. **GKE Cluster and Node pool creation**:
 
     ```bash
 
@@ -51,8 +51,7 @@ Deploying the digital human blueprint based on few NIMs on GKE.
       --num-nodes="1" \
       --location="${ZONE}" \
       --machine-type="${NP_CPU_MACHTYPE}" \
-      --gateway-api=standard \
-      --addons=GcpFilestoreCsiDriver,HttpLoadBalancing
+      --addons=GcpFilestoreCsiDriver
 
     gcloud container node-pools create "${NP_NAME}" \
       --cluster="${CLUSTER_NAME}" \
@@ -67,14 +66,25 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
     ```
 
-3. **Deploy NIMs:**
+3. **Get Cluster Credentials:**
 
     ```bash
 
-    gcloud container clusters get-credentials "${CLUSTER_NAME}" \
-    --location="${ZONE}"
+    gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${ZONE}"
 
+    ```
+
+4. **Set kubectl Alias (Optional):**
+
+    ```bash
+    
     alias k=kubectl
+
+    ```
+
+5. **Create NGC API Key Secret:** Creates secrets for pulling images from NVIDIA NGC and pods that need the API key at startup.
+
+    ```bash
 
     k create secret docker-registry secret-nvcr \
       --docker-username=\$oauthtoken \
@@ -83,6 +93,12 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
     k create secret generic ngc-api-key \
       --from-literal=NGC_API_KEY="${NGC_API_KEY}"
+
+    ```
+
+6. **Deploy NIMs:**
+
+    ```bash
 
     k apply -f digital-human-nimbp.yaml
 
