@@ -172,7 +172,7 @@ model:
     parallel_attention: false
   data:
     data_impl: mock
-    splits_string: 98,1,1
+    splits_string: "98/1/1"
     seq_length: 4096
     skip_warmup: true
     num_workers: 2
