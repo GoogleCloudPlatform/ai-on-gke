@@ -378,13 +378,32 @@ kubectl apply -f ../serve_model/vllm_deplyment.yaml
 kubectl rollout status deployment/vllm-gemma-deployment
 ```
 
-5. Open another terminal and forward port for of the inference server:
+5. Wait until the model is pulled and initialized. Open pod's container log watch:
+
+```
+kubectl logs  -l app=gemma-server -f
+
+```
+
+When everything is initialized, the end of the logs output should be:
+
+```
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000
+```
+
+Press `Ctrl+C` to quit the log watch.
+
+
+6. Open another terminal and forward port for of the inference server:
 
 ```
 kubectl port-forward svc/llm-service 8000:8000
 ```
 
-6. Interact with the model
+7. Interact with the model
 
 ```
 
