@@ -26,7 +26,7 @@ variable "app_name" {
 variable "k8s_namespace" {
   type        = string
   description = "Kubernetes namespace where resources are deployed"
-  default = "default"
+  default     = "default"
 }
 
 variable "k8s_app_image" {
@@ -104,7 +104,7 @@ variable "oauth_client_secret" {
 }
 
 variable "members_allowlist" {
-  type    = list(string)
+  type = list(string)
 }
 
 variable "db_instance_name" {
