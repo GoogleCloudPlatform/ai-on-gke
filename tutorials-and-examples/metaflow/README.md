@@ -239,7 +239,7 @@ The model fine-tuning process requires a dedicated environment, which we will en
 gcloud builds submit ../finetune_inside_metaflow/image --config=../cloudbuild.yaml
 ```
 
-*More details can be found in the `cloudbuild.yaml` file.*
+*More details can be found in the [cloudbuild.yaml](cloudbuild.yaml) file.*
 
 ## Fine-tune the model
 
