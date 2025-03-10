@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chat-ui
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: langchain-chatbot
+    networking.gke.io/managed-certificates: chat-ui
+    kubernetes.io/ingress.class: "gce"
+spec:
+  defaultBackend:
+    service:
+      name: chat
+      port:
+        number: 80
