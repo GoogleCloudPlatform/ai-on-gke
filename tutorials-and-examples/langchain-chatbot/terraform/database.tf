@@ -45,7 +45,7 @@ resource "google_sql_database_instance" "langchain_storage" {
   root_password    = random_password.db_password.result
   settings {
     edition = "ENTERPRISE"
-    tier = var.db_tier
+    tier    = var.db_tier
     ip_configuration {
       ipv4_enabled    = false
       private_network = data.google_compute_network.database.id
