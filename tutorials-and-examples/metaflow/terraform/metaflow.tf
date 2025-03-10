@@ -30,7 +30,7 @@ module "metaflow_metadata_workload_identity" {
 
 resource "local_file" "metaflow-metadata-deployment-file" {
   content = templatefile(
-    "${path.module}/../metaflow/templates/metaflow-metadata.yaml",
+    "${path.module}/../metaflow/manifests/metaflow-metadata.yaml",
     {
       SERVICE_ACCOUNT_NAME = var.metaflow_kubernetes_service_account_name,
       CLOUDSQL_INSTANCE    = "${var.project_id}:${var.metaflow_cloudsql_instance_region}:${local.metaflow_cloudsql_instance}"
@@ -41,7 +41,7 @@ resource "local_file" "metaflow-metadata-deployment-file" {
 
 resource "local_file" "metaflow-ui-deployment-file" {
   content = templatefile(
-    "${path.module}/../metaflow/templates/metaflow-ui.yaml",
+    "${path.module}/../metaflow/manifests/metaflow-ui.yaml",
     {
       SERVICE_ACCOUNT_NAME = var.metaflow_kubernetes_service_account_name,
       CLOUDSQL_INSTANCE    = "${var.project_id}:${var.metaflow_cloudsql_instance_region}:${local.metaflow_cloudsql_instance}"
@@ -52,7 +52,7 @@ resource "local_file" "metaflow-ui-deployment-file" {
 
 resource "local_file" "finetune-constants-module-file" {
   content = templatefile(
-    "${path.module}/../metaflow/templates/constants.py",
+    "${path.module}/../metaflow/constants_template.py",
     {
       FINETUNE_IMAGE_NAME = "us-docker.pkg.dev/${var.project_id}/${local.image_repository_name}/finetune:latest",
     }

@@ -16,7 +16,7 @@ The tutorial is designed for ML Platform engineers who plan to use Metaflow for 
 
 * `finetune_inside_metaflow/` \- folder with [Metaflow Flow](https://docs.metaflow.org/metaflow/basics) for fine-tuning the Gemma-2 model.  
 * `serve_model/` \- a simple deployment manifest for serving the fine-tuned model within the same GKE cluster.  
-* `metaflow/templates/` \- folder with Kubernetes manifests and other files that require additional processing to specify additional values that are not known from the start.
+* `metaflow/manifests/` \- folder with Kubernetes manifests. These files are [templates](https://developer.hashicorp.com/terraform/language/functions/templatefile) that require additional processing by the terraform to specify additional values that are not known from the start.
 * `terraform/` \- folder with terraform config that executes automated provisioning of required infrastructure resources.
 
 # Before you begin
@@ -112,7 +112,6 @@ Outputs:
 
 argo_workflows_k8s_sa_name = "metaflow-tutorial-argo-sa"
 cloudsql_instance_name = "metaflow-tutorial-tf"
-finetune_image_registry_name = "metaflow-tutorial-tf"
 gke_cluster_location = "us-central1"
 gke_cluster_name = "metaflow-tutorial-tf"
 metaflow_datastore_bucket_name = "metaflow-tutorial-tf"
@@ -137,7 +136,7 @@ This tutorial includes two Kubernetes manifests for Metaflow Metadata service:
 - [*Metadata-service*](https://github.com/Netflix/metaflow-service) \- Keeps track of metadata.   
 - [*UI-service*](https://github.com/Netflix/metaflow-service/tree/master/services/ui_backend_service) \- Provides a backend instance that powers a web interface for monitoring active flows.
 
-The manifests are generated from templates in the `metaflow/templates/` directory and put in the `gen` directory.
+The manifests are generated from templates in the `metaflow/manifests/` directory and put in the `gen` directory.
 
 1. Apply metadata service manifest:
 
