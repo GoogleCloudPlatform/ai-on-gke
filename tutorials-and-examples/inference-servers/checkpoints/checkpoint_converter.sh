@@ -128,6 +128,8 @@ convert_maxtext_checkpoint() {
     QUANTIZE_TYPE=$8
     QUANTIZE_WEIGHTS=$9
 
+    CONCURRENT_GB=96
+
     echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Bucket name=${BUCKET_NAME}"
     echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model path=${MODEL_PATH}"
     echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model name=${MODEL_NAME}"
@@ -210,6 +212,7 @@ convert_maxtext_checkpoint() {
                 MODEL_SIZE="llama3.1-70b"
             elif [[ $MODEL_PATH == *"405B"* ]] || [[ $MODEL_PATH == *"405b"* ]]; then
                 MODEL_SIZE="llama3.1-405b"
+                CONCURRENT_GB=500
             else
                 echo -e "Unclear llama3.1 model: $MODEL_PATH"
             fi
@@ -237,6 +240,7 @@ convert_maxtext_checkpoint() {
         echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Maxtext model path=${OUTPUT_CKPT_DIR_SCANNED}"
         echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model path=${MODEL_PATH}"
         echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Model size=${MODEL_SIZE}"
+        echo -e "$(date '+%Y-%m-%d %H:%M:%S'): Concurrent_gb=${CONCURRENT_GB}"
 
         export JAX_PLATFORMS=cpu
         cd /maxtext/
@@ -260,6 +264,7 @@ convert_maxtext_checkpoint() {
         run_name=${RUN_NAME} \
         model_name=${MODEL_SIZE} \
         force_unroll=true \
+        checkpoint_storage_concurrent_gb=${CONCURRENT_GB} \
         weight_dtype=bfloat16 \
         opt_type=sgd
 
