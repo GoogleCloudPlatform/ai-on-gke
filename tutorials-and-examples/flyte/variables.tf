@@ -146,6 +146,12 @@ variable "kubernetes_version" {
   default     = "1.30"
 }
 
+variable "create_network" {
+  type        = bool
+  description = "Whether to create a network (otherwise, use an existing one)"
+  default     = true
+}
+
 variable "create_gcs_bucket" {
   type        = bool
   description = "Whether to create a GCS bucket"
