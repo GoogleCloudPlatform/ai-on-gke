@@ -27,3 +27,7 @@ enable_gpu = true
 
 create_gcs_bucket = true
 gcs_bucket = "flyte-bucket"
+
+create_network = true
+network_name = "flyte"
+subnetwork_name = "flyte"

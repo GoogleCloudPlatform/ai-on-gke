@@ -155,19 +155,17 @@ variable "kubernetes_version" {
 variable "create_network" {
   type        = bool
   description = "Whether to create a network (otherwise, use an existing one)"
-  default     = true
+  default     = false
 }
 
 variable "network_name" {
   type        = string
   description = "Name of the network where resources are deployed"
-  default     = "flyte"
 }
 
 variable "subnetwork_name" {
   type        = string
   description = "Name of the subnetwork where cluster is deployed"
-  default     = "flyte"
 }
 
 ## GCS variables
