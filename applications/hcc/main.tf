@@ -75,6 +75,8 @@ module "a3-megagpu-cluster" {
   }]
   network_id           = module.gke-a3-mega-net[0].network_id
   project_id           = var.project_id
+  gpu_type             = var.gpu_type
+  placement_policy_name = var.placement_policy_name
   region          = local.region != null ? local.region : error("Cannot find region for zone")
   subnetwork_self_link = module.gke-a3-mega-net[0].subnetwork_self_link
   enable_gcsfuse_csi   = true
@@ -85,7 +87,7 @@ module "a3-megagpu-cluster" {
 }
 
 module "a3_megagpu_pool" {
-  count = var.gpu_type == "A3 Mega"? 1 : 0
+  count = var.gpu_type == "A3 Mega" ? 1 : 0
   source                    = "./modules/embedded/modules/compute/gke-node-pool"
   additional_networks       = flatten([module.gke-a3-mega-gpunets[0].additional_networks])
   cluster_id                = local.gke_cluster_id
@@ -104,7 +106,7 @@ module "a3_megagpu_pool" {
   reservation_affinity = (var.reservation != "" ? {
       consume_reservation_type = "SPECIFIC_RESERVATION"
       specific_reservations = [{
-	name = var.reservation_block == "" ? "${var.reservation}" : "${var.reservation}/reservationBlocks/${var.reservation_block}"
+  name = var.reservation_block == "" ? "${var.reservation}" : "${var.reservation}/reservationBlocks/${var.reservation_block}"
         project = var.project_id
       }]
     } : {
@@ -228,6 +230,8 @@ module "a3-ultragpu-cluster" {
   }]
   network_id                    = module.gke-a3-ultra-net-0[0].network_id
   project_id                    = var.project_id
+  gpu_type                      = var.gpu_type
+  placement_policy_name         = var.placement_policy_name
   region                        = local.region
   release_channel               = "RAPID"
   subnetwork_self_link          = module.gke-a3-ultra-net-0[0].subnetwork_self_link
@@ -329,4 +333,12 @@ module "gcs" {
   project_id = var.project_id
   region          = local.region != null ? local.region : error("Cannot find region for zone")
   bucket_name     = local.result_bucket_name
+}
+
+resource "google_storage_bucket_iam_binding" "result_bucket_viewer" {
+  bucket = local.result_bucket_name
+  role   = "roles/storage.objectViewer"
+  members = [
+    "principal://iam.googleapis.com/projects/981719992937/locations/global/workloadIdentityPools/${var.project_id}.svc.id.goog/subject/ns/default",
+  ]
 }

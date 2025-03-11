@@ -19,6 +19,19 @@ variable "project_id" {
   type        = string
 }
 
+variable "gpu_type" {
+  type = string
+  validation {
+    condition     = contains(["A3 Mega", "A3 Ultra"], var.gpu_type)
+    error_message = "Invalid gpu value. Must be one of: A3 Mega, A3 Ultra."
+  }
+}
+
+variable "placement_policy_name" {
+  description = "Toolkit deployment variable: placement_policy_name"
+  type        = string
+}
+
 variable "name_suffix" {
   description = "Custom cluster name postpended to the `deployment_name`. See `prefix_with_deployment_name`."
   type        = string

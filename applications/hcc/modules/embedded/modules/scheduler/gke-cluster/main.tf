@@ -348,6 +348,10 @@ resource "google_container_node_pool" "system_node_pools" {
       condition     = local.upgrade_settings.max_unavailable > 0 || local.upgrade_settings.max_surge > 0
       error_message = "At least one of max_unavailable or max_surge must greater than 0"
     }
+    precondition {
+      condition     = var.gpu_type == "A3 Mega" ? length(var.placement_policy_name) > 0 : true
+      error_message = "placement_policy_name must be provided when gpu_type is A3 Mega."
+    }
   }
 }
 
