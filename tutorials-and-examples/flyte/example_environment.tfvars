@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-##common variables
-## Need to pull this variables from tf output from previous platform stage
 project_id = "flyte_project"
 
-## this is required for terraform to connect to GKE master and deploy workloads
-create_cluster   = true # this flag will create a new standard public gke cluster in default network
+## Cluster configuration
+create_cluster   = true
 cluster_name     = "flyte-test"
 cluster_location = "us-central1"
 
 autopilot_cluster = true
 enable_gpu = true
 
-create_gcs_bucket = true
-gcs_bucket = "flyte-bucket"
-
+# Network configuration
 create_network = true
 network_name = "flyte"
 subnetwork_name = "flyte"
+
+# GCS bucket configuration
+create_gcs_bucket = true
+gcs_bucket = "flyte-bucket"
+
+# Database configuration
+db_instance_name = "flytepg"
