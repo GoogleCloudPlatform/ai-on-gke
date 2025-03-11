@@ -23,25 +23,30 @@ labels = {
   ghpc_deployment = "a3ultra-hcc-test"
 }
 
-project_id = "supercomputer-testing"	project_id = "gke-aishared-gsc-dev"
+project_id = "supercomputer-testing"
 
+a3_mega_zone = ""
+a3_ultra_zone = "europe-west1-b"
 
-a3_mega_zone = ""	a3_mega_zone = ""
-a3_ultra_zone = "europe-west1-b"	a3_ultra_zone = "europe-west1-b"
+node_count_gke_nccl = 0
+node_count_gke = 0
+node_count_nemo = 16
+node_count_maxtext = 16
+node_count_llama_3_7b = 2
 
+# A3 Ultra recipe options:
+# - "gke"
+# - "gke-nccl"
+# - "llama3.1_7b_nemo_pretraining"
+# - "llama3.1_70b_nemo_pretraining"
+# - "llama3.1_70b_maxtext_pretraining"
+# - "mixtral8_7b_nemo_pretraining"
+# - "mixtral8_7b_maxtext_pretraining"
+a3ultra_recipe = "llama3.1_70b_maxtext_pretraining"
+a3mega_recipe=""
 
-node_count_gke_nccl = 0	node_count_gke_nccl = 2
-node_count_gke = 0	node_count_gke = 0
-node_count_nemo = 16	node_count_nemo = 16
-node_count_maxtext = 16	node_count_maxtext = 16
-@@ -45,8 +45,9 @@ node_count_llama_3_7b = 2
-a3ultra_recipe = "llama3.1_70b_maxtext_pretraining"	a3ultra_recipe = "llama3.1_70b_maxtext_pretraining"
-a3mega_recipe=""	a3mega_recipe=""
-
-
-reservation = "supercomputer-testing-gsc-asq-fr"	#reservation = "supercomputer-testing-gsc-asq-fr"
-reservation = "gke-exfr-4"
-reservation_block = ""	reservation_block = ""
-placement_policy_name = "supercomputer-testing-gsc-asq-fr-block-0001"	placement_policy_name = "gke-exfr-4-block-0001"
+reservation = "supercomputer-testing-gsc-asq-fr"
+reservation_block = ""
+placement_policy_name = "supercomputer-testing-gsc-asq-fr-block-0001"
 
 gpu_type = "A3 Ultra"
