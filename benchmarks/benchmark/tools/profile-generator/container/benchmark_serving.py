@@ -588,7 +588,7 @@ def metrics_to_scrape(backend: str) -> List[str]:
   else:
     return []
 
-def print_metrics(metrics: List[str], duration: float, backend: str):
+def print_metrics(metrics: List[str], duration: float, namespace: str, job: str):
   # Creates a credentials object from the default service account file
   # Assumes that script has appropriate default credentials set up, ref:
   # https://googleapis.dev/python/google-auth/latest/user-guide.html#application-default-credentials
@@ -606,8 +606,10 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
   all_metrics_metadata = request_post.json()
   if request_post.ok is not True:
     print("HTTP Error: %s" % (all_metrics_metadata))
+    return server_metrics
   if all_metrics_metadata["status"] != "success":
     print("Metadata error response: %s" % all_metrics_metadata["error"])
+    return server_metrics
 
   for metric in metrics:
     print("Metric Name: %s" % (metric))
@@ -624,21 +626,21 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
     # podmonitoring spec assumed to be named "$BACKEND-podmonitoring"
     queries = {
       "gauge": {
-        "Mean": "avg_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Median": "quantile_over_time(0.5, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Sd": "stddev_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Min": "min_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "Max": "max_over_time(%s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "P90": "quantile_over_time(0.9, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
-        "P99": "quantile_over_time(0.99, %s{job='%s-podmonitoring'}[%.0fs])" % (metric, backend, duration),
+        "Mean": "avg_over_time(%s{job='%s',namespace='%s'}[%.0fs])" % (metric, job, namespace, duration),
+        "Median": "quantile_over_time(0.5, %s{job='%s',namespace='%s'}[%.0fs])" % (metric, job, namespace, duration),
+        "Sd": "stddev_over_time(%s{job='%s',namespace='%s'}[%.0fs])" % (metric, job, namespace, duration),
+        "Min": "min_over_time(%s{job='%s',namespace='%s'}[%.0fs])" % (metric, job, namespace, duration),
+        "Max": "max_over_time(%s{job='%s',namespace='%s'}[%.0fs])" % (metric, job, namespace, duration),
+        "P90": "quantile_over_time(0.9, %s{job='%s',namespace='%s'}[%.0fs])" % (metric, job, namespace, duration),
+        "P99": "quantile_over_time(0.99, %s{job='%s',namespace='%s'}[%.0fs])" % (metric, job, namespace, duration),
     },
       "histogram": {
-        "Mean": "sum(rate(%s_sum{job='%s-podmonitoring'}[%.0fs])) / sum(rate(%s_count{job='%s-podmonitoring'}[%.0fs]))" % (metric, backend, duration, metric, backend, duration),
-        "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
-        "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s-podmonitoring'}[%.0fs])) by (le))" % (metric, backend, duration),
+        "Mean": "sum(rate(%s_sum{job='%s',namespace='%s'}[%.0fs])) / sum(rate(%s_count{job='%s',namespace='%s'}[%.0fs]))" % (metric, job, namespace, duration, metric, job, namespace, duration),
+        "Median": "histogram_quantile(0.5, sum(rate(%s_bucket{job='%s',namespace='%s'}[%.0fs])) by (le))" % (metric, job, namespace, duration),
+        "Min": "histogram_quantile(0, sum(rate(%s_bucket{job='%s',namespace='%s'}[%.0fs])) by (le))" % (metric, job, namespace, duration),
+        "Max": "histogram_quantile(1, sum(rate(%s_bucket{job='%s',namespace='%s'}[%.0fs])) by (le))" % (metric, job, namespace, duration),
+        "P90": "histogram_quantile(0.9, sum(rate(%s_bucket{job='%s',namespace='%s'}[%.0fs])) by (le))" % (metric, job, namespace, duration),
+        "P99": "histogram_quantile(0.99, sum(rate(%s_bucket{job='%s',namespace='%s'}[%.0fs])) by (le))" % (metric, job, namespace, duration),
     }
   }
     for query_name, query in queries[metric_type].items():
@@ -746,7 +748,7 @@ def print_and_save_result(args: argparse.Namespace, benchmark_duration, total_re
 
   server_metrics = {}
   if args.scrape_server_metrics:
-    server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_duration, args.backend)
+    server_metrics = print_metrics(metrics_to_scrape(args.backend), benchmark_duration, args.namespace, args.pm_job)
   if args.save_json_results:
     save_json_results(args, benchmark_result, server_metrics, model, errors)
 
@@ -975,5 +977,7 @@ if __name__ == "__main__":
       action="store_true",
       help="Whether to scrape server metrics.",
   )
+  parser.add_argument("--namespace", type=str, default="default", help="namespace of the pod monitoring object")
+  parser.add_argument("--pm-job", type=str, default="vllm-podmonitoring", help="name of the pod monitoring object")
   cmd_args = parser.parse_args()
   asyncio.run(main(cmd_args))
