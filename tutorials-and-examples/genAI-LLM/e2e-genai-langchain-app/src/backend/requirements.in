@@ -1,4 +1,4 @@
-ray==2.8.1
+ray==2.43.0
 ray[serve] 
 requests 
 transformers 
