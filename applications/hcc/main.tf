@@ -335,10 +335,3 @@ module "gcs" {
   bucket_name     = local.result_bucket_name
 }
 
-resource "google_storage_bucket_iam_binding" "result_bucket_viewer" {
-  bucket = local.result_bucket_name
-  role   = "roles/storage.objectViewer"
-  members = [
-    "principal://iam.googleapis.com/projects/981719992937/locations/global/workloadIdentityPools/${var.project_id}.svc.id.goog/subject/ns/default",
-  ]
-}
