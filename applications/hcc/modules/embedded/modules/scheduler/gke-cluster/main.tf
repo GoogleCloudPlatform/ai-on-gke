@@ -349,7 +349,7 @@ resource "google_container_node_pool" "system_node_pools" {
       error_message = "At least one of max_unavailable or max_surge must greater than 0"
     }
     precondition {
-      condition     = var.gpu_type == "A3 Mega" ? length(var.placement_policy_name) > 0 : true
+      condition     = var.gpu_type != "A3 Mega" || length(var.placement_policy_name) > 0
       error_message = "placement_policy_name must be provided when gpu_type is A3 Mega."
     }
   }
