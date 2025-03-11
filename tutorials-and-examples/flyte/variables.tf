@@ -17,23 +17,16 @@ variable "project_id" {
   description = "GCP project id"
 }
 
-variable "cluster_name" {
-  type = string
-}
-
-variable "cluster_location" {
-  type = string
-}
-
+## Flyte variables
 variable "kubernetes_namespace" {
   type        = string
-  description = "Kubernetes namespace where resources are deployed"
+  description = "Kubernetes namespace where Flyte resources are deployed"
   default     = "default"
 }
 
 variable "helm_release_name" {
   type        = string
-  description = "Helm release name"
+  description = "The name of the helm release for Flyte"
   default     = "flyte-backend"
 }
 
@@ -43,12 +36,18 @@ variable "flyte_projects" {
   default     = ["flytesnacks"]
 }
 
-variable "enable_gpu" {
-  type    = bool
-  default = false
+## GKE Cluster variables
+variable "cluster_name" {
+  type = string
+  description = "Name of the GKE cluster to be created"
 }
 
-## GKE variables
+variable "cluster_location" {
+  type = string
+  description = "Location of the GKE cluster"
+}
+
+
 variable "create_cluster" {
   type    = bool
   default = false
@@ -99,6 +98,12 @@ variable "cpu_pools" {
   }]
 }
 
+variable "enable_gpu" {
+  type    = bool
+  description = "Enable GPU support in the GKE cluster by adding GPU pools"
+  default = false
+}
+
 variable "gpu_pools" {
   type = list(object({
     name                   = string
@@ -146,12 +151,26 @@ variable "kubernetes_version" {
   default     = "1.30"
 }
 
+## Network variables
 variable "create_network" {
   type        = bool
   description = "Whether to create a network (otherwise, use an existing one)"
   default     = true
 }
 
+variable "network_name" {
+  type        = string
+  description = "Name of the network where resources are deployed"
+  default     = "flyte"
+}
+
+variable "subnetwork_name" {
+  type        = string
+  description = "Name of the subnetwork where cluster is deployed"
+  default     = "flyte"
+}
+
+## GCS variables
 variable "create_gcs_bucket" {
   type        = bool
   description = "Whether to create a GCS bucket"
@@ -163,6 +182,7 @@ variable "gcs_bucket" {
   description = "Name for the created GCS bucket"
 }
 
+## Database variables
 variable "db_tier" {
   type        = string
   description = "Tier for the database instance"
@@ -173,18 +193,6 @@ variable "cloudsql_user" {
   type        = string
   description = "Username for the cloudsql database"
   default     = "flytepg"
-}
-
-variable "network_name" {
-  type        = string
-  description = "Name of the network"
-  default     = "flyte"
-}
-
-variable "subnetwork_name" {
-  type        = string
-  description = "Name of the subnetwork"
-  default     = "flyte"
 }
 
 variable "database_name" {
@@ -199,6 +207,7 @@ variable "db_instance_name" {
   default     = "flytepg"
 }
 
+## Helm chart variables
 variable "render_helm_values" {
   type        = bool
   description = "Render values.yaml for helm chart"
