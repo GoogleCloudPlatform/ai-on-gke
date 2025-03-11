@@ -42,7 +42,7 @@ node_count_llama_3_7b = 2
 # - "llama3.1_70b_maxtext_pretraining"
 # - "mixtral8_7b_nemo_pretraining"
 # - "mixtral8_7b_maxtext_pretraining"
-a3ultra_recipe = "mixtral8_7b_maxtext_pretraining"
+a3ultra_recipe = "llama3.1_70b_maxtext_pretraining"
 a3mega_recipe=""
 
 reservation = "supercomputer-testing-gsc-asq-fr"
