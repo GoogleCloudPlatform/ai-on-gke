@@ -45,7 +45,7 @@ ignoredObjects:
   Kind: "ClusterRole"
   Version: "v1"
   Namespace: ".*"
-  Name: "^(cluster-admin|cilium.*|external-metrics-reader|anet-operator-cluster-role|cluster-autoscaler|filestorecsi-resizer-role|pdcsi-snapshotter-role|ca-cr-actor|antrea-agent|egress-nat-controller|pdcsi-resizer-role|snapshot-controller-runner|gce:cloud-provider|gce:beta:kubelet-certificate-rotation|pdcsi-attacher-role|pdcsi-provisioner-role|edit|gke-gmp-system:operator|filestorecsi-provisioner-role|admin|gke-spiffe-issuer|gke-spiffe-user|ca-pr-beta-actor|kubelet-api-admin|gmp-system:operator|gce:beta:kubelet-certificate-bootstrap)$"
+  Name: "^(cluster-admin|cilium.*|external-metrics-reader|anet-operator-cluster-role|cluster-autoscaler|filestorecsi.*|parallelstore.*|pdcsi-snapshotter-role|ca-cr-actor|antrea-agent|egress-nat-controller|pdcsi-resizer-role|snapshot-controller-runner|gce:cloud-provider|gce:beta:kubelet-certificate-rotation|pdcsi-attacher-role|pdcsi-provisioner-role|edit|gke-gmp-system:operator|filestorecsi-provisioner-role|admin|gke-spiffe-issuer|gke-spiffe-user|ca-pr-beta-actor|kubelet-api-admin|gmp-system:operator|gce:beta:kubelet-certificate-bootstrap)$"
 
 # ClusterRoleBindings (system-related or not security-relevant)
 - Group: "rbac.authorization.k8s.io"
@@ -67,4 +67,3 @@ ignoredObjects:
   Version: "v1"
   Namespace: "default"
   Name: "^default$"
-
