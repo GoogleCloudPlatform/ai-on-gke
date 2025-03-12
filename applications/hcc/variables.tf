@@ -87,6 +87,21 @@ variable "placement_policy_name" {
   type        = string
 }
 
+locals {
+  placement_policy_valid = var.gpu_type != "A3 Mega" || length(var.placement_policy_name) > 0
+}
+
+resource "null_resource" "placement_policy_validation" {
+  count = 1
+
+  lifecycle {
+    precondition {
+      condition     = local.placement_policy_valid
+      error_message = "placement_policy_name must be provided when gpu_type is A3 Mega."
+    }
+  }
+}
+
 variable "a3mega_recipe" {
   description = "Toolkit deployment variable: a3mega_recipe"
   type        = string
