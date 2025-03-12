@@ -7,6 +7,9 @@ This sample walks through setting up a Google Cloud GKE environment to fine-tune
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
 - [Cleanup](#cleanup)
+- **NVIDIA GPUs:** One of the below GPUs should work
+  - [NVIDIA A100 40GB (1) GPU](https://cloud.google.com/compute/docs/gpus#a100-gpus)
+  - [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
 
 ## Prerequisites
 
@@ -29,24 +32,25 @@ Replace "your-project-id" with your actual project ID.
 2. Set Environment Variables:
 
 ```bash
-export PROJECT_ID="your-project-id"
 export PUBLIC_REPOSITORY=$PROJECT_ID
 export REGION=us-central1
 export ZONE=us-central1-b
 export CLUSTER_NAME=bionemo-demo
-export NODE_POOL_MACHINE_TYPE=a2-highgpu-2g
-export CLUSTER_MACHINE_TYPE=e2-standard-4
+export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g
+export CLUSTER_MACHINE_TYPE=e2-standard-2
 export GPU_TYPE=nvidia-tesla-a100
-export GPU_COUNT=2
+export GPU_COUNT=1
 ```
 
-Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to Google Cloud documentation for available options. Consider smaller machine types for development to manage costs.
+Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to [Google Cloud documentation](https://cloud.google.com/compute/docs/gpus) for available options. Consider smaller machine types for development to manage costs.
 
-3. Enable the Filestore API and create a GKE Cluster
+3. Enable the Filestore API
 
 ```bash
 gcloud services enable file.googleapis.com --project ${PROJECT_ID}
 ```
+
+4. Create GKE Cluster
 
 ```bash
 gcloud container clusters create ${CLUSTER_NAME} \
@@ -58,7 +62,7 @@ gcloud container clusters create ${CLUSTER_NAME} \
     --workload-pool=${PROJECT_ID}.svc.id.goog
 ```
 
-4. Create GPU Node Pool:
+5. Create GPU Node Pool:
 
 ```bash
 gcloud container node-pools create gpupool \
@@ -72,27 +76,27 @@ gcloud container node-pools create gpupool \
 
 This creates a node pool specifically for GPU workloads.
 
-5. Get Cluster Credentials:
+6. Get Cluster Credentials:
 
 ```bash
 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
 --location="${ZONE}"
 ```
 
-6. Create an Artifact Registry to store container images
+7. Create an Artifact Registry to store container images
 
 ```bash
 gcloud artifacts repositories create ${PUBLIC_REPOSITORY} --repository-format=docker --location=${REGION}
 ```
 
-7. Create service account to allow GKE to pull images
+8. Create service account to allow GKE to pull images
 
 ```bash
 gcloud iam service-accounts create esm2-inference-gsa \
     --project=$PROJECT_ID
 ```
 
-8. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
+9. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
 
 ```bash
 kubectl create namespace bionemo-training
@@ -100,7 +104,9 @@ kubectl create namespace bionemo-training
 kubectl create serviceaccount esm2-inference-sa -n bionemo-training
 ```
 
-9. Create identity binding
+10. Create identity binding
+
+This is needed to allow the GKE POD to pull the custom image from the artifact registry we just created in step 7.
 
 ```bash
 gcloud iam service-accounts add-iam-policy-binding esm2-inference-gsa@${PROJECT_ID}.iam.gserviceaccount.com --role="roles/iam.workloadIdentityUser" --member="serviceAccount:${PROJECT_ID}.svc.id.goog[bionemo-training/esm2-inference-sa]"
@@ -111,7 +117,7 @@ kubectl annotate serviceaccount esm2-inference-sa -n bionemo-training iam.gke.io
 ```
 Note: this requires workload identity to be configured at the cluster level.
 
-10. Launch fine-tuning job
+11. Launch fine-tuning job
 
 make sure you are in this directory
 
@@ -125,17 +131,31 @@ then apply the kustomize file
 kubectl apply -k fine-tuning/job
 ```
 
-11. build and push inference server docker image 
+Check job status by running:
+
+```bash
+kubectl get job esm2-finetuning -n bionemo-training
+```
+
+You will need if the job has succeded once its status is `Complete`.
+
+12. build and push inference server docker image 
 
 ```bash
 docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inference:latest fine-tuning/inference/.
+```
+
+Authenticate to artifact registry:
+
+```bash
+gcloud auth configure-docker ${REGION}-docker.pkg.dev
 ```
 
 ```bash
 docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inference:latest
 ```
 
-12. Launch inference deployment
+13. Launch inference deployment
 
 ensure job status is `Complete` by running:
 
@@ -153,7 +173,7 @@ envsubst < fine-tuning/inference/kustomization.yaml | sponge fine-tuning/inferen
 kubectl apply -k fine-tuning/inference
 ```
 
-13. Port Forwarding (for inference):
+14. Port Forwarding (for inference):
 
 List deployment PODs 
 
@@ -174,6 +194,8 @@ curl -X POST http://localhost:8080/predict \
   -H "Content-Type: application/json" \
   -d '{"sequence": "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"}'
 ```
+
+See [here](https://docs.nvidia.com/bionemo-framework/latest/user-guide/examples/bionemo-esm2/inference/) documentation reference.
 
 ## Cleanup
 

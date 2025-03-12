@@ -13,6 +13,9 @@ This samples walks through setting up a Google Cloud GKE environment to train ES
 - **GCloud SDK:** Ensure you have the Google Cloud SDK installed and configured.
 - **Project:**  A Google Cloud project with billing enabled.
 - **Permissions:**  Sufficient permissions to create GKE clusters and other related resources.
+- **NVIDIA GPUs:** One of the below GPUs should work
+  - [NVIDIA A100 40GB (1) GPU](https://cloud.google.com/compute/docs/gpus#a100-gpus)
+  - [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
 
 ## Setup
 
@@ -27,23 +30,24 @@ Replace "your-project-id" with your actual project ID.
 2. Set Environment Variables:
 
 ```bash
-export PROJECT_ID="your-project-id"
 export REGION=us-central1
 export ZONE=us-central1-a
 export CLUSTER_NAME=bionemo-demo
-export NODE_POOL_MACHINE_TYPE=a2-highgpu-2g
-export CLUSTER_MACHINE_TYPE=e2-standard-4
+export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g
+export CLUSTER_MACHINE_TYPE=e2-standard-2
 export GPU_TYPE=nvidia-tesla-a100
-export GPU_COUNT=2
+export GPU_COUNT=1
 ```
 
-Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to Google Cloud documentation for available options. Consider smaller machine types for development to manage costs.
+Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to [Google Cloud documentation](https://cloud.google.com/compute/docs/gpus) for available options. Consider smaller machine types for development to manage costs.
 
-3. Enable the Filestore API and create a GKE Cluster
+3. Enable the Filestore API 
 
 ```bash
 gcloud services enable file.googleapis.com --project ${PROJECT_ID}
 ```
+
+4. Create GKE Cluster
 
 ```bash
 gcloud container clusters create ${CLUSTER_NAME} \
@@ -54,7 +58,7 @@ gcloud container clusters create ${CLUSTER_NAME} \
     --num-nodes=1
 ```
 
-4. Create GPU Node Pool:
+5. Create GPU Node Pool:
 
 ```bash
 gcloud container node-pools create gpupool \
@@ -68,14 +72,14 @@ gcloud container node-pools create gpupool \
 
 This creates a node pool specifically for GPU workloads.
 
-5. Get Cluster Credentials:
+6. Get Cluster Credentials:
 
 ```bash
 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
 --location="${ZONE}"
 ```
 
-6. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
+7. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
 
 ```bash
 alias k=kubectl
@@ -93,7 +97,7 @@ then run:
 k apply -k pretraining/
 ```
 
-7. Port Forwarding (for TensorBoard):
+8. Port Forwarding (for TensorBoard):
 
 List PODs and ensure tensorboard POD is under `Running` status
 
@@ -115,10 +119,16 @@ On your local machine: Browse to <http://localhost:8080> port forward from above
 
 ## Cleanup
 
-To delete the cluster and all associated resources:
+1. Delete all associated resources
 
 ```bash
 k delete -k pretraining/
+```
 
+**Note**: This cluster can be used for fine-tuning. Feel free to skip this step if you want to reuse it.
+
+2. To delete the cluster 
+
+```bash
 gcloud container clusters delete "${CLUSTER_NAME}" --location="${ZONE}" --quiet
 ```
