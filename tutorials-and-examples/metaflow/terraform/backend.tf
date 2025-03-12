@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "cluster" {
-  value = module.gke
-}
 
-output "endpoint" {
-  value = module.gke.endpoint
-}
+# terraform {
+#   backend "gcs" {
+#     bucket = "<bucket_name>"
+#     prefix = "terraform/state/metaflow-tutorial"
+#   }
+# }
 
-output "ca_certificate" {
-  value = module.gke.ca_certificate
-}
-
-output "service_account" {
-  value = module.gke.service_account
-}

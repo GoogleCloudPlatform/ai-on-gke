@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "cluster" {
-  value = module.gke
+locals {
+  bucket_name = var.bucket_name != "" ? var.bucket_name : var.default_resource_name
 }
 
-output "endpoint" {
-  value = module.gke.endpoint
-}
+resource "google_storage_bucket" "metaflow_datastore_bucket" {
+  name = local.bucket_name
 
-output "ca_certificate" {
-  value = module.gke.ca_certificate
-}
+  location      = "US"
+  storage_class = "STANDARD"
 
-output "service_account" {
-  value = module.gke.service_account
+  uniform_bucket_level_access = true
+  force_destroy               = true
 }
