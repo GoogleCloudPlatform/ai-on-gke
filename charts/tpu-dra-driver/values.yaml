@@ -64,6 +64,10 @@ kubeletPlugin:
             operator: NotIn
             values:
             - "true"
+          - key: gke-no-default-tpu-dra-plugin
+            operator: NotIn
+            value:
+            - "true"
   containers:
     init:
       securityContext: {}
