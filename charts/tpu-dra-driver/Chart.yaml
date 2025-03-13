@@ -1,6 +1,6 @@
 apiVersion: v2
 name: tpu-dra-driver
-description: An example Helm chart for a Dynamic Resource Allocation (DRA) resource driver
+description: An example Helm chart for a Dynamic Resource Allocation (DRA) resource driver for TPU
 
 # A chart can be either an 'application' or a 'library' chart.
 #

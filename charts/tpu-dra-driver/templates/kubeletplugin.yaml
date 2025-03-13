@@ -34,6 +34,18 @@ spec:
       serviceAccountName: {{ include "tpu-dra-driver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.kubeletPlugin.podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: "tpu-network-optimization"
+        image: "gcr.io/gke-release/tpu_network_optimizer@sha256:ad1446302c2a7714af62959dd84fc9cd47552085cac4f03580cb4c5eb523e81c"
+        securityContext:
+          privileged: true
+        command:
+        - /tpu_network_optimizer.sh
+        volumeMounts:
+        - name: sys
+          mountPath: /sys
+        - name: proc
+          mountPath: /proc
       containers:
       - name: plugin
         securityContext:
@@ -75,6 +87,24 @@ spec:
           mountPath: /sys
         - name: proc
           mountPath: /proc
+      - image: "gcr.io/gke-release/vbar_control_agent@sha256:4bd33c9d448a446b8a1893f1caee93f0206674faeda82047491d144416c42c88"
+        name: vbar-control-agent
+        env:
+        - name: TPU_SKIP_MDS_QUERY
+          value: 'true'
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            memory: 150Mi
+            cpu: 10m
+          limits:
+            memory: 150Mi
+        command: ["vbar_control_agent_files/bin/vbar_control_agent"]
+        args: ['--logtostderr', '--census_enabled=false', '--gid=', '--uid=', '--chroot=']
       volumes:
       - name: plugins-registry
         hostPath:

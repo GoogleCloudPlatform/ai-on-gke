@@ -13,7 +13,7 @@ deviceClasses: ["tpu"]
 
 imagePullSecrets: []
 image:
-  repository: us-central1-docker.pkg.dev/project-sri97/cloud-tpu
+  repository: gcr.io/gke-release-staging
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -61,7 +61,11 @@ kubeletPlugin:
           - key: cloud.google.com/gke-tpu-accelerator
             operator: Exists
           - key: gke-no-default-tpu-device-plugin
-            operator: NotIn
+            operator: In
+            values:
+            - "true"
+          - key: gke-no-default-tpu-dra-plugin
+            operator: In
             values:
             - "true"
   containers:
