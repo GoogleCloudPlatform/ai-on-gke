@@ -24,7 +24,7 @@ volumes:
 
 workload:
   steps: 50
-  image: "us-central1-docker.pkg.dev/gke-ai-eco-dev/reproducibility/maxtext-benchmark:hypercomputer-cluster"
+  image: "us-central1-docker.pkg.dev/deeplearning-images/reproducibility/jax-maxtext-gpu:toolbox-maxtext-2025-01-10-A3U" 
 
 network:
   subnetworks[]:
