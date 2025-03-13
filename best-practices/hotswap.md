@@ -82,7 +82,8 @@ spec:
 ```
 Then we can create a low priority Jobset Workload, again making sure to add the priority labels and the priorityClassName.
 
-```apiVersion: jobset.x-k8s.io/v1alpha2
+```
+apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
   name: low-priority
@@ -130,7 +131,8 @@ spec:
 
 Now that we have clearly differentiated priorities for two different Jobset specifications, we can go ahead and deploy them using
 
-```kubectl apply -f <LOW-PRIO-JOB-NAME>
+```
+kubectl apply -f <LOW-PRIO-JOB-NAME>
 kubectl apply -f <HIGH-PRIO-JOB-NAME>
 ```
 
