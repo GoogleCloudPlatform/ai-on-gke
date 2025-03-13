@@ -33,6 +33,7 @@ globalDefault: false
 description: "This priority class should be used for hero pods only."
 ```
 
+Now we can create a high priority Jobset Workload, making sure to add the priority labels to pod templates, as well as adding the priorityClassName to clearly differentiate the workload's priority.
 ```
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
@@ -64,6 +65,53 @@ spec:
             priorityClassName: high-prior-job
             containers:
             - name: jax-tpu
+              image: python:3.8
+              ports:
+              - containerPort: 8471
+              - containerPort: 8080
+              - containerPort: 8431
+              securityContext:
+                privileged: true
+              command:
+              - bash
+              - -c
+              - |
+                pip install "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+                python -c 'import jax; print("Global device count:", jax.device_count())'
+                sleep 60000
+```
+Then we can create a low priority Jobset Workload, again making sure to add the priority labels and the priorityClassName.
+
+```apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: low-priority
+  annotations:
+    alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool
+spec:
+  failurePolicy:
+    maxRestarts: 100
+  replicatedJobs:
+  - name: job
+    replicas: 1
+    template:
+      spec:
+        parallelism: 2
+        completions: 2
+        backoffLimit: 0
+        template:
+          metadata:
+            labels:
+              priority: low
+          spec:
+            hostNetwork: true
+            dnsPolicy: ClusterFirstWithHostNet
+            nodeSelector:
+              cloud.google.com/machine-family: n2
+              node.kubernetes.io/instance-type: n2-standard-64
+            priorityClassName: low-prior-job
+            containers:
+            - name: jax-cpu
               image: python:3.8
               ports:
               - containerPort: 8471
