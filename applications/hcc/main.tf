@@ -342,3 +342,9 @@ resource "google_storage_bucket_iam_binding" "result_bucket_viewer" {
   ]
   depends_on = [module.gcs]
 }
+
+resource "google_project_service" "resourcemanager" {
+  project            = var.project_id
+  service            = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+}
