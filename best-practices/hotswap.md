@@ -127,3 +127,8 @@ spec:
                 python -c 'import jax; print("Global device count:", jax.device_count())'
                 sleep 60000
 ```
+
+Now that we have clearly differentiated priorities for two different Jobset specifications, we can go ahead and deploy them using
+```kubectl apply -f <LOW-PRIO-JOB-NAME>
+kubectl apply -f <HIGH-PRIO-JOB-NAME>```
+
