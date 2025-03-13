@@ -136,3 +136,6 @@ kubectl apply -f <LOW-PRIO-JOB-NAME>
 kubectl apply -f <HIGH-PRIO-JOB-NAME>
 ```
 
+Now, when a infrastruction interruption takes place that interrupts your high prio job, it will evict the low prio job's pods off their nodes, and give the high prio job those nodes to schedule on. This all happens in O(sec), drastically reducing workload idle time. If you want to test that your workload setup works, you can simulate workload disruption by cordoning the nodepool that one of your high prio jobs is running on:
+```kubectl cordon -l {$NODEPOOL_NAME}```
+
