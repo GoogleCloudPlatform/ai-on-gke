@@ -130,5 +130,7 @@ spec:
 
 Now that we have clearly differentiated priorities for two different Jobset specifications, we can go ahead and deploy them using
 
-```kubectl apply -f <LOW-PRIO-JOB-NAME>```
+```kubectl apply -f <LOW-PRIO-JOB-NAME>
+kubectl apply -f <HIGH-PRIO-JOB-NAME>
+```
 
