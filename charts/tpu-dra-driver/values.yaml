@@ -61,11 +61,11 @@ kubeletPlugin:
           - key: cloud.google.com/gke-tpu-accelerator
             operator: Exists
           - key: gke-no-default-tpu-device-plugin
-            operator: NotIn
+            operator: In
             values:
             - "true"
           - key: gke-no-default-tpu-dra-plugin
-            operator: NotIn
+            operator: In
             value:
             - "true"
   containers:
