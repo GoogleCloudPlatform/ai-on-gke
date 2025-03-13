@@ -15,6 +15,9 @@
   */
 
 data "google_client_config" "default" {}
+data "google_project" "project" {
+  project_id = var.project_id
+}
 
 locals {
   subnetwork_name = "${var.goog_cm_deployment_name}-gke-net"
@@ -329,4 +332,13 @@ module "gcs" {
   project_id = var.project_id
   region          = local.region != null ? local.region : error("Cannot find region for zone")
   bucket_name     = local.result_bucket_name
+}
+
+resource "google_storage_bucket_iam_binding" "result_bucket_viewer" {
+  bucket = local.result_bucket_name
+  role   = "roles/storage.objectUser"
+  members = [
+    "principal://iam.googleapis.com/projects/${data.google_project.project.number}/locations/global/workloadIdentityPools/${var.project_id}.svc.id.goog/subject/ns/default/sa/default",
+  ]
+  depends_on = [module.gcs]
 }
