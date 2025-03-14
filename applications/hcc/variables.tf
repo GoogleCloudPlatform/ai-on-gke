@@ -87,21 +87,6 @@ variable "placement_policy_name" {
   type        = string
 }
 
-locals {
-  placement_policy_valid = var.gpu_type != "A3 Mega" || length(var.placement_policy_name) > 0
-}
-
-resource "null_resource" "placement_policy_validation" {
-  count = 1
-
-  lifecycle {
-    precondition {
-      condition     = local.placement_policy_valid
-      error_message = "placement_policy_name must be provided when gpu_type is A3 Mega."
-    }
-  }
-}
-
 variable "a3mega_recipe" {
   description = "Toolkit deployment variable: a3mega_recipe"
   type        = string
@@ -116,3 +101,47 @@ variable "gpu_type" {
   description = "Toolkit deployment variable: gpu_type"
   type        = string
 } 
+
+variable "a3_ultra_consumption_model" {
+  description = "Toolkit deployment variable: a3_ultra_consumption_model"
+  type        = string
+}
+
+variable "a3_mega_consumption_model" {
+  description = "Toolkit deployment variable: a3_mega_consumption_model"
+  type        = string
+}
+
+locals {
+  placement_policy_valid = var.gpu_type != "A3 Mega" || length(var.placement_policy_name) > 0
+  a3_consumption_model_check = length(var.a3_ultra_consumption_model) > 0 || length(var.a3_mega_consumption_model) > 0
+  recipe = {
+    "A3 Mega" = var.a3mega_recipe
+    "A3 Ultra" = var.a3ultra_recipe
+  }[var.gpu_type]
+  recipes_not_empty = length(local.recipe) > 0
+  reservation_valid = !(local.recipe != "gke") || length(var.reservation) > 0
+}
+
+resource "null_resource" "input_validation" {
+  count = 1
+
+  lifecycle {
+    precondition {
+      condition     = local.placement_policy_valid
+      error_message = "placement_policy_name must be provided when gpu_type is A3 Mega."
+    }
+    precondition {
+      condition     = local.a3_consumption_model_check
+      error_message = "Either a3_ultra_consumption_model or a3_mega_consumption_model must be specified. They cannot both be empty."
+    }
+    precondition {
+      condition     = local.recipes_not_empty
+      error_message = "Must input one recipe."
+    }
+    precondition {
+      condition     = local.reservation_valid
+      error_message = "The 'reservation' variable must not be empty when recipe is not 'gke'."
+    }
+  }
+}
