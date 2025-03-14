@@ -11,7 +11,7 @@ Hotswap takes effect in 2 main ways:
 1) When a node hosting workloads become unhealthy, it looks for a spare, eligible accelerator hardware to replace. This is a simple swap of the hardware hosting the workload with the spare.
 2) When a node hosting workloads become unhealthy, if there are no spares, it will evict a *lower priority* workload from an eligible slice, and transfer the accelerator hardware to this *higher priority* job. This is the more nuanced scenario, that requires a little setup.
 
-**Note:** Scenario 2  takes effect when multiple workloads are running on the **same cluster**, and they are competing for the same set of nodepools. 
+**Note:** Scenario 2  takes effect when multiple workloads are running on the **same cluster**, and they are sharing for the same set of accelerator nodepools. 
 
 #### Priority Classes
 To connect back to the concept of priority levels on workloads, we will use **PriorityClasses** to provide the priority indicator for the Hotswap algorithm. To begin, lets setup two different Priority Classes to indicate our levels of priority. The first class will have a lower priority by indicating a lower value, 1000000, and the higher priority class will have a value of 2000000, having a clear differentiation. 
