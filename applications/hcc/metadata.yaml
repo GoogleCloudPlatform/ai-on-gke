@@ -58,19 +58,19 @@ spec:
         defaultValue: ""
       - name: node_count_gke
         varType: number
-        defaultValue: 0
+        defaultValue: -1
       - name: node_count_gke_nccl
         varType: number
-        defaultValue: 2
+        defaultValue: -1
       - name: node_count_llama_3_7b
         varType: number
-        defaultValue: 2
+        defaultValue: -1
       - name: node_count_nemo
         varType: number
-        defaultValue: 16 
+        defaultValue: -1 
       - name: node_count_maxtext
         varType: number
-        defaultValue: 16
+        defaultValue: -1
       - name: additional_labels
         description: Additional labels to add to Kubernetes resources.
         varType: string
