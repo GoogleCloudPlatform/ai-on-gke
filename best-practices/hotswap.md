@@ -8,8 +8,8 @@ Hotswap is intended to reduce MTTR (Median-Time-To-Recovery) by reacting to node
 # Hotswap Takes Effect
 
 Hotswap takes effect in 2 main ways:
-1) When a node hosting workloads become unhealthy, it looks for a spare, idle hardware slice to replace. This is a simple swap of the hardware hosting the workload with the spare.
-2) When a node hosting workloads become unhealthy, if there are no spares, it will evict a *lower priority* workload from a slice, and transfer the slice to this *higher priority* job. This is the more nuanced scenario, that requires a little setup.
+1) When a node hosting workloads become unhealthy, it looks for a spare, eligible hardware slice to replace. This is a simple swap of the hardware hosting the workload with the spare.
+2) When a node hosting workloads become unhealthy, if there are no spares, it will evict a *lower priority* workload from an eligible slice, and transfer the slice to this *higher priority* job. This is the more nuanced scenario, that requires a little setup.
 
 **Note:** Scenario 2  takes effect when multiple workloads are running on the **same cluster**, and they are competing for the same set of nodepools. 
 
