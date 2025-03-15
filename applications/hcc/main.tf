@@ -26,10 +26,6 @@ locals {
   gke_cluster_ca_cert = var.gpu_type == "A3 Mega"? "${module.a3-megagpu-cluster[0].gke_ca_cert}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-cluster[0].gke_ca_cert}" : error("Only A3 Mega and A3 Ultra are supported")
   gpu_pool_name = var.gpu_type == "A3 Mega" ? "${module.a3_megagpu_pool[0].node_pool_name}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-pool[0].node_pool_name}" : error("Only A3 Mega and A3 Ultra are supported")
   num_gpus = var.gpu_type == "A3 Mega" ? "${module.a3_megagpu_pool[0].static_gpu_count}" : var.gpu_type == "A3 Ultra"? "${module.a3-ultragpu-pool[0].static_gpu_count}" : error("Only A3 Mega and A3 Ultra are supported")
-  recipe = {
-    "A3 Mega" = var.a3mega_recipe
-    "A3 Ultra" = var.a3ultra_recipe
-  }[var.gpu_type]
 }
 
 module "gke-a3-mega-net" {

@@ -29,3 +29,18 @@ variable "node_count" {
 variable "queue" {
   type = string
 }
+
+locals {
+  node_count_valid = (var.recipe == "gke-nccl" && var.node_count >= 2) || (var.recipe != "gke-nccl" && var.node_count >= 0)
+}
+
+resource "null_resource" "node_count_validation" {
+  count = 1
+
+  lifecycle {
+    precondition {
+      condition     = local.node_count_valid
+      error_message = "For recipe 'gke-nccl', node_count must be >= 2. For other recipes, node_count must be >= 0."
+    }
+  }
+}

@@ -7,5 +7,6 @@ locals {
     "mixtral8_7b_maxtext_pretraining"  = var.node_count_maxtext
     "gke-nccl"                         = var.node_count_gke_nccl
     "gke"                              = var.node_count_gke
+    ""                                 = 0
   }[local.recipe]
 }

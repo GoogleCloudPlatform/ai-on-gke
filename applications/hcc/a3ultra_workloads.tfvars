@@ -50,3 +50,5 @@ reservation_block = ""
 placement_policy_name = "supercomputer-testing-gsc-asq-fr-block-0001"
 
 gpu_type = "A3 Ultra"
+a3_ultra_consumption_model = "Reservation"
+a3_mega_consumption_model = ""
