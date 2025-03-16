@@ -137,11 +137,11 @@ Deploying the digital human blueprint based on few NIMs on GKE.
 
 ## Test
 
-   Below are curl statements to test each of the endpoints
+Below are curl statements to test each of the endpoints
 
-### nv-embedqa-e5-v5
+- ### nv-embedqa-e5-v5
 
-   Set `EXTERNAL_IP` from above output for `dighum-embedqa-e5v5`
+    Set `EXTERNAL_IP` from above output for `dighum-embedqa-e5v5`
 
     ```bash
     export EXTERNAL_IP=<IP>
@@ -156,7 +156,7 @@ Deploying the digital human blueprint based on few NIMs on GKE.
     }'
     ```
 
-### nv-rerankqa-mistral-4b-v3
+- ### nv-rerankqa-mistral-4b-v3
 
     Set `EXTERNAL_IP` from above output for `dighum-rerankqa-mistral4bv3`
 
@@ -168,18 +168,18 @@ Deploying the digital human blueprint based on few NIMs on GKE.
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
-    "model": "nvidia/nv-rerankqa-mistral-4b-v3",
-    "query": {"text": "which way should i go?"},
-    "passages": [
-      {"text": "two roads diverged in a yellow wood, and sorry i could not travel both and be one traveler, long i stood and looked down one as far as i could to where it bent in the undergrowth;"}
-    ],
-    "truncate": "END"
-    }'
+          "model": "nvidia/nv-rerankqa-mistral-4b-v3",
+          "query": {"text": "which way should i go?"},
+          "passages": [
+            {"text": "two roads diverged in a yellow wood, and sorry i could not travel both and be one traveler, long i stood and looked down one as far as i could to where it bent in the undergrowth;"}
+          ],
+          "truncate": "END"
+        }'
     ```
 
-### llama3-8b-instruct
+- ### llama3-8b-instruct
 
-   Set `EXTERNAL_IP` from above output for `dighum-llama3-8b`
+    Set `EXTERNAL_IP` from above output for `dighum-llama3-8b`
 
     ```bash
     export EXTERNAL_IP=<IP>
@@ -195,152 +195,152 @@ Deploying the digital human blueprint based on few NIMs on GKE.
     }'
     ```
 
-### parakeet-ctc-1.1b-asr
+- ### parakeet-ctc-1.1b-asr
 
-- Install the Riva Python client package
-
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install nvidia-riva-client
-  ```
-
-- Download Riva sample clients
+  - Install the Riva Python client package
 
     ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install nvidia-riva-client
+    ```
 
+  - Download Riva sample clients
+
+      ```bash
+
+      git clone https://github.com/nvidia-riva/python-clients.git
+
+      ```
+
+  - Run Speech to Text inference in streaming modes. Riva ASR supports Mono, 16-bit audio in WAV, OPUS and FLAC formats.
+
+      ```bash
+  
+      k port-forward $(k get pod --selector="app=dighum-parakeet-asr-1-1b" --output jsonpath='{.items[0].metadata.name}') 50051:50051
+
+      python3 python-clients/scripts/asr/transcribe_file.py --server 0.0.0.0:50051 --input-file ./output.wav --language-code en-US
+
+      deactivate
+
+      ```
+
+ For more details on getting started with this NIM, visit the [Riva ASR NIM Docs](https://docs.nvidia.com/nim/riva/asr/latest/overview.html)
+
+- ### fastpitch-hifigan-tts
+
+  - Install the Riva Python client package
+
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install nvidia-riva-client
+    ```
+
+  - Download Riva sample clients
+
+    ```bash
+  
     git clone https://github.com/nvidia-riva/python-clients.git
 
     ```
 
-- Run Speech to Text inference in streaming modes. Riva ASR supports Mono, 16-bit audio in WAV, OPUS and FLAC formats.
+  - Use `kubectl` to port forward
 
     ```bash
- 
-    k port-forward $(k get pod --selector="app=dighum-parakeet-asr-1-1b" --output jsonpath='{.items[0].metadata.name}') 50051:50051
 
-    python3 python-clients/scripts/asr/transcribe_file.py --server 0.0.0.0:50051 --input-file ./output.wav --language-code en-US
-
-    deactivate
+    k port-forward $(k get pod --selector="app=dighum-parakeet-asr-1-1b" --output jsonpath='{.items[0].metadata.name}') 50051:50051 &
 
     ```
 
- For more details on getting started with this NIM, visit the [Riva ASR NIM Docs](https://docs.nvidia.com/nim/riva/asr/latest/overview.html)
+  - Run Speech to Text inference in streaming modes. Riva ASR supports Mono, 16-bit audio in WAV, OPUS and FLAC formats.
 
-### fastpitch-hifigan-tts
+    ```bash
+    python3 python-clients/scripts/tts/talk.py --server 0.0.0.0:50051 --text "Hello, this is a speech synthesizer." --language-code en-US --output output.wav
 
-- Install the Riva Python client package
+    deactivate
+    ```
 
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install nvidia-riva-client
-  ```
+  On running the above command, the synthesized audio file named output.wav will be created.
 
-- Download Riva sample clients
+- ### audio2face-2d
 
-  ```bash
- 
-  git clone https://github.com/nvidia-riva/python-clients.git
+  - Setup a virtual env
 
-  ```
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
-- Use `kubectl` to port forward
+  - Download the Audio2Face-2D client code
 
-  ```bash
+    ```bash
+    git clone https://github.com/NVIDIA-Maxine/nim-clients.git
+    cd nim-clients/audio2face-2d/
+    pip install -r python/requirements.txt
+    ```
 
-  k port-forward $(k get pod --selector="app=dighum-parakeet-asr-1-1b" --output jsonpath='{.items[0].metadata.name}') 50051:50051 &
+  - Compile the protos
 
-  ```
+    ```bash
+    cd protos/linux/python
+    chmod +x compile_protos.sh
+    ./compile_protos.sh
+    ```
 
-- Run Speech to Text inference in streaming modes. Riva ASR supports Mono, 16-bit audio in WAV, OPUS and FLAC formats.
+  - Run test inference
 
-  ```bash
-  python3 python-clients/scripts/tts/talk.py --server 0.0.0.0:50051 --text "Hello, this is a speech synthesizer." --language-code en-US --output output.wav
+    ```bash
+    cd python/scripts
+    
+    python audio2face-2d.py --target <server_ip:port> \
+      --audio-input <input audio file path> \
+      --portrait-input <input portrait image file path> \
+      --output <output file path and the file name> \
+      --head-rotation-animation-filepath <rotation animation filepath> \
+      --head-translation-animation-filepath <translation animation filepath> \
+      --ssl-mode <ssl mode value> \
+      --ssl-key <ssl key file path> \
+      --ssl-cert <ssl cert filepath> \
+      --ssl-root-cert <ssl root cert filepath>
+    ```
 
-  deactivate
-  ```
+    Refer the documentation [audio2face-2d](https://docs.nvidia.com/nim/maxine/audio2face-2d/latest/basic-inference.html#running-inference-via-node-js-script) NIM to set the values.
 
- On running the above command, the synthesized audio file named output.wav will be created.
+- ### audio2face-3d
 
-### audio2face-2d
+  - Setup a virtual env
 
-- Setup a virtual env
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+  - Download the Audio2Face-2D client code
 
-- Download the Audio2Face-2D client code
+    ```bash
+    git clone https://github.com/NVIDIA/Audio2Face-3D-Samples.git
+    cd Audio2Face-3D-Samples/scripts/audio2face_3d_microservices_interaction_app
 
-  ```bash
-  git clone https://github.com/NVIDIA-Maxine/nim-clients.git
-  cd nim-clients/audio2face-2d/
-  pip install -r python/requirements.txt
-  ```
+    pip3 install ../../proto/sample_wheel/nvidia_ace-1.2.0-py3-none-any.whl
 
-- Compile the protos
+    pip3 install -r requirements.txt
+    ```
 
-  ```bash
-  cd protos/linux/python
-  chmod +x compile_protos.sh
-  ./compile_protos.sh
-  ```
+  - Perform a health check
 
-- Run test inference
+    ```bash
+    python3 a2f_3d.py health_check --url 0.0.0.0:52000
+    ```
 
-  ```bash
-  cd python/scripts
-  
-  python audio2face-2d.py --target <server_ip:port> \
-    --audio-input <input audio file path> \
-    --portrait-input <input portrait image file path> \
-    --output <output file path and the file name> \
-    --head-rotation-animation-filepath <rotation animation filepath> \
-    --head-translation-animation-filepath <translation animation filepath> \
-    --ssl-mode <ssl mode value> \
-    --ssl-key <ssl key file path> \
-    --ssl-cert <ssl cert filepath> \
-    --ssl-root-cert <ssl root cert filepath>
-  ```
+  - Run a test inference
 
-   Refer the documentation [audio2face-2d](https://docs.nvidia.com/nim/maxine/audio2face-2d/latest/basic-inference.html#running-inference-via-node-js-script) NIM to set the values.
+    ```bash
+    python3 a2f_3d.py run_inference ../../example_audio/Claire_neutral.wav config/config_claire.yml \
+    -u 0.0.0.0:52000
+    ```
 
-### audio2face-3d
-
-- Setup a virtual env
-
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-  ```
-
-- Download the Audio2Face-2D client code
-
-  ```bash
-  git clone https://github.com/NVIDIA/Audio2Face-3D-Samples.git
-  cd Audio2Face-3D-Samples/scripts/audio2face_3d_microservices_interaction_app
-
-  pip3 install ../../proto/sample_wheel/nvidia_ace-1.2.0-py3-none-any.whl
-
-  pip3 install -r requirements.txt
-  ```
-
-- Perform a health check
-
-  ```bash
-  python3 a2f_3d.py health_check --url 0.0.0.0:52000
-  ```
-
-- Run a test inference
-
-  ```bash
-  python3 a2f_3d.py run_inference ../../example_audio/Claire_neutral.wav config/config_claire.yml \
-  -u 0.0.0.0:52000
-  ```
-
-  Refer the documentation of [audio2face-3d](https://docs.nvidia.com/ace/audio2face-3d-microservice/latest/text/getting-started/getting-started.html#running-inference) NIM for more information.
+    Refer the documentation of [audio2face-3d](https://docs.nvidia.com/ace/audio2face-3d-microservice/latest/text/getting-started/getting-started.html#running-inference) NIM for more information.
 
 ## Tear down
 
