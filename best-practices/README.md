@@ -12,6 +12,6 @@ This reference architecture is designed to assist platform administrators, cloud
 
 To enhance cold start performance of workloads on Google Kubernetes Engine (GKE), this document provides best practices and examines the elements that influence startup latency.
 
-## [Enabling Hotswap to reduce Workload Rescheduling time](/best-practices/hotswap.md)
+## [Running hero training job with hotswap](/best-practices/hotswap.md)
 
-In order to reduce workload rescheduling time during interuptions, we highly reccomend modifing your workloads to allow for smooth interactions with Hotswap.
+In order to reduce workload rescheduling time during interuptions for your hero job, we highly recommend modifing your workloads to allow for smooth interactions with Hotswap.
