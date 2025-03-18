@@ -34,11 +34,11 @@ reservation = "hcc-a3mega"
 reservation_block = ""
 placement_policy_name = "kevinmcw-test"
 
-recipe = "gke-nccl"
-node_count_gke_nccl = 2
+recipe = "gke"
+node_count_gke_nccl = -1
 node_count_gke = 0
-node_count_nemo = 16
-node_count_maxtext = 16
-node_count_llama_3_7b = 2
+node_count_nemo = -1
+node_count_maxtext = -1
+node_count_llama_3_7b = -1
 a3_mega_consumption_model = "Reservation"
 a3_ultra_consumption_model = ""

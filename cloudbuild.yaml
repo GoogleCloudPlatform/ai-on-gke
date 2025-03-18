@@ -29,6 +29,14 @@ steps:
   dir: "applications/ray/"
   waitFor: ["validate platform"]
 
+- id: "validate hcc"
+  name: "gcr.io/$PROJECT_ID/terraform"
+  script: |
+    terraform init -no-color
+    terraform validate -no-color
+  dir: "applications/hcc/"
+  waitFor: ["validate platform"]
+
 - id: "validate jupyterhub"
   name: "gcr.io/$PROJECT_ID/terraform"
   script: |
@@ -70,7 +78,7 @@ steps:
     echo "pass" > /workspace/gke_cluster_result.txt
   dir: 'infrastructure/'
   allowFailure: true
-  waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
+  waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag', 'validate hcc']
 
 - id: 'test ray cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -114,6 +122,52 @@ steps:
     echo "pass" > /workspace/ray_result.txt
   allowFailure: true
   waitFor: ['create gke cluster']
+
+- id: 'test hcc cluster'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    # # Get kube config
+    # gcloud container clusters get-credentials \
+    # ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
+    # --location $_REGION \
+    # --project $PROJECT_ID
+
+    cd /workspace/applications/hcc/
+    terraform apply \
+    -var-file=a3ultra_workloads.tfvars \
+    -auto-approve -no-color
+
+    terraform apply \
+    -var-file=a3mega_workloads.tfvars \
+    -auto-approve -no-color
+    echo "pass" > /workspace/hcc_result.txt
+  allowFailure: true
+  waitFor: ['create gke cluster']
+
+
+- id: 'cleanup hcc cluster'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    cd /workspace/applications/hcc/
+    terraform destroy \
+    -var-file=a3ultra_workloads.tfvars \
+    -auto-approve -no-color
+
+    terraform destroy \
+    -var-file=a3mega_workloads.tfvars \
+    -auto-approve -no-color
+  allowFailure: true
+  waitFor: ['test hcc cluster']
 
 - id: 'cleanup ray cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -323,7 +377,7 @@ steps:
     -var=cluster_location=$_REGION -auto-approve -no-color
 
   allowFailure: true
-  waitFor: ['cleanup rag', 'cleanup jupyterhub', 'cleanup ray cluster']
+  waitFor: ['cleanup rag', 'cleanup jupyterhub', 'cleanup ray cluster', 'cleanup hcc cluster']
 
 - id: 'check result'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -338,6 +392,11 @@ steps:
 
     if [[ $(cat /workspace/ray_result.txt) != "pass" ]]; then
       echo "ray API run failed"
+      exit 1
+    fi
+
+    if [[ $(cat /workspace/hcc_result.txt) != "pass" ]]; then
+      echo "hcc cluster failed"
       exit 1
     fi
 

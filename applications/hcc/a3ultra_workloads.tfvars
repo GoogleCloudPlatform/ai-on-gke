@@ -28,11 +28,11 @@ project_id = "supercomputer-testing"
 a3_mega_zone = ""
 a3_ultra_zone = "europe-west1-b"
 
-node_count_gke_nccl = 0
+node_count_gke_nccl = -1
 node_count_gke = 0
-node_count_nemo = 16
-node_count_maxtext = 16
-node_count_llama_3_7b = 2
+node_count_nemo = -1
+node_count_maxtext = -1
+node_count_llama_3_7b = -1
 
 # A3 Ultra recipe options:
 # - "gke"
@@ -42,7 +42,7 @@ node_count_llama_3_7b = 2
 # - "llama3.1_70b_maxtext_pretraining"
 # - "mixtral8_7b_nemo_pretraining"
 # - "mixtral8_7b_maxtext_pretraining"
-a3ultra_recipe = "llama3.1_70b_maxtext_pretraining"
+a3ultra_recipe = "gke"
 a3mega_recipe=""
 
 reservation = "supercomputer-testing-gsc-asq-fr"
