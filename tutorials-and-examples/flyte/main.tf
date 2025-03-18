@@ -118,7 +118,7 @@ resource "google_storage_bucket_iam_binding" "gke_service_account_bucket_object_
 }
 
 resource "google_project_iam_member" "workload_identity_sa_bindings" {
-  project = "akvelon-gke-aieco"
+  project = var.project_id
   role    = "roles/iam.serviceAccountTokenCreator"
   member  = data.google_service_account.gke_service_account.member
 }
