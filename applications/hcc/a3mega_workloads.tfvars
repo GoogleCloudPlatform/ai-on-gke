@@ -23,7 +23,7 @@ labels = {
   ghpc_deployment = "a3mega-qss-test"
 }
 
-project_id = "supercomputer-testing"
+project_id = "gke-ai-eco-dev"
 
 a3_mega_zone = "australia-southeast1-c"
 a3_ultra_zone = ""

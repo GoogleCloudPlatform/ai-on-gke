@@ -23,7 +23,7 @@ labels = {
   ghpc_deployment = "a3ultra-hcc-test"
 }
 
-project_id = "supercomputer-testing"
+project_id = "gke-ai-eco-dev"
 
 a3_mega_zone = ""
 a3_ultra_zone = "europe-west1-b"
@@ -45,9 +45,9 @@ node_count_llama_3_7b = -1
 a3ultra_recipe = "gke"
 a3mega_recipe=""
 
-reservation = "supercomputer-testing-gsc-asq-fr"
+reservation = "gke-ai-eco-dev-exr-1"
 reservation_block = ""
-placement_policy_name = "supercomputer-testing-gsc-asq-fr-block-0001"
+placement_policy_name = "gke-ai-eco-dev-exr-1-block-0001"
 
 gpu_type = "A3 Ultra"
 a3_ultra_consumption_model = "Reservation"
