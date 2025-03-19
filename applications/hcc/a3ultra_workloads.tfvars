@@ -16,7 +16,7 @@
 
 authorized_cidr = "0.0.0.0/0"
 
-goog_cm_deployment_name = "a3ultra-hcc-test"
+goog_cm_deployment_name = "ultra-cluster-test"
 
 labels = {
   ghpc_blueprint  = "gke-a3-ultra"
