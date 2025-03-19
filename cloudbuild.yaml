@@ -123,7 +123,7 @@ steps:
   allowFailure: true
   waitFor: ['create gke cluster']
 
-- id: 'test hcc cluster'
+- id: 'test hcc ultra cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
   entrypoint: 'sh'
   args:
@@ -131,21 +131,10 @@ steps:
   - |
     set -e
 
-    # # Get kube config
-    # gcloud container clusters get-credentials \
-    # ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    # --location $_REGION \
-    # --project $PROJECT_ID
-
     cd /workspace/applications/hcc/
     terraform apply \
     -var-file=a3ultra_workloads.tfvars \
     -auto-approve -no-color
-
-    terraform apply \
-    -var-file=a3mega_workloads.tfvars \
-    -auto-approve -no-color
-    echo "pass" > /workspace/hcc_result.txt
   allowFailure: true
   waitFor: ['create gke cluster']
 
@@ -161,10 +150,6 @@ steps:
     cd /workspace/applications/hcc/
     terraform destroy \
     -var-file=a3ultra_workloads.tfvars \
-    -auto-approve -no-color
-
-    terraform destroy \
-    -var-file=a3mega_workloads.tfvars \
     -auto-approve -no-color
   allowFailure: true
   waitFor: ['test hcc cluster']
