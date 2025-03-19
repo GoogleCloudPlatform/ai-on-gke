@@ -135,6 +135,8 @@ steps:
     terraform apply \
     -var-file=a3ultra_workloads.tfvars \
     -auto-approve -no-color
+
+    echo "pass" > /workspace/hcc_result.txt
   allowFailure: true
   waitFor: ['create gke cluster']
 
