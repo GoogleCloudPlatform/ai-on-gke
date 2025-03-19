@@ -58,10 +58,10 @@ spec:
         defaultValue: ""
       - name: node_count_gke
         varType: number
-        defaultValue: -1
+        defaultValue: 0
       - name: node_count_gke_nccl
         varType: number
-        defaultValue: -1
+        defaultValue: 2
       - name: node_count_llama_3_7b
         varType: number
         defaultValue: -1
