@@ -34,7 +34,8 @@ reservation = "hcc-a3mega"
 reservation_block = ""
 placement_policy_name = "kevinmcw-test"
 
-recipe = "gke"
+a3mega_recipe = "gke"
+a3ultra_recipe = ""
 node_count_gke_nccl = -1
 node_count_gke = 0
 node_count_nemo = -1
