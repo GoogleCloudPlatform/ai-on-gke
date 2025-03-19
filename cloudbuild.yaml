@@ -123,7 +123,7 @@ steps:
   allowFailure: true
   waitFor: ['create gke cluster']
 
-- id: 'test hcc ultra cluster'
+- id: 'test hcc cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
   entrypoint: 'sh'
   args:
