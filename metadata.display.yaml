@@ -117,32 +117,23 @@ spec:
           name: reservation
           title: Reservation name
           section: required_config
-          toggleUsingVariables:
-          - variableName: a3_mega_consumption_model
-            variableValues:
-            - Reservation
-            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
-          - variableName: a3_ultra_consumption_model
-            variableValues:
-            - Reservation
-            type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         reservation_block:
           name: reservation_block
           title: Reservation block
           section: required_config
           toggleUsingVariables:
-          - variableName: a3_ultra_consumption_model
+          - variableName: gpu_type
             variableValues:
-            - Reservation
+            - A3 Ultra
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         placement_policy_name:
           name: placement_policy_name
           title: Placement policy
           section: required_config
           toggleUsingVariables:
-          - variableName: a3_mega_consumption_model
+          - variableName: gpu_type
             variableValues:
-            - Reservation
+            - A3 Mega
             type: DISPLAY_VARIABLE_TOGGLE_TYPE_UNSPECIFIED
         a3mega_recipe:
           name: recipe
