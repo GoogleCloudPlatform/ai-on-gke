@@ -78,7 +78,43 @@ steps:
     echo "pass" > /workspace/gke_cluster_result.txt
   dir: 'infrastructure/'
   allowFailure: true
-  waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag', 'validate hcc']
+  waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag']
+
+- id: 'test hcc'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    cd /workspace/applications/hcc/
+    terraform apply \
+    -var-file=a3ultra_workloads.tfvars \
+    -var=project_id=$PROJECT_ID \
+    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -auto-approve -no-color
+
+    echo "pass" > /workspace/hcc_result.txt
+  allowFailure: true
+  waitFor: ['validate hcc']
+
+- id: 'cleanup hcc'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    cd /workspace/applications/hcc/
+    terraform destroy \
+    -var-file=a3ultra_workloads.tfvars \
+    -var=project_id=$PROJECT_ID \
+    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -auto-approve -no-color
+  allowFailure: true
+  waitFor: ['test hcc']
 
 - id: 'test ray cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -144,43 +180,6 @@ steps:
     -auto-approve -no-color
   allowFailure: true
   waitFor: ['test ray cluster']
-
-- id: 'test hcc cluster'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/hcc/
-    terraform apply \
-    -var-file=a3ultra_workloads.tfvars \
-    -var=project_id=$PROJECT_ID \
-    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
-    -auto-approve -no-color
-
-    echo "pass" > /workspace/hcc_result.txt
-  allowFailure: true
-  waitFor: ['create gke cluster']
-
-
-- id: 'cleanup hcc cluster'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/hcc/
-    terraform destroy \
-    -var-file=a3ultra_workloads.tfvars \
-    -var=project_id=$PROJECT_ID \
-    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
-    -auto-approve -no-color
-  allowFailure: true
-  waitFor: ['test hcc cluster']
 
 - id: 'test jupyterhub'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -368,7 +367,7 @@ steps:
     -var=cluster_location=$_REGION -auto-approve -no-color
 
   allowFailure: true
-  waitFor: ['cleanup rag', 'cleanup jupyterhub', 'cleanup ray cluster', 'cleanup hcc cluster']
+  waitFor: ['cleanup rag', 'cleanup jupyterhub', 'cleanup ray cluster']
 
 - id: 'check result'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -387,7 +386,7 @@ steps:
     fi
 
     if [[ $(cat /workspace/hcc_result.txt) != "pass" ]]; then
-      echo "hcc cluster failed"
+      echo "hcc failed"
       exit 1
     fi
 
@@ -430,7 +429,7 @@ steps:
       echo "rag prompt test failed"
       exit 1
     fi
-  waitFor: ['cleanup gke cluster']
+  waitFor: ['cleanup gke cluster', 'cleanup hcc']
 
 substitutions:
   _REGION: us-east4
