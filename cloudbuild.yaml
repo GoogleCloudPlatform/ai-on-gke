@@ -29,6 +29,14 @@ steps:
   dir: "applications/ray/"
   waitFor: ["validate platform"]
 
+- id: "validate hcc"
+  name: "gcr.io/$PROJECT_ID/terraform"
+  script: |
+    terraform init -no-color
+    terraform validate -no-color
+  dir: "applications/hcc/"
+  waitFor: ["validate platform"]
+
 - id: "validate jupyterhub"
   name: "gcr.io/$PROJECT_ID/terraform"
   script: |
@@ -70,7 +78,43 @@ steps:
     echo "pass" > /workspace/gke_cluster_result.txt
   dir: 'infrastructure/'
   allowFailure: true
-  waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
+  waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', 'validate rag']
+
+- id: 'test hcc'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    cd /workspace/applications/hcc/
+    terraform apply \
+    -var-file=a3ultra_workloads.tfvars \
+    -var=project_id=$PROJECT_ID \
+    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -auto-approve -no-color
+
+    echo "pass" > /workspace/hcc_result.txt
+  allowFailure: true
+  waitFor: ['validate hcc']
+
+- id: 'cleanup hcc'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    cd /workspace/applications/hcc/
+    terraform destroy \
+    -var-file=a3ultra_workloads.tfvars \
+    -var=project_id=$PROJECT_ID \
+    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -auto-approve -no-color
+  allowFailure: true
+  waitFor: ['test hcc']
 
 - id: 'test ray cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -341,6 +385,11 @@ steps:
       exit 1
     fi
 
+    if [[ $(cat /workspace/hcc_result.txt) != "pass" ]]; then
+      echo "hcc failed"
+      exit 1
+    fi
+
     if [[ $(cat /workspace/user_result.txt) != "pass" ]]; then
       echo "ray cluster failed"
       exit 1
@@ -380,7 +429,7 @@ steps:
       echo "rag prompt test failed"
       exit 1
     fi
-  waitFor: ['cleanup gke cluster']
+  waitFor: ['cleanup gke cluster', 'cleanup hcc']
 
 substitutions:
   _REGION: us-east4

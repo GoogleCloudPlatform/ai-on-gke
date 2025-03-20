@@ -23,7 +23,7 @@ labels = {
   ghpc_deployment = "a3mega-qss-test"
 }
 
-project_id = "supercomputer-testing"
+project_id = "gke-ai-eco-dev"
 
 a3_mega_zone = "australia-southeast1-c"
 a3_ultra_zone = ""
@@ -34,11 +34,12 @@ reservation = "hcc-a3mega"
 reservation_block = ""
 placement_policy_name = "kevinmcw-test"
 
-recipe = "gke-nccl"
-node_count_gke_nccl = 2
+a3mega_recipe = "gke"
+a3ultra_recipe = ""
+node_count_gke_nccl = -1
 node_count_gke = 0
-node_count_nemo = 16
-node_count_maxtext = 16
-node_count_llama_3_7b = 2
+node_count_nemo = -1
+node_count_maxtext = -1
+node_count_llama_3_7b = -1
 a3_mega_consumption_model = "Reservation"
 a3_ultra_consumption_model = ""
