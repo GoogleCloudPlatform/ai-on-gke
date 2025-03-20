@@ -45,9 +45,9 @@ node_count_llama_3_7b = -1
 a3ultra_recipe = "gke"
 a3mega_recipe=""
 
-reservation = "gke-ai-eco-dev-exr-1"
+reservation = ""
 reservation_block = ""
-placement_policy_name = "gke-ai-eco-dev-exr-1-block-0001"
+placement_policy_name = ""
 
 gpu_type = "A3 Ultra"
 a3_ultra_consumption_model = "Reservation"
