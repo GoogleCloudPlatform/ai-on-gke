@@ -36,10 +36,10 @@ spec:
         defaultValue: ""
       - name: a3_mega_consumption_model
         varType: string
-        defaultValue: ""
+        defaultValue: "Reservation"
       - name: a3_ultra_consumption_model
         varType: string
-        defaultValue: ""
+        defaultValue: "Reservation"
       - name: reservation
         varType: string
         defaultValue: ""
