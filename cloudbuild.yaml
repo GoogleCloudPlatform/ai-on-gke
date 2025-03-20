@@ -123,39 +123,6 @@ steps:
   allowFailure: true
   waitFor: ['create gke cluster']
 
-- id: 'test hcc cluster'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/hcc/
-    terraform apply \
-    -var-file=a3ultra_workloads.tfvars \
-    -auto-approve -no-color
-
-    echo "pass" > /workspace/hcc_result.txt
-  allowFailure: true
-  waitFor: ['create gke cluster']
-
-
-- id: 'cleanup hcc cluster'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/hcc/
-    terraform destroy \
-    -var-file=a3ultra_workloads.tfvars \
-    -auto-approve -no-color
-  allowFailure: true
-  waitFor: ['test hcc cluster']
-
 - id: 'cleanup ray cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
   entrypoint: 'bash'
@@ -177,6 +144,43 @@ steps:
     -auto-approve -no-color
   allowFailure: true
   waitFor: ['test ray cluster']
+
+- id: 'test hcc cluster'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    cd /workspace/applications/hcc/
+    terraform apply \
+    -var-file=a3ultra_workloads.tfvars \
+    -var=project_id=$PROJECT_ID \
+    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -auto-approve -no-color
+
+    echo "pass" > /workspace/hcc_result.txt
+  allowFailure: true
+  waitFor: ['create gke cluster']
+
+
+- id: 'cleanup hcc cluster'
+  name: 'gcr.io/$PROJECT_ID/terraform'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    set -e
+
+    cd /workspace/applications/hcc/
+    terraform destroy \
+    -var-file=a3ultra_workloads.tfvars \
+    -var=project_id=$PROJECT_ID \
+    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -auto-approve -no-color
+  allowFailure: true
+  waitFor: ['test hcc cluster']
 
 - id: 'test jupyterhub'
   name: 'gcr.io/$PROJECT_ID/terraform'
