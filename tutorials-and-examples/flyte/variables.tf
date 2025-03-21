@@ -209,5 +209,5 @@ variable "db_instance_name" {
 variable "render_helm_values" {
   type        = bool
   description = "Render values.yaml for helm chart"
-  default     = false
+  default     = true
 }

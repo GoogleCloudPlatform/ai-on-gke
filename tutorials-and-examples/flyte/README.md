@@ -63,6 +63,8 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
    service_account = "tf-gke-flyte-test-k3af@flyte-project.iam.gserviceaccount.com"
    ```
 
+   Also, the `flyte.yaml` file should be generated with the necessary configuration for the Flyte deployment using Helm. The file is generated based on the `flyte.yaml.tpl` template and the outputs from the Terraform. You can adjust the configuration in the `flyte.yaml` file if needed. If you want to handle the configuration manually, you can skip the generation of the `flyte.yaml` file by setting the `render_helm_values` variable to `false` in the `your_environment.tfvars` file.
+
 3. Get Kubernetes access.
 
    Run the following command to get the credentials for the GKE cluster:
@@ -73,16 +75,7 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
      --project $(terraform output -raw project_id)
    ```
 
-4. Configure Flyte Helm values.
-
-   Make a copy of the `flyte.yaml.tpl` file and name it `flyte.yaml`. Open the `flyte.yaml` file and replace the placeholders with the values from the Terraform output:
-
-   * replace `${FLYTE_IAM_SA_EMAIL}` with the service account email (4 occurrences)
-   * replace `${PROJECT_ID}` with the project ID (3 occurrences)
-   * replace `${BUCKET_NAME}` with the bucket name (2 occurrences)
-   * replace `${CLOUDSQL_IP}`, `${CLOUDSQL_DBNAME}`, `${CLOUDSQL_USERNAME}` and `${CLOUDSQL_PASSWORD}` with corresponding values (1 occurrence each; use `terraform output cloudsql_password` to get the password)
-
-5. Install Flyte to the GKE cluster using Helm.
+4. Install Flyte to the GKE cluster using Helm.
 
    ```bash
    helm install flyte-backend flyte-binary \
