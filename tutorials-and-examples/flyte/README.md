@@ -145,17 +145,8 @@ At this point, the Flyte dashboard is not exposed to the internet. Let's access 
    ```
 
 3. Install flytectl.
-   Go to the [releases page](https://github.com/flyteorg/flyte/releases), find the latest release for the `flytectl` binary, and download the one for your operating system. Unpack the archive, move the binary to a directory in your PATH, and make it executable. The actual commands may vary depending on the operating system and the version of the binary.
 
-   For example, on Linux x86_64:
-
-   ```bash
-   curl -L -o /tmp/flytectl.tar.gz https://github.com/flyteorg/flyte/releases/download/${VERSION}/flytectl_Linux_x86_64.tar.gz
-   tar -xvf /tmp/flytectl.tar.gz
-   sudo install flytectl /usr/local/bin/flytectl
-   ```
-
-   In the above commands, replace `${VERSION}` with the actual release tag.
+   Follow the instructions in the [Flyte documentation](https://docs.flyte.org/en/latest/api/flytectl/overview.html#installation) to install the `flytectl` CLI.
 
 4. Start port forwarding for the Flyte GRPC service:
 
