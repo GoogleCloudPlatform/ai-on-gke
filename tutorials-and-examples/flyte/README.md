@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide will show how to install Flyte on GKE using Helm. Deployment will use Google Cloud Storage bucket and Cloud SQL PostgreSQL database.
+This guide illustrates the deployment of Flyte on Google Kubernetes Engine (GKE) using Helm, utilizing Google Cloud Storage for scalable data storage and Cloud SQL PostgreSQL for a reliable metadata store. By the end of this tutorial, you will have a fully functional Flyte instance on GKE, offering businesses seamless integration with the GCP ecosystem, improved resource efficiency, and cost-effectiveness. ML platform engineers will benefit from the simplified deployment and management provided by GKE, along with the enhanced security achieved by enabling authentication using Google OAuth.
 
 ## Before you begin
 
