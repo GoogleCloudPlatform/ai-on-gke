@@ -35,8 +35,8 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
 
    ```hcl
    project_id = "flyte-project"
-   cluster_name = "flyte-tutorial"
-   autopilot_cluster = true  # Set to false for Standard    cluster
+   cluster_name = "flyte-test"
+   autopilot_cluster = true  # Set to false for Standard cluster
    ```
 
 2. Initialize and apply the Terraform configuration.
