@@ -13,7 +13,7 @@
 # limitations under the License.
 
 Flask==3.0.0
-gunicorn==22.0.0
+gunicorn==23.0.0
 Werkzeug==3.0.6
 langchain==0.3.14
 langchain-community==0.3.14
