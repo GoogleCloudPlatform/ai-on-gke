@@ -63,7 +63,7 @@ Let's start with setting up the infrastructure using Terraform. The Terraform co
    service_account = "tf-gke-flyte-test-k3af@flyte-project.iam.gserviceaccount.com"
    ```
 
-   Also, the `flyte.yaml` file should be generated with the necessary configuration for the Flyte deployment using Helm. The file is generated based on the `flyte.yaml.tpl` template and the outputs from the Terraform. You can adjust the configuration in the `flyte.yaml` file if needed. If you want to handle the configuration manually, you can skip the generation of the `flyte.yaml` file by setting the `render_helm_values` variable to `false` in the `your_environment.tfvars` file.
+   Also, the `flyte.yaml` file should be generated with the necessary configuration for the Flyte deployment using Helm. The file is generated based on the `flyte.yaml.tpl` template and the outputs from the Terraform. You can adjust the configuration in the `flyte.yaml` file if needed. Alternatively, for manual configuration, you can skip the generation of the `flyte.yaml` file by setting the `render_helm_values` variable to `false` in the `your_environment.tfvars` file.
 
 3. Get Kubernetes access.
 
