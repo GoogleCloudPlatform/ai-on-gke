@@ -2,16 +2,16 @@
 This doc describes how to set up your training job to improve the workload recovery time by utilizing hotswap on Google Kubernetes Engine (GKE).
 
 ## Introduction
-Hotswap is intended to reduce Mean-Time-To-Recovery(MTTR) by reacting to infrastructure failures and interruptions, and essentially placing the workload onto healthy resources. Workload recovery is gated by the infrastructure repair time, which could take up to 10 minutes depending on the hardware platforms. Hotswap could reduce this time to 1 minute so as to improve the overall training job goodput.
+Hotswap is intended to reduce Mean-Time-To-Recovery(MTTR) by reacting to infrastructure failures and interruptions, and essentially placing the workload onto healthy resources. Workload recovery is gated by the infrastructure repair time, which could take up to 10 minutes depending on the hardware platforms. Hotswap could reduce this time to 1 minute so as to improve the overall training job [goodput](https://cloud.google.com/blog/products/ai-machine-learning/goodput-metric-as-measure-of-ml-productivity).
 
-##Hotswap Takes Effect
+## Hotswap Takes Effect
 Hotswap takes effect in 2 main ways:
-When the nodes hosting workloads become unhealthy, the job will be rescheduled onto eligible spare nodes upon interruption..
-If your workload is configured with PriorityClass, the job that is configured with higher priority will preempt the low priority jobs’ capacities in the same cluster upon interruptions. 
+1. When the nodes hosting workloads become unhealthy, the job will be rescheduled onto eligible spare nodes upon interruption..
+2. If your workload is configured with [PriorityClass](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass), the job that is configured with higher priority will preempt the low priority jobs’ capacities in the same cluster upon interruptions. 
 
 
 ## Example
-In this example, we will show how to set up the workload using Jobset together with PriorityClass to achieve hotswap. The training jobs are using multi-host TPU slices and Maxtext framework for illustration.
+In this example, we will show how to set up the workload using [Jobset](https://github.com/kubernetes-sigs/jobset) together with PriorityClass to achieve hotswap. The training jobs are using multi-host TPU slices and [Maxtext](https://github.com/AI-Hypercomputer/maxtext) framework for illustration.
 
 To begin, let's set up two different Priority Classes to indicate our levels of priority.
 ```
