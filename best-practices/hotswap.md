@@ -30,7 +30,7 @@ value: 2000000
 globalDefault: false
 description: "This priority class should be used for hero pods only."
 ```
-Now we can create a high priority Jobset workload, making sure to add the priority labels to pod templates, as well as adding the priorityClassName to clearly differentiate the workload's priority. The high priority job is a multi-slice training job running on two 4x4 [Trillium](https://cloud.google.com/blog/products/compute/trillium-tpu-is-ga) slices to run a training job with LLama2 7B. 
+Now we can create a high priority Jobset workload, making sure to add the priorityClassName to clearly differentiate the workload's priority. The high priority job is a multi-slice training job running on two 4x4 [Trillium](https://cloud.google.com/blog/products/compute/trillium-tpu-is-ga) slices to run a training job with LLama2 7B. 
 ```
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
@@ -77,7 +77,7 @@ spec:
                 limits:
                   google.com/tpu: 4
 ```
-Then we can create a low priority Jobset workload, making sure to add the priority labels and the priorityClassName. The low priority job is a single-slice training job running on one 4x4 Trillium slice.
+Then we can create a low priority Jobset workload, making sure to add the priorityClassName. The low priority job is a single-slice training job running on one 4x4 Trillium slice.
 ```
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
