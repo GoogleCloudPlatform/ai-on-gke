@@ -14,4 +14,4 @@ To enhance cold start performance of workloads on Google Kubernetes Engine (GKE)
 
 ## [Running hero training job with hotswap](/best-practices/hotswap.md)
 
-When running large scale training jobs, interruptions are inevitable. It's critical to setup your training job to be resilient to the interruptions to achieve the high goodput. Hotswap is one recommended solution to improve the workload recovery time by leveraging the additional capacities.
+When running large scale training jobs, interruptions are inevitable. It's critical to setup your training job to be resilient to the interruptions to achieve the high [goodput](https://cloud.google.com/blog/products/ai-machine-learning/goodput-metric-as-measure-of-ml-productivity). Hotswap is one recommended solution to improve the workload recovery time by leveraging the additional capacities.
