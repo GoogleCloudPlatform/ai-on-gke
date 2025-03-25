@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bionemo-training-config
+  namespace: bionemo-training
+data:
+  training-params: |
+    --precision=bf16-mixed
+    --num-gpus 1
+    --num-nodes 1
+    --num-steps 100
+    --val-check-interval 25
+    --max-seq-length 1024
+    --limit-val-batches 2
+    --micro-batch-size 2
+    --num-layers 33
+    --hidden-size 1280
+    --num-attention-head 20
+    --ffn-hidden-size 5120
+    --tensor-model-parallel-size 1
+    --create-tensorboard-logger
