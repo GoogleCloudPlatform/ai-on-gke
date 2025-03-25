@@ -9,7 +9,6 @@ Hotswap takes effect in 2 main ways:
 1. When the nodes hosting workloads become unhealthy, the job will be rescheduled onto eligible spare nodes upon interruption.
 2. If your workload is configured with [PriorityClass](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass), the job that is configured with higher priority will preempt the low priority jobs’ capacities in the same cluster upon interruptions. 
 
-
 ## Example
 In this example, we will show how to set up the workload using [Jobset](https://github.com/kubernetes-sigs/jobset) together with PriorityClass to achieve hotswap. The training jobs are using multi-host TPU slices and [Maxtext](https://github.com/AI-Hypercomputer/maxtext) framework for illustration.
 
