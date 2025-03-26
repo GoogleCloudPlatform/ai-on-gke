@@ -29,7 +29,9 @@ value: 2000000
 globalDefault: false
 description: "This priority class should be used for hero pods only."
 ```
-Now we can create a high priority Jobset workload, making sure to add the priorityClassName to clearly differentiate the workload's priority. The high priority job is a multi-slice training job running on two 4x4 [Trillium](https://cloud.google.com/blog/products/compute/trillium-tpu-is-ga) slices to run a training job with LLama2 7B. **The yamls below are just meant to serve as samples to demonstrate what elements are needed for hotswap to be executed**
+Now we can create a high priority Jobset workload, making sure to add the priorityClassName to clearly differentiate the workload's priority. The high priority job is a multi-slice training job running on two 4x4 [Trillium](https://cloud.google.com/blog/products/compute/trillium-tpu-is-ga) slices to run a training job with LLama2 7B. 
+
+**Note: The yamls below are just meant to serve as samples to demonstrate what elements are needed for hotswap to be executed**
 ```
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
