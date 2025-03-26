@@ -655,8 +655,16 @@ def print_metrics(metrics: List[str], duration: float, backend: str):
       # handle response
       if request_post.ok:
         if response["status"] == "success":
-          metric_results[query_name] = float(response["data"]["result"][0]["value"][1])
-          print("%s: %s" % (query_name, response["data"]["result"][0]["value"][1]))
+          r = response["data"]["result"]
+          if not r:
+            print(f"Failed to get result for {query_name}")
+            continue
+          v = r[0].get("value", None)
+          if not v:
+            print(f"Failed to get value for result: {r}")
+            continue
+          metric_results[query_name] = float(v[1])
+          print("%s: %s" % (query_name, v[1]))
         else:
           print("Cloud Monitoring PromQL Error: %s" % (response["error"]))
       else:
