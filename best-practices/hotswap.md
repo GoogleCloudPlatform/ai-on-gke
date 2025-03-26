@@ -10,7 +10,7 @@ Hotswap takes effect in 2 main ways:
 2. If your workload is configured with [PriorityClass](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass), the job that is configured with higher priority will preempt the low priority jobs’ capacities in the same cluster upon interruptions. 
 
 ## Example
-In this example, we will show how to set up the workload using [Jobset](https://github.com/kubernetes-sigs/jobset) together with PriorityClass to achieve hotswap. The training jobs are using multi-host TPU slices and [Maxtext](https://github.com/AI-Hypercomputer/maxtext) framework for illustration.
+In this example, we will show how to set up the workload using [Jobset](https://github.com/kubernetes-sigs/jobset) together with PriorityClass to achieve hotswap. Jobset is where a lot of the magic takes place. The training jobs are using multi-host TPU slices and [Maxtext](https://github.com/AI-Hypercomputer/maxtext) framework for illustration.
 
 To begin, let's set up two different Priority Classes to indicate our levels of priority.
 ```
@@ -29,7 +29,7 @@ value: 2000000
 globalDefault: false
 description: "This priority class should be used for hero pods only."
 ```
-Now we can create a high priority Jobset workload, making sure to add the priorityClassName to clearly differentiate the workload's priority. The high priority job is a multi-slice training job running on two 4x4 [Trillium](https://cloud.google.com/blog/products/compute/trillium-tpu-is-ga) slices to run a training job with LLama2 7B. 
+Now we can create a high priority Jobset workload, making sure to add the priorityClassName to clearly differentiate the workload's priority. The high priority job is a multi-slice training job running on two 4x4 [Trillium](https://cloud.google.com/blog/products/compute/trillium-tpu-is-ga) slices to run a training job with LLama2 7B. **The yamls below are just meant to serve as samples to demonstrate what elements are needed for hotswap to be executed**
 ```
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
