@@ -258,9 +258,9 @@ steps:
     interval=15  # 15 seconds
 
     # Construct the bucket name and file pattern
-    BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
-    FILE_PATTERN="all_gather_perf*"
-    GCS_FILE_PATH="gs://${BUCKET_NAME}/${FILE_PATTERN}.txt"
+    _BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
+    _FILE_PATTERN="all_gather_perf*"
+    GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
 
     while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
       if gsutil ls "$GCS_FILE_PATH" > /dev/null 2>&1; then
@@ -317,9 +317,9 @@ steps:
     interval=15  # 15 seconds
 
     # Construct the bucket name and file pattern
-    BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
-    FILE_PATTERN="all_gather_perf*"
-    GCS_FILE_PATH="gs://${BUCKET_NAME}/${FILE_PATTERN}.txt"
+    _BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
+    _FILE_PATTERN="all_gather_perf*"
+    GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
 
     while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
       if gsutil ls "$GCS_FILE_PATH" > /dev/null 2>&1; then
