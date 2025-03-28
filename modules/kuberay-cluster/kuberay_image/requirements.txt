@@ -1,5 +1,5 @@
 langchain==0.1.9
-transformers==4.38.1
+transformers==4.48.0
 sentence-transformers==2.5.1
 pyarrow
 datasets==2.18.0
