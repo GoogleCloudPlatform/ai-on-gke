@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "db_secret_name" {
-  description = "Cloud SQL DB secret name"
-  value       = kubernetes_secret.secret.metadata[0].name
-}
+project_id = "flyte_project"
 
-output "db_secret_namespace" {
-  description = "Cloud SQL DB secret namespace"
-  value       = kubernetes_secret.secret.metadata[0].namespace
-}
+## Cluster configuration
+create_cluster   = true
+cluster_name     = "flyte-test"
+cluster_location = "us-central1"
 
-output "instance" {
-  description = "Cloud SQL Instance name"
-  value       = module.cloudsql.instance_name
-}
+autopilot_cluster = true
+enable_gpu = true
 
-output "ip" {
-  value = module.cloudsql.instance_ip_address
+# Network configuration
+create_network = true
+network_name = "flyte"
+subnetwork_name = "flyte"
 
-}
+# GCS bucket configuration
+create_gcs_bucket = true
+gcs_bucket = "flyte-bucket"
+
+# Database configuration
+db_instance_name = "flytepg"
