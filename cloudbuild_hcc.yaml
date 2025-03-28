@@ -260,10 +260,10 @@ steps:
     # Construct the bucket name and file pattern
     _BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
     _FILE_PATTERN="all_gather_perf*"
-    GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
+    _GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
 
     while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
-      if gsutil ls "$GCS_FILE_PATH" > /dev/null 2>&1; then
+      if gsutil ls "$_GCS_FILE_PATH" > /dev/null 2>&1; then
         echo "NCCL test log file(s) found matching pattern" > /workspace/a3m_nccl_result.txt
         exit 0
       fi
@@ -319,10 +319,10 @@ steps:
     # Construct the bucket name and file pattern
     _BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
     _FILE_PATTERN="all_gather_perf*"
-    GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
+    _GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
 
     while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
-      if gsutil ls "$GCS_FILE_PATH" > /dev/null 2>&1; then
+      if gsutil ls "$_GCS_FILE_PATH" > /dev/null 2>&1; then
         echo "NCCL test log file(s) found matching pattern" > /workspace/a3m_nccl_result.txt
         exit 0
       fi
