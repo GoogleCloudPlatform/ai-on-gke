@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "db_secret_name" {
-  description = "Cloud SQL DB secret name"
-  value       = kubernetes_secret.secret.metadata[0].name
-}
-
-output "db_secret_namespace" {
-  description = "Cloud SQL DB secret namespace"
-  value       = kubernetes_secret.secret.metadata[0].namespace
-}
-
-output "instance" {
-  description = "Cloud SQL Instance name"
-  value       = module.cloudsql.instance_name
-}
-
-output "ip" {
-  value = module.cloudsql.instance_ip_address
-
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.8.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.18.1"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "0.11.1"
+    }
+  }
 }
