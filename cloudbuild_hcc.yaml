@@ -42,7 +42,7 @@ steps:
       -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
       -auto-approve -no-color
   
-      echo "cluster creation successfully" > /workspace/a3m_nccl_result.txt
+      echo "cluster creation successfully"
     waitFor: ["validate cluster"]
   
   - id: 'wait for a3m nccl job to complete'
@@ -56,7 +56,6 @@ steps:
       gcloud container clusters get-credentials cloudbuild-a3m-nccl --location $_A3MEGA_REGION --project $_A3MEGA_PROJECT
       if kubectl wait --for=condition=complete=true job/nccl-test-w-0 -n default --timeout=300s; then
         echo "Job 'nccl-test-w-0' completed successfully."
-        echo "nccl job start successfully" > /workspace/a3m_nccl_result.txt
       else
         wait_exit_status=$? 
         echo "Job 'nccl-test-w-0' did not complete within 300 seconds or the job failed."
@@ -78,7 +77,6 @@ steps:
       while [ $(date +%s) -lt $end_time ]; do
           (gsutil cat "$gcs_file_path" 2>/dev/null | grep -q "Avg bus bandwidth") && {
               echo "Success: Found required content in ${gcs_file_path}."
-              echo "nccl log found with necessary contents" > /workspace/a3m_nccl_result.txt
               exit 0
           }
           sleep $interval
@@ -131,7 +129,7 @@ steps:
       -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
       -auto-approve -no-color
   
-      echo "cluster creation successfully" > /workspace/a3m_nemo_result.txt
+      echo "cluster creation successfully"
     waitFor: ["cleanup a3m with nccl"]
   
   - id: 'wait for a3m nemo job to complete'
@@ -145,7 +143,6 @@ steps:
       gcloud container clusters get-credentials cloudbuild-a3m-nemo --location $_A3MEGA_REGION --project $_A3MEGA_PROJECT
       if kubectl wait --for=condition=complete=true job/benchmark -n default --timeout=3000s; then
         echo "Job 'benchmark' completed successfully."
-        echo "nemo job start successfully" > /workspace/a3m_nemo_result.txt
       else
         wait_exit_status=$? 
         echo "Job 'benchmark' did not complete within 3000 seconds or the job failed."
@@ -178,7 +175,6 @@ steps:
               END { exit !(found_k1 && found_k2) }
           '; then
               echo "Success: Found file(s) with both required keywords."
-              echo "nccl log found with necessary contents" > /workspace/a3m_nemo_result.txt
               exit 0 
           else
               echo "File(s) or required keywords not ready yet. Retrying..."
