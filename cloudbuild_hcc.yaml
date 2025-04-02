@@ -13,388 +13,217 @@
 # limitations under the License.
 
 steps:
-
-# - id: 'create a3ultra with nccl'
-#   name: 'gcr.io/$PROJECT_ID/terraform'
-#   entrypoint: 'sh'
-#   args:
-#   - '-c'
-#   - |
-#     set -e
-
-#     cd /workspace/applications/hcc/
-#     terraform apply \
-#     -var-file=a3ultra_workloads.tfvars \
-#     -var=project_id=$_A3ULTRA_PROJECT \
-#     -var=a3ultra_recipe="gke-nccl" \
-#     -var=gpu_type="A3 Ultra" \
-#     -var=node_count_gke_nccl=2 \
-#     -var=goog_cm_deployment_name="cloudbuild-a3u-nccl" \
-#     -var=a3_ultra_zone=$_A3ULTRA_ZONE \
-#     -var=reservation=$_A3ULTRA_RESERVATION \
-#     -var=placement_policy_name=$_A3ULTRA_PLACEMENT_POLICY_NAME \
-#     -auto-approve -no-color
-
-#     echo "pass" > /workspace/a3u_nccl_result.txt
-#   allowFailure: true
-#   waitFor: ["-"]
-
-
-# - id: 'cleanup a3ultra with nccl'
-#   name: 'gcr.io/$PROJECT_ID/terraform'
-#   entrypoint: 'bash'
-#   args:
-#   - '-c'
-#   - |
-#     set -e
-
-#     cd /workspace/applications/hcc/
-#     terraform destroy \
-#     -var-file=a3ultra_workloads.tfvars \
-#     -var=project_id=$_A3ULTRA_PROJECT \
-#     -var=a3ultra_recipe="gke-nccl" \
-#     -var=gpu_type="A3 Ultra" \
-#     -var=node_count_gke_nccl=2 \
-#     -var=goog_cm_deployment_name="cloudbuild-a3u-nccl" \
-#     -var=a3_ultra_zone=$_A3ULTRA_ZONE \
-#     -var=reservation=$_A3ULTRA_RESERVATION \
-#     -var=placement_policy_name=$_A3ULTRA_PLACEMENT_POLICY_NAME \
-#     -auto-approve -no-color
-#   allowFailure: true
-#   waitFor: ['create a3ultra with nccl']
-
-# - id: 'create a3ultra with llama7b'
-#   name: 'gcr.io/$PROJECT_ID/terraform'
-#   entrypoint: 'sh'
-#   args:
-#   - '-c'
-#   - |
-#     set -e
-
-#     cd /workspace/applications/hcc/
-#     terraform apply \
-#     -var-file=a3ultra_workloads.tfvars \
-#     -var=project_id=$_A3ULTRA_PROJECT \
-#     -var=a3ultra_recipe="llama3.1_7b_nemo_pretraining" \
-#     -var=gpu_type="A3 Ultra" \
-#     -var=node_count_nemo=2 \
-#     -var=goog_cm_deployment_name="cloudbuild-a3u-nccl" \
-#     -var=a3_ultra_zone=$_A3ULTRA_ZONE \
-#     -var=reservation=$_A3ULTRA_RESERVATION \
-#     -var=placement_policy_name=$_A3ULTRA_PLACEMENT_POLICY_NAME \
-#     -auto-approve -no-color
-
-#     echo "pass" > /workspace/a3u_llama7b_result.txt
-#   allowFailure: true
-#   waitFor: ["-"]
-
-
-# - id: 'cleanup a3ultra with llama7b'
-#   name: 'gcr.io/$PROJECT_ID/terraform'
-#   entrypoint: 'bash'
-#   args:
-#   - '-c'
-#   - |
-#     set -e
-
-#     cd /workspace/applications/hcc/
-#     terraform destroy \
-#     -var-file=a3ultra_workloads.tfvars \
-#     -var=project_id=$_A3ULTRA_PROJECT \
-#     -var=a3ultra_recipe="llama3.1_7b_nemo_pretraining" \
-#     -var=gpu_type="A3 Ultra" \
-#     -var=node_count_nemo=2 \
-#     -var=goog_cm_deployment_name="cloudbuild-a3u-nccl" \
-#     -var=a3_ultra_zone=$_A3ULTRA_ZONE \
-#     -var=reservation=$_A3ULTRA_RESERVATION \
-#     -var=placement_policy_name=$_A3ULTRA_PLACEMENT_POLICY_NAME \
-#     -auto-approve -no-color
-#   allowFailure: true
-#   waitFor: ['create a3ultra with llama7b']
-
-- id: 'create a3mega with nccl'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/hcc/
-    terraform apply \
-    -var-file=a3mega_workloads.tfvars \
-    -var=project_id=$_A3MEGA_PROJECT \
-    -var=a3mega_recipe="gke-nccl" \
-    -var=gpu_type="A3 Mega" \
-    -var=node_count_gke_nccl=2 \
-    -var=goog_cm_deployment_name="cloudbuild-a3m-nccl" \
-    -var=a3_mega_zone=$_A3MEGA_ZONE \
-    -var=reservation=$_A3MEGA_RESERVATION \
-    -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
-    -auto-approve -no-color
-
-    echo "pass" > /workspace/a3m_nccl_result.txt
-  allowFailure: true
-  waitFor: ["-"]
-
-
-- id: 'cleanup a3mega with nccl'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/hcc/
-    terraform destroy \
-    -var-file=a3mega_workloads.tfvars \
-    -var=project_id=$_A3MEGA_PROJECT \
-    -var=a3mega_recipe="gke-nccl" \
-    -var=gpu_type="A3 Mega" \
-    -var=node_count_gke_nccl=2 \
-    -var=goog_cm_deployment_name="cloudbuild-a3m-nccl" \
-    -var=a3_mega_zone=$_A3MEGA_ZONE \
-    -var=reservation=$_A3MEGA_RESERVATION \
-    -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
-    -auto-approve -no-color
-  allowFailure: true
-  waitFor: ['check a3m NCCL result']
-
-# - id: 'create a3mega with llama7b'
-#   name: 'gcr.io/$PROJECT_ID/terraform'
-#   entrypoint: 'sh'
-#   args:
-#   - '-c'
-#   - |
-#     set -e
-
-#     cd /workspace/applications/hcc/
-#     terraform apply \
-#     -var-file=a3mega_workloads.tfvars \
-#     -var=project_id=$_A3MEGA_PROJECT \
-#     -var=a3mega_recipe="llama3.1_7b_nemo_pretraining" \
-#     -var=gpu_type="A3 Mega" \
-#     -var=node_count_nemo=2 \
-#     -var=goog_cm_deployment_name="cloudbuild-a3m-nccl" \
-#     -var=a3_ultra_zone=$_A3MEGA_ZONE \
-#     -var=reservation=$_A3MEGA_RESERVATION \
-#     -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
-#     -auto-approve -no-color
-
-#     echo "pass" > /workspace/a3m_llama7b_result.txt
-#   allowFailure: true
-#   waitFor: ["-"]
-
-
-# - id: 'cleanup a3mega with llama7b'
-#   name: 'gcr.io/$PROJECT_ID/terraform'
-#   entrypoint: 'bash'
-#   args:
-#   - '-c'
-#   - |
-#     set -e
-
-#     cd /workspace/applications/hcc/
-#     terraform destroy \
-#     -var-file=a3mega_workloads.tfvars \
-#     -var=project_id=$_A3MEGA_PROJECT \
-#     -var=a3mega_recipe="llama3.1_7b_nemo_pretraining" \
-#     -var=gpu_type="A3 Mega" \
-#     -var=node_count_nemo=2 \
-#     -var=goog_cm_deployment_name="cloudbuild-a3m-nccl" \
-#     -var=a3_ultra_zone=$_A3MEGA_ZONE \
-#     -var=reservation=$_A3MEGA_RESERVATION \
-#     -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
-#     -auto-approve -no-color
-#   allowFailure: true
-#   waitFor: ['create a3mega with llama7b']
-
-- id: 'wait for a3m nccl job to start'
-  name: 'gcr.io/cloud-builders/kubectl'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    gcloud container clusters get-credentials \
-    $_A3MEGA_DEPLOYMENT_NAME \
-    --location $_A3MEGA_ZONE \
-    --project $_A3MEGA_PROJECT
-    
-    # Set the timeout and interval
-    timeout=120  # 2 minutes
-    interval=5   # 5 seconds
-
-    _JOB_NAME=$(kubectl get job -n default -o json | jq -r '.items[].metadata.name' | grep 'nccl-test')
-
-    # Loop until the job status is 'Running' or timeout
-    while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
-        status=$(kubectl get job "$_JOB_NAME" -n default -o json | jq -r '.status.conditions[].type')
-
-        if [[ "$status" == "Complete" ]]; then
-          echo "pass: nccl start successfully" > /workspace/a3m_nccl_result.txt
-          exit 0
-        fi
-        sleep $interval
-    done
-
-    echo "Timeout reached. Job did not start within $timeout seconds."
-    exit 1
-  allowFailure: true
-  waitFor: ['create a3mega with nccl']
-
-- id: 'check a3m NCCL result'
-  name: 'gcr.io/cloud-builders/gsutil'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    # Set the timeout and interval
-    timeout=300  # 10 minutes
-    interval=15  # 15 seconds
-
-    # Construct the bucket name and file pattern
-    _BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
-    _FILE_PATTERN="all_gather_perf*"
-    _GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
-
-    while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
-      if gsutil ls "$_GCS_FILE_PATH" > /dev/null 2>&1; then
-        echo "NCCL test log file(s) found matching pattern" > /workspace/a3m_nccl_result.txt
-        exit 0
+  - id: "validate cluster"
+    name: "hashicorp/terraform:latest"
+    script: |
+      terraform init -no-color
+      terraform validate -no-color
+    dir: "applications/hcc/"
+    waitFor: ["-"]
+  
+  - id: 'create a3m with nccl'
+    name: 'hashicorp/terraform:latest'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+  
+      cd /workspace/applications/hcc/
+      terraform apply \
+      -var-file=a3mega_workloads.tfvars \
+      -var=project_id=$_A3MEGA_PROJECT \
+      -var=a3mega_recipe="gke-nccl" \
+      -var=gpu_type="A3 Mega" \
+      -var=node_count_gke_nccl=2 \
+      -var=goog_cm_deployment_name="cloudbuild-a3m-nccl" \
+      -var=a3_mega_zone=$_A3MEGA_ZONE \
+      -var=reservation=$_A3MEGA_RESERVATION \
+      -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
+      -auto-approve -no-color
+  
+      echo "cluster creation successfully" > /workspace/a3m_nccl_result.txt
+    waitFor: ["validate cluster"]
+  
+  - id: 'wait for a3m nccl job to complete'
+    name: 'gcr.io/cloud-builders/kubectl'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+  
+      gcloud container clusters get-credentials cloudbuild-a3m-nccl --location $_A3MEGA_REGION --project $_A3MEGA_PROJECT
+      if kubectl wait --for=condition=complete=true job/nccl-test-w-0 -n default --timeout=300s; then
+        echo "Job 'nccl-test-w-0' completed successfully."
+        echo "nccl job start successfully" > /workspace/a3m_nccl_result.txt
+      else
+        wait_exit_status=$? 
+        echo "Job 'nccl-test-w-0' did not complete within 300 seconds or the job failed."
+        exit 1 
       fi
-    done
-    exit 1
-  waitFor: ['wait for a3m nccl job to start']
-
-- id: 'wait for a3m nemo job to start'
-  name: 'gcr.io/cloud-builders/kubectl'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    gcloud container clusters get-credentials \
-    $_A3MEGA_DEPLOYMENT_NAME \
-    --location $_A3MEGA_ZONE \
-    --project $_A3MEGA_PROJECT
-    
-    # Set the timeout and interval
-    timeout=120  # 2 minutes
-    interval=5   # 5 seconds
-
-    # Loop until the job status is 'Running' or timeout
-    while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
-        status=$(kubectl get job benchmark -n default -o json | jq -r '.status.conditions[].type')
-
-        if [[ "$status" == "Complete" ]]; then
-          echo "pass: nccl start successfully" > /workspace/a3m_nccl_result.txt
-          exit 0
-        fi
-        sleep $interval
-    done
-
-    echo "Timeout reached. Job did not start within $timeout seconds."
-    exit 1
-  allowFailure: true
-  waitFor: ['create a3mega with llama7b']
-
-- id: 'check a3m nemo result'
-  name: 'gcr.io/cloud-builders/gsutil'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    # Set the timeout and interval
-    timeout=300  # 10 minutes
-    interval=15  # 15 seconds
-
-    # Construct the bucket name and file pattern
-    _BUCKET_NAME="${_A3MEGA_PROJECT}-${_A3MEGA_DEPLOYMENT_NAME}-result"
-    _FILE_PATTERN="all_gather_perf*"
-    _GCS_FILE_PATH="gs://${_BUCKET_NAME}/${_FILE_PATTERN}.txt"
-
-    while [ $(date +%s) -lt $(($timeout + $(date +%s))) ]; do
-      if gsutil ls "$_GCS_FILE_PATH" > /dev/null 2>&1; then
-        echo "NCCL test log file(s) found matching pattern" > /workspace/a3m_nccl_result.txt
-        exit 0
+    waitFor: ['create a3m with nccl']
+  
+  - id: 'check a3m nccl result'
+    name: 'gcr.io/cloud-builders/gsutil'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+      gcs_file_path=gs://${_A3MEGA_PROJECT}-cloudbuild-a3m-nccl-result/all_gather_perf*.txt
+      timeout=300 
+      interval=20 
+      end_time=$(($(date +%s) + timeout))
+      while [ $(date +%s) -lt $end_time ]; do
+          (gsutil cat "$gcs_file_path" 2>/dev/null | grep -q "Avg bus bandwidth") && {
+              echo "Success: Found required content in ${gcs_file_path}."
+              echo "nccl log found with necessary contents" > /workspace/a3m_nccl_result.txt
+              exit 0
+          }
+          sleep $interval
+      done
+      echo "Error: Timeout after ${timeout} seconds waiting for content in ${gcs_file_path}."
+      exit 1
+    waitFor: ["wait for a3m nccl job to complete"]
+  
+  - id: 'cleanup a3m with nccl'
+    name: 'hashicorp/terraform:latest'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+  
+      cd /workspace/applications/hcc/
+      terraform destroy \
+      -var-file=a3mega_workloads.tfvars \
+      -var=project_id=$_A3MEGA_PROJECT \
+      -var=a3mega_recipe="gke-nccl" \
+      -var=gpu_type="A3 Mega" \
+      -var=node_count_gke_nccl=2 \
+      -var=goog_cm_deployment_name="cloudbuild-a3m-nccl" \
+      -var=a3_mega_zone=$_A3MEGA_ZONE \
+      -var=reservation=$_A3MEGA_RESERVATION \
+      -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
+      -auto-approve -no-color
+    waitFor: ["check a3m nccl result"]
+  
+  
+  - id: 'create a3m with nemo'
+    name: 'hashicorp/terraform:latest'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+  
+      cd /workspace/applications/hcc/
+      terraform apply \
+      -var-file=a3mega_workloads.tfvars \
+      -var=project_id=$_A3MEGA_PROJECT \
+      -var=a3mega_recipe="llama3.1_7b_nemo_pretraining" \
+      -var=gpu_type="A3 Mega" \
+      -var=node_count_llama_3_7b=2 \
+      -var=goog_cm_deployment_name="cloudbuild-a3m-nemo" \
+      -var=a3_mega_zone=$_A3MEGA_ZONE \
+      -var=reservation=$_A3MEGA_RESERVATION \
+      -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
+      -auto-approve -no-color
+  
+      echo "cluster creation successfully" > /workspace/a3m_nemo_result.txt
+    waitFor: ["cleanup a3m with nccl"]
+  
+  - id: 'wait for a3m nemo job to complete'
+    name: 'gcr.io/cloud-builders/kubectl'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+  
+      gcloud container clusters get-credentials cloudbuild-a3m-nemo --location $_A3MEGA_REGION --project $_A3MEGA_PROJECT
+      if kubectl wait --for=condition=complete=true job/benchmark -n default --timeout=3000s; then
+        echo "Job 'benchmark' completed successfully."
+        echo "nemo job start successfully" > /workspace/a3m_nemo_result.txt
+      else
+        wait_exit_status=$? 
+        echo "Job 'benchmark' did not complete within 3000 seconds or the job failed."
+        exit 1 
       fi
-    done
-    exit 1
-  waitFor: ['wait for a3m nemo job to start']
-
-
-
-
-- id: 'check result'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    if [[ $(cat /workspace/a3u_nccl_result.txt) != "pass" ]]; then
-      echo "a3ultra with nccl creation failed"
+    waitFor: ['create a3m with nemo']
+  
+  - id: 'check a3m nemo result'
+    name: 'gcr.io/cloud-builders/gsutil'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+  
+      gcs_file_path="gs://${_A3MEGA_PROJECT}-cloudbuild-a3m-nemo-result/nemo-experiments/benchmark-*/dllogger/rank-0/dllogger.json"
+      keyword1="reduced_train_loss"
+      keyword2="validation_step_timing"
+      timeout=300  
+      interval=20  
+      end_time=$(($(date +%s) + timeout))
+      echo "Polling for GCS file(s): ${gcs_file_path}"
+      echo "Requiring keywords: '${keyword1}' AND '${keyword2}'"
+      echo "Timeout: ${timeout}s, Interval: ${interval}s."
+      while [ $(date +%s) -lt $end_time ]; do
+          echo "Checking GCS at $(date)..."
+          if gsutil cat "$gcs_file_path" 2>/dev/null | awk -v k1="$keyword1" -v k2="$keyword2" '
+              $0 ~ k1 { found_k1 = 1 }
+              $0 ~ k2 { found_k2 = 1 }
+              END { exit !(found_k1 && found_k2) }
+          '; then
+              echo "Success: Found file(s) with both required keywords."
+              echo "nccl log found with necessary contents" > /workspace/a3m_nemo_result.txt
+              exit 0 
+          else
+              echo "File(s) or required keywords not ready yet. Retrying..."
+          fi
+          sleep $interval
+      done
+      echo "Error: Timeout after ${timeout} seconds waiting for content in ${gcs_file_path}."
       exit 1
-    fi
-
-    if [[ $(cat /workspace/a3u_llama7b_result.txt) != "pass" ]]; then
-      echo "a3ultra with llama7b creation failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/a3m_nccl_result.txt) != "pass" ]]; then
-      echo "a3mega with nccl creation failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/a3m_llama7b_result.txt) != "pass" ]]; then
-      echo "a3mega with llama7b creation failed"
-      exit 1
-    fi
-    
-    if [[ $(cat /workspace/a3m_nccl_result.txt) != "pass: nccl start successfully" ]]; then
-      echo "a3mega with nccl job start failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/a3m_nccl_result.txt) != "NCCL test log file(s) found matching pattern" ]]; then
-      echo "a3mega with nccl test failed or result file not found"
-      exit 1
-    fi
-
-    
-
-
-  waitFor: ['cleanup a3ultra with nccl', 'cleanup a3ultra with llama7b', 'cleanup a3mega with nccl', 'cleanup a3mega with llama7b']
-
+    waitFor: ["wait for a3m nemo job to complete"]
+  
+  - id: 'cleanup a3m with nemo'
+    name: 'hashicorp/terraform:latest'
+    entrypoint: 'sh'
+    args:
+    - '-c'
+    - |
+      set -e
+  
+      cd /workspace/applications/hcc/
+      terraform destroy \
+      -var-file=a3mega_workloads.tfvars \
+      -var=project_id=$_A3MEGA_PROJECT \
+      -var=a3mega_recipe="llama3.1_7b_nemo_pretraining" \
+      -var=gpu_type="A3 Mega" \
+      -var=node_count_llama_3_7b=2 \
+      -var=goog_cm_deployment_name="cloudbuild-a3m-nemo" \
+      -var=a3_ultra_zone=$_A3MEGA_ZONE \
+      -var=reservation=$_A3MEGA_RESERVATION \
+      -var=placement_policy_name=$_A3MEGA_PLACEMENT_POLICY_NAME \
+      -auto-approve -no-color
+    waitFor: ['check a3m nemo result']
+  
 substitutions:
   _A3ULTRA_ZONE: ""
+  _A3ULTRA_REGION: ""
   _A3ULTRA_PROJECT: ""
   _A3ULTRA_RESERVATION: ""
   _A3ULTRA_PLACEMENT_POLICY_NAME: ""
-  _A3MEGA_ZONE: australia-southeast1-c
-  _A3MEGA_PROJECT: "supercomputer-testing"
-  _A3MEGA_RESERVATION: "hcc-a3mega"
-  _A3MEGA_PLACEMENT_POLICY_NAME: "kevinmcw-test"
-  _REGION: us-east4
-  _USER_NAME: github
-  _AUTOPILOT_CLUSTER: "false"
-  _BUILD_ID: ${BUILD_ID:0:8}
-logsBucket: gs://ai-on-gke-build-logs
+  _A3MEGA_ZONE: ""
+  _A3MEGA_REGION: ""
+  _A3MEGA_PROJECT: ""
+  _A3MEGA_RESERVATION: ""
+  _A3MEGA_PLACEMENT_POLICY_NAME: ""
+  # logsBucket: gs://ai-on-gke-build-logs
 options:
+  logging: CLOUD_LOGGING_ONLY
   substitutionOption: "ALLOW_LOOSE"
-  machineType: "E2_HIGHCPU_8"
-timeout: 5400s
-availableSecrets:
-  secretManager:
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-username/versions/latest
-    env: "KAGGLE_USERNAME"
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-key/versions/latest
-    env: "KAGGLE_KEY"
+timeout: 9000s
