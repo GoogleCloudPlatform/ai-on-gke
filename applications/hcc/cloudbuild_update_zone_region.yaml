@@ -20,7 +20,7 @@ steps:
       - '-c'
       - |
         set -e
-        echo "Checking for file modifications..."
+        echo "Checking for file modifications...."
 
         git_status_output=$(git status --porcelain)
 
