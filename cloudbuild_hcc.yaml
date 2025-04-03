@@ -71,19 +71,14 @@ steps:
     - |
       set -e
       gcs_file_path=gs://${_A3MEGA_PROJECT}-cloudbuild-a3m-nccl-result/all_gather_perf*.txt
-      timeout=300 
-      interval=20 
-      end_time=$(($(date +%s) + timeout))
-      while [ $(date +%s) -lt $end_time ]; do
-          (gsutil cat "$gcs_file_path" 2>/dev/null | grep -q "Avg bus bandwidth") && {
-              echo "Success: Found required content in ${gcs_file_path}."
-              exit 0
-          }
-          sleep $interval
-      done
-      echo "Error: Timeout after ${timeout} seconds waiting for content in ${gcs_file_path}."
-      exit 1
-    waitFor: ["wait for a3m nccl job to complete"]
+      if (gsutil cat "$gcs_file_path" 2>/dev/null | grep -q "Avg bus bandwidth"); then
+          echo "Success: Found required content in ${gcs_file_path}."
+          echo "nccl log found with necessary contents"
+          exit 0
+      else
+          echo "Error: Required content 'Avg bus bandwidth' not found in ${gcs_file_path}, file(s) might be missing, inaccessible, or lack content."
+          exit 1
+      fi
   
   - id: 'cleanup a3m with nccl'
     name: 'hashicorp/terraform:latest'
@@ -161,29 +156,19 @@ steps:
       gcs_file_path="gs://${_A3MEGA_PROJECT}-cloudbuild-a3m-nemo-result/nemo-experiments/benchmark-*/dllogger/rank-0/dllogger.json"
       keyword1="reduced_train_loss"
       keyword2="validation_step_timing"
-      timeout=300  
-      interval=20  
-      end_time=$(($(date +%s) + timeout))
-      echo "Polling for GCS file(s): ${gcs_file_path}"
-      echo "Requiring keywords: '${keyword1}' AND '${keyword2}'"
-      echo "Timeout: ${timeout}s, Interval: ${interval}s."
-      while [ $(date +%s) -lt $end_time ]; do
-          echo "Checking GCS at $(date)..."
-          if gsutil cat "$gcs_file_path" 2>/dev/null | awk -v k1="$keyword1" -v k2="$keyword2" '
-              $0 ~ k1 { found_k1 = 1 }
-              $0 ~ k2 { found_k2 = 1 }
-              END { exit !(found_k1 && found_k2) }
-          '; then
-              echo "Success: Found file(s) with both required keywords."
-              exit 0 
-          else
-              echo "File(s) or required keywords not ready yet. Retrying..."
-          fi
-          sleep $interval
-      done
-      echo "Error: Timeout after ${timeout} seconds waiting for content in ${gcs_file_path}."
-      exit 1
-    waitFor: ["wait for a3m nemo job to complete"]
+      echo "Checking for keywords '${keyword1}' AND '${keyword2}' in ${gcs_file_path}..."
+      if gsutil cat "$gcs_file_path" 2>/dev/null | awk -v k1="$keyword1" -v k2="$keyword2" '
+          $0 ~ k1 { found_k1 = 1 }
+          $0 ~ k2 { found_k2 = 1 }
+          END { exit !(found_k1 && found_k2) }
+      '; then
+          echo "Success: Found file(s) with both required keywords."
+          echo "Nemo result file found with necessary contents" > /workspace/a3m_nemo_result.txt
+          exit 0
+      else
+          echo "Error: Required keywords not found in file(s) matching ${gcs_file_path}, or files inaccessible."
+          exit 1
+      fi
   
   - id: 'cleanup a3m with nemo'
     name: 'hashicorp/terraform:latest'
