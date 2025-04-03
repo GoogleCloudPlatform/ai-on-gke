@@ -22,8 +22,9 @@ The script uses the Google Cloud Compute Engine API to retrieve information abou
   ```
 ## Usage
 * Run the script with the `--project_id` argument:
-  ```
-  python update-region.py --project_id your-project-id
+  ```Bash
+  cd ./applications/hcc/
+  python update_zone_region.py --project_id your-project-id
   ```
   Replace `your-project-id` with your actual Google Cloud Project ID.
 
