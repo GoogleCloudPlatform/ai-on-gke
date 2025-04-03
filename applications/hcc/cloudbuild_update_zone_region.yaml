@@ -10,7 +10,8 @@ steps:
         pip install --quiet --no-warn-script-location pyyaml google-cloud-compute
 
         echo "Running update script for project ${PROJECT_ID}..."
-        python ./applications/hcc/update_zone_region.py --project_id "$PROJECT_ID"
+        cd ./applications/hcc/
+        python update_zone_region.py --project_id "$PROJECT_ID"
         echo "Script finished."
 
   - name: 'gcr.io/cloud-builders/git' 

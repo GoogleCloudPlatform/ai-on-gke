@@ -32,7 +32,7 @@ The script uses the Google Cloud Compute Engine API to retrieve information abou
 To update the `metadata.display.yaml` file with the available zones for the `a3-megagpu-8g` and `a3-ultragpu-8g` machine types in the `your-project-id` project, and generate the `zone_to_region.json` file:
 ```Bash
 cd ./applications/hcc/
-python update-region.py --project_id your-project-id
+python update_zone_region.py --project_id your-project-id
 ```
 This will:
 
