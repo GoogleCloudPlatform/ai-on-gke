@@ -208,6 +208,7 @@ steps:
     waitFor: ['check a3m nemo result']
   
 substitutions:
+  # TODO: Populate the following attribute before submitting cloud build job
   _A3ULTRA_ZONE: ""
   _A3ULTRA_REGION: ""
   _A3ULTRA_PROJECT: ""
