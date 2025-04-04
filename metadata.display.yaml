@@ -97,9 +97,7 @@ spec:
           name: a3_mega_consumption_model
           title: Consumption options
           section: required_config
-          subtext: For optimal performance with distributed AI workloads, reserve
-            densely allocated accelerator capacity. See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption
-            options</i></a> for more details.</br>
+          subtext: See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption options</i></a> for more details.</br>
           enumValueLabels:
           - label: Reservation
             value: Reservation
@@ -112,9 +110,7 @@ spec:
           name: a3_ultra_consumption_model
           title: Consumption options
           section: required_config
-          subtext: For optimal performance with distributed AI workloads, reserve
-            densely allocated accelerator capacity. See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption
-            options</i></a> for more details.</br>
+          subtext: See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption options</i></a> for more details.</br>
           enumValueLabels:
           - label: Reservation
             value: Reservation
