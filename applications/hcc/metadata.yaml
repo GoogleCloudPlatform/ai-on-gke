@@ -1,0 +1,83 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: ai-on-gke
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: HyperCompute Cluster on GKE 
+    source:
+      repo: https://github.com/GoogleCloudPlatform/ai-on-gke
+      sourceType: git
+      dir: /applications/hcc
+    actuationTool:
+      flavor: Terraform
+    description: {}
+  content: {}
+  interfaces:
+    variables:
+      - name: goog_cm_deployment_name
+        varType: string
+        defaultValue: ""
+      - name: project_id
+        description: GCP project id
+        varType: string
+        required: true
+      - name: gpu_type
+        varType: string
+        required: true
+        defaultValue: ""
+      - name: a3_mega_zone
+        varType: string
+        defaultValue: ""
+      - name: a3_ultra_zone
+        varType: string
+        defaultValue: ""
+      - name: a3_mega_consumption_model
+        varType: string
+        defaultValue: "Reservation"
+      - name: a3_ultra_consumption_model
+        varType: string
+        defaultValue: "Reservation"
+      - name: reservation
+        varType: string
+        defaultValue: ""
+        required: true
+      - name: reservation_block
+        varType: string
+        defaultValue: ""
+      - name: placement_policy_name
+        varType: string
+        defaultValue: ""
+      - name: a3mega_recipe
+        varType: string
+        defaultValue: ""
+      - name: a3ultra_recipe
+        varType: string
+        defaultValue: ""
+      - name: node_count_gke
+        varType: number
+        defaultValue: 0
+      - name: node_count_gke_nccl
+        varType: number
+        defaultValue: 2
+      - name: node_count_llama_3_7b
+        varType: number
+        defaultValue: -1
+      - name: node_count_nemo
+        varType: number
+        defaultValue: -1 
+      - name: node_count_maxtext
+        varType: number
+        defaultValue: -1
+      - name: additional_labels
+        description: Additional labels to add to Kubernetes resources.
+        varType: string
+        defaultValue: "created-by=gke-ai-quick-start-solutions,ai.gke.io=ray"
+      - name: acknowledge
+        varType: bool
+        required: true
+      - name: solution_deployment_view
+        varType: bool
+        required: true

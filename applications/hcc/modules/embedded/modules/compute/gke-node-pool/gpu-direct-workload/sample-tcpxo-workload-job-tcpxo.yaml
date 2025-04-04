@@ -1,0 +1,198 @@
+"apiVersion": 
+  batch/v1
+"kind": 
+  Job
+"metadata":
+  "name": 
+    my-sample-job
+"spec":
+  "parallelism": 
+    2
+  "completions": 
+    2
+  "completionMode": 
+    Indexed
+  "template":
+    "spec":
+      "hostname": 
+        host1
+      "subdomain": 
+        nccl-host-1
+      "containers":
+      - "name": 
+          tcpxo-daemon
+        "image": 
+          us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/tcpgpudmarxd-dev:v1.0.10
+        "imagePullPolicy": 
+          Always
+        "command":
+        - 
+          /bin/sh
+        - 
+          -c
+        "args":
+        - 
+          |
+                          set -ex
+                          chmod 755 /fts/entrypoint_rxdm_container.sh
+                          /fts/entrypoint_rxdm_container.sh --num_hops=2 --num_nics=8 --uid= --alsologtostderr
+        "securityContext":
+          "capabilities":
+            "add":
+            - 
+              NET_ADMIN
+            - 
+              NET_BIND_SERVICE
+        "volumeMounts":
+        - "name": 
+            nvidia-install-dir-host
+          "mountPath": 
+            /usr/local/nvidia
+        - "name": 
+            sys
+          "mountPath": 
+            /hostsysfs
+        - "name": 
+            proc-sys
+          "mountPath": 
+            /hostprocsysfs
+        "env":
+        - "name": 
+            LD_LIBRARY_PATH
+          "value": 
+            /usr/local/nvidia/lib64
+      - "name": 
+          nccl-test
+        "image": 
+          us-docker.pkg.dev/gce-ai-infra/gpudirect-tcpxo/nccl-plugin-gpudirecttcpx-dev:v1.0.3
+        "imagePullPolicy": 
+          Always
+        "command":
+        - 
+          /bin/sh
+        - 
+          -c
+        - |
+          set -ex
+          chmod 755  /scripts/demo-run-nccl-test-tcpxo-via-mpi.sh
+          cat >/scripts/allgather.sh <<EOF
+          #!/bin/bash
+          /scripts/init_ssh.sh \${@};
+          pushd /scripts;
+          /scripts/gen_hostfiles.sh \${@};
+          popd;
+          BENCHMARK=all_gather_perf NHOSTS=2 NCCL_LIB_DIR="${LD_LIBRARY_PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" /scripts/demo-run-nccl-test-tcpxo-via-mpi.sh
+          EOF
+          chmod +x /scripts/allgather.sh
+          service ssh restart;
+          sleep infinity;
+        "env":
+        - "name": 
+            LD_LIBRARY_PATH
+          "value": 
+            /usr/local/nvidia/lib64
+        - "name": 
+            NCCL_FASTRAK_LLCM_DEVICE_DIRECTORY
+          "value": 
+            /dev/aperture_devices
+        - "name": 
+            LD_LIBRARY_PATH
+          "value": 
+            /usr/local/nvidia/lib64
+        - "name": 
+            NCCL_FASTRAK_LLCM_DEVICE_DIRECTORY
+          "value": 
+            /dev/aperture_devices
+        "volumeMounts":
+        - "name": 
+            nvidia
+          "mountPath": 
+            /usr/local/nvidia/lib64
+        - "name": 
+            shared-memory
+          "mountPath": 
+            /dev/shm
+        - "name": 
+            aperture-devices
+          "mountPath": 
+            /dev/aperture_devices
+        "resources":
+          "limits":
+            "nvidia.com/gpu": 
+              8
+      "volumes":
+      - "name": 
+          nvidia
+        "hostPath":
+          "path": 
+            /home/kubernetes/bin/nvidia/lib64
+      - "name": 
+          shared-memory
+        "emptyDir":
+          "medium": 
+            Memory
+          "sizeLimit": 
+            1Gi
+      - "name": 
+          nvidia-install-dir-host
+        "hostPath":
+          "path": 
+            /home/kubernetes/bin/nvidia
+      - "name": 
+          sys
+        "hostPath":
+          "path": 
+            /sys
+      - "name": 
+          proc-sys
+        "hostPath":
+          "path": 
+            /proc/sys
+      - "name": 
+          aperture-devices
+        "hostPath":
+          "path": 
+            /dev/aperture_devices
+      "restartPolicy": 
+        Never
+      "tolerations":
+      - "key": 
+          user-workload
+        "operator": 
+          Equal
+        "value": 
+          "true"
+        "effect": 
+          NoSchedule
+    "metadata":
+      "annotations":
+        "devices.gke.io/container.tcpxo-daemon": 
+          |+
+          - path: /dev/nvidia0
+          - path: /dev/nvidia1
+          - path: /dev/nvidia2
+          - path: /dev/nvidia3
+          - path: /dev/nvidia4
+          - path: /dev/nvidia5
+          - path: /dev/nvidia6
+          - path: /dev/nvidia7
+          - path: /dev/nvidiactl
+          - path: /dev/nvidia-uvm
+          - path: /dev/dmabuf_import_helper
+        "networking.gke.io/default-interface": 
+          eth0
+        "networking.gke.io/interfaces": 
+          |
+          [
+              {"interfaceName":"eth0","network":"default"},
+              {"interfaceName":"eth1","network":"vpc1"},
+              {"interfaceName":"eth2","network":"vpc2"},
+              {"interfaceName":"eth3","network":"vpc3"},
+              {"interfaceName":"eth4","network":"vpc4"},
+              {"interfaceName":"eth5","network":"vpc5"},
+              {"interfaceName":"eth6","network":"vpc6"},
+              {"interfaceName":"eth7","network":"vpc7"},
+              {"interfaceName":"eth8","network":"vpc8"}
+          ]
+  "backoffLimit": 
+    0
