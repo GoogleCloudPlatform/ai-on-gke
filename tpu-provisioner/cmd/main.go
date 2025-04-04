@@ -79,19 +79,24 @@ func main() {
 		GCPCluster            string `envconfig:"GCP_CLUSTER"`
 		GCPNodeServiceAccount string `envconfig:"GCP_NODE_SERVICE_ACCOUNT"`
 
-		GCPNodeTags          []string `envconfig:"GCP_NODE_TAGS"`
-		GCPPodToNodeLabels   []string `envconfig:"GCP_POD_TO_NODE_LABELS"`
-		GCPNodeSecondaryDisk string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
-		GCPNodeSecureBoot    bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
+		GCPNodeTags               []string `envconfig:"GCP_NODE_TAGS"`
+		GCPPodToNodeLabels        []string `envconfig:"GCP_POD_TO_NODE_LABELS"`
+		GCPNodeSecondaryDisk      string   `envconfig:"GCP_NODE_SECONDARY_DISK" default:""`
+		GCPNodeSecureBoot         bool     `envconfig:"GCP_NODE_SECURE_BOOT" default:"true"`
+		GCPNodeAdditionalNetworks string   `envconfig:"GCP_NODE_ADDITIONAL_NETWORKS" default:""`
+
+		GCPNodeDiskType            string `envconfig:"GCP_NODE_DISK_TYPE"`
+		GCPNodeConfidentialStorage bool   `envconfig:"GCP_NODE_CONFIDENTIAL_STORAGE"`
+		GCPNodeBootDiskKMSKey      string `envconfig:"GCP_NODE_BOOT_DISK_KMS_KEY"`
 
 		// GCPForceOnDemand forces the controller to create nodes on demand, even if
 		// the Pod requests a reservation or spot.
 		GCPForceOnDemand bool `envconfig:"GCP_FORCE_ON_DEMAND" default:"false"`
 
 		// NodeMinLifespan is the amount of time that should pass between a Node object
-		// creation and a cleanup of that Node. This needs to be long enough to allow
-		// the node to become Ready and for a pending Pod to be scheduled on it.
-		NodeMinLifespan time.Duration `envconfig:"NODE_MIN_LIFESPAN" default:"3m"`
+		// creation and a cleanup of that Node. This is mostly irrelevant now that JobSet
+		// existance is checked before deleting a NodePool.
+		NodeMinLifespan time.Duration `envconfig:"NODE_MIN_LIFESPAN" default:"10s"`
 
 		NodepoolDeletionDelay time.Duration `envconfig:"NODEPOOL_DELETION_DELAY" default:"30s"`
 
@@ -193,26 +198,37 @@ func main() {
 			"podToNodeLabels", cfg.GCPPodToNodeLabels,
 		)
 
+		clusterCtx := cloud.GKEContext{
+			ProjectID:               cfg.GCPProjectID,
+			ClusterLocation:         cfg.GCPClusterLocation,
+			Cluster:                 cfg.GCPCluster,
+			NodeZone:                cfg.GCPZone,
+			NodeServiceAccount:      cfg.GCPNodeServiceAccount,
+			NodeAdditionalNetworks:  cfg.GCPNodeAdditionalNetworks,
+			NodeSecondaryDisk:       cfg.GCPNodeSecondaryDisk,
+			NodeTags:                cfg.GCPNodeTags,
+			NodeDiskType:            cfg.GCPNodeDiskType,
+			NodeConfidentialStorage: cfg.GCPNodeConfidentialStorage,
+			NodeBootDiskKMSKey:      cfg.GCPNodeBootDiskKMSKey,
+			PodToNodeLabels:         cfg.GCPPodToNodeLabels,
+			NodeSecureBoot:          cfg.GCPNodeSecureBoot,
+			ForceOnDemand:           cfg.GCPForceOnDemand,
+		}
+
 		containers, err := containerv1beta1.NewService(context.Background() /*, option.WithCredentials(creds)*/)
 		if err != nil {
 			setupLog.Error(err, "unable to create gke client")
 			os.Exit(1)
 		}
+		nodePoolsService := &cloud.GKENodePoolService{
+			ClusterContext: clusterCtx,
+			Service:        containers,
+		}
+
 		provider = &cloud.GKE{
-			Service: containers,
-			ClusterContext: cloud.GKEContext{
-				ProjectID:          cfg.GCPProjectID,
-				ClusterLocation:    cfg.GCPClusterLocation,
-				Cluster:            cfg.GCPCluster,
-				NodeZone:           cfg.GCPZone,
-				NodeServiceAccount: cfg.GCPNodeServiceAccount,
-				NodeSecondaryDisk:  cfg.GCPNodeSecondaryDisk,
-				NodeTags:           cfg.GCPNodeTags,
-				PodToNodeLabels:    cfg.GCPPodToNodeLabels,
-				NodeSecureBoot:     cfg.GCPNodeSecureBoot,
-				ForceOnDemand:      cfg.GCPForceOnDemand,
-			},
-			Recorder: mgr.GetEventRecorderFor("tpu-provisioner"),
+			NodePools:      nodePoolsService,
+			ClusterContext: clusterCtx,
+			Recorder:       mgr.GetEventRecorderFor("tpu-provisioner"),
 		}
 	case "mock":
 		provider = &cloud.Mock{}

@@ -1,0 +1,21 @@
+[
+  {
+    "message": "Ingress \"iap-ingress\" is in the default namespace, which is not allowed.",
+    "policyName": "defaultnamespace",
+    "resourceKey": {
+      "group": "networking.k8s.io",
+      "kind": "Ingress",
+      "name": "iap-ingress",
+      "version": "v1"
+    }
+  },
+  {
+    "message": "Secret \"iap-secret\" is in the default namespace, which is not allowed.",
+    "policyName": "defaultnamespace",
+    "resourceKey": {
+      "kind": "Secret",
+      "name": "iap-secret",
+      "version": "v1"
+    }
+  }
+]

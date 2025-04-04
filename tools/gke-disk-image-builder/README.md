@@ -54,7 +54,7 @@ Flag                | Required | Default | Description
 *--job-name*        | No       | secondary-disk-image | Name of the workflow. This name is used to provision some of the intermediate resources (disks, VMs) needed by the workflow. The maximum length is 50 characters
 *--zone*            | Yes      | nil     | Zone where the resources will be used to create the image creator resources
 *--gcs-path*        | Yes      | nil     | GCS path prefix to dump the logs
-*--container-image* | Yes      | nil     | Container image to include in the disk image. This flag can be specified multiple times
+*--container-image* | Yes      | nil     | Container image with tag to include in the disk image. Tag are required for image like `latest` in this example: `docker.io/library/python:latest`. This flag can be specified multiple times
 *--gcp-oauth*       | No       | nil     | Path to GCP service account credential file
 *--disk-size-gb*    | No       | 10      | Size of a disk that will host the unpacked images
 *--image-pull-auth* | No       | 'None'  | Auth mechanism to pull the container image, valid values: [None, ServiceAccountToken]. None means that the images are publically available and no authentication is required to pull them. ServiceAccountToken means the service account oauth token will be used to pull the images. For more information refer to https://cloud.google.com/compute/docs/access/authenticate-workloads#applications

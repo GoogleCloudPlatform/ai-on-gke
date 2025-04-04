@@ -309,7 +309,7 @@ module "frontend" {
 resource "helm_release" "gmp-apps" {
   name      = "gmp-apps"
   provider  = helm.rag
-  chart     = "../../charts/gmp-engine/"
+  chart     = "./charts/gmp-engine"
   namespace = local.kubernetes_namespace
   # Timeout is increased to guarantee sufficient scale-up time for Autopilot nodes.
   timeout    = 1200
