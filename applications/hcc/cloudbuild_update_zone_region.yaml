@@ -1,0 +1,57 @@
+steps:
+  - name: 'python:3.9-slim'
+    id: 'run-update-script'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        echo "Installing dependencies..."
+        pip install --quiet --no-warn-script-location pyyaml google-cloud-compute
+
+        echo "Running update script for project ${PROJECT_ID}..."
+        cd ./applications/hcc/
+        python update_zone_region.py --project_id "$PROJECT_ID"
+        echo "Script finished."
+
+  - name: 'gcr.io/cloud-builders/git' 
+    id: 'check-git-diff'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        echo "Checking for file modifications...."
+
+        git_status_output=$(git status --porcelain)
+
+        if [ -z "$git_status_output" ]; then
+          echo "SUCCESS: No region/zones change for hcc detected. Workspace is clean."
+        else
+          echo "ERROR: region/zones change for hcc detected after running the script!"
+          echo "-------------------- GIT STATUS --------------------"
+          echo "$git_status_output"
+          echo "-------------------- GIT DIFF (Tracked Files) ------"
+          git diff 
+          echo "-------------------- NEW FILES (Untracked) ---------"
+          untracked_lines=$(echo "$git_status_output" | grep '^?? ' || true)
+          if [ -n "$untracked_lines" ]; then
+            echo "$untracked_lines" | while IFS= read -r line; do
+              untracked_file="${line#\?? }"
+              echo ">>> Content of new file: '$untracked_file' <<<"
+              cat "$untracked_file"
+              echo "--- End of new file: '$untracked_file' ---"
+              echo ""
+            done
+          else
+            echo "(No new untracked files detected)"
+          fi
+          echo "----------------------------------------------------"
+          echo "ERROR: FAILURE: Build failed due to unexpected file changes."
+          echo "ERROR: Please review the status, diff, and new file content above. The regions and zones has changed for A3U and A3M"
+          echo "ERROR: Please follow the guildline in ai-on-gke/applications/hcc/README_update_zone.md to update regions and zones."
+          echo "ERROR: Do not forget to commit the changes after running the scripts."
+          exit 1 
+        fi
+options:
+  logging: CLOUD_LOGGING_ONLY
