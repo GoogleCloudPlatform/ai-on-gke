@@ -92,7 +92,7 @@ steps:
     terraform apply \
     -var-file=a3ultra_workloads.tfvars \
     -var=project_id=$PROJECT_ID \
-    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -var=goog_cm_deployment_name="hcc-$_PR_NUMBER-$_BUILD_ID-test" \
     -auto-approve -no-color
 
     echo "pass" > /workspace/hcc_result.txt
@@ -111,7 +111,7 @@ steps:
     terraform destroy \
     -var-file=a3ultra_workloads.tfvars \
     -var=project_id=$PROJECT_ID \
-    -var=goog_cm_deployment_name="cloudbuild-hcc-test" \
+    -var=goog_cm_deployment_name="hcc-$_PR_NUMBER-$_BUILD_ID-test" \
     -auto-approve -no-color
   allowFailure: true
   waitFor: ['test hcc']
