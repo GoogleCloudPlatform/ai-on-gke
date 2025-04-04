@@ -209,6 +209,7 @@ variable "cpu_pools" {
     preemptible            = optional(bool, false)
     initial_node_count     = optional(number, 1)
     accelerator_count      = optional(number, 0)
+    queued_provisioning    = optional(bool, false)
   }))
   default = [{
     name         = "cpu-pool"
@@ -245,6 +246,7 @@ variable "gpu_pools" {
     accelerator_count      = optional(number, 0)
     accelerator_type       = optional(string, "nvidia-tesla-t4")
     gpu_driver_version     = optional(string, "DEFAULT")
+    queued_provisioning    = optional(bool, false)
   }))
   default = [{
     name               = "gpu-pool"
@@ -283,6 +285,7 @@ variable "tpu_pools" {
     initial_node_count     = optional(number, 1)
     accelerator_count      = optional(number, 0)
     accelerator_type       = optional(string, "nvidia-tesla-t4")
+    queued_provisioning    = optional(bool, false)
   }))
   default = []
 }

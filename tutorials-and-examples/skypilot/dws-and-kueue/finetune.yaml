@@ -1,0 +1,50 @@
+name: gemma-finetune
+
+envs:
+  HF_TOKEN: null
+  MODEL_NAME: gemma-2b-sql-finetuned
+
+# Configuration needed for GCSFuse to mount bucket for model storage and for Kueue to configure max time in queue
+experimental:
+  config_overrides:
+    kubernetes:
+      pod_config:
+        metadata:
+          annotations:
+              gke-gcsfuse/volumes: "true"
+              provreq.kueue.x-k8s.io/maxRunDurationSeconds: "3600"
+        spec:
+          containers:
+            - volumeMounts:
+              - name: gcsfuse
+                mountPath: /data
+                readOnly: false
+          volumes:
+            - name: gcsfuse
+              csi:
+                driver: gcsfuse.csi.storage.gke.io
+                volumeAttributes:
+                  bucketName: BUCKET_NAME
+                  mountOptions: "implicit-dirs,uid=1000,gid=1000"
+      provision_timeout: 900
+
+resources:
+    cpus: 4+
+    accelerators: L4:1
+    labels:
+      kueue.x-k8s.io/queue-name: dws-local-queue
+# Optional: upload a working directory to remote ~/sky_workdir.
+# Commands in "setup" and "run" will be executed under it.
+#
+workdir: code
+
+setup: |
+  pip3 install --no-cache-dir \
+      accelerate==0.30.1 bitsandbytes==0.43.1 \
+      datasets==2.19.1 transformers==4.41.0 \
+      peft==0.11.1 trl==0.8.6 torch==2.3.0 \
+      torchvision==0.18.0
+
+
+run: |
+  python3 finetune.py --device cuda

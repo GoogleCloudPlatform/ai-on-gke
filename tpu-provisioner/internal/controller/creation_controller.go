@@ -82,6 +82,9 @@ func (r *CreationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			lg.Info("Attempted to create a node pool that is currently undergoing deletion, retrying soon",
 				"wait", wait)
 			return ctrl.Result{RequeueAfter: wait}, nil
+		} else if errors.Is(err, cloud.ErrNodePoolDeletedToBeRecreated) {
+			lg.Info("Deleted a node pool that is to be recreated, requeuing")
+			return ctrl.Result{Requeue: true}, nil
 		} else {
 			return ctrl.Result{}, err
 		}

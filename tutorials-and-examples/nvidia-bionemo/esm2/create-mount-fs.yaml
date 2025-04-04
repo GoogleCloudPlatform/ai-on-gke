@@ -1,0 +1,23 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fs-bionemo
+provisioner: filestore.csi.storage.gke.io
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+parameters:
+  tier: BASIC_HDD
+  network: default
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: fileserver
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: fs-bionemo
+  resources:
+    requests:
+      storage: 1Ti

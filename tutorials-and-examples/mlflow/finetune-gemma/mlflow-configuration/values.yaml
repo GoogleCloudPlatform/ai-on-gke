@@ -1,0 +1,9 @@
+tracking:
+  auth:
+    enabled: false
+  service:
+    type: ClusterIP
+minio:
+  enabled: false
+externalGCS:
+  bucket: "dima_mlflow_artifact_storage"

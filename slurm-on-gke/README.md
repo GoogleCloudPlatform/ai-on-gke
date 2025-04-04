@@ -208,8 +208,7 @@ The Terraform module will also create a new project and anything that might be n
 5\. Initialize Terraform.
 
 ```bash
-cd slurm-on-gke
-cd infrastructure 
+cd ai-on-gke/slurm-on-gke/infrastructure 
 terraform init
 ```
 
@@ -224,6 +223,8 @@ project_id                  = "YOUR_PROJECT_ID"
 billing_account_id          = "YOUR_BILLING_ACCOUNT_ID"
 folder_id                   = "folders/FOLDER_ID"
 ```
+
+Retrieve your billing account ID with `gcloud billing projects describe ${PROJECT_ID} --format="value(billingAccountName)"` and your folder ID with `gcloud projects describe ${PROJECT_ID} --format="value(parent.id)"`.
 
 **Note:** Ensure your selected region or zone offers GPU availability. Consult the [Google Cloud documentation for a complete list](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones).
 
@@ -265,7 +266,8 @@ To build the container image, use the following commands:
 
 ```bash
 cd .. # (you were in the infrastructure directory) 
-cd image docker build -t europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:535 .  
+cd image
+docker build -t europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:535 .  
 docker push europe-west3-docker.pkg.dev/$PROJECT_ID/slurm/slurmd:535
 ```
 

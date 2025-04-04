@@ -37,6 +37,7 @@ benchmark_time_seconds = 120
 artifact_registry      = "your_project_artifact_registry"
 
 # Model server configuration information
+models = "your_models"
 targets = {
   manual = {
     name         = "your_model_server_name"

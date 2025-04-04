@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tcp-increase-rmem
+  namespace: kube-system
+  labels:
+    k8s-app: tcp-increase-rmem
+spec:
+  selector:
+    matchLabels:
+      k8s-app: tcp-increase-rmem
+  template:
+    metadata:
+      labels:
+        k8s-app: tcp-increase-rmem
+    spec:
+      priorityClassName: system-node-critical
+      # hostNetwork: true prevents a pod IP from being allocated to this pod, which can help with IP space utilization.
+      hostNetwork: true
+      hostPID: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cloud.google.com/gke-tpu-accelerator
+                operator: In
+                values:
+                - tpu-v6e-slice
+      tolerations:
+      - operator: "Exists"
+        effect: "NoExecute"
+      - operator: "Exists"
+        effect: "NoSchedule"
+      initContainers:
+      - name: "tcp-increase-rmem"
+        image: "ubuntu:latest"
+        securityContext:
+          privileged: true
+        command:
+        - bash
+        - -c
+        - |
+          #!/bin/bash
+          echo "4096 41943040 314572800" > /proc/sys/net/ipv4/tcp_rmem
+        volumeMounts:
+        - name: sys
+          mountPath: /sys
+        - name: proc
+          mountPath: /proc
+      volumes:
+      - name: sys
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: proc
+        hostPath:
+          path: /proc
+          type: Directory
+      containers:
+      - image: "gke.gcr.io/pause:3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
+        name: pause

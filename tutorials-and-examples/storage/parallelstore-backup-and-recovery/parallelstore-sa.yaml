@@ -1,0 +1,7 @@
+
+# Service Account that have access to Parallelstore and GCS
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: parallelstore-sa
+  namespace: default

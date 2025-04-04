@@ -77,7 +77,7 @@ Create a node pool for deploying Mixtral 7B with quadpod deployment L4 GPU {4 x 
 ```bash
 gcloud container node-pools create mixtral-moe-gpu-pool \
   --cluster=mixtral8x7-cluster-gke  \
-  --project=gke-aishared-dev \
+  --project=${PROJECT_ID} \
   --machine-type=g2-standard-48 \
   --ephemeral-storage-local-ssd=count=4 \
   --accelerator=type=nvidia-l4,count=4 \
@@ -127,7 +127,7 @@ Pod Template:
   Labels:  app=mixtral8x7b
   Containers:
    mixtral8x7b:
-    Image:      us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310
+    Image:      ghcr.io/huggingface/text-generation-inference:1.4.3
     Port:       8080/TCP
     Host Port:  0/TCP
     Limits:

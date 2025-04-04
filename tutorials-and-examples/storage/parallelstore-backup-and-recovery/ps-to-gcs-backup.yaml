@@ -1,0 +1,98 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ps-to-gcs-backup
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  schedule: "0 * * * *"
+  successfulJobsHistoryLimit: 3
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            gke-parallelstore/cpu-limit: "0"
+            gke-parallelstore/ephemeral-storage-limit: "0"
+            gke-parallelstore/memory-limit: "0"
+            gke-parallelstore/volumes: "true"
+        spec:
+          serviceAccountName: parallelstore-sa
+          containers:
+          - name: pstore-backup
+            image: google/cloud-sdk:slim
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/bash
+            - -c
+            - |
+              #!/bin/bash
+              set -ex
+
+              # Retrieve modification timestamp for the latest file up to the minute
+              latest_folder_timestamp=$(find $PSTORE_MOUNT_PATH/$SOURCE_PARALLELSTORE_PATH -type d -printf  '%T@ %p\n'| sort -n | tail -1 | cut -d' ' -f2- | xargs -I{} stat -c %x {} | xargs -I {} date -d {} +"%Y-%m-%d %H:%M")
+
+              # Start exporting from PStore to GCS
+              operation=$(gcloud beta parallelstore instances export-data $PSTORE_NAME \
+                --location=$PSTORE_LOCATION \
+                --source-parallelstore-path=$SOURCE_PARALLELSTORE_PATH \
+                --destination-gcs-bucket-uri=$DESTINATION_GCS_URI \
+                --async \
+                --format="value(name)")
+
+              # Wait until operation complete
+              while true; do
+                status=$(gcloud beta parallelstore operations describe $operation \
+                  --location=$PSTORE_LOCATION \
+                  --format="value(done)")
+                if [ "$status" == "True" ]; then
+                  break
+                fi
+                sleep 60
+              done
+
+              # Check if export succeeded
+              error=$(gcloud beta parallelstore operations describe $operation \
+                --location=$PSTORE_LOCATION \
+                --format="value(error)")
+              if [ "$error" != "" ]; then
+                echo "!!! ERROR while exporting data !!!"
+              fi
+
+              # Delete the old files from PStore if requested
+              # This will not delete the folder with the latest modification timestamp
+              if $DELETE_AFTER_BACKUP && [ "$error" == "" ]; then
+                find $PSTORE_MOUNT_PATH/$SOURCE_PARALLELSTORE_PATH -type d -mindepth 1 |
+                  while read dir; do
+                      # Only delete folders that is modified earlier than the latest modification timestamp
+                      folder_timestamp=$(stat -c %y $dir)
+                      if [ $(date -d "$folder_timestamp" +%s) -lt $(date -d "$latest_folder_timestamp" +%s) ]; then
+                        echo "Deleting $dir"
+                        rm -rf "$dir"
+                      fi
+                  done
+              fi
+            env:
+            - name: PSTORE_MOUNT_PATH # mount path of the Parallelstore instance, should match the volumeMount defined for this container
+              value: "PSTORE_MOUNT_PATH"
+            - name: PSTORE_NAME # name of the Parallelstore instance that need backup
+              value: "PSTORE_NAME"
+            - name: PSTORE_LOCATION # location/zone of the Parallelstore instance that need backup
+              value: "PSTORE_LOCATION"
+            - name: SOURCE_PARALLELSTORE_PATH # absolute path from the PStore instance, without volume mount path
+              value: "SOURCE_PARALLELSTORE_PATH"
+            - name: DESTINATION_GCS_URI # GCS bucket uri used for storing backups, starting with "gs://"
+              value: "DESTINATION_GCS_URI"
+            - name: DELETE_AFTER_BACKUP # will delete old data from Parallelstore if true
+              value: "DELETE_AFTER_BACKUP"
+            volumeMounts:
+            - mountPath: PSTORE_MOUNT_PATH # should match the value of env var PSTORE_MOUNT_PATH
+              name: PSTORE_PV_NAME
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          terminationGracePeriodSeconds: 30
+          volumes:
+          - name: PSTORE_PV_NAME
+            persistentVolumeClaim:
+              claimName: PSTORE_PVC_NAME

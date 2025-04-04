@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llamaindex-rag
+  labels:
+    app: llamaindex-rag
+spec:
+  selector:
+    matchLabels:
+      app: llamaindex-rag
+  template:
+    metadata:
+      labels:
+        app: llamaindex-rag
+    spec:
+      containers:
+        - name: llamaindex-rag
+          image:  ${IMAGE_NAME} 
+          imagePullPolicy: Always
+          env:
+            - name: MODEL_NAME
+              value: ${MODEL_NAME}
+            - name: REDIS_HOST
+              value: redis-stack-service
+            - name: REDIS_PORT
+              value: "6379"
+            - name: OLLAMA_SERVER_URL
+              value: http://ollama-service:11434
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llamaindex-rag-service
+spec:
+  selector:
+    app: llamaindex-rag
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

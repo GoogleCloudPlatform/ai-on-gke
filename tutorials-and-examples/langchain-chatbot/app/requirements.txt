@@ -1,0 +1,7 @@
+streamlit
+langchain
+langchain-community
+langchain-openai
+langgraph
+langgraph-checkpoint-postgres
+psycopg

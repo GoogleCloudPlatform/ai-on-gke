@@ -11,7 +11,7 @@ SkyPilot is a framework for running AI and batch workloads on any infra, offerin
 ## The tutorial overview 
 In this tutorial, our persona is an ML scientist planning to run a batch workload for hyperparameter tuning. This workload involves two experiments, with each experiment requiring 4 GPUs to execute. 
 
-We have two GKE clusters in different regions: one in us-central1 with 4*A100 and another in us-west1 with 4*L4.
+We have two GKE clusters in different regions: one in us-central1 with 4\*A100 and another in us-west1 with 4\*L4.
 
 By the end of this tutorial, our goal is to have one experiment running in the us-central1 cluster and the other in the us-west1 cluster, demonstrating efficient resource distribution across regions.
 
@@ -88,11 +88,25 @@ cd ai-on-gke/tutorials-and-examples/skypilot
 ```bash
 pip install -U "skypilot[kubernetes,gcp]"
 ```
-You can find the available GPUs in a GKE cluster.
+
+Verify the installation:
 ```bash
 sky check
+```
 
-sky show-gpus
+This will produce a summary like:
+```
+Checking credentials to enable clouds for SkyPilot.
+  GCP: enabled
+  Kubernetes: enabled
+
+SkyPilot will use only the enabled clouds to run tasks. To change this, configure cloud credentials, and run sky check.
+```
+If you encounter an error, please consult the [offical documentation](https://docs.skypilot.co/en/latest/getting-started/installation.html). 
+
+You can find the available GPUs in a GKE cluster.
+```bash
+sky show-gpus --cloud kubernetes 
 ```
 
 3. Find the context names
@@ -120,7 +134,7 @@ kubernetes:
 
 ## Launch the jobs
 Under `~/skypilot-test/ai-on-gke/tutorials-and-examples/skypilot`, you’ll find a file named `train.yaml`, which uses SkyPilot's syntax to define a job. 
-In the resource section, the job asks for 4* A100 first. If no capacity is found, it failovers to L4. 
+In the resource section, the job asks for 4\*A100 first. If no capacity is found, it failovers to L4. You can find other supported syntax in SkyPilot to specify resource choices in the documentation [here](https://docs.skypilot.co/en/latest/examples/auto-failover.html#multiple-candidate-resources).
 ```yaml
 resources:
   cloud: kubernetes
@@ -130,11 +144,12 @@ resources:
 
 The `launch.py` a Python program that initiates a hyperparameter tuning process with two jobs for the learning rate (LR) parameter. In production environments, such experiments are typically tracked using open-source frameworks like MLFlow.
 
-Start the trainig:
+SkyPilot offers support for launching hyperparameter tuning tasks through its CLI using the `sky launch` command. For more details, refer to the [official documentation](https://docs.skypilot.co/en/latest/running-jobs/many-jobs.html#with-cli-and-config-files).
+Start the training:
 ```bash
 python launch.py
 ```
-The first job will be first deployed to the demo-us-central1 GKE cluster with 4*A100 GPUs. For the second job, it will be deployed to the demo-us-west1 cluster with 4*L4 GPUs, because no 4*A100 GPUs were available in all clusters.
+The first job will be first deployed to the demo-us-central1 GKE cluster with 4\*A100 GPUs. For the second job, it will be deployed to the demo-us-west1 cluster with 4\*L4 GPUs, because no 4*A100 GPUs were available in all clusters.
 
 You also can check SkyPilot's status using: 
 ```bash

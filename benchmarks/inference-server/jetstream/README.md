@@ -12,7 +12,7 @@ To create our TPU cluster, run:
 
 ```
 # Stage 1 creates the cluster.
-cd infra/stage-1
+cd infra/accelerator-cluster/stage-1
 
 # Copy the sample variables and update the project ID, cluster name and other 
 parameters as needed in the `terraform.tfvars` file.

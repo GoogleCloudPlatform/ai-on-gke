@@ -1,0 +1,58 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "resource": "pods",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "Role \"ray-cluster-kuberay\" has rbac rule for resource \"pods.\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "ray-cluster-kuberay",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "get"
+      ]
+    },
+    "message": "Role \"ray-cluster-kuberay\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"get\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "ray-cluster-kuberay",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  },
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.RBACDetails",
+      "apiGroup": "ray.io",
+      "resource": "rayclusters",
+      "verbs": [
+        "patch"
+      ]
+    },
+    "message": "Role \"ray-cluster-kuberay\" has rbac rule for resource \"rayclusters.ray.io\" with verb \"patch\" that is not allowed.",
+    "policyName": "rbac",
+    "resourceKey": {
+      "group": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "ray-cluster-kuberay",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 

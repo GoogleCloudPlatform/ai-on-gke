@@ -1,0 +1,18 @@
+[
+  {
+    "details": {
+      "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
+      "containerName": "chp",
+      "image": "quay.io/jupyterhub/configurable-http-proxy:4.6.1"
+    },
+    "message": "image \"quay.io/jupyterhub/configurable-http-proxy:4.6.1\" could not be found on gcr.io",
+    "policyName": "distroless",
+    "resourceKey": {
+      "group": "apps",
+      "kind": "Deployment",
+      "name": "proxy",
+      "namespace": ".*",
+      "version": "v1"
+    }
+  }
+] 
