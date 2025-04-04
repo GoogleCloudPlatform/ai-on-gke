@@ -22,16 +22,18 @@ The script uses the Google Cloud Compute Engine API to retrieve information abou
   ```
 ## Usage
 * Run the script with the `--project_id` argument:
-  ```
-  python update-region.py --project_id your-project-id
+  ```Bash
+  cd ./applications/hcc/
+  python update_zone_region.py --project_id your-project-id
   ```
   Replace `your-project-id` with your actual Google Cloud Project ID.
 
 
 ### Example
-To update the `metadata.display.yaml` file with the available zones for the `a3-megagpu-8g` and `a3-ultragpu-8g` machine types in the `my-gcp-project` project, and generate the `zone_to_region.json` file:
+To update the `metadata.display.yaml` file with the available zones for the `a3-megagpu-8g` and `a3-ultragpu-8g` machine types in the `your-project-id` project, and generate the `zone_to_region.json` file:
 ```Bash
-python update-region.py --project_id my-gcp-project 
+cd ./applications/hcc/
+python update_zone_region.py --project_id your-project-id
 ```
 This will:
 
