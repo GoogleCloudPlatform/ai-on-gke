@@ -218,7 +218,7 @@ module "a3-ultragpu-cluster" {
   maintenance_exclusions = [{
     end_time        = "2025-12-22T00:00:00Z"
     exclusion_scope = "NO_MINOR_OR_NODE_UPGRADES"
-    name            = "no-minor-or-node-upgrades-indefinite"
+    name            = "no-minor-or-node-upgrades-indefinite-cluster-director"
     start_time      = "2024-12-01T00:00:00Z"
   }]
   master_authorized_networks = [{
