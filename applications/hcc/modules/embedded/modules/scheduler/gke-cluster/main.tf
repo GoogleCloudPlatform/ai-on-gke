@@ -21,7 +21,7 @@ locals {
     { 
       ghpc_module = "gke-cluster", 
       ghpc_role = "scheduler" 
-      "gke_product_type" = "cluster-director"
+      "gke_product_type" = "cluster-director-qss"
     }
   )
 }
