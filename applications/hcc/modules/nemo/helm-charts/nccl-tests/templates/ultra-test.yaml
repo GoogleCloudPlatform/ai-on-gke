@@ -14,7 +14,7 @@ spec:
   network:
     enableDNSHostnames: true
   replicatedJobs:
-    - name: nccl-test
+    - name: w
       template:
         spec:
           parallelism: {{$root.Values.workload.node_count}}
