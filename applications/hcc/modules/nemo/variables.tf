@@ -9,8 +9,8 @@ variable "checkpoint_bucket" {
 variable "recipe" {
   type = string
   validation {
-    condition     = contains(["mixtral8_7b_maxtext_pretraining", "mixtral8_7b_nemo_pretraining", "llama3.1_70b_maxtext_pretraining", "llama3.1_7b_nemo_pretraining", "llama3.1_70b_nemo_pretraining", "gke-nccl", "gke"], var.recipe)
-    error_message = "Invalid recipe value. Must be one of: [\"mixtral8_7b_maxtext_pretraining\", \"mixtral8_7b_nemo_pretraining\", \"llama3.1_70b_maxtext_pretraining\", \"llama3.1_7b_nemo_pretraining\", \"llama3.1_70b_nemo_pretraining\", \"gke-nccl\", \"gke\"]."
+    condition     = contains(["mixtral8_7b_maxtext_pretraining", "mixtral8_7b_nemo_pretraining", "llama3.1_70b_maxtext_pretraining", "llama3.1_7b_nemo_pretraining", "llama3.1_70b_nemo_pretraining", "gke-nccl", "gke", "gke-ray"], var.recipe)
+    error_message = "Invalid recipe value. Must be one of: [\"mixtral8_7b_maxtext_pretraining\", \"mixtral8_7b_nemo_pretraining\", \"llama3.1_70b_maxtext_pretraining\", \"llama3.1_7b_nemo_pretraining\", \"llama3.1_70b_nemo_pretraining\", \"gke-nccl\", \"gke\", \"gke-ray\"]."
   }
 }
 

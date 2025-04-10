@@ -67,6 +67,11 @@ variable "node_count_gke_nccl" {
   type        = number
 }
 
+variable "node_count_gke_ray" {
+  description = "Toolkit deployment variable: node_count_ray"
+  type        = number
+}
+
 variable "node_count_llama_3_7b" {
   description = "Toolkit deployment variable: node_count_llama_3_7b"
   type        = number

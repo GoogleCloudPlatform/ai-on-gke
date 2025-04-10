@@ -6,6 +6,7 @@ locals {
     "mixtral8_7b_nemo_pretraining"     = "mixtral8-7b-bf16.yaml"
     "mixtral8_7b_maxtext_pretraining"  = "mixtral8-7b-bf16.yaml"
     "gke-nccl"                         = ""
+    "gke-ray"                          = ""
   }[var.recipe]
 
   model_type = {
@@ -15,6 +16,7 @@ locals {
     "mixtral8_7b_nemo_pretraining"     = "nemo-training"
     "mixtral8_7b_maxtext_pretraining"  = "maxtext-training"
     "gke-nccl"                         = ""
+    "gke-ray"                          = ""
   }[var.recipe]
 
   values_file = {
@@ -24,6 +26,7 @@ locals {
     "mixtral8_7b_nemo_pretraining"     = "values.yaml"
     "mixtral8_7b_maxtext_pretraining"  = "mixtral8-7b-bf16-values.yaml"
     "gke-nccl"                         = ""
+    "gke-ray"                          = ""
   }[var.recipe]
 
 }
