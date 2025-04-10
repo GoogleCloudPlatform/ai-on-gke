@@ -19,7 +19,7 @@ data "google_container_cluster" "gke_cluster" {
 }
 
 resource "helm_release" "benchmark" {
-  count     = var.recipe == "gke-nccl" ? 0 : 1
+  count     = (var.recipe == "gke-nccl" || var.recipe == "gke-ray" || var.recipe == "gke") ? 0 : 1
   name      = "benchmark"
   provider  = helm
   version     = "0.7.0"
@@ -88,4 +88,27 @@ resource "helm_release" "nccl_tests" {
     name = "queue"
     value = var.queue
   }
+}
+
+resource "helm_release" "kuberay_operator" {
+  count     = var.recipe == "gke-ray" ? 1 : 0
+  name       = "kuberay-operator"    
+  repository = "https://ray-project.github.io/kuberay-helm/"
+  provider  = helm
+  chart      = "kuberay-operator"      
+  version    = "1.1.0"
+  namespace = "default"
+  reset_values = true
+}
+
+resource "helm_release" "raycluster" {
+  count      = var.recipe == "gke-ray" ? 1 : 0
+  name       = "raycluster"            
+  repository = "https://ray-project.github.io/kuberay-helm/"
+  chart      = "ray-cluster"           
+  version    = "1.1.0"
+  namespace  = "default"
+  depends_on = [
+    helm_release.kuberay_operator
+  ]
 }

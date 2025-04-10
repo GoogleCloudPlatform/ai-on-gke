@@ -41,5 +41,6 @@ node_count_gke = 0
 node_count_nemo = -1
 node_count_maxtext = -1
 node_count_llama_3_7b = -1
+node_count_gke_ray = 0
 a3_mega_consumption_model = "Reservation"
 a3_ultra_consumption_model = ""

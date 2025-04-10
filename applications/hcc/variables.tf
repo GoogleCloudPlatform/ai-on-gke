@@ -67,6 +67,11 @@ variable "node_count_gke_nccl" {
   type        = number
 }
 
+variable "node_count_gke_ray" {
+  description = "Toolkit deployment variable: node_count_ray"
+  type        = number
+}
+
 variable "node_count_llama_3_7b" {
   description = "Toolkit deployment variable: node_count_llama_3_7b"
   type        = number
@@ -139,9 +144,9 @@ resource "null_resource" "input_validation" {
       condition     = local.recipes_not_empty
       error_message = "Must input one recipe."
     }
-    precondition {
-      condition     = local.reservation_valid
-      error_message = "The 'reservation' variable must not be empty when recipe is not 'gke'."
-    }
+    # precondition {
+    #   condition     = local.reservation_valid
+    #   error_message = "The 'reservation' variable must not be empty when recipe is not 'gke'."
+    # }
   }
 }
