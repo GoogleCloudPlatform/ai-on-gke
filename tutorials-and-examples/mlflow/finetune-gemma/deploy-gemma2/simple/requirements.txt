@@ -12,7 +12,7 @@ httptools==0.6.4
 httpx==0.28.1
 idna==3.10
 itsdangerous==2.2.0
-Jinja2==3.1.5
+Jinja2==3.1.6
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
