@@ -118,7 +118,7 @@ variable "a3_mega_consumption_model" {
 }
 
 locals {
-  placement_policy_valid = var.gpu_type != "A3 Mega" || length(var.placement_policy_name) > 0
+  placement_policy_valid = var.gpu_type != "A3 Mega" || local.recipe == "gke" || length(var.placement_policy_name) > 0
   a3_consumption_model_check = length(var.a3_ultra_consumption_model) > 0 || length(var.a3_mega_consumption_model) > 0
   recipe = {
     "A3 Mega" = var.a3mega_recipe
