@@ -97,7 +97,8 @@ spec:
           name: a3_mega_consumption_model
           title: Consumption options
           section: required_config
-          subtext: See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption options</i></a> for more details.</br>
+          subtext: See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption
+            options</i></a> for more details.</br>
           enumValueLabels:
           - label: Reservation
             value: Reservation
@@ -110,7 +111,8 @@ spec:
           name: a3_ultra_consumption_model
           title: Consumption options
           section: required_config
-          subtext: See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption options</i></a> for more details.</br>
+          subtext: See <a href="https://cloud.google.com/ai-hypercomputer/docs/consumption-models"><i>Consumption
+            options</i></a> for more details.</br>
           enumValueLabels:
           - label: Reservation
             value: Reservation
@@ -123,7 +125,10 @@ spec:
           name: reservation
           title: Reservation name
           section: required_config
-          subtext: For optimal performance with distributed AI workloads, reserve densely allocated accelerator capacity. See <a href="https://cloud.google.com/ai-hypercomputer/docs/request-capacity"><i>Request Capacity</i></a> and <a href="https://cloud.google.com/ai-hypercomputer/docs/request-capacity#view-capacity"><i>View the delivered capacity</i></a> for more details.</br>
+          subtext: For optimal performance with distributed AI workloads, reserve
+            densely allocated accelerator capacity. See <a href="https://cloud.google.com/ai-hypercomputer/docs/request-capacity"><i>Request
+            Capacity</i></a> and <a href="https://cloud.google.com/ai-hypercomputer/docs/request-capacity#view-capacity"><i>View
+            the delivered capacity</i></a> for more details.</br>
         reservation_block:
           name: reservation_block
           title: Reservation block
