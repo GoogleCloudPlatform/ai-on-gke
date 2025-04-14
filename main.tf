@@ -72,6 +72,13 @@ module "a3-megagpu-cluster" {
     cidr_block   = var.authorized_cidr
     display_name = "kubectl-access-network"
   }]
+  release_channel               = "RAPID"
+  maintenance_exclusions = [{
+    end_time        = "2025-12-22T00:00:00Z"
+    exclusion_scope = "NO_MINOR_OR_NODE_UPGRADES"
+    name            = "no-minor-or-node-upgrades-indefinite-cluster-director-mega"
+    start_time      = "2024-12-01T00:00:00Z"
+  }]
   network_id           = module.gke-a3-mega-net[0].network_id
   project_id           = var.project_id
   region          = local.region != null ? local.region : error("Cannot find region for zone")
@@ -93,6 +100,7 @@ module "a3_megagpu_pool" {
   internal_ghpc_module_id   = "a3_megagpu_pool"
   labels                    = var.labels
   machine_type              = "a3-megagpu-8g"
+  auto_upgrade        = true
   placement_policy = var.placement_policy_name == "" ? {
     policy_type = ""
   } : {
@@ -218,7 +226,7 @@ module "a3-ultragpu-cluster" {
   maintenance_exclusions = [{
     end_time        = "2025-12-22T00:00:00Z"
     exclusion_scope = "NO_MINOR_OR_NODE_UPGRADES"
-    name            = "no-minor-or-node-upgrades-indefinite"
+    name            = "no-minor-or-node-upgrades-indefinite-cluster-director-ultra"
     start_time      = "2024-12-01T00:00:00Z"
   }]
   master_authorized_networks = [{
