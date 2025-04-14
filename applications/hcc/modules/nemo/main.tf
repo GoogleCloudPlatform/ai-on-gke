@@ -99,6 +99,18 @@ resource "helm_release" "kuberay_operator" {
   version    = "1.1.0"
   namespace = "default"
   reset_values = true
+  set {
+    name  = "tolerations[0].key"
+    value = "nvidia.com/gpu"
+  }
+  set {
+    name  = "tolerations[0].operator"
+    value = "Exists"
+  }
+  set {
+    name  = "tolerations[0].effect"
+    value = "NoSchedule"
+  }
 }
 
 resource "helm_release" "raycluster" {
@@ -108,7 +120,44 @@ resource "helm_release" "raycluster" {
   chart      = "ray-cluster"           
   version    = "1.1.0"
   namespace  = "default"
+  reset_values = true
   depends_on = [
     helm_release.kuberay_operator
   ]
+  set {
+    name  = "tolerations[0].key"
+    value = "nvidia.com/gpu"
+  }
+  set {
+    name  = "tolerations[0].operator"
+    value = "Exists"
+  }
+  set {
+    name  = "tolerations[0].effect"
+    value = "NoSchedule"
+  }
+  set {
+    name  = "head.tolerations[0].key"
+    value = "nvidia.com/gpu"
+  }
+  set {
+    name  = "head.tolerations[0].operator"
+    value = "Exists"
+  }
+  set {
+    name  = "head.tolerations[0].effect"
+    value = "NoSchedule"
+  }
+  set {
+    name  = "worker.tolerations[0].key"
+    value = "nvidia.com/gpu"
+  }
+  set {
+    name  = "worker.tolerations[0].operator"
+    value = "Exists"
+  }
+  set {
+    name  = "worker.tolerations[0].effect"
+    value = "NoSchedule"
+  }
 }
