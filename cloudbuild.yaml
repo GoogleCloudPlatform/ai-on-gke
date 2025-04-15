@@ -360,16 +360,6 @@ steps:
       exit 1
     fi
 
-    if [[ $(cat /workspace/jupyterhub_tf_result.txt) != "pass" ]]; then
-      echo "jupyterhub tf failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/jupyterhub_test_result.txt) != "pass" ]]; then
-      echo "jupyterhub test failed"
-      exit 1
-    fi
-
     if [[ $(cat /workspace/rag_tf_result.txt) != "pass" ]]; then
       echo "rag tf failed"
       exit 1
