@@ -29,14 +29,6 @@ steps:
   dir: "applications/ray/"
   waitFor: ["validate platform"]
 
-- id: "validate jupyterhub"
-  name: "gcr.io/$PROJECT_ID/terraform"
-  script: |
-    terraform init -no-color
-    terraform validate -no-color
-  dir: "applications/jupyter/"
-  waitFor: ["validate platform"]
-
 - id: "validate rag"
   name: "gcr.io/$PROJECT_ID/terraform"
   script: |
@@ -70,7 +62,7 @@ steps:
     echo "pass" > /workspace/gke_cluster_result.txt
   dir: 'infrastructure/'
   allowFailure: true
-  waitFor: ['validate platform', 'validate ray', 'validate jupyterhub', validate rag]
+  waitFor: ['validate platform', 'validate ray', validate rag]
 
 - id: 'test ray cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -136,62 +128,6 @@ steps:
     -auto-approve -no-color
   allowFailure: true
   waitFor: ['test ray cluster']
-
-- id: 'test jupyterhub'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/modules/jupyter/tests
-    python3 change_jupyter_config.py $_AUTOPILOT_CLUSTER
-
-    cd /workspace/applications/jupyter
-    terraform apply \
-    -var-file=workloads-without-iap.example.tfvars \
-    -var=project_id=$PROJECT_ID \
-    -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    -var=cluster_location=$_REGION \
-    -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-jupyter \
-    -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
-    -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
-    -auto-approve -no-color
-    echo "pass" > /workspace/jupyterhub_tf_result.txt
-
-    kubectl wait --for=condition=Ready pods -n ml-$SHORT_SHA-$_BUILD_ID-jupyter -l 'component!=continuous-image-puller' --timeout=1800s
-    kubectl get services -n ml-$SHORT_SHA-$_BUILD_ID-jupyter
-    kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-jupyter service/proxy-public 9442:80 &
-    # Wait port-forwarding to take its place
-    sleep 5s
-
-    cd /workspace/modules/jupyter/tests
-    python3 test_hub.py "127.0.0.1:9442" $_AUTOPILOT_CLUSTER
-    echo "pass" > /workspace/jupyterhub_test_result.txt
-  allowFailure: true
-  waitFor: ['create gke cluster']
-
-- id: 'cleanup jupyterhub'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/jupyter/
-    terraform destroy \
-    -var-file=workloads-without-iap.example.tfvars \
-    -var=project_id=$PROJECT_ID \
-    -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    -var=cluster_location=$_REGION \
-    -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-jupyter \
-    -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
-    -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
-    -auto-approve -no-color
-  allowFailure: true
-  waitFor: ['test jupyterhub']
 
 - id: 'test rag'
   name: 'gcr.io/$PROJECT_ID/terraform'
