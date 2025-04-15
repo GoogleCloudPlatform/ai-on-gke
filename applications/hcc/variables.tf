@@ -67,6 +67,11 @@ variable "node_count_gke_nccl" {
   type        = number
 }
 
+variable "node_count_gke_ray" {
+  description = "Toolkit deployment variable: node_count_ray"
+  type        = number
+}
+
 variable "node_count_llama_3_7b" {
   description = "Toolkit deployment variable: node_count_llama_3_7b"
   type        = number
@@ -113,14 +118,14 @@ variable "a3_mega_consumption_model" {
 }
 
 locals {
-  placement_policy_valid = var.gpu_type != "A3 Mega" || local.recipe == "gke" || length(var.placement_policy_name) > 0
+  placement_policy_valid = var.gpu_type != "A3 Mega" || local.recipe == "gke" || local.recipe == "gke-ray" || length(var.placement_policy_name) > 0
   a3_consumption_model_check = length(var.a3_ultra_consumption_model) > 0 || length(var.a3_mega_consumption_model) > 0
   recipe = {
     "A3 Mega" = var.a3mega_recipe
     "A3 Ultra" = var.a3ultra_recipe
   }[var.gpu_type]
   recipes_not_empty = length(local.recipe) > 0
-  reservation_valid = !(local.recipe != "gke") || length(var.reservation) > 0
+  reservation_valid = local.recipe == "gke" || local.recipe == "gke-ray" || length(var.reservation) > 0
 }
 
 resource "null_resource" "input_validation" {
@@ -141,7 +146,7 @@ resource "null_resource" "input_validation" {
     }
     precondition {
       condition     = local.reservation_valid
-      error_message = "The 'reservation' variable must not be empty when recipe is not 'gke'."
+      error_message = "The 'reservation' variable must not be empty when recipe is not 'gke' or 'gke-ray'."
     }
   }
 }

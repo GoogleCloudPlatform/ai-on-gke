@@ -6,6 +6,7 @@ locals {
     "mixtral8_7b_nemo_pretraining"     = var.node_count_nemo
     "mixtral8_7b_maxtext_pretraining"  = var.node_count_maxtext
     "gke-nccl"                         = var.node_count_gke_nccl
+    "gke-ray"                          = var.node_count_gke_ray
     "gke"                              = var.node_count_gke
     ""                                 = 0
   }[local.recipe]
