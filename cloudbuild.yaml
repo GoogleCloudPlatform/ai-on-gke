@@ -337,7 +337,7 @@ steps:
     -var=cluster_location=$_REGION -auto-approve -no-color
 
   allowFailure: true
-  waitFor: ['cleanup rag', 'cleanup jupyterhub', 'cleanup ray cluster']
+  waitFor: ['cleanup rag', 'cleanup ray cluster']
 
 - id: 'check result'
   name: 'gcr.io/$PROJECT_ID/terraform'
