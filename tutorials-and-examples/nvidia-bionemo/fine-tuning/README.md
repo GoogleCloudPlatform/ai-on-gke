@@ -40,6 +40,7 @@ export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g
 export CLUSTER_MACHINE_TYPE=e2-standard-2
 export GPU_TYPE=nvidia-tesla-a100
 export GPU_COUNT=1
+export NETWORK_NAME="default"
 ```
 
 Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to [Google Cloud documentation](https://cloud.google.com/compute/docs/gpus) for available options. Consider smaller machine types for development to manage costs.
@@ -56,6 +57,7 @@ gcloud services enable file.googleapis.com --project ${PROJECT_ID}
 gcloud container clusters create ${CLUSTER_NAME} \
     --project=${PROJECT_ID} \
     --location=${ZONE} \
+    --network=${NETWORK_NAME} \
     --addons=GcpFilestoreCsiDriver \
     --machine-type=${CLUSTER_MACHINE_TYPE} \
     --num-nodes=1 \
