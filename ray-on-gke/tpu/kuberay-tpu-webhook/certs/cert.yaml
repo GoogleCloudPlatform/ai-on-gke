@@ -31,4 +31,6 @@ spec:
     - kuberay-tpu-webhook.ray-system.svc
     - kuberay-tpu-webhook.ray-system.svc.cluster.local
   issuerRef:
+    kind: Issuer
+    group: cert-manager.io
     name: selfsigned-issuer
