@@ -13,9 +13,18 @@ This samples walks through setting up a Google Cloud GKE environment to train ES
 - **GCloud SDK:** Ensure you have the Google Cloud SDK installed and configured.
 - **Project:**  A Google Cloud project with billing enabled.
 - **Permissions:**  Sufficient permissions to create GKE clusters and other related resources.
+- **kubectl:** kubectl command-line tool installed and configured.
 - **NVIDIA GPUs:** One of the below GPUs should work
-  - [NVIDIA A100 40GB (1) GPU](https://cloud.google.com/compute/docs/gpus#a100-gpus)
+  - [NVIDIA L4 GPU (2)](https://cloud.google.com/compute/docs/gpus#l4-gpus)
+  - [NVIDIA A100 40GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a100-gpus)
   - [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
+
+Clone the repo before proceeding further:
+
+  ```bash
+  git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+  cd ai-on-gke/tutorials-and-examples/nvidia-bionemo
+  ```
 
 ## Setup
 
@@ -30,29 +39,29 @@ Replace "your-project-id" with your actual project ID.
 2. Set Environment Variables:
 
 ```bash
+
 export REGION=us-central1
 export ZONE=us-central1-a
 export CLUSTER_NAME=bionemo-demo
-export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g
+export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g # e.g., g2-standard-24 (L4) or a2-ultragpu-1g (A100 80GB)
 export CLUSTER_MACHINE_TYPE=e2-standard-2
-export GPU_TYPE=nvidia-tesla-a100
-export GPU_COUNT=1
+export GPU_TYPE=nvidia-tesla-a100 # e.g., nvidia-l4 (L4) OR nvidia-tesla-a100 for A100 40GB OR nvidia-a100-80gb (A100 80GB)
+export GPU_COUNT=1 # e.g., 2 (L4) OR 1 (A100 80GB)
 export NETWORK_NAME="default" 
 ```
 
 Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to [Google Cloud documentation](https://cloud.google.com/compute/docs/gpus) for available options. Consider smaller machine types for development to manage costs.
 
-3. Enable the Filestore API 
+3. Enable the Filestore API
 
 ```bash
-gcloud services enable file.googleapis.com --project ${PROJECT_ID}
+gcloud services enable file.googleapis.com
 ```
 
 4. Create GKE Cluster
 
 ```bash
 gcloud container clusters create ${CLUSTER_NAME} \
-    --project=${PROJECT_ID} \
     --location=${ZONE} \
     --network=${NETWORK_NAME} \
     --addons=GcpFilestoreCsiDriver \
@@ -99,6 +108,9 @@ then run:
 k apply -k pretraining/
 ```
 
+> NOTE:
+> Wait for 10-15 minutes to complete the file store mouting and job training. The dataset used in the walkthrough is a small sampling. It could take 8-10 minutes for data to be downloaded and all the steps to be completed. Upon successful completion of pre-training job, below message will be displayed.
+
 8. Port Forwarding (for TensorBoard):
 
 List PODs and ensure tensorboard POD is under `Running` status
@@ -127,9 +139,9 @@ On your local machine: Browse to <http://localhost:8080> port forward from above
 k delete -k pretraining/
 ```
 
-**Note**: This cluster can be used for fine-tuning. Feel free to skip this step if you want to reuse it.
+**Note**: This cluster can be used for fine-tuning. Feel free to skip the next step if you want to reuse it.
 
-2. To delete the cluster 
+2. To delete the cluster
 
 ```bash
 gcloud container clusters delete "${CLUSTER_NAME}" --location="${ZONE}" --quiet
