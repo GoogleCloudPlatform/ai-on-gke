@@ -32,11 +32,13 @@ Installing the webhook:
     - to change the namespace, edit the "namespace" value in each .yaml in deployments/ and certs/
 4. `make deploy-cert`
 
-The webhook can also be installed using the [Helm chart](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/tpu/kuberay-tpu-webhook/helm-chart), enabling users to easily edit the webhook configuration:
-1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
-2. `cd ai-on-gke/ray-on-gke/tpu/kuberay-tpu-webhook/helm-chart`
-3. [Optional] edit values in `values.yaml` to configure the webhook deployment
-4. `helm install kuberay-tpu-webhook .`
+The webhook can also be installed using the [Helm chart](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/tpu/kuberay-tpu-webhook/helm-chart), enabling users to easily edit the webhook configuration. This helm package is stored on Artifact Registry and can be installed with the following commands:
+1. Ensure you are authenticated with gcloud:
+    - `gcloud auth login`
+    - `gcloud auth configure-docker us-docker.pkg.dev`
+3. `helm install kuberay-tpu-webhook oci://us-docker.pkg.dev/ai-on-gke/kuberay-tpu-webhook-helm/kuberay-tpu-webhook`
+
+The above command can be edited with `-f` or `--set` flags to pass in a custom values file or key-value pair respectively for the chart (i.e. `--set tpuWebhook.image.tag=v1.2.3-gke.0`).
 
 For common errors encountered when deploying the webhook, see the [Troubleshooting guide](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/applications/ray/kuberay-tpu-webhook/Troubleshooting.md).
 
