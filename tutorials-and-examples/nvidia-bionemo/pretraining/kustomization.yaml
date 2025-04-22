@@ -1,0 +1,8 @@
+# pretraining/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+- configmaps/training-config.yaml
+- configmaps/startup-script.yaml
+- job.yaml
