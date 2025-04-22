@@ -46,7 +46,7 @@ accelerator_type       = "nvidia-tesla-t4"
 
 ### Manually Installing the TPU Initialization Webhook
 
-The TPU Initialization Webhook automatically bootstraps the TPU environment for TPU clusters. The webhook needs to be installed once per GKE cluster and requires a Kuberay Operator running v1.1+ and GKE cluster version of 1.28+. The webhook requires [cert-manager](https://github.com/cert-manager/cert-manager) to be installed in-cluster to handle TLS certificate injection. cert-manager can be installed in both GKE standard and autopilot clusters using the following helm commands:
+The TPU Initialization Webhook automatically bootstraps the TPU environment for TPU clusters. The webhook needs to be installed once per GKE cluster and requires a KubeRay Operator running v1.1+ and GKE cluster version of 1.28+. The webhook requires [cert-manager](https://github.com/cert-manager/cert-manager) to be installed in-cluster to handle TLS certificate injection. cert-manager can be installed in both GKE standard and autopilot clusters using the following helm commands:
 ```
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
@@ -62,9 +62,15 @@ Installing the webhook:
     - to change the namespace, edit the "namespace" value in each .yaml in deployments/ and certs/
 4. `make deploy-cert`
 
+The webhook can also be installed using the [Helm chart](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/ray-on-gke/tpu/kuberay-tpu-webhook/helm-chart), enabling users to easily edit the webhook configuration:
+1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
+2. `cd ai-on-gke/ray-on-gke/tpu/kuberay-tpu-webhook/helm-chart`
+3. [Optional] edit values in `values.yaml` to configure the webhook deployment
+4. `helm install kuberay-tpu-webhook .`
+
 For common errors encountered when deploying the webhook, see the [Troubleshooting guide](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/applications/ray/kuberay-tpu-webhook/Troubleshooting.md).
 
-### Creating the Kuberay Cluster
+### Creating the KubeRay Cluster
 
 You can find sample TPU cluster manifests for [single-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-singlehost.yaml) and [multi-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-multihost.yaml) here.
 
@@ -80,7 +86,7 @@ If you are using Terraform:
 
 4. Run `terraform init && terraform apply -var-file workloads.tfvars`
 
-This should deploy a Kuberay cluster with a single TPU worker node (v4 TPU with `2x2x1` topology). 
+This should deploy a KubeRay cluster with a single TPU worker node (v4 TPU with `2x2x1` topology). 
 
 To deploy a multi-host Ray Cluster, modify the `worker` spec [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/kuberay-cluster/kuberay-tpu-values.yaml) by changing the `cloud.google.com/gke-tpu-topology` `nodeSelector` to a multi-host topology. Set the `numOfHosts` field in the `worker` spec to the number of hosts specified by your chosen topology. For v4 TPUs, each TPU VM has access to 4 TPU chips. Therefore, you can calculate the number of TPU VM hosts by taking the product of the topology and dividing by 4 (i.e. a 2x2x4 TPU podslice will have 4 TPU VM hosts).
 
@@ -114,6 +120,4 @@ print(ray.get(result))
 3. `export RAY_ADDRESS=http://localhost:8265`
 4. `ray job submit --runtime-env-json='{"working_dir": "."}' -- python test_tpu.py`
    
-For a more advanced workload running Stable Diffusion on TPUs, see [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/applications/ray/example_notebooks/stable-diffusion-tpu.ipynb).
-
- 
+For a more advanced workload running Stable Diffusion on TPUs, see [here](https://cloud.google.com/kubernetes-engine/docs/add-on/ray-on-gke/tutorials/deploy-ray-serve-stable-diffusion-tpu).
