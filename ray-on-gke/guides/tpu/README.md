@@ -11,37 +11,7 @@ For addition useful information about TPUs on GKE (such as topology configuratio
 
 In addition, please ensure the following are installed on your local development environment:
 * Helm (v3.9.3)
-* Terraform (v1.7.4)
 * Kubectl
-
-### Provisioning a GKE Cluster with Terraform (Optional)
-
-Skip this section if you already have a GKE cluster with TPUs (cluster version should be 1.28 or later). 
-
-1. `git clone https://github.com/GoogleCloudPlatform/ai-on-gke`
-
-2. `cd ai-on-gke/infrastructure`
-
-3. Edit `platform.tfvars` with your GCP settings.
-
-4. Change the region or zone to one where TPUs are available (see [this link](https://cloud.google.com/tpu/docs/regions-zones) for details.
-For v4 TPUs (the default type), the region should be set to `us-central2` or `us-central2-b`.
-
-5. Set the following flags (note that TPUs are currently only supported on GKE standard):
-
-```
-autopilot_cluster = false
-...
-enable_tpu = true
-```
- 
-6. Change the following lines in the `tpu_pools` configuration to match your desired [TPU accelerator](https://cloud.google.com/tpu/docs/supported-tpu-configurations#using-accelerator-type).
-```
-accelerator_count      = 2
-accelerator_type       = "nvidia-tesla-t4"
-```
-
-7. Run `terraform init && terraform apply -var-file platform.tfvars`
 
 
 ### Manually Installing the TPU Initialization Webhook
@@ -74,21 +44,7 @@ For common errors encountered when deploying the webhook, see the [Troubleshooti
 
 You can find sample TPU cluster manifests for [single-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-singlehost.yaml) and [multi-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-multihost.yaml) here.
 
-If you are using Terraform:
-
-1. Get the GKE cluster name and location/region from `infrastructure/platform.tfvars`.
-   Run `gcloud container clusters get-credentials %gke_cluster_name% --location=%location%`.
-   Configuring `gcloud` [instructions](https://cloud.google.com/sdk/docs/initializing)
-
-2. `cd ../applications/ray`
-
-3. Edit `workloads.tfvars` with your GCP settings. Replace `<your project ID>` and `<your cluster name>` with the names you used in `platform.tfvars`.
-
-4. Run `terraform init && terraform apply -var-file workloads.tfvars`
-
-This should deploy a KubeRay cluster with a single TPU worker node (v4 TPU with `2x2x1` topology). 
-
-To deploy a multi-host Ray Cluster, modify the `worker` spec [here](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/modules/kuberay-cluster/kuberay-tpu-values.yaml) by changing the `cloud.google.com/gke-tpu-topology` `nodeSelector` to a multi-host topology. Set the `numOfHosts` field in the `worker` spec to the number of hosts specified by your chosen topology. For v4 TPUs, each TPU VM has access to 4 TPU chips. Therefore, you can calculate the number of TPU VM hosts by taking the product of the topology and dividing by 4 (i.e. a 2x2x4 TPU podslice will have 4 TPU VM hosts).
+For a quick-start guide to using TPUs with KubeRay, see [Use TPUs with KubeRay](https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/tpu.html).
 
 ### Running Sample Workloads
 
@@ -120,4 +76,4 @@ print(ray.get(result))
 3. `export RAY_ADDRESS=http://localhost:8265`
 4. `ray job submit --runtime-env-json='{"working_dir": "."}' -- python test_tpu.py`
    
-For a more advanced workload running Stable Diffusion on TPUs, see [here](https://cloud.google.com/kubernetes-engine/docs/add-on/ray-on-gke/tutorials/deploy-ray-serve-stable-diffusion-tpu).
+For a more advanced workload running Stable Diffusion on TPUs, see [here](https://cloud.google.com/kubernetes-engine/docs/add-on/ray-on-gke/tutorials/deploy-ray-serve-stable-diffusion-tpu). For an example of serving a LLM with TPUs, RayServe, and KubeRay, see [here](https://cloud.google.com/kubernetes-engine/docs/tutorials/serve-lllm-tpu-ray).
