@@ -40,11 +40,13 @@ The webhook can also be installed using the [Helm chart](https://github.com/Goog
 
 For common errors encountered when deploying the webhook, see the [Troubleshooting guide](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/applications/ray/kuberay-tpu-webhook/Troubleshooting.md).
 
+
 ### Creating the KubeRay Cluster
 
 You can find sample TPU cluster manifests for [single-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-singlehost.yaml) and [multi-host](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.tpu-v4-multihost.yaml) here.
 
 For a quick-start guide to using TPUs with KubeRay, see [Use TPUs with KubeRay](https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/tpu.html).
+
 
 ### Running Sample Workloads
 
