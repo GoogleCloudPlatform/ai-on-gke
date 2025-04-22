@@ -3,9 +3,9 @@
     "details": {
       "@type": "type.googleapis.com/google.internal.kubernetes.security.validation.v1.ContainerDetails",
       "containerName": "hub",
-      "image": "us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class:1710974014"
+      "image": "us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class:sample-public-image-1741648202"
     },
-    "message": "container \"hub\" in Deployment \"hub\" has an image \"us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class:1710974014\" that does not have a valid digest.",
+    "message": "container \"hub\" in Deployment \"hub\" has an image \"us-docker.pkg.dev/ai-on-gke/jupyterhub-authentication-class/jupyter-auth-class:sample-public-image-1741648202\" that does not have a valid digest.",
     "policyName": "imagefreshness",
     "resourceKey": {
       "group": "apps",
@@ -15,4 +15,4 @@
       "version": "v1"
     }
   }
-] 
+]

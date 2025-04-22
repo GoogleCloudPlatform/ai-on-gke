@@ -19,4 +19,5 @@ For more configuration options visit [Kueue's installation guide.](https://kueue
 
 * `dws-queue.yaml` - Kueue's Cluster and Local queues with ProvisioningRequest and DWS support enabled.
 * `job.yaml` - Sample job that requires GPU and uses DWS-enabled queue. Contains optional annotation ` provreq.kueue.x-k8s.io/maxRunDurationSeconds` which sets `maxRunDurationSeconds` for the created ProvisioningRequest
+* `job-autopilot.yaml` - Sample job that requires GPU and uses DWS-enabled queue, compatible with Autopilot GKE clusters. Compared to `job.yaml`, replaces the nodepool selector with accelerator selector, which allows autopilot to manage the nodes.
 
