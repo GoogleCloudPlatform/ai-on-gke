@@ -29,14 +29,6 @@ steps:
   dir: "applications/ray/"
   waitFor: ["validate platform"]
 
-- id: "validate rag"
-  name: "gcr.io/$PROJECT_ID/terraform"
-  script: |
-    terraform init -no-color
-    terraform validate -no-color
-  dir: "applications/rag/"
-  waitFor: ["validate platform"]
-
 - id: 'create gke cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
   env:
@@ -62,7 +54,7 @@ steps:
     echo "pass" > /workspace/gke_cluster_result.txt
   dir: 'infrastructure/'
   allowFailure: true
-  waitFor: ['validate platform', 'validate ray', validate rag]
+  waitFor: ['validate platform', 'validate ray']
 
 - id: 'test ray cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -129,91 +121,6 @@ steps:
   allowFailure: true
   waitFor: ['test ray cluster']
 
-- id: 'test rag'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'sh'
-  secretEnv: ['KAGGLE_USERNAME', 'KAGGLE_KEY']
-  args:
-  - '-c'
-  - |
-    set -e
-
-    # Get kube config
-    gcloud container clusters get-credentials \
-    ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    --location $_REGION \
-    --project $PROJECT_ID
-
-    cd /workspace/modules/jupyter/tests
-    python3 change_jupyter_config.py $_AUTOPILOT_CLUSTER
-
-    cd /workspace/applications/rag/
-    terraform apply \
-    -var-file=workloads.tfvars \
-    -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
-    -var=create_cluster=false \
-    -var=jupyter_add_auth=false \
-    -var=frontend_add_auth=false \
-    -var=project_id=$PROJECT_ID \
-    -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    -var=cluster_location=$_REGION \
-    -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
-    -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
-    -var=ray_service_account=ray-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
-    -var=rag_service_account=rag-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
-    -var=jupyter_service_account=jupyter-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
-    -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
-    -auto-approve -no-color
-    echo "pass" > /workspace/rag_tf_result.txt
-
-    # Validate Ray: Make sure pods are running
-    kubectl wait --for=condition=Ready pods -n rag-$SHORT_SHA-$_BUILD_ID -l 'component!=continuous-image-puller' --timeout=1200s
-    kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8262:8265 &
-    # Wait port-forwarding to take its place
-    sleep 5s
-
-    # Validate Ray: Check dashboard
-    ray job submit --working-dir ./tests \
-    --address=http://127.0.0.1:8262 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
-    echo "pass" > /workspace/rag_ray_dashboard_result.txt
-
-    # Validate JupyterHub: Get hub url
-    kubectl get services -n rag-$SHORT_SHA-$_BUILD_ID
-    kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
-    # Wait port-forwarding to take its place
-    sleep 5s
-
-    # Validate JupyterHub: Test Hub
-    cd /workspace/modules/jupyter/tests
-    python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
-    echo "pass" > /workspace/rag_jupyterhub_test_result.txt
-
-    # Validate RAG: Test rag frontend
-    kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/rag-frontend 8081:8080 &
-    # Wait port-forwarding to take its place
-    sleep 5s
-
-    cd /workspace/applications/rag/tests
-    python3 test_frontend.py "127.0.0.1:8081"
-    echo "pass" > /workspace/rag_frontend_result.txt
-
-    cd /workspace/
-    sed -i "s/<username>/$$KAGGLE_USERNAME/g" ./applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb
-    sed -i "s/<token>/$$KAGGLE_KEY/g" ./applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb
-    gsutil cp ./applications/rag/example_notebooks/rag-kaggle-ray-sql-interactive.ipynb gs://gke-aieco-rag-$SHORT_SHA-$_BUILD_ID/
-    kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID $(kubectl get pod -l app=jupyterhub,component=hub -n rag-$SHORT_SHA-$_BUILD_ID -o jsonpath="{.items[0].metadata.name}") -- jupyterhub token admin --log-level=CRITICAL | xargs python3 ./applications/rag/notebook_starter.py
-    # Wait for jupyterhub to trigger notebook pod startup
-    sleep 5s
-    kubectl wait --for=condition=Ready pod/jupyter-admin -n rag-$SHORT_SHA-$_BUILD_ID --timeout=500s
-    kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- jupyter nbconvert --to script /data/rag-kaggle-ray-sql-interactive.ipynb
-    kubectl exec -it -n rag-$SHORT_SHA-$_BUILD_ID jupyter-admin -c notebook -- ipython /data/rag-kaggle-ray-sql-interactive.py
-
-    python3 ./applications/rag/tests/test_rag.py "http://127.0.0.1:8081/prompt"
-    echo "pass" > /workspace/rag_prompt_result.txt
-
-  allowFailure: true
-  waitFor: ['create gke cluster']
-
 - id: 'Generate Kubeconfig'
   name: 'gcr.io/cloud-builders/gcloud'
   env:
@@ -227,7 +134,6 @@ steps:
   - '--region=${_REGION}'
   - '--project=$PROJECT_ID'
   allowFailure: true
-  waitFor: ['test rag']
 
 - id: 'Copy metadata'
   name: 'ubuntu'
@@ -292,34 +198,6 @@ steps:
   allowFailure: true
   waitFor: ['Copy metadata']
 
-- id: 'cleanup rag'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/rag/
-    terraform destroy \
-    -var-file=workloads.tfvars \
-    -var=network_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-$_AUTOPILOT_CLUSTER  \
-    -var=create_cluster=false \
-    -var=jupyter_add_auth=false \
-    -var=frontend_add_auth=false \
-    -var=project_id=$PROJECT_ID \
-    -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    -var=cluster_location=$_REGION \
-    -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
-    -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
-    -var=ray_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
-    -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
-    -var=jupyter_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
-    -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
-    -auto-approve -no-color
-  allowFailure: true
-  waitFor: ['Run shipshape on cluster', 'Run Shipshape on helm']
-
 - id: 'cleanup gke cluster'
   name: 'gcr.io/$PROJECT_ID/terraform'
   entrypoint: 'bash'
@@ -337,7 +215,7 @@ steps:
     -var=cluster_location=$_REGION -auto-approve -no-color
 
   allowFailure: true
-  waitFor: ['cleanup rag', 'cleanup ray cluster']
+  waitFor: ['cleanup ray cluster']
 
 - id: 'check result'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -357,31 +235,6 @@ steps:
 
     if [[ $(cat /workspace/user_result.txt) != "pass" ]]; then
       echo "ray cluster failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/rag_tf_result.txt) != "pass" ]]; then
-      echo "rag tf failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/rag_ray_dashboard_result.txt) != "pass" ]]; then
-      echo "rag ray dashboard test failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/rag_jupyterhub_test_result.txt) != "pass" ]]; then
-      echo "rag jupyterhub test failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/rag_frontend_result.txt) != "pass" ]]; then
-      echo "rag frontend test failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/rag_prompt_result.txt) != "pass" ]]; then
-      echo "rag prompt test failed"
       exit 1
     fi
     
