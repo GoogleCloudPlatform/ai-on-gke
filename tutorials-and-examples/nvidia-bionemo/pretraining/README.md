@@ -47,18 +47,18 @@ export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g # e.g., g2-standard-24 (L4) or a2-ul
 export CLUSTER_MACHINE_TYPE=e2-standard-2
 export GPU_TYPE=nvidia-tesla-a100 # e.g., nvidia-l4 (L4) OR nvidia-tesla-a100 for A100 40GB OR nvidia-a100-80gb (A100 80GB)
 export GPU_COUNT=1 # e.g., 2 (L4) OR 1 (A100 80GB)
-export NETWORK_NAME="default" 
+export NETWORK_NAME="default"
 ```
 
 Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to [Google Cloud documentation](https://cloud.google.com/compute/docs/gpus) for available options. Consider smaller machine types for development to manage costs.
 
-3. Enable the Filestore API
+3. Enable the Filestore API:
 
 ```bash
 gcloud services enable file.googleapis.com
 ```
 
-4. Create GKE Cluster
+4. Create GKE Cluster:
 
 ```bash
 gcloud container clusters create ${CLUSTER_NAME} \
@@ -73,12 +73,11 @@ gcloud container clusters create ${CLUSTER_NAME} \
 
 ```bash
 gcloud container node-pools create gpupool \
-    --project=${PROJECT_ID} \
     --location=${ZONE} \
     --cluster=${CLUSTER_NAME} \
     --machine-type=${NODE_POOL_MACHINE_TYPE} \
     --num-nodes=1 \
-    --accelerator type=${GPU_TYPE},count=${GPU_COUNT},gpu-driver-version=latest 
+    --accelerator type=${GPU_TYPE},count=${GPU_COUNT},gpu-driver-version=latest
 ```
 
 This creates a node pool specifically for GPU workloads.
@@ -96,12 +95,6 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
 alias k=kubectl
 ```
 
-make sure you are in this directory
-
-```bash
-cd tutorials-and-examples/nvidia-bionemo/
-```
-
 then run:
 
 ```bash
@@ -109,7 +102,11 @@ k apply -k pretraining/
 ```
 
 > NOTE:
-> Wait for 10-15 minutes to complete the file store mouting and job training. The dataset used in the walkthrough is a small sampling. It could take 8-10 minutes for data to be downloaded and all the steps to be completed. Upon successful completion of pre-training job, below message will be displayed.
+> Wait for 10-15 minutes to complete the file store mounting and job training. The dataset used in the walkthrough is a small sampling. It could take 8-10 minutes for data to be downloaded and all the steps to be completed. Upon successful completion of pre-training job, below message will be displayed.
+
+```bash
+Trainer.fit stopped: `max_steps=100` reached.
+```
 
 8. Port Forwarding (for TensorBoard):
 
@@ -119,6 +116,9 @@ List PODs and ensure tensorboard POD is under `Running` status
 k get pods -n bionemo-training
 ```
 
+> NOTE:
+> It is assumed that the local port 8000 is available. If the post is unavailable, update below to an available port.
+
 ```bash
 k port-forward -n bionemo-training svc/tensorboard-service 8080:6006
 ```
@@ -127,7 +127,8 @@ k port-forward -n bionemo-training svc/tensorboard-service 8080:6006
 
 On your local machine: Browse to <http://localhost:8080> port forward from above step timeseries and see the loss curves as show below.
 
->Note: tensorboard dashboards will take some time to show up as the bioenemo job takes a few minutes to kick off. Then, the full plots will show up once the job's POD is under `COMPLETED` status.
+> NOTE:
+> Tensorboard dashboards will take some time to show up as the bioenemo job takes a few minutes to kick off. Then, the full plots will show up once the job's POD is under `COMPLETED` status.
 
 [<img src="./images/tensorboard-results.png" width="750"/>](HighLevelArch)
 
@@ -139,7 +140,8 @@ On your local machine: Browse to <http://localhost:8080> port forward from above
 k delete -k pretraining/
 ```
 
-**Note**: This cluster can be used for fine-tuning. Feel free to skip the next step if you want to reuse it.
+> NOTE:
+> This cluster can be used for fine-tuning. Feel free to skip the next step if you want to reuse it.
 
 2. To delete the cluster
 

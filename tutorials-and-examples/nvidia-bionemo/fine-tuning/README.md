@@ -55,6 +55,9 @@ export NETWORK_NAME="default"
 
 Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to [Google Cloud documentation](https://cloud.google.com/compute/docs/gpus) for available options. Consider smaller machine types for development to manage costs.
 
+> NOTE:
+> Skip steps 3-5 if you are reusing the same GKE cluster from pretraining.
+
 3. Enable the Filestore API
 
 ```bash
@@ -109,9 +112,11 @@ gcloud iam service-accounts create esm2-inference-gsa
 9. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
 
 ```bash
-kubectl create namespace bionemo-training
+alias k=kubectl
 
-kubectl create serviceaccount esm2-inference-sa -n bionemo-training
+k create namespace bionemo-training
+
+k create serviceaccount esm2-inference-sa -n bionemo-training
 ```
 
 10. Create identity binding
@@ -119,37 +124,26 @@ kubectl create serviceaccount esm2-inference-sa -n bionemo-training
 This is needed to allow the GKE POD to pull the custom image from the artifact registry we just created in a previous step
 
 ```bash
-gcloud iam service-accounts add-iam-policy-binding \ 
-  esm2-inference-gsa@${PROJECT_ID}.iam.gserviceaccount.com \
- --role="roles/iam.workloadIdentityUser" \
- --member="serviceAccount:${PROJECT_ID}.svc.id.goog[bionemo-training/esm2-inference-sa]"
+gcloud iam service-accounts add-iam-policy-binding esm2-inference-gsa@${PROJECT_ID}.iam.gserviceaccount.com --role="roles/iam.workloadIdentityUser" --member="serviceAccount:${PROJECT_ID}.svc.id.goog[bionemo-training/esm2-inference-sa]"
 ```
 
 ```bash
-kubectl annotate serviceaccount esm2-inference-sa \
-  -n bionemo-training iam.gke.io/gcp-service-account=esm2-inference-gsa@$PROJECT_ID.iam.gserviceaccount.com
+k annotate serviceaccount esm2-inference-sa -n bionemo-training iam.gke.io/gcp-service-account=esm2-inference-gsa@$PROJECT_ID.iam.gserviceaccount.com
 ```
 
-Note: this requires workload identity to be configured at the cluster level.
+> Note:
+> This requires workload identity to be configured at the cluster level.
 
-11. Launch fine-tuning job
-
-make sure you are in this directory
-
-```bash
-cd tutorials-and-examples/nvidia-bionemo/
-```
-
-then apply the kustomize file
+11. Launch fine-tuning job by applying the kustomize file
 
 ```bash
-kubectl apply -k fine-tuning/job
+k apply -k fine-tuning/job
 ```
 
 Check job status by running:
 
 ```bash
-kubectl get job esm2-finetuning -n bionemo-training
+k get job esm2-finetuning -n bionemo-training
 ```
 
 You will need if the job has succeded once its status is `Complete`.
@@ -175,7 +169,7 @@ docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inf
 ensure job status is `Complete` by running:
 
 ```bash
-kubectl get job esm2-finetuning -n bionemo-training
+k get job esm2-finetuning -n bionemo-training
 ```
 
 Ensure environment variables `REGION`, `PROJECT_ID`, and `PUBLIC_REPOSITORY` are fully set.
@@ -185,7 +179,7 @@ envsubst < fine-tuning/inference/kustomization.yaml | sponge fine-tuning/inferen
 ```
 
 ```bash
-kubectl apply -k fine-tuning/inference
+k apply -k fine-tuning/inference
 ```
 
 14. Port Forwarding (for inference):
@@ -193,13 +187,13 @@ kubectl apply -k fine-tuning/inference
 List deployment PODs
 
 ```bash
-kubectl get pods -l app=esm2-inference -n bionemo-training
+k get pods -l app=esm2-inference -n bionemo-training
 ```
 
-Once the inference POD is under `Running` status, run:
+Wait for a few minutes for the inference POD to be in `Running` status, run:
 
 ```bash
-kubectl port-forward -n bionemo-training svc/esm2-inference 8080:80
+k port-forward -n bionemo-training svc/esm2-inference 8080:80
 ```
 
 in a separate shell window, run:
@@ -217,7 +211,7 @@ See [here](https://docs.nvidia.com/bionemo-framework/latest/user-guide/examples/
 To delete the cluster and all associated resources:
 
 ```bash
-kubectl delete namespace bionemo-training --cascade=background
+k delete namespace bionemo-training --cascade=background
 ```
 
 ```bash
