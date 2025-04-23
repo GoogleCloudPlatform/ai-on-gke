@@ -70,6 +70,10 @@ spec:
           ]
         {{- end }}
         {{- end }}
+      labels:
+        {{- with $root.Values.workloadLabels }} 
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- if $root.Values.network.hostNetwork }}
       hostNetwork: true
