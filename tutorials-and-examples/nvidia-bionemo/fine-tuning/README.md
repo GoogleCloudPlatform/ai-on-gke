@@ -7,17 +7,26 @@ This sample walks through setting up a Google Cloud GKE environment to fine-tune
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
 - [Cleanup](#cleanup)
-- **NVIDIA GPUs:** One of the below GPUs should work
-  - [NVIDIA A100 40GB (1) GPU](https://cloud.google.com/compute/docs/gpus#a100-gpus)
-  - [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
 
 ## Prerequisites
 
 - **GCloud SDK:** Ensure you have the Google Cloud SDK installed and configured.
 - **Project:**  A Google Cloud project with billing enabled.
 - **Permissions:**  Sufficient permissions to create GKE clusters and other related resources.
+- **kubectl:** kubectl command-line tool installed and configured.
+- **NVIDIA GPUs:** One of the below GPUs should work
+  - [NVIDIA L4 GPU (2)](https://cloud.google.com/compute/docs/gpus#l4-gpus)
+  - [NVIDIA A100 40GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a100-gpus)
+  - [NVIDIA H100 80GB (1) GPU or higher](https://cloud.google.com/compute/docs/gpus#a3-series)
 
 **Note**: Google Cloud shell is recommended to run this sample.
+
+You can skip this step, if done previously.
+
+  ```bash
+  git clone https://github.com/GoogleCloudPlatform/ai-on-gke
+  cd ai-on-gke/tutorials-and-examples/nvidia-bionemo
+  ```
 
 ## Setup
 
@@ -32,30 +41,33 @@ Replace "your-project-id" with your actual project ID.
 2. Set Environment Variables:
 
 ```bash
+export PROJECT_ID="your-project-id"
 export PUBLIC_REPOSITORY=$PROJECT_ID
 export REGION=us-central1
-export ZONE=us-central1-b
+export ZONE=us-central1-a
 export CLUSTER_NAME=bionemo-demo
-export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g
-export CLUSTER_MACHINE_TYPE=e2-standard-2
-export GPU_TYPE=nvidia-tesla-a100
-export GPU_COUNT=1
+export NODE_POOL_MACHINE_TYPE=a2-highgpu-1g # e.g., g2-standard-24 (L4) or a2-ultragpu-1g (A100 80GB)
+export CLUSTER_MACHINE_TYPE=e2-standard-2 
+export GPU_TYPE=nvidia-tesla-a100 # e.g., nvidia-l4 (L4) OR nvidia-a100-80gb (A100 80GB)
+export GPU_COUNT=1 # e.g., 2 (L4) OR 1 (A100 80GB)
 export NETWORK_NAME="default"
 ```
 
 Adjust the zone, machine type, accelerator type, count, and number of nodes as per your requirements. Refer to [Google Cloud documentation](https://cloud.google.com/compute/docs/gpus) for available options. Consider smaller machine types for development to manage costs.
 
+> NOTE:
+> Skip steps 3-5 if you are reusing the same GKE cluster from pretraining.
+
 3. Enable the Filestore API
 
 ```bash
-gcloud services enable file.googleapis.com --project ${PROJECT_ID}
+gcloud services enable file.googleapis.com
 ```
 
 4. Create GKE Cluster
 
 ```bash
 gcloud container clusters create ${CLUSTER_NAME} \
-    --project=${PROJECT_ID} \
     --location=${ZONE} \
     --network=${NETWORK_NAME} \
     --addons=GcpFilestoreCsiDriver \
@@ -68,7 +80,6 @@ gcloud container clusters create ${CLUSTER_NAME} \
 
 ```bash
 gcloud container node-pools create gpupool \
-    --project=${PROJECT_ID} \
     --location=${ZONE} \
     --cluster=${CLUSTER_NAME} \
     --machine-type=${NODE_POOL_MACHINE_TYPE} \
@@ -82,66 +93,62 @@ This creates a node pool specifically for GPU workloads.
 
 ```bash
 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
---location="${ZONE}"
+  --location="${ZONE}"
 ```
 
 7. Create an Artifact Registry to store container images
 
 ```bash
-gcloud artifacts repositories create ${PUBLIC_REPOSITORY} --repository-format=docker --location=${REGION}
+gcloud artifacts repositories create ${PUBLIC_REPOSITORY} \
+  --repository-format=docker --location=${REGION}
 ```
 
 8. Create service account to allow GKE to pull images
 
 ```bash
-gcloud iam service-accounts create esm2-inference-gsa \
-    --project=$PROJECT_ID
+gcloud iam service-accounts create esm2-inference-gsa
 ```
 
 9. Create namespace, training job, tensorboard microservice, and mount Google cloud Filestore for storage
 
 ```bash
-kubectl create namespace bionemo-training
+alias k=kubectl
 
-kubectl create serviceaccount esm2-inference-sa -n bionemo-training
+k create namespace bionemo-training
+
+k create serviceaccount esm2-inference-sa -n bionemo-training
 ```
 
 10. Create identity binding
 
-This is needed to allow the GKE POD to pull the custom image from the artifact registry we just created in step 7.
+This is needed to allow the GKE POD to pull the custom image from the artifact registry we just created in a previous step
 
 ```bash
 gcloud iam service-accounts add-iam-policy-binding esm2-inference-gsa@${PROJECT_ID}.iam.gserviceaccount.com --role="roles/iam.workloadIdentityUser" --member="serviceAccount:${PROJECT_ID}.svc.id.goog[bionemo-training/esm2-inference-sa]"
 ```
 
 ```bash
-kubectl annotate serviceaccount esm2-inference-sa -n bionemo-training iam.gke.io/gcp-service-account=esm2-inference-gsa@$PROJECT_ID.iam.gserviceaccount.com
-```
-Note: this requires workload identity to be configured at the cluster level.
-
-11. Launch fine-tuning job
-
-make sure you are in this directory
-
-```bash
-cd tutorials-and-examples/nvidia-bionemo/
+k annotate serviceaccount esm2-inference-sa -n bionemo-training iam.gke.io/gcp-service-account=esm2-inference-gsa@$PROJECT_ID.iam.gserviceaccount.com
 ```
 
-then apply the kustomize file
+> Note:
+> This requires workload identity to be configured at the cluster level.
+
+11. Launch fine-tuning job by applying the kustomize file
 
 ```bash
-kubectl apply -k fine-tuning/job
+k apply -k fine-tuning/job
 ```
 
 Check job status by running:
 
 ```bash
-kubectl get job esm2-finetuning -n bionemo-training
+k get job esm2-finetuning -n bionemo-training
 ```
 
 You will need if the job has succeded once its status is `Complete`.
 
-12. build and push inference server docker image 
+12. build and push inference server docker image
 
 ```bash
 docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inference:latest fine-tuning/inference/.
@@ -162,7 +169,7 @@ docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${PUBLIC_REPOSITORY}/esm2-inf
 ensure job status is `Complete` by running:
 
 ```bash
-kubectl get job esm2-finetuning -n bionemo-training
+k get job esm2-finetuning -n bionemo-training
 ```
 
 Ensure environment variables `REGION`, `PROJECT_ID`, and `PUBLIC_REPOSITORY` are fully set.
@@ -172,21 +179,21 @@ envsubst < fine-tuning/inference/kustomization.yaml | sponge fine-tuning/inferen
 ```
 
 ```bash
-kubectl apply -k fine-tuning/inference
+k apply -k fine-tuning/inference
 ```
 
 14. Port Forwarding (for inference):
 
-List deployment PODs 
+List deployment PODs
 
 ```bash
-kubectl get pods -l app=esm2-inference -n bionemo-training
+k get pods -l app=esm2-inference -n bionemo-training
 ```
 
-Once the inference POD is under `Running` status, run:
+Wait for a few minutes for the inference POD to be in `Running` status, run:
 
 ```bash
-kubectl port-forward -n bionemo-training svc/esm2-inference 8080:80
+k port-forward -n bionemo-training svc/esm2-inference 8080:80
 ```
 
 in a separate shell window, run:
@@ -204,7 +211,7 @@ See [here](https://docs.nvidia.com/bionemo-framework/latest/user-guide/examples/
 To delete the cluster and all associated resources:
 
 ```bash
-kubectl delete namespace bionemo-training --cascade=background
+k delete namespace bionemo-training --cascade=background
 ```
 
 ```bash
