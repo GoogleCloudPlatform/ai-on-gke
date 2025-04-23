@@ -55,6 +55,11 @@ resource "helm_release" "benchmark" {
     value = var.queue
   }
 
+  set_json {
+    name  = "workloadLabels"
+    value = jsonencode(local.workload_labels)
+  }
+
   set {
     name = "workload.gpus"
     value = var.node_count * 8
@@ -82,6 +87,11 @@ resource "helm_release" "nccl_tests" {
   set {
     name = "workload.node_count"
     value = var.node_count
+  }
+
+  set_json {
+    name  = "workloadLabels"
+    value = jsonencode(local.workload_labels) 
   }
 
   set {
