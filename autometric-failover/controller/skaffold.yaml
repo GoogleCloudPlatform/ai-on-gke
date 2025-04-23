@@ -1,0 +1,13 @@
+apiVersion: skaffold/v4beta12
+kind: Config
+metadata:
+  name: controller
+build:
+  artifacts:
+    - image: controller
+      docker:
+        dockerfile: Dockerfile
+        noCache: true
+manifests:
+  rawYaml:
+    - config/manifests.yaml

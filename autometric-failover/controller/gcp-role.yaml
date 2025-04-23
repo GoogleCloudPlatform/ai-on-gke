@@ -1,0 +1,5 @@
+title: Autometric Failover Controller
+description: Role for GKE node pool failover
+stage: GA
+includedPermissions:
+- compute.instances.delete

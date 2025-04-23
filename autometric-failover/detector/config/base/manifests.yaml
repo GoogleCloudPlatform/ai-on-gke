@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: detector
+  namespace: autometric-failover-system
+  labels:
+    app.kubernetes.io/name: autometric-failover
+    app.kubernetes.io/component: detector
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: detector
+  namespace: autometric-failover-system
+  labels:
+    app.kubernetes.io/name: autometric-failover
+    app.kubernetes.io/component: detector
+spec:
+  schedule: "*/15 * * * *"  # Run every 15 minutes
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: autometric-failover
+            app.kubernetes.io/component: detector
+        spec:
+          serviceAccountName: detector
+          containers:
+          - name: detector
+            image: detector  # Will be patched by overlay
+            env:
+            - name: TIME_WINDOW_MINUTES
+              value: "15"
+            - name: CONTROLLER_URL
+              value: "http://controller:8080"
+            - name: DRY_RUN
+              value: "false" # Change to false to enable actual failover
+            - name: LOG_LEVEL
+              value: "DEBUG"
+            resources:
+              limits:
+                cpu: 2
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 1Gi
+          restartPolicy: Never

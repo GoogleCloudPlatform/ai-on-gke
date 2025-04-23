@@ -1,0 +1,44 @@
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: example-jobset
+  labels:
+    tier: hero
+spec:
+  failurePolicy:
+    maxRestarts: 99
+  replicatedJobs:
+    - name: rs-a
+      replicas: 1
+      template:
+        spec:
+          parallelism: 2
+          completions: 2
+          backoffLimit: 0
+          template:
+            spec:
+              containers:
+              - name: main
+                image: ubuntu
+                command:
+                - bash
+                - -c
+                - |
+                  sleep 6000
+    - name: rs-b
+      replicas: 2
+      template:
+        spec:
+          parallelism: 1
+          completions: 1
+          backoffLimit: 0
+          template:
+            spec:
+              containers:
+              - name: main
+                image: ubuntu
+                command:
+                - bash
+                - -c
+                - |
+                  sleep 6000

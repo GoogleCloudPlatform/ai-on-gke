@@ -1,0 +1,42 @@
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: example-single-3
+  annotations:
+    alpha.jobset.sigs.k8s.io/exclusive-topology: cloud.google.com/gke-nodepool
+spec:
+  failurePolicy:
+    maxRestarts: 9
+  replicatedJobs:
+    - name: rs-s
+      replicas: 1
+      template:
+        spec:
+          parallelism: 1 # 1 node per node pool
+          completions: 1
+          backoffLimit: 0
+          template:
+            spec:
+              nodeSelector:
+                cloud.google.com/gke-tpu-accelerator: tpu-v5p-slice
+                cloud.google.com/gke-tpu-topology: 2x2x1
+                cloud.google.com/gke-spot: "true"
+              tolerations:
+              - key: cloud.google.com/gke-spot
+                operator: Equal
+                value: "true"
+                effect: NoSchedule
+              containers:
+              - name: jax-tpu
+                image: ubuntu
+                ports:
+                - containerPort: 8471
+                - containerPort: 8080
+                command:
+                - bash
+                - -c
+                - |
+                  sleep 6000
+                resources:
+                  limits:
+                    google.com/tpu: 4
