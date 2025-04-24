@@ -55,9 +55,22 @@ resource "helm_release" "benchmark" {
     value = var.queue
   }
 
-  set_json {
-    name  = "workloadLabels"
-    value = jsonencode(local.workload_labels)
+  set {
+    name  = "workloadLabels.ai-on-gke-solution" # Note the dot notation for the key path
+    value = local.workload_labels["ai-on-gke-solution"]
+  }
+  set {
+    name  = "workloadLabels.ai-on-gke-machine-type"
+    value = local.workload_labels["ai-on-gke-machine-type"]
+  }
+  set {
+    name  = "workloadLabels.ai-on-gke-framework"
+    value = local.workload_labels["ai-on-gke-framework"]
+  }
+
+  set {
+    name  = "workloadLabels.ai-on-gke-model"
+    value = local.workload_labels["ai-on-gke-model"]
   }
 
   set {
@@ -89,9 +102,17 @@ resource "helm_release" "nccl_tests" {
     value = var.node_count
   }
 
-  set_json {
-    name  = "workloadLabels"
-    value = jsonencode(local.workload_labels) 
+  set {
+    name  = "workloadLabels.ai-on-gke-solution"
+    value = local.workload_labels["ai-on-gke-solution"]
+  }
+  set {
+    name  = "workloadLabels.ai-on-gke-machine-type"
+    value = local.workload_labels["ai-on-gke-machine-type"]
+  }
+  set {
+    name  = "workloadLabels.ai-on-gke-framework"
+    value = local.workload_labels["ai-on-gke-framework"]
   }
 
   set {
