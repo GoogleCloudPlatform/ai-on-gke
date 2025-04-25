@@ -41,6 +41,10 @@ spec:
       {{- if $root.Values.volumes.gcsMounts }}
       gke-gcsfuse/volumes: "true"
       {{- end}}
+    labels:
+      {{- with $root.Values.workloadLabels }} 
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
 
    spec:
      #schedulingGates:
