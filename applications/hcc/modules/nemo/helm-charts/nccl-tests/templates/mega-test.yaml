@@ -52,6 +52,10 @@ spec:
                     {"interfaceName":"eth7","network":"vpc7"},
                     {"interfaceName":"eth8","network":"vpc8"}
                   ]
+              labels:
+                {{- with $root.Values.workloadLabels }} 
+                {{- toYaml . | nindent 16 }}   
+                {{- end }}
             spec:
               restartPolicy: Never
               nodeSelector:
