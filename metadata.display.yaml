@@ -87,6 +87,7 @@ spec:
               - us-east4-b
               - us-east5-a
               - us-east7-c
+              - us-south1-b
               - us-west1-c
           toggleUsingVariables:
           - variableName: gpu_type
