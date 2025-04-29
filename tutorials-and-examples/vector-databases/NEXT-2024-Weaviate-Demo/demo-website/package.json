@@ -12,7 +12,7 @@
     "@google-cloud/storage": "^7.7.0",
     "@google/generative-ai": "^0.2.1",
     "axios": "^1.8.2",
-    "formidable": "^3.5.1",
+    "formidable": "^3.5.4",
     "fs": "^0.0.1-security",
     "next": "14.2.25",
     "path": "^0.12.7",
