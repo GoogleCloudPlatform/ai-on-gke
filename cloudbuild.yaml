@@ -21,14 +21,6 @@ steps:
   dir: "infrastructure/"
   waitFor: ["-"]
 
-- id: "validate ray"
-  name: "gcr.io/$PROJECT_ID/terraform"
-  script: |
-    terraform init -no-color
-    terraform validate -no-color
-  dir: "applications/ray/"
-  waitFor: ["validate platform"]
-
 - id: "validate rag"
   name: "gcr.io/$PROJECT_ID/terraform"
   script: |
@@ -63,71 +55,6 @@ steps:
   dir: 'infrastructure/'
   allowFailure: true
   waitFor: ['validate platform', 'validate ray', validate rag]
-
-- id: 'test ray cluster'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    # Get kube config
-    gcloud container clusters get-credentials \
-    ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    --location $_REGION \
-    --project $PROJECT_ID
-
-    cd /workspace/applications/ray/
-    terraform apply \
-    -var-file=workloads.tfvars \
-    -var=project_id=$PROJECT_ID \
-    -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    -var=cluster_location=$_REGION \
-    -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-ray \
-    -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
-    -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_BUILD_ID \
-    -var=enable_gpu=true \
-    -auto-approve -no-color
-    echo "pass" > /workspace/user_result.txt
-
-    chmod +x /workspace/scripts/ci/wait_for_pods.sh
-    /workspace/scripts/ci/wait_for_pods.sh ml-$SHORT_SHA-$_BUILD_ID-ray 3600
-
-    kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID-ray --for=condition=Ready --timeout=1200s
-    # Ray head's readinessProbe is not probing the head service today. Therefore the wait for ready above is not reliable.
-    sleep 60s
-    kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-ray service/ray-cluster-kuberay-head-svc 8265:8265 &
-    # Wait port-forwarding to take its place
-    sleep 10s
-
-    ray job submit \
-    --address=http://127.0.0.1:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
-    echo "pass" > /workspace/ray_result.txt
-  allowFailure: true
-  waitFor: ['create gke cluster']
-
-- id: 'cleanup ray cluster'
-  name: 'gcr.io/$PROJECT_ID/terraform'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e
-
-    cd /workspace/applications/ray/
-    terraform destroy \
-    -var-file=workloads.tfvars \
-    -var=project_id=$PROJECT_ID \
-    -var=cluster_name=ml-$SHORT_SHA-$_PR_NUMBER-$_BUILD_ID-cluster \
-    -var=cluster_location=$_REGION \
-    -var=kubernetes_namespace=ml-$SHORT_SHA-$_BUILD_ID-ray \
-    -var=workload_identity_service_account=ray-sa-$SHORT_SHA-$_BUILD_ID \
-    -var=gcs_bucket=gke-aieco-ray-$SHORT_SHA-$_BUILD_ID \
-    -var=enable_gpu=true \
-    -auto-approve -no-color
-  allowFailure: true
-  waitFor: ['test ray cluster']
 
 - id: 'test rag'
   name: 'gcr.io/$PROJECT_ID/terraform'
