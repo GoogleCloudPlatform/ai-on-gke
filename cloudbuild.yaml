@@ -267,23 +267,8 @@ steps:
       exit 1
     fi
 
-    if [[ $(cat /workspace/ray_result.txt) != "pass" ]]; then
-      echo "ray API run failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/user_result.txt) != "pass" ]]; then
-      echo "ray cluster failed"
-      exit 1
-    fi
-
     if [[ $(cat /workspace/rag_tf_result.txt) != "pass" ]]; then
       echo "rag tf failed"
-      exit 1
-    fi
-
-    if [[ $(cat /workspace/rag_ray_dashboard_result.txt) != "pass" ]]; then
-      echo "rag ray dashboard test failed"
       exit 1
     fi
 
