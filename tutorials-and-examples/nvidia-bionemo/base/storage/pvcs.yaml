@@ -1,0 +1,12 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: bionemo-filestore
+  namespace: bionemo-training
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: filestore-storage
+  resources:
+    requests:
+      storage: 1Ti
