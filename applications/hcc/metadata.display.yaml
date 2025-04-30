@@ -82,6 +82,7 @@ spec:
             type: ET_GCE_ZONE
             gce_zone:
               allowlisted_zones:
+              - asia-south2-c
               - europe-west1-b
               - us-central1-b
               - us-east4-b
