@@ -260,9 +260,3 @@ options:
   substitutionOption: "ALLOW_LOOSE"
   machineType: "E2_HIGHCPU_8"
 timeout: 5400s
-availableSecrets:
-  secretManager:
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-username/versions/latest
-    env: "KAGGLE_USERNAME"
-  - versionName: projects/gke-ai-eco-dev/secrets/cloudbuild-kaggle-key/versions/latest
-    env: "KAGGLE_KEY"
