@@ -59,10 +59,7 @@ resource "helm_release" "benchmark" {
     name  = "workloadLabels.ai-on-gke-solution" # Note the dot notation for the key path
     value = local.workload_labels["ai-on-gke-solution"]
   }
-  set {
-    name  = "workloadLabels.ai-on-gke-machine-type"
-    value = local.workload_labels["ai-on-gke-machine-type"]
-  }
+
   set {
     name  = "workloadLabels.ai-on-gke-framework"
     value = local.workload_labels["ai-on-gke-framework"]
@@ -106,10 +103,7 @@ resource "helm_release" "nccl_tests" {
     name  = "workloadLabels.ai-on-gke-solution"
     value = local.workload_labels["ai-on-gke-solution"]
   }
-  set {
-    name  = "workloadLabels.ai-on-gke-machine-type"
-    value = local.workload_labels["ai-on-gke-machine-type"]
-  }
+
   set {
     name  = "workloadLabels.ai-on-gke-framework"
     value = local.workload_labels["ai-on-gke-framework"]
