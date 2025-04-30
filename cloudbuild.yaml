@@ -54,7 +54,7 @@ steps:
     echo "pass" > /workspace/gke_cluster_result.txt
   dir: 'infrastructure/'
   allowFailure: true
-  waitFor: ['validate platform', 'validate ray', validate rag]
+  waitFor: ['validate platform', validate rag]
 
 - id: 'test rag'
   name: 'gcr.io/$PROJECT_ID/terraform'
@@ -93,16 +93,6 @@ steps:
     -auto-approve -no-color
     echo "pass" > /workspace/rag_tf_result.txt
 
-    # Validate Ray: Make sure pods are running
-    kubectl wait --for=condition=Ready pods -n rag-$SHORT_SHA-$_BUILD_ID -l 'component!=continuous-image-puller' --timeout=1200s
-    kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/ray-cluster-kuberay-head-svc 8262:8265 &
-    # Wait port-forwarding to take its place
-    sleep 5s
-
-    # Validate Ray: Check dashboard
-    ray job submit --working-dir ./tests \
-    --address=http://127.0.0.1:8262 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
-    echo "pass" > /workspace/rag_ray_dashboard_result.txt
 
     # Validate JupyterHub: Get hub url
     kubectl get services -n rag-$SHORT_SHA-$_BUILD_ID
