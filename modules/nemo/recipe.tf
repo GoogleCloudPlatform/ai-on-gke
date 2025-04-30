@@ -26,8 +26,6 @@ locals {
     "gke-nccl"                         = ""
   }[var.recipe]
 
-  machine_type_label = var.gpu_type == "A3 Mega" ? "a3mega" : (var.gpu_type == "A3 Ultra" ? "a3ultra" : "unknown")
-
   framework_label = {
     "llama3.1_7b_nemo_pretraining"     = "nemo"
     "llama3.1_70b_nemo_pretraining"    = "nemo"
@@ -38,18 +36,17 @@ locals {
   }[var.recipe]
 
   model_label = {
-    "llama3.1_7b_nemo_pretraining"     = "llama-3.1-7b"
-    "llama3.1_70b_nemo_pretraining"    = "llama-3.1-70b"
-    "llama3.1_70b_maxtext_pretraining" = "llama-3.1-70b"
-    "mixtral8_7b_nemo_pretraining"     = "mixtral-8-7b" 
-    "mixtral8_7b_maxtext_pretraining"  = "mixtral-8-7b" 
+    "llama3.1_7b_nemo_pretraining"     = "llama"
+    "llama3.1_70b_nemo_pretraining"    = "llama"
+    "llama3.1_70b_maxtext_pretraining" = "llama"
+    "mixtral8_7b_nemo_pretraining"     = "mixtral" 
+    "mixtral8_7b_maxtext_pretraining"  = "mixtral" 
     "gke-nccl"                         = null
   }[var.recipe]
  
   workload_labels = merge(
     {
       "ai-on-gke-solution"     = "cluster-director-quick-start-solution"
-      "ai-on-gke-machine-type" = local.machine_type_label
       "ai-on-gke-framework"    = local.framework_label
     },
     
