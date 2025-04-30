@@ -36,11 +36,11 @@ locals {
   }[var.recipe]
 
   model_label = {
-    "llama3.1_7b_nemo_pretraining"     = "llama-3.1-7b"
-    "llama3.1_70b_nemo_pretraining"    = "llama-3.1-70b"
-    "llama3.1_70b_maxtext_pretraining" = "llama-3.1-70b"
-    "mixtral8_7b_nemo_pretraining"     = "mixtral-8-7b" 
-    "mixtral8_7b_maxtext_pretraining"  = "mixtral-8-7b" 
+    "llama3.1_7b_nemo_pretraining"     = "llama"
+    "llama3.1_70b_nemo_pretraining"    = "llama"
+    "llama3.1_70b_maxtext_pretraining" = "llama"
+    "mixtral8_7b_nemo_pretraining"     = "mixtral" 
+    "mixtral8_7b_maxtext_pretraining"  = "mixtral" 
     "gke-nccl"                         = null
   }[var.recipe]
  
