@@ -22,14 +22,10 @@ jobs:
       - name: Terraform Init
         id: init
         run: |
-          terraform -chdir=applications/rag init 
           terraform -chdir=applications/ray init 
-          terraform -chdir=applications/jupyter init 
 
       - name: Terraform Validate
         id: validate
         run: |
-          terraform -chdir=applications/rag validate -no-color
           terraform -chdir=applications/ray validate -no-color
-          terraform -chdir=applications/jupyter validate -no-color
 
