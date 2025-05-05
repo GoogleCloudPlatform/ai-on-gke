@@ -1,9 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- namespace.yaml
-- storage/storage-class.yaml
-- storage/pvcs.yaml
-- monitoring/tensorboard-deployment.yaml
-- monitoring/tensorboard-service.yaml
-- monitoring/rbac.yaml
