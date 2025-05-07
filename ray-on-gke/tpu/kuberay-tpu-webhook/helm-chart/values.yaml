@@ -17,3 +17,7 @@ tpuWebhook:
   service:
     type: ClusterIP
     port: 443
+
+  cert:
+    duration: 2160h # 90d
+    renewBefore: 360h # 15d
