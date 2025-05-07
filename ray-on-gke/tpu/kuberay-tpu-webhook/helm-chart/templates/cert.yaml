@@ -26,9 +26,13 @@ metadata:
   name: kuberay-tpu-webhook-certs
   namespace: {{ .Values.tpuWebhook.namespace.name }}
 spec:
+  duration: {{ .Values.tpuWebhook.cert.duration }}
+  renewBefore: {{ .Values.tpuWebhook.cert.renewBefore }}
   secretName: kuberay-tpu-webhook-certs
   dnsNames:
     - kuberay-tpu-webhook.{{ .Values.tpuWebhook.namespace.name }}.svc
     - kuberay-tpu-webhook.{{ .Values.tpuWebhook.namespace.name }}.svc.cluster.local
   issuerRef:
+    kind: Issuer
+    group: cert-manager.io
     name: selfsigned-issuer
