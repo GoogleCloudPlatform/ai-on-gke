@@ -1,0 +1,18 @@
+apiVersion: tpu.gke.io/v1
+kind: Slice
+metadata:
+  # Name of the Slice resource
+  name: my-simple-slice
+  # Namespace where the Slice resource will be created
+  namespace: default
+spec:
+  # Specify the type of TPU for this slice
+  tpuType: "tpu-v4-podslice"
+  # Define the desired topology for the TPU slice
+  tpuTopology: "2x2x1"
+  # List the specific Kubernetes nodes the controller should use for this slice
+  nodes:
+    - "gke-my-cluster-pool-1-node-abcd"
+    - "gke-my-cluster-pool-1-node-efgh"
+    - "gke-my-cluster-pool-1-node-ijkl"
+    - "gke-my-cluster-pool-1-node-mnop"
