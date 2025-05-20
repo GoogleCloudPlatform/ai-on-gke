@@ -54,7 +54,7 @@ spec:
             properties:
               nodes:
                 description: If set, then user is telling the controller which nodes
-                  to use to form super-slice
+                  to use to form slice
                 items:
                   type: string
                 type: array
@@ -74,7 +74,7 @@ spec:
             properties:
               blockId:
                 description: Populated to match the physical topology of block the
-                  Super-Slice is running on
+                  slice is running on
                 type: string
               isDegraded:
                 description: If the SuperSlice is running in a DEGRADED state
@@ -93,7 +93,7 @@ spec:
                 type: string
               subBlockIds:
                 description: Populated to list of physical topology of sub-block the
-                  Super-Slice is running on
+                  slice is running on
                 items:
                   type: string
                 type: array

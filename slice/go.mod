@@ -1,4 +1,4 @@
-module ai-on-gke/super-slice
+module ai-on-gke/slice
 
 go 1.24.0
 

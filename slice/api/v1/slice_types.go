@@ -33,7 +33,7 @@ type SliceSpec struct {
 	// +kubebuilder:validation:Immutable
 	TpuTopology string `json:"tpuTopology"`
 
-	// If set, then user is telling the controller which nodes to use to form super-slice
+	// If set, then user is telling the controller which nodes to use to form slice
 	Nodes []string `json:"nodes"`
 }
 
@@ -48,10 +48,10 @@ type SliceStatus struct {
 	// If the SuperSlice is running in a DEGRADED state
 	IsDegraded bool `json:"isDegraded,omitempty"`
 
-	// Populated to match the physical topology of block the Super-Slice is running on
+	// Populated to match the physical topology of block the slice is running on
 	BlockID string `json:"blockId,omitempty"`
 
-	// Populated to list of physical topology of sub-block the Super-Slice is running on
+	// Populated to list of physical topology of sub-block the slice is running on
 	SubBlockIDs []string `json:"subBlockIds,omitempty"`
 }
 
