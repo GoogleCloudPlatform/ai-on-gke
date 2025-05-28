@@ -1,5 +1,10 @@
 # AI on GKE: Benchmark TensorRT LLM on Triton Server
 
+>[!WARNING]
+>This guide and associated code are **deprecated** and no longer maintained.
+>
+>Please refer to the [GKE AI Labs website](https://gke-ai-labs.dev) for the latest tutorials and quick start solutions.
+
 This guide outlines the steps for deploying and benchmarking a TensorRT Large Language Model (LLM) on the Triton Inference Server within Google Kubernetes Engine (GKE). It includes the process of building a Docker container equipped with the TensorRT LLM engine and deploying this container to a GKE cluster.
 
 ## Prerequisites
