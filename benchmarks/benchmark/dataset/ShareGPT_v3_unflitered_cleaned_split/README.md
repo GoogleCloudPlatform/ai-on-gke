@@ -1,3 +1,8 @@
+>[!WARNING]
+>This guide and associated code are **deprecated** and no longer maintained.
+>
+>Please refer to the [GKE AI Labs website](https://gke-ai-labs.dev) for the latest tutorials and quick start solutions.
+
 This directory contains the script for uploading a filtered and formatted file of prompts based on the "anon8231489123/ShareGPT_Vicuna_unfiltered" dataset to a given GCS path.
 
 Example usage:

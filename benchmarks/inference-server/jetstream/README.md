@@ -1,5 +1,10 @@
 # AI on GKE Benchmarking for JetStream
 
+>[!WARNING]
+>This guide and associated code are **deprecated** and no longer maintained.
+>
+>Please refer to the [GKE AI Labs website](https://gke-ai-labs.dev) for the latest tutorials and quick start solutions.
+
 Deploying and benchmarking JetStream on TPU has many similarities with the standard GPU path. But distinct enough differences to warrant a separate readme. If you are familiar with deploying on GPU, much of this should be familiar. For a more detailed understanding of each step. Refer to our primary benchmarking [README](https://github.com/GoogleCloudPlatform/ai-on-gke/tree/main/benchmarks)
 
 ## Pre-requisites

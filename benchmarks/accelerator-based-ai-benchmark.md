@@ -1,5 +1,12 @@
 # AI on GKE Accelerator-Based Benchmarking
 
+>[!WARNING]
+>This guide and associated code are **deprecated** and no longer maintained.
+>
+>Please refer to the [GKE AI Labs website](https://gke-ai-labs.dev) for the latest tutorials and quick start solutions.
+>
+>Please refer to the [Inference Benchmark](https://gke-ai-labs.dev/docs/benchmarking/inference-benchmark/) for the latest inference benchmarking tutorial.
+
 This framework enables you to run automated benchmarks on Google Kubernetes Engine (GKE) for AI workloads using Terraform. The benchmark utilizes an accelerator-based cluster with GPU or TPU nodes, depending on your Terraform configuration.
 
 You can find the current set of supported cluster deployments under `infra/accelerator-cluster` and the supported inference servers
