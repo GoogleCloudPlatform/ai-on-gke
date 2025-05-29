@@ -1,23 +1,5 @@
 # Dynamic Workload Scheduler examples
 
-The repository contains examples on how to use DWS in GKE. More information about DWS is
-available [here](https://cloud.google.com/kubernetes-engine/docs/how-to/provisioningrequest).
 
-## Prerequisites
-
-### [Kueue](https://kueue.sigs.k8s.io/)
-To install a released version of Kueue in your cluster, run the following command:
-
-```sh
-VERSION=v0.7.0
-kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml
-```
-
-For more configuration options visit [Kueue's installation guide.](https://kueue.sigs.k8s.io/docs/installation/)
-
-## Files included
-
-* `dws-queue.yaml` - Kueue's Cluster and Local queues with ProvisioningRequest and DWS support enabled.
-* `job.yaml` - Sample job that requires GPU and uses DWS-enabled queue. Contains optional annotation ` provreq.kueue.x-k8s.io/maxRunDurationSeconds` which sets `maxRunDurationSeconds` for the created ProvisioningRequest
-* `job-autopilot.yaml` - Sample job that requires GPU and uses DWS-enabled queue, compatible with Autopilot GKE clusters. Compared to `job.yaml`, replaces the nodepool selector with accelerator selector, which allows autopilot to manage the nodes.
-
+>[!WARNING]
+>The files for the Kueue with DWS and GKE autopilot example have been moved to the [AI-on-GKE/tutorials-and-examples](https://github.com/ai-on-gke/tutorials-and-examples) repository. For more information, please refer to the [Kueue with DWS and GKE autopilot tutorial](https://gke-ai-labs.dev/docs/tutorials/workflow-orchestration/dws/s).
