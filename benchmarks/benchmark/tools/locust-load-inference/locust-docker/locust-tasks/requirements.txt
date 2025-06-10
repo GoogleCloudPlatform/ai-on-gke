@@ -21,7 +21,7 @@ msgpack==1.0.3
 msgpack-python==0.5.6
 psutil==5.9.1
 pyzmq==25.0.0
-requests==2.31.0
+requests==2.32.4
 roundrobin==0.0.2
 six==1.16.0
 transformers==4.48.0
