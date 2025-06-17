@@ -1,172 +1,32 @@
-# AI on GKE Assets
+# AI on GKE (Archived)
 
-This repository contains assets related to AI/ML workloads on
-[Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/docs/integrations/ai-infra).
+>[!WARNING]
+>This repository has been archived to preserve its contents and is no **longer actively maintained**. It is now **read-only**, meaning no further changes or contributions can be made.
+>
+> You can still freely browse all files, commit history, and issues. Please note that most of this repository's content has been migrated to new repositories under the [AI on GKE GitHub Organization](https://github.com/ai-on-gke).
 
-## Overview
+## Content Migration Update
 
-Run optimized AI/ML workloads with Google Kubernetes Engine (GKE) platform orchestration capabilities. A robust AI/ML platform considers the following layers:
+All content, including open PRs and Issues has been successfully migrated and updated! You can now find everything in the new repositories within the [AI on GKE GitHub Organization](https://github.com/ai-on-gke) and on the [GKE AI Labs website](https://gke-ai-labs.dev).
 
-- Infrastructure orchestration that support GPUs and TPUs for training and serving workloads at scale
-- Flexible integration with distributed computing and data processing frameworks
-- Support for multiple teams on the same infrastructure to maximize utilization of resources
+#### Looking for Older Content?
+If you're searching for a previous folder or guide, start by checking the main README.md file of the specific folder you're looking for. This file  should include a direct link to where the code was migrated. If you can't find it there, please refer to the table below for overall guidance.
 
-## Infrastructure
+#### Repository Migration Table
+Below is a breakdown of how the content from older folders has been migrated to new repositories within the [AI on GKE GitHub Organization](https://github.com/ai-on-gke). This table will help you locate content that has been moved or updated.
 
-The AI-on-GKE application modules assumes you already have a functional GKE cluster. If not, follow the instructions under [infrastructure/README.md](./infrastructure/README.md) to install a Standard or Autopilot GKE cluster.
-
-```bash
-.
-├── LICENSE
-├── README.md
-├── infrastructure
-│   ├── README.md
-│   ├── backend.tf
-│   ├── main.tf
-│   ├── outputs.tf
-│   ├── platform.tfvars
-│   ├── variables.tf
-│   └── versions.tf
-├── modules
-│   ├── gke-autopilot-private-cluster
-│   ├── gke-autopilot-public-cluster
-│   ├── gke-standard-private-cluster
-│   ├── gke-standard-public-cluster
-│   ├── jupyter
-│   ├── jupyter_iap
-│   ├── jupyter_service_accounts
-│   ├── kuberay-cluster
-│   ├── kuberay-logging
-│   ├── kuberay-monitoring
-│   ├── kuberay-operator
-│   └── kuberay-serviceaccounts
-└── tutorial.md
-```
-
-To deploy new GKE cluster update the `platform.tfvars` file with the appropriate values and then execute below terraform commands:
-```
-terraform init
-terraform apply -var-file platform.tfvars
-```
-
-
-## Applications
-
-The repo structure looks like this:
-
-```bash
-.
-├── LICENSE
-├── Makefile
-├── README.md
-├── applications
-│   ├── jupyter
-│   └── ray
-├── contributing.md
-├── dcgm-on-gke
-│   ├── grafana
-│   └── quickstart
-├── gke-a100-jax
-│   ├── Dockerfile
-│   ├── README.md
-│   ├── build_push_container.sh
-│   ├── kubernetes
-│   └── train.py
-├── gke-batch-refarch
-│   ├── 01_gke
-│   ├── 02_platform
-│   ├── 03_low_priority
-│   ├── 04_high_priority
-│   ├── 05_compact_placement
-│   ├── 06_jobset
-│   ├── Dockerfile
-│   ├── README.md
-│   ├── cloudbuild-create.yaml
-│   ├── cloudbuild-destroy.yaml
-│   ├── create-platform.sh
-│   ├── destroy-platform.sh
-│   └── images
-├── gke-disk-image-builder
-│   ├── README.md
-│   ├── cli
-│   ├── go.mod
-│   ├── go.sum
-│   ├── imager.go
-│   └── script
-├── gke-dws-examples
-│   ├── README.md
-│   ├── dws-queues.yaml
-│   ├── job.yaml
-│   └── kueue-manifests.yaml
-├── gke-online-serving-single-gpu
-│   ├── README.md
-│   └── src
-├── gke-tpu-examples
-│   ├── single-host-inference
-│   └── training
-├── indexed-job
-│   ├── Dockerfile
-│   ├── README.md
-│   └── mnist.py
-├── jobset
-│   └── pytorch
-├── modules
-│   ├── gke-autopilot-private-cluster
-│   ├── gke-autopilot-public-cluster
-│   ├── gke-standard-private-cluster
-│   ├── gke-standard-public-cluster
-│   ├── jupyter
-│   ├── jupyter_iap
-│   ├── jupyter_service_accounts
-│   ├── kuberay-cluster
-│   ├── kuberay-logging
-│   ├── kuberay-monitoring
-│   ├── kuberay-operator
-│   └── kuberay-serviceaccounts
-├── saxml-on-gke
-│   ├── httpserver
-│   └── single-host-inference
-├── training-single-gpu
-│   ├── README.md
-│   ├── data
-│   └── src
-├── tutorial.md
-└── tutorials
-    ├── e2e-genai-langchain-app
-    ├── finetuning-llama-7b-on-l4
-    └── serving-llama2-70b-on-l4-gpus
-```
-
-
-### Jupyter Hub
-
-This repository contains a Terraform template for running JupyterHub on Google Kubernetes Engine. We've also included some example notebooks ( under `applications/ray/example_notebooks`), including one that serves a GPT-J-6B model with Ray AIR (see here for the original notebook). To run these, follow the instructions at [applications/ray/README.md](./applications/ray/README.md) to install a Ray cluster.
-
-This jupyter module deploys the following resources, once per user:
-- JupyterHub deployment
-- User namespace
-- Kubernetes service accounts
-
-Learn more [about JupyterHub on GKE here](./applications/jupyter/README.md)
-
-### Ray
-
-This repository contains a Terraform template for running Ray on Google Kubernetes Engine.
-
-This module deploys the following, once per user:
-- User namespace
-- Kubernetes service accounts
-- Kuberay cluster
-- Prometheus monitoring
-- Logging container
-
-Learn more [about Ray on GKE here](./applications/ray/README.md)
-
-## Important Considerations
-- Make sure to configure terraform backend to use GCS bucket, in order to persist terraform state across different environments.
-
-
-## Licensing
-
-* The use of the assets contained in this repository is subject to compliance with [Google's AI Principles](https://ai.google/responsibility/principles/)
-* See [LICENSE](/LICENSE)
+| Original ai-on-gke folder | New Repository  | 
+| :----------| :--------------------- | 
+| `benchmarks` | [scalability-benchmarks](https://github.com/ai-on-gke/scalability-benchmarks) |
+| `gke-batch-refarch` | [batch-reference-architecture](https://github.com/ai-on-gke/batch-reference-architecture) |
+| `ml-platform` | [GoogleCloudPlatform/accelerated-platforms](https://github.com/GoogleCloudPlatform/accelerated-platforms) |
+| `tutorials-and-examples/nvidia*` | [nvidia-ai-solutions](https://github.com/ai-on-gke/nvidia-ai-solutions) |
+| `applications` | [quick-start-guides](https://github.com/ai-on-gke/quick-start-guides) |
+| `ray-on-gke` | [quick-start-guides](https://github.com/ai-on-gke/quick-start-guides) |
+| `slurm-on-gke` | [slurm-on-gke](https://github.com/ai-on-gke/slurm-on-gke) |
+| `tools` | [tools](https://github.com/ai-on-gke/tools) |
+| `tpu-provisioner` | [tpu-provisioner](https://github.com/ai-on-gke/tpu-provisioner) |
+| `tutorials-and-examples` | [tutorials-and-examples](https://github.com/ai-on-gke/tutorials-and-examples) |
+| `ray-on-gke\tpu\kuberay-tpu-webhook` | [kuberay-tpu-webhook](https://github.com/ai-on-gke/kuberay-tpu-webhook) |
+| `modules`, `scripts`, `charts` | [common-infra](https://github.com/ai-on-gke/common-infra) |
+| `website` | [website](https://github.com/ai-on-gke/website) |
