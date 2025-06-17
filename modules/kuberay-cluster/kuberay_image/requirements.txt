@@ -3,7 +3,7 @@ transformers==4.38.1
 sentence-transformers==2.5.1
 pyarrow
 datasets==2.18.0
-torch==2.0.1
+torch==2.7.1
 cloud-sql-python-connector[pg8000]==1.7.0
 SQLAlchemy==2.0.7
 huggingface_hub==0.21.3
